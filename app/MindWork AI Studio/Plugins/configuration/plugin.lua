@@ -456,14 +456,13 @@ CONFIG["SETTINGS"] = {}
 
 -- Prohibit providers, e.g., when your organization must not send any data to them. The list
 -- applies to LLM providers, embedding providers, and transcription providers alike. Allowed
--- values are the provider keys of DataConfidence.CustomConfidenceScheme, see below, e.g.,
--- OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD. A name AI Studio does not
--- know is ignored and logged as a warning.
+-- values are the provider keys of DataConfidence.CustomConfidenceScheme, see below. A name
+-- AI Studio does not know is ignored and logged as a warning.
 --
--- A prohibition names the operator of an API, not a family of models: prohibiting DEEP_SEEK
--- keeps AI Studio away from the API of DeepSeek, but the models of DeepSeek remain available
--- through a hub such as OPEN_ROUTER or HUGGINGFACE, or on a server of your own (SELF_HOSTED).
--- Prohibit these as well if you need to.
+-- A prohibition names the operator of an API, not a family of models: prohibiting the API of
+-- a model maker keeps AI Studio away from that API, but the models of that maker may remain
+-- available through a hub which offers the models of several makers, or on a server of your
+-- own. Prohibit these as well if you need to.
 --
 -- Users can still select a prohibited provider when they add one, but the dialog then only
 -- explains that your organization does not allow it. Providers which users set up before stay
@@ -477,7 +476,7 @@ CONFIG["SETTINGS"] = {}
 -- Available since AI Studio v26.10.1. Older versions ignore this setting. Until all devices
 -- run that version, you can in addition use the CUSTOM confidence scheme, set the provider to
 -- UNTRUSTED there, and enforce a global minimum confidence level of at least VERY_LOW.
--- CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "DEEP_SEEK" }
+-- CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "<PROVIDER_KEY>" }
 
 -- Configure the permission to add mailboxes. A mailbox is a data source, not a provider, so
 -- DataApp.AllowUserToAddProvider does not apply to it. When set to false, the menu entry for

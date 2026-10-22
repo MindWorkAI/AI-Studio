@@ -1141,15 +1141,16 @@ such providers in your configuration, and AI Studio uses them neither for chats 
 transcriptions:
 
 ```lua
-CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "DEEP_SEEK" }
+CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "<PROVIDER_KEY>" }
 ```
 
-The values are the provider keys of `DataConfidence.CustomConfidenceScheme`, see the example
-configuration. A name AI Studio does not know is ignored and logged as a warning.
+Replace `<PROVIDER_KEY>` with the keys of the providers you prohibit, as listed for
+`DataConfidence.CustomConfidenceScheme` in the example configuration. A name AI Studio does not know is
+ignored and logged as a warning.
 
-- **A prohibition names the operator, not the models.** `DEEP_SEEK` keeps AI Studio away from the API
-  of DeepSeek. The models of DeepSeek remain available through a hub such as OpenRouter or Hugging
-  Face, and on a server of your own. Prohibit these as well if you need to.
+- **A prohibition names the operator, not the models.** Prohibiting the API of a model maker keeps AI
+  Studio away from that API. The models of that maker may remain available through a hub which offers
+  the models of several makers, and on a server of your own. Prohibit these as well if you need to.
 - **Users still find the provider.** When they add a provider and select a prohibited one, the dialog
   explains that your organization does not allow it instead of showing the form, and nothing can be
   saved.

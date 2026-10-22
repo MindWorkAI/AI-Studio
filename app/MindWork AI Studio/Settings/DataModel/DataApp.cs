@@ -197,8 +197,8 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// The providers an organization prohibited, for LLMs, embeddings, and transcriptions alike.
     /// </summary>
     /// <remarks>
-    /// A prohibition names the operator of an API, not a family of models: prohibiting DEEP_SEEK
-    /// leaves the models of DeepSeek reachable through a hub or a self-hosted server. Providers the
+    /// A prohibition names the operator of an API, not a family of models: prohibiting the API of a
+    /// model maker leaves its models reachable through a hub or a self-hosted server. Providers the
     /// user set up before stay in the settings, so they are back once the prohibition ends, but
     /// AI Studio neither offers nor contacts them, see SettingsManager.IsProviderProhibited.
     /// </remarks>
