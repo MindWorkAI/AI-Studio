@@ -703,6 +703,21 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
             return DocumentOpenPlan::Plain;
         };
 
+        //
+        // A program installed as a Flatpak keeps the desktop entry of its native package but is
+        // not on the path. The native program comes first, because it is the one the user chose
+        // to install along with the system; the Flatpak is what is left when there is none.
+        //
+        if !linux_program_on_path(&program)
+            && let Some(app_id) = linux_flatpak_app_id(&desktop_id)
+            && linux_flatpak_installed(app_id).await
+        {
+            return DocumentOpenPlan::WithPage {
+                program: String::from("flatpak"),
+                arguments: flatpak_run_arguments(app_id, &arguments, path),
+            };
+        }
+
         DocumentOpenPlan::WithPage { program, arguments }
     }
 }
@@ -861,7 +876,8 @@ fn linux_page_aware_program(desktop_id: &str) -> Option<(String, PageArgument)> 
 
         //
         // PdfCraft's desktop entry is `ai.storyteller.pdfcraft.desktop`. Its packages for Debian,
-        // Fedora and Arch put the program on the path; its other builds are not found there.
+        // Fedora and Arch put the program on the path, its Flatpak is started through `flatpak`,
+        // and its AppImage is found by neither, so it opens on the first page.
         //
         ("pdfcraft", "pdfcraft", PageArgument::PdfCraftPage),
 
@@ -879,6 +895,59 @@ fn linux_page_aware_program(desktop_id: &str) -> Option<(String, PageArgument)> 
     KNOWN_VIEWERS.iter()
         .find(|(needle, _, _)| desktop_id.contains(needle))
         .map(|(_, program, argument)| (String::from(*program), *argument))
+}
+
+/// Names the Flatpak behind a desktop entry, for the viewers we start through `flatpak` when they
+/// are not on the path.
+#[cfg(any(target_os = "linux", test))]
+fn linux_flatpak_app_id(desktop_id: &str) -> Option<&'static str> {
+    const KNOWN_FLATPAKS: [(&str, &str); 1] = [
+        ("pdfcraft", "ai.storyteller.pdfcraft"),
+    ];
+
+    let desktop_id = desktop_id.to_ascii_lowercase();
+    KNOWN_FLATPAKS.iter()
+        .find(|(needle, _)| desktop_id.contains(needle))
+        .map(|(_, app_id)| *app_id)
+}
+
+/// Whether a program of this name lies in one of the folders of the path.
+#[cfg(target_os = "linux")]
+fn linux_program_on_path(program: &str) -> bool {
+    std::env::var_os("PATH")
+        .is_some_and(|path| std::env::split_paths(&path).any(|directory| directory.join(program).is_file()))
+}
+
+/// Whether this Flatpak is installed, for the user or for the whole system.
+#[cfg(target_os = "linux")]
+async fn linux_flatpak_installed(app_id: &str) -> bool {
+    tokio::process::Command::new("flatpak")
+        .args(["info", app_id])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .await
+        .is_ok_and(|status| status.success())
+}
+
+/// Builds the arguments which start a Flatpak with the page arguments of its program.
+///
+/// A Flatpak sees only the folders it was granted, and PdfCraft's are Documents and Downloads, while
+/// a data source may lie anywhere. The file is therefore handed over through the document portal,
+/// which `--file-forwarding` does for every argument between two `@@`.
+#[cfg(any(target_os = "linux", test))]
+fn flatpak_run_arguments(app_id: &str, arguments: &[String], path: &Path) -> Vec<String> {
+    let path_argument = path.to_string_lossy().to_string();
+    let mut run_arguments = vec![String::from("run"), String::from("--file-forwarding"), String::from(app_id)];
+    for argument in arguments {
+        if *argument == path_argument {
+            run_arguments.extend([String::from("@@"), argument.clone(), String::from("@@")]);
+        } else {
+            run_arguments.push(argument.clone());
+        }
+    }
+
+    run_arguments
 }
 
 /// Applies an optional file type filter to a FileDialogBuilder.
@@ -1357,5 +1426,28 @@ mod tests {
         assert_eq!(linux_page_aware_program("google-chrome.desktop"), Some((String::from("google-chrome"), PageArgument::UrlFragment)));
         assert_eq!(linux_page_aware_program("chromium_chromium.desktop"), Some((String::from("chromium"), PageArgument::UrlFragment)));
         assert_eq!(linux_page_aware_program("com.example.SomeViewer.desktop"), None, "A viewer we know nothing about opens its first page.");
+    }
+
+    #[test]
+    fn linux_knows_the_flatpaks_it_can_start_with_a_page() {
+        assert_eq!(linux_flatpak_app_id("ai.storyteller.pdfcraft.desktop"), Some("ai.storyteller.pdfcraft"), "The Flatpak keeps the desktop entry of the native package.");
+        assert_eq!(linux_flatpak_app_id("org.gnome.Evince.desktop"), None, "Only the Flatpaks we start ourselves are named.");
+    }
+
+    /// The Flatpak can read only Documents and Downloads, so the file has to travel through the
+    /// document portal, and the page arguments must reach the program unchanged.
+    #[test]
+    fn a_flatpak_receives_the_file_through_the_document_portal() {
+        let document = Path::new("/srv/Größere Übersicht.pdf");
+        let arguments = page_arguments(PageArgument::PdfCraftPage, document, 12).unwrap();
+
+        assert_eq!(
+            flatpak_run_arguments("ai.storyteller.pdfcraft", &arguments, document),
+            vec![
+                String::from("run"), String::from("--file-forwarding"), String::from("ai.storyteller.pdfcraft"),
+                String::from("--page"), String::from("12"),
+                String::from("@@"), String::from("/srv/Größere Übersicht.pdf"), String::from("@@"),
+            ],
+        );
     }
 }
