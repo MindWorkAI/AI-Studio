@@ -168,6 +168,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("embedded_at_utc");
 
+            entity.Property<int?>("EndPageNumber")
+                .HasColumnType("INTEGER")
+                .HasColumnName("end_page_number");
+
             entity.Property<int?>("PageNumber")
                 .HasColumnType("INTEGER")
                 .HasColumnName("page_number");
@@ -280,6 +284,9 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.Property<DateTimeOffset>("EmbeddedAtUtc")
                 .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT");
+
+            entity.Property<int?>("EndPageNumber")
+                .HasColumnType("INTEGER");
 
             entity.Property<string>("FileName")
                 .IsRequired()

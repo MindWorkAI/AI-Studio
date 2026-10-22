@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
@@ -52,6 +53,34 @@ public sealed class ContentText : IContent
     public List<FileAttachment> FileAttachments { get; set; } = [];
 
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
+
+    /// <summary>
+    /// The passages the data sources handed to the AI for this answer, as the AI received them.
+    /// </summary>
+    /// <remarks>
+    /// Stored with the answer, so the user can still read what it rests on after the chat was
+    /// reloaded. Each passage belongs to one of the sources, see SourcePassageExtensions.GetPassagesOf.
+    /// Empty for every answer written before passages were kept, and for every answer no data
+    /// source contributed to.
+    /// </remarks>
+    public List<SourcePassage> SourcePassages { get; set; } = [];
+
+    /// <summary>
+    /// Adds sources to this answer, together with the passages the AI received from them.
+    /// </summary>
+    /// <remarks>
+    /// Both at once, because the title of a source names where its passages are, see
+    /// SourcePassageExtensions.NamePassagesInTitles. A passage added on its own would leave a title
+    /// behind which names only the pages known before it.
+    /// </remarks>
+    /// <param name="sources">The sources to add.</param>
+    /// <param name="passages">The passages to add.</param>
+    public void AddSources(IEnumerable<ISource> sources, IEnumerable<SourcePassage> passages)
+    {
+        this.Sources.MergeSources(sources);
+        this.SourcePassages.MergePassages(passages);
+        this.Sources.NamePassagesInTitles(this.SourcePassages);
+    }
 
     /// <summary>
     /// What the provider said everything sent along with this answer cost, where it said anything.
@@ -138,6 +167,31 @@ public sealed class ContentText : IContent
         };
     }
 
+    /// <summary>
+    /// Adds what one chunk of the stream brings to this answer: its text, its sources together with
+    /// their passages, and what the provider says the request cost.
+    /// </summary>
+    /// <remarks>
+    /// The chat and the job service both write answers from a stream, and they used to do so step
+    /// by step each. A step one of them missed, such as the passages, would have been missing from
+    /// every answer written that way.
+    /// </remarks>
+    /// <param name="chunk">The chunk of the stream.</param>
+    /// <param name="modelId">The model the request went to.</param>
+    /// <param name="blockCount">How many blocks the conversation had when the request went out, this answer included.</param>
+    public void ApplyStreamChunk(ContentStreamChunk chunk, string modelId, int blockCount)
+    {
+        // The first chunk ends the waiting animation:
+        this.InitialRemoteWait = false;
+        this.IsStreaming = true;
+
+        this.Text += chunk;
+        if (chunk.Sources.Count > 0 || chunk.Passages.Count > 0)
+            this.AddSources(chunk.Sources, chunk.Passages);
+
+        this.RecordReportedUsage(chunk.Usage, modelId, blockCount);
+    }
+
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
@@ -220,18 +274,8 @@ public sealed class ContentText : IContent
                         if (token.IsCancellationRequested)
                             break;
 
-                        // Stop the waiting animation:
-                        this.InitialRemoteWait = false;
-                        this.IsStreaming = true;
-
-                        // Add the response to the text:
-                        this.Text += contentStreamChunk;
-
-                        // Merge the sources:
-                        this.Sources.MergeSources(contentStreamChunk.Sources);
-
-                        // Keep what the provider says the request cost:
-                        this.RecordReportedUsage(contentStreamChunk.Usage, chatModel.Id, blocksSent);
+                        // Add the response, its sources, and what it cost:
+                        this.ApplyStreamChunk(contentStreamChunk, chatModel.Id, blocksSent);
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:
@@ -368,6 +412,7 @@ public sealed class ContentText : IContent
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
         Sources = [..this.Sources],
+        SourcePassages = [..this.SourcePassages],
         FileAttachments = [..this.FileAttachments],
         ToolInvocations = [..this.ToolInvocations.Select(x => new ToolInvocationTrace
         {

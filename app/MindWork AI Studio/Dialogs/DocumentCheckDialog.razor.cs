@@ -75,17 +75,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
     private string? loadFailureMessage;
 
     /// <summary>
-    /// What we show to the user: either the entire file content, or its beginning. We keep this in
-    /// its own field so that we cut the content only once, instead of on every render.
-    /// </summary>
-    private string previewContent = string.Empty;
-
-    /// <summary>
-    /// How many characters we cut off from the preview. Zero when we show the entire content.
-    /// </summary>
-    private int previewCutOffCharacters;
-
-    /// <summary>
     /// Ends the extraction when this dialog is gone, or when another document took the place of
     /// the one being read, before that file was read completely.
     /// </summary>
@@ -128,7 +117,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
         this.fileContent = this.FileContent;
 
         this.isLoadingContent = this.NeedsExtraction();
-        this.UpdatePreview();
         await base.OnInitializedAsync();
     }
 
@@ -221,7 +209,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
             if (!this.isDisposed && generation == this.loadGeneration)
             {
                 this.isLoadingContent = false;
-                this.UpdatePreview();
                 this.StateHasChanged();
             }
         }
@@ -301,43 +288,19 @@ public partial class DocumentCheckDialog : MSGComponentBase
         this.fileContent = string.Empty;
         this.loadFailureMessage = null;
         this.isLoadingContent = this.NeedsExtraction();
-        this.UpdatePreview();
     }
 
     /// <summary>
-    /// Called when the user loads a file through this dialog. We don't use a two-way binding here,
-    /// since we have to refresh the preview whenever the content changes.
+    /// An image is shown as it is; everything else is shown as the text we read from it.
     /// </summary>
-    /// <param name="loadedContent">The content of the file the user has loaded.</param>
-    private void ApplyLoadedFileContent(string loadedContent)
-    {
-        this.fileContent = loadedContent;
-        this.UpdatePreview();
-    }
+    private ContentViewerKind ViewerKind => (this.document?.IsImage ?? false) ? ContentViewerKind.IMAGE : ContentViewerKind.TEXT;
 
     /// <summary>
-    /// Determines what part of the file content we show to the user.
+    /// Explains why we show only the beginning of a large document. The preview only answers how we
+    /// read the file, so it may leave out the rest; the AI does not.
     /// </summary>
-    private void UpdatePreview()
-    {
-        if (this.fileContent.Length <= PREVIEW_CHARACTER_LIMIT)
-        {
-            this.previewContent = this.fileContent;
-            this.previewCutOffCharacters = 0;
-            return;
-        }
-
-        //
-        // We cut at the last line break before our limit. Otherwise, we might tear apart a Markdown
-        // construct like a table row or a code fence in the middle of a line:
-        //
-        var cutIndex = this.fileContent.LastIndexOf('\n', PREVIEW_CHARACTER_LIMIT - 1) + 1;
-        if (cutIndex < 1)
-            cutIndex = PREVIEW_CHARACTER_LIMIT;
-
-        this.previewContent = this.fileContent[..cutIndex];
-        this.previewCutOffCharacters = this.fileContent.Length - cutIndex;
-    }
+    /// <param name="cutOffCharacters">How many characters the preview leaves out.</param>
+    private string CutOffNotice(int cutOffCharacters) => string.Format(T("Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document."), cutOffCharacters);
 
     /// <summary>
     /// Ends a running extraction. Without this, reading a large document would continue after the
@@ -357,11 +320,4 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
         base.DisposeResources();
     }
-
-    private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
-
-    private MudMarkdownStyling MarkdownStyling => new()
-    {
-        CodeBlock = { Theme = this.CodeColorPalette },
-    };
 }

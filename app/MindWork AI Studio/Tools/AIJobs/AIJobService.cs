@@ -461,12 +461,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             if (state.IsCompletionStarted || token.IsCancellationRequested || state.ChatGenerationRequest is null)
                 return false;
 
-            var aiText = state.ChatGenerationRequest.AIText;
-            aiText.InitialRemoteWait = false;
-            aiText.IsStreaming = true;
-            aiText.Text += contentStreamChunk;
-            aiText.Sources.MergeSources(contentStreamChunk.Sources);
-            aiText.RecordReportedUsage(contentStreamChunk.Usage, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
+            state.ChatGenerationRequest.AIText.ApplyStreamChunk(contentStreamChunk, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
 
             if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {

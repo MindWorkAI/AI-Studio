@@ -95,7 +95,7 @@ internal sealed partial class MailboxIndexer
             // In English like the header block, cf. MailTextBuilder:
             var heading = attachment.Name.Length > 0 ? $"Attachment: {attachment.Name}" : "Attachment without a name";
             await foreach (var chunk in textChunker.SplitAsync(attachment.Content, attachment.Strategy, options, embeddingProvider, token, heading))
-                yield return chunk with { PageNumber = null };
+                yield return chunk with { PageNumber = null, EndPageNumber = null };
         }
     }
 }

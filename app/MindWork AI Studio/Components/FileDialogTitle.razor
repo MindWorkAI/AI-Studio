@@ -1,0 +1,24 @@
+@inherits MSGComponentBase
+
+@* The name takes the free width, so the buttons stand right. *@
+<div class="file-dialog-title">
+    <MudText Typo="Typo.h6" Class="flex-grow-1">
+        @this.Title
+    </MudText>
+
+    @if (!string.IsNullOrWhiteSpace(this.Path))
+    {
+        <MudTooltip Text="@string.Format(T("Copy the path: {0}"), this.Path)" Placement="Placement.Bottom">
+            <MudIconButton Icon="@Icons.Material.Outlined.ContentCopy" Size="Size.Small" Class="icon-button-compact" OnClick="@this.CopyPath"/>
+        </MudTooltip>
+
+        @if (this.OffersFileManager)
+        {
+            @* On hover only: the focus comes back to the button from the file manager, and a tooltip
+               shown on focus would then stay until the user clicks somewhere else. *@
+            <MudTooltip Text="@T("Show this file in the file manager of your system")" Placement="Placement.Bottom" ShowOnFocus="@false">
+                <MudIconButton Icon="@Icons.Material.Outlined.FolderOpen" Size="Size.Small" Class="icon-button-compact" OnClick="@this.ShowInFileManager"/>
+            </MudTooltip>
+        }
+    }
+</div>

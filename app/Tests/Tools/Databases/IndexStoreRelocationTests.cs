@@ -18,7 +18,7 @@ public sealed class IndexStoreRelocationTests
         var token = CancellationToken.None;
         await store.Client.UpsertDataSourceAsync(sourceId, "LOCAL_DIRECTORY", "provider", "signature", "old-hash", 3, token);
         await store.Client.UpsertFileAsync(sourceId, new EmbeddingStateFile(parentId, oldPath, "notes.md", "notes.md", "md", "old-fingerprint", 100, now, now, now, 1) { TranscriptKey = "transcript" }, token);
-        await store.Client.UpsertChunksAsync(sourceId, [new EmbeddingStateChunk(chunkId, parentId, 2, 0, "report about relocation", now)], token);
+        await store.Client.UpsertChunksAsync(sourceId, [new EmbeddingStateChunk(chunkId, parentId, 2, 2, 0, "report about relocation", now)], token);
 
         // Repeating the metadata write after an interrupted relocation must keep the same chunks.
         await store.Client.RelocateFileAsync(sourceId, parentId, newPath, "renamed.md", "new-fingerprint", token);

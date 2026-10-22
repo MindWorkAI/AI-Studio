@@ -39,6 +39,27 @@ public sealed class IndexStoreFullTextSearchTests
         });
     }
 
+    [Test]
+    public async Task AChunkFoundKnowsThePagesItSpans()
+    {
+        await using var store = await TemporaryIndexStore.CreateAsync();
+        await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "LOCAL_DIRECTORY", "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "signature", string.Empty, 3, TOKEN);
+
+        const string PATH = "/tmp/test-data/report.pdf";
+        var parentFileId = IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, PATH);
+        var now = DateTimeOffset.UtcNow;
+        await store.Client.UpsertFileAsync(DATA_SOURCE_ID, new EmbeddingStateFile(parentFileId, PATH, "report.pdf", "report.pdf", "pdf", PATH, 64, now, now, now, 1), TOKEN);
+        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, PATH, 0), parentFileId, 3, 5, 0, "The report runs over three pages.", now)], TOKEN);
+
+        var found = (await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "report", 10, TOKEN)).Single();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(found.PageNumber, Is.EqualTo(3));
+            Assert.That(found.EndPageNumber, Is.EqualTo(5), "The passage the AI receives from this chunk names pages 3 to 5.");
+        });
+    }
+
     private static async Task<string> StoreFileAsync(TemporaryIndexStore store, string path, params string[] chunkTexts)
     {
         var parentFileId = IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, path);
@@ -47,7 +68,7 @@ public sealed class IndexStoreFullTextSearchTests
         await store.Client.UpsertFileAsync(DATA_SOURCE_ID, new EmbeddingStateFile(parentFileId, path, Path.GetFileName(path), Path.GetFileName(path), "md", path, 64, now, now, now, chunkTexts.Length), TOKEN);
         await store.Client.UpsertChunksAsync(
             DATA_SOURCE_ID,
-            chunkTexts.Select((text, index) => new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, path, index), parentFileId, null, index, text, now)).ToList(),
+            chunkTexts.Select((text, index) => new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, path, index), parentFileId, null, null, index, text, now)).ToList(),
             TOKEN);
 
         return parentFileId;

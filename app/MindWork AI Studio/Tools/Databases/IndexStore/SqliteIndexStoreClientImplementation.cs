@@ -372,6 +372,7 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                                   f.relative_path AS RelativePath,
                                   f.file_type AS FileType,
                                   c.page_number AS PageNumber,
+                                  c.end_page_number AS EndPageNumber,
                                   c.chunk_index AS ChunkIndex,
                                   c.chunk_text AS ChunkText,
                                   bm25(embedding_chunks_fts) AS Score,
@@ -731,6 +732,7 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         chunkEntity.ChunkId = chunk.ChunkId;
         chunkEntity.ParentFileId = chunk.ParentFileId;
         chunkEntity.PageNumber = chunk.PageNumber;
+        chunkEntity.EndPageNumber = chunk.EndPageNumber;
         chunkEntity.ChunkIndex = chunk.ChunkIndex;
         chunkEntity.ChunkText = chunk.ChunkText;
         chunkEntity.EmbeddedAtUtc = chunk.EmbeddedAtUtc;
@@ -746,6 +748,7 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         result.RelativePath,
         result.FileType,
         result.PageNumber,
+        result.EndPageNumber,
         result.ChunkIndex,
         result.ChunkText,
         result.Score,

@@ -13,6 +13,7 @@ public sealed record VectorSearchResult(
     string RelativePath,
     string FileType,
     int? PageNumber,
+    int? EndPageNumber,
     int ChunkIndex,
     string Text,
     string Fingerprint,

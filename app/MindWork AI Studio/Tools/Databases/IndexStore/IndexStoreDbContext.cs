@@ -103,6 +103,7 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.Property(chunk => chunk.ChunkId).HasColumnName("chunk_id").IsRequired();
             entity.Property(chunk => chunk.ParentFileId).HasColumnName("parent_file_id").IsRequired();
             entity.Property(chunk => chunk.PageNumber).HasColumnName("page_number");
+            entity.Property(chunk => chunk.EndPageNumber).HasColumnName("end_page_number");
             entity.Property(chunk => chunk.ChunkIndex).HasColumnName("chunk_index");
             entity.Property(chunk => chunk.ChunkText).HasColumnName("chunk_text").IsRequired();
             entity.Property(chunk => chunk.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();

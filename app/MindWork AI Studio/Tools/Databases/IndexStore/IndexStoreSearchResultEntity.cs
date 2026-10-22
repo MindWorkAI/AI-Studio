@@ -20,6 +20,8 @@ internal sealed class IndexStoreSearchResultEntity
 
     public int? PageNumber { get; set; }
 
+    public int? EndPageNumber { get; set; }
+
     public int ChunkIndex { get; set; }
 
     public string ChunkText { get; set; } = string.Empty;

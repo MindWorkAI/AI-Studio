@@ -10,8 +10,9 @@ namespace AIStudio.Tests.Tools;
 /// <remarks>
 /// The page a passage sits on travels from the runtime through the index into the retrieval
 /// context, but it used to stop there: the AI was given the file and nothing else, so an answer
-/// could name the document it rests on but never the place in it. A source which has no page, a
-/// slide for instance, must stay silent rather than claim one.
+/// could name the document it rests on but never the place in it. A passage over several pages
+/// names all of them. A source which has no page, a slide for instance, must stay silent rather
+/// than claim one.
 /// </remarks>
 [TestFixture]
 public sealed class RetrievalContextDescriptionTests
@@ -22,6 +23,16 @@ public sealed class RetrievalContextDescriptionTests
         var description = Describe(TextContext(pageNumber: 12));
 
         Assert.That(description, Does.Contain("Content location: page 12"), "The AI is told the page, so it can say where an answer comes from.");
+    }
+
+    [Test]
+    public void APassageOverSeveralPagesNamesThemAll()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(Describe(TextContext(pageNumber: 12, endPageNumber: 14)), Does.Contain("Content location: pages 12 to 14"), "The AI can say on which pages an answer stands.");
+            Assert.That(Describe(TextContext(pageNumber: 12, endPageNumber: 12)), Does.Contain("Content location: page 12").And.Not.Contain("pages"), "A passage on one page names one page.");
+        });
     }
 
     [Test]
@@ -138,7 +149,7 @@ public sealed class RetrievalContextDescriptionTests
         return builder.ToString();
     }
 
-    private static RetrievalTextContext TextContext(int? pageNumber, IReadOnlyList<string>? links = null) => new()
+    private static RetrievalTextContext TextContext(int? pageNumber, IReadOnlyList<string>? links = null, int? endPageNumber = null) => new()
     {
         DataSourceName = "Handbooks",
         Category = RetrievalContentCategory.TEXT,
@@ -147,5 +158,6 @@ public sealed class RetrievalContextDescriptionTests
         Links = links ?? [],
         MatchedText = "The mixing console is described here.",
         PageNumber = pageNumber,
+        EndPageNumber = endPageNumber,
     };
 }

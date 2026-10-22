@@ -3,7 +3,6 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Rust;
 
@@ -11,8 +10,6 @@ namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService indexSearch, ILogger<DataSourceLocalRetrievalService> logger)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceLocalRetrievalService).Namespace, nameof(DataSourceLocalRetrievalService));
-
     private enum RetrievalChannel
     {
         VECTOR,
@@ -37,6 +34,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         string RelativePath,
         string FileType,
         int? PageNumber,
+        int? EndPageNumber,
         int ChunkIndex,
         string Text,
         double Score,
@@ -137,6 +135,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
             result.RelativePath,
             result.FileType,
             result.PageNumber,
+            result.EndPageNumber,
             result.ChunkIndex,
             result.Text,
             result.Score,
@@ -154,6 +153,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
             result.RelativePath,
             result.FileType,
             result.PageNumber,
+            result.EndPageNumber,
             result.ChunkIndex,
             result.ChunkText,
             result.Score,
@@ -165,6 +165,14 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         var path = FirstNonEmpty(hit.AbsolutePath, hit.RelativePath);
         var referenceLink = string.IsNullOrWhiteSpace(path) ? string.Empty : BuildReferenceLink(path, hit);
 
+        //
+        // An end page only names a range when the passage goes on beyond the page it starts on. A
+        // chunk indexed before the end page was kept has none, and then names its start page only:
+        //
+        var pageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null;
+        var endPageNumber = pageNumber is not null && hit.EndPageNumber > pageNumber ? hit.EndPageNumber : null;
+        var chunkNumber = hit.ChunkIndex + 1;
+
         return new RetrievalTextContext
         {
             DataSourceName = sourceName,
@@ -174,24 +182,21 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
             Links = [],
             MatchedText = hit.Text,
             SurroundingContent = [],
-            ReferenceTitle = BuildReferenceTitle(hit, dataSource),
+            ReferenceTitle = BuildReferenceTitle(sourceName, pageNumber, endPageNumber, chunkNumber),
             ReferenceLink = referenceLink,
-            PageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null,
+            PageNumber = pageNumber,
+            EndPageNumber = endPageNumber,
+            ChunkNumber = chunkNumber,
         };
     }
 
-    private static string BuildReferenceTitle(LocalRetrievalHit hit, IInternalDataSource dataSource)
+    //
+    // Worded like the location of every passage, so that the title reads the same before and after
+    // the passages of an answer rename it, cf. SourcePassageExtensions.NamePassagesInTitles:
+    //
+    private static string BuildReferenceTitle(string sourceName, int? pageNumber, int? endPageNumber, int chunkNumber)
     {
-        var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
-        return BuildLocatedReferenceTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
-    }
-
-    private static string BuildLocatedReferenceTitle(string sourceName, int chunkIndex, int? pageNumber)
-    {
-        var location = pageNumber is > 0
-            ? string.Format(TB("Page {0}"), pageNumber)
-            : string.Format(TB("Chunk {0}"), chunkIndex + 1);
-
+        var location = new SourcePassage { PageNumber = pageNumber, EndPageNumber = endPageNumber, ChunkNumber = chunkNumber }.GetLocationLabel();
         return $"{sourceName} ({location})";
     }
 
@@ -224,8 +229,12 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         }
     }
 
-    private static RetrievalContentType GetRetrievalContentType(string fileType)
+    internal static RetrievalContentType GetRetrievalContentType(string fileType)
     {
+        // An audio or a video file is indexed by its transcript, so that is what its passages are:
+        if (FileTypes.IsAllowedExtension(fileType, FileTypes.AUDIO, FileTypes.VIDEO))
+            return RetrievalContentType.TEXT_TRANSCRIPT;
+
         if (FileTypes.IsAllowedExtension(fileType, FileTypes.TABULAR, FileTypes.SPREADSHEET))
             return RetrievalContentType.TEXT_SPREADSHEET;
 
@@ -266,7 +275,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 FirstNonEmpty(result.Result.AbsolutePath, result.Result.FilePath),
-                BuildLocatedReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.PageNumber, result.Result.EndPageNumber, result.Result.ChunkIndex + 1));
         }
     }
 
@@ -290,7 +299,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 result.Result.AbsolutePath,
-                BuildLocatedReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.PageNumber, result.Result.EndPageNumber, result.Result.ChunkIndex + 1));
         }
     }
 }

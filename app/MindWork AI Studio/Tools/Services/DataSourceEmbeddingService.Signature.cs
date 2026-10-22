@@ -25,6 +25,11 @@ public sealed partial class DataSourceEmbeddingService
     /// Version 2: the page of a chunk is taken from the runtime metadata instead of being read back
     /// out of the chunk text, which is what left Word and OpenDocument files, and passages
     /// continuing across a page break, without a page.
+    ///
+    /// Not raised for the page a chunk ends on, which chunks store since v26.10.1. It adds to what
+    /// a chunk says and corrects nothing: a chunk without it still names its start page, which is
+    /// right, and gains its end page once its file is indexed again. Rebuilding every index for it
+    /// would send every document to the embedding provider once more, for a page range.
     /// </remarks>
     private const string CHUNK_METADATA_VERSION = "2";
 

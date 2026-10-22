@@ -147,7 +147,8 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
             tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, textWithOverlap, token);
             if (tokenCount <= options.MaxChunkTokenLength)
             {
-                yield return new(textWithOverlap, currentPageNumber);
+                // The whole text is one chunk, so it ends where its last segment is:
+                yield return new(textWithOverlap, currentPageNumber, sourceSegments.LastOrDefault(segment => segment.PageNumber is not null)?.PageNumber ?? currentPageNumber);
                 yield break;
             }
         }
@@ -212,12 +213,12 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
                 overlapPrefix = string.Empty;
 
                 //
-                // The page of the first unit this chunk covers, not of the overlap prefix in front
-                // of it: the prefix repeats what the chunk before already said, while the page has
-                // to name where this chunk's own content begins.
+                // From the page of the first unit this chunk covers, not of the overlap prefix in
+                // front of it: the prefix repeats what the chunk before already said, while the page
+                // has to name where this chunk's own content begins. To the page of its last unit.
                 //
                 if (!string.IsNullOrWhiteSpace(chunk))
-                    yield return new(chunk, PageOfUnit(index));
+                    yield return new(chunk, PageOfUnit(index), PageOfUnit(index + unitCount - 1));
 
                 var nextIndex = index + unitCount;
                 if (nextIndex >= units.Count)
@@ -530,9 +531,10 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
                 throw new InvalidOperationException(string.Format(TB("The chunk size configured for the embedding provider '{0}' is too small: the smallest piece the text can be cut into still has {1} tokens, while the limit is {2}."), embeddingProvider.Name, smallestCandidateTokenCount, options.MaxChunkTokenLength));
             }
 
+            // A hard cut works inside a single piece of text, so the chunk stays on its page:
             var chunk = AddOverlapPrefix(text[startIndex..bestEndIndex].Trim(), overlapPrefix);
             if (!string.IsNullOrWhiteSpace(chunk))
-                yield return new(chunk, currentPageNumber);
+                yield return new(chunk, currentPageNumber, currentPageNumber);
 
             if (bestEndIndex >= text.Length)
                 yield break;

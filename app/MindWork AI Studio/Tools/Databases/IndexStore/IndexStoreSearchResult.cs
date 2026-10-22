@@ -10,6 +10,7 @@ public sealed record IndexStoreSearchResult(
     string RelativePath,
     string FileType,
     int? PageNumber,
+    int? EndPageNumber,
     int ChunkIndex,
     string ChunkText,
     double Score,
