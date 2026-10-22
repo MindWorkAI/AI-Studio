@@ -754,6 +754,18 @@ public sealed class SettingsManager
     }
 
     /// <summary>
+    /// Checks whether the organization prohibited the given provider.
+    /// </summary>
+    /// <remarks>
+    /// A prohibition is a rule of its own, next to confidence and data-source security: no confidence
+    /// level and no trust by configuration makes a prohibited provider usable. It names the operator of
+    /// an API, so a hub or a self-hosted server which serves the same models stays allowed.
+    /// </remarks>
+    /// <param name="provider">The provider to check, for LLMs, embeddings, and transcriptions alike.</param>
+    /// <returns>True, when the organization prohibited the provider. NONE is never prohibited.</returns>
+    public bool IsProviderProhibited(LLMProviders provider) => provider is not LLMProviders.NONE && this.ConfigurationData.App.ProhibitedProviders.Contains(provider);
+
+    /// <summary>
     /// Returns all providers that satisfy the minimum confidence level of the given component.
     /// </summary>
     /// <param name="component">The component for which the providers get filtered.</param>

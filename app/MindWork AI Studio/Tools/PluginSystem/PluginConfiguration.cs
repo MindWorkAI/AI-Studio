@@ -330,6 +330,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         
         // Config: hide some assistants?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HiddenAssistants, this.Id, settingsTable, dryRun);
+
+        // Config: prohibit some providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, this.Id, settingsTable, dryRun);
         
         // Config: global voice recording shortcut
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShortcutVoiceRecording, this.Id, settingsTable, dryRun);
