@@ -112,6 +112,22 @@ public static class ConfigurationSnippetImport
                 result = new(MakeLocal(profile), string.Empty, hints, []);
                 return true;
 
+            //
+            // Like the attachments of a chat template, the glossary file may be any file of this computer,
+            // and its terms go along with every translation. A file elsewhere, on a network share as well,
+            // is left for the user to choose anew:
+            //
+            case Glossary glossary:
+                if (IsLocalFile(glossary.FilePath))
+                {
+                    hints.Add(string.Format(TB("The glossary uses this file from this computer: {0}. Please check that you want to use it for your translations."), glossary.FilePath));
+                    result = new(MakeLocal(glossary), string.Empty, hints, []);
+                    return true;
+                }
+
+                result = new(MakeLocal(glossary) with { FilePath = string.Empty }, string.Empty, hints, [glossary.FilePath]);
+                return true;
+
             default:
                 throw new NotSupportedException($"Configuration objects of the type {type} cannot be imported yet.");
         }

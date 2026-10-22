@@ -2713,6 +2713,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T33
 -- Simple language, e.g., for children
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T530584375"] = "Simple language, e.g., for children"
 
+-- The glossary '{0}' was left out: its file does not exist or is not reachable right now.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1048090856"] = "The glossary '{0}' was left out: its file does not exist or is not reachable right now."
+
 -- Please select a target language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1173859091"] = "Please select a target language."
 
@@ -2725,11 +2728,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T13730
 -- Translate
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2028202101"] = "Translate"
 
+-- Open Glossary Options
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2098649229"] = "Open Glossary Options"
+
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T237828418"] = "Target language"
 
 -- Translate the following text to {0}:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2578812023"] = "Translate the following text to {0}:"
+
+-- Manage glossaries
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2714695686"] = "Manage glossaries"
+
+-- (Optional) Which glossaries should the translation follow?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T319204810"] = "(Optional) Which glossaries should the translation follow?"
 
 -- Translate text from one language to another.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3230457846"] = "Translate text from one language to another."
@@ -2740,11 +2752,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T35562
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3848935911"] = "Custom target language"
 
+-- The glossary '{0}' was left out: its file could not be read.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4076478565"] = "The glossary '{0}' was left out: its file could not be read."
+
+-- Use further glossary files for this translation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4231761325"] = "Use further glossary files for this translation"
+
 -- Live translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4279308324"] = "Live translation"
 
 -- Translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T613888204"] = "Translation"
+
+-- The glossary '{0}' was left out: its file holds no table with a header row of languages and at least one term.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T641515790"] = "The glossary '{0}' was left out: its file holds no table with a header row of languages and at least one term."
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T656744944"] = "Please provide a custom language."
@@ -6376,6 +6397,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2156367745
 -- {0} profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2342765572"] = "{0} profile"
 
+-- {0} glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2396010207"] = "{0} glossary"
+
 -- {0} introduction on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2426110502"] = "{0} introduction on the welcome page"
 
@@ -6384,6 +6408,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2438407498
 
 -- Yes, delete it
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2466176832"] = "Yes, delete it"
+
+-- {0} glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2509714007"] = "{0} glossaries"
 
 -- This also removes everything the configuration plugin had set up:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T264970454"] = "This also removes everything the configuration plugin had set up:"
@@ -7645,6 +7672,72 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T1173984541"] = "Embe
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T3448155331"] = "Close"
 
+-- AI Studio could not read the glossary file. Please choose a spreadsheet or a CSV file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1340190822"] = "AI Studio could not read the glossary file. Please choose a spreadsheet or a CSV file."
+
+-- Check the file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1711402114"] = "Check the file"
+
+-- Use this glossary in the translation assistant right away?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1811804066"] = "Use this glossary in the translation assistant right away?"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1847791252"] = "Update"
+
+-- AI Studio reads the file whenever you translate, so you can keep maintaining your glossary in the spreadsheet. Only the terms which occur in your text are sent to the AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2040686626"] = "AI Studio reads the file whenever you translate, so you can keep maintaining your glossary in the spreadsheet. Only the terms which occur in your text are sent to the AI."
+
+-- No, you select the glossary when you need it
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2240027358"] = "No, you select the glossary when you need it"
+
+-- The glossary file does not exist or is not reachable right now.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2562326632"] = "The glossary file does not exist or is not reachable right now."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2646845972"] = "Add"
+
+-- Glossary file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2703356833"] = "Glossary file"
+
+-- A glossary makes the translation assistant always translate certain terms the same way. Choose a spreadsheet or a CSV file: its first row names the languages, for example German and English, and every further row holds one term in all of these languages. The glossary therefore works in both directions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2908743925"] = "A glossary makes the translation assistant always translate certain terms the same way. Choose a spreadsheet or a CSV file: its first row names the languages, for example German and English, and every further row holds one term in all of these languages. The glossary therefore works in both directions."
+
+-- {0} entries in the languages: {1}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2981703653"] = "{0} entries in the languages: {1}"
+
+-- The glossary name must be unique; the chosen name is already in use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3164669679"] = "The glossary name must be unique; the chosen name is already in use."
+
+-- Glossary Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3167853804"] = "Glossary Name"
+
+-- Please enter a glossary name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3280779301"] = "Please enter a glossary name."
+
+-- The glossary file '{0}' is not on this computer. Please choose the glossary file before you add the glossary.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T341069209"] = "The glossary file '{0}' is not on this computer. Please choose the glossary file before you add the glossary."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3448155331"] = "Close"
+
+-- Select the glossary file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3719845528"] = "Select the glossary file"
+
+-- Yes, the glossary is preselected; you can still deselect it for a translation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3929823212"] = "Yes, the glossary is preselected; you can still deselect it for a translation"
+
+-- The glossary file holds no usable table. Its first row must name at least two languages, and at least one further row must hold a term.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T4131686974"] = "The glossary file holds no usable table. Its first row must name at least two languages, and at least one further row must hold a term."
+
+-- The glossary name must not exceed 40 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T4268692991"] = "The glossary name must not exceed 40 characters."
+
+-- Please choose the glossary file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T577637437"] = "Please choose the glossary file."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T900713019"] = "Cancel"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::INFORMATIONDIALOG::T3448155331"] = "Close"
 
@@ -7780,11 +7873,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2163853103"] = "You are
 -- {0} profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2342765572"] = "{0} profile"
 
+-- {0} glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2396010207"] = "{0} glossary"
+
 -- {0} introduction on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2426110502"] = "{0} introduction on the welcome page"
 
 -- Support contact
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2434966596"] = "Support contact"
+
+-- {0} glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2509714007"] = "{0} glossaries"
 
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T266367750"] = "Name"
@@ -8962,6 +9061,57 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T36293728
 -- ERI server options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T488190224"] = "ERI server options are preselected"
 
+-- A glossary makes the translation assistant always translate certain terms the same way, for example the names of your departments or the terms of your contracts. Each glossary is a spreadsheet or a CSV file, which you can keep maintaining as usual.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T1075339116"] = "A glossary makes the translation assistant always translate certain terms the same way, for example the names of your departments or the terms of your contracts. Each glossary is a spreadsheet or a CSV file, which you can keep maintaining as usual."
+
+-- Your Glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T1237246066"] = "Your Glossaries"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T1469573738"] = "Delete"
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T1582017048"] = "View"
+
+-- Delete Glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T1913598146"] = "Delete Glossary"
+
+-- Add Glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T2091244660"] = "Add Glossary"
+
+-- Are you sure you want to delete the glossary '{0}'? The glossary file stays where it is.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T2596793025"] = "Are you sure you want to delete the glossary '{0}'? The glossary file stays where it is."
+
+-- Edit Glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T3060106679"] = "Edit Glossary"
+
+-- Glossary Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T3167853804"] = "Glossary Name"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T3267849393"] = "Edit"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T3448155331"] = "Close"
+
+-- No glossaries configured yet.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T3452917058"] = "No glossaries configured yet."
+
+-- View Glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T3743333320"] = "View Glossary"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T3865031940"] = "Actions"
+
+-- This glossary is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T4236124819"] = "This glossary is managed by your organization."
+
+-- File
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T723007075"] = "File"
+
+-- Import Glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T99577620"] = "Import Glossary"
+
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1417990312"] = "Preselect the target language"
 
@@ -9508,11 +9658,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T198934
 -- Hide the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2090693677"] = "Hide the web content reader?"
 
+-- Open Glossary Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2098649229"] = "Open Glossary Options"
+
 -- Translator options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2234531191"] = "Translator options are preselected"
 
 -- Live translation is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2435743076"] = "Live translation is preselected"
+
+-- Manage glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2714695686"] = "Manage glossaries"
 
 -- Web content reader is hidden
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2799795311"] = "Web content reader is hidden"
@@ -13018,6 +13174,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T384
 -- The pasted configuration is not a valid configuration of the type '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T4231596123"] = "The pasted configuration is not a valid configuration of the type '{0}'."
 
+-- The glossary uses this file from this computer: {0}. Please check that you want to use it for your translations.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T57015778"] = "The glossary uses this file from this computer: {0}. Please check that you want to use it for your translations."
+
 -- The policy permits tools which are not available on this computer: {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T582643438"] = "The policy permits tools which are not available on this computer: {0}."
 
@@ -13239,6 +13398,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T1148682011
 
 -- The CONFIG table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3331620576"] = "The CONFIG table does not exist or is not a valid table."
+
+-- Glossary
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T1350120821"] = "Glossary"
 
 -- Document Analysis Policy
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T16338172"] = "Document Analysis Policy"

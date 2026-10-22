@@ -1,4 +1,5 @@
-﻿use std::cmp::min;
+﻿use std::borrow::Cow;
+use std::cmp::min;
 use std::collections::VecDeque;
 use std::convert::Infallible;
 use crate::pandoc::PandocProcessBuilder;
@@ -1361,7 +1362,7 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                 // holds nothing. The fences around each sheet are left out for the same reason.
                 //
                 number_of_characters += cells.iter().map(|cell| readable_character_count(cell)).sum::<usize>();
-                let content = cells.join(",");
+                let content = cells.iter().map(|cell| csv_escape_cell(cell)).collect::<Vec<_>>().join(",");
 
                 if tx.blocking_send(Ok(Chunk::new(
                     content,
@@ -1400,6 +1401,19 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
     });
 
     Ok(Box::pin(ReceiverStream::new(rx)))
+}
+
+/// Quotes a spreadsheet cell for a CSV row as RFC 4180 describes it.
+///
+/// Only a cell which holds a comma, a quote, or a line break gets quotes, and the quotes inside it
+/// are doubled. Without them, a cell such as "The parties agree, that" would fall apart into two
+/// cells, and nobody reading the row could tell where one cell ends and the next one begins.
+fn csv_escape_cell(cell: &str) -> Cow<'_, str> {
+    if cell.contains([',', '"', '\n', '\r']) {
+        Cow::Owned(format!("\"{}\"", cell.replace('"', "\"\"")))
+    } else {
+        Cow::Borrowed(cell)
+    }
 }
 
 async fn convert_with_pandoc(
@@ -1931,6 +1945,17 @@ mod tests {
         });
 
         assert!(row.carries_filterable_text());
+    }
+
+    /// A cell must stay one cell in its CSV row, whatever characters it holds.
+    #[test]
+    fn spreadsheet_cells_are_quoted_only_when_needed() {
+        assert_eq!(csv_escape_cell("working hours"), "working hours");
+        assert_eq!(csv_escape_cell(""), "");
+        assert_eq!(csv_escape_cell("Die Parteien sind sich einig, dass"), "\"Die Parteien sind sich einig, dass\"");
+        assert_eq!(csv_escape_cell("the \"center\""), "\"the \"\"center\"\"\"");
+        assert_eq!(csv_escape_cell("first line\nsecond line"), "\"first line\nsecond line\"");
+        assert_eq!(csv_escape_cell("first line\r\nsecond line"), "\"first line\r\nsecond line\"");
     }
 
     /// A slide's Markdown is text even though the same metadata variant also carries images.

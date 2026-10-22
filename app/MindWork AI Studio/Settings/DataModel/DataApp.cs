@@ -255,6 +255,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToImportDocumentAnalysisPolicy { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportDocumentAnalysisPolicy, true);
 
     /// <summary>
+    /// Should the user be allowed to import glossaries?
+    /// </summary>
+    public bool AllowUserToImportGlossary { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportGlossary, true);
+
+    /// <summary>
     /// May the user import a configuration of this type, which somebody else exported?
     /// </summary>
     /// <param name="type">The type of configuration object to import.</param>
@@ -268,6 +273,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
         PluginConfigurationObjectType.CHAT_TEMPLATE => this.AllowUserToImportChatTemplate,
         PluginConfigurationObjectType.DATA_SOURCE => this.AllowUserToImportERIDataSource,
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => this.AllowUserToImportDocumentAnalysisPolicy,
+        PluginConfigurationObjectType.GLOSSARY => this.AllowUserToImportGlossary,
 
         _ => false,
     };
