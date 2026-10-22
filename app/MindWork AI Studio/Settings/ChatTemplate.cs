@@ -55,9 +55,10 @@ public record ChatTemplate(
     /// The profile this template preselects for a chat started with it.
     /// </summary>
     /// <remarks>
-    /// Null means the template says nothing about profiles, so the chat starts with the profile
-    /// chosen as its default in the app settings. The ID of <see cref="Profile.NO_PROFILE"/> is the
-    /// opposite statement: such chats start without a profile, whatever that default says.<br/><br/>
+    /// Null means the template says nothing about profiles, so the chat keeps the profile it would
+    /// start with anyway: the default of the chat settings, or the one the user picked. The ID of
+    /// Profile.NO_PROFILE is a statement of its own: such chats start without a profile, whatever
+    /// that default says.<br/><br/>
     /// A preselection, not a limit: the user picks another profile in the chat as usual. It means
     /// nothing for a template which does not allow profiles, and a profile which is gone leaves the
     /// chat default in place.

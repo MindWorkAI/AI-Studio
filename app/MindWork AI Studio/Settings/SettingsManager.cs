@@ -884,7 +884,7 @@ public sealed class SettingsManager
     /// Null whenever the template has nothing to say which could be used: it names no profile, it
     /// does not allow profiles, or the profile it names is gone. The chat then keeps the profile it
     /// would have without the template. Starting without a profile is an answer of its own, and it
-    /// comes back as <see cref="Profile.NO_PROFILE"/>.
+    /// comes back as Profile.NO_PROFILE.
     /// </remarks>
     /// <param name="chatTemplate">The chat template of the chat about to start.</param>
     /// <returns>The profile to start with, or null to keep the usual one.</returns>
@@ -924,7 +924,7 @@ public sealed class SettingsManager
     /// </summary>
     /// <remarks>
     /// The template is no way around the confidence levels: a provider which may not be used for
-    /// chats comes back as <see cref="Provider.NONE"/>, just like one which is gone or one the
+    /// chats comes back as Provider.NONE, just like one which is gone or one the
     /// template does not name at all. The chat then keeps the provider it would have without the
     /// template.
     /// </remarks>
@@ -956,7 +956,7 @@ public sealed class SettingsManager
     /// Returns the profile a chat begins with when it starts with the given chat template now.
     /// </summary>
     /// <remarks>
-    /// A template which names a profile decides, see <see cref="GetChatTemplateStartProfile"/>. One
+    /// A template which names a profile decides, see GetChatTemplateStartProfile. One
     /// which says nothing keeps the current profile, with one exception: when that profile is the one
     /// the previous template preselected, the chat starts with the default profile of the chat
     /// settings instead. Keeping it would carry the choice of another template over into this chat.
@@ -980,7 +980,7 @@ public sealed class SettingsManager
     /// Returns the provider a chat begins with when it starts with the given chat template now.
     /// </summary>
     /// <remarks>
-    /// The same as for the profile, see <see cref="ChooseChatTemplateProfile"/>: a template which
+    /// The same as for the profile, see ChooseChatTemplateProfile: a template which
     /// names a usable provider decides, and the provider of the previous template is not carried
     /// over. In its place comes the default provider of the chat settings. Without such a default,
     /// the current provider stays, so that the chat does not lose its provider altogether.

@@ -799,7 +799,7 @@ When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/READ
 
 ## Chat templates with a provider, a profile, and a workspace
 
-A chat template may also decide the provider, and with it the model, and the profile a chat started with it begins with, and the workspace that keeps such chats. Use case: a template for working with mails preselects the mailbox as its data source, the provider whose confidence level the mailbox requires, and a profile that suits mail work, so that users no longer switch both by hand for every chat.
+A chat template may also decide the provider, and with it the model, and the profile a chat started with it begins with, and the workspace that keeps such chats. Use case: a template for working with mails preselects the mailbox as its data source, the provider whose confidence level the mailbox requires, a profile that suits mail work, and a workspace for these chats, so that users no longer set all of this up by hand for every chat.
 
 | What the template says | What a chat started with it does |
 |---|---|
@@ -811,7 +811,7 @@ A chat template may also decide the provider, and with it the model, and the pro
 | no `WorkspaceName` at all | goes where it would go anyway |
 | `WorkspaceName` present | goes into that workspace, which is created when it does not exist yet, wherever the chat would otherwise be a disappearing chat |
 
-Both are a preselection, not a lock: users change them in the chat as usual. A provider that does not exist or is below the confidence level of chats is ignored, and the chat starts with the provider it would start with anyway. A profile that does not exist is ignored as well, and the chat starts with the default profile of the user's chat settings, which may be none. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
+All three are a preselection, not a lock: users change the provider and the profile in the chat as usual, and move the chat to another workspace. A provider that does not exist or is below the confidence level of chats is ignored, and the chat starts with the provider it would start with anyway. A profile that does not exist is ignored as well, and the chat starts with the default profile of the user's chat settings, which may be none. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
 
 What one template preselects does not carry over to the next one. When users switch from a template with a provider or a profile to one without, the chat starts with the default provider and the default profile of their chat settings, unless they had picked another one by hand in the meantime.
 

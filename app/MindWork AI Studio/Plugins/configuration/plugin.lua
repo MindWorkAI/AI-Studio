@@ -1392,10 +1392,10 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --
 --     -- Optional: the workspace, by its name, that keeps the chats started with this template.
 --     -- The workspace is created with the first message of such a chat, when it does not exist
---     -- yet. It only applies where a chat would
---     -- otherwise be a disappearing chat: a chat users start in a workspace on purpose, for
---     -- example, from the workspace list, stays there, and so does every chat while workspaces
---     -- are switched off. An assistant chat launcher which names a workspace keeps its own.
+--     -- yet. It only applies where a chat would otherwise be a disappearing chat: a chat users
+--     -- start in a workspace on purpose, for example, from the workspace list, stays there, and
+--     -- so does every chat while workspaces are switched off. An assistant chat launcher which
+--     -- names a workspace keeps its own.
 --     ["WorkspaceName"] = "Mails",
 -- }
 
