@@ -4,6 +4,8 @@ using System.Text.Json.Nodes;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.Web;
@@ -155,6 +157,28 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/newsletter/2026-10")), Is.True, "The user may ask in the next message to open the link.");
     }
 
+    [Test]
+    public async Task ThePassagesOfAResultReachTheAnswer()
+    {
+        var passage = new SourcePassage { SourceUrl = "file:///C:/docs/handbook.pdf#page=11", DataSourceName = "handbook.pdf", Text = "A passage from the handbook.", PageNumber = 11 };
+        var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult
+        {
+            TextContent = passage.Text,
+            Sources = [new Source("handbook.pdf (Page 11)", passage.SourceUrl, SourceOrigin.RAG)],
+            Passages = [passage],
+        });
+        var answer = new ContentText();
+
+        await foreach (var chunk in new ToolCallingLoop(NullLogger<ToolCallingLoop>.Instance).RunAsync(new OneToolCallAdapter(), this.LoopContext(tool, new ChatThread())))
+            answer.ApplyStreamChunk(chunk, "test-model", blockCount: 2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(answer.SourcePassages, Is.EqualTo(new[] { passage }), "The result of a tool call is not stored with the chat, but what the model received of the sources is.");
+            Assert.That(answer.Sources.Select(source => source.URL), Is.EqualTo(new[] { passage.SourceUrl }));
+        });
+    }
+
     [TestCase("web_search", ExpectedResult = true)]
     [TestCase("read-web-page_2", ExpectedResult = true)]
     [TestCase(null, ExpectedResult = false)]
@@ -182,6 +206,7 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         Assert.That(outcome.RequiredDataSecurity, Is.EqualTo(DataSourceSecurity.NOT_SPECIFIED), REASON);
         Assert.That(outcome.RequiredOutboundDataRestriction, Is.EqualTo(OutboundDataRequirement.NONE), REASON);
         Assert.That(outcome.Sources, Is.Empty, REASON);
+        Assert.That(outcome.Passages, Is.Empty, REASON);
     }
 
     private ToolCallingLoopContext LoopContext(TestTool tool, ChatThread thread) => new()

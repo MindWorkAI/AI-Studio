@@ -319,14 +319,15 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
         var textContent = new StringBuilder();
         var sources = new List<Source>();
+        var passages = new List<SourcePassage>();
         var resultCounts = new int[pages.Length];
         var leftOutCounts = new int[pages.Length];
         var passageCount = 0;
 
         //
         // Every passage goes through the same filter for prompt injections and into the same shape
-        // as with the classic RAG process. The user hears about what was filtered once for the
-        // whole search, not once per passage.
+        // as with the classic RAG process. All of them are filtered in one request, so the user
+        // hears about what was filtered once for the whole search, not once per passage.
         //
         // The data sources take turns: first the best passage of each, then the second best of
         // each, and so on. Otherwise, the data source offered first would take the budget, and the
@@ -334,6 +335,13 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         //
         await using (var reportingScope = guardService.BeginAction())
         {
+            var preparedContexts = await pages.SelectMany(page => page.Contexts).ToList().PrepareForModelAsync(guardService, reportingScope, token);
+
+            // Where the prepared contexts of each data source begin, since they are prepared all together:
+            var firstOfPage = new int[pages.Length];
+            for (var index = 1; index < pages.Length; index++)
+                firstOfPage[index] = firstOfPage[index - 1] + pages[index - 1].Contexts.Count;
+
             var mostPassages = pages.Select(page => page.Contexts.Count).DefaultIfEmpty(0).Max();
             for (var rank = 0; rank < mostPassages; rank++)
             {
@@ -342,11 +350,11 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                     if (rank >= pages[index].Contexts.Count)
                         continue;
 
-                    var retrievalContext = pages[index].Contexts[rank];
-                    var passage = await retrievalContext.AsMarkdown(index: passageCount + 1, reportingScope: reportingScope, token: token);
+                    var preparedContext = preparedContexts[firstOfPage[index] + rank];
+                    var markdown = preparedContext.ToMarkdown(passageCount + 1);
 
                     // A passage too long for what is left makes room for shorter ones after it:
-                    if (textContent.Length + passage.Length > MAX_RESULT_CHARACTERS)
+                    if (textContent.Length + markdown.Length > MAX_RESULT_CHARACTERS)
                     {
                         leftOutCounts[index]++;
                         continue;
@@ -354,8 +362,12 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
                     passageCount++;
                     resultCounts[index]++;
-                    textContent.Append(passage);
-                    sources.AddRange(retrievalContext.ToSources());
+                    textContent.Append(markdown);
+
+                    // The user is shown what the model received, so only the passages which fit:
+                    sources.AddRange(preparedContext.Sources);
+                    if (preparedContext.Passage is not null)
+                        passages.Add(preparedContext.Passage);
                 }
             }
         }
@@ -382,6 +394,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                 ["text_content"] = textContent.ToString(),
             },
             Sources = sources,
+            Passages = passages,
             RequiredProviderConfidence = requirements.Confidence,
             RequiredDataSecurity = requirements.Security,
         };

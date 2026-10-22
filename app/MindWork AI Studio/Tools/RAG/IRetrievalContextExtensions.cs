@@ -57,25 +57,6 @@ public static class IRetrievalContextExtensions
     }
 
     /// <summary>
-    /// Writes what the AI is told about one retrieval context, filtered for prompt injections.
-    /// </summary>
-    /// <param name="retrievalContext">The context to describe.</param>
-    /// <param name="sb">The builder to write into, or null for a new one.</param>
-    /// <param name="index">The number of the context among all of them, or -1 when it stands alone.</param>
-    /// <param name="numTotalRetrievalContexts">How many contexts there are, or -1 when that is unknown.</param>
-    /// <param name="reportingScope">The action the context is retrieved for, or null when it is retrieved for none.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>Everything written into the builder so far.</returns>
-    public static async Task<string> AsMarkdown(this IRetrievalContext retrievalContext, StringBuilder? sb = null, int index = -1, int numTotalRetrievalContexts = -1, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
-    {
-        sb ??= new StringBuilder();
-        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        var preparedContexts = await PrepareForModelAsync([retrievalContext], guardService, reportingScope, token);
-        sb.Append(preparedContexts[0].ToMarkdown(index, numTotalRetrievalContexts));
-        return sb.ToString();
-    }
-
-    /// <summary>
     /// Prepares retrieval contexts for the AI: filters them for prompt injections, writes out what
     /// the AI is told about each, and keeps what the user is shown of it.
     /// </summary>

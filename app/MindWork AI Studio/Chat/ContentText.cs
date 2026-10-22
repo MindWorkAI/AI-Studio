@@ -167,6 +167,31 @@ public sealed class ContentText : IContent
         };
     }
 
+    /// <summary>
+    /// Adds what one chunk of the stream brings to this answer: its text, its sources together with
+    /// their passages, and what the provider says the request cost.
+    /// </summary>
+    /// <remarks>
+    /// The chat and the job service both write answers from a stream, and they used to do so step
+    /// by step each. A step one of them missed, such as the passages, would have been missing from
+    /// every answer written that way.
+    /// </remarks>
+    /// <param name="chunk">The chunk of the stream.</param>
+    /// <param name="modelId">The model the request went to.</param>
+    /// <param name="blockCount">How many blocks the conversation had when the request went out, this answer included.</param>
+    public void ApplyStreamChunk(ContentStreamChunk chunk, string modelId, int blockCount)
+    {
+        // The first chunk ends the waiting animation:
+        this.InitialRemoteWait = false;
+        this.IsStreaming = true;
+
+        this.Text += chunk;
+        if (chunk.Sources.Count > 0 || chunk.Passages.Count > 0)
+            this.AddSources(chunk.Sources, chunk.Passages);
+
+        this.RecordReportedUsage(chunk.Usage, modelId, blockCount);
+    }
+
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
@@ -249,18 +274,8 @@ public sealed class ContentText : IContent
                         if (token.IsCancellationRequested)
                             break;
 
-                        // Stop the waiting animation:
-                        this.InitialRemoteWait = false;
-                        this.IsStreaming = true;
-
-                        // Add the response to the text:
-                        this.Text += contentStreamChunk;
-
-                        // Merge the sources:
-                        this.Sources.MergeSources(contentStreamChunk.Sources);
-
-                        // Keep what the provider says the request cost:
-                        this.RecordReportedUsage(contentStreamChunk.Usage, chatModel.Id, blocksSent);
+                        // Add the response, its sources, and what it cost:
+                        this.ApplyStreamChunk(contentStreamChunk, chatModel.Id, blocksSent);
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:
