@@ -25,16 +25,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// <param name="Pictures">The pictures for the picture slots, as 1-based numbers of the attached pictures.</param>
 /// <param name="Table">The content of the table slot, if any.</param>
 /// <param name="TemplateSlide">The number of the template slide the slide keeps or edits; null for a new slide.</param>
-internal sealed record SlideSpec(
-    string Layout,
-    bool StartsChapter,
-    string Title,
-    string Subtitle,
-    IReadOnlyList<SlideTextBlock> Texts,
-    IReadOnlyList<string> Labels,
-    IReadOnlyList<int> Pictures,
-    SlideTableSpec? Table,
-    int? TemplateSlide = null)
+internal sealed record SlideSpec(string Layout, bool StartsChapter, string Title, string Subtitle, IReadOnlyList<SlideTextBlock> Texts, IReadOnlyList<string> Labels, IReadOnlyList<int> Pictures, SlideTableSpec? Table, int? TemplateSlide = null)
 {
     /// <summary>
     /// What the slide removes from the template slide it edits, by the names the model read: slots,

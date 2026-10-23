@@ -538,7 +538,7 @@ public sealed class PresentationWriterTests
     }
 
     /// <summary>
-    /// Slides of <see cref="Layouts"/>: a title slide, three content slides of which one is hidden
+    /// Slides of the Layouts: a title slide, three content slides of which one is hidden
     /// and one an imprint, and a hint nobody keeps.
     /// </summary>
     private static readonly TestTemplateOptions TEMPLATE_WITH_SLIDES = new(Slides:
@@ -551,7 +551,7 @@ public sealed class PresentationWriterTests
     ]);
 
     /// <summary>
-    /// Slides of <see cref="Layouts"/> on the table layout whose tables are no placeholders: one
+    /// Slides of the Layouts on the table layout whose tables are no placeholders: one
     /// pasted onto the slide, with a note in front of it, and one standing in for an empty placeholder.
     /// </summary>
     private static readonly TestTemplateOptions TEMPLATE_WITH_FREE_TABLES = new(Slides:
@@ -571,7 +571,7 @@ public sealed class PresentationWriterTests
     ]);
 
     /// <summary>
-    /// A slide of <see cref="Layouts"/> on the content layout with a sample label, and with
+    /// A slide of the Layouts on the content layout with a sample label, and with
     /// elements of its own: a picture (element 1), a text box naming its source (element 2), a
     /// colored rectangle (element 3), and a chart (element 4).
     /// </summary>
@@ -623,7 +623,7 @@ public sealed class PresentationWriterTests
         new("Table", TestPlaceholder.Title(), TestPlaceholder.Table(11, TestTemplate.MASTER_BODY_BOUNDS)),
     ];
 
-    private static async Task<(MemoryStream File, PresentationWriteResult Result)> WriteAsync(SlideDeckSpec deck, PresentationWriteOptions options, TestTemplateOptions? templateOptions = null, IPictureSource? pictures = null)
+    private static async Task<WrittenPresentation> WriteAsync(SlideDeckSpec deck, PresentationWriteOptions options, TestTemplateOptions? templateOptions = null, IPictureSource? pictures = null)
     {
         using var templateFile = TestTemplate.Create(templateOptions ?? new TestTemplateOptions(), Layouts());
         return await WriteFromAsync(templateFile, deck, options, pictures);
@@ -632,7 +632,7 @@ public sealed class PresentationWriterTests
     /// <summary>
     /// Writes a presentation from a template file of the test's own, e.g., from a presentation written before.
     /// </summary>
-    private static async Task<(MemoryStream File, PresentationWriteResult Result)> WriteFromAsync(Stream templateFile, SlideDeckSpec deck, PresentationWriteOptions options, IPictureSource? pictures = null)
+    private static async Task<WrittenPresentation> WriteFromAsync(Stream templateFile, SlideDeckSpec deck, PresentationWriteOptions options, IPictureSource? pictures = null)
     {
         templateFile.Position = 0;
         var template = PresentationTemplate.Read(templateFile);
@@ -644,7 +644,7 @@ public sealed class PresentationWriterTests
         output.Position = 0;
         var result = await PresentationWriter.WriteAsync(output, template, deck, options, pictures ?? new FakePictureSource(), CancellationToken.None);
         output.Position = 0;
-        return (output, result);
+        return new WrittenPresentation(output, result);
     }
 
     private static List<string> ValidationErrorsOf(PresentationDocument document) => new OpenXmlValidator(FileFormatVersions.Office2019)
@@ -695,4 +695,11 @@ public sealed class PresentationWriterTests
     {
         public Task<SlidePicture?> LoadAsync(int number, CancellationToken token) => Task.FromResult(number >= 1 && number <= pictures.Length ? pictures[number - 1] : null);
     }
+
+    /// <summary>
+    /// A presentation a test wrote, and what the writer reported beyond writing it.
+    /// </summary>
+    /// <param name="File">The presentation, positioned at its start.</param>
+    /// <param name="Result">What happened beyond writing.</param>
+    private sealed record WrittenPresentation(MemoryStream File, PresentationWriteResult Result);
 }

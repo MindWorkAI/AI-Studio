@@ -524,7 +524,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeckAnswer = string.Empty;
         var catalog = this.Catalog;
         var plannedTemplatePath = this.template is null ? string.Empty : this.templatePath;
-        var templateSlideUses = this.ChosenTemplateSlideUses;
+        var chosenTemplateSlideUses = this.ChosenTemplateSlideUses;
         var imageAttachments = this.PicturesOfRequest();
 
         this.CreateChatThread();
@@ -542,7 +542,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         {
             documentContent = await this.PromptLoadDocumentsContent(promptInjectionScope);
             layouts = await PromptLayoutsAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath);
-            templateSlides = await PromptTemplateSlidesAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath, templateSlideUses);
+            templateSlides = await PromptTemplateSlidesAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath, chosenTemplateSlideUses);
         }
 
         var time = this.AddUserRequest(
@@ -572,7 +572,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if (string.IsNullOrWhiteSpace(answer))
             return;
 
-        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, templateSlideUses);
+        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, chosenTemplateSlideUses);
         if (deck is null || issues.Count > 0)
         {
             //
@@ -582,7 +582,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             //
             var repairTime = this.AddUserRequest(RepairPromptOf(issues), hideContentFromUser: true);
             var repairedAnswer = await this.AddAIResponseAsync(repairTime, hideContentFromUser: true);
-            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? (null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, templateSlideUses);
+            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? new CheckedAnswer(null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, chosenTemplateSlideUses);
             if (repairedDeck is not null)
             {
                 answer = repairedAnswer;
@@ -596,7 +596,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         // choose, cannot be shown, let alone written. Any other issue, such as a text which runs
         // long, leaves slides worth looking at:
         //
-        if (deck is null || deck.Slides.Count == 0 || deck.Slides.Any(slide => !SlideDeckSpecValidator.CanWrite(slide, catalog, templateSlideUses)))
+        if (deck is null || deck.Slides.Count == 0 || deck.Slides.Any(slide => !SlideDeckSpecValidator.CanWrite(slide, catalog, chosenTemplateSlideUses)))
         {
             this.Logger.LogWarning("The slides the model planned cannot be used: {Issues}", string.Join(" | ", issues));
             await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model.")));

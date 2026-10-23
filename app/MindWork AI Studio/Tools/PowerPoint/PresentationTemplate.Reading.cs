@@ -266,7 +266,7 @@ internal sealed partial class PresentationTemplate
     /// <summary>
     /// Where a reader takes something in: by its row first, then from left to right.
     /// </summary>
-    private static (int Row, long X) ReadingKeyOf(SlotBounds bounds, long slideHeight) => ((int)Math.Round(bounds.Y * (double)READING_ROWS / slideHeight), bounds.X);
+    private static ReadingPosition ReadingKeyOf(SlotBounds bounds, long slideHeight) => new((int)Math.Round(bounds.Y * (double)READING_ROWS / slideHeight), bounds.X);
 
     private static SlotBounds? BoundsOf(A.Offset? offset, A.Extents? extents)
     {
@@ -297,4 +297,14 @@ internal sealed partial class PresentationTemplate
     private sealed record MasterStyles(IReadOnlyDictionary<string, PlaceholderInfo> Placeholders, int TitleFontSize, int BodyFontSize, int DefaultFontSize);
 
     private readonly record struct TextInsets(long Left, long Top, long Right, long Bottom);
+
+    /// <summary>
+    /// Where a reader comes across something on a slide, which orders the slots.
+    /// </summary>
+    /// <param name="Row">The row, of the rows a slide is divided into for reading.</param>
+    /// <param name="X">The left edge, in EMU.</param>
+    private readonly record struct ReadingPosition(int Row, long X) : IComparable<ReadingPosition>
+    {
+        public int CompareTo(ReadingPosition other) => this.Row != other.Row ? this.Row.CompareTo(other.Row) : this.X.CompareTo(other.X);
+    }
 }

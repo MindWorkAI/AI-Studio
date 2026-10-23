@@ -20,7 +20,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// variant and the footer of the presentation, so that they look like the slides around them. A
 /// slide the model edited takes its new content into its slots, and keeps the rest.
 ///
-/// The deck has to pass <see cref="SlideDeckSpecValidator"/> first; what fits the template is not
+/// The deck has to pass the SlideDeckSpecValidator first; what fits the template is not
 /// checked again here.
 /// </remarks>
 internal static partial class PresentationWriter
@@ -131,7 +131,7 @@ internal static partial class PresentationWriter
         ? layoutPart
         : throw new InvalidOperationException($"The template has no layout at '{layout.PartUri}'. The template was read from another file than the one being written.");
 
-    private static async Task<(Dictionary<int, SlidePicture> Loaded, List<int> Skipped)> LoadPicturesAsync(SlideDeckSpec deck, IPictureSource pictures, CancellationToken token)
+    private static async Task<LoadedPictures> LoadPicturesAsync(SlideDeckSpec deck, IPictureSource pictures, CancellationToken token)
     {
         var loaded = new Dictionary<int, SlidePicture>();
         var skipped = new List<int>();
@@ -144,7 +144,7 @@ internal static partial class PresentationWriter
                 skipped.Add(number);
         }
 
-        return (loaded, skipped);
+        return new LoadedPictures(loaded, skipped);
     }
 
     /// <summary>
@@ -208,12 +208,12 @@ internal static partial class PresentationWriter
     /// <param name="TableStyleId">The default table style of the template, if it states one.</param>
     /// <param name="FooterText">The footer text; empty for no footer.</param>
     /// <param name="SlideArea">The area of a slide, in square EMU.</param>
-    private sealed record SlideContent(
-        SlideSpec Slide,
-        TemplateLayout Layout,
-        P.SlideLayout? LayoutElement,
-        IReadOnlyDictionary<int, SlidePicture> Pictures,
-        string? TableStyleId,
-        string FooterText,
-        double SlideArea);
+    private sealed record SlideContent(SlideSpec Slide, TemplateLayout Layout, P.SlideLayout? LayoutElement, IReadOnlyDictionary<int, SlidePicture> Pictures, string? TableStyleId, string FooterText, double SlideArea);
+
+    /// <summary>
+    /// The pictures a slide deck refers to, as far as they could be loaded.
+    /// </summary>
+    /// <param name="Pictures">The loaded pictures, by their numbers.</param>
+    /// <param name="Skipped">The numbers of the pictures which cannot be read, or which come in a format PowerPoint does not show.</param>
+    private sealed record LoadedPictures(IReadOnlyDictionary<int, SlidePicture> Pictures, IReadOnlyList<int> Skipped);
 }

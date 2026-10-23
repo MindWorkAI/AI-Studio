@@ -7,7 +7,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// The model writes JSON, which is read leniently into this shape: whatever the model may write in
 /// several ways, such as a number in a table cell, is accepted, and every missing value becomes
 /// empty. Whether the slides fit the template is a separate question, which
-/// <see cref="SlideDeckSpecValidator"/> answers.
+/// SlideDeckSpecValidator answers.
 /// </remarks>
 /// <param name="Title">The title of the presentation.</param>
 /// <param name="Slides">The slides, in order.</param>

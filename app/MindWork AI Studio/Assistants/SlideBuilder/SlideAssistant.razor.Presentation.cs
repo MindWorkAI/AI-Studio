@@ -390,13 +390,13 @@ public partial class SlideAssistant
     /// <summary>
     /// Reads the slide deck out of an answer and checks it against the layouts it was planned for.
     /// </summary>
-    /// <returns>The deck, or null when the answer cannot be read; and the issues, written for the model.</returns>
-    private (SlideDeckSpec? Deck, IReadOnlyList<string> Issues) CheckAnswer(string answer, PresentationTemplate catalog, int pictureCount, IReadOnlyList<TemplateSlideUse> templateSlideUses)
+    /// <returns>The deck, or none when the answer cannot be read, with the issues, written for the model.</returns>
+    private CheckedAnswer CheckAnswer(string answer, PresentationTemplate catalog, int pictureCount, IReadOnlyList<TemplateSlideUse> chosenTemplateSlideUses)
     {
         if (!SlideDeckSpec.TryParse(answer, out var deck, out var issue))
-            return (null, [issue]);
+            return new CheckedAnswer(null, [issue]);
 
-        return (deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, templateSlideUses));
+        return new CheckedAnswer(deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, chosenTemplateSlideUses));
     }
 
     private static string RepairPromptOf(IReadOnlyList<string> issues)
@@ -514,4 +514,11 @@ public partial class SlideAssistant
             this.Logger.LogWarning(e, "The temporary file '{TemporaryPath}' cannot be deleted.", temporaryPath);
         }
     }
+
+    /// <summary>
+    /// A slide deck read out of an answer of the model, with what is wrong with it.
+    /// </summary>
+    /// <param name="Deck">The deck; null when the answer cannot be read.</param>
+    /// <param name="Issues">The issues, written for the model; empty when the deck fits.</param>
+    private sealed record CheckedAnswer(SlideDeckSpec? Deck, IReadOnlyList<string> Issues);
 }

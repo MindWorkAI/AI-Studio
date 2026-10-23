@@ -89,7 +89,7 @@ internal static partial class PresentationWriter
     ///
     /// What the slide removes goes first, so that the slots are filled on what is left.
     /// </remarks>
-    /// <param name="slidePart">The slide part of the template slide, already on the layout of <see cref="SlideContent.Layout"/>.</param>
+    /// <param name="slidePart">The slide part of the template slide, already on the layout of SlideContent.Layout.</param>
     /// <param name="templateSlide">The template slide, as read from the template, which knows where it moved its slots, which copies of slots and which elements it carries.</param>
     /// <param name="content">What goes on the slide.</param>
     private static void EditTemplateSlide(SlidePart slidePart, TemplateSlide templateSlide, SlideContent content)

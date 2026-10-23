@@ -37,7 +37,7 @@ public sealed class ManagedSettingsCoverageTests
     /// <remarks>
     /// Free text accepts any value, and the settings which hold the ID of a provider or a profile
     /// accept nothing but a GUID, so a GUID suits almost all of them. The others are listed in
-    /// <see cref="SAMPLE_TEXTS_BY_SETTING"/>.
+    /// SAMPLE_TEXTS_BY_SETTING.
     /// </remarks>
     private const string SAMPLE_TEXT = "e2f4bebe-1a3a-4f98-bbb9-e40e0b9daa14";
 

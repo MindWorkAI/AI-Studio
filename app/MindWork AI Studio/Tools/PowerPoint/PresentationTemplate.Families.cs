@@ -22,7 +22,7 @@ internal sealed partial class PresentationTemplate
     /// which finds more variants. Within a single template, a word in front and a word at the end
     /// never mean the same thing.
     /// </remarks>
-    private static (List<LayoutFamily> Families, List<string> VariantLabels) GroupIntoFamilies(IReadOnlyList<TemplateLayout> layouts, long slideWidth, long slideHeight)
+    private static GroupedLayouts GroupIntoFamilies(IReadOnlyList<TemplateLayout> layouts, long slideWidth, long slideHeight)
     {
         var usableLayouts = layouts.Where(layout => layout.Slots.Any(slot => slot.Role.CarriesContent())).ToList();
         var byFirstWord = Group(usableLayouts, VariantWord.FIRST, slideWidth, slideHeight);
@@ -47,7 +47,7 @@ internal sealed partial class PresentationTemplate
                     variantLabels.Add(label);
         }
 
-        return (families, variantLabels);
+        return new GroupedLayouts(families, variantLabels);
     }
 
     private static List<FamilyCandidate> Group(IReadOnlyList<TemplateLayout> layouts, VariantWord variantWord, long slideWidth, long slideHeight)
@@ -130,4 +130,11 @@ internal sealed partial class PresentationTemplate
     /// <param name="Stem">The name without the word which tells the variants apart.</param>
     /// <param name="Variants">The variants found so far.</param>
     private sealed record FamilyCandidate(string Stem, List<LayoutVariant> Variants);
+
+    /// <summary>
+    /// The layouts with room for content, grouped into families of variants.
+    /// </summary>
+    /// <param name="Families">The families, in the order of the template.</param>
+    /// <param name="VariantLabels">The labels which tell the variants apart; empty when the template carries every layout once.</param>
+    private sealed record GroupedLayouts(IReadOnlyList<LayoutFamily> Families, IReadOnlyList<string> VariantLabels);
 }

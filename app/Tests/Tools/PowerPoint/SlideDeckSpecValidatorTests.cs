@@ -8,7 +8,7 @@ namespace AIStudio.Tests.Tools.PowerPoint;
 /// <remarks>
 /// Uses the default catalog: L1 title slide, L2 section header, L3 title and content, L4 two
 /// content, L5 content with picture, and L6 table. Template slides need a template with slides,
-/// which <see cref="TemplateWithSlides"/> builds.
+/// which TemplateWithSlides builds.
 /// </remarks>
 [TestFixture]
 public sealed class SlideDeckSpecValidatorTests
@@ -275,7 +275,7 @@ public sealed class SlideDeckSpecValidatorTests
     }
 
     /// <summary>
-    /// What the user chose for the slides of <see cref="TemplateWithSlides"/>: the second slide and
+    /// What the user chose for the slides of TemplateWithSlides: the second slide and
     /// the imprint are edited, and the closing slide is left out.
     /// </summary>
     private static readonly TemplateSlideUse[] USES = [TemplateSlideUse.KEEP, TemplateSlideUse.EDIT, TemplateSlideUse.KEEP, TemplateSlideUse.EDIT, TemplateSlideUse.OMIT];
@@ -306,13 +306,7 @@ public sealed class SlideDeckSpecValidatorTests
 
     private static SlideSpec Edit(int templateSlide, string title = "", string subtitle = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<string>? labels = null) => new(string.Empty, false, title, subtitle, texts ?? [], labels ?? [], [], null, templateSlide);
 
-    private static SlideSpec Slide(
-        string layout,
-        string title = "Title",
-        string subtitle = "",
-        IReadOnlyList<SlideTextBlock>? texts = null,
-        IReadOnlyList<int>? pictures = null,
-        SlideTableSpec? table = null) => new(layout, false, title, subtitle, texts ?? [], [], pictures ?? [], table);
+    private static SlideSpec Slide(string layout, string title = "Title", string subtitle = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<int>? pictures = null, SlideTableSpec? table = null) => new(layout, false, title, subtitle, texts ?? [], [], pictures ?? [], table);
 
     private static SlideTextBlock Text(params string[] paragraphs) => new(paragraphs.Select(paragraph => new SlideParagraph(paragraph, 0)).ToList());
 }

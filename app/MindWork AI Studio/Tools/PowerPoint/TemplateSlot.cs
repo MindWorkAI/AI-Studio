@@ -9,13 +9,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// <param name="PlaceholderType">The placeholder type as the file spells it, e.g., "body" or "pic"; "obj" when the file states none.</param>
 /// <param name="PlaceholderIndex">The placeholder index, which links a placeholder of a slide to the one of its layout.</param>
 /// <param name="Capacity">How much text fits; missing for pictures.</param>
-internal sealed record TemplateSlot(
-    PlaceholderRole Role,
-    int Ordinal,
-    SlotBounds Bounds,
-    string PlaceholderType,
-    uint? PlaceholderIndex,
-    TextCapacity? Capacity)
+internal sealed record TemplateSlot(PlaceholderRole Role, int Ordinal, SlotBounds Bounds, string PlaceholderType, uint? PlaceholderIndex, TextCapacity? Capacity)
 {
     /// <summary>
     /// The slot as the layout offers it, which a slot a slide moved or copied is measured against;

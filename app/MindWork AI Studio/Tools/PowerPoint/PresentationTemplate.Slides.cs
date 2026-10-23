@@ -87,7 +87,7 @@ internal sealed partial class PresentationTemplate
     /// <remarks>
     /// Placeholders which fill no slot, such as the footer, and slots left empty are left out. A
     /// picture counts as content even though it has no text, and a table which is no placeholder
-    /// as the content of the table slot, see <see cref="TemplateSlideShapes.SlotShapesOf"/>.
+    /// as the content of the table slot, see TemplateSlideShapes.SlotShapesOf.
     /// </remarks>
     /// <param name="slots">The slots the slide offers, in reading order.</param>
     /// <param name="filledSlots">The shapes filling the slots, by role and number: the slot of the layout, or the copy, and its shape.</param>
@@ -135,7 +135,7 @@ internal sealed partial class PresentationTemplate
     /// <param name="slideWidth">The width of a slide, in EMU.</param>
     /// <param name="slideHeight">The height of a slide, in EMU.</param>
     /// <returns>The copies with their shapes, in reading order, numbered after the slots of the layout.</returns>
-    private static List<(TemplateSlotCopy Copy, P.Shape Shape)> SlotCopiesOf(IReadOnlyList<OpenXmlElement> topLevel, IReadOnlyDictionary<uint, int> idCounts, IReadOnlyDictionary<TemplateSlot, OpenXmlElement> shapesBySlot, TemplateLayout layout, IReadOnlyList<TemplateSlot> slotsOnSlide, long slideWidth, long slideHeight)
+    private static List<FoundSlotCopy> SlotCopiesOf(IReadOnlyList<OpenXmlElement> topLevel, IReadOnlyDictionary<uint, int> idCounts, IReadOnlyDictionary<TemplateSlot, OpenXmlElement> shapesBySlot, TemplateLayout layout, IReadOnlyList<TemplateSlot> slotsOnSlide, long slideWidth, long slideHeight)
     {
         var horizontalTolerance = (long)(slideWidth * SLOT_TOLERANCE);
         var verticalTolerance = (long)(slideHeight * SLOT_TOLERANCE);
@@ -194,12 +194,12 @@ internal sealed partial class PresentationTemplate
         } while (foundMore);
 
         var counters = layout.Slots.CountBy(slot => slot.Role).ToDictionary();
-        var copies = new List<(TemplateSlotCopy Copy, P.Shape Shape)>();
+        var copies = new List<FoundSlotCopy>();
         foreach (var copy in found.OrderBy(candidate => ReadingKeyOf(candidate.Bounds, slideHeight)))
         {
             var ordinal = counters.GetValueOrDefault(copy.Original.Role) + 1;
             counters[copy.Original.Role] = ordinal;
-            copies.Add((new TemplateSlotCopy(copy.Original.MovedTo(copy.Bounds) with { Ordinal = ordinal }, copy.Id), copy.Shape));
+            copies.Add(new FoundSlotCopy(new TemplateSlotCopy(copy.Original.MovedTo(copy.Bounds) with { Ordinal = ordinal }, copy.Id), copy.Shape));
         }
 
         return copies;
@@ -223,6 +223,13 @@ internal sealed partial class PresentationTemplate
     /// <param name="Bounds">Where the slot or the copy sits on the slide.</param>
     /// <param name="Original">The slot of the layout which is repeated, where the slide puts it.</param>
     private sealed record CopyReference(SlotBounds Bounds, TemplateSlot Original);
+
+    /// <summary>
+    /// A copy of a slot found on a slide, with the shape which is the copy.
+    /// </summary>
+    /// <param name="Copy">The copy, as the model knows it.</param>
+    /// <param name="Shape">The shape on the slide, whose text the copy holds.</param>
+    private sealed record FoundSlotCopy(TemplateSlotCopy Copy, P.Shape Shape);
 
     /// <summary>
     /// Adds the copies of slots to the slots of a slide, each one where a reader comes across it.

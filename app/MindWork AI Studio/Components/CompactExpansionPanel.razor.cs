@@ -7,7 +7,7 @@ namespace AIStudio.Components;
 /// or the source code of a generated plugin.
 /// </summary>
 /// <remarks>
-/// Unlike <see cref="ExpansionPanel"/>, it brings its own panel list, so it stands anywhere in a
+/// Unlike the ExpansionPanel component, it brings its own panel list, so it stands anywhere in a
 /// form. The header text comes from the caller, which keeps the translation with the caller as
 /// well.
 /// </remarks>
