@@ -1258,9 +1258,13 @@ The kinds of slides come in five areas:
 A kind in the singular, e.g., `RISK`, shows one item prominently; its plural, e.g., `RISKS`, shows
 several items together. For a kind you leave out, the LLM chooses the layout
 itself, and so it does for a name your template lacks. A layout says how such a slide looks, not
-whether the presentation has one. The layouts are preselections as well, so they apply only while
-preselection is enabled, and the table applies as a whole: users either keep it or, with
-`AllowUserOverride`, change it as they like.
+whether the presentation has one; that follows from the content. Only for `TABLE_OF_CONTENTS`,
+`Q_AND_A`, `ACKNOWLEDGEMENTS`, `REFERENCES`, `CLOSING`, and `IMPRINT` does a layout also add such a
+slide to every presentation. The LLM fills an imprint only with what the content, the important
+aspects, or the profile of the user state, and the current date.
+
+The layouts are preselections as well, so they apply only while preselection is enabled, and the
+table applies as a whole: users either keep it or, with `AllowUserOverride`, change it as they like.
 
 ## Labeling AI-generated content
 

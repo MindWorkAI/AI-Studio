@@ -297,6 +297,30 @@ public sealed class SlideDeckSpecValidatorTests
     }
 
     [Test]
+    public void TheSlidesWhichAChoiceAddsAreThereAndTheImprintComesLast()
+    {
+        var chosen = ChosenLayouts.Of(TEMPLATE, new Dictionary<LayoutPurpose, string>
+        {
+            [LayoutPurpose.TABLE_OF_CONTENTS] = "Two Content",
+            [LayoutPurpose.IMPRINT] = "Table",
+        });
+
+        var title = Slide("L1", "Mars");
+        var contents = Slide("L4", "Contents", texts: [Text("Why Mars"), Text("How to get there")]);
+        var imprint = Slide("L6", "Imprint", table: new SlideTableSpec(["Role", "Name"], [["Author", "Jane Doe"]]));
+        var content = Slide("L3", "Why Mars", texts: [Text("Close to Earth")]);
+
+        var missing = SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [title, content]), TEMPLATE, 0, 0, chosenLayouts: chosen);
+        Assert.Multiple(() =>
+        {
+            Assert.That(SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [title, contents, content, imprint]), TEMPLATE, 0, 0, chosenLayouts: chosen), Is.Empty);
+            Assert.That(missing, Has.Some.Contains("The presentation has no slide on layout L4 for the table of contents, which lists the topics or chapters of the presentation without times. Add one right after the title slide."));
+            Assert.That(missing, Has.Some.Contains("The presentation has no slide on layout L6 for the imprint"));
+            Assert.That(SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [title, contents, imprint, content]), TEMPLATE, 0, 0, chosenLayouts: chosen), Has.Some.Contains("The imprint on layout L6 is not the last slide."));
+        });
+    }
+
+    [Test]
     public void ASlideHasNoMoreMainPointsThanAskedFor()
     {
         var points = Text("Close to Earth", "Has water ice");

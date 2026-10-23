@@ -66,7 +66,30 @@ internal static class SlideDeckSpecValidator
         }
 
         ValidateTemplateSlides(spec, template, uses, issues);
+        ValidateAddedSlides(spec, template, chosen, issues);
         return issues;
+    }
+
+    /// <summary>
+    /// Checks that the slides a choice of the user adds are there, and that an imprint comes last.
+    /// </summary>
+    /// <remarks>
+    /// The check goes by layout: a new slide on the layout chosen for the kind counts as such a slide.
+    /// It cannot tell the kinds apart when the user chose one layout for two of them, which then
+    /// share their slides.
+    /// </remarks>
+    private static void ValidateAddedSlides(SlideDeckSpec spec, PresentationTemplate template, ChosenLayouts chosen, List<string> issues)
+    {
+        var newSlideFamilyIds = spec.Slides.Select(slide => slide.TemplateSlide is null ? template.FindFamily(slide.Layout)?.Id : null).ToList();
+        foreach (var purpose in chosen.AddedSlides)
+        {
+            var familyId = chosen.Families[purpose].Id;
+            if (!newSlideFamilyIds.Contains(familyId))
+                issues.Add($"The presentation has no slide on layout {familyId} for {purpose.PromptDescription()}. Add one {purpose.PromptPlacement()}.");
+        }
+
+        if (chosen.For(LayoutPurpose.IMPRINT) is { } imprintFamily && newSlideFamilyIds.Contains(imprintFamily.Id) && newSlideFamilyIds[^1] != imprintFamily.Id)
+            issues.Add($"The imprint on layout {imprintFamily.Id} is not the last slide. Move it to the end of the presentation.");
     }
 
     /// <summary>

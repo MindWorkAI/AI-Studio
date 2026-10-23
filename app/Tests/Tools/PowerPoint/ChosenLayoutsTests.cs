@@ -81,4 +81,22 @@ public sealed class ChosenLayoutsTests
             Assert.That(rules, Does.Not.Contain("Section Header").And.Not.Contain("Two Content"), "No text of the template file reaches the system prompt.");
         });
     }
+
+    [Test]
+    public void AChoiceForAFramingSlideRequiresSuchASlide()
+    {
+        var chosen = ChosenLayouts.Of(TEMPLATE, new Dictionary<LayoutPurpose, string>
+        {
+            [LayoutPurpose.TIMELINE] = "Two Content",
+            [LayoutPurpose.IMPRINT] = "Title and Content",
+        });
+
+        var rules = chosen.ToPromptRules();
+        Assert.Multiple(() =>
+        {
+            Assert.That(chosen.AddedSlides, Is.EqualTo(new[] { LayoutPurpose.IMPRINT }), "A timeline comes only where the content has one.");
+            Assert.That(rules, Does.Contain("\n    - The presentation has at least one slide of each of these kinds, on its layout:\n        - L3: the imprint, e.g., with the authors, the organization, and the date, as the very last slide;"));
+            Assert.That(rules, Does.Contain("leaves a slot empty rather than inventing anything."), "The model must not invent the details of an imprint.");
+        });
+    }
 }

@@ -43,6 +43,10 @@ to `app/AGENTS.md`, which apply here as well.
   their names, which outlive sessions and new versions of a template. `ChosenLayouts` finds them in the
   template, and only their IDs go into the system prompt. The validator checks the two kinds which show
   in a deck, the title slide and the start of a chapter; every other choice is a rule for the model.
+  A choice says which layout a kind uses, not whether the deck has one, except for the kinds with a
+  `PromptPlacement`: a choice for them adds such a slide, and the validator checks that a new slide uses
+  their layout and that an imprint comes last. Everything about a kind of slide lives in the file of its
+  area, `LayoutPurposeExtensions.<Area>.cs`; a new kind goes there and into `LayoutPurpose`, within its area.
 - **New slides carry no formatting of their own.** They fill the placeholders of their layout and
   leave out every placeholder without content, so that no prompt text such as "Click to add text"
   remains.

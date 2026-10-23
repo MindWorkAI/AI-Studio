@@ -39,7 +39,7 @@
             {
                 @foreach (var purpose in Enum.GetValues<LayoutPurpose>())
                 {
-                    <ConfigurationSelect OptionDescription="@purpose.Label()" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedLayoutOf(purpose))" Data="@this.layoutOptions" SelectionUpdate="@(selectedValue => this.SetPreselectedLayout(purpose, selectedValue))" OptionHelp="@purpose.Question()" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked"/>
+                    <ConfigurationSelect OptionDescription="@purpose.Label()" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedLayoutOf(purpose))" Data="@this.layoutOptions" SelectionUpdate="@(selectedValue => this.SetPreselectedLayout(purpose, selectedValue))" OptionHelp="@purpose.Help()" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked"/>
                 }
             }
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence = selectedValue)"/>
