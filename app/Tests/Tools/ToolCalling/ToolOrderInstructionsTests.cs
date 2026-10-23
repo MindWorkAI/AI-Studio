@@ -1,6 +1,5 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
-using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
