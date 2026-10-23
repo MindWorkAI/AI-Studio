@@ -1,7 +1,9 @@
 using System.Text.Json;
 
+using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.RAG;
 
 namespace AIStudio.Tests.Settings;
 
@@ -75,6 +77,17 @@ public sealed class DataSourceOutboundDataRestrictionTests
         var dataSource = JsonSerializer.Deserialize<IDataSource>("""{"$type_discriminator": "LOCAL_DIRECTORY", "OutboundDataRestriction": "NOTHING_AT_ALL"}""", SettingsManager.JSON_OPTIONS);
 
         Assert.That(dataSource?.OutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES), "A newer version may know levels this one does not.");
+    }
+
+    [Test]
+    public void ANumberWhichNamesNoLevelRestrictsTheChatToTheConfiguredServices()
+    {
+        var dataSource = JsonSerializer.Deserialize<IDataSource>("""{"$type_discriminator": "LOCAL_DIRECTORY", "Id": "6f3a9d2e-8c1b-4e7a-b5d4-3a9e7f1c2b68", "OutboundDataRestriction": "5"}""", SettingsManager.JSON_OPTIONS)!;
+        var chat = new ChatThread();
+
+        chat.RequireOutboundDataRestriction(DataSourceRequirements.Of([dataSource], [2], OutboundDataRestriction.UNRESTRICTED).OutboundData);
+
+        Assert.That(chat.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.DATA_SOURCE, dataSource.Id)), "The settings read the number as it is, and compared as it is, it would rank above UNRESTRICTED.");
     }
 
     [Test]

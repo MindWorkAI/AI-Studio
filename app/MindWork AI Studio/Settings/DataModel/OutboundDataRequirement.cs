@@ -25,9 +25,15 @@ public sealed record OutboundDataRequirement(OutboundDataRestriction Restriction
     /// <remarks>
     /// On a tie, this one is kept, whatever the origin of either, so the source which set a level
     /// first stays the one which is named, and a chat does not name another source with every
-    /// search.
+    /// search. A restriction this version does not know counts as the strictest one, and the
+    /// requirement which wins carries that one instead.
     /// </remarks>
     /// <param name="other">The other requirement.</param>
     /// <returns>The requirement whose restriction is the stricter one.</returns>
-    public OutboundDataRequirement StricterOf(OutboundDataRequirement other) => other.Restriction < this.Restriction ? other : this;
+    public OutboundDataRequirement StricterOf(OutboundDataRequirement other)
+    {
+        var stricter = other.Restriction.OrStrictestWhenUnknown() < this.Restriction.OrStrictestWhenUnknown() ? other : this;
+        var knownRestriction = stricter.Restriction.OrStrictestWhenUnknown();
+        return knownRestriction == stricter.Restriction ? stricter : stricter with { Restriction = knownRestriction };
+    }
 }

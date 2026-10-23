@@ -14,6 +14,8 @@ public enum OutboundDataRestriction
     // The strictest level is deliberately the member with the underlying value 0: when the settings
     // file holds a value TolerantEnumConverter cannot read, it falls back to that member. Falling back
     // to a more permissive level would open a way out for internal content the user meant to keep in.
+    // A number which names no member is read as it is, so the comparisons count it as the strictest
+    // level, see OutboundDataRestrictionExtensions.OrStrictestWhenUnknown.
 
     /// <summary>
     /// Only the services configured in AI Studio.
