@@ -330,6 +330,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         
         // Config: hide some assistants?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HiddenAssistants, this.Id, settingsTable, dryRun);
+
+        // Config: prohibit some providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, this.Id, settingsTable, dryRun);
         
         // Config: global voice recording shortcut
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShortcutVoiceRecording, this.Id, settingsTable, dryRun);
@@ -369,6 +372,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: data source security settings
         ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.TrustedProviderIds, this.Id, settingsTable, dryRun);
+
+        // Config: the least strict outbound data restriction a data source may have
+        ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.MinimumOutboundDataRestriction, this.Id, settingsTable, dryRun);
 
         // Config: the least strict outbound data restriction a mailbox may have
         ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.MinimumOutboundDataRestriction, this.Id, settingsTable, dryRun);

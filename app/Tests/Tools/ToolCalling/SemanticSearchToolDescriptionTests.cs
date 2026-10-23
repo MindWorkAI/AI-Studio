@@ -48,7 +48,7 @@ public sealed class SemanticSearchToolDescriptionTests
     {
         var descriptions = new Dictionary<string, string> { [HANDBOOK.Id] = "Our processes.", [MINUTES.Id] = "Meetings.", [INTRANET.Id] = "Everything else." };
         ToolFunctionDefinition DescribeInOfferOrder(params IDataSource[] dataSources) =>
-            Describe(SemanticSearchTool.InOfferOrder(dataSources).Select(dataSource => (dataSource, descriptions[dataSource.Id])).ToArray());
+            Describe(dataSources.InFixedOrder().Select(dataSource => (dataSource, descriptions[dataSource.Id])).ToArray());
 
         var first = DescribeInOfferOrder(INTRANET, MINUTES, HANDBOOK);
         var second = DescribeInOfferOrder(MINUTES, HANDBOOK, INTRANET);

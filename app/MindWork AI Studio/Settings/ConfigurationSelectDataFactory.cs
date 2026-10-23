@@ -336,9 +336,9 @@ public static class ConfigurationSelectDataFactory
     }
 
     /// <summary>
-    /// The restrictions a mailbox may have.
+    /// The restrictions a mailbox or a data source may have.
     /// </summary>
-    /// <param name="minimumRestriction">The least strict restriction the organization allows, see DataMailboxes.MinimumOutboundDataRestriction.</param>
+    /// <param name="minimumRestriction">The least strict restriction allowed, see DataMailboxes.MinimumOutboundDataRestriction and DataSourceOutboundDataExtensions.GetMinimumOutboundDataRestriction.</param>
     public static IEnumerable<ConfigurationSelectData<OutboundDataRestriction>> GetOutboundDataRestrictionData(OutboundDataRestriction minimumRestriction)
     {
         foreach (var restriction in Enum.GetValues<OutboundDataRestriction>())

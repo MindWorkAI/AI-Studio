@@ -1,4 +1,3 @@
-using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
@@ -105,7 +104,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(Tools.Components.APP_SETTINGS);
         foreach (var provider in this.SettingsManager.GetAllTranscriptionProviders())
         {
-            if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            if (this.SettingsManager.IsProviderUsable(provider.UsedLLMProvider, minimumLevel))
                 yield return new(provider.Name, provider.Id);
         }
     }

@@ -240,6 +240,7 @@ public sealed class DataSourceRelocationWorkflowTests
         {
             Assert.That(edit.Warning.ShowCount, Is.Zero, "Nothing was prepared for the data source, so nothing can be lost.");
             Assert.That(saved is DataSourceLocalDirectory folder ? folder.Path : ((DataSourceLocalFile)saved).FilePath, Is.EqualTo(newPath));
+            Assert.That(saved.OutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.UNRESTRICTED), "The dialog creates the data source anew, so a value it does not carry over falls back to its default.");
         });
     }
 
@@ -617,12 +618,13 @@ public sealed class DataSourceRelocationWorkflowTests
         {
             Id = id, Name = "Existing documents", Type = DataSourceType.LOCAL_DIRECTORY, Path = root,
             EmbeddingId = EMBEDDING_ID, ConfidenceLevel = ConfidenceLevel.NONE, MaxChunkTokenLength = 512, ChunkOverlapTokenLength = 100,
-            FilePatterns = "*.md", ExcludePatterns = string.Empty,
+            FilePatterns = "*.md", ExcludePatterns = string.Empty, OutboundDataRestriction = OutboundDataRestriction.UNRESTRICTED,
         };
         this.source = singleFile ? new DataSourceLocalFile
         {
             Id = id, Name = folder.Name, Type = DataSourceType.LOCAL_FILE, FilePath = Path.Combine(root, "notes.md"),
             EmbeddingId = EMBEDDING_ID, ConfidenceLevel = ConfidenceLevel.NONE, MaxChunkTokenLength = 512, ChunkOverlapTokenLength = 100,
+            OutboundDataRestriction = OutboundDataRestriction.UNRESTRICTED,
         } : folder;
         this.settings.ConfigurationData.DataSources.Add(this.source);
 
@@ -685,6 +687,7 @@ public sealed class DataSourceRelocationWorkflowTests
         SetField(component, "dataName", storedSource.Name);
         SetField(component, "dataEmbeddingId", storedSource.EmbeddingId);
         SetField(component, "dataConfidenceLevel", storedSource.ConfidenceLevel);
+        SetField(component, "dataOutboundDataRestriction", storedSource.OutboundDataRestriction);
         SetField(component, "dataMaxChunkTokenLength", storedSource.MaxChunkTokenLength);
         SetField(component, "dataChunkOverlapTokenLength", storedSource.ChunkOverlapTokenLength);
         SetField(component, storedSource is DataSourceLocalDirectory ? "dataPath" : "dataFilePath", newPath);

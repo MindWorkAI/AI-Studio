@@ -343,8 +343,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
     private OutboundDataRestriction MinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction;
 
-    private bool IsOutboundDataRestrictionLimited => this.MinimumOutboundDataRestriction is not OutboundDataRestriction.UNRESTRICTED;
-
     private string TestResultText
     {
         get

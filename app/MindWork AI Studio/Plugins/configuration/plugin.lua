@@ -276,6 +276,13 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 -- }
 
 -- ERI v1 data sources for retrieval-augmented generation:
+--
+-- "OutboundDataRestriction" is optional and decides where a chat may still send data once the
+-- AI found something in the data source: ONLY_CONFIGURED_SERVICES, ONLY_LINKS_FROM_CHAT, or
+-- UNRESTRICTED, see DataSourceSecuritySettings.MinimumOutboundDataRestriction below. Without it,
+-- the data source gets ONLY_LINKS_FROM_CHAT, and a value AI Studio cannot read counts as
+-- ONLY_CONFIGURED_SERVICES. A data source with the security policy SELF_HOSTED always gets
+-- ONLY_CONFIGURED_SERVICES, whatever it says here.
 CONFIG["DATA_SOURCES"] = {}
 
 -- Example: ERI v1 data source with a shared access token.
@@ -288,6 +295,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["AuthMethod"] = "TOKEN",
 --     ["Token"] = "ENC:v2:<base64-encoded encrypted token>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -304,6 +312,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Username"] = "<shared username>",
 --     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -319,6 +328,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
 --     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -453,6 +463,34 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddLLMProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
+
+-- Prohibit providers, e.g., when your organization must not send any data to them. The list
+-- applies to LLM providers, embedding providers, and transcription providers alike. Allowed
+-- values are the provider keys of DataConfidence.CustomConfidenceScheme, see below. A name
+-- AI Studio does not know is ignored and logged as a warning.
+--
+-- A prohibition names the operator of an API, not a family of models: prohibiting the API of
+-- a model maker keeps AI Studio away from that API, but the models of that maker may remain
+-- available through a hub which offers the models of several makers, or on a server of your
+-- own. Prohibit these as well if you need to.
+--
+-- Users can still select a prohibited provider when they add one, but the dialog then only
+-- explains that your organization does not allow it. Providers which users set up before stay
+-- in their settings, marked as prohibited, and users can delete them. AI Studio no longer
+-- offers or contacts them. Once you lift the prohibition, they work again.
+--
+-- A prohibited provider is always UNTRUSTED, whatever the confidence scheme says. A level which
+-- DataConfidence.CustomConfidenceScheme names for it is ignored and logged as a warning, and
+-- users cannot change it in the app. Once you lift the prohibition, that level applies again.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces the whole list.
+-- A configuration which prohibits one more provider has to repeat the providers of the base
+-- configuration. Otherwise, these become usable again.
+--
+-- Available since AI Studio v26.10.1. Older versions ignore this setting. Until all devices
+-- run that version, you can in addition use the CUSTOM confidence scheme, set the provider to
+-- UNTRUSTED there, and enforce a global minimum confidence level of at least VERY_LOW.
+-- CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "<PROVIDER_KEY>" }
 
 -- Configure the permission to add mailboxes. A mailbox is a data source, not a provider, so
 -- DataApp.AllowUserToAddProvider does not apply to it. When set to false, the menu entry for
@@ -1182,6 +1220,9 @@ CONFIG["SETTINGS"] = {}
 --   SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --
+-- A provider which DataApp.ProhibitedProviders names is always UNTRUSTED. Its level in this
+-- table is ignored and logged as a warning, see DataApp.ProhibitedProviders above.
+--
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
 -- table. Every configuration that sets this must therefore list all providers it wants
 -- to cover. A partial table is not completed from the configuration below it, and the
@@ -1225,6 +1266,23 @@ CONFIG["SETTINGS"] = {}
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",
 -- }
+
+-- Configure the least strict outbound data restriction a data source may have, i.e., a local
+-- file, a local folder, or an external data source (ERI server). Each data source decides where
+-- a chat may still send data once the AI found something in it:
+--   ONLY_CONFIGURED_SERVICES  Only services configured in AI Studio, such as your data sources,
+--                             your Confluence, or the allowed private hosts of the tool Read Web
+--                             Page. No other web pages, no web search.
+--   ONLY_LINKS_FROM_CHAT      Also web pages whose addresses stand in the chat, written by the
+--                             user or returned by a tool. No web search, and no addresses the AI
+--                             chooses itself outside the configured services.
+--   UNRESTRICTED              Every tool the user selected.
+-- A data source set to a less strict level gets this one whenever its passages reach a chat, and
+-- the dialog of the data source no longer offers the less strict levels. An external data source
+-- which only self-hosted providers may use always gets ONLY_CONFIGURED_SERVICES. A chat which
+-- found something before keeps the level it got then. The default is UNRESTRICTED, which leaves
+-- the choice to the user. New data sources start with ONLY_LINKS_FROM_CHAT either way.
+-- CONFIG["SETTINGS"]["DataSourceSecuritySettings.MinimumOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT"
 
 -- Configure the least strict outbound data restriction a mailbox may have. Mails come from
 -- strangers and may contain instructions meant for the AI, so each mailbox decides where a chat

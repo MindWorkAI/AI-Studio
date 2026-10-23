@@ -282,6 +282,24 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         });
     }
 
+    [TestCase(null, OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, TestName = "A data source without a level gets the one of a new data source")]
+    [TestCase("\"ONLY_CONFIGURED_SERVICES\"", OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, TestName = "A data source keeps the level it names")]
+    [TestCase("\"only_links_from_chat\"", OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, TestName = "A level is read regardless of case")]
+    [TestCase("\"NOTHING_AT_ALL\"", OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, TestName = "A level this version does not know counts as the strictest")]
+    [TestCase("\"2\"", OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, TestName = "A number is no level, even as text")]
+    [TestCase("2", OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, TestName = "A number is no level")]
+    public void ADataSourceReadsWhereAChatMaySendData(string? luaValue, OutboundDataRestriction expected)
+    {
+        var (_, exported) = ExportDataSource(AuthMethod.NONE);
+        const string EXPORTED_LINE = "[\"OutboundDataRestriction\"] = \"UNRESTRICTED\",";
+        Assert.That(exported, Does.Contain(EXPORTED_LINE));
+
+        var snippet = exported.Replace(EXPORTED_LINE, luaValue is null ? string.Empty : $"[\"OutboundDataRestriction\"] = {luaValue},", StringComparison.Ordinal);
+        var dataSource = (DataSourceERI_V1)Import(snippet, PluginConfigurationObjectType.DATA_SOURCE).ConfigurationObject;
+
+        Assert.That(dataSource.OutboundDataRestriction, Is.EqualTo(expected));
+    }
+
     [Test]
     public void AttachmentsWhichAreNotOnThisComputerAreToBeRelinked()
     {
@@ -724,6 +742,10 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             AuthMethod = authMethod,
             Username = username,
             SecurityPolicy = DataSourceSecurity.SELF_HOSTED,
+
+            // Not the default, so that a parser which ignores the level does not pass unnoticed. The
+            // stored level travels, not the stricter one the security policy demands at runtime:
+            OutboundDataRestriction = OutboundDataRestriction.UNRESTRICTED,
             SelectedRetrievalId = "semantic-search",
             MaxMatches = 25,
         };

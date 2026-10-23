@@ -801,7 +801,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
         {
             token.ThrowIfCancellationRequested();
-            this.UpsertStatus(this.GetFallbackStatus(dataSource, TB("The selected embedding provider is not available. Please check it in the settings.")));
+            this.UpsertStatus(this.GetFallbackStatus(dataSource, DataSourceEmbeddingProviders.IsProhibited(settingsManager, dataSource)
+                ? TB("The use of the embedding provider of this data source has been prohibited by your organization. Please select a different embedding provider in the settings of the data source.")
+                : TB("The selected embedding provider is not available. Please check it in the settings.")));
             return null;
         }
 
