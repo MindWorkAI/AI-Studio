@@ -1,27 +1,32 @@
 @inherits ConfigurationBaseCore
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-    <MudTextField
-        T="string"
-        Text="@this.Text()"
-        TextChanged="@this.InternalUpdate"
-        Disabled="@this.IsDisabled"
-        Adornment="Adornment.Start"
-        AdornmentIcon="@this.Icon"
-        AdornmentColor="@this.IconColor"
-        UserAttributes="@SPELLCHECK_ATTRIBUTES"
-        Immediate="@true"
-        Underline="false"
-        Class="flex-grow-1"
-    />
+<PathDropZone Disabled="@(() => this.IsDisabled)" OnPathsDropped="@this.PathsDropped">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudTextField
+            T="string"
+            Text="@this.Text()"
+            TextChanged="@this.InternalUpdate"
+            Disabled="@this.IsDisabled"
+            Adornment="Adornment.Start"
+            AdornmentIcon="@this.Icon"
+            AdornmentColor="@this.IconColor"
+            UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            Immediate="@true"
+            Underline="false"
+            Class="flex-grow-1"
+        />
 
-    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen"
-               Variant="Variant.Outlined"
-               Color="Color.Primary"
-               Size="Size.Small"
-               Disabled="@(this.IsDisabled || this.isFileDialogOpen)"
-               Class="mb-1"
-               OnClick="@this.OpenFileDialog">
-        @T("Choose File")
-    </MudButton>
-</MudStack>
+        <MudButton StartIcon="@Icons.Material.Filled.FolderOpen"
+                   Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   Disabled="@(this.IsDisabled || this.isFileDialogOpen)"
+                   Class="mb-1"
+                   OnClick="@this.OpenFileDialog">
+            @T("Choose File")
+        </MudButton>
+    </MudStack>
+    <MudText Typo="Typo.body2">
+        @T("You can also drag & drop the file here.")
+    </MudText>
+</PathDropZone>
