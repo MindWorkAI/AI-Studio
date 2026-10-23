@@ -43,8 +43,9 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
         // them can be used right now, or the search found nothing -- would still send the
         // passages of the last message which did, cf. ChatThread.RollBackTo.
         //
-        // The data security and the required provider confidence stay as they are: both only
-        // ever tighten, because the data which raised them was seen by this thread.
+        // The data security, the required provider confidence, and where the chat may still send
+        // data stay as they are: they only ever tighten, because the data which raised them was
+        // seen by this thread.
         //
         chatThread.AugmentedData = string.Empty;
         chatThread.AISelectedDataSources = [];
@@ -187,13 +188,17 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     retrievalTasks.Add(dataSource.RetrieveDataAsync(lastUserPrompt, chatThreadWithoutWaitingAIBlock, token));
             
                 //
-                // Wait for all retrieval tasks to finish:
+                // Wait for all retrieval tasks to finish, and count the passages of each data source.
+                // The tasks are in the order of the selected data sources:
                 //
-                foreach (var retrievalTask in retrievalTasks)
+                var passageCounts = new int[retrievalTasks.Count];
+                for (var index = 0; index < retrievalTasks.Count; index++)
                 {
                     try
                     {
-                        dataContexts.AddRange(await retrievalTask);
+                        var retrievedContexts = await retrievalTasks[index];
+                        dataContexts.AddRange(retrievedContexts);
+                        passageCounts[index] = retrievedContexts.Count;
                     }
                     catch (OperationCanceledException) when (token.IsCancellationRequested)
                     {
@@ -205,6 +210,12 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                         LOGGER.LogError(e, "An error occurred during the retrieval process.");
                     }
                 }
+
+                //
+                // Right after the retrieval, before the augmentation: the passages are in the chat
+                // from here on, and a step below which ends early must not leave it unrestricted:
+                //
+                RequireOutboundDataRestriction(chatThread, selectedDataSources, passageCounts, settings.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction);
             }
 
             //
@@ -249,6 +260,33 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     }
 
     #endregion
+
+    /// <summary>
+    /// Restricts where the chat may still send data, because of the passages the retrieval brought in.
+    /// </summary>
+    /// <remarks>
+    /// Semantic Search asks the same place, DataSourceRequirements, so that both ways of searching
+    /// demand the same of the same data sources. Only the data sources with passages count: one
+    /// which found nothing leaves the chat as it was. A passage the validation agent drops later
+    /// still counts, which is the safe side. The data security and the provider confidence were
+    /// raised before the retrieval already, for every selected data source, because the agents see
+    /// the passages as well; the data sources with passages are among them, so asking again would
+    /// change nothing.<br/><br/>
+    /// The answer which follows does not offer the web search any more: the request reads the
+    /// restriction from this very thread when it puts its tools together, after this process, see
+    /// ToolRegistry.GetRunnableToolsAsync.
+    /// </remarks>
+    /// <param name="chatThread">The chat thread.</param>
+    /// <param name="selectedDataSources">The data sources searched.</param>
+    /// <param name="passageCounts">How many passages each data source returned, in the same order.</param>
+    /// <param name="organizationMinimum">The least strict outbound data restriction the organization allows.</param>
+    internal static void RequireOutboundDataRestriction(ChatThread chatThread, IReadOnlyList<IDataSource> selectedDataSources, IReadOnlyList<int> passageCounts, OutboundDataRestriction organizationMinimum)
+    {
+        var previousRestriction = chatThread.RequiredOutboundDataRestriction;
+        chatThread.RequireOutboundDataRestriction(DataSourceRequirements.Of(selectedDataSources, passageCounts, organizationMinimum).OutboundData);
+        if (previousRestriction != chatThread.RequiredOutboundDataRestriction)
+            LOGGER.LogInformation($"The outbound data restriction of the chat thread was updated from '{previousRestriction.Restriction}' to '{chatThread.RequiredOutboundDataRestriction.Restriction}' because of the data source with id '{chatThread.RequiredOutboundDataRestriction.Reference}'.");
+    }
 
     /// <summary>
     /// Adds the note on the data sources whose server could not be reached to what the model reads along with the passages.
