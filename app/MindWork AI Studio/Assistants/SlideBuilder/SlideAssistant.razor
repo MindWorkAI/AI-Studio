@@ -105,7 +105,7 @@
         {
             <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Slides of the template")</MudText>
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them.")
+                @T("Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template.")
             </MudJustifiedText>
             @foreach (var templateSlide in loadedTemplate.Slides)
             {

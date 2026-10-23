@@ -199,13 +199,11 @@ public partial class SlideAssistant
     /// What the presentation does with the slides of a template unless the user says otherwise.
     /// </summary>
     /// <remarks>
-    /// The LLM edits every slide it can, so that a presentation used as a template becomes the next
-    /// one in its structure. A slide whose layout has no slots for content is kept as it is. Samples
-    /// and hints of a template are for the user to leave out.
+    /// The presentation leaves every slide out. A template serves its design first, and the slides
+    /// of a file are as often samples and hints as an earlier presentation: whoever wants one of them
+    /// in the new presentation says so.
     /// </remarks>
-    private static List<TemplateSlideUse> DefaultTemplateSlideUsesOf(PresentationTemplate template) => template.Slides
-        .Select(slide => slide.FamilyId is null ? TemplateSlideUse.KEEP : TemplateSlideUse.EDIT)
-        .ToList();
+    private static List<TemplateSlideUse> DefaultTemplateSlideUsesOf(PresentationTemplate template) => Enumerable.Repeat(TemplateSlideUse.OMIT, template.Slides.Count).ToList();
 
     private TemplateSlideUse TemplateSlideUseOf(int number) => this.templateSlideUses.UseOf(number);
 
