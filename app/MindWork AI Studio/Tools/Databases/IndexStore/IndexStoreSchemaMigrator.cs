@@ -15,6 +15,7 @@ internal static class IndexStoreSchemaMigrator
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.ChunkEndPageNumber))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.ChunkTextHash))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.ChunkGeneration))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.IndexedFileContentHash))]
     public static async Task MigrateAsync(IndexStoreDbContext context, CancellationToken token)
     {
         await context.Database.MigrateAsync(token);

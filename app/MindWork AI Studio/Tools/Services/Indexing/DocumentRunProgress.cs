@@ -223,19 +223,51 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// <param name="token">The cancellation token.</param>
     public async Task RecordDocumentIndexedAsync(EmbeddingDocument document, int chunkCount, bool isNew, CancellationToken token)
     {
-        var embeddedAtUtc = DateTimeOffset.UtcNow;
-        var state = document.State with { ChunkCount = chunkCount, EmbeddedAtUtc = embeddedAtUtc };
-        await context.IndexStore.UpsertFileAsync(context.DataSource.Id, state, token);
-        context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount, state.TranscriptKey, state.RelativePath, state.ParentFileId);
-        await context.ForgetPermanentFailureAsync(document.Key, token);
-        context.Pass.Forget(document.Key);
+        await this.StoreDocumentStateAsync(document.Key, document.State with { ChunkCount = chunkCount, EmbeddedAtUtc = DateTimeOffset.UtcNow }, token);
 
-        this.readDocuments++;
         this.IndexedDocuments++;
         if (isNew)
             this.NewDocuments++;
         else
             this.ChangedDocuments++;
+    }
+
+    /// <summary>
+    /// Records a document whose fingerprint changed while its content did not, e.g., a file saved again without edits.
+    /// </summary>
+    /// <remarks>
+    /// Its chunks and vectors stay as they are, under the ids they have. Only the new fingerprint
+    /// is written, into the vector store as well as into the index store, the way a relocation
+    /// writes it, so the next run finds the document unchanged. Nothing is read through the
+    /// runtime, and nothing goes to the embedding provider.
+    /// </remarks>
+    /// <param name="document">The document, as it would be indexed now.</param>
+    /// <param name="storedRecord">What the manifest knows about the document from its last indexing.</param>
+    /// <param name="token">The cancellation token.</param>
+    public async Task RecordContentUnchangedAsync(EmbeddingDocument document, EmbeddedFileRecord storedRecord, CancellationToken token)
+    {
+        var state = document.State with { ChunkCount = storedRecord.ChunkCount, EmbeddedAtUtc = storedRecord.EmbeddedAtUtc, TranscriptKey = storedRecord.TranscriptKey };
+        await context.VectorStore.RelocateEmbeddingFileAsync(context.CollectionName, state.ParentFileId, state.AbsolutePath, state.RelativePath, state.Fingerprint, token);
+        token.ThrowIfCancellationRequested();
+        await this.StoreDocumentStateAsync(document.Key, state, token);
+
+        this.UnchangedDocuments++;
+    }
+
+    /// <summary>
+    /// Writes the row of a document which is in the index from now on, and what the manifest knows about it.
+    /// </summary>
+    /// <param name="documentKey">The key of the document.</param>
+    /// <param name="state">The row.</param>
+    /// <param name="token">The cancellation token.</param>
+    private async Task StoreDocumentStateAsync(string documentKey, EmbeddingStateFile state, CancellationToken token)
+    {
+        await context.IndexStore.UpsertFileAsync(context.DataSource.Id, state, token);
+        context.Manifest.Files[documentKey] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, state.EmbeddedAtUtc, state.ChunkCount, state.TranscriptKey, state.RelativePath, state.ParentFileId, state.ContentHash);
+        await context.ForgetPermanentFailureAsync(documentKey, token);
+        context.Pass.Forget(documentKey);
+
+        this.readDocuments++;
     }
 
     /// <summary>

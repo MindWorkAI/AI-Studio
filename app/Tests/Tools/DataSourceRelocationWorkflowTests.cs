@@ -582,7 +582,79 @@ public sealed class DataSourceRelocationWorkflowTests
         });
     }
 
-    private async Task SeedLegacyIndexAsync(bool singleFile)
+    /// <summary>
+    /// A file saved again without edits, synchronized or copied looks changed by its fingerprint,
+    /// but its content is the same. Its chunks and vectors stay, nothing is read or embedded, and
+    /// only the new fingerprint is stored, so the next run finds the file unchanged.
+    /// </summary>
+    [Test]
+    public async Task AFileSavedAgainWithoutChangesKeepsItsEmbeddings()
+    {
+        await this.SeedLegacyIndexAsync(false, withContentHash: true);
+        var touched = new FileInfo(Path.Combine(this.OriginalFolder, "notes.md"));
+        touched.LastWriteTimeUtc = touched.LastWriteTimeUtc.AddMinutes(5);
+
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+
+        await this.AssertOriginalChunksAsync();
+        var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
+        touched.Refresh();
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
+            Assert.That(this.vectors.InsertedBatches, Is.Zero, "Nothing is embedded.");
+            Assert.That(this.vectors.DeletedDocuments, Is.Zero, "Nothing is read either: without a runtime here, reading the file would fail and remove it.");
+            Assert.That(this.vectors.RelocatedPaths, Is.EqualTo(new[] { touched.FullName }), "The new fingerprint reaches the vectors as well, under the same path.");
+            Assert.That(manifest.Files[touched.FullName].Fingerprint, Is.EqualTo(LegacyFingerprint(touched)), "The next run finds the file unchanged.");
+        });
+    }
+
+    /// <remarks>
+    /// This fixture has no runtime, so reading a file fails, and the failure removes what the file
+    /// had in the index. That is how these tests see that a file was read.
+    /// </remarks>
+    [Test]
+    public async Task AFileWhoseContentChangedIsReadAgain()
+    {
+        await this.SeedLegacyIndexAsync(false, withContentHash: true);
+        await File.WriteAllTextAsync(Path.Combine(this.OriginalFolder, "notes.md"), "A changed report");
+
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.vectors.DeletedDocuments, Is.EqualTo(1), "Only the changed file was read.");
+            Assert.That(this.vectors.RelocatedPaths, Is.Empty);
+        });
+    }
+
+    /// <remarks>
+    /// A file indexed before its content hash was kept cannot be compared, so it is read once more
+    /// the next time it looks changed, which stores its hash. Cf. AFileWhoseContentChangedIsReadAgain
+    /// for how the test sees the read.
+    /// </remarks>
+    [Test]
+    public async Task AFileWithoutAStoredContentHashIsReadAgainWhenItLooksChanged()
+    {
+        await this.SeedLegacyIndexAsync(false);
+        var touched = new FileInfo(Path.Combine(this.OriginalFolder, "notes.md"));
+        touched.LastWriteTimeUtc = touched.LastWriteTimeUtc.AddMinutes(5);
+
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.vectors.DeletedDocuments, Is.EqualTo(1));
+            Assert.That(this.vectors.RelocatedPaths, Is.Empty);
+        });
+    }
+
+    /// <param name="singleFile">Whether the data source is a single file rather than a folder.</param>
+    /// <param name="withContentHash">Whether the rows keep the hash of the content of their file, as rows indexed since v26.10.1 do.</param>
+    private async Task SeedLegacyIndexAsync(bool singleFile, bool withContentHash = false)
     {
         var paths = await this.AddSourceAsync(singleFile);
         var id = this.source.Id;
@@ -596,8 +668,9 @@ public sealed class DataSourceRelocationWorkflowTests
             var parentId = IndexedDocumentIds.CreateParentId(id, path);
             var chunkId = IndexedDocumentIds.CreateChunkId(id, fingerprint, 0);
             var embeddedAt = DateTimeOffset.UtcNow.AddDays(-10);
+            var contentHash = withContentHash ? await FileContentHash.ComputeAsync(path, CancellationToken.None) : null;
             await this.store.Client.UpsertFileAsync(id, new EmbeddingStateFile(parentId, path, file.Name, relative, "md", fingerprint, file.Length,
-                new DateTimeOffset(file.CreationTimeUtc), new DateTimeOffset(file.LastWriteTimeUtc), embeddedAt, 1), CancellationToken.None);
+                new DateTimeOffset(file.CreationTimeUtc), new DateTimeOffset(file.LastWriteTimeUtc), embeddedAt, 1, ContentHash: contentHash), CancellationToken.None);
             await this.store.Client.UpsertChunksAsync(id, [new EmbeddingStateChunk(chunkId, parentId, 1, 1, 0, "Already indexed report", embeddedAt)], CancellationToken.None);
             this.vectors.Locations.Add(parentId, path);
             this.chunkIds.Add(chunkId);

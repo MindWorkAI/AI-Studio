@@ -15,7 +15,8 @@ The parts:
 - **`IIndexedSourceIndexer`** - one per kind of data source. `Supports` claims the data sources, `ProcessAsync`
   finds and reads the documents of one run, and `TrackChanges` / `StopTracking` notice changes on their own.
   `FileSourceIndexer` is the reference: a file system watcher per data source, fingerprints over path, size and
-  write time.
+  write time, and once a fingerprint changed, the hash of the content (`FileContentHash`), so a file saved again
+  without edits keeps its chunks without being read.
 - **`IndexedRunContext`** - one prepared run: both stores, the embedding provider, the manifest, the
   collection, and the scope for reporting prompt injections. `IndexDocumentAsync` embeds and stores one
   document; the cleanup methods remove what a failed attempt left behind. A chunk whose text the document had

@@ -213,6 +213,29 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
             try
             {
+                //
+                // The fingerprint changed, but perhaps not the content: a file saved again without
+                // edits, synchronized or copied keeps its chunks and vectors, and only its new
+                // fingerprint is stored. Reading the bytes once costs far less than extracting and
+                // embedding them again. The transcript of an audio or video file is filed under the
+                // same hash, so a recording indexed before this hash was kept is recognized as well.
+                //
+                var contentHash = await FileContentHash.ComputeAsync(file.FullName, token);
+                document = this.CreateFileDocument(context, dataSource, file, fingerprint, null, contentHash);
+                if (existingRecord is { ParentFileId: not null } && string.Equals(existingRecord.ContentHash ?? existingRecord.TranscriptKey, contentHash, StringComparison.Ordinal))
+                {
+                    await progress.RecordContentUnchangedAsync(document, existingRecord, token);
+                    logger.LogInformation(
+                        "Kept the stored chunks of file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) without reading it, because its content did not change, although {EmbeddingReason}. Progress={CompletedFiles}/{TotalFiles}.",
+                        file.FullName,
+                        dataSource.Name,
+                        dataSource.Id,
+                        GetFileEmbeddingReason(file, fingerprint, existingRecord),
+                        progress.DoneDocuments,
+                        totalFiles);
+                    continue;
+                }
+
                 logger.LogInformation(
                     "Embedding file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because {EmbeddingReason}. CurrentMetadataHashPrefix={CurrentMetadataHashPrefix}. Progress={CompletedFiles}/{TotalFiles}.",
                     file.FullName,
@@ -228,7 +251,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 // its transcript instead, and its row knows which transcript that is:
                 //
                 if (PersistentMediaTranscript.IsMediaPath(file.FullName))
-                    document = this.CreateFileDocument(context, dataSource, file, fingerprint, await this.ReadOrCreateTranscriptAsync(dataSource, file.FullName, token));
+                    document = this.CreateFileDocument(context, dataSource, file, fingerprint, await this.ReadOrCreateTranscriptAsync(dataSource, file.FullName, token), contentHash);
 
                 var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
@@ -1060,10 +1083,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// <param name="file">The file.</param>
     /// <param name="fingerprint">The fingerprint of the file as it is about to be read.</param>
     /// <param name="transcript">The transcript an audio or video file is read through, or null for every other file.</param>
+    /// <param name="contentHash">The hash of the content of the file, cf. FileContentHash, or null while it is not computed yet.</param>
     /// <returns>The document.</returns>
-    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, MediaTranscriptSlot? transcript) => new(
+    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, MediaTranscriptSlot? transcript, string? contentHash = null) => new(
         file.FullName,
-        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { ParentFileId = context.GetFileParentId(file.FullName), TranscriptKey = transcript?.Key },
+        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { ParentFileId = context.GetFileParentId(file.FullName), TranscriptKey = transcript?.Key, ContentHash = contentHash },
         file.Name,
         token => this.StreamEmbeddingChunksAsync(file.FullName, transcript, dataSource, context.EmbeddingProvider, context.PromptInjectionScope, token));
 

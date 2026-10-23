@@ -75,6 +75,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("INTEGER")
                 .HasColumnName("chunk_count");
 
+            entity.Property<string>("ContentHash")
+                .HasColumnType("TEXT")
+                .HasColumnName("content_hash");
+
             entity.Property<DateTimeOffset>("CreationUtc")
                 .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
