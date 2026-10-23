@@ -43,10 +43,11 @@
             </MudJustifiedText>
             @if (this.layoutOptions.Count > 0)
             {
-                @foreach (var purpose in Enum.GetValues<LayoutPurpose>())
-                {
-                    <ConfigurationSelect OptionDescription="@purpose.Label()" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedLayoutOf(purpose))" Data="@this.layoutOptions" SelectionUpdate="@(selectedValue => this.SetPreselectedLayout(purpose, selectedValue))" OptionHelp="@purpose.Help()" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked"/>
-                }
+                <LayoutChoicePanels IsChosen="@(purpose => this.PreselectedLayoutOf(purpose).Length > 0)">
+                    <ChoiceContent Context="purpose">
+                        <ConfigurationSelect OptionDescription="@purpose.Label()" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedLayoutOf(purpose))" Data="@this.layoutOptions" SelectionUpdate="@(selectedValue => this.SetPreselectedLayout(purpose, selectedValue))" OptionHelp="@purpose.Help()" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked"/>
+                    </ChoiceContent>
+                </LayoutChoicePanels>
             }
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.SLIDE_BUILDER_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProvider = selectedValue)"/>

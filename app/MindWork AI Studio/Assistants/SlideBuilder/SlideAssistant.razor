@@ -114,16 +114,17 @@
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Only for the framing slides, e.g., the table of contents or the imprint, does a choice also add such a slide; their help says so. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline.")
         </MudJustifiedText>
-        @foreach (var purpose in Enum.GetValues<LayoutPurpose>())
-        {
-            <MudSelect T="string" Value="@this.LayoutNameOf(purpose)" ValueChanged="@(name => this.SetLayoutName(purpose, name))" Disabled="@this.AreLayoutsLocked" Label="@purpose.Label()" HelperText="@purpose.Help()" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewQuilt" Class="mb-3">
-                <MudSelectItem T="string" Value="@string.Empty">@LayoutPurposeExtensions.NoPreference</MudSelectItem>
-                @foreach (var layoutName in loadedTemplate.FamilyNames)
-                {
-                    <MudSelectItem T="string" Value="@layoutName">@layoutName</MudSelectItem>
-                }
-            </MudSelect>
-        }
+        <LayoutChoicePanels IsChosen="@(purpose => this.LayoutNameOf(purpose).Length > 0)">
+            <ChoiceContent Context="purpose">
+                <MudSelect T="string" Value="@this.LayoutNameOf(purpose)" ValueChanged="@(name => this.SetLayoutName(purpose, name))" Disabled="@this.AreLayoutsLocked" Label="@purpose.Label()" HelperText="@purpose.Help()" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewQuilt" Class="mb-3">
+                    <MudSelectItem T="string" Value="@string.Empty">@LayoutPurposeExtensions.NoPreference</MudSelectItem>
+                    @foreach (var layoutName in loadedTemplate.FamilyNames)
+                    {
+                        <MudSelectItem T="string" Value="@layoutName">@layoutName</MudSelectItem>
+                    }
+                </MudSelect>
+            </ChoiceContent>
+        </LayoutChoicePanels>
 
         @if (loadedTemplate.Slides.Count > 0)
         {

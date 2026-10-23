@@ -1,0 +1,10 @@
+@using AIStudio.Tools.PowerPoint
+@foreach (var area in Enum.GetValues<LayoutPurposeArea>())
+{
+    <CompactExpansionPanel HeaderText="@this.HeaderTextOf(area)" HeaderIcon="@IconOf(area)" Class="mb-3 rounded" Expanded="@this.expandedAreas.Contains(area)" ExpandedChanged="@(expanded => this.SetExpanded(area, expanded))">
+        @foreach (var purpose in Enum.GetValues<LayoutPurpose>().Where(purpose => purpose.Area() == area))
+        {
+            @this.ChoiceContent(purpose)
+        }
+    </CompactExpansionPanel>
+}
