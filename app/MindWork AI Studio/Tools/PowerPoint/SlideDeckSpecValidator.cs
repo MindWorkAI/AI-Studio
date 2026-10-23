@@ -39,10 +39,12 @@ internal static class SlideDeckSpecValidator
     /// <param name="pictureCount">How many pictures are attached, which the slides may refer to by number.</param>
     /// <param name="expectedSlideCount">How many slides the user asked for, or 0 when the model may choose.</param>
     /// <param name="templateSlideUses">What the user chose for each slide of the template, by its number; null or empty when the deck uses no template slides.</param>
+    /// <param name="chosenLayouts">The layouts the user chose for kinds of slides; null when the model decides every layout.</param>
     /// <returns>The issues, written for the model; empty when the deck fits.</returns>
-    public static IReadOnlyList<string> Validate(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, int expectedSlideCount, IReadOnlyList<TemplateSlideUse>? templateSlideUses = null)
+    public static IReadOnlyList<string> Validate(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, int expectedSlideCount, IReadOnlyList<TemplateSlideUse>? templateSlideUses = null, ChosenLayouts? chosenLayouts = null)
     {
         var uses = templateSlideUses ?? [];
+        var chosen = chosenLayouts ?? ChosenLayouts.NONE;
         var issues = new List<string>();
         if (spec.Title.Length == 0)
             issues.Add("The presentation has no title.");
@@ -57,7 +59,7 @@ internal static class SlideDeckSpecValidator
             issues.Add($"The presentation has {spec.Slides.Count} slides, but exactly {expectedSlideCount} were asked for.");
 
         for (var index = 0; index < spec.Slides.Count; index++)
-            ValidateSlide(spec.Slides[index], index + 1, template, uses, pictureCount, issues);
+            ValidateSlide(spec.Slides[index], index + 1, template, uses, chosen, pictureCount, issues);
 
         ValidateTemplateSlides(spec, template, uses, issues);
         return issues;
@@ -78,7 +80,7 @@ internal static class SlideDeckSpecValidator
         ? templateSlideUses.UseOf(number) is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null && (!slide.HasContent || template.FamilyOf(slide) is not null)
         : template.FindFamily(slide.Layout) is not null;
 
-    private static void ValidateSlide(SlideSpec slide, int number, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, int pictureCount, List<string> issues)
+    private static void ValidateSlide(SlideSpec slide, int number, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, ChosenLayouts chosen, int pictureCount, List<string> issues)
     {
         if (slide.TemplateSlide is { } templateSlideNumber)
         {
@@ -96,7 +98,32 @@ internal static class SlideDeckSpecValidator
             return;
         }
 
+        ValidateChosenLayout(slide, number, family, chosen, issues);
         ValidateContent(slide, number, family.Id, family.Slots, pictureCount, issues);
+    }
+
+    /// <summary>
+    /// Checks that a new slide uses the layout the user chose for its kind, where its kind shows in the deck.
+    /// </summary>
+    /// <remarks>
+    /// Only two kinds show: the first slide is the title slide, and a slide which starts a chapter
+    /// says so. Whether a slide is, e.g., a timeline is for the model to judge, so those choices are
+    /// rules in the prompt only. The title slide wins over a chapter on the first slide, so that the
+    /// two checks never contradict each other. A template slide keeps its own layout and is not
+    /// checked at all.
+    /// </remarks>
+    private static void ValidateChosenLayout(SlideSpec slide, int number, LayoutFamily family, ChosenLayouts chosen, List<string> issues)
+    {
+        if (number == 1)
+        {
+            if (chosen.For(LayoutPurpose.TITLE) is { } titleFamily && titleFamily.Id != family.Id)
+                issues.Add($"Slide 1 is the title slide, but uses layout {family.Id}. The title slide uses layout {titleFamily.Id}.");
+
+            return;
+        }
+
+        if (slide.StartsChapter && chosen.For(LayoutPurpose.CHAPTER) is { } chapterFamily && chapterFamily.Id != family.Id)
+            issues.Add($"Slide {number} starts a chapter, but uses layout {family.Id}. Chapters start with a slide on layout {chapterFamily.Id}; put their content on the slides that follow.");
     }
 
     /// <summary>

@@ -274,6 +274,49 @@ public sealed class SlideDeckSpecValidatorTests
         });
     }
 
+    [Test]
+    public void TheTitleSlideAndTheChaptersUseTheChosenLayouts()
+    {
+        var chosen = ChosenLayouts.Of(TEMPLATE, new Dictionary<LayoutPurpose, string>
+        {
+            [LayoutPurpose.TITLE] = "Title Slide",
+            [LayoutPurpose.CHAPTER] = "Section Header",
+        });
+
+        var fitting = new SlideDeckSpec("Mars", [Slide("L1", "Mars"), Slide("L2", "Why Mars", startsChapter: true), Slide("L3", "Water", texts: [Text("Ice at the poles")])]);
+        var deviating = new SlideDeckSpec("Mars", [Slide("L3", "Mars"), Slide("L3", "Why Mars", texts: [Text("Close to Earth")], startsChapter: true)]);
+
+        var issues = SlideDeckSpecValidator.Validate(deviating, TEMPLATE, 0, 0, chosenLayouts: chosen);
+        Assert.Multiple(() =>
+        {
+            Assert.That(SlideDeckSpecValidator.Validate(fitting, TEMPLATE, 0, 0, chosenLayouts: chosen), Is.Empty);
+            Assert.That(issues, Has.Some.Contains("Slide 1 is the title slide, but uses layout L3. The title slide uses layout L1."));
+            Assert.That(issues, Has.Some.Contains("Slide 2 starts a chapter, but uses layout L3. Chapters start with a slide on layout L2; put their content on the slides that follow."));
+            Assert.That(SlideDeckSpecValidator.Validate(deviating, TEMPLATE, 0, 0), Is.Empty, "Without choices, the model decides every layout.");
+        });
+    }
+
+    [Test]
+    public void ATemplateSlideKeepsItsLayoutWhateverTheChoices()
+    {
+        var template = TemplateWithSlides();
+        var chosen = ChosenLayouts.Of(template, new Dictionary<LayoutPurpose, string>
+        {
+            [LayoutPurpose.TITLE] = "Content",
+            [LayoutPurpose.CHAPTER] = "Content",
+        });
+
+        var deck = new SlideDeckSpec("Weekly",
+        [
+            Keep(1, startsChapter: true),
+            Edit(2, "News", texts: [Text("AI Studio: a new release", "EINSTEIN: a new model")]),
+            Keep(3, startsChapter: true),
+            Edit(4, texts: [Text("Thema:\tWeekly")]),
+        ]);
+
+        Assert.That(SlideDeckSpecValidator.Validate(deck, template, 0, 0, USES, chosen), Is.Empty);
+    }
+
     /// <summary>
     /// What the user chose for the slides of TemplateWithSlides: the second slide and
     /// the imprint are edited, and the closing slide is left out.
@@ -302,11 +345,11 @@ public sealed class SlideDeckSpecValidatorTests
         return PresentationTemplate.Read(file);
     }
 
-    private static SlideSpec Keep(int templateSlide) => new(string.Empty, false, string.Empty, string.Empty, [], [], [], null, templateSlide);
+    private static SlideSpec Keep(int templateSlide, bool startsChapter = false) => new(string.Empty, startsChapter, string.Empty, string.Empty, [], [], [], null, templateSlide);
 
     private static SlideSpec Edit(int templateSlide, string title = "", string subtitle = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<string>? labels = null) => new(string.Empty, false, title, subtitle, texts ?? [], labels ?? [], [], null, templateSlide);
 
-    private static SlideSpec Slide(string layout, string title = "Title", string subtitle = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<int>? pictures = null, SlideTableSpec? table = null) => new(layout, false, title, subtitle, texts ?? [], [], pictures ?? [], table);
+    private static SlideSpec Slide(string layout, string title = "Title", string subtitle = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<int>? pictures = null, SlideTableSpec? table = null, bool startsChapter = false) => new(layout, startsChapter, title, subtitle, texts ?? [], [], pictures ?? [], table);
 
     private static SlideTextBlock Text(params string[] paragraphs) => new(paragraphs.Select(paragraph => new SlideParagraph(paragraph, 0)).ToList());
 }

@@ -54,6 +54,18 @@ internal sealed partial class PresentationTemplate
     public LayoutFamily? FindFamily(string id) => this.Families.FirstOrDefault(family => string.Equals(family.Id, id.Trim(), StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
+    /// Finds a family by the name the user chose it by.
+    /// </summary>
+    /// <remarks>
+    /// The name is compared exactly, as the template's author wrote it. A template may give two
+    /// layouts the same name, e.g., in two slide masters; the first one in the order of the template
+    /// counts then.
+    /// </remarks>
+    /// <param name="name">The name, e.g., "Inhalt/Content 1".</param>
+    /// <returns>The family, or null when there is none with this name.</returns>
+    public LayoutFamily? FindFamilyByName(string name) => name.Length == 0 ? null : this.Families.FirstOrDefault(family => string.Equals(family.Name, name, StringComparison.Ordinal));
+
+    /// <summary>
     /// Finds a slide of the template by its number.
     /// </summary>
     /// <param name="number">The number, starting at 1.</param>

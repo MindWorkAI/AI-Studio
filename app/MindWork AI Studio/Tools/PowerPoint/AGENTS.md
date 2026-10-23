@@ -39,6 +39,10 @@ to `app/AGENTS.md`, which apply here as well.
   texts of the slides. They reach the model in the request, as `LAYOUTS` and `TEMPLATE_SLIDES`, never
   in the system prompt, and they pass `PromptInjectionGuardService` with the reporting scope of the
   request. The names of the attached pictures go with the request as well, as `PICTURES`.
+- **Layout choices travel by name.** The user chooses layouts for kinds of slides (`LayoutPurpose`) by
+  their names, which outlive sessions and new versions of a template. `ChosenLayouts` finds them in the
+  template, and only their IDs go into the system prompt. The validator checks the two kinds which show
+  in a deck, the title slide and the start of a chapter; every other choice is a rule for the model.
 - **New slides carry no formatting of their own.** They fill the placeholders of their layout and
   leave out every placeholder without content, so that no prompt text such as "Click to add text"
   remains.
