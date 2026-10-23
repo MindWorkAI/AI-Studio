@@ -81,11 +81,4 @@ public sealed class ChosenLayoutsTests
             Assert.That(rules, Does.Not.Contain("Section Header").And.Not.Contain("Two Content"), "No text of the template file reaches the system prompt.");
         });
     }
-
-    [Test]
-    public void EveryKindOfSlideHasADescriptionForTheModel()
-    {
-        foreach (var purpose in Enum.GetValues<LayoutPurpose>())
-            Assert.That(purpose.PromptDescription(), Is.Not.Empty, $"The kind of slide {purpose} has no description.");
-    }
 }

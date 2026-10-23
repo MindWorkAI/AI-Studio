@@ -5,93 +5,154 @@ namespace AIStudio.Tools.PowerPoint;
 /// </summary>
 /// <remarks>
 /// A choice says which layout a kind of slide uses, not whether the presentation has such a slide
-/// at all. The members follow the course of a presentation, which is the order the form lists them
-/// in. Public, because the settings store the choices by these members.
+/// at all. The members are grouped by their LayoutPurposeArea, in the order of the areas, and within
+/// an area they roughly follow the course of a presentation; the forms list them in this order. A
+/// kind which comes as a single item or as several gets a member for each, because a template
+/// usually shows one item prominently and several as an overview. What the user and the model read
+/// about each member is in LayoutPurposeExtensions, one file per area.<br/><br/>
+/// Public, because the settings store the choices by these members. They are stored by name, so
+/// members may be added anywhere, but a renamed member loses the choices made for it.
 /// </remarks>
 public enum LayoutPurpose
 {
-    /// <summary>
-    /// The title slide, which opens the presentation.
-    /// </summary>
+    //
+    // Structure and framing:
+    //
     TITLE,
-
-    /// <summary>
-    /// An agenda, or an overview of the parts of the presentation.
-    /// </summary>
+    TABLE_OF_CONTENTS,
     AGENDA,
-
-    /// <summary>
-    /// The slide which opens a chapter.
-    /// </summary>
+    SPEAKER,
+    SPEAKERS,
     CHAPTER,
-
-    /// <summary>
-    /// An ordinary slide with content.
-    /// </summary>
-    CONTENT,
-
-    /// <summary>
-    /// A slide with little content, e.g., a single statement, a quote, or a key figure.
-    /// </summary>
-    LITTLE_CONTENT,
-
-    /// <summary>
-    /// A slide with much content, e.g., many points or a longer explanation.
-    /// </summary>
-    MUCH_CONTENT,
-
-    /// <summary>
-    /// A slide which presents pictures, e.g., screenshots, photos, or sketches.
-    /// </summary>
-    MEDIA,
-
-    /// <summary>
-    /// A comparison, e.g., before and after, or pros and cons.
-    /// </summary>
-    COMPARISON,
-
-    /// <summary>
-    /// A timeline, e.g., the course of a project.
-    /// </summary>
-    TIMELINE,
-
-    /// <summary>
-    /// A process, e.g., the steps of a workflow.
-    /// </summary>
-    PROCESS,
-
-    /// <summary>
-    /// A hypothesis.
-    /// </summary>
-    HYPOTHESIS,
-
-    /// <summary>
-    /// A research question.
-    /// </summary>
-    RESEARCH_QUESTION,
-
-    /// <summary>
-    /// Feedback, e.g., of customers or users.
-    /// </summary>
-    FEEDBACK,
-
-    /// <summary>
-    /// Source code.
-    /// </summary>
-    CODE,
-
-    /// <summary>
-    /// A question to the audience during the presentation.
-    /// </summary>
-    AUDIENCE_QUESTION,
-
-    /// <summary>
-    /// A summary or a conclusion.
-    /// </summary>
-    SUMMARY,
-
-    /// <summary>
-    /// The closing slide, e.g., with thanks and contact details.
-    /// </summary>
+    CHAPTER_SUMMARY,
+    Q_AND_A,
+    ACKNOWLEDGEMENTS,
+    REFERENCES,
     CLOSING,
+    APPENDIX,
+    IMPRINT,
+
+    //
+    // General content:
+    //
+    CONTENT,
+    LITTLE_CONTENT,
+    MUCH_CONTENT,
+    KEY_MESSAGE,
+    EXECUTIVE_SUMMARY,
+    CONTEXT,
+    RETROSPECTIVE,
+    PICTURE,
+    PICTURES,
+    TABLE,
+    COMPARISON,
+    PROS_AND_CONS,
+    TIMELINE,
+    PROCESS,
+    QUOTE,
+    QUOTES,
+    CODE,
+    CHECKLIST,
+    AUDIENCE_QUESTION,
+    FEEDBACK,
+    DISCLAIMER,
+    SUMMARY,
+    OUTLOOK,
+
+    //
+    // Teaching and workshops:
+    //
+    INTRODUCTION_ROUND,
+    EXPECTATIONS,
+    GROUND_RULES,
+    ORGANIZATIONAL_NOTES,
+    LEARNING_OBJECTIVE,
+    LEARNING_OBJECTIVES,
+    EXAMPLE,
+    EXAMPLES,
+    STEP_BY_STEP,
+    EXERCISE,
+    EXERCISE_SOLUTION,
+    GROUP_WORK,
+    POLL,
+    DISCUSSION_PROMPT,
+    REFLECTION,
+    BREAK,
+    DAY_CHANGE,
+
+    //
+    // Business and projects:
+    //
+    VISION,
+    GOAL,
+    GOALS,
+    NARRATIVE,
+    STORY,
+    PROBLEM,
+    PROBLEMS,
+    OPPORTUNITY,
+    OPPORTUNITIES,
+    SWOT,
+    USE_CASE,
+    USE_CASES,
+    USER_STORY,
+    USER_STORIES,
+    ACCEPTANCE_CRITERIA,
+    KPI,
+    KPIS,
+    FORECAST,
+    SCENARIO,
+    SCENARIOS,
+    RISK,
+    RISKS,
+    DEPENDENCY,
+    DEPENDENCIES,
+    RESOURCES,
+    TEAM,
+    PARTNERS,
+    ROADMAP,
+    MILESTONE,
+    MILESTONES,
+    WORK_PACKAGE,
+    WORK_PACKAGES,
+    PROJECT_STATUS,
+    LESSONS_LEARNED,
+    REASON,
+    REASONS,
+    RECOMMENDATION,
+    RECOMMENDATIONS,
+    DECISION_REQUEST,
+    NEXT_STEPS,
+    CALL_TO_ACTION,
+
+    //
+    // Science and research:
+    //
+    STATE_OF_RESEARCH,
+    RESEARCH_GAP,
+    RESEARCH_QUESTION,
+    RESEARCH_QUESTIONS,
+    DEFINITION,
+    DEFINITIONS,
+    ASSUMPTION,
+    ASSUMPTIONS,
+    DELIMITATION,
+    DELIMITATIONS,
+    THESIS,
+    THESES,
+    HYPOTHESIS,
+    HYPOTHESES,
+    ARGUMENT_CHAIN,
+    COUNTERARGUMENT,
+    COUNTERARGUMENTS,
+    METHODOLOGY,
+    STUDY_DESIGN,
+    EXPERIMENTAL_SETUP,
+    DATA,
+    RESULT,
+    RESULTS,
+    INTERPRETATION,
+    LIMITATIONS,
+    CONTRIBUTION,
+    FUNDING,
 }

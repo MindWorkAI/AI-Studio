@@ -1232,9 +1232,31 @@ CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts"] = {
 CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
 ```
 
-The kinds of slides are `TITLE`, `AGENDA`, `CHAPTER`, `CONTENT`, `LITTLE_CONTENT`, `MUCH_CONTENT`,
-`MEDIA`, `COMPARISON`, `TIMELINE`, `PROCESS`, `HYPOTHESIS`, `RESEARCH_QUESTION`, `FEEDBACK`, `CODE`,
-`AUDIENCE_QUESTION`, `SUMMARY`, and `CLOSING`. For a kind you leave out, the LLM chooses the layout
+The kinds of slides come in five areas:
+
+- **Structure and framing:** `TITLE`, `TABLE_OF_CONTENTS`, `AGENDA`, `SPEAKER`, `SPEAKERS`, `CHAPTER`,
+  `CHAPTER_SUMMARY`, `Q_AND_A`, `ACKNOWLEDGEMENTS`, `REFERENCES`, `CLOSING`, `APPENDIX`, `IMPRINT`
+- **General content:** `CONTENT`, `LITTLE_CONTENT`, `MUCH_CONTENT`, `KEY_MESSAGE`, `EXECUTIVE_SUMMARY`,
+  `CONTEXT`, `RETROSPECTIVE`, `PICTURE`, `PICTURES`, `TABLE`, `COMPARISON`, `PROS_AND_CONS`, `TIMELINE`,
+  `PROCESS`, `QUOTE`, `QUOTES`, `CODE`, `CHECKLIST`, `AUDIENCE_QUESTION`, `FEEDBACK`, `DISCLAIMER`,
+  `SUMMARY`, `OUTLOOK`
+- **Teaching and workshops:** `INTRODUCTION_ROUND`, `EXPECTATIONS`, `GROUND_RULES`, `ORGANIZATIONAL_NOTES`,
+  `LEARNING_OBJECTIVE`, `LEARNING_OBJECTIVES`, `EXAMPLE`, `EXAMPLES`, `STEP_BY_STEP`, `EXERCISE`,
+  `EXERCISE_SOLUTION`, `GROUP_WORK`, `POLL`, `DISCUSSION_PROMPT`, `REFLECTION`, `BREAK`, `DAY_CHANGE`
+- **Business and projects:** `VISION`, `GOAL`, `GOALS`, `NARRATIVE`, `STORY`, `PROBLEM`, `PROBLEMS`,
+  `OPPORTUNITY`, `OPPORTUNITIES`, `SWOT`, `USE_CASE`, `USE_CASES`, `USER_STORY`, `USER_STORIES`,
+  `ACCEPTANCE_CRITERIA`, `KPI`, `KPIS`, `FORECAST`, `SCENARIO`, `SCENARIOS`, `RISK`, `RISKS`, `DEPENDENCY`,
+  `DEPENDENCIES`, `RESOURCES`, `TEAM`, `PARTNERS`, `ROADMAP`, `MILESTONE`, `MILESTONES`, `WORK_PACKAGE`,
+  `WORK_PACKAGES`, `PROJECT_STATUS`, `LESSONS_LEARNED`, `REASON`, `REASONS`, `RECOMMENDATION`,
+  `RECOMMENDATIONS`, `DECISION_REQUEST`, `NEXT_STEPS`, `CALL_TO_ACTION`
+- **Science and research:** `STATE_OF_RESEARCH`, `RESEARCH_GAP`, `RESEARCH_QUESTION`, `RESEARCH_QUESTIONS`,
+  `DEFINITION`, `DEFINITIONS`, `ASSUMPTION`, `ASSUMPTIONS`, `DELIMITATION`, `DELIMITATIONS`, `THESIS`,
+  `THESES`, `HYPOTHESIS`, `HYPOTHESES`, `ARGUMENT_CHAIN`, `COUNTERARGUMENT`, `COUNTERARGUMENTS`,
+  `METHODOLOGY`, `STUDY_DESIGN`, `EXPERIMENTAL_SETUP`, `DATA`, `RESULT`, `RESULTS`, `INTERPRETATION`,
+  `LIMITATIONS`, `CONTRIBUTION`, `FUNDING`
+
+A kind in the singular, e.g., `RISK`, shows one item prominently; its plural, e.g., `RISKS`, shows
+several items together. For a kind you leave out, the LLM chooses the layout
 itself, and so it does for a name your template lacks. A layout says how such a slide looks, not
 whether the presentation has one. The layouts are preselections as well, so they apply only while
 preselection is enabled, and the table applies as a whole: users either keep it or, with
