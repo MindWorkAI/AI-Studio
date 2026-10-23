@@ -441,6 +441,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedFooterText, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedLayouts, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedTemplateSlideUses, this.Id, settingsTable, dryRun);
 
         // Config: Batch Processing Assistant defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectOptions, this.Id, settingsTable, dryRun);

@@ -45,6 +45,16 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     public Dictionary<LayoutPurpose, string> PreselectedLayouts { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedLayouts, new Dictionary<LayoutPurpose, string>());
 
     /// <summary>
+    /// Preselect what the presentation does with the slides of the preselected template, by the number of each slide?
+    /// </summary>
+    /// <remarks>
+    /// The slides count from 1, in the order of the file, hidden ones included. A slide which is
+    /// missing is left out, as by default. The choices belong to the preselected template: for any
+    /// other template, the assistant ignores them, since its slides are other ones.
+    /// </remarks>
+    public Dictionary<int, TemplateSlideUse> PreselectedTemplateSlideUses { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedTemplateSlideUses, new Dictionary<int, TemplateSlideUse>());
+
+    /// <summary>
     /// Preselect any Slide Builder  options?
     /// </summary>
     public bool PreselectOptions { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectOptions, true);

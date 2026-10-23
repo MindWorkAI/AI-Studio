@@ -738,11 +738,22 @@ CONFIG["SETTINGS"] = {}
 --     ["CONTENT"] = "Title and Content",
 -- }
 --
+-- Preselect what the presentation does with the slides your template carries, by their number in the
+-- file, starting with 1 and counting hidden slides. OMIT leaves a slide out, KEEP keeps it as it is,
+-- and EDIT lets the LLM write new content into it; a slide without room for content stays unchanged
+-- instead. A slide you do not name is left out. This applies only to the template above.
+-- Replaces, does not merge: the table applies as a whole, also with AllowUserOverride.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses"] = {
+--     [1] = "KEEP",
+--     [4] = "EDIT",
+-- }
+--
 -- Allow users to choose another template or change the defaults locally.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses.AllowUserOverride"] = true
 
 -- Configure defaults for the Batch Processing Assistant.
 -- Preselection must be enabled for the remaining batch settings to take effect.

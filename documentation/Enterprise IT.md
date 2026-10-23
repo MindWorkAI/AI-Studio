@@ -1266,6 +1266,26 @@ aspects, or the profile of the user state, and the current date.
 The layouts are preselections as well, so they apply only while preselection is enabled, and the
 table applies as a whole: users either keep it or, with `AllowUserOverride`, change it as they like.
 
+When your template carries slides of its own, e.g., a title slide with your logo or a closing slide
+with your contact details, you can also preselect what the presentation does with them. By default,
+it leaves them out. Number the slides as they come in the file, starting with 1 and counting hidden
+slides:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses"] = {
+    [1] = "KEEP",
+    [4] = "EDIT",
+}
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses.AllowUserOverride"] = true
+```
+
+`OMIT` leaves a slide out, `KEEP` keeps it as it is, and `EDIT` lets the LLM write new content into
+it. A slide without room for content stays unchanged instead, and a slide you do not name is left
+out. AI Studio logs a warning for an entry it cannot read, e.g., a number below 1 or an unknown
+option, and passes it over. These choices belong to the template you preselect: when users choose
+another template, they do not apply. Like the layouts, they apply only while preselection is
+enabled, and the table applies as a whole.
+
 ## Labeling AI-generated content
 
 Rules on transparency, such as the EU AI Act, may require that a text says when AI generated it, for

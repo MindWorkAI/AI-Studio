@@ -3,7 +3,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// <summary>
 /// What the presentation does with one slide of the template, as the user chose it.
 /// </summary>
-internal enum TemplateSlideUse
+public enum TemplateSlideUse
 {
     /// <summary>
     /// The presentation leaves the slide out, as it does with the samples and hints of a template.
