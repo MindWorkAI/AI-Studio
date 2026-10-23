@@ -110,9 +110,9 @@
         </MudJustifiedText>
         @foreach (var purpose in Enum.GetValues<LayoutPurpose>())
         {
-            <MudSelect T="string" Value="@this.LayoutNameOf(purpose)" ValueChanged="@(name => this.SetLayoutName(purpose, name))" Label="@purpose.Label()" HelperText="@purpose.Question()" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewQuilt" Class="mb-3">
+            <MudSelect T="string" Value="@this.LayoutNameOf(purpose)" ValueChanged="@(name => this.SetLayoutName(purpose, name))" Disabled="@this.AreLayoutsLocked" Label="@purpose.Label()" HelperText="@purpose.Question()" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewQuilt" Class="mb-3">
                 <MudSelectItem T="string" Value="@string.Empty">@LayoutPurposeExtensions.NoPreference</MudSelectItem>
-                @foreach (var layoutName in LayoutNamesOf(loadedTemplate))
+                @foreach (var layoutName in loadedTemplate.FamilyNames)
                 {
                     <MudSelectItem T="string" Value="@layoutName">@layoutName</MudSelectItem>
                 }

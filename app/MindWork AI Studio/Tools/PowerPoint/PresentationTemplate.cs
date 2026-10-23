@@ -66,6 +66,11 @@ internal sealed partial class PresentationTemplate
     public LayoutFamily? FindFamilyByName(string name) => name.Length == 0 ? null : this.Families.FirstOrDefault(family => string.Equals(family.Name, name, StringComparison.Ordinal));
 
     /// <summary>
+    /// The names of the families, each one once, in the order of the template, e.g., for the user to choose a layout by.
+    /// </summary>
+    public IEnumerable<string> FamilyNames => this.Families.Select(family => family.Name).Distinct(StringComparer.Ordinal);
+
+    /// <summary>
     /// Finds a slide of the template by its number.
     /// </summary>
     /// <param name="number">The number, starting at 1.</param>

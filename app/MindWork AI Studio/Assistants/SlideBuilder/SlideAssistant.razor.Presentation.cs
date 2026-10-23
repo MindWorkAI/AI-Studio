@@ -110,6 +110,14 @@ public partial class SlideAssistant
     private bool IsLockedTemplateUnavailable => this.IsTemplateLocked && !string.IsNullOrWhiteSpace(this.templatePath) && this.template is null;
 
     /// <summary>
+    /// Whether the organization locked the layouts for kinds of slides.
+    /// </summary>
+    /// <remarks>
+    /// Like the template, the layouts are a preselection, so a lock binds only while preselection is enabled.
+    /// </remarks>
+    private bool AreLayoutsLocked => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions && ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked;
+
+    /// <summary>
     /// What the user chose for the slides of the template, as the model and the check of its answer see it; empty without a template.
     /// </summary>
     private IReadOnlyList<TemplateSlideUse> ChosenTemplateSlideUses => this.template is null ? [] : this.templateSlideUses.ToList();
@@ -238,11 +246,6 @@ public partial class SlideAssistant
         else
             this.layoutNames[purpose] = name;
     }
-
-    /// <summary>
-    /// The names of the layouts the user may choose from, each one once, in the order of the template.
-    /// </summary>
-    private static IEnumerable<string> LayoutNamesOf(PresentationTemplate template) => template.Families.Select(family => family.Name).Distinct(StringComparer.Ordinal);
 
     /// <summary>
     /// The rules for the layouts the user chose; empty when the LLM decides every layout.

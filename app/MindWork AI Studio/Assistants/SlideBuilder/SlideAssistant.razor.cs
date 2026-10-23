@@ -220,6 +220,10 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.templatePath = this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath;
             this.LoadTemplate();
             this.footerText = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText;
+            this.layoutNames.Clear();
+            foreach (var (purpose, layoutName) in this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedLayouts)
+                this.layoutNames[purpose] = layoutName;
+
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage;
             this.selectedAudienceProfile = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceProfile;
