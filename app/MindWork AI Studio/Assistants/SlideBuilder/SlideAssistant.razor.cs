@@ -110,6 +110,11 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     protected override bool ShowDedicatedProgress => true;
 
+    /// <summary>
+    /// The slides may carry the date, e.g., on the title slide or in an imprint, so the model must not guess it.
+    /// </summary>
+    protected override bool IncludeDateTime => true;
+
     protected override string ExportFileName => this.slideDeck is { Title.Length: > 0 } deck ? deck.Title : this.Title;
 
     protected override string SubmitText => T("Create Slides");

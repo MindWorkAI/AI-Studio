@@ -124,6 +124,15 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual bool ShowReset => true;
 
+    /// <summary>
+    /// Whether the system prompt starts with the current date and time.
+    /// </summary>
+    /// <remarks>
+    /// Off for most assistants, whose results do not depend on the date. An assistant which writes
+    /// the date into its result, or plans around it, turns this on rather than guessing the date.
+    /// </remarks>
+    protected virtual bool IncludeDateTime => false;
+
     protected virtual string? SendToChatVisibleUserPromptPrefix => null;
 
     protected virtual string? SendToChatVisibleUserPromptContent => null;
@@ -385,7 +394,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.ChatThread = new()
         {
-            IncludeDateTime = false,
+            IncludeDateTime = this.IncludeDateTime,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
@@ -403,7 +412,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var chatId = Guid.NewGuid();
         this.ChatThread = new()
         {
-            IncludeDateTime = false,
+            IncludeDateTime = this.IncludeDateTime,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
