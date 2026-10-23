@@ -1182,8 +1182,9 @@ ignored and logged as a warning.
 
 ## Shipping the PowerPoint template of the Slide Planner
 
-The Slide Planner plans slides for the layouts of a PowerPoint template, and it creates PowerPoint
-files in that template's design. Instead of placing your corporate template on a network share, you
+The Slide Planner plans slides for the layouts of a PowerPoint template (.pptx or .potx), and it
+creates PowerPoint files (.pptx) in that template's design. OpenDocument presentations (.odp, .otp)
+cannot serve as a template yet. Instead of placing your corporate template on a network share, you
 can ship it with your configuration plugin. Put the file next to your `plugin.lua`, or into a folder
 below it, and give its path relative to your `plugin.lua`:
 
@@ -1200,7 +1201,12 @@ The relative path must stay inside the plugin directory. AI Studio rejects `..` 
 pointing out of that directory. A missing or rejected file is never fatal: AI Studio logs a warning
 and treats the template as if your plugin did not configure it. Users then keep the template they
 chose themselves, or have none, and the Slide Planner plans an outline only. An absolute path, e.g.,
-on a network share, keeps working as before.
+on a network share, works as well, as long as every computer can read it.
+
+A locked template which a computer cannot read at the moment, e.g., because the network share cannot
+be reached, does not block the Slide Planner either. It tells users that the template of their
+organization is not available right now and plans an outline only. Once the template can be read
+again, the Slide Planner uses it the next time users open it.
 
 Keep in mind that every client downloads the whole configuration plugin, template included, whenever
 AI Studio starts and whenever your configuration changes.
