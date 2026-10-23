@@ -1,4 +1,3 @@
-using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
 using A = DocumentFormat.OpenXml.Drawing;
@@ -186,8 +185,7 @@ internal sealed partial class PresentationTemplate
                 placeholder.Index?.Value,
                 bounds,
                 FontSizeOf(textBody?.ListStyle?.Level1ParagraphProperties),
-                InsetsOf(textBody?.BodyProperties),
-                element);
+                InsetsOf(textBody?.BodyProperties));
         }
     }
 
@@ -287,8 +285,7 @@ internal sealed partial class PresentationTemplate
     /// <summary>
     /// A placeholder as the slide, the layout or the slide master states it, before anything is inherited.
     /// </summary>
-    /// <param name="Element">The shape, picture or graphic frame which is the placeholder, e.g., to read its text.</param>
-    private sealed record PlaceholderInfo(string Type, uint? Index, SlotBounds? Bounds, int? FontSize, TextInsets Insets, OpenXmlElement Element);
+    private sealed record PlaceholderInfo(string Type, uint? Index, SlotBounds? Bounds, int? FontSize, TextInsets Insets);
 
     /// <summary>
     /// What the layouts of one slide master inherit from it: its placeholders, keyed by the type
