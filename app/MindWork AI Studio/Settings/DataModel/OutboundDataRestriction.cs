@@ -2,18 +2,18 @@ namespace AIStudio.Settings.DataModel;
 
 /// <summary>
 /// Where a chat may still send data, once internal content entered it: mails, a search of the
-/// wiki, or an internal web page.
+/// wiki, an internal web page, or passages of a data source.
 /// </summary>
 /// <remarks>
 /// The members run from the strictest to the most permissive, so the stricter of two levels is the
 /// smaller one. Services which are configured in AI Studio, such as Confluence, the allowed private
-/// hosts, or the mailbox itself, stay allowed on every level.
+/// hosts, the data sources, or the mailbox itself, stay allowed on every level.
 /// </remarks>
 public enum OutboundDataRestriction
 {
     // The strictest level is deliberately the member with the underlying value 0: when the settings
     // file holds a value TolerantEnumConverter cannot read, it falls back to that member. Falling back
-    // to a more permissive level would open a way out for mail content the user meant to keep in.
+    // to a more permissive level would open a way out for internal content the user meant to keep in.
 
     /// <summary>
     /// Only the services configured in AI Studio.

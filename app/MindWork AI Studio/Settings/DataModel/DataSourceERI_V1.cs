@@ -64,6 +64,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
 
     /// <inheritdoc />
+    public OutboundDataRestriction OutboundDataRestriction { get; init; } = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
+
+    /// <inheritdoc />
     public bool IsEnterpriseConfiguration { get; init; }
 
     /// <inheritdoc />

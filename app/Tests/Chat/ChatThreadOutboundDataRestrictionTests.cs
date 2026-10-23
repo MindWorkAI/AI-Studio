@@ -21,6 +21,7 @@ public sealed class ChatThreadOutboundDataRestrictionTests
     private const string PRIVATE_MAILBOX_ID = "5c9e2a7b-3f1d-4e8a-b6c4-2d7f9a1e3b5c";
     private const string WORK_MAILBOX_ID = "8d1f4b6a-2e9c-4a7d-9b3e-6c5a8f2d1e4b";
     private const string INTRANET_HOST = "intranet.example.org";
+    private const string DATA_SOURCE_ID = "3e8b1d6f-9a2c-4f7e-b5d1-6c4a9e2f8b17";
 
     [Test]
     public void AChatWhichReadNoMailboxDemandsNothing() =>
@@ -88,7 +89,7 @@ public sealed class ChatThreadOutboundDataRestrictionTests
         thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE_MAILBOX_ID));
         thread.RequireOutboundDataRestriction(OutboundDataRequirement.NONE);
 
-        Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE_MAILBOX_ID)), "A search of the local files, say, says nothing about mailboxes and must leave the chat as it was.");
+        Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE_MAILBOX_ID)), "A search which found nothing, say, brought nothing in and must leave the chat as it was.");
     }
 
     [Test]
@@ -104,6 +105,7 @@ public sealed class ChatThreadOutboundDataRestrictionTests
 
     [TestCase(OutboundDataOrigin.CONFLUENCE_WIKI, "")]
     [TestCase(OutboundDataOrigin.INTERNAL_WEB_PAGE, INTRANET_HOST)]
+    [TestCase(OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID)]
     public void TheOriginSurvivesSavingTheChat(OutboundDataOrigin origin, string reference)
     {
         var thread = new ChatThread { ChatId = Guid.NewGuid() };

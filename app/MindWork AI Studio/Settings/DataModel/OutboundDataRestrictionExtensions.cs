@@ -28,9 +28,9 @@ public static class OutboundDataRestrictionExtensions
     /// </summary>
     public static string GetDescription(this OutboundDataRestriction restriction) => restriction switch
     {
-        OutboundDataRestriction.ONLY_CONFIGURED_SERVICES => TB("The chat may only use services configured in AI Studio: your mailboxes, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web."),
+        OutboundDataRestriction.ONLY_CONFIGURED_SERVICES => TB("The chat may only use services configured in AI Studio: your mailboxes, your data sources, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web."),
         OutboundDataRestriction.ONLY_LINKS_FROM_CHAT => TB("The chat may also read web pages whose addresses stand in the chat, written by you or returned by a tool, exactly as they stand there. It does not search the web, and the AI cannot choose addresses of its own outside the services configured in AI Studio."),
-        OutboundDataRestriction.UNRESTRICTED => TB("The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails, can then reach third parties, e.g., inside a search query or the address of a web page."),
+        OutboundDataRestriction.UNRESTRICTED => TB("The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails or the documents of your data sources, can then reach third parties, e.g., inside a search query or the address of a web page."),
 
         _ => TB("This version of AI Studio does not know this restriction, so it applies the strictest one."),
     };

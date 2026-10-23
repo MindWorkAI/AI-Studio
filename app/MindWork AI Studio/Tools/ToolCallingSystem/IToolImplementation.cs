@@ -98,8 +98,9 @@ public interface IToolImplementation
     /// Where this tool sends data when it runs, beyond AI Studio and the provider of the model.
     /// </summary>
     /// <remarks>
-    /// A chat which read from a mailbox keeps the tools whose data goes further than the mailbox
-    /// allows from being offered and from running, see ToolSelectionRules.IsOutboundDataAllowed.
+    /// A chat which holds internal content, such as mails or passages of a data source, keeps the
+    /// tools whose data goes further than their source allows from being offered and from running,
+    /// see ToolSelectionRules.IsOutboundDataAllowed.
     /// A tool which says nothing counts as one which contacts addresses the model chooses, the most
     /// open kind: a tool which forgot to say, or one written by a plugin author, is kept back rather
     /// than let through.

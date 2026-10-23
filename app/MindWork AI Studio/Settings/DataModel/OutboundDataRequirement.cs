@@ -5,12 +5,12 @@ namespace AIStudio.Settings.DataModel;
 /// </summary>
 /// <remarks>
 /// The source travels along so a tool which is kept from running can name it, and the user
-/// learns what stands in the way. For a mailbox, the reference is its id rather than its name,
-/// because a mailbox may be renamed after a chat read from it.
+/// learns what stands in the way. For a mailbox or a data source, the reference is its id rather
+/// than its name, because either may be renamed after a chat read from it.
 /// </remarks>
 /// <param name="Restriction">Where the chat may still send data.</param>
 /// <param name="Origin">What kind of source demands the restriction, or NONE when nothing restricts the chat.</param>
-/// <param name="Reference">Which source of its kind demands the restriction: the id of a mailbox, or the host of a private web page. An empty text when the kind says it all, as for the wiki, or when nothing restricts the chat.</param>
+/// <param name="Reference">Which source of its kind demands the restriction: the id of a mailbox or of a data source, or the host of a private web page. An empty text when the kind says it all, as for the wiki, or when nothing restricts the chat.</param>
 public sealed record OutboundDataRequirement(OutboundDataRestriction Restriction, OutboundDataOrigin Origin, string Reference)
 {
     /// <summary>

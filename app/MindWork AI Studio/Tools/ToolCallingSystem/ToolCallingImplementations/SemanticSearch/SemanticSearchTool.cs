@@ -189,24 +189,16 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     {
         var offeredDataSources = options.AutomaticDataSourceSelection ? dataSources.AllowedDataSources : dataSources.SelectedDataSources;
 
-        // A data source configured to return no matches would only ever come back empty:
+        //
+        // A data source configured to return no matches would only ever come back empty. The same
+        // data sources always come in the same order, however the settings list them or the checks
+        // return them: the providers cache a request from its beginning, and the tools are part of
+        // that beginning, see IToolImplementation.ResolveFunctionAsync.
+        //
         return new(
-            InOfferOrder(offeredDataSources.Where(dataSource => dataSource.MaxMatches > 0)),
-            InOfferOrder(dataSources.GetUnreachableOfTheChat(options)));
+            offeredDataSources.Where(dataSource => dataSource.MaxMatches > 0).InFixedOrder(),
+            dataSources.GetUnreachableOfTheChat(options).InFixedOrder());
     }
-
-    /// <summary>
-    /// Sorts data sources the way the tool offers them: by their number, then by their ID.
-    /// </summary>
-    /// <remarks>
-    /// The same data sources always come in the same order, however the settings list them or the
-    /// checks return them. The providers cache a request from its beginning, and the tools are part
-    /// of that beginning, see IToolImplementation.ResolveFunctionAsync.
-    /// </remarks>
-    internal static IReadOnlyList<IDataSource> InOfferOrder(IEnumerable<IDataSource> dataSources) => dataSources
-        .OrderBy(dataSource => dataSource.Num)
-        .ThenBy(dataSource => dataSource.Id, StringComparer.Ordinal)
-        .ToList();
 
     /// <summary>
     /// Tailors the function to the data sources offered: lists them in its description, and allows
@@ -371,7 +363,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         logger.LogInformation("Semantic search finished. ToolCallId={ToolCallId}, DataSourceCount={DataSourceCount}, UnreachableCount={UnreachableCount}, Page={Page}, PassageCount={PassageCount}, LeftOutCount={LeftOutCount}", context.ToolCallId, request.DataSources.Count, unreachableDataSources.Count, request.Page, passageCount, leftOutCount);
 
         // Finding nothing is no error; the model reads it from the result counts:
-        var requirements = GetRequirements(request.DataSources, resultCounts);
+        var requirements = GetRequirements(request.DataSources, resultCounts, settingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction);
         return new ToolExecutionResult
         {
             JsonContent = new JsonObject
@@ -423,22 +415,16 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// </summary>
     /// <remarks>
     /// Only the data sources whose passages reached the model count: a search which found nothing
-    /// brought nothing into the chat, and a passage left out for the budget never reached it. A
-    /// data source which may only be used with self-hosted providers restricts the chat to those,
-    /// the same way as with the classic RAG process, cf. AISrcSelWithRetCtxVal.
+    /// brought nothing into the chat, and a passage left out for the budget never reached it. The
+    /// classic RAG process asks the same place, cf. AISrcSelWithRetCtxVal, so that both ways of
+    /// searching demand the same of the same data sources.
     /// </remarks>
     /// <param name="searchedDataSources">The data sources searched.</param>
     /// <param name="resultCounts">How many passages of each data source reached the model, in the same order.</param>
-    /// <returns>The provider confidence and the data security the chat requires from now on; NOT_SPECIFIED leaves the latter as it was.</returns>
-    internal static (ConfidenceLevel Confidence, DataSourceSecurity Security) GetRequirements(IReadOnlyList<IDataSource> searchedDataSources, IReadOnlyList<int> resultCounts)
-    {
-        var contributingDataSources = searchedDataSources.Where((_, index) => resultCounts[index] > 0).ToList();
-        if (contributingDataSources.Count == 0)
-            return (ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED);
-
-        var requiresSelfHosted = contributingDataSources.OfType<IExternalDataSource>().Any(dataSource => dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
-        return (contributingDataSources.GetRequiredConfidenceLevel(), requiresSelfHosted ? DataSourceSecurity.SELF_HOSTED : DataSourceSecurity.ALLOW_ANY);
-    }
+    /// <param name="organizationMinimum">The least strict outbound data restriction the organization allows.</param>
+    /// <returns>What the chat requires from now on.</returns>
+    internal static DataSourceRequirements GetRequirements(IReadOnlyList<IDataSource> searchedDataSources, IReadOnlyList<int> resultCounts, OutboundDataRestriction organizationMinimum) =>
+        DataSourceRequirements.Of(searchedDataSources, resultCounts, organizationMinimum);
 
     /// <summary>
     /// Reads the search the model asked for, and refuses what does not fit the data sources offered.

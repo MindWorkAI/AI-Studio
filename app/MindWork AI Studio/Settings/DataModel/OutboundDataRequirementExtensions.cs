@@ -16,13 +16,14 @@ public static class OutboundDataRequirementExtensions
     /// had when the chat read the content: a change made later does not loosen the chat.
     /// </remarks>
     /// <param name="requirement">What the chat demands.</param>
-    /// <param name="settings">The configuration, to find the name of the mailbox which demands it.</param>
+    /// <param name="settings">The configuration, to find the name of the mailbox or data source which demands it.</param>
     /// <returns>The text for the user.</returns>
     public static string GetToolBlockedMessage(this OutboundDataRequirement requirement, Data settings) => requirement.Origin switch
     {
         OutboundDataOrigin.MAILBOX => GetMailboxBlockedMessage(requirement, settings.Mailboxes),
         OutboundDataOrigin.CONFLUENCE_WIKI => string.Format(TB("This chat searched your Confluence wiki while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName()),
         OutboundDataOrigin.INTERNAL_WEB_PAGE => string.Format(TB("This chat read an internal web page on '{0}' while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Reference, requirement.Restriction.GetName()),
+        OutboundDataOrigin.DATA_SOURCE => GetDataSourceBlockedMessage(requirement, settings.DataSources),
 
         // NONE keeps no tool from running, since nothing restricts such a chat. What is left is an
         // origin this version does not know:
@@ -39,5 +40,17 @@ public static class OutboundDataRequirementExtensions
         return string.IsNullOrWhiteSpace(mailboxName)
             ? string.Format(TB("This chat read mails from a mailbox which has been removed since, while its setting 'Where a chat may send data after reading mails' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName())
             : string.Format(TB("This chat read mails from the mailbox '{0}' while its setting 'Where a chat may send data after reading mails' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), mailboxName, requirement.Restriction.GetName());
+    }
+
+    private static string GetDataSourceBlockedMessage(OutboundDataRequirement requirement, IEnumerable<IDataSource> dataSources)
+    {
+        var dataSourceName = dataSources
+            .Where(dataSource => string.Equals(dataSource.Id, requirement.Reference, StringComparison.Ordinal))
+            .Select(dataSource => dataSource.Name)
+            .FirstOrDefault();
+
+        return string.IsNullOrWhiteSpace(dataSourceName)
+            ? string.Format(TB("This chat found content in a data source which has been removed since, while its setting 'Where a chat may send data after reading this data source' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName())
+            : string.Format(TB("This chat found content in the data source '{0}' while its setting 'Where a chat may send data after reading this data source' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), dataSourceName, requirement.Restriction.GetName());
     }
 }

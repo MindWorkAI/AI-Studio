@@ -373,6 +373,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: data source security settings
         ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.TrustedProviderIds, this.Id, settingsTable, dryRun);
 
+        // Config: the least strict outbound data restriction a data source may have
+        ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.MinimumOutboundDataRestriction, this.Id, settingsTable, dryRun);
+
         // Config: the least strict outbound data restriction a mailbox may have
         ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.MinimumOutboundDataRestriction, this.Id, settingsTable, dryRun);
 
