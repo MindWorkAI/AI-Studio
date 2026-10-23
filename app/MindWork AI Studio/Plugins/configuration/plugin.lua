@@ -677,8 +677,9 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
 -- Configure defaults for the Slide Planner Assistant.
--- Preselection must be enabled for the template and the footer text to take effect. It is
--- enabled by default; lock it as well to make sure users cannot do without your template.
+-- Preselection must be enabled for the template, the footer text, and the layouts to take
+-- effect. It is enabled by default; lock it as well to make sure users cannot do without your
+-- template.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
 --
 -- Configure the PowerPoint template of the Slide Planner Assistant.
@@ -702,10 +703,26 @@ CONFIG["SETTINGS"] = {}
 -- the organization. Leave it empty for no footer.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
 --
+-- Configure the layout of your template for kinds of slides, e.g., which layout opens each
+-- chapter. Give the name of the layout as the slide master of your template shows it. A kind
+-- of slide you leave out has no preference, and the LLM decides; a name the template lacks
+-- counts as no preference as well.
+-- Allowed kinds of slides are: TITLE, AGENDA, CHAPTER, CONTENT, LITTLE_CONTENT, MUCH_CONTENT,
+--   MEDIA, COMPARISON, TIMELINE, PROCESS, HYPOTHESIS, RESEARCH_QUESTION, FEEDBACK, CODE,
+--   AUDIENCE_QUESTION, SUMMARY, CLOSING
+--
+-- Replaces, does not merge: the table applies as a whole, also with AllowUserOverride.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts"] = {
+--     ["TITLE"] = "Title Slide",
+--     ["CHAPTER"] = "Section Header",
+--     ["CONTENT"] = "Title and Content",
+-- }
+--
 -- Allow users to choose another template or change the defaults locally.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
 
 -- Configure defaults for the Batch Processing Assistant.
 -- Preselection must be enabled for the remaining batch settings to take effect.

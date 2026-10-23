@@ -907,6 +907,78 @@ public static partial class ManagedConfiguration
     }
 
     /// <summary>
+    /// Attempts to process the configuration settings from a Lua table for dictionaries which map enum keys to texts.
+    /// </summary>
+    /// <remarks>
+    /// When the configuration is successfully processed, it updates the configuration metadata with the configured value.
+    /// Furthermore, it applies the configured managed state to the provided configuration plugin ID.
+    /// The setting's value is set to the configured value when locked or when the editable default should apply.
+    /// A key which names no member of the enum is passed over, as with the enum dictionaries.
+    /// </remarks>
+    /// <param name="configPluginId">The ID of the related configuration plugin.</param>
+    /// <param name="settings">The Lua table containing the settings to process.</param>
+    /// <param name="configSelection">The expression to select the configuration class.</param>
+    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
+    /// <param name="dryRun">When true, the method will not apply any changes but only check if the configuration can be read.</param>
+    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
+    /// <typeparam name="TKey">The enum type of the dictionary keys.</typeparam>
+    /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
+    public static bool TryProcessConfiguration<TClass, TKey>(
+        Expression<Func<Data, TClass>> configSelection,
+        Expression<Func<TClass, Dictionary<TKey, string>>> propertyExpression,
+        Guid configPluginId,
+        LuaTable settings,
+        bool dryRun)
+        where TKey : struct, Enum
+    {
+        //
+        // Handle configured dictionaries of enum keys and texts (Lua keys and values are strings)
+        //
+
+        // Check if that configuration was registered:
+        if(!TryGet(configSelection, propertyExpression, out var configMeta))
+            return false;
+
+        var successful = false;
+        var configuredValue = new Dictionary<TKey, string>(configMeta.Default);
+
+        // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
+        if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
+            configuredLuaList.Type is LuaValueType.Table &&
+            configuredLuaList.TryRead<LuaTable>(out var valueTable))
+        {
+            configuredValue.Clear();
+
+            // In order to iterate over all key-value pairs in the Lua table, we have to use TryGetNext.
+            // Thus, we initialize the previous key variable to Nil and keep calling TryGetNext until
+            // there are no more pairs:
+            var previousKey = LuaValue.Nil;
+            while(valueTable.TryGetNext(previousKey, out var pair))
+            {
+                // Update the previous key for the next iteration:
+                previousKey = pair.Key;
+
+                // Try to read both the key and the value as strings:
+                var hadKey = pair.Key.TryRead<string>(out var keyText);
+                var hadValue = pair.Value.TryRead<string>(out var valueText);
+
+                // If both were read successfully and the key names a member of the enum, add them to the dictionary:
+                if (hadKey && hadValue && EnumNames.TryParse<TKey>(keyText, out var key))
+                    configuredValue[key] = valueText;
+            }
+
+            successful = true;
+        }
+
+        if(dryRun)
+            return successful;
+
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
+    }
+
+    /// <summary>
     /// Handles the parsed configuration value based on whether the parsing was successful and whether it's a dry run.
     /// </summary>
     /// <param name="configPluginId">The ID of the related configuration plugin.</param>

@@ -1219,6 +1219,27 @@ again, the Slide Planner uses it the next time users open it.
 Keep in mind that every client downloads the whole configuration plugin, template included, whenever
 AI Studio starts and whenever your configuration changes.
 
+You can also tell the Slide Planner which layout of your template to use for certain kinds of slides,
+e.g., which layout opens each chapter. Give each layout by its name in the slide master of your
+template:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts"] = {
+    ["TITLE"] = "Title Slide",
+    ["CHAPTER"] = "Section Header",
+    ["CONTENT"] = "Title and Content",
+}
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
+```
+
+The kinds of slides are `TITLE`, `AGENDA`, `CHAPTER`, `CONTENT`, `LITTLE_CONTENT`, `MUCH_CONTENT`,
+`MEDIA`, `COMPARISON`, `TIMELINE`, `PROCESS`, `HYPOTHESIS`, `RESEARCH_QUESTION`, `FEEDBACK`, `CODE`,
+`AUDIENCE_QUESTION`, `SUMMARY`, and `CLOSING`. For a kind you leave out, the LLM chooses the layout
+itself, and so it does for a name your template lacks. A layout says how such a slide looks, not
+whether the presentation has one. The layouts are preselections as well, so they apply only while
+preselection is enabled, and the table applies as a whole: users either keep it or, with
+`AllowUserOverride`, change it as they like.
+
 ## Labeling AI-generated content
 
 Rules on transparency, such as the EU AI Act, may require that a text says when AI generated it, for

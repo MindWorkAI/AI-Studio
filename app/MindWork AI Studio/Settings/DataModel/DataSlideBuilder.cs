@@ -2,6 +2,7 @@
 
 using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Provider;
+using AIStudio.Tools.PowerPoint;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -32,6 +33,16 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     /// Preselect the footer text of the slides?
     /// </summary>
     public string PreselectedFooterText { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedFooterText, string.Empty);
+
+    /// <summary>
+    /// Preselect the layouts for kinds of slides, i.e., the name of a layout of the template by kind of slide?
+    /// </summary>
+    /// <remarks>
+    /// A kind of slide which is missing has no preference, and the LLM decides. Names instead of IDs
+    /// keep the choices valid across sessions, computers, and versions of the template; a name which
+    /// the current template lacks counts as no preference.
+    /// </remarks>
+    public Dictionary<LayoutPurpose, string> PreselectedLayouts { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedLayouts, new Dictionary<LayoutPurpose, string>());
 
     /// <summary>
     /// Preselect any Slide Builder  options?
