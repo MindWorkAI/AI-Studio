@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using AIStudio.Assistants.Builder;
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 
 namespace AIStudio.Tools.PowerPoint;
 
