@@ -2517,6 +2517,57 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::
 -- Software developers
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T831424531"] = "Software developers"
 
+-- Kick-off
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T1289358099"] = "Kick-off"
+
+-- Pitch
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2019197265"] = "Pitch"
+
+-- Unspecified occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T227451887"] = "Unspecified occasion"
+
+-- Training
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2287937623"] = "Training"
+
+-- Conference talk
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2421639635"] = "Conference talk"
+
+-- Other occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2509856260"] = "Other occasion"
+
+-- Talk
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2530449775"] = "Talk"
+
+-- Lecture
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2695461681"] = "Lecture"
+
+-- Presentation of research results
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2950712069"] = "Presentation of research results"
+
+-- Workshop of several days
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3144398028"] = "Workshop of several days"
+
+-- Workshop of one day
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3310080195"] = "Workshop of one day"
+
+-- Team meeting
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3390299757"] = "Team meeting"
+
+-- Product presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3522562796"] = "Product presentation"
+
+-- Defense of a thesis or dissertation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3767586701"] = "Defense of a thesis or dissertation"
+
+-- Project or status report
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T4260502387"] = "Project or status report"
+
+-- Report to management
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T4288525803"] = "Report to management"
+
+-- Keynote
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T657131160"] = "Keynote"
+
 -- Slides of the template
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1178900119"] = "Slides of the template"
 
@@ -2535,11 +2586,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1443064107
 -- The PowerPoint template of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans an outline only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1473992941"] = "The PowerPoint template of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans an outline only."
 
+-- Occasion of the presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1500915876"] = "Occasion of the presentation"
+
 -- Shown on every slide whose layout has a footer, e.g., your name, organization, and date.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1541134619"] = "Shown on every slide whose layout has a footer, e.g., your name, organization, and date."
 
 -- You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1672597841"] = "You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted."
+
+-- Occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1774567962"] = "Occasion"
 
 -- Details about the desired presentation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1793579367"] = "Details about the desired presentation"
@@ -2547,11 +2604,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1793579367
 -- Text content
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1820253043"] = "Text content"
 
+-- Maximum number of bullet points per slide
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1849301398"] = "Maximum number of bullet points per slide"
+
 -- Please provide a text or at least one valid document or image.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2013746884"] = "Please provide a text or at least one valid document or image."
 
 -- Content to derive slide from
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2086228265"] = "Content to derive slide from"
+
+-- Please describe the occasion.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2152067908"] = "Please describe the occasion."
+
+-- The occasion helps the LLM to structure the presentation. A lecture, for example, may close its chapters with an interim summary or with room for questions, and a report to management leads with the key messages.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2174617817"] = "The occasion helps the LLM to structure the presentation. A lecture, for example, may close its chapters with an interim summary or with room for questions, and a report to management leads with the key messages."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T237828418"] = "Target language"
@@ -2561,6 +2627,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T24391765"]
 
 -- Audience age group
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2496533563"] = "Audience age group"
+
+-- Other occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2509856260"] = "Other occasion"
 
 -- Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2541602129"] = "Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting."
@@ -2586,9 +2655,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2799381756
 -- Number of slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2823798965"] = "Number of slides"
 
--- Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2842323081"] = "Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline."
-
 -- Slide Planner Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2924755246"] = "Slide Planner Assistant"
 
@@ -2606,9 +2672,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3049299559
 
 -- Create Slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3079776593"] = "Create Slides"
-
--- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3114699859"] = "This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result."
 
 -- These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3302350746"] = "These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"
@@ -2643,14 +2706,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3649769130
 -- Attach documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3666048746"] = "Attach documents"
 
--- Slide {0}: {1}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3684030069"] = "Slide {0}: {1}"
-
 -- Select a PowerPoint template
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3690748035"] = "Select a PowerPoint template"
-
--- Number of bullet points
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3796347042"] = "Number of bullet points"
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3848935911"] = "Custom target language"
@@ -2664,32 +2721,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3882045083
 -- Presentation title
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3893271035"] = "Presentation title"
 
--- Slide {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3921179924"] = "Slide {0}"
-
 -- {0} - Slide Builder Session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3922788056"] = "{0} - Slide Builder Session"
 
 -- Color variant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3930823017"] = "Color variant"
 
--- The LLM does not see your layouts. It knows their names from the slide master of your template, where their placeholders sit, and how much text fits into them. Clear names such as “Chapter” or “Content with picture” therefore help it choose well; in PowerPoint, you rename a layout in the slide master view. Logo, background, and footer come with the layout. Layouts which differ only in their color count as one, and you choose the color for the whole presentation in the advanced options.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3975445689"] = "The LLM does not see your layouts. It knows their names from the slide master of your template, where their placeholders sit, and how much text fits into them. Clear names such as “Chapter” or “Content with picture” therefore help it choose well; in PowerPoint, you rename a layout in the slide master view. Logo, background, and footer come with the layout. Layouts which differ only in their color count as one, and you choose the color for the whole presentation in the advanced options."
-
--- hidden
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4128829753"] = "hidden"
-
--- Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4131419342"] = "Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values."
-
 -- Audience expertise
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4279519256"] = "Audience expertise"
 
 -- (Optional) Footer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T531280033"] = "(Optional) Footer"
-
--- Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T554384175"] = "Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template."
 
 -- The PowerPoint file was created.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T590228290"] = "The PowerPoint file was created."
@@ -2703,8 +2745,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T656744944"
 -- Creates a PowerPoint file in the design of your template.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T682162982"] = "Creates a PowerPoint file in the design of your template."
 
+-- Please specify the extent of the planned presentation. This can be the number of slides, the maximum number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T805699788"] = "Please specify the extent of the planned presentation. This can be the number of slides, the maximum number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values."
+
 -- The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T82751648"] = "The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out."
+
+-- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also limit the number of bullet points per slide. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T854215805"] = "This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also limit the number of bullet points per slide. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result."
 
 -- The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx).
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T928047772"] = "The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx)."
@@ -2714,6 +2762,24 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T94807224"]
 
 -- The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T966839368"] = "The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program."
+
+-- Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Only for the framing slides, e.g., the table of contents or the imprint, does a choice also add such a slide; their help says so. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEPLANNERTEXTS::T2111748232"] = "Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Only for the framing slides, e.g., the table of contents or the imprint, does a choice also add such a slide; their help says so. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline."
+
+-- Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEPLANNERTEXTS::T554384175"] = "Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template."
+
+-- The LLM does not see what your layouts look like. It knows only their names from the slide master of your template, where their placeholders sit, and how much text fits into them. Clear names such as “Chapter” or “Content with picture” therefore help it choose well; in PowerPoint, you rename a layout in the slide master view. Logo, background, and footer come with the layout. Layouts which differ only in their color count as one, and the color applies to the whole presentation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEPLANNERTEXTS::T672635431"] = "The LLM does not see what your layouts look like. It knows only their names from the slide master of your template, where their placeholders sit, and how much text fits into them. Clear names such as “Chapter” or “Content with picture” therefore help it choose well; in PowerPoint, you rename a layout in the slide master view. Logo, background, and footer come with the layout. Layouts which differ only in their color count as one, and the color applies to the whole presentation."
+
+-- Slide {0}: {1}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEEXTENSIONS::T3684030069"] = "Slide {0}: {1}"
+
+-- Slide {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEEXTENSIONS::T3921179924"] = "Slide {0}"
+
+-- hidden
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEEXTENSIONS::T4128829753"] = "hidden"
 
 -- Let the LLM edit it
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS::T2549215047"] = "Let the LLM edit it"
@@ -9579,8 +9645,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T553954963"
 -- Preselect the audience expertise
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1017131030"] = "Preselect the audience expertise"
 
+-- Preselect another occasion
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1150085788"] = "Preselect another occasion"
+
+-- Slides of the template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1178900119"] = "Slides of the template"
+
 -- When enabled, you can preselect options of the Slide Planner Assistant. This might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1187030240"] = "When enabled, you can preselect options of the Slide Planner Assistant. This might be useful when you prefer a specific language or LLM model."
+
+-- Preselect the occasion
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1451545352"] = "Preselect the occasion"
 
 -- Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1528169602"] = "Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize."
@@ -9600,14 +9675,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T17663
 -- Shown on every slide whose layout has a footer, e.g., your name, organization, and date. Leave it empty for no footer.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1770252925"] = "Shown on every slide whose layout has a footer, e.g., your name, organization, and date. Leave it empty for no footer."
 
+-- Preselect what the assistant starts with for each presentation: the aspects to emphasize, the language, the audience, and the occasion. You can still change them in the assistant.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1883749129"] = "Preselect what the assistant starts with for each presentation: the aspects to emphasize, the language, the audience, and the occasion. You can still change them in the assistant."
+
+-- Preselect which LLM plans the slides and which profile it gets. A profile can, e.g., name your organization, which the LLM may use for the imprint.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1886202233"] = "Preselect which LLM plans the slides and which profile it gets. A profile can, e.g., name your organization, which the LLM may use for the imprint."
+
 -- Preselect the footer text
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1952334375"] = "Preselect the footer text"
 
 -- Preselect the audience organizational level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2014662371"] = "Preselect the audience organizational level"
 
+-- AI selection
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2105832301"] = "AI selection"
+
 -- Which audience organizational level should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T216511105"] = "Which audience organizational level should be preselected?"
+
+-- The preselected template contains no slides besides its layouts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2310759788"] = "The preselected template contains no slides besides its layouts."
 
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2322771068"] = "Preselect a profile"
@@ -9617,6 +9704,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T23451
 
 -- Preselect another language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2382415529"] = "Preselect another language"
+
+-- Content and audience
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2399412443"] = "Content and audience"
+
+-- Which occasion of the presentation should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T253212936"] = "Which occasion of the presentation should be preselected?"
 
 -- Preselect the language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2571465005"] = "Preselect the language"
@@ -9636,8 +9729,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T32260
 -- Which audience expertise should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3228597992"] = "Which audience expertise should be preselected?"
 
--- Preselect which layout of the template the LLM uses for certain kinds of slides. Where you have no preference, the LLM decides by the names and placeholders of the layouts.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3380203221"] = "Preselect which layout of the template the LLM uses for certain kinds of slides. Where you have no preference, the LLM decides by the names and placeholders of the layouts."
+-- Layouts for kinds of slides
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3306428265"] = "Layouts for kinds of slides"
 
 -- Preselect Slide Planner Assistant options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T339924858"] = "Preselect Slide Planner Assistant options?"
@@ -9645,11 +9738,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T33992
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3448155331"] = "Close"
 
+-- PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3472250354"] = "PowerPoint template"
+
 -- Select a PowerPoint template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3690748035"] = "Select a PowerPoint template"
 
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3705987833"] = "Preselect important aspects"
+
+-- Preselect a readable template above to choose what the presentation does with its slides.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T799025846"] = "Preselect a readable template above to choose what the presentation does with its slides."
 
 -- Preselect the audience profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T861397972"] = "Preselect the audience profile"
@@ -13671,62 +13770,512 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T237059392
 -- Configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T3353383632"] = "Configuration plugin"
 
+-- Business and projects
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T1042553620"] = "Business and projects"
+
+-- Science and research
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T1909173573"] = "Science and research"
+
+-- Structure and framing
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T2152680157"] = "Structure and framing"
+
+-- Other kinds of slides
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T574173375"] = "Other kinds of slides"
+
+-- Teaching and workshops
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T875074265"] = "Teaching and workshops"
+
+-- General content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T897777590"] = "General content"
+
+-- Layout for partners
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1014233027"] = "Layout for partners"
+
+-- Which slide layout should a single opportunity use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T103149100"] = "Which slide layout should a single opportunity use, shown prominently?"
+
+-- Which slide layout should a decision use which the audience is asked to make?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1040281888"] = "Which slide layout should a decision use which the audience is asked to make?"
+
+-- Layout for breaks
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1064102044"] = "Layout for breaks"
+
+-- Layout for stories
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1070686897"] = "Layout for stories"
+
+-- Which slide layout should a narrative use, which frames, e.g., a project?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1077820264"] = "Which slide layout should a narrative use, which frames, e.g., a project?"
+
+-- Layout for several problems
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1094127856"] = "Layout for several problems"
+
+-- Which slide layout should a chain of arguments use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1104132271"] = "Which slide layout should a chain of arguments use?"
+
 -- Layout for timelines
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1115997848"] = "Layout for timelines"
+
+-- Which slide layout should the contribution of the work use, i.e., what is new?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1117697696"] = "Which slide layout should the contribution of the work use, i.e., what is new?"
+
+-- Layout for “Any questions?”
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1129259891"] = "Layout for “Any questions?”"
+
+-- Which slide layout should several assumptions use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1141663885"] = "Which slide layout should several assumptions use, shown together?"
+
+-- Which slide layout should several delimitations use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1152239577"] = "Which slide layout should several delimitations use, shown together?"
+
+-- Layout for the team
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T115619112"] = "Layout for the team"
+
+-- Layout for acknowledgements
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1165298089"] = "Layout for acknowledgements"
 
 -- Layout for the summary
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1217016695"] = "Layout for the summary"
 
+-- Which slide layout should slides with little content use, e.g., a short statement?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T122211757"] = "Which slide layout should slides with little content use, e.g., a short statement?"
+
+-- Layout for one use case
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1231694521"] = "Layout for one use case"
+
+-- Which slide layout should several examples use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T123810252"] = "Which slide layout should several examples use, shown together?"
+
 -- Which slide layout should open each chapter?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1240241139"] = "Which slide layout should open each chapter?"
+
+-- Layout for the state of research
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1281296692"] = "Layout for the state of research"
+
+-- Which slide layout should a look back on where we come from use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1308711435"] = "Which slide layout should a look back on where we come from use?"
 
 -- Which slide layout should a summary or a conclusion use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1335800860"] = "Which slide layout should a summary or a conclusion use?"
 
+-- Layout for the study design
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1339678504"] = "Layout for the study design"
+
+-- Which slide layout should a single result use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1353098126"] = "Which slide layout should a single result use, shown prominently?"
+
+-- Which slide layout should the definition of a single term use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1354815318"] = "Which slide layout should the definition of a single term use?"
+
+-- Layout for one goal
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1366104671"] = "Layout for one goal"
+
+-- Layout for SWOT analyses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T136706369"] = "Layout for SWOT analyses"
+
+-- Layout for one scenario
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1428654470"] = "Layout for one scenario"
+
+-- Layout for one hypothesis
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1445572710"] = "Layout for one hypothesis"
+
+-- Layout for an overview of KPIs
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1447134482"] = "Layout for an overview of KPIs"
+
+-- Layout for forecasts
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1487244874"] = "Layout for forecasts"
+
+-- Layout for one assumption
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1503180167"] = "Layout for one assumption"
+
+-- Which slide layout should conflicts of interest and disclaimers use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1507945603"] = "Which slide layout should conflicts of interest and disclaimers use?"
+
+-- Which slide layout should pros and cons use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1514618392"] = "Which slide layout should pros and cons use?"
+
+-- Which slide layout should a call to action use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1517426306"] = "Which slide layout should a call to action use?"
+
+-- Which slide layout should the status of a project use, e.g., as a traffic light?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1534894088"] = "Which slide layout should the status of a project use, e.g., as a traffic light?"
+
 -- Layout for the title slide
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1535308880"] = "Layout for the title slide"
+
+-- Which slide layout should the context or the starting point use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T158061098"] = "Which slide layout should the context or the starting point use?"
+
+-- Layout for pros and cons
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1587972966"] = "Layout for pros and cons"
+
+-- Layout for several delimitations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1610652216"] = "Layout for several delimitations"
 
 -- Which slide layout should timelines use, e.g., the course of a project?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1625275711"] = "Which slide layout should timelines use, e.g., the course of a project?"
 
--- Which slide layout should slides use which present screenshots, photos, or sketches?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T166466469"] = "Which slide layout should slides use which present screenshots, photos, or sketches?"
+-- Which slide layout should a single quote use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1633664977"] = "Which slide layout should a single quote use, shown prominently?"
 
--- Which slide layout should comparisons use, e.g., before and after, or pros and cons?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T19600179"] = "Which slide layout should comparisons use, e.g., before and after, or pros and cons?"
+-- Layout for several definitions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1645055642"] = "Layout for several definitions"
+
+-- Which slide layout should several opportunities use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1671430802"] = "Which slide layout should several opportunities use, shown together?"
+
+-- Layout for the experimental setup
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1678480418"] = "Layout for the experimental setup"
+
+-- Layout for introducing several speakers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1680921944"] = "Layout for introducing several speakers"
+
+-- Which slide layout should the state of research use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1747258262"] = "Which slide layout should the state of research use?"
+
+-- Layout for one user story
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1754624674"] = "Layout for one user story"
+
+-- Layout for one learning objective
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1771256293"] = "Layout for one learning objective"
+
+-- Which slide layout should the introduction of a single speaker use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1776932064"] = "Which slide layout should the introduction of a single speaker use?"
+
+-- Which slide layout should a key message use, which states the one thing to remember?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1787619917"] = "Which slide layout should a key message use, which states the one thing to remember?"
+
+-- Layout for the project status
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1807351352"] = "Layout for the project status"
+
+-- Layout for the table of contents
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1823365046"] = "Layout for the table of contents"
+
+-- Layout for several pictures
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1828342463"] = "Layout for several pictures"
+
+-- Which slide layout should comparisons use, e.g., before and after, or two options?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1840246589"] = "Which slide layout should comparisons use, e.g., before and after, or two options?"
+
+-- Which slide layout should the ground rules for working together use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1847072681"] = "Which slide layout should the ground rules for working together use?"
+
+-- Which slide layout should organizational notes use, e.g., on rooms or Wi-Fi?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1857170293"] = "Which slide layout should organizational notes use, e.g., on rooms or Wi-Fi?"
+
+-- Layout for several research questions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1877198900"] = "Layout for several research questions"
+
+-- Layout for several learning objectives
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T191598066"] = "Layout for several learning objectives"
+
+-- Which slide layout should an exercise use, with its task, time frame, and expected result?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1929274048"] = "Which slide layout should an exercise use, with its task, time frame, and expected result?"
+
+-- Layout for an overview of work packages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1950946185"] = "Layout for an overview of work packages"
+
+-- Which slide layout should acceptance criteria use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1959540330"] = "Which slide layout should acceptance criteria use?"
+
+-- Which slide layout should a slide use which presents a team?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1979984215"] = "Which slide layout should a slide use which presents a team?"
+
+-- Which slide layout should a single scenario use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1982380825"] = "Which slide layout should a single scenario use, shown prominently?"
+
+-- Which slide layout should the methodology use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T203822370"] = "Which slide layout should the methodology use?"
+
+-- Which slide layout should several quotes use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2041878078"] = "Which slide layout should several quotes use, shown together?"
+
+-- Which slide layout should a note on the funding of the work use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2077700183"] = "Which slide layout should a note on the funding of the work use?"
+
+-- Which slide layout should the introduction of several speakers use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2094194578"] = "Which slide layout should the introduction of several speakers use?"
+
+-- Layout for step-by-step explanations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2111999519"] = "Layout for step-by-step explanations"
+
+-- Layout for one milestone
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2114685310"] = "Layout for one milestone"
+
+-- Which slide layout should a slide with a table use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2147948257"] = "Which slide layout should a slide with a table use?"
+
+-- Layout for one quote
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2150775408"] = "Layout for one quote"
+
+-- Which slide layout should a prompt for a discussion use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2166518417"] = "Which slide layout should a prompt for a discussion use?"
+
+-- Which slide layout should a single goal use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2178279832"] = "Which slide layout should a single goal use, shown prominently?"
 
 -- Default layout for content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2216550238"] = "Default layout for content"
 
--- Layout for research questions
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2633440528"] = "Layout for research questions"
+-- Layout for several goals
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2217393844"] = "Layout for several goals"
+
+-- Which slide layout should an overview of several milestones use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2251715184"] = "Which slide layout should an overview of several milestones use?"
+
+-- Layout for the contribution
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2263473163"] = "Layout for the contribution"
+
+-- Which slide layout should several reasons use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2280792678"] = "Which slide layout should several reasons use, shown together?"
+
+-- Layout for polls
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2299527458"] = "Layout for polls"
+
+-- Which slide layout should the experimental setup use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2300173724"] = "Which slide layout should the experimental setup use?"
+
+-- Layout for one reason
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2324022664"] = "Layout for one reason"
+
+-- Which slide layout should a single user story use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2329609477"] = "Which slide layout should a single user story use, shown prominently?"
+
+-- Layout for the context
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T233353792"] = "Layout for the context"
+
+-- Layout for expectations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2371205947"] = "Layout for expectations"
+
+-- Layout for one KPI
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2388056074"] = "Layout for one KPI"
+
+-- Which slide layout should several goals use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2417807229"] = "Which slide layout should several goals use, shown together?"
+
+-- Layout for one opportunity
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2428145985"] = "Layout for one opportunity"
+
+-- Layout for interim summaries
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2438421040"] = "Layout for interim summaries"
+
+-- Layout for the methodology
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2451437972"] = "Layout for the methodology"
+
+-- Which slide layout should the design of a study use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2454384104"] = "Which slide layout should the design of a study use?"
+
+-- Which slide layout should a round use in which the participants introduce themselves?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T246747363"] = "Which slide layout should a round use in which the participants introduce themselves?"
+
+-- Layout for the imprint
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2479880990"] = "Layout for the imprint"
+
+-- Layout for several results
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2488831402"] = "Layout for several results"
+
+-- Which slide layout should the solution of an exercise use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2529501126"] = "Which slide layout should the solution of an exercise use?"
+
+-- Which slide layout should several hypotheses use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2537315271"] = "Which slide layout should several hypotheses use, shown together?"
+
+-- Layout for tables
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2540038829"] = "Layout for tables"
+
+-- Layout for chains of arguments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2559513003"] = "Layout for chains of arguments"
+
+-- Layout for introducing one speaker
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2568963247"] = "Layout for introducing one speaker"
+
+-- Which slide layout should the table of contents use, which lists the topics of the presentation?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2570153877"] = "Which slide layout should the table of contents use, which lists the topics of the presentation?"
+
+-- Which slide layout should reflecting on and recording the results use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2576096519"] = "Which slide layout should reflecting on and recording the results use?"
+
+-- Which slide layout should the next steps use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2607482691"] = "Which slide layout should the next steps use?"
+
+-- Layout for one dependency
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2610479757"] = "Layout for one dependency"
+
+-- Which slide layout should a SWOT analysis use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2655203380"] = "Which slide layout should a SWOT analysis use?"
+
+-- Which slide layout should a poll, a vote, or a knowledge check use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2694466351"] = "Which slide layout should a poll, a vote, or a knowledge check use?"
+
+-- Which slide layout should collecting the expectations of the participants use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2697820950"] = "Which slide layout should collecting the expectations of the participants use?"
 
 -- No preference (the LLM decides)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2736980667"] = "No preference (the LLM decides)"
 
+-- Layout for one work package
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2760560305"] = "Layout for one work package"
+
+-- Which slide layout should a single reason use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2764805851"] = "Which slide layout should a single reason use, shown prominently?"
+
+-- Layout for one thesis
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2776067892"] = "Layout for one thesis"
+
+-- Which slide layout should an overview of several work packages use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2799714841"] = "Which slide layout should an overview of several work packages use?"
+
+-- Which slide layout should several risks use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2809967041"] = "Which slide layout should several risks use, shown together?"
+
+-- Layout for several theses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2832902216"] = "Layout for several theses"
+
+-- Which slide layout should an interpretation of the results use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2838598093"] = "Which slide layout should an interpretation of the results use?"
+
+-- Layout for a look back
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2854650733"] = "Layout for a look back"
+
+-- Layout for one example
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2884053898"] = "Layout for one example"
+
+-- Layout for one delimitation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2887082539"] = "Layout for one delimitation"
+
+-- Which slide layout should a single work package use, e.g., in a project report?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2892903451"] = "Which slide layout should a single work package use, e.g., in a project report?"
+
+-- Layout for one definition
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2901571581"] = "Layout for one definition"
+
 -- Which slide layout should the title slide use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2927095458"] = "Which slide layout should the title slide use?"
+
+-- Which slide layout should a single research question use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2929392338"] = "Which slide layout should a single research question use, shown prominently?"
+
+-- Layout for decision requests
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2970628172"] = "Layout for decision requests"
+
+-- Layout for several counterarguments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2975929628"] = "Layout for several counterarguments"
 
 -- Layout for questions to the audience
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2984056773"] = "Layout for questions to the audience"
 
+-- Which slide layout should several counterarguments use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2999624893"] = "Which slide layout should several counterarguments use, shown together?"
+
+-- Which slide layout should a single use case use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3051456178"] = "Which slide layout should a single use case use, shown prominently?"
+
+-- Which slide layout should several research questions use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3073525085"] = "Which slide layout should several research questions use, shown together?"
+
+-- Which slide layout should a description of the data use, e.g., of a dataset?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3083535091"] = "Which slide layout should a description of the data use, e.g., of a dataset?"
+
+-- Which slide layout should a single thesis or central claim use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3085355069"] = "Which slide layout should a single thesis or central claim use, shown prominently?"
+
 -- Which slide layout should slides with much content use, e.g., many points or a longer explanation?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3100562182"] = "Which slide layout should slides with much content use, e.g., many points or a longer explanation?"
+
+-- Layout for roadmaps
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3108446521"] = "Layout for roadmaps"
+
+-- Which slide layout should a single assumption use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3134718364"] = "Which slide layout should a single assumption use, shown prominently?"
+
+-- Which slide layout should a checklist use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3135542815"] = "Which slide layout should a checklist use?"
+
+-- Layout for one counterargument
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3176066423"] = "Layout for one counterargument"
+
+-- Layout for the appendix
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3231339388"] = "Layout for the appendix"
 
 -- Layout for comparisons
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3236321854"] = "Layout for comparisons"
 
+-- Which slide layout should a slide use which invites the questions of the audience?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3238718471"] = "Which slide layout should a slide use which invites the questions of the audience?"
+
+-- Layout for several hypotheses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3255105074"] = "Layout for several hypotheses"
+
+-- Layout for checklists
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3259851537"] = "Layout for checklists"
+
+-- Which slide layout should several scenarios use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3290319304"] = "Which slide layout should several scenarios use, shown together?"
+
 -- Layout for source code
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3293257190"] = "Layout for source code"
 
--- Which slide layout should research questions use?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3328441314"] = "Which slide layout should research questions use?"
+-- Layout for several opportunities
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3296599085"] = "Layout for several opportunities"
+
+-- Layout for several assumptions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3303991020"] = "Layout for several assumptions"
+
+-- Layout for organizational notes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3337686411"] = "Layout for organizational notes"
 
 -- Layout for the agenda
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3343931801"] = "Layout for the agenda"
 
--- Layout for hypotheses
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3509350934"] = "Layout for hypotheses"
+-- Which slide layout should the research gap use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3350032786"] = "Which slide layout should the research gap use?"
+
+-- Which slide layout should open an appendix with backup slides?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3360010463"] = "Which slide layout should open an appendix with backup slides?"
+
+-- Which slide layout should a roadmap use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3376320251"] = "Which slide layout should a roadmap use?"
+
+-- Which slide layout should a single milestone use, e.g., with a report?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T340072348"] = "Which slide layout should a single milestone use, e.g., with a report?"
+
+-- Which slide layout should a single problem use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3408433614"] = "Which slide layout should a single problem use, shown prominently?"
+
+-- Which slide layout should resources use, e.g., costs, people, or machines?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3415463181"] = "Which slide layout should resources use, e.g., costs, people, or machines?"
+
+-- Which slide layout should several problems use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3415830569"] = "Which slide layout should several problems use, shown together?"
+
+-- Which slide layout should a single recommendation use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3429598200"] = "Which slide layout should a single recommendation use, shown prominently?"
+
+-- Layout for the narrative
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3431189329"] = "Layout for the narrative"
+
+-- Choosing a layout also adds such a slide to the presentation.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3455006548"] = "Choosing a layout also adds such a slide to the presentation."
+
+-- Layout for several use cases
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3455648654"] = "Layout for several use cases"
+
+-- Layout for funding notes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3479554352"] = "Layout for funding notes"
+
+-- Layout for lessons learned
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3481358786"] = "Layout for lessons learned"
+
+-- Which slide layout should the imprint use, e.g., with authors, organization, and date?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3482700194"] = "Which slide layout should the imprint use, e.g., with authors, organization, and date?"
+
+-- Which slide layout should a slide use which presents partners, e.g., with their logos?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3497108376"] = "Which slide layout should a slide use which presents partners, e.g., with their logos?"
+
+-- Layout for the research gap
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3509558196"] = "Layout for the research gap"
+
+-- Layout for data
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3512688144"] = "Layout for data"
 
 -- Which slide layout should the closing slide use, e.g., with thanks and contact details?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3543885893"] = "Which slide layout should the closing slide use, e.g., with thanks and contact details?"
@@ -13734,29 +14283,125 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T35438858
 -- Which slide layout should feedback use, e.g., of customers or users?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3550149798"] = "Which slide layout should feedback use, e.g., of customers or users?"
 
--- Layout for media
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3796872572"] = "Layout for media"
+-- Which slide layout should a single risk use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3556807844"] = "Which slide layout should a single risk use, shown prominently?"
 
--- Which slide layout should slides with little content use, e.g., a single statement, a quote, or a key figure?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3802702823"] = "Which slide layout should slides with little content use, e.g., a single statement, a quote, or a key figure?"
+-- Layout for the executive summary
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3560846545"] = "Layout for the executive summary"
 
--- Which slide layout should these slides use?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3828940195"] = "Which slide layout should these slides use?"
+-- Which slide layout should an interim summary at the end of a chapter use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T356449757"] = "Which slide layout should an interim summary at the end of a chapter use?"
+
+-- Layout for one research question
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3565608351"] = "Layout for one research question"
+
+-- Which slide layout should several pictures use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T358514112"] = "Which slide layout should several pictures use, shown together?"
+
+-- Which slide layout should a step-by-step explanation use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3591485915"] = "Which slide layout should a step-by-step explanation use?"
+
+-- Layout for ground rules
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3608808260"] = "Layout for ground rules"
+
+-- Which slide layout should the end of a day or the start of the next use in a workshop of several days?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3683858868"] = "Which slide layout should the end of a day or the start of the next use in a workshop of several days?"
+
+-- Layout for several user stories
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3692846210"] = "Layout for several user stories"
+
+-- Which slide layout should the limitations of the work use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3693036613"] = "Which slide layout should the limitations of the work use?"
+
+-- Which slide layout should a break use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T370295206"] = "Which slide layout should a break use?"
+
+-- Layout for several risks
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3766935148"] = "Layout for several risks"
+
+-- Layout for several examples
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3795085003"] = "Layout for several examples"
+
+-- Which slide layout should the definitions of several terms use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3798037761"] = "Which slide layout should the definitions of several terms use?"
+
+-- Which slide layout should several dependencies and their countermeasures use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3816121265"] = "Which slide layout should several dependencies and their countermeasures use?"
+
+-- Which slide layout should the acknowledgements use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3832735898"] = "Which slide layout should the acknowledgements use?"
+
+-- Which slide layout should a single picture use, shown prominently, e.g., a screenshot, a photo, or a sketch?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3855855203"] = "Which slide layout should a single picture use, shown prominently, e.g., a screenshot, a photo, or a sketch?"
 
 -- Layout for much content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T38628112"] = "Layout for much content"
 
+-- Which slide layout should a single example or case study use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3892617705"] = "Which slide layout should a single example or case study use?"
+
+-- Layout for several scenarios
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3919966111"] = "Layout for several scenarios"
+
+-- Which slide layout should group work use, e.g., the groups and their tasks?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3944216706"] = "Which slide layout should group work use, e.g., the groups and their tasks?"
+
+-- Which slide layout should an agenda with times and rooms use, e.g., of a workshop?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3970798363"] = "Which slide layout should an agenda with times and rooms use, e.g., of a workshop?"
+
+-- Layout for discussion prompts
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3976709671"] = "Layout for discussion prompts"
+
+-- Which slide layout should several theses or central claims use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T398665322"] = "Which slide layout should several theses or central claims use, shown together?"
+
 -- Layout for processes
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3988497225"] = "Layout for processes"
 
--- Layout
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4152902175"] = "Layout"
+-- Layout for one picture
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4004724742"] = "Layout for one picture"
+
+-- Which slide layout should several user stories use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4020220483"] = "Which slide layout should several user stories use, shown together?"
+
+-- Which slide layout should a single delimitation use, i.e., what the work leaves out?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4024727480"] = "Which slide layout should a single delimitation use, i.e., what the work leaves out?"
+
+-- Which slide layout should a single learning objective use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4043291982"] = "Which slide layout should a single learning objective use, shown prominently?"
+
+-- Which slide layout should a vision use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T411531801"] = "Which slide layout should a vision use?"
+
+-- Which slide layout should several use cases use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T412705947"] = "Which slide layout should several use cases use, shown together?"
+
+-- Layout for exercises
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4139918235"] = "Layout for exercises"
+
+-- Layout for one recommendation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4152682543"] = "Layout for one recommendation"
+
+-- Which slide layout should a forecast use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4157101626"] = "Which slide layout should a forecast use?"
+
+-- Layout for several dependencies
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4167135281"] = "Layout for several dependencies"
+
+-- Which slide layout should the sources and the literature use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T424325956"] = "Which slide layout should the sources and the literature use?"
 
 -- Layout for chapters
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4270765578"] = "Layout for chapters"
 
--- Which slide layout should hypotheses use?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T429829808"] = "Which slide layout should hypotheses use?"
+-- Layout for sources and literature
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4288705850"] = "Layout for sources and literature"
+
+-- Layout for reflection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4291696997"] = "Layout for reflection"
+
+-- Layout for group work
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4352908"] = "Layout for group work"
 
 -- Which slide layout should processes use, e.g., the steps of a workflow?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T472481710"] = "Which slide layout should processes use, e.g., the steps of a workflow?"
@@ -13764,11 +14409,47 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T47248171
 -- Which slide layout should questions to the audience during the presentation use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T481382299"] = "Which slide layout should questions to the audience during the presentation use?"
 
--- Which slide layout should an agenda or an overview of the parts use?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T609477514"] = "Which slide layout should an agenda or an overview of the parts use?"
+-- Which slide layout should a single dependency and its countermeasures use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T483166750"] = "Which slide layout should a single dependency and its countermeasures use?"
+
+-- Layout for several recommendations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T488858884"] = "Layout for several recommendations"
+
+-- Layout for next steps
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T492677118"] = "Layout for next steps"
+
+-- Layout for disclaimers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T499992444"] = "Layout for disclaimers"
+
+-- Layout for one risk
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T520213671"] = "Layout for one risk"
+
+-- Layout for the outlook
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T532661312"] = "Layout for the outlook"
+
+-- Layout for a key message
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T580205055"] = "Layout for a key message"
+
+-- Which slide layout should an overview of several key figures use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T591913673"] = "Which slide layout should an overview of several key figures use?"
+
+-- Which slide layout should a single key figure use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T597027606"] = "Which slide layout should a single key figure use, shown prominently?"
+
+-- Layout for several reasons
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T642594705"] = "Layout for several reasons"
+
+-- Which slide layout should an executive summary use, which sums up the presentation for decision makers?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T656187586"] = "Which slide layout should an executive summary use, which sums up the presentation for decision makers?"
+
+-- Which slide layout should several learning objectives use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T661130415"] = "Which slide layout should several learning objectives use, shown together?"
 
 -- Layout for feedback
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T696819471"] = "Layout for feedback"
+
+-- Layout for several quotes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T712009129"] = "Layout for several quotes"
 
 -- Layout for the closing slide
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T720559061"] = "Layout for the closing slide"
@@ -13776,11 +14457,68 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T72055906
 -- Which slide layout should ordinary slides with content use by default?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T786472161"] = "Which slide layout should ordinary slides with content use by default?"
 
+-- Layout for interpretations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T805484287"] = "Layout for interpretations"
+
 -- Layout for little content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T80953305"] = "Layout for little content"
 
+-- Which slide layout should an outlook on what comes next use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T813908001"] = "Which slide layout should an outlook on what comes next use?"
+
+-- Layout for the change of days
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T83666001"] = "Layout for the change of days"
+
+-- Layout for solutions of exercises
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T839629486"] = "Layout for solutions of exercises"
+
+-- Layout for one result
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T839738989"] = "Layout for one result"
+
+-- Layout for calls to action
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T842816024"] = "Layout for calls to action"
+
+-- Which slide layout should lessons learned use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T843945672"] = "Which slide layout should lessons learned use?"
+
+-- Which slide layout should several results use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T852132531"] = "Which slide layout should several results use, shown together?"
+
 -- Which slide layout should source code use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T875188064"] = "Which slide layout should source code use?"
+
+-- Which slide layout should several recommendations use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T910165957"] = "Which slide layout should several recommendations use, shown together?"
+
+-- Layout for the vision
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T91142277"] = "Layout for the vision"
+
+-- Which slide layout should a single hypothesis use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T928643773"] = "Which slide layout should a single hypothesis use, shown prominently?"
+
+-- Which slide layout should a single counterargument use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T932548010"] = "Which slide layout should a single counterargument use, shown prominently?"
+
+-- Which slide layout should a story use, e.g., in the storytelling of a keynote?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T935856327"] = "Which slide layout should a story use, e.g., in the storytelling of a keynote?"
+
+-- Layout for introduction rounds
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T939876765"] = "Layout for introduction rounds"
+
+-- Layout for acceptance criteria
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T959706504"] = "Layout for acceptance criteria"
+
+-- Layout for limitations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T967847257"] = "Layout for limitations"
+
+-- Layout for an overview of milestones
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T972717018"] = "Layout for an overview of milestones"
+
+-- Layout for resources
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T976410413"] = "Layout for resources"
+
+-- Layout for one problem
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T980921811"] = "Layout for one problem"
 
 -- Picture: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1001457607"] = "Picture: {0}"
