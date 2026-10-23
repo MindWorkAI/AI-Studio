@@ -586,6 +586,14 @@ public static partial class ManagedConfiguration
                     // Step 3 -- try to parse the string as the target type:
                     if (EnumNames.TryParse(typeof(TValue), configuredLuaValueText, out var configuredEnum))
                         set.Add((TValue)configuredEnum);
+
+                    //
+                    // Dropped, but not quietly: such a set may prohibit something, and a typo would
+                    // otherwise leave it allowed without anybody noticing. A dry run comes before
+                    // the actual one, so only the actual one reports it:
+                    //
+                    else if (!dryRun)
+                        Log.LogWarning($"The configuration plugin '{configPluginId}' names '{configuredLuaValueText}' in the setting '{configMeta.SettingName}', which is no valid value. Ignoring it.");
                 }
             }
 

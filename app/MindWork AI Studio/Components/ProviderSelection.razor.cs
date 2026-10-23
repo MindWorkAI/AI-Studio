@@ -76,20 +76,24 @@ public partial class ProviderSelection : MSGComponentBase
     /// Says why there is nothing to choose from, or nothing at all when that is not the user's doing.
     /// </summary>
     /// <remarks>
-    /// An empty list has two causes the user can act on, and they lead to different places in the
-    /// settings: there is no provider yet, or none of the configured ones reaches the confidence
-    /// this component asks for. Naming the wrong one sends the user looking in the wrong place --
-    /// a first start has nobody to blame for a confidence level it never set. A missing or invalid
-    /// component is a third case and neither of those: it is a defect, it was logged as one, and
-    /// any explanation offered to the user here would be a guess.
+    /// An empty list has three causes the user can act on, and they lead to different places in the
+    /// settings: there is no provider yet, the organization prohibited all of them, or none of the
+    /// configured ones reaches the confidence this component asks for. Naming the wrong one sends
+    /// the user looking in the wrong place -- a first start has nobody to blame for a confidence
+    /// level it never set. A missing or invalid component is another case and none of those: it is
+    /// a defect, it was logged as one, and any explanation offered to the user here would be a guess.
     /// </remarks>
     private string? GetEmptySelectionHint()
     {
         if (this.Component is null or Tools.Components.NONE)
             return null;
 
-        if (!this.SettingsManager.GetAllProviders().Any(x => x.UsedLLMProvider is not LLMProviders.NONE))
+        var configuredProviders = this.SettingsManager.GetAllProviders().Where(x => x.UsedLLMProvider is not LLMProviders.NONE).ToList();
+        if (configuredProviders.Count == 0)
             return this.T("No LLM providers are configured yet. Add a provider in the app settings.");
+
+        if (configuredProviders.All(x => this.SettingsManager.IsProviderProhibited(x.UsedLLMProvider)))
+            return this.T("The use of all your LLM providers has been prohibited by your organization. Add a different provider in the app settings.");
 
         return this.T("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.");
     }
@@ -164,6 +168,17 @@ public partial class ProviderSelection : MSGComponentBase
             {
                 this.ProviderSettings = updatedProvider;
                 await this.ProviderSettingsChanged.InvokeAsync(updatedProvider);
+            }
+
+            //
+            // A configuration may also take our provider out of reach, e.g., when the organization
+            // prohibits it or raises the minimum confidence. The list already leaves it out, so the
+            // selection must not keep showing it either:
+            //
+            if (this.Component is not (null or Tools.Components.NONE) && this.ProviderSettings != AIStudio.Settings.Provider.NONE && !this.GetAvailableProviders().Contains(this.ProviderSettings))
+            {
+                this.ProviderSettings = AIStudio.Settings.Provider.NONE;
+                await this.ProviderSettingsChanged.InvokeAsync(AIStudio.Settings.Provider.NONE);
             }
 
             this.StateHasChanged();

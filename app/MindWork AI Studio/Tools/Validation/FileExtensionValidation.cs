@@ -69,6 +69,17 @@ public static class FileExtensionValidation
                         TB("Images are not supported at this place")));
                     return false;
                 
+                //
+                // Whether AI Studio can prepare an image for a model does not depend on the
+                // provider. This holds for templates as well, therefore: a HEIC image attached
+                // there could never be sent.
+                //
+                case UseCase.ATTACHING_CONTENT when !FileTypes.IsAllowedPath(filePath, FileTypes.MODEL_IMAGE):
+                    await MessageBus.INSTANCE.SendWarning(new(
+                        Icons.Material.Filled.ImageNotSupported,
+                        string.Format(TB("AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG."), Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant())));
+                    return false;
+
                 // In this use case, we don't validate the provider capabilities:
                 case UseCase.ATTACHING_CONTENT when !validateMediaFileTypes:
                     return true;
@@ -115,32 +126,5 @@ public static class FileExtensionValidation
             Icons.Material.Filled.InsertDriveFile,
             TB("Unsupported file type")));
         return false;
-    }
-
-    /// <summary>
-    /// Validates that the file is a supported image format and sends appropriate MessageBus notifications when invalid.
-    /// </summary>
-    /// <param name="filePath">The file path to validate.</param>
-    /// <returns>True if valid image, false if invalid (error already sent via MessageBus).</returns>
-    public static async Task<bool> IsImageExtensionValidWithNotifyAsync(string filePath)
-    {
-        var ext = Path.GetExtension(filePath).TrimStart('.');
-        if (string.IsNullOrWhiteSpace(ext))
-        {
-            await MessageBus.INSTANCE.SendError(new(
-                Icons.Material.Filled.ImageNotSupported,
-                TB("File has no extension")));
-            return false;
-        }
-
-        if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
-        {
-            await MessageBus.INSTANCE.SendError(new(
-                Icons.Material.Filled.ImageNotSupported,
-                TB("Unsupported image format")));
-            return false;
-        }
-
-        return true;
     }
 }

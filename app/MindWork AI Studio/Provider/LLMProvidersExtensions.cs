@@ -289,6 +289,27 @@ public static class LLMProvidersExtensions
     };
 
     /// <summary>
+    /// The largest image file, in bytes, which the provider accepts in a request, where it states one.
+    /// </summary>
+    /// <remarks>
+    /// The limit belongs to the API of the provider, not to the model: the same model may accept
+    /// larger images through another provider. What we actually send is asked through
+    /// IImageSourceExtensions.MaxImageSizeBytesFor, which also applies our own limit.
+    /// </remarks>
+    /// <param name="llmProvider">The provider to check.</param>
+    /// <returns>The size limit of one image file, or null when the provider states none we know of.</returns>
+    public static long? GetMaxImageSizeBytes(this LLMProviders llmProvider) => llmProvider switch
+    {
+        //
+        // Anthropic accepts at most 5 MiB (5,242,880 bytes) of base64 per image. Base64 needs four
+        // characters for every three bytes, which leaves 3,932,160 bytes for the image file itself:
+        //
+        LLMProviders.ANTHROPIC => 3_932_160,
+
+        _ => null,
+    };
+
+    /// <summary>
     /// Creates a new provider instance based on the provider value.
     /// </summary>
     /// <param name="providerSettings">The provider settings.</param>
@@ -320,6 +341,16 @@ public static class LLMProvidersExtensions
 
     private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false, HFEndpointKind hfEndpointKind = HFEndpointKind.CHAT, ProviderCapabilityOverrides? capabilityOverrides = null, string tokenizerPath = "")
     {
+        //
+        // Every provider instance comes from here, for LLMs, embeddings, and transcriptions alike.
+        // Whatever a caller forgot to check, no request reaches a provider the organization prohibited:
+        //
+        if (IsProhibitedByOrganization(provider))
+        {
+            LOGGER.LogWarning($"Refused to create the provider '{instanceName}' of '{provider}': the organization prohibited this provider.");
+            return new NoProvider();
+        }
+
         try
         {
             IProvider providerInstance = provider switch
@@ -361,7 +392,22 @@ public static class LLMProvidersExtensions
             return new NoProvider();
         }
     }
-    
+
+    /// <summary>
+    /// Checks whether the organization prohibited the given provider.
+    /// </summary>
+    /// <remarks>
+    /// The settings come from Program.SERVICE_PROVIDER, because none of the callers of CreateProvider
+    /// hands them in. Tests which create providers without the services of the app have no settings
+    /// there, and nothing is prohibited for them.
+    /// </remarks>
+    private static bool IsProhibitedByOrganization(LLMProviders provider)
+    {
+        // Declared as never null, but it is null until the app has started its services:
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+        return Program.SERVICE_PROVIDER?.GetService<SettingsManager>() is { } settingsManager && settingsManager.IsProviderProhibited(provider);
+    }
+
     public static string GetCreationURL(this LLMProviders provider) => provider switch
     {
         LLMProviders.OPEN_AI => "https://platform.openai.com/signup",

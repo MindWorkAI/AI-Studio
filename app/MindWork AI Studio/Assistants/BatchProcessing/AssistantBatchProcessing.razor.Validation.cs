@@ -1,3 +1,4 @@
+using AIStudio.Settings;
 using AIStudio.Tools.Media;
 
 namespace AIStudio.Assistants.BatchProcessing;
@@ -82,39 +83,18 @@ public partial class AssistantBatchProcessing
     private IReadOnlyList<string> FindInputFiles(string resolvedOutputDirectory)
     {
         var selection = new FolderFileSelection(FileNamePatterns.Parse(this.filePatterns), FileExclusions.Parse(this.excludePatterns), this.includeSubdirectories, this.includeHiddenFilesAndFolders, this.maxFileSizeMegabytes);
+        var outputFolder = new BatchProcessingOutputFolder(this.inputDirectory, resolvedOutputDirectory, this.ResolveResultsFileName());
         var files = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         this.numTooLargeFiles = 0;
 
-        var normalizedInputDirectory = TrimDirectorySeparator(Path.GetFullPath(this.inputDirectory));
-        var normalizedOutputDirectory = TrimDirectorySeparator(Path.GetFullPath(resolvedOutputDirectory));
-
-        // When the output folder is a folder of its own, we skip everything
-        // inside it. When it is the input folder itself, we must not skip the
-        // whole folder: we would not find any document at all. We then skip
-        // our own output artifacts instead.
-        var isOutputSeparateFolder = !string.Equals(normalizedInputDirectory, normalizedOutputDirectory, StringComparison.OrdinalIgnoreCase);
-
-        // The separator is essential: without it, an output folder named 'out'
-        // would also exclude a document named 'output-notes.md':
-        var outputDirectoryPrefix = normalizedOutputDirectory + Path.DirectorySeparatorChar;
-
         foreach (var file in selection.EnumerateCandidates(
                      this.inputDirectory,
-                     includeDirectory: directory => !isOutputSeparateFolder
-                                                    || !string.Equals(TrimDirectorySeparator(Path.GetFullPath(directory)), normalizedOutputDirectory, StringComparison.OrdinalIgnoreCase),
+                     includeDirectory: outputFolder.Enters,
                      reportInaccessibleDirectory: (directory, exception) =>
                          throw new IOException($"Could not access directory '{directory}'.", exception)))
         {
             var normalizedFile = Path.GetFullPath(file);
-            if (!selection.Selects(normalizedFile) || IsTranscriptArtifact(normalizedFile))
-                continue;
-
-            if (isOutputSeparateFolder)
-            {
-                if (normalizedFile.StartsWith(outputDirectoryPrefix, StringComparison.OrdinalIgnoreCase))
-                    continue;
-            }
-            else if (this.IsOwnOutputArtifact(normalizedFile))
+            if (!selection.Selects(normalizedFile) || IsTranscriptArtifact(normalizedFile) || outputFolder.IsOutputOfRun(normalizedFile))
                 continue;
 
             //
@@ -134,25 +114,6 @@ public partial class AssistantBatchProcessing
             this.Logger.LogInformation("Left out {NumTooLargeFiles} matching file(s) in '{InputDirectory}' from the batch run because they are larger than {MaxFileSize}.", this.numTooLargeFiles, this.inputDirectory, selection.MaxFileSizeBytes.FileSize());
 
         return [.. files];
-    }
-
-    private static string TrimDirectorySeparator(string path) => path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-    /// <summary>
-    /// Checks whether a file is an output artifact of this assistant. We need
-    /// this when the output folder is the input folder: without it, the results
-    /// of a previous run would be processed as documents.
-    /// </summary>
-    private bool IsOwnOutputArtifact(string filePath)
-    {
-        var fileName = Path.GetFileName(filePath);
-        if (string.Equals(fileName, LOG_FILENAME, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        if (string.Equals(fileName, this.ResolveResultsFileName(), StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        return fileName.EndsWith(RESULT_FILE_SUFFIX, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -214,6 +175,17 @@ public partial class AssistantBatchProcessing
         if (requiresTranscription && !this.MediaTranscriptionService.HasUsableTranscriptionProvider)
         {
             this.AddInputIssue(T("The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns."));
+            return null;
+        }
+
+        //
+        // A model that cannot read images would get the text of the request alone, without the
+        // image, and answer about nothing. Such images fail one by one, see LoadImageAsync, while the
+        // documents next to them are processed. A run of nothing but images does not start at all:
+        //
+        if (files.All(IsImage) && !this.ProviderSettings.SupportsImageInput())
+        {
+            this.AddInputIssue(T("All selected files are images, but the selected model cannot read images. Select a model with image support."));
             return null;
         }
 

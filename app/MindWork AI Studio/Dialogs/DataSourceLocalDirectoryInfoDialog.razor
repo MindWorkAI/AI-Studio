@@ -43,6 +43,7 @@
         }
 
         <TextInfoLine Label="@T("Required provider confidence level")" Value="@this.DataSource.ConfidenceLevel.GetName()" ClipboardTooltipSubject="@T("the required provider confidence level")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.Shield" Label="@T("Where a chat may send data after reading this data source")" Value="@this.OutboundDataRestrictionName" ClipboardTooltipSubject="@T("where a chat may send data after reading this data source")"/>
         <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
 
         <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Number of matching files")" Value="@this.NumberFilesInDirectory" ClipboardTooltipSubject="@T("the number of matching files in the directory")"/>

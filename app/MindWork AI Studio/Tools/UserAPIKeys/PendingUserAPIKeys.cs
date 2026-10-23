@@ -19,14 +19,19 @@ public static class PendingUserAPIKeys
     /// <returns>One group per configuration plugin with at least one waiting provider.</returns>
     public static async Task<IReadOnlyList<PendingUserAPIKeyGroup>> FindAsync(SettingsManager settingsManager, RustService rustService)
     {
+        //
+        // A provider the organization prohibited is left out, even when a configuration of the same
+        // organization asks for its key: the key could be used for nothing, and checking it would
+        // contact the provider.
+        //
         var candidates = new List<(Guid ConfigPluginId, PendingUserAPIKeyTarget Target)>();
-        foreach (var provider in settingsManager.GetAllProviders().Where(provider => IsPrompting(provider)))
+        foreach (var provider in settingsManager.GetAllProviders().Where(provider => IsPrompting(provider) && !settingsManager.IsProviderProhibited(provider.UsedLLMProvider)))
             candidates.Add((provider.EnterpriseConfigurationPluginId, new PendingUserAPIKeyTarget(provider.InstanceName, provider, SecretStoreType.LLM_PROVIDER, () => provider.CreateProvider())));
 
-        foreach (var provider in settingsManager.GetAllEmbeddingProviders().Where(provider => IsPrompting(provider)))
+        foreach (var provider in settingsManager.GetAllEmbeddingProviders().Where(provider => IsPrompting(provider) && !settingsManager.IsProviderProhibited(provider.UsedLLMProvider)))
             candidates.Add((provider.EnterpriseConfigurationPluginId, new PendingUserAPIKeyTarget(provider.Name, provider, SecretStoreType.EMBEDDING_PROVIDER, () => provider.CreateProvider())));
 
-        foreach (var provider in settingsManager.GetAllTranscriptionProviders().Where(provider => IsPrompting(provider)))
+        foreach (var provider in settingsManager.GetAllTranscriptionProviders().Where(provider => IsPrompting(provider) && !settingsManager.IsProviderProhibited(provider.UsedLLMProvider)))
             candidates.Add((provider.EnterpriseConfigurationPluginId, new PendingUserAPIKeyTarget(provider.Name, provider, SecretStoreType.TRANSCRIPTION_PROVIDER, () => provider.CreateProvider())));
 
         if (candidates.Count == 0)

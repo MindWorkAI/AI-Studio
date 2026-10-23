@@ -17,19 +17,24 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (assistantPlugin.ChatLaunchConfiguration is not { } launchConfiguration)
             return new(null, TB("The assistant plugin does not contain a valid chat launch configuration."));
 
-        var providerResult = this.ResolveProvider(launchConfiguration.ProviderId);
-        if (providerResult.IsExplicit && providerResult.Provider == ProviderSettings.NONE)
-            return new(null, providerResult.ErrorMessage);
-
-        var profileResult = this.ResolveProfile(launchConfiguration.ProfileId);
-        var profile = profileResult.Profile;
-        if (profile is null)
-            return new(null, profileResult.ErrorMessage);
-
+        //
+        // The chat template comes first, because it may preselect the provider and the profile as
+        // well. When it does, it wins over the launcher — the same rule as for the tools and the
+        // data sources, so that nobody has to remember two of them:
+        //
         var chatTemplateResult = this.ResolveChatTemplate(launchConfiguration.ChatTemplateId);
         var chatTemplate = chatTemplateResult.ChatTemplate;
         if (chatTemplate is null)
             return new(null, chatTemplateResult.ErrorMessage);
+
+        var providerResult = this.ResolveProvider(assistantPlugin.Name, chatTemplate, launchConfiguration.ProviderId);
+        if (providerResult.IsExplicit && providerResult.Provider == ProviderSettings.NONE)
+            return new(null, providerResult.ErrorMessage);
+
+        var profileResult = this.ResolveProfile(assistantPlugin.Name, chatTemplate, launchConfiguration.ProfileId);
+        var profile = profileResult.Profile;
+        if (profile is null)
+            return new(null, profileResult.ErrorMessage);
 
         //
         // A chat template that forbids profiles wins over a configured profile: the chat disables
@@ -52,8 +57,10 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
 
         //
         // A launcher that names no workspace wants the same chat the chat page starts on its own:
-        // one that belongs nowhere, is kept among the temporary chats, and disappears with them. The
-        // empty workspace ID is what says so, here as everywhere else in the app.
+        // one that belongs nowhere, is kept among the temporary chats, and disappears with them —
+        // unless its chat template names a workspace, which then fills in, just like on the chat
+        // page. A workspace the launcher names itself was chosen on purpose and wins. The empty
+        // workspace ID is what says "no workspace", here as everywhere else in the app.
         //
         var workspaceId = Guid.Empty;
         if (!launchConfiguration.OpensTemporaryChat)
@@ -73,6 +80,11 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
                 logger.LogWarning("Assistant plugin '{PluginName}' could not resolve or create workspace '{WorkspaceName}'.", assistantPlugin.Name, launchConfiguration.WorkspaceName);
                 return new(null, string.Format(TB("The workspace '{0}' could not be opened or created."), launchConfiguration.WorkspaceName));
             }
+        }
+        else if (settingsManager.GetChatTemplateWorkspaceName(chatTemplate) is { } templateWorkspaceName)
+        {
+            // A workspace of the template which cannot be used does not stop the launch, the same as on the chat page:
+            workspaceId = await WorkspaceBehaviour.ResolveOrCreateChatTemplateWorkspaceAsync(templateWorkspaceName, chatTemplate.GetSafeName());
         }
 
         var toolChoice = ChatTemplate.ChooseToolIds(chatTemplate, launchConfiguration.ToolIds);
@@ -115,7 +127,34 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         return new(new(chatThread, ApplySelectedChatTemplateToComposer: true, PreserveDataSourceOptions: dataSourcesWereChosen), string.Empty);
     }
 
-    private (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveProvider(Guid? providerId)
+    /// <remarks>
+    /// A provider of the chat template which is gone, or which may not be used for chats, does not
+    /// stop the launch: the chat then starts as if the template named none, so the launcher decides
+    /// after all. Only what the launcher names itself is an error when it cannot be used, because
+    /// that is the one choice its author can fix in the launcher.
+    /// </remarks>
+    internal ChatLauncherProviderResult ResolveProvider(string pluginName, ChatTemplate chatTemplate, Guid? launcherProviderId)
+    {
+        var templateProvider = settingsManager.GetChatTemplateProvider(chatTemplate);
+        if (templateProvider != ProviderSettings.NONE)
+        {
+            if (launcherProviderId is not null)
+                logger.LogWarning(
+                    "Assistant plugin '{PluginName}' selects the provider '{LauncherProviderId}', but its chat template '{ChatTemplateName}' preselects a provider of its own. The chat starts with the provider of that template.",
+                    pluginName, launcherProviderId, chatTemplate.GetSafeName());
+
+            return new(templateProvider, true, string.Empty);
+        }
+
+        if (chatTemplate.ProviderId is not null)
+            logger.LogWarning(
+                "The chat template '{ChatTemplateName}' preselects the provider '{TemplateProviderId}', which does not exist or may not be used for chats. The chat starts as if the template named no provider.",
+                chatTemplate.GetSafeName(), chatTemplate.ProviderId);
+
+        return this.ResolveLauncherProvider(launcherProviderId);
+    }
+
+    private ChatLauncherProviderResult ResolveLauncherProvider(Guid? providerId)
     {
         //
         // The launcher does not name a provider, so it wants the chat defaults. We resolve them
@@ -140,7 +179,32 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         return new(provider, true, string.Empty);
     }
 
-    private (Profile? Profile, string ErrorMessage) ResolveProfile(Guid? profileId)
+    /// <remarks>
+    /// The same as for the provider: a profile of the chat template which is gone leaves the choice
+    /// to the launcher. A template which does not allow profiles names none here, and the launch
+    /// below drops the profile of the launcher for it as well.
+    /// </remarks>
+    internal ChatLauncherProfileResult ResolveProfile(string pluginName, ChatTemplate chatTemplate, Guid? launcherProfileId)
+    {
+        if (settingsManager.GetChatTemplateProfile(chatTemplate) is { } templateProfile)
+        {
+            if (launcherProfileId is not null)
+                logger.LogWarning(
+                    "Assistant plugin '{PluginName}' selects the profile '{LauncherProfileId}', but its chat template '{ChatTemplateName}' preselects a profile of its own. The chat starts with the profile of that template.",
+                    pluginName, launcherProfileId, chatTemplate.GetSafeName());
+
+            return new(templateProfile, string.Empty);
+        }
+
+        if (chatTemplate.AllowProfileUsage && chatTemplate.ProfileId is not null)
+            logger.LogWarning(
+                "The chat template '{ChatTemplateName}' preselects the profile '{TemplateProfileId}', which does not exist. The chat starts as if the template named no profile.",
+                chatTemplate.GetSafeName(), chatTemplate.ProfileId);
+
+        return this.ResolveLauncherProfile(launcherProfileId);
+    }
+
+    private ChatLauncherProfileResult ResolveLauncherProfile(Guid? profileId)
     {
         if (profileId is null)
             return new(settingsManager.GetPreselectedProfile(Components.CHAT), string.Empty);
@@ -159,7 +223,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             : new(profile, string.Empty);
     }
 
-    private (ChatTemplate? ChatTemplate, string ErrorMessage) ResolveChatTemplate(Guid? chatTemplateId)
+    private ChatLauncherTemplateResult ResolveChatTemplate(Guid? chatTemplateId)
     {
         if (chatTemplateId is null)
             return new(settingsManager.GetPreselectedChatTemplate(Components.CHAT), string.Empty);
@@ -178,7 +242,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             : new(chatTemplate, string.Empty);
     }
 
-    private async Task<(DataSourceOptions? Options, string ErrorMessage)> ResolveDataSourceOptionsAsync(PluginAssistants assistantPlugin, ProviderSettings provider, ChatTemplate chatTemplate, IReadOnlyList<Guid>? launcherDataSourceIds)
+    private async Task<ChatLauncherDataSourcesResult> ResolveDataSourceOptionsAsync(PluginAssistants assistantPlugin, ProviderSettings provider, ChatTemplate chatTemplate, IReadOnlyList<Guid>? launcherDataSourceIds)
     {
         //
         // The launcher names data sources as plain IDs, and the options around them are always the
@@ -225,8 +289,17 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
     /// <param name="chosenOptions">The options the chat is about to start with.</param>
     /// <param name="originChatTemplate">The chat template the options came from, or null when the launcher named the sources itself.</param>
     /// <returns>The checked options, or null and a message saying why no chat was created.</returns>
-    private async Task<(DataSourceOptions? Options, string ErrorMessage)> CheckChosenDataSourcesAsync(ProviderSettings provider, DataSourceOptions chosenOptions, ChatTemplate? originChatTemplate)
+    internal async Task<ChatLauncherDataSourcesResult> CheckChosenDataSourcesAsync(ProviderSettings provider, DataSourceOptions chosenOptions, ChatTemplate? originChatTemplate)
     {
+        //
+        // Without the RAG preview, the chat uses no data sources at all, so a source which is gone
+        // or not permitted takes nothing from it. Stopping the launch for it would block a launcher
+        // over something the user can neither see nor change. The options stay in the chat as they
+        // are, just like a chat template keeps them, and count once RAG is switched on again.
+        //
+        if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(settingsManager))
+            return new(chosenOptions, string.Empty);
+
         //
         // There is nothing to check when data sources are switched off, and nothing to check either
         // when an agent picks them: that choice is made per message in the chat, exactly as it is

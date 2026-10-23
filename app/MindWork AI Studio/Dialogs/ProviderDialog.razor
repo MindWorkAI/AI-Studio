@@ -27,326 +27,338 @@
                         </MudSelectItem>
                     }
                 </MudSelect>
-                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton())" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">
+                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton() || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">
                     @T("Create account")
                 </MudButton>
             </MudStack>
 
-            @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
+            @if (this.IsProviderProhibited)
             {
-                <SecretInputField Secret="@this.dataAPIKey" SecretChanged="@this.OnAPIKeyChanged" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
+                <MudAlert Severity="Severity.Warning" Class="mb-3">
+                    @T("The use of this provider has been prohibited by your organization. Please select a different provider.")
+                </MudAlert>
             }
-
-            @if (this.DataLLMProvider.IsHostnameNeeded())
+            else
             {
-                <MudTextField
-                    T="string"
-                    @bind-Text="@this.DataHostname"
-                    Label="@T("Hostname")"
-                    Class="mb-3"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.Dns"
-                    AdornmentColor="Color.Info"
-                    Disabled="@this.IsEnterpriseConfiguration"
-                    Validation="@this.providerValidation.ValidatingHostname"
-                    UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
-            }
+                @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
+                {
+                    <SecretInputField Secret="@this.dataAPIKey" SecretChanged="@this.OnAPIKeyChanged" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
+                }
 
-            @if (this.DataLLMProvider.IsHostNeeded())
-            {
-                <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
-                    @foreach (Host host in Enum.GetValues(typeof(Host)))
-                    {
-                        @if (host.IsChatSupported())
+                @if (this.DataLLMProvider.IsHostnameNeeded())
+                {
+                    <MudTextField
+                        T="string"
+                        @bind-Text="@this.DataHostname"
+                        Label="@T("Hostname")"
+                        Class="mb-3"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Dns"
+                        AdornmentColor="Color.Info"
+                        Disabled="@this.IsEnterpriseConfiguration"
+                        Validation="@this.providerValidation.ValidatingHostname"
+                        UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                }
+
+                @if (this.DataLLMProvider.IsHostNeeded())
+                {
+                    <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
+                        @foreach (Host host in Enum.GetValues(typeof(Host)))
                         {
-                            <MudSelectItem Value="@host">
-                                @host.Name()
-                            </MudSelectItem>
+                            @if (host.IsChatSupported())
+                            {
+                                <MudSelectItem Value="@host">
+                                    @host.Name()
+                                </MudSelectItem>
+                            }
                         }
-                    }
-                </MudSelect>
-            }
+                    </MudSelect>
+                }
 
-            @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
-            {
-                <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
-                    @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
-                    {
-                        @if (inferenceProvider.SupportsChat())
+                @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
+                {
+                    <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
+                        @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                         {
-                            <MudSelectItem Value="@inferenceProvider">
-                                @inferenceProvider.ToName()
-                            </MudSelectItem>
+                            @if (inferenceProvider.SupportsChat())
+                            {
+                                <MudSelectItem Value="@inferenceProvider">
+                                    @inferenceProvider.ToName()
+                                </MudSelectItem>
+                            }
                         }
-                    }
-                </MudSelect>
-                <MudJustifiedText Class="mb-3">
-                    @T("Choose which inference provider should answer your requests. When you pick one of the automatic options instead, Hugging Face selects a provider for you and switches to another one when your choice is unavailable.")
-                </MudJustifiedText>
-            }       
+                    </MudSelect>
+                    <MudJustifiedText Class="mb-3">
+                        @T("Choose which inference provider should answer your requests. When you pick one of the automatic options instead, Hugging Face selects a provider for you and switches to another one when your choice is unavailable.")
+                    </MudJustifiedText>
+                }
 
-            @if (!this.IsLLMModelSelectionHidden)
-            {
-                <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
-                    <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
-                        @if (this.DataLLMProvider.IsLLMModelProvidedManually())
-                        {
-                            <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
-                                @T("Show available models")
-                            </MudButton>
-                            <MudTextField
-                                T="string"
-                                @bind-Text="@this.dataManuallyModel"
-                                Label="@T("Model")"
-                                Adornment="Adornment.Start"
-                                AdornmentIcon="@Icons.Material.Filled.FaceRetouchingNatural"
-                                AdornmentColor="Color.Info"
-                                Disabled="@this.IsEnterpriseConfiguration"
-                                Validation="@this.ValidateManuallyModel"
-                                UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                                HelperText="@T("Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.")"
-                            />
-                        }
-                        else
-                        {
-                            @if (!string.IsNullOrWhiteSpace(this.ModelsOverviewURL))
+                @if (!this.IsLLMModelSelectionHidden)
+                {
+                    <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
+                        <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
+                            @if (this.DataLLMProvider.IsLLMModelProvidedManually())
                             {
                                 <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
                                     @T("Show available models")
                                 </MudButton>
-                            }
-                            <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
-                                @T("Load models")
-                            </MudButton>
-                            @if(this.availableModels.Count is 0)
-                            {
-                                <MudText Typo="Typo.body1">
-                                    @T("No models loaded or available.")
-                                </MudText>
+                                <MudTextField
+                                    T="string"
+                                    @bind-Text="@this.dataManuallyModel"
+                                    Label="@T("Model")"
+                                    Adornment="Adornment.Start"
+                                    AdornmentIcon="@Icons.Material.Filled.FaceRetouchingNatural"
+                                    AdornmentColor="Color.Info"
+                                    Disabled="@this.IsEnterpriseConfiguration"
+                                    Validation="@this.ValidateManuallyModel"
+                                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                                    HelperText="@T("Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.")"
+                                />
                             }
                             else
                             {
-                                <MudSelect T="Provider.Model"
-                                           Value="@this.DataModel"
-                                           ValueChanged="@(async model => await this.OnModelChanged(model))"
-                                           OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info"
-                                           Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingModel">
-                                    @foreach (var model in this.availableModels)
+                                @if (!string.IsNullOrWhiteSpace(this.ModelsOverviewURL))
+                                {
+                                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
+                                        @T("Show available models")
+                                    </MudButton>
+                                }
+                                <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
+                                    @T("Load models")
+                                </MudButton>
+                                @if(this.availableModels.Count is 0)
+                                {
+                                    <MudText Typo="Typo.body1">
+                                        @T("No models loaded or available.")
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudSelect T="Provider.Model"
+                                               Value="@this.DataModel"
+                                               ValueChanged="@(async model => await this.OnModelChanged(model))"
+                                               OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info"
+                                               Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingModel">
+                                        @foreach (var model in this.availableModels)
+                                        {
+                                            <MudSelectItem Value="@model">
+                                                @model
+                                            </MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                }
+                            }
+                        </MudStack>
+                        @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mt-3">
+                                @this.dataLoadingModelsIssue
+                            </MudAlert>
+                        }
+                    </MudField>
+                }
+                else
+                {
+                    <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
+                        <MudText Typo="Typo.body1">
+                            @T("This host uses the model configured at the provider level. No model selection is available.")
+                        </MudText>
+                    </MudField>
+                }
+
+                @* ReSharper disable once CSharpWarnings::CS8974 *@
+                <MudTextField
+                    T="string"
+                    @bind-Text="@this.DataInstanceName"
+                    Label="@T("Instance Name")"
+                    Class="mb-3"
+                    MaxLength="40"
+                    Counter="40"
+                    Immediate="@true"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                    AdornmentColor="Color.Info"
+                    Disabled="@this.IsEnterpriseConfiguration"
+                    Validation="@this.providerValidation.ValidatingInstanceName"
+                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                />
+
+                <MudStack>
+                    <MudButton OnClick="@this.ToggleExpertSettings">
+                        @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+                    </MudButton>
+                    <MudDivider />
+                    <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                        <MudAlert Severity="Severity.Warning" Class="mb-4">
+                            @T("Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available.")
+                        </MudAlert>
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">
+                            @T("Override Model Capabilities")
+                        </MudText>
+                        <MudJustifiedText Typo="Typo.body2" Class="mb-4">
+                            @T("Stored default model capabilities may not reflect its full range. Override them here if needed.")
+                        </MudJustifiedText>
+                        <MudStack Class="mb-4" Spacing="2">
+                            @foreach (var capability in SWITCH_CAPABILITY_OVERRIDES)
+                            {
+                                <MudPaper Outlined="@true" Class="pa-3">
+                                    <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                        <MudStack Spacing="0">
+                                            <MudText Typo="Typo.body2">
+                                                @this.GetCapabilityOverrideLabel(capability)
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @this.GetCapabilityEffectiveLabel(capability)
+                                            </MudText>
+                                        </MudStack>
+                                        <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudSwitch T="bool"
+                                                       Value="@this.IsCapabilityEnabled(capability)"
+                                                       ValueChanged="@(value => this.OnCapabilitySwitchChanged(capability, value))"
+                                                       Disabled="@this.IsEnterpriseConfiguration"
+                                                       Color="Color.Primary" />
+                                            <MudButton Variant="Variant.Outlined"
+                                                       Color="Color.Default"
+                                                       Size="Size.Small"
+                                                       StartIcon="@Icons.Material.Filled.RestartAlt"
+                                                       Disabled="@(this.IsEnterpriseConfiguration || !this.HasCapabilityOverride(capability))"
+                                                       OnClick="@(() => this.ResetCapabilityOverride(capability))">
+                                                @T("Reset")
+                                            </MudButton>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                            <MudPaper Outlined="@true" Class="pa-3">
+                                <MudSelect T="ReasoningOverrideMode"
+                                           Value="@this.GetReasoningOverrideMode()"
+                                           ValueChanged="@this.SetReasoningOverrideMode"
+                                           Label="@T("Reasoning (thinking) behavior")"
+                                           HelperText="@this.GetReasoningOverrideModeDescription(this.GetReasoningOverrideMode())"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           OpenIcon="@Icons.Material.Filled.Psychology"
+                                           AdornmentColor="Color.Info"
+                                           Adornment="Adornment.Start"
+                                           Disabled="@this.IsEnterpriseConfiguration">
+                                    @foreach (var mode in REASONING_OVERRIDE_MODES)
                                     {
-                                        <MudSelectItem Value="@model">
-                                            @model
+                                        <MudSelectItem Value="@mode">
+                                            @this.GetReasoningOverrideModeLabel(mode)
                                         </MudSelectItem>
                                     }
                                 </MudSelect>
-                            }
-                        }
-                    </MudStack>
-                    @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
-                    {
-                        <MudAlert Severity="Severity.Error" Class="mt-3">
-                            @this.dataLoadingModelsIssue
-                        </MudAlert>
-                    }
-                </MudField>
-            }
-            else
-            {
-                <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
-                    <MudText Typo="Typo.body1">
-                        @T("This host uses the model configured at the provider level. No model selection is available.")
-                    </MudText>
-                </MudField>
-            }
-
-            @* ReSharper disable once CSharpWarnings::CS8974 *@
-            <MudTextField
-                T="string"
-                @bind-Text="@this.DataInstanceName"
-                Label="@T("Instance Name")"
-                Class="mb-3"
-                MaxLength="40"
-                Counter="40"
-                Immediate="@true"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
-                AdornmentColor="Color.Info"
-                Disabled="@this.IsEnterpriseConfiguration"
-                Validation="@this.providerValidation.ValidatingInstanceName"
-                UserAttributes="@SPELLCHECK_ATTRIBUTES"
-            />
-
-            <MudStack>
-                <MudButton OnClick="@this.ToggleExpertSettings">
-                    @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
-                </MudButton>
-                <MudDivider />
-                <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
-                    <MudAlert Severity="Severity.Warning" Class="mb-4">
-                        @T("Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available.")
-                    </MudAlert>
-                    <MudText Typo="Typo.subtitle2" Class="mb-2">
-                        @T("Override Model Capabilities")
-                    </MudText>
-                    <MudJustifiedText Typo="Typo.body2" Class="mb-4">
-                        @T("Stored default model capabilities may not reflect its full range. Override them here if needed.")
-                    </MudJustifiedText>
-                    <MudStack Class="mb-4" Spacing="2">
-                        @foreach (var capability in SWITCH_CAPABILITY_OVERRIDES)
-                        {
-                            <MudPaper Outlined="@true" Class="pa-3">
-                                <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
-                                    <MudStack Spacing="0">
-                                        <MudText Typo="Typo.body2">
-                                            @this.GetCapabilityOverrideLabel(capability)
-                                        </MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                            @this.GetCapabilityEffectiveLabel(capability)
-                                        </MudText>
-                                    </MudStack>
-                                    <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
-                                        <MudSwitch T="bool"
-                                                   Value="@this.IsCapabilityEnabled(capability)"
-                                                   ValueChanged="@(value => this.OnCapabilitySwitchChanged(capability, value))"
-                                                   Disabled="@this.IsEnterpriseConfiguration"
-                                                   Color="Color.Primary" />
-                                        <MudButton Variant="Variant.Outlined"
-                                                   Color="Color.Default"
-                                                   Size="Size.Small"
-                                                   StartIcon="@Icons.Material.Filled.RestartAlt"
-                                                   Disabled="@(this.IsEnterpriseConfiguration || !this.HasCapabilityOverride(capability))"
-                                                   OnClick="@(() => this.ResetCapabilityOverride(capability))">
-                                            @T("Reset")
-                                        </MudButton>
-                                    </MudStack>
-                                </MudStack>
                             </MudPaper>
-                        }
-                        <MudPaper Outlined="@true" Class="pa-3">
-                            <MudSelect T="ReasoningOverrideMode"
-                                       Value="@this.GetReasoningOverrideMode()"
-                                       ValueChanged="@this.SetReasoningOverrideMode"
-                                       Label="@T("Reasoning (thinking) behavior")"
-                                       HelperText="@this.GetReasoningOverrideModeDescription(this.GetReasoningOverrideMode())"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense"
-                                       OpenIcon="@Icons.Material.Filled.Psychology"
-                                       AdornmentColor="Color.Info"
-                                       Adornment="Adornment.Start"
-                                       Disabled="@this.IsEnterpriseConfiguration">
-                                @foreach (var mode in REASONING_OVERRIDE_MODES)
-                                {
-                                    <MudSelectItem Value="@mode">
-                                        @this.GetReasoningOverrideModeLabel(mode)
-                                    </MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudPaper>
-                    </MudStack>
-                    <MudText Typo="Typo.subtitle2" Class="mb-2">
-                        @T("Override Model Limits")
-                    </MudText>
-                    <MudJustifiedText Typo="Typo.body2" Class="mb-4">
-                        @T("Where the stored numbers do not match your installation, state yours here. This matters most for self-hosted models: they run with whatever their operator configured, which the model card cannot know.")
-                    </MudJustifiedText>
-                    <MudStack Class="mb-4" Spacing="2">
-                        <MudPaper Outlined="@true" Class="pa-3">
-                            <MudNumericField T="int?"
-                                             Value="@this.capabilityOverrides.ContextWindowTokens"
-                                             ValueChanged="@this.SetContextWindowOverride"
-                                             Label="@T("Context window in tokens")"
-                                             HelperText="@this.ContextWindowHelperText"
-                                             Placeholder="@this.AutomaticContextWindowPlaceholder"
-                                             Variant="Variant.Outlined"
-                                             Margin="Margin.Dense"
-                                             Min="1"
-                                             HideSpinButtons="@true"
-                                             Clearable="@true"
-                                             Disabled="@this.IsEnterpriseConfiguration"
-                                             Adornment="Adornment.Start"
-                                             AdornmentIcon="@Icons.Material.Filled.Straighten"
-                                             AdornmentColor="Color.Info" />
-                        </MudPaper>
-                        <MudPaper Outlined="@true" Class="pa-3">
-                            <MudText Typo="Typo.body2">
-                                @T("Images")
-                            </MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                @this.ImageLimitsEffectiveLabel
-                            </MudText>
-                            <MudStack Row="@true" Spacing="3" Wrap="Wrap.Wrap" Class="border-dashed border rounded-lg pa-3 mt-3">
-                                <MudNumericField T="int?"
-                                                 Value="@this.capabilityOverrides.MaxImagesPerMessage"
-                                                 ValueChanged="@this.SetMaxImagesPerMessageOverride"
-                                                 Label="@T("Per message")"
-                                                 Placeholder="@this.AutomaticImageLimitPlaceholder(this.GetAutomaticModelProfile().Images.MaxPerMessage)"
-                                                 Variant="Variant.Outlined"
-                                                 Margin="Margin.Dense"
-                                                 Min="0"
-                                                 Clearable="@true"
-                                                 Disabled="@this.IsEnterpriseConfiguration" />
-                                <MudNumericField T="int?"
-                                                 Value="@this.capabilityOverrides.MaxImagesPerRequest"
-                                                 ValueChanged="@this.SetMaxImagesPerRequestOverride"
-                                                 Label="@T("Per request")"
-                                                 Placeholder="@this.AutomaticImageLimitPlaceholder(this.GetAutomaticModelProfile().Images.MaxPerRequest)"
-                                                 Variant="Variant.Outlined"
-                                                 Margin="Margin.Dense"
-                                                 Min="0"
-                                                 Clearable="@true"
-                                                 Disabled="@this.IsEnterpriseConfiguration" />
-                            </MudStack>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
-                                @T("Vendors state one of the two, the other, or neither. Whichever is smaller decides how many images one message may carry; an empty field states nothing.")
-                            </MudText>
-                        </MudPaper>
-                    </MudStack>
-                    <MudJustifiedText Typo="Typo.body2" Class="mb-4">
-                        @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
-                    </MudJustifiedText>
-                    <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
-                    @if (this.ShowTokenizerSettings)
-                    {
-                        <MudJustifiedText Typo="Typo.body1" Class="mt-4 mb-3">
-                            @T("For better token estimates, you can configure a custom tokenizer for this provider.")
+                        </MudStack>
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">
+                            @T("Override Model Limits")
+                        </MudText>
+                        <MudJustifiedText Typo="Typo.body2" Class="mb-4">
+                            @T("Where the stored numbers do not match your installation, state yours here. This matters most for self-hosted models: they run with whatever their operator configured, which the model card cannot know.")
                         </MudJustifiedText>
-                        <TokenizerHint LLMProvider="@this.DataLLMProvider" Model="@this.DataModel"/>
-                        <PathDropZone IdPrefix="tokenizer" Disabled="@(() => this.IsEnterpriseConfiguration)" OnPathsDropped="@this.OnTokenizerPathsDropped">
-                            <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
-                                <MudTextField
-                                    T="string"
-                                    Text="@this.dataFilePath"
-                                    TextChanged="@this.OnDataFilePathChanged"
-                                    Label="@T("Selected file path for the custom tokenizer")"
-                                    Disabled="@this.IsEnterpriseConfiguration"
-                                    Validation="@this.providerValidation.ValidatingCustomTokenizer"
-                                    Adornment="Adornment.Start"
-                                    AdornmentIcon="@Icons.Material.Filled.AttachFile"
-                                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                                    Variant="Variant.Outlined"
-                                    Clearable="@true"
-                                    Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
-                                    ErrorText="@this.dataCustomTokenizerValidationIssue"
-                                    OnClearButtonClick="@this.ClearPathTokenizer"
-                                />
-                                <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.IsEnterpriseConfiguration || this.isTokenizerFileDialogOpen)" OnClick="@this.OpenTokenizerFileDialog">
-                                    @T("Choose File")
-                                </MudButton>
-                            </MudStack>
-                            <MudText Typo="Typo.body2">
-                                @T("You can also drag & drop the tokenizer file here.")
-                            </MudText>
-                        </PathDropZone>
-                    }
-                </MudCollapse>
-            </MudStack>
+                        <MudStack Class="mb-4" Spacing="2">
+                            <MudPaper Outlined="@true" Class="pa-3">
+                                <MudNumericField T="int?"
+                                                 Value="@this.capabilityOverrides.ContextWindowTokens"
+                                                 ValueChanged="@this.SetContextWindowOverride"
+                                                 Label="@T("Context window in tokens")"
+                                                 HelperText="@this.ContextWindowHelperText"
+                                                 Placeholder="@this.AutomaticContextWindowPlaceholder"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="1"
+                                                 HideSpinButtons="@true"
+                                                 Clearable="@true"
+                                                 Disabled="@this.IsEnterpriseConfiguration"
+                                                 Adornment="Adornment.Start"
+                                                 AdornmentIcon="@Icons.Material.Filled.Straighten"
+                                                 AdornmentColor="Color.Info" />
+                            </MudPaper>
+                            <MudPaper Outlined="@true" Class="pa-3">
+                                <MudText Typo="Typo.body2">
+                                    @T("Images")
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @this.ImageLimitsEffectiveLabel
+                                </MudText>
+                                <MudStack Row="@true" Spacing="3" Wrap="Wrap.Wrap" Class="border-dashed border rounded-lg pa-3 mt-3">
+                                    <MudNumericField T="int?"
+                                                     Value="@this.capabilityOverrides.MaxImagesPerMessage"
+                                                     ValueChanged="@this.SetMaxImagesPerMessageOverride"
+                                                     Label="@T("Per message")"
+                                                     Placeholder="@this.AutomaticImageLimitPlaceholder(this.GetAutomaticModelProfile().Images.MaxPerMessage)"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Min="0"
+                                                     Clearable="@true"
+                                                     Disabled="@this.IsEnterpriseConfiguration" />
+                                    <MudNumericField T="int?"
+                                                     Value="@this.capabilityOverrides.MaxImagesPerRequest"
+                                                     ValueChanged="@this.SetMaxImagesPerRequestOverride"
+                                                     Label="@T("Per request")"
+                                                     Placeholder="@this.AutomaticImageLimitPlaceholder(this.GetAutomaticModelProfile().Images.MaxPerRequest)"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Min="0"
+                                                     Clearable="@true"
+                                                     Disabled="@this.IsEnterpriseConfiguration" />
+                                </MudStack>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                                    @T("Vendors state one of the two, the other, or neither. Whichever is smaller decides how many images one message may carry; an empty field states nothing.")
+                                </MudText>
+                            </MudPaper>
+                        </MudStack>
+                        <MudJustifiedText Typo="Typo.body2" Class="mb-4">
+                            @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
+                        </MudJustifiedText>
+                        <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
+                        @if (this.ShowTokenizerSettings)
+                        {
+                            <MudJustifiedText Typo="Typo.body1" Class="mt-4 mb-3">
+                                @T("For better token estimates, you can configure a custom tokenizer for this provider.")
+                            </MudJustifiedText>
+                            <TokenizerHint LLMProvider="@this.DataLLMProvider" Model="@this.DataModel"/>
+                            <PathDropZone IdPrefix="tokenizer" Disabled="@(() => this.IsEnterpriseConfiguration)" OnPathsDropped="@this.OnTokenizerPathsDropped">
+                                <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
+                                    <MudTextField
+                                        T="string"
+                                        Text="@this.dataFilePath"
+                                        TextChanged="@this.OnDataFilePathChanged"
+                                        Label="@T("Selected file path for the custom tokenizer")"
+                                        Disabled="@this.IsEnterpriseConfiguration"
+                                        Validation="@this.providerValidation.ValidatingCustomTokenizer"
+                                        Adornment="Adornment.Start"
+                                        AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                                        UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                                        Variant="Variant.Outlined"
+                                        Clearable="@true"
+                                        Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
+                                        ErrorText="@this.dataCustomTokenizerValidationIssue"
+                                        OnClearButtonClick="@this.ClearPathTokenizer"
+                                    />
+                                    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.IsEnterpriseConfiguration || this.isTokenizerFileDialogOpen)" OnClick="@this.OpenTokenizerFileDialog">
+                                        @T("Choose File")
+                                    </MudButton>
+                                </MudStack>
+                                <MudText Typo="Typo.body2">
+                                    @T("You can also drag & drop the tokenizer file here.")
+                                </MudText>
+                            </PathDropZone>
+                        }
+                    </MudCollapse>
+                </MudStack>
+            }
         </MudForm>
-        <Issues IssuesData="@this.dataIssues"/>
+        @if (!this.IsProviderProhibited)
+        {
+            <Issues IssuesData="@this.dataIssues"/>
+        }
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("Cancel")
         </MudButton>
-        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary" Disabled="@this.IsProviderProhibited">
             @if(this.IsEditing)
             {
                 @T("Update")

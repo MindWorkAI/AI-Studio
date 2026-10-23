@@ -255,6 +255,14 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             var provider = request.ProviderSettings.CreateProvider();
             var chatThread = request.ChatThread;
 
+            // Checked on its own, so that the user learns what to change:
+            if (settingsManager.IsProviderProhibited(request.ProviderSettings.UsedLLMProvider))
+            {
+                logger.LogError("The provider of chat '{ChatId}' is prohibited by the organization. Skipping the AI process.", chatThread.ChatId);
+                await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, TB("The use of this provider has been prohibited by your organization. Please select a different provider."));
+                return;
+            }
+
             if (!chatThread.IsLLMProviderAllowed(provider))
             {
                 logger.LogError("The provider is not allowed for chat '{ChatId}' due to data security reasons. Skipping the AI process.", chatThread.ChatId);

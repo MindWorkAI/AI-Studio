@@ -11,7 +11,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.Builder;
 
-public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
+public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistantBuilder>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -82,8 +82,6 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     // The result is the Lua code of a plugin, and a notice below it would make that code invalid:
     protected override bool AddsAIGeneratedContentDisclosure => false;
 
-    protected override bool HasSettingsPanel => false;
-    
     protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant) ? this.generatedLuaAssistant : this.generatedAssistantSpec;
 
     private BuilderStep step = BuilderStep.DESCRIBE;
@@ -251,8 +249,6 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.launcherDataSourceIds = [];
         this.launcherToolIds = [];
         this.selectedAssistantComponents = [];
-        this.selectedOutputLanguage = CommonLanguages.AS_IS;
-        this.customOutputLanguage = string.Empty;
         this.allowGeneratedAssistantProfiles = true;
         this.extraRules = string.Empty;
         this.exampleRequest = string.Empty;
@@ -260,9 +256,25 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.reviewNotes = string.Empty;
         this.generatedLuaAssistant = string.Empty;
         this.ResetInstallFlow();
+
+        if (!this.MightPreselectValues())
+        {
+            this.selectedOutputLanguage = CommonLanguages.AS_IS;
+            this.customOutputLanguage = string.Empty;
+        }
     }
 
-    protected override bool MightPreselectValues() => false;
+    protected override bool MightPreselectValues()
+    {
+        if (this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectOptions)
+        {
+            this.selectedOutputLanguage = this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectedOutputLanguage;
+            this.customOutputLanguage = this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectedOtherOutputLanguage;
+            return true;
+        }
+
+        return false;
+    }
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)

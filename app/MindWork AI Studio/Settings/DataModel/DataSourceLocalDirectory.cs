@@ -64,7 +64,10 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     
     /// <inheritdoc />
     public ushort MaxMatches { get; init; } = 10;
-    
+
+    /// <inheritdoc />
+    public OutboundDataRestriction OutboundDataRestriction { get; init; } = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
+
     /// <inheritdoc />
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
         Program.SERVICE_PROVIDER.GetRequiredService<DataSourceLocalRetrievalService>().RetrieveDataAsync(this, lastUserPrompt, thread, token);

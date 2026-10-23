@@ -426,6 +426,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- The selected folder does not exist.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T17705912"] = "Der ausgewählte Ordner existiert nicht."
 
+-- The image was no longer available while the model was asked about it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1805791865"] = "Das Bild war nicht mehr verfügbar, während das Modell dazu befragt wurde."
+
 -- Minimum pause between files
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1829787634"] = "Mindestpause zwischen Dateien"
 
@@ -531,8 +534,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Was not able to write the result file: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2991295581"] = "Die Ergebnisdatei konnte nicht geschrieben werden: {0}"
 
+-- Images in JPG, PNG, WebP, GIF, BMP, or TIFF format are given to the model as images, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3011193639"] = "Bilder im JPG-, PNG-, WebP-, GIF-, BMP- oder TIFF-Format werden als Bilder an das Modell übergeben, daher benötigen Sie ein Modell, das Bilder versteht. Falls das ausgewählte Modell keine Bilder lesen kann, entfernen Sie die Dateimuster für Bilder, z. B. *.jpg oder *.png, bevor Sie starten."
+
 -- The batch run finished, but one file could not be processed. See the progress table and log for details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3201532790"] = "Die Stapelverarbeitung ist abgeschlossen, aber eine Datei konnte nicht verarbeitet werden. Weitere Informationen finden Sie in der Fortschrittstabelle und im Protokoll."
+
+-- The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T324865195"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung der {0} Bilder unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
 
 -- Maximum pause between files
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3250003796"] = "Maximale Pause zwischen Dateien"
@@ -552,6 +561,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3361153305"] = "Experten-Einstellungen anzeigen"
 
+-- All selected files are images, but the selected model cannot read images. Select a model with image support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3365102967"] = "Alle ausgewählten Dateien sind Bilder, aber das ausgewählte Modell kann keine Bilder lesen. Wählen Sie ein Modell mit Bildunterstützung aus."
+
 -- Header of the result column (optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T340994102"] = "Überschrift der Ergebnisspalte (optional)"
 
@@ -563,6 +575,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3439247329"] = "Der Dateiname der CSV-Ergebnistabelle. Die Endung .csv wird ergänzt, falls sie fehlt. Wenn Sie das Feld leer lassen, wird 'batch-results.csv' verwendet."
+
+-- The selected model cannot read images. Select a model with image support to process this image.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T346986514"] = "Das ausgewählte Modell kann keine Bilder lesen. Wählen Sie ein Modell mit Bildunterstützung aus, um dieses Bild zu verarbeiten."
 
 -- Document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3510564924"] = "Regelwerk für die Dokumentenanalyse"
@@ -677,6 +692,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T967206794"] = "Die KI kann diese Werkzeuge bei der Arbeit an jedem Dokument verwenden. Jedes Werkzeug muss die Vertrauensanforderungen des ausgewählten Anbieters erfüllen. Daher kann ein Werkzeug trotz Auswahl hier weiterhin nicht verfügbar sein."
+
+-- The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T9738678"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung des Bildes unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
 
 -- Comma (,)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T1676507543"] = "Komma (,)"
@@ -3717,6 +3735,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1543974632"] = "Die Medie
 -- {0}, of which approx. {1} from tools
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1614399447"] = "{0}, davon ca. {1} aus Werkzeugen"
 
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1807387355"] = "Die Verwendung dieses Anbieters wurde von Ihrer Organisation untersagt. Bitte wählen Sie einen anderen Anbieter."
+
 -- Type your input here...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Geben Sie hier Ihre Eingabe ein..."
 
@@ -4473,8 +4494,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1797236585"] = "
 -- Workspace name (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1873204484"] = "Name des Arbeitsbereichs (optional)"
 
+-- The chosen chat template preselects a provider of its own, and it wins over a selection made here as long as that provider can be used for chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1876510820"] = "Die ausgewählte Chat-Vorlage wählt einen eigenen Anbieter vorab aus; dieser hat Vorrang vor einer hier getroffenen Auswahl, solange er für Chats verwendet werden kann."
+
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2205839602"] = "Kein Profil verwenden"
+
+-- The chosen chat template keeps its chats in the workspace '{0}', so the tile opens its chat there instead. A workspace entered here wins over the one of the template.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2344103917"] = "Die ausgewählte Chat-Vorlage legt ihre Chats im Arbeitsbereich „{0}“ ab, daher öffnet die Kachel ihren Chat dort. Ein hier eingegebener Arbeitsbereich hat Vorrang vor dem der Vorlage."
 
 -- Existing workspace (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2364306588"] = "Vorhandener Arbeitsbereich (optional)"
@@ -4496,6 +4523,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2901190527"] = "
 
 -- Data sources (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3259309302"] = "Datenquellen (optional)"
+
+-- The chosen chat template preselects a profile of its own, and it wins over a selection made here as long as that profile exists.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3419242912"] = "Die ausgewählte Chat-Vorlage wählt ein eigenes Profil vorab aus; dieses hat Vorrang vor einer hier getroffenen Auswahl, solange das Profil existiert."
 
 -- Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3611496116"] = "Ohne Arbeitsbereich öffnet die Kachel einen selbstlöschenden Chat: Er gehört keinem Arbeitsbereich an und wird gemäß den Wartungseinstellungen für Ihre Arbeitsbereiche gelöscht."
@@ -4653,6 +4683,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T12948066"] = "Ko
 -- Cannot copy this content type to clipboard.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T3937637647"] = "Dieser Inhaltstyp kann nicht in die Zwischenablage kopiert werden."
 
+-- Only self-hosted providers may use this data source. A chat which found something in it may therefore only use the services configured in AI Studio, such as the allowed private hosts of the tool 'Read Web Page'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::OUTBOUNDDATARESTRICTIONSELECTION::T1911680179"] = "Nur selbst gehostete Anbieter dürfen diese Datenquelle verwenden. Ein Chat, der darin etwas gefunden hat, darf daher nur die in AI Studio konfigurierten Dienste nutzen, z. B. die zulässigen privaten Hosts des Werkzeugs „Webseite lesen“."
+
+-- Your organization does not allow less strict settings than the ones offered here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::OUTBOUNDDATARESTRICTIONSELECTION::T2255463475"] = "Ihre Organisation erlaubt keine weniger strengen Einstellungen als die hier angebotenen."
+
 -- The assistant cannot be deleted while background work is still running.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T1318944584"] = "Der Assistent kann nicht gelöscht werden, solange noch Hintergrundaufgaben ausgeführt werden."
 
@@ -4772,6 +4808,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2685487365"] = "Bilde
 
 -- Speech input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3005724142"] = "Spracheingabe möglich"
+
+-- The use of all your LLM providers has been prohibited by your organization. Add a different provider in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3506708164"] = "Die Verwendung aller Ihrer LLM-Anbieter wurde von Ihrer Organisation untersagt. Bitte fügen Sie einen anderen Anbieter in den App-Einstellungen hinzu."
 
 -- Uses reasoning (thinking) by default
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3891860124"] = "Nutzt standardmäßig Schlussfolgerungen (Denken)"
@@ -5343,6 +5382,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T45885
 -- Not yet configured
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T48051324"] = "Noch nicht konfiguriert"
 
+-- The use of this provider has been prohibited by your organization. Therefore, it is untrusted, and you cannot change its confidence level.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T489079668"] = "Die Verwendung dieses Anbieters wurde von Ihrer Organisation untersagt. Daher gilt er als nicht vertrauenswürdig, und Sie können sein Vertrauensniveau nicht ändern."
+
 -- Do you want to always see how trustworthy your providers are? This way, you stay in control of which provider you send your data to. You can choose a common schema or configure the trust levels for each provider yourself.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T700839804"] = "Möchten Sie immer sehen, wie vertrauenswürdig Ihre Anbieter sind? So behalten Sie die Kontrolle darüber, an welchen Anbieter Sie Ihre Daten senden. Sie können ein gängiges Schema wählen oder die Vertrauensniveaus für jeden Anbieter selbst festlegen."
 
@@ -5360,6 +5402,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T13870
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Löschen"
+
+-- The use of this embedding provider has been prohibited by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1509600117"] = "Die Verwendung dieses Einbettungsanbieters wurde von Ihrer Organisation untersagt."
 
 -- Embed text
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1644934561"] = "Text einbetten"
@@ -5506,10 +5551,13 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T331371
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3346433704"] = "LLM-Anbieter hinzufügen"
 
 -- This provider is managed by your organization.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3415927576"] = "Dieser Anbieter wird von ihrer Organisation verwaltet."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3415927576"] = "Dieser Anbieter wird von Ihrer Organisation verwaltet."
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3865031940"] = "Aktionen"
+
+-- The use of this provider has been prohibited by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4229691938"] = "Die Verwendung dieses Anbieters wurde von Ihrer Organisation untersagt."
 
 -- Delete LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4269256234"] = "LLM-Anbieter löschen"
@@ -5573,6 +5621,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T16
 
 -- Uses the provider-configured model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1760715963"] = "Verwendet das vom Anbieter konfigurierte Modell"
+
+-- The use of this transcription provider has been prohibited by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T2059509230"] = "Die Verwendung dieses Anbieters für Transkriptionen wurde von Ihrer Organisation untersagt."
 
 -- Add Transcription Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T2066315685"] = "Anbieter für Transkriptionen hinzufügen"
@@ -6261,14 +6312,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1396308587"] = "Der Nam
 -- The same goes for your data. A chat template may bring its own data source options, which includes leaving the choice of sources to the AI. Without them, those chats start with the data source options from your chat options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1442266827"] = "Das Gleiche gilt für Ihre Daten. Eine Chat-Vorlage kann eigene Datenquellen-Optionen mitbringen – dazu gehört auch, die Auswahl der Quellen der KI zu überlassen. Ohne solche Optionen starten diese Chats mit den Datenquellen-Optionen aus Ihren Chat-Optionen."
 
+-- Preselected provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1469984996"] = "Vorausgewählter Anbieter"
+
 -- Please enter a name for the chat template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1548747185"] = "Bitte geben Sie einen Namen für die Chat-Vorlage ein."
+
+-- A chat template may decide which provider, and with it which model, a chat starts with. Without such a decision, those chats start with the provider they would start with anyway. The provider stays changeable in the chat, and it must meet the confidence level required for chats.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T171066641"] = "Eine Chat-Vorlage kann festlegen, mit welchem Anbieter – und damit mit welchem Modell – ein Chat startet. Ohne eine solche Festlegung starten diese Chats mit dem Anbieter, mit dem sie ohnehin starten würden. Der Anbieter lässt sich im Chat weiterhin ändern und muss das für Chats erforderliche Vertrauensniveau erfüllen."
 
 -- Yes, this template decides which data a chat starts with
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T17861006"] = "Ja, diese Vorlage legt fest, mit welchen Daten ein Chat startet"
 
+-- Preselected profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T178965494"] = "Vorausgewähltes Profil"
+
 -- Enter the full path of a file on this computer, or remove the attachment.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1798848159"] = "Geben Sie den vollständigen Pfad zu einer Datei auf diesem Computer ein oder entfernen Sie den Anhang."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1798848159"] = "Geben Sie den vollständigen Pfad zu einer Datei auf diesem Rechner ein oder entfernen Sie den Anhang."
 
 -- Load predefined user input from file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1837026610"] = "Vordefinierte Benutzereingabe aus Datei laden"
@@ -6276,11 +6336,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1837026610"] = "Vordefi
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1847791252"] = "Aktualisieren"
 
+-- Yes, this template decides which profile a chat starts with
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1865005833"] = "Ja, diese Vorlage legt fest, mit welchem Profil ein Chat startet"
+
 -- The chat template name must not exceed 40 characters.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T204496403"] = "Der Name der Chat-Vorlage darf maximal 40 Zeichen lang sein."
 
 -- Profile Usage
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2147062613"] = "Profilnutzung"
+
+-- Use no profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2205839602"] = "Kein Profil verwenden"
+
+-- Yes, chats with this template go into a workspace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2205963533"] = "Ja, Chats mit dieser Vorlage werden in einem Arbeitsbereich abgelegt"
 
 -- Relink attachment: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2234793579"] = "Anhang erneut verknüpfen: {0}"
@@ -6290,6 +6359,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2292424657"] = "Fügen 
 
 -- File Attachments
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2294745309"] = "Dateianhänge"
+
+-- No, chats go where they would go anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2355334446"] = "Nein, Chats werden dort abgelegt, wo sie ohnehin landen würden"
+
+-- Existing workspace (Optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2364306588"] = "Vorhandener Arbeitsbereich (optional)"
 
 -- Role
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2418769465"] = "Rolle"
@@ -6303,6 +6378,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2499909372"] = "Werkzeu
 -- What predefined user input do you want to use?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2501284417"] = "Welche vordefinierte Benutzereingabe möchten Sie verwenden?"
 
+-- Please enter the workspace for the chats of this template, or switch the preselection off.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2504276031"] = "Bitte geben Sie den Arbeitsbereich für die Chats dieser Vorlage ein oder deaktivieren Sie die Vorauswahl."
+
+-- Does this chat template preselect a provider?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2541393632"] = "Wählt diese Chat-Vorlage einen Anbieter vorab aus?"
+
 -- Tell the AI your system prompt.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2552381261"] = "Teilen Sie der KI einen System-Prompt mit."
 
@@ -6311,6 +6392,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579080722"] = "Nein, d
 
 -- You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579208700"] = "Sie können eine Nachricht vordefinieren, die als Benutzereingabe verwendet wird, wenn Sie diese Chat-Vorlage verwenden. Diese Nachricht könnte beispielsweise eine Vorlage für eine strukturierte Nachricht sein, für die diese Chat-Vorlage entwickelt wurde."
+
+-- Does this chat template preselect a profile?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2602340928"] = "Wählt diese Chat-Vorlage ein Profil vorab aus?"
 
 -- Predefined User Input
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2607897066"] = "Vordefinierte Benutzereingabe"
@@ -6327,8 +6411,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2719480499"] = "Die Nac
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T275026390"] = "Name der Chat-Vorlage"
 
+-- Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2828180414"] = "In Ihren Arbeitsbereichseinstellungen sind Arbeitsbereiche deaktiviert. Solange sie deaktiviert sind, gehören Chats mit dieser Vorlage zu keinem Arbeitsbereich und werden auch nicht in einen Arbeitsbereich verschoben, wenn Sie Arbeitsbereiche wieder aktivieren. Sie können diese Auswahl ändern, sobald Arbeitsbereiche aktiviert sind."
+
 -- Please relink the attachment '{0}' to a file on this computer or remove it before you save.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Bitte verknüpfen Sie den Anhang „{0}“ vor dem Speichern erneut mit einer Datei auf diesem Computer oder entfernen Sie ihn."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Bitte verknüpfen Sie den Anhang „{0}“ vor dem Speichern erneut mit einer Datei auf diesem Rechner oder entfernen Sie ihn."
+
+-- Workspace name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T295876489"] = "Name des Arbeitsbereichs"
 
 -- Commit Changes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2996302517"] = "Änderungen übernehmen"
@@ -6345,8 +6435,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3108503534"] = "Sie kö
 -- Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3127437308"] = "Sind Sie unsicher, welchen System-Prompt Sie verwenden sollen? Sie können mit dem Standard-System-Prompt beginnen, den AI Studio für alle Chats verwendet."
 
+-- A chat template may also decide which profile a chat starts with, including starting without one. Without such a decision, those chats start with the profile they would start with anyway. The profile stays changeable in the chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T313529011"] = "Eine Chat-Vorlage kann auch festlegen, mit welchem Profil ein Chat startet, oder dass er ohne Profil startet. Ohne eine solche Festlegung starten diese Chats mit dem Profil, mit dem sie ohnehin starten würden. Das Profil lässt sich im Chat weiterhin ändern."
+
+-- The profile this chat template preselects does not exist on this computer. Chats started with it keep their usual profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3170335831"] = "Das Profil, das diese Chat-Vorlage vorab auswählt, ist auf diesem Rechner nicht vorhanden. Mit ihr gestartete Chats behalten ihr übliches Profil."
+
 -- Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3227981830"] = "Die gleichzeitige Verwendung einiger Chat-Vorlagen mit Profilen kann zu Problemen führen. Deshalb könnten Sie hier die Nutzung von Profilen untersagen."
+
+-- Choose an existing workspace or enter a name that should be created when a chat with this template starts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3256439227"] = "Wählen Sie einen vorhandenen Arbeitsbereich aus oder geben Sie einen Namen ein, der erstellt werden soll, wenn ein Chat mit dieser Vorlage startet."
 
 -- No, chats keep the data source options from your chat options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3268470871"] = "Nein, Chats behalten die Datenquellen-Optionen aus Ihren Chat-Optionen"
@@ -6354,11 +6453,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3268470871"] = "Nein, C
 -- A chat template may decide which tools a chat starts with. Without such a decision, those chats start with the tools you chose as your default in the chat options. Deciding and then picking nothing is a different statement: such chats start with no tool at all, no matter what your default says.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3329415439"] = "Eine Chat-Vorlage kann festlegen, mit welchen Werkzeugen ein Chat startet. Ohne eine solche Festlegung starten diese Chats mit den Werkzeugen, die Sie in den Chat-Optionen als Standard ausgewählt haben. Legen Sie es fest und wählen dann nichts aus, ist das eine andere Aussage: Solche Chats starten ohne jedes Werkzeug, ganz gleich, was Ihr Standard vorsieht."
 
+-- A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise be a disappearing chat, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3352941260"] = "Eine Chat-Vorlage kann ihre Chats in einem eigenen Arbeitsbereich ablegen, der erstellt wird, falls er noch nicht existiert. Das gilt immer dann, wenn ein Chat sonst ein selbstlöschender Chat wäre, zum Beispiel wenn Sie einen neuen Chat außerhalb der Arbeitsbereiche starten oder diese Vorlage in einem neuen Chat auswählen. Ein Chat, den Sie gezielt in einem Arbeitsbereich starten, zum Beispiel über die Liste der Arbeitsbereiche, bleibt in diesem Arbeitsbereich."
+
 -- Add a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3372872324"] = "Nachricht hinzufügen"
 
+-- Yes, this template decides which provider a chat starts with
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3422337353"] = "Ja, diese Vorlage legt fest, mit welchem Anbieter ein Chat startet"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3448155331"] = "Schließen"
+
+-- No, chats keep their usual profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3465925873"] = "Nein, Chats behalten ihr übliches Profil"
+
+-- The provider this chat template preselects does not exist on this computer or does not meet the confidence level required for chats. Chats started with it keep their usual provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T349281189"] = "Der Anbieter, den diese Chat-Vorlage vorab auswählt, ist auf diesem Rechner nicht vorhanden oder erfüllt das für Chats erforderliche Vertrauensniveau nicht. Mit ihr gestartete Chats behalten ihren üblichen Anbieter."
 
 -- Unsupported content type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3570316759"] = "Nicht unterstützter Inhaltstyp"
@@ -6396,11 +6507,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4051106111"] = "Verwend
 -- Tell the AI your predefined user input.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4052406705"] = "Teilen Sie der KI Ihre vordefinierte Benutzereingabe mit."
 
+-- Does this chat template keep its chats in a workspace?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4057825866"] = "Legt diese Chat-Vorlage ihre Chats in einem Arbeitsbereich ab?"
+
 -- Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4194591607"] = "Einige Anhänge dieser Chat-Vorlage sind auf diesem Computer nicht vorhanden. Bitte verknüpfen Sie sie erneut oder entfernen Sie sie, bevor Sie die Vorlage hinzufügen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4194591607"] = "Einige Anhänge dieser Chat-Vorlage sind auf diesem Rechner nicht vorhanden. Bitte verknüpfen Sie sie erneut oder entfernen Sie sie, bevor Sie die Vorlage hinzufügen."
 
 -- Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4199560726"] = "Erstellen Sie Ihre eigene Chat-Vorlage, um das Verhalten des LLMs für bestimmte Aufgaben oder Bereiche anzupassen. Definieren Sie einen individuellen System-Prompt und geben Sie eine Beispiel-Konversation vor, um eine KI-Erfahrung zu gestalten, die genau auf Ihre Anforderungen zugeschnitten ist."
+
+-- Please choose the provider this chat template preselects, or switch the preselection off.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T442309864"] = "Bitte wählen Sie den Anbieter aus, den diese Chat-Vorlage vorab auswählt, oder deaktivieren Sie die Vorauswahl."
 
 -- Enter a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T446374405"] = "Nachricht eingeben"
@@ -6414,14 +6531,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T628396066"] = "System-P
 -- A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T650711085"] = "Ein mit dieser Vorlage gestarteter Chat beginnt mit diesen Datenquellen und Optionen. Alles davon lässt sich im Chat selbst weiterhin ändern."
 
+-- Workspace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T658612054"] = "Arbeitsbereich"
+
 -- Remove this attachment
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T70791272"] = "Diesen Anhang entfernen"
 
 -- The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T722788866"] = "Die Auswahl lässt sich im Chat weiterhin ändern, und jedes Werkzeug muss die Vertrauensanforderungen des verwendeten Anbieters erfüllen."
 
+-- No, chats keep their usual provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T787085105"] = "Nein, Chats behalten ihren üblichen Anbieter"
+
 -- Allow the use of profiles together with this chat template?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T823785464"] = "Erlauben Sie die Verwendung von Profilen zusammen mit dieser Chat-Vorlage?"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900237532"] = "Anbieter"
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900713019"] = "Abbrechen"
@@ -6648,6 +6774,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T299279954"] = "Bitt
 -- ERI v1 Server Hostname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3494933602"] = "ERI v1 Server-Hostname"
 
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3528266571"] = "Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
+
+-- This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3738459730"] = "Mit dieser Einstellung legen Sie fest, wohin ein Chat noch Daten senden darf, nachdem die KI etwas in dieser Datenquelle gefunden hat, damit deren Inhalte zum Beispiel nicht in einer Websuche landen. Wählen Sie „Keine Einschränkung“ nur für Inhalte, die ohnehin jeder lesen darf."
+
 -- Port
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3804576966"] = "Port"
 
@@ -6759,6 +6891,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T299279954"] = "
 -- The data source does not provide any retrieval information.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T306340560"] = "Die Datenquelle stellt keine Abrufinformationen bereit."
 
+-- where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3127438251"] = "die Einstellung, wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
+
 -- Common data source information
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3206517471"] = "Allgemeine Informationen zur Datenquelle"
 
@@ -6770,6 +6905,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3425007227"] = 
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3448155331"] = "Schließen"
+
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3528266571"] = "Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
 
 -- ERI server port
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3843835535"] = "ERI-Server-Port"
@@ -6918,8 +7056,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3359366900"
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3361153305"] = "Experten-Einstellungen anzeigen"
 
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3528266571"] = "Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
+
 -- No, ignore hidden files and folders
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3584816527"] = "Nein, versteckte Dateien und Ordner ignorieren"
+
+-- This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3738459730"] = "Mit dieser Einstellung legen Sie fest, wohin ein Chat noch Daten senden darf, nachdem die KI etwas in dieser Datenquelle gefunden hat, damit deren Inhalte zum Beispiel nicht in einer Websuche landen. Wählen Sie „Keine Einschränkung“ nur für Inhalte, die ohnehin jeder lesen darf."
 
 -- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3934601817"] = "Diese Dateien und Ordner werden auch dann ausgeschlossen, wenn ein Dateimuster auf sie zutrifft. Trennen Sie die Einträge durch ein Semikolon oder einen Zeilenumbruch. Ein Eintrag mit einem Schrägstrich am Ende schließt alle Ordner mit diesem Namen aus, z. B. node_modules/. Alle anderen Einträge beziehen sich auf Dateien, z. B. *.min.js."
@@ -7035,6 +7179,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3013883
 -- the size limit for files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3081730094"] = "das Größenlimit für Dateien"
 
+-- where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3127438251"] = "die Einstellung, wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
+
 -- Embedding name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3153201045"] = "Name der Einbettung"
 
@@ -7043,6 +7190,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3353866
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3448155331"] = "Schließen"
+
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3528266571"] = "Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
 
 -- Matching files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3650746465"] = "Passende Dateien"
@@ -7131,6 +7281,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3359366900"] = "
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3361153305"] = "Experten-Einstellungen anzeigen"
 
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3528266571"] = "Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
+
+-- This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3738459730"] = "Mit dieser Einstellung legen Sie fest, wohin ein Chat noch Daten senden darf, nachdem die KI etwas in dieser Datenquelle gefunden hat, damit deren Inhalte zum Beispiel nicht in einer Websuche landen. Wählen Sie „Keine Einschränkung“ nur für Inhalte, die ohnehin jeder lesen darf."
+
 -- Select the file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Datei auswählen"
 
@@ -7200,11 +7356,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2937209992"]
 -- this path
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2944855252"] = "diesen Pfad"
 
+-- where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3127438251"] = "die Einstellung, wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
+
 -- Embedding name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3153201045"] = "Name der Einbettung"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3448155331"] = "Schließen"
+
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3528266571"] = "Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat"
 
 -- File size
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3650018664"] = "Dateigröße"
@@ -7283,9 +7445,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2154020504"] = "Ih
 
 -- Test the connection to select another folder.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2226748448"] = "Testen Sie die Verbindung, um einen anderen Ordner auszuwählen."
-
--- Your organization does not allow less strict settings than the ones offered here.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2255463475"] = "Ihre Organisation erlaubt keine weniger strengen Einstellungen als die hier angebotenen."
 
 -- Period
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2267317284"] = "Zeitraum"
@@ -7622,6 +7781,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1727440780"] = "Ho
 
 -- Load
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1756340745"] = "Laden"
+
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1807387355"] = "Die Verwendung dieses Anbieters wurde von Ihrer Organisation untersagt. Bitte wählen Sie einen anderen Anbieter."
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1847791252"] = "Aktualisieren"
@@ -8148,6 +8310,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1727440780"] = "Hostname"
 -- Always on
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1761671861"] = "Immer an"
 
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1807387355"] = "Die Verwendung dieses Anbieters wurde von Ihrer Organisation untersagt. Bitte wählen Sie einen anderen Anbieter."
+
 -- Reset
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T180921696"] = "Zurücksetzen"
 
@@ -8655,6 +8820,33 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T6790
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "Wenn diese Option aktiviert ist, können Sie Voreinstellungen vornehmen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
 
+-- When enabled, the Assistant Builder starts with the defaults configured below. When disabled, it uses the app-wide default provider and preselects no output language.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T1496952909"] = "Wenn diese Option aktiviert ist, startet der Assistenten-Builder mit den unten festgelegten Standardwerten. Wenn sie deaktiviert ist, verwendet er den appweiten Standardanbieter und wählt keine Ausgabesprache vorab aus."
+
+-- Preselect Assistant Builder options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T2127606148"] = "Optionen für den Assistenten-Builder vorauswählen?"
+
+-- Default custom output language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3360584376"] = "Standardmäßige benutzerdefinierte Ausgabesprache"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3448155331"] = "Schließen"
+
+-- Default output language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3652922567"] = "Standard-Ausgabesprache"
+
+-- Assistant: Assistant Builder defaults
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3668274570"] = "Assistent: Standardwerte für den Assistenten-Builder"
+
+-- Assistant Builder options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3962364100"] = "Optionen für den Assistenten-Builder sind vorausgewählt"
+
+-- No Assistant Builder options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T4104323209"] = "Für den Assistenten-Builder sind keine Optionen vorausgewählt"
+
+-- The language in which the assistants you build answer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T42126731"] = "Die Sprache, in der die von Ihnen erstellten Assistenten antworten."
+
 -- Default minimum pause between files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Standardmäßige Mindestpause zwischen Dateien"
 
@@ -8700,6 +8892,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T22
 -- Hidden files and folders are included
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2288334048"] = "Versteckte Dateien und Ordner werden einbezogen"
 
+-- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats as well as images in JPG, PNG, WebP, GIF, BMP, and TIFF format.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T232588799"] = "Trennen Sie mehrere Dateimuster durch ein Semikolon, z. B. *.pdf;*.docx. Die Standardmuster umfassen alle unterstützten Audio- und Videoformate sowie Bilder im JPG-, PNG-, WebP-, GIF-, BMP- und TIFF-Format."
+
 -- The lower end of the random pause interval. AI Studio never allows less than 6 seconds.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T237774509"] = "Das untere Ende des Intervalls für die zufällige Pause. AI Studio erlaubt niemals weniger als 6 Sekunden."
 
@@ -8711,9 +8906,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T24
 
 -- When enabled, new batch runs start with the defaults configured below.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2592677194"] = "Wenn aktiviert, werden neue Stapel-Durchläufe mit den unten konfigurierten Standardwerten gestartet."
-
--- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2594325620"] = "Trennen Sie mehrere Dateimuster durch ein Semikolon, z. B. *.pdf;*.docx. Die Standardmuster umfassen alle unterstützten Audio- und Videoformate."
 
 -- Subfolders are included
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2607092632"] = "Unterordner werden einbezogen"
@@ -9914,6 +10106,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1727440780"] =
 
 -- Load
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1756340745"] = "Laden"
+
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1807387355"] = "Die Verwendung dieses Anbieters wurde von Ihrer Organisation untersagt. Bitte wählen Sie einen anderen Anbieter."
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1847791252"] = "Aktualisieren"
@@ -11844,11 +12039,17 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::MAILBOXTRANSPORTSECURITYEXTENSIO
 -- Unknown encryption
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::MAILBOXTRANSPORTSECURITYEXTENSIONS::T685301366"] = "Unbekannte Verschlüsselung"
 
+-- This chat found content in a data source which has been removed since, while its setting 'Where a chat may send data after reading this data source' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T1103975982"] = "Dieser Chat hat Inhalte in einer inzwischen entfernten Datenquelle gefunden, als deren Einstellung „Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat“ auf „{0}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
+
 -- This chat read an internal web page on '{0}' while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T1307134700"] = "Dieser Chat hat eine interne Webseite auf „{0}“ gelesen, als die Einstellung „Wohin ein Chat Daten senden darf, nachdem er interne Seiten gelesen hat“ des Werkzeugs „Webseite lesen“ auf „{1}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
 
 -- This chat searched your Confluence wiki while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T1719013859"] = "Dieser Chat hat Ihr Confluence-Wiki durchsucht, als die Einstellung „Wohin ein Chat Daten senden darf, nachdem er interne Seiten gelesen hat“ des Werkzeugs „Webseite lesen“ auf „{0}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
+
+-- This chat found content in the data source '{0}' while its setting 'Where a chat may send data after reading this data source' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T2391737974"] = "Dieser Chat hat Inhalte in der Datenquelle „{0}“ gefunden, als deren Einstellung „Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat“ auf „{1}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
 
 -- This chat read mails from the mailbox '{0}' while its setting 'Where a chat may send data after reading mails' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3290545516"] = "Dieser Chat hat E-Mails aus dem Postfach „{0}“ gelesen, als dessen Einstellung „Wohin ein Chat Daten senden darf, nachdem er E-Mails gelesen hat“ auf „{1}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
@@ -11862,11 +12063,11 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSION
 -- Unknown restriction
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T1376332431"] = "Unbekannte Einschränkung"
 
+-- The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails or the documents of your data sources, can then reach third parties, e.g., inside a search query or the address of a web page.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T1824702909"] = "Der Chat darf alle Werkzeuge nutzen, die Sie ausgewählt haben, die Websuche und beliebige Webseiten eingeschlossen. Dabei können interne Inhalte, etwa Ihre E-Mails oder die Dokumente Ihrer Datenquellen, an Dritte gelangen, zum Beispiel in einer Suchanfrage oder in der Adresse einer Webseite."
+
 -- Configured services and addresses from the chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3527841781"] = "Konfigurierte Dienste und Adressen aus dem Chat"
-
--- The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails, can then reach third parties, e.g., inside a search query or the address of a web page.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3881528711"] = "Der Chat darf alle Werkzeuge nutzen, die Sie ausgewählt haben, die Websuche und beliebige Webseiten eingeschlossen. Dabei können interne Inhalte, etwa Ihre E-Mails, an Dritte gelangen, zum Beispiel in einer Suchanfrage oder in der Adresse einer Webseite."
 
 -- No restriction
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3930382848"] = "Keine Einschränkung"
@@ -11877,8 +12078,8 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSION
 -- The chat may also read web pages whose addresses stand in the chat, written by you or returned by a tool, exactly as they stand there. It does not search the web, and the AI cannot choose addresses of its own outside the services configured in AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T4161394355"] = "Der Chat darf auch Webseiten lesen, deren Adressen im Chat stehen – ob Sie sie eingegeben haben oder ein Werkzeug sie zurückgegeben hat. Dabei verwendet er die Adressen genau so, wie sie dort stehen. Er durchsucht das Web nicht, und außerhalb der in AI Studio konfigurierten Dienste kann die KI keine eigenen Adressen wählen."
 
--- The chat may only use services configured in AI Studio: your mailboxes, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T739697396"] = "Der Chat darf nur Dienste nutzen, die in AI Studio konfiguriert sind: Ihre Postfächer, Ihr Confluence-Wiki und die zulässigen privaten Hosts des Werkzeugs „Webseite lesen“. Er liest keine anderen Webseiten und durchsucht das Web nicht."
+-- The chat may only use services configured in AI Studio: your mailboxes, your data sources, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T664995897"] = "Der Chat darf nur Dienste nutzen, die in AI Studio konfiguriert sind: Ihre Postfächer, Ihre Datenquellen, Ihr Confluence-Wiki und die zulässigen privaten Hosts des Werkzeugs „Webseite lesen“. Er liest keine anderen Webseiten und durchsucht das Web nicht."
 
 -- Only services configured in AI Studio
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T750634166"] = "Nur in AI Studio konfigurierte Dienste"
@@ -11957,6 +12158,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T1578005752"] = "Das aus
 
 -- The selected provider is not allowed for this chat.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T174545104"] = "Der ausgewählte Anbieter ist für diesen Chat nicht zulässig."
+
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T1807387355"] = "Die Verwendung dieses Anbieters wurde von Ihrer Organisation untersagt. Bitte wählen Sie einen anderen Anbieter."
 
 -- The AI job failed. The message is: '{0}'
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T237448388"] = "Der KI-Auftrag ist fehlgeschlagen. Die Meldung lautet: „{0}“"
@@ -13081,40 +13285,52 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T995107927"] = "Der Plugin-Code wurde nach der letzten Sicherheitsprüfung geändert. Das gespeicherte Ergebnis stimmt nicht mehr mit dem aktuellen Code überein, daher muss dieses Assistenten-Plugin erneut geprüft werden, bevor es aktiviert oder verwendet werden darf."
 
 -- The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T186946778"] = "Das Token oder Passwort der Datenquelle lässt sich auf diesem Computer nicht entschlüsseln. Datenquellen dieser Art können nur auf einem Computer importiert werden, auf dem das Verschlüsselungsgeheimnis Ihrer Organisation eingerichtet ist."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T186946778"] = "Das Token oder Passwort der Datenquelle lässt sich auf diesem Rechner nicht entschlüsseln. Datenquellen dieser Art können nur auf einem Rechner importiert werden, auf dem das Verschlüsselungsgeheimnis Ihrer Organisation eingerichtet ist."
+
+-- The chat template preselects the provider '{0}', which does not meet the confidence level required for chats. Chats started with it use your usual provider instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T190892810"] = "Die Chat-Vorlage wählt den Anbieter „{0}“ vorab aus, der das für Chats erforderliche Vertrauensniveau nicht erfüllt. Mit ihr gestartete Chats verwenden dann Ihren üblichen Anbieter."
 
 -- Data sources which sign in with Kerberos cannot be imported yet. Please add them yourself.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T206419407"] = "Datenquellen, die Kerberos zur Anmeldung verwenden, können noch nicht importiert werden. Bitte fügen Sie sie selbst hinzu."
 
 -- The tokenizer '{0}' is not on this computer, so the provider is imported without it.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2556276619"] = "Der Tokenizer „{0}“ ist auf diesem Computer nicht vorhanden. Daher wird der Anbieter ohne ihn importiert."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2556276619"] = "Der Tokenizer „{0}“ ist auf diesem Rechner nicht vorhanden. Daher wird der Anbieter ohne ihn importiert."
 
 -- The chat template preselects data sources which do not exist on this computer: {0}.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2608225446"] = "Die Chat-Vorlage wählt Datenquellen vorab aus, die auf diesem Computer nicht vorhanden sind: {0}."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2608225446"] = "Die Chat-Vorlage wählt Datenquellen vorab aus, die auf diesem Rechner nicht vorhanden sind: {0}."
 
 -- The chat template preselects tools which are not available on this computer: {0}.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2693686582"] = "Die Chat-Vorlage wählt Werkzeuge vorab aus, die auf diesem Computer nicht verfügbar sind: {0}."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2693686582"] = "Die Chat-Vorlage wählt Werkzeuge vorab aus, die auf diesem Rechner nicht verfügbar sind: {0}."
+
+-- The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2735390326"] = "Die Chat-Vorlage wählt ein Profil vorab aus, das auf diesem Rechner nicht vorhanden ist: {0}. Mit ihr gestartete Chats verwenden dann Ihr übliches Profil."
+
+-- The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3321789654"] = "Die Chat-Vorlage wählt einen Anbieter vorab aus, der auf diesem Rechner nicht vorhanden ist: {0}. Mit ihr gestartete Chats verwenden dann Ihren üblichen Anbieter."
 
 -- The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3589070261"] = "Der API-Schlüssel in der eingefügten Konfiguration kann auf diesem Computer nicht entschlüsselt werden. Bitte geben Sie Ihren API-Schlüssel ein, bevor Sie den Anbieter speichern."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3589070261"] = "Der API-Schlüssel in der eingefügten Konfiguration kann auf diesem Rechner nicht entschlüsselt werden. Bitte geben Sie Ihren API-Schlüssel ein, bevor Sie den Anbieter speichern."
 
 -- The chat template attaches these files from this computer to every chat started with it: {0}. Please check that you want to share them.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3702015680"] = "Die Chat-Vorlage fügt jedem damit gestarteten Chat folgende Dateien von diesem Computer hinzu: {0}. Bitte vergewissern Sie sich, dass Sie diese Dateien teilen möchten."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3702015680"] = "Die Chat-Vorlage fügt jedem damit gestarteten Chat folgende Dateien von diesem Rechner hinzu: {0}. Bitte vergewissern Sie sich, dass Sie diese Dateien teilen möchten."
 
 -- The policy preselects a provider which does not exist on this computer: {0}.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3849646238"] = "Das Regelwerk wählt einen Anbieter vorab aus, der auf diesem Computer nicht vorhanden ist: {0}."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3849646238"] = "Das Regelwerk wählt einen Anbieter vorab aus, der auf diesem Rechner nicht vorhanden ist: {0}."
 
 -- The pasted configuration is not a valid configuration of the type '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T4231596123"] = "Die eingefügte Konfiguration ist keine gültige Konfiguration vom Typ „{0}“."
 
 -- The policy permits tools which are not available on this computer: {0}.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T582643438"] = "Das Regelwerk erlaubt Werkzeuge, die auf diesem Computer nicht verfügbar sind: {0}."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T582643438"] = "Das Regelwerk erlaubt Werkzeuge, die auf diesem Rechner nicht verfügbar sind: {0}."
 
 -- The policy preselects a profile which does not exist on this computer: {0}.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T600255824"] = "Das Regelwerk wählt ein Profil vorab aus, das auf diesem Computer nicht vorhanden ist: {0}."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T600255824"] = "Das Regelwerk wählt ein Profil vorab aus, das auf diesem Rechner nicht vorhanden ist: {0}."
 
 -- The pasted configuration contains an API key which is not encrypted, so it was left out. Please enter your API key before you save the provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T639320638"] = "Die eingefügte Konfiguration enthält einen unverschlüsselten API-Schlüssel. Dieser wurde daher ausgelassen. Bitte geben Sie Ihren API-Schlüssel ein, bevor Sie den Anbieter speichern."
+
+-- The chat template preselects a profile but does not allow profiles. Chats started with it ignore that profile.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T769062029"] = "Die Chat-Vorlage wählt vorab ein Profil aus, erlaubt aber keine Profile. Mit ihr gestartete Chats ignorieren dieses Profil."
 
 -- Expected a quoted string at character {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1235695745"] = "An Position {0} wurde ein Text in Anführungszeichen erwartet."
@@ -13533,8 +13749,35 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code �
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
 
+-- Image for AI models
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T791951937"] = "Bild für KI-Modelle"
+
 -- Plugin archive
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T927001356"] = "Plugin-Archiv"
+
+-- AI Studio was not able to prepare the image '{0}' for the AI, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T1345506748"] = "AI Studio konnte das Bild „{0}“ nicht für die KI vorbereiten und hat es daher nicht gesendet."
+
+-- The image '{0}' could not be made small enough for the selected provider, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T1463083567"] = "Das Bild „{0}“ konnte für den ausgewählten Anbieter nicht ausreichend verkleinert werden und wurde daher nicht gesendet."
+
+-- The image '{0}' could not be opened and was not sent. When the image is stored on a network drive, the drive might be unavailable.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T2022724454"] = "Das Bild „{0}“ konnte nicht geöffnet und daher nicht gesendet werden. Wenn das Bild auf einem Netzlaufwerk gespeichert ist, ist das Laufwerk möglicherweise nicht verfügbar."
+
+-- The image '{0}' does not exist anymore and was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T2330229240"] = "Das Bild „{0}“ existiert nicht mehr und wurde nicht gesendet."
+
+-- The image '{0}' is not what its file extension claims, so it was not sent. Please correct its file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T3457568536"] = "Das Bild „{0}“ hat nicht das Format, das seine Dateiendung angibt, und wurde daher nicht gesendet. Bitte korrigieren Sie die Dateiendung."
+
+-- The image '{0}' could not be read and was not sent. It might be damaged or transferred incompletely.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T4029166607"] = "Das Bild „{0}“ konnte nicht gelesen und daher nicht gesendet werden. Möglicherweise ist es beschädigt oder unvollständig übertragen worden."
+
+-- The image '{0}' has too many pixels for AI Studio to prepare it, so it was not sent. Please scale the image down first.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T567941882"] = "Das Bild „{0}“ hat zu viele Pixel, als dass AI Studio es vorbereiten könnte, und wurde daher nicht gesendet. Bitte verkleinern Sie das Bild zuerst."
+
+-- The image '{0}' uses a format which AI Studio cannot give to an AI model, so it was not sent. Please convert the image to JPG or PNG.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T568830141"] = "Das Bild „{0}“ liegt in einem Format vor, das AI Studio nicht an ein KI-Modell übergeben kann, und wurde daher nicht gesendet. Bitte konvertieren Sie das Bild in JPG oder PNG."
 
 -- Attempt to override instructions
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T161976090"] = "Versuch, Anweisungen zu überschreiben"
@@ -13778,6 +14021,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T1738200
 
 -- The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T204783307"] = "Der Index der Datenquelle „{0}“ fehlt. Die Datenquelle wird in Ihren Chats nicht verwendet, bis ihr Index neu erstellt wurde. Verwenden Sie die Aktion „Reparieren“, um dies zu starten."
+
+-- The use of the embedding provider of this data source has been prohibited by your organization. Please select a different embedding provider in the settings of the data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2092244746"] = "Die Verwendung des Einbettungsanbieters dieser Datenquelle wurde von Ihrer Organisation untersagt. Bitte wählen Sie in den Einstellungen der Datenquelle einen anderen Einbettungsanbieter."
 
 -- The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2186533187"] = "Der ausgewählte Einbettungsanbieter darf diese Datenquelle nicht indexieren. Die Datenquelle erfordert das Vertrauensniveau „{0}“, während der Einbettungsanbieter „{1}“ hat."
@@ -14709,6 +14955,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2222598306"
 -- Please select your security policy.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2250909198"] = "Bitte wählen Sie Ihre Sicherheitsrichtlinie aus."
 
+-- The use of this embedding provider has been prohibited by your organization. Please select a different embedding provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2376506873"] = "Die Verwendung dieses Einbettungsanbieters wurde von Ihrer Organisation untersagt. Bitte wählen Sie einen anderen Einbettungsanbieter."
+
 -- Please acknowledge that you are aware of the cloud transcription implications.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2818048408"] = "Bitte bestätigen Sie, dass Ihnen die Auswirkungen der Cloud-Transkription bewusst sind."
 
@@ -14766,11 +15015,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T90753429"] 
 -- Please enter the secret necessary for authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"] = "Bitte geben Sie das für die Authentifizierung benötigte Geheimnis ein."
 
--- Unsupported image format
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1398282880"] = "Nicht unterstütztes Bildformat"
-
--- File has no extension
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1555980031"] = "Datei hat keine Erweiterung"
+-- AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1578559061"] = "AI Studio kann keine Bilder im Format {0} an ein KI-Modell übergeben. Bitte konvertieren Sie das Bild in JPG oder PNG."
 
 -- Audio files are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T2919730669"] = "Audio-Dateien werden noch nicht unterstützt."
