@@ -30,16 +30,6 @@ public partial class SlideAssistant
     private const int MAX_REPORTED_ISSUES = 12;
 
     /// <summary>
-    /// How a template is opened for reading.
-    /// </summary>
-    /// <remarks>
-    /// Other programs may go on writing or deleting the file meanwhile. PowerPoint keeps a file open
-    /// for writing as long as it shows it, and a template which is still open there has to be
-    /// readable all the same.
-    /// </remarks>
-    private const FileShare TEMPLATE_FILE_SHARE = FileShare.ReadWrite | FileShare.Delete;
-
-    /// <summary>
     /// How much of the title of a template slide its label in the form shows.
     /// </summary>
     private const int MAX_SLIDE_TITLE_CHARACTERS = 60;
@@ -169,8 +159,7 @@ public partial class SlideAssistant
 
         try
         {
-            using var stream = new FileStream(this.templatePath, FileMode.Open, FileAccess.Read, TEMPLATE_FILE_SHARE);
-            this.template = PresentationTemplate.Read(stream);
+            this.template = PresentationTemplate.ReadFile(this.templatePath);
         }
         catch (Exception e)
         {
@@ -470,7 +459,7 @@ public partial class SlideAssistant
         this.StateHasChanged();
         try
         {
-            await using (var templateFile = new FileStream(this.slideDeckTemplatePath, FileMode.Open, FileAccess.Read, TEMPLATE_FILE_SHARE))
+            await using (var templateFile = new FileStream(this.slideDeckTemplatePath, FileMode.Open, FileAccess.Read, PresentationTemplate.FILE_SHARE))
             await using (var copy = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 await templateFile.CopyToAsync(copy);
 
