@@ -56,7 +56,7 @@ internal sealed class RelocationVectorStore() : VectorStoreClient("Relocation te
         throw new InvalidOperationException("Existing unchanged files must not be embedded again.");
     }
 
-    public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, CancellationToken token)
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, IReadOnlyCollection<string> keepPointIds, CancellationToken token)
     {
         this.DeletedDocuments++;
         foreach (var id in this.Locations.Where(entry => entry.Key == parentFileId || entry.Value == filePath).Select(entry => entry.Key).ToArray())
@@ -76,6 +76,9 @@ internal sealed class RelocationVectorStore() : VectorStoreClient("Relocation te
     public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token) => throw new NotSupportedException();
 
     public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token) => throw new NotSupportedException();
+
+    // Only the identities and locations are kept here, never a vector:
+    public override Task<IReadOnlyList<StoredVector>> RetrieveVectorsAsync(string storeName, IReadOnlyList<string> pointIds, CancellationToken token) => Task.FromResult<IReadOnlyList<StoredVector>>([]);
 
     public override Task<VectorStoreBackupPreparation> PrepareBackupAsync(CancellationToken token) => throw new NotSupportedException();
 

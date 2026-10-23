@@ -2,6 +2,8 @@ using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Services.Indexing;
 
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AIStudio.Tests.Tools.Databases;
 
@@ -17,16 +19,44 @@ internal sealed class TemporaryIndexStore(string directory, string databasePath)
 
     public static async Task<TemporaryIndexStore> CreateAsync()
     {
+        var store = Create();
+        await store.MigrateAsync();
+        return store;
+    }
+
+    /// <summary>
+    /// Creates a store migrated only up to the given migration, the way an older version of the app left it.
+    /// </summary>
+    /// <remarks>
+    /// The client maps the current schema, so it may fail on such a store. Write the rows of the
+    /// older schema with raw SQL through CreateContext, then call MigrateAsync.
+    /// </remarks>
+    /// <param name="targetMigration">The id of the last migration to apply, e.g., "20261022000000_ChunkEndPageNumber".</param>
+    public static async Task<TemporaryIndexStore> CreateAsync(string targetMigration)
+    {
+        var store = Create();
+        await using var context = store.CreateContext();
+        await context.GetService<IMigrator>().MigrateAsync(targetMigration);
+        return store;
+    }
+
+    /// <summary>
+    /// Applies every migration which is still missing, the way the app does when it starts.
+    /// </summary>
+    public async Task MigrateAsync()
+    {
+        await using var context = this.CreateContext();
+        await IndexStoreSchemaMigrator.MigrateAsync(context, CancellationToken.None);
+    }
+
+    private static TemporaryIndexStore Create()
+    {
         SQLitePCL.Batteries_V2.Init();
 
         var directory = Path.Combine(Path.GetTempPath(), $"ai-studio-index-store-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
 
-        var databasePath = Path.Combine(directory, "rag-index.sqlite3");
-        await using (var context = new IndexStoreDbContext(IndexStoreDbContext.CreateOptions(databasePath)))
-            await IndexStoreSchemaMigrator.MigrateAsync(context, CancellationToken.None);
-
-        return new TemporaryIndexStore(directory, databasePath);
+        return new TemporaryIndexStore(directory, Path.Combine(directory, "rag-index.sqlite3"));
     }
 
     /// <summary>

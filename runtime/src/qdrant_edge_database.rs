@@ -12,8 +12,8 @@ use qdrant_edge::{
     Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
     FieldCondition, Filter, HasIdCondition, HnswIndexConfig, Match, MatchValue, NamedQuery,
     Payload, PayloadOps, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
-    QueryRequest, ScoredPoint, ScoringQuery, UpdateOperation, ValueVariants, VectorInternal,
-    SetPayloadOp, Vectors, WithPayloadInterface, WithVector,
+    QueryRequest, RetrieveRequest, ScoredPoint, ScoringQuery, UpdateOperation, ValueVariants,
+    VectorInternal, VectorStructInternal, SetPayloadOp, Vectors, WithPayloadInterface, WithVector,
 };
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
@@ -129,10 +129,21 @@ pub struct SearchQdrantEdgeEmbeddingRequest {
 }
 
 #[derive(Deserialize)]
+pub struct RetrieveQdrantEdgeVectorsRequest {
+    pub store_name: String,
+    pub point_ids: Vec<String>,
+}
+
+#[derive(Deserialize)]
 pub struct DeleteQdrantEdgeEmbeddingByFileRequest {
     pub store_name: String,
     pub file_path: String,
     pub parent_file_id: String,
+
+    /// Points of the document which stay, e.g., the ones an indexing run just wrote. Missing means
+    /// none, so every point of the document goes.
+    #[serde(default)]
+    pub keep_point_ids: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -253,6 +264,12 @@ pub struct QdrantEdgeSearchResult {
     pub creation_utc: String,
     pub last_write_utc: String,
     pub embedded_at_utc: String,
+}
+
+#[derive(Serialize)]
+pub struct QdrantEdgeStoredVector {
+    pub point_id: String,
+    pub vector: Vec<f32>,
 }
 
 #[derive(Clone, Serialize)]
@@ -474,7 +491,49 @@ impl QdrantEdgeDatabase {
             .collect())
     }
 
-    fn delete_embedding_by_file(&mut self, store_name: &str, file_path: &str, parent_file_id: &str) -> QdrantEdgeResult<()> {
+    /// Reads the vectors of the given points, leaving out the points which do not exist.
+    ///
+    /// An indexing run asks for them before it replaces a document: a chunk whose text did not
+    /// change takes over its stored vector instead of going to the embedding provider again.
+    fn retrieve_vectors(&mut self, store_name: &str, point_ids: &[String]) -> QdrantEdgeResult<Vec<QdrantEdgeStoredVector>> {
+        if point_ids.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let point_ids = point_ids
+            .iter()
+            .map(|point_id| to_point_id(point_id))
+            .collect::<QdrantEdgeResult<Vec<_>>>()?;
+
+        let Some(shard) = self.get_existing_store(store_name)? else {
+            return Ok(vec![]);
+        };
+
+        let records = shard.retrieve(RetrieveRequest {
+            point_ids,
+            with_payload: Some(WithPayloadInterface::Bool(false)),
+            with_vector: Some(WithVector::Selector(vec![VECTOR_NAME.to_string()])),
+        })?;
+
+        Ok(records
+            .into_iter()
+            .filter_map(|record| {
+                let Some(VectorStructInternal::Named(mut vectors)) = record.vector else {
+                    return None;
+                };
+
+                match vectors.remove(VECTOR_NAME)? {
+                    VectorInternal::Dense(vector) => Some(QdrantEdgeStoredVector {
+                        point_id: point_id_to_string(record.id),
+                        vector,
+                    }),
+                    _ => None,
+                }
+            })
+            .collect())
+    }
+
+    fn delete_embedding_by_file(&mut self, store_name: &str, file_path: &str, parent_file_id: &str, keep_point_ids: &[String]) -> QdrantEdgeResult<()> {
         let Some(shard) = self.get_existing_store(store_name)? else {
             return Ok(());
         };
@@ -482,11 +541,11 @@ impl QdrantEdgeDatabase {
         // The location may already have changed if a relocation stopped before SQLite caught up.
         if !parent_file_id.is_empty() {
             shard.update(UpdateOperation::PointOperation(
-                PointOperations::DeletePointsByFilter(match_keyword_filter("parent_file_id", parent_file_id)?),
+                PointOperations::DeletePointsByFilter(document_points_filter("parent_file_id", parent_file_id, keep_point_ids)?),
             ))?;
         }
         shard.update(UpdateOperation::PointOperation(
-            PointOperations::DeletePointsByFilter(match_keyword_filter("file_path", file_path)?),
+            PointOperations::DeletePointsByFilter(document_points_filter("file_path", file_path, keep_point_ids)?),
         ))?;
         shard.flush()?;
         Ok(())
@@ -822,9 +881,15 @@ pub async fn search_qdrant_edge_embeddings(Json(request): Json<SearchQdrantEdgeE
     }).await
 }
 
+pub async fn retrieve_qdrant_edge_vectors(Json(request): Json<RetrieveQdrantEdgeVectorsRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeStoredVector>>> {
+    run_qdrant_edge_request(move |database| {
+        database.retrieve_vectors(&request.store_name, &request.point_ids)
+    }).await
+}
+
 pub async fn delete_qdrant_edge_embedding_by_file(Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeResponse<()>> {
     run_qdrant_edge_request(move |database| {
-        database.delete_embedding_by_file(&request.store_name, &request.file_path, &request.parent_file_id)
+        database.delete_embedding_by_file(&request.store_name, &request.file_path, &request.parent_file_id, &request.keep_point_ids)
     }).await
 }
 
@@ -1353,6 +1418,24 @@ fn match_keyword_filter(field_name: &str, value: &str) -> QdrantEdgeResult<Filte
     })
 }
 
+/// The points of one document, found by one of its payload fields, apart from the points to keep.
+///
+/// An indexing run writes the new points of a document first and removes the old ones last, so a
+/// chunk whose text did not change can still take over its old vector while the run goes on.
+fn document_points_filter(field_name: &str, value: &str, keep_point_ids: &[String]) -> QdrantEdgeResult<Filter> {
+    let mut filter = match_keyword_filter(field_name, value)?;
+    if !keep_point_ids.is_empty() {
+        let keep = keep_point_ids
+            .iter()
+            .map(|point_id| to_point_id(point_id))
+            .collect::<QdrantEdgeResult<HasIdCondition>>()?;
+
+        filter.must_not = Some(vec![Condition::HasId(keep)]);
+    }
+
+    Ok(filter)
+}
+
 /// Restricts a search to the given points. Every id has to be a valid UUID, the same as when the
 /// points were inserted, so a malformed id is an error rather than a point which is silently missed.
 fn point_id_filter(point_ids: &[String]) -> QdrantEdgeResult<Filter> {
@@ -1584,8 +1667,51 @@ mod tests {
 
         // SQLite may still know the old path when a relocation was interrupted. Its stable parent
         // id must be enough to remove the vectors if the document changed before the next retry.
-        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/notes.md", "original-parent").unwrap();
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/notes.md", "original-parent", &[]).unwrap();
         assert!(database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap().is_empty());
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// An indexing run reads the vectors of a document before it replaces the document, so a chunk
+    /// whose text stays the same keeps its vector instead of being embedded again.
+    #[test]
+    fn retrieving_vectors_returns_the_stored_ones_and_leaves_out_unknown_points() {
+        let test_directory = test_directory("retrieve");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.insert_embedding(SEARCH_STORE, vec![test_point(POINT_X, vec![1.0, 0.0, 0.0]), test_point(POINT_Y, vec![0.0, 1.0, 0.0])]).unwrap();
+
+        let vectors = database.retrieve_vectors(SEARCH_STORE, &[POINT_Y.to_string(), POINT_Z.to_string()]).unwrap();
+        assert_eq!(vectors.len(), 1, "a point which does not exist is left out");
+        assert_eq!(vectors[0].point_id, POINT_Y);
+        assert_eq!(vectors[0].vector, vec![0.0, 1.0, 0.0], "the vector comes back as it was stored");
+
+        assert!(database.retrieve_vectors("rag_00000000000000000000000000000000", &[POINT_X.to_string()]).unwrap().is_empty(), "a store which does not exist has no vectors to give");
+        assert!(database.retrieve_vectors(SEARCH_STORE, &["not-a-point-id".to_string()]).is_err(), "a malformed id is an error, not a point which is quietly missed");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// An indexing run writes the new points of a document first and removes the old ones at the
+    /// end, all but the points it just wrote.
+    #[test]
+    fn deleting_the_points_of_a_document_keeps_the_points_named() {
+        let test_directory = test_directory("delete-keep");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.insert_embedding(SEARCH_STORE, vec![test_point(POINT_X, search_vector()), test_point(POINT_Y, search_vector()), test_point(POINT_Z, search_vector())]).unwrap();
+
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/notes.md", "", &[POINT_X.to_string(), POINT_Z.to_string()]).unwrap();
+
+        let mut remaining = database
+            .retrieve_vectors(SEARCH_STORE, &[POINT_X.to_string(), POINT_Y.to_string(), POINT_Z.to_string()])
+            .unwrap()
+            .into_iter()
+            .map(|stored| stored.point_id)
+            .collect::<Vec<_>>();
+        remaining.sort();
+        assert_eq!(remaining, vec![POINT_X.to_string(), POINT_Z.to_string()], "only the point which is not kept goes");
+
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
     }

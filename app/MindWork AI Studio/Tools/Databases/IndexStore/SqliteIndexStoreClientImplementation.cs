@@ -336,6 +336,32 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         await transaction.CommitAsync(token);
     }
 
+    public override async Task<IReadOnlyList<StoredChunk>> GetStoredChunksAsync(string dataSourceId, string filePath, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var parentFileIds = context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId && file.AbsolutePath == filePath)
+            .Select(file => file.ParentFileId);
+
+        //
+        // Only a description of the query: the rows are read in the loop below, one at a time. A
+        // chunk without a stored hash brings its whole text along, and a large document has
+        // thousands of them, so they must never be in memory together. A chunk with a hash brings
+        // no text at all.
+        //
+        var chunkQuery = context.EmbeddingChunks
+            .AsNoTracking()
+            .Where(chunk => parentFileIds.Contains(chunk.ParentFileId))
+            .Select(chunk => new { chunk.ChunkId, chunk.TextHash, chunk.Generation, ChunkText = chunk.TextHash == null ? chunk.ChunkText : null })
+            .AsAsyncEnumerable();
+
+        var storedChunks = new List<StoredChunk>();
+        await foreach (var chunk in chunkQuery.WithCancellation(token))
+            storedChunks.Add(new(chunk.ChunkId, chunk.TextHash ?? ChunkTextHash.Of(chunk.ChunkText ?? string.Empty), chunk.Generation));
+
+        return storedChunks;
+    }
+
     public override async Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token)
     {
         if (maxMatches <= 0)
@@ -735,6 +761,8 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         chunkEntity.EndPageNumber = chunk.EndPageNumber;
         chunkEntity.ChunkIndex = chunk.ChunkIndex;
         chunkEntity.ChunkText = chunk.ChunkText;
+        chunkEntity.TextHash = chunk.TextHash;
+        chunkEntity.Generation = chunk.Generation;
         chunkEntity.EmbeddedAtUtc = chunk.EmbeddedAtUtc;
     }
 

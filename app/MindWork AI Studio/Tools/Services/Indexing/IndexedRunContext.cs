@@ -47,9 +47,9 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IndexedRunContext).Namespace, nameof(IndexedRunContext));
 
     /// <summary>
-    /// One chunk on its way to the stores, with the id it is stored under.
+    /// One chunk on its way to the stores, with the id it is stored under and the hash of its text.
     /// </summary>
-    private sealed record EmbeddingChunkDraft(string ChunkId, string Text, int ChunkIndex, int? PageNumber, int? EndPageNumber);
+    private sealed record EmbeddingChunkDraft(string ChunkId, string Text, string TextHash, int ChunkIndex, int? PageNumber, int? EndPageNumber);
 
     public IIndexedDataSource DataSource => dataSource;
 
@@ -137,10 +137,14 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// Embeds one document and stores it, in place of whatever was stored for it before.
     /// </summary>
     /// <remarks>
-    /// The old vectors and the old index row go first, then the row is written anew with a chunk
-    /// count of zero, so the chunks have something to point at while they arrive batch by batch.
-    /// The final row, with the real chunk count, is written by whoever decides that the document
-    /// was indexed: only the kind of data source knows whether it changed in the meantime.
+    /// Which chunks the document has stored is read first. Then the old index row goes, and the row
+    /// is written anew with a chunk count of zero, so the chunks have something to point at while
+    /// they arrive batch by batch. Each chunk whose text the document had before takes over the
+    /// stored vector instead of going to the embedding provider again, so the old vectors stay until
+    /// all new chunks are stored, and only then go. The new chunks belong to the next generation and
+    /// have ids of their own, so none of them overwrites an old one. The final row, with the real chunk count, is
+    /// written by whoever decides that the document was indexed: only the kind of data source knows
+    /// whether it changed in the meantime.
     /// </remarks>
     /// <param name="document">The document to index.</param>
     /// <param name="reportBlockProgress">Told about every chunk, with its number and its page.</param>
@@ -148,31 +152,36 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// <returns>The number of chunks stored for the document.</returns>
     public async Task<int> IndexDocumentAsync(EmbeddingDocument document, Action<int, int?> reportBlockProgress, CancellationToken token)
     {
+        var reusableVectors = await ReusableVectors.ReadAsync(indexStore, dataSource.Id, document.Key, token);
+
         logger.LogDebug(
-            "Resetting stored embeddings for file '{FilePath}' in collection '{CollectionName}' before re-indexing.",
+            "Resetting the stored chunks of file '{FilePath}' in collection '{CollectionName}' before re-indexing. Its vectors stay until the new ones are stored.",
             document.Key,
             this.CollectionName);
-        await this.DeleteDocumentPointsAsync(document.Key, token);
         await indexStore.DeleteFileAsync(dataSource.Id, document.Key, token);
         await indexStore.UpsertFileAsync(dataSource.Id, document.State, token);
 
         var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
         var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
         var totalChunkCount = 0;
-        var chunkIdSource = IndexedDocumentIds.CreateChunkIdSource(dataSource.Id, document.Key, document.State.ParentFileId, document.State.Fingerprint);
+        var reusedChunkCount = 0;
+        var storedChunkIds = new List<string>();
+        var chunkIdSource = IndexedDocumentIds.CreateChunkIdSource(dataSource.Id, document.Key, document.State.ParentFileId, document.State.Fingerprint, reusableVectors.NextGeneration);
 
         await foreach (var chunk in document.StreamChunks(token))
         {
-            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, chunkIdSource, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber, chunk.EndPageNumber));
+            var chunkId = IndexedDocumentIds.CreateChunkId(dataSource.Id, chunkIdSource, totalChunkCount);
+            batch.Add(new(chunkId, chunk.Text, ChunkTextHash.Of(chunk.Text), totalChunkCount, chunk.PageNumber, chunk.EndPageNumber));
+            storedChunkIds.Add(chunkId);
             totalChunkCount++;
             reportBlockProgress(totalChunkCount, chunk.PageNumber);
 
             if (batch.Count >= embeddingBatchSize)
-                await this.FlushBatchAsync(document, batch, token);
+                reusedChunkCount += await this.FlushBatchAsync(document, batch, reusableVectors, token);
         }
 
         if (batch.Count > 0)
-            await this.FlushBatchAsync(document, batch, token);
+            reusedChunkCount += await this.FlushBatchAsync(document, batch, reusableVectors, token);
 
         //
         // The extraction itself did not report a failure, but nothing usable came out of it. For
@@ -182,12 +191,27 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         if (totalChunkCount == 0)
             throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, string.Format(TB("No text could be read from '{0}'."), document.Key));
 
+        //
+        // Only now the old vectors of the document go: every point it has, apart from those just
+        // written. That includes a point an interrupted run left behind for the document.
+        //
+        await this.DeleteDocumentPointsAsync(document.Key, storedChunkIds, token);
+
         logger.LogDebug(
             "Generated {ChunkCount} chunks for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
             totalChunkCount,
             document.Key,
             dataSource.Name,
             dataSource.Id);
+
+        if (reusedChunkCount > 0)
+            logger.LogInformation(
+                "Reused the stored vectors of {ReusedChunkCount} of {ChunkCount} chunks for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}). Only the other chunks went to the embedding provider.",
+                reusedChunkCount,
+                totalChunkCount,
+                document.Key,
+                dataSource.Name,
+                dataSource.Id);
 
         return totalChunkCount;
     }
@@ -197,12 +221,20 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// </summary>
     /// <param name="documentKey">The key of the document.</param>
     /// <param name="token">The cancellation token.</param>
-    public async Task DeleteDocumentPointsAsync(string documentKey, CancellationToken token)
+    public Task DeleteDocumentPointsAsync(string documentKey, CancellationToken token) => this.DeleteDocumentPointsAsync(documentKey, [], token);
+
+    /// <summary>
+    /// Removes the vectors of one document from the collection, apart from the given ones.
+    /// </summary>
+    /// <param name="documentKey">The key of the document.</param>
+    /// <param name="keepPointIds">The points of the document which stay.</param>
+    /// <param name="token">The cancellation token.</param>
+    private async Task DeleteDocumentPointsAsync(string documentKey, IReadOnlyCollection<string> keepPointIds, CancellationToken token)
     {
         // A relocated document keeps its original parent id. Delete by that identity as well as
         // by path, including when a previous relocation stopped between its two database writes.
         var parentId = manifest.Files.GetValueOrDefault(documentKey)?.ParentFileId ?? string.Empty;
-        await vectorStore.DeleteEmbeddingByFile(this.CollectionName, documentKey, parentId, token);
+        await vectorStore.DeleteEmbeddingByFile(this.CollectionName, documentKey, parentId, keepPointIds, token);
         this.hasPendingChanges = true;
     }
 
@@ -318,16 +350,102 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         this.hasPendingChanges = false;
     }
 
-    private async Task FlushBatchAsync(EmbeddingDocument document, List<EmbeddingChunkDraft> batch, CancellationToken token)
+    /// <summary>
+    /// Stores one batch of chunks, each with its vector.
+    /// </summary>
+    /// <param name="document">The document the chunks belong to.</param>
+    /// <param name="batch">The chunks, emptied once they are stored.</param>
+    /// <param name="reusableVectors">The chunks the document had stored before.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>How many of the chunks kept a stored vector instead of being embedded.</returns>
+    private async Task<int> FlushBatchAsync(EmbeddingDocument document, List<EmbeddingChunkDraft> batch, ReusableVectors reusableVectors, CancellationToken token)
+    {
+        //
+        // A chunk whose text the document had stored before takes that vector over. Only the other
+        // chunks go to the embedding provider:
+        //
+        var storedVectors = await reusableVectors.TakeAsync(vectorStore, this.CollectionName, manifest.VectorSize, batch.Select(chunk => chunk.TextHash).ToList(), token);
+        var vectors = new IReadOnlyList<float>[batch.Count];
+        var chunksToEmbed = new List<int>(batch.Count);
+        for (var index = 0; index < batch.Count; index++)
+        {
+            if (storedVectors[index] is { } storedVector)
+                vectors[index] = storedVector;
+            else
+                chunksToEmbed.Add(index);
+        }
+
+        if (chunksToEmbed.Count > 0)
+        {
+            var embeddedVectors = await this.EmbedAsync(document, chunksToEmbed.Select(index => batch[index].Text).ToList(), token);
+            for (var position = 0; position < chunksToEmbed.Count; position++)
+                vectors[chunksToEmbed[position]] = embeddedVectors[position];
+        }
+
+        token.ThrowIfCancellationRequested();
+        var embeddedAtUtc = DateTimeOffset.UtcNow;
+        var state = document.State;
+        var points = batch.Select((item, index) => new VectorStoragePoint(
+            item.ChunkId,
+            vectors[index],
+            dataSource.Id,
+            dataSource.Type.ToString(),
+            item.ChunkId,
+            state.ParentFileId,
+            document.Key,
+            state.AbsolutePath,
+            state.FileName,
+            state.RelativePath,
+            state.FileType,
+            item.PageNumber,
+            item.EndPageNumber,
+            item.ChunkIndex,
+            item.Text,
+            state.Fingerprint,
+            state.CreationUtc,
+            state.LastWriteUtc,
+            embeddedAtUtc)).ToList();
+
+        await vectorStore.InsertEmbedding(this.CollectionName, points, token);
+        token.ThrowIfCancellationRequested();
+
+        var chunks = batch
+            .Select(chunk => new EmbeddingStateChunk(chunk.ChunkId, state.ParentFileId, chunk.PageNumber, chunk.EndPageNumber, chunk.ChunkIndex, chunk.Text, embeddedAtUtc, chunk.TextHash, reusableVectors.NextGeneration))
+            .ToList();
+
+        await indexStore.UpsertChunksAsync(dataSource.Id, chunks, token);
+        await this.RecordStoredChunksAsync(batch.Count, token);
+
+        logger.LogDebug(
+            "Stored {ChunkCount} embedded chunks for file '{FilePath}' in collection '{CollectionName}'.",
+            batch.Count,
+            document.Key,
+            this.CollectionName);
+
+        var reusedChunkCount = batch.Count - chunksToEmbed.Count;
+        batch.Clear();
+        return reusedChunkCount;
+    }
+
+    /// <summary>
+    /// Asks the embedding provider for the vectors of some texts, and checks them before anything is stored.
+    /// </summary>
+    /// <remarks>
+    /// The first vectors a data source gets also decide the size of its store, which is created then.
+    /// </remarks>
+    /// <param name="document">The document the texts belong to.</param>
+    /// <param name="texts">The texts.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>One vector per text, in the same order.</returns>
+    private async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedAsync(EmbeddingDocument document, List<string> texts, CancellationToken token)
     {
         logger.LogDebug(
             "Requesting embeddings for batch of {ChunkCount} chunks from file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
-            batch.Count,
+            texts.Count,
             document.Key,
             dataSource.Name,
             dataSource.Id);
 
-        var texts = batch.Select(item => item.Text).ToList();
         IReadOnlyList<IReadOnlyList<float>> vectors;
         try
         {
@@ -353,11 +471,11 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
             // The messages of these exceptions end up in the log, never in front of the user, so
             // they name the document by its key: the name a user reads may be the subject of a mail.
             //
-            throw new InvalidOperationException(string.Format(TB("The embedding provider was not able to embed {0} part(s) of '{1}'. The provider reported: {2}"), batch.Count, document.Key, exception.Message), exception);
+            throw new InvalidOperationException(string.Format(TB("The embedding provider was not able to embed {0} part(s) of '{1}'. The provider reported: {2}"), texts.Count, document.Key, exception.Message), exception);
         }
 
-        if (vectors.Count != batch.Count)
-            throw new InvalidOperationException(string.Format(TB("The embedding provider answered with {0} vectors for {1} parts of '{2}'. Please select another embedding model or provider."), vectors.Count, batch.Count, document.Key));
+        if (vectors.Count != texts.Count)
+            throw new InvalidOperationException(string.Format(TB("The embedding provider answered with {0} vectors for {1} parts of '{2}'. Please select another embedding model or provider."), vectors.Count, texts.Count, document.Key));
 
         var vectorSize = vectors.FirstOrDefault()?.Count ?? 0;
         if (vectorSize <= 0)
@@ -399,46 +517,6 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
                 dataSource.Id);
         }
 
-        token.ThrowIfCancellationRequested();
-        var embeddedAtUtc = DateTimeOffset.UtcNow;
-        var state = document.State;
-        var points = batch.Select((item, index) => new VectorStoragePoint(
-            item.ChunkId,
-            vectors[index],
-            dataSource.Id,
-            dataSource.Type.ToString(),
-            item.ChunkId,
-            state.ParentFileId,
-            document.Key,
-            state.AbsolutePath,
-            state.FileName,
-            state.RelativePath,
-            state.FileType,
-            item.PageNumber,
-            item.EndPageNumber,
-            item.ChunkIndex,
-            item.Text,
-            state.Fingerprint,
-            state.CreationUtc,
-            state.LastWriteUtc,
-            embeddedAtUtc)).ToList();
-
-        await vectorStore.InsertEmbedding(this.CollectionName, points, token);
-        token.ThrowIfCancellationRequested();
-
-        var chunks = batch
-            .Select(chunk => new EmbeddingStateChunk(chunk.ChunkId, state.ParentFileId, chunk.PageNumber, chunk.EndPageNumber, chunk.ChunkIndex, chunk.Text, embeddedAtUtc))
-            .ToList();
-
-        await indexStore.UpsertChunksAsync(dataSource.Id, chunks, token);
-        await this.RecordStoredChunksAsync(batch.Count, token);
-
-        logger.LogDebug(
-            "Stored {ChunkCount} embedded chunks for file '{FilePath}' in collection '{CollectionName}'.",
-            batch.Count,
-            document.Key,
-            this.CollectionName);
-
-        batch.Clear();
+        return vectors;
     }
 }

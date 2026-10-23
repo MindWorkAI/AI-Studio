@@ -42,6 +42,19 @@ public abstract partial class IndexStoreClient(string name, string path) : Datab
 
     public abstract Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token);
 
+    /// <summary>
+    /// The chunks a document has stored now, each with the hash of its text and its generation.
+    /// </summary>
+    /// <remarks>
+    /// The same chunks DeleteFileAsync removes for the document. A chunk stored before its hash was
+    /// kept is hashed from its text here, and only such a chunk has its text read at all.
+    /// </remarks>
+    /// <param name="dataSourceId">The data source the document belongs to.</param>
+    /// <param name="filePath">The key of the document, as DeleteFileAsync takes it.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The chunks, in no particular order.</returns>
+    public abstract Task<IReadOnlyList<StoredChunk>> GetStoredChunksAsync(string dataSourceId, string filePath, CancellationToken token);
+
     public abstract Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token);
 
     public abstract Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token);

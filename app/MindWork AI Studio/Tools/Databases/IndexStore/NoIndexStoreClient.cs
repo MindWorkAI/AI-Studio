@@ -63,6 +63,8 @@ public sealed partial class NoIndexStoreClient(string name, string? unavailableR
 
     public override Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token) => Task.CompletedTask;
 
+    public override Task<IReadOnlyList<StoredChunk>> GetStoredChunksAsync(string dataSourceId, string filePath, CancellationToken token) => Task.FromResult<IReadOnlyList<StoredChunk>>([]);
+
     public override Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token) =>
         Task.FromResult<IReadOnlyList<IndexStoreSearchResult>>([]);
 

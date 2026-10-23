@@ -18,7 +18,12 @@ The parts:
   write time.
 - **`IndexedRunContext`** - one prepared run: both stores, the embedding provider, the manifest, the
   collection, and the scope for reporting prompt injections. `IndexDocumentAsync` embeds and stores one
-  document; the cleanup methods remove what a failed attempt left behind.
+  document; the cleanup methods remove what a failed attempt left behind. A chunk whose text the document had
+  stored before keeps its vector (`ReusableVectors`), found by the hash of exactly the text that goes to the
+  embedding provider (`ChunkTextHash`), so hash whatever is sent, and send whatever is stored. That is why the
+  old vectors of a document go only after all of its new chunks are stored. The new chunks belong to the next
+  generation, which is part of their ids (`IndexedDocumentIds.CreateChunkIdSource`), so they never overwrite an
+  old chunk, not even for a mail, whose fingerprint never changes.
 - **`EmbeddingDocument`** - one document: its key, its index row, its display name, and how to read its chunks.
 - **`DocumentRunProgress`** - counts the documents, records indexed and failed ones in the stores, publishes the
   status, and completes or pauses the run.

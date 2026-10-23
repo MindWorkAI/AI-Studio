@@ -26,6 +26,17 @@ public sealed class QdrantEdgeClientImplementation(
     private const string EXISTS_PATH = "/system/qdrant-edge/exists";
     private const string INSERT_PATH = "/system/qdrant-edge/insert";
     private const string SEARCH_PATH = "/system/qdrant-edge/search";
+    private const string RETRIEVE_PATH = "/system/qdrant-edge/retrieve";
+
+    /// <summary>
+    /// How many vectors one request to the runtime reads at most.
+    /// </summary>
+    /// <remarks>
+    /// A vector travels as JSON text, some 15 KB at 1,536 dimensions. A document of thousands of
+    /// chunks in one answer would be hundreds of megabytes on the connection all other calls of the
+    /// app share.
+    /// </remarks>
+    private const int RETRIEVE_BATCH_SIZE = 256;
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
     private const string RELOCATE_FILE_PATH = "/system/qdrant-edge/relocate-file";
     private const string OPTIMIZE_PATH = "/system/qdrant-edge/optimize";
@@ -157,8 +168,24 @@ public sealed class QdrantEdgeClientImplementation(
             token) ?? [];
     }
 
-    public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, CancellationToken token) =>
-        rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath, parentFileId), token);
+    public override async Task<IReadOnlyList<StoredVector>> RetrieveVectorsAsync(string storeName, IReadOnlyList<string> pointIds, CancellationToken token)
+    {
+        var vectors = new List<StoredVector>(pointIds.Count);
+        foreach (var batch in pointIds.Chunk(RETRIEVE_BATCH_SIZE))
+        {
+            token.ThrowIfCancellationRequested();
+            var batchVectors = await rustService.ExecuteDatabaseQuery<RetrieveVectorsRequest, List<StoredVector>>(DATABASE_NAME, RETRIEVE_PATH,
+                new RetrieveVectorsRequest(storeName, batch), token);
+
+            if (batchVectors is not null)
+                vectors.AddRange(batchVectors);
+        }
+
+        return vectors;
+    }
+
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, IReadOnlyCollection<string> keepPointIds, CancellationToken token) =>
+        rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath, parentFileId, keepPointIds), token);
 
     public override Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, RELOCATE_FILE_PATH, new RelocateEmbeddingFileRequest(storeName, parentFileId, absolutePath, Path.GetFileName(absolutePath), relativePath, fingerprint), token);
@@ -198,7 +225,9 @@ public sealed class QdrantEdgeClientImplementation(
     /// <param name="PointIds">The only points the search may return, or null for the whole store.</param>
     private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches, IReadOnlyList<string>? PointIds);
 
-    private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath, string ParentFileId);
+    private sealed record RetrieveVectorsRequest(string StoreName, IReadOnlyList<string> PointIds);
+
+    private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath, string ParentFileId, IReadOnlyCollection<string> KeepPointIds);
 
     private sealed record RelocateEmbeddingFileRequest(string StoreName, string ParentFileId, string AbsolutePath, string FileName, string RelativePath, string Fingerprint);
 

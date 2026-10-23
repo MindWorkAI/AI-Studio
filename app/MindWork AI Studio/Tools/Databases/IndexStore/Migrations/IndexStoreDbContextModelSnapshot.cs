@@ -172,6 +172,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("INTEGER")
                 .HasColumnName("end_page_number");
 
+            entity.Property<int>("Generation")
+                .HasColumnType("INTEGER")
+                .HasColumnName("generation");
+
             entity.Property<int?>("PageNumber")
                 .HasColumnType("INTEGER")
                 .HasColumnName("page_number");
@@ -180,6 +184,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT")
                 .HasColumnName("parent_file_id");
+
+            entity.Property<string>("TextHash")
+                .HasColumnType("TEXT")
+                .HasColumnName("text_hash");
 
             entity.HasKey("Id");
 
