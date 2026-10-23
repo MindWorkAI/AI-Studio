@@ -417,30 +417,36 @@ public partial class SlideAssistant
         if (response.UserCancelled)
             return;
 
+        //
+        // The presentation comes about in a copy of the template next to the target, which takes its
+        // place once it is complete. A failure therefore leaves no half-written file behind, and
+        // neither the template nor the presentation has to be held in memory:
+        //
+        var targetPath = response.SaveFilePath;
+        var temporaryPath = Path.Join(Path.GetDirectoryName(targetPath), $".{Path.GetFileName(targetPath)}-{Guid.NewGuid():N}.tmp");
         this.isWritingPresentation = true;
         this.StateHasChanged();
         try
         {
-            using var presentation = new MemoryStream();
-            PresentationWriteResult result;
             await using (var templateFile = new FileStream(this.slideDeckTemplatePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            await using (var copy = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                await templateFile.CopyToAsync(copy);
+
+            PresentationWriteResult result;
+            await using (var presentationFile = new FileStream(temporaryPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
             {
                 //
                 // Read once more rather than reused: the template may have changed since the slides
-                // were planned, and the writer has to see the layouts of the very file it copies.
+                // were planned, and the writer has to see the layouts of the very file it edits.
                 //
-                var currentTemplate = PresentationTemplate.Read(templateFile);
-                templateFile.Position = 0;
+                var currentTemplate = PresentationTemplate.Read(presentationFile);
+                presentationFile.Position = 0;
 
                 var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim());
-                result = await PresentationWriter.WriteAsync(templateFile, currentTemplate, deck, options, new RustPictureSource(this.RustService, this.slideDeckPicturePaths), presentation, CancellationToken.None);
+                result = await PresentationWriter.WriteAsync(presentationFile, currentTemplate, deck, options, new RustPictureSource(this.RustService, this.slideDeckPicturePaths), CancellationToken.None);
             }
 
-            // Written in one go, so a failure above leaves no half-written file behind:
-            presentation.Position = 0;
-            await using (var target = new FileStream(response.SaveFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
-                await presentation.CopyToAsync(target);
-
+            File.Move(temporaryPath, targetPath, true);
             if (result.SkippedPictures.Count > 0)
             {
                 var names = result.SkippedPictures.Select(number => number >= 1 && number <= this.slideDeckPicturePaths.Count ? Path.GetFileName(this.slideDeckPicturePaths[number - 1]) : number.ToString(CultureInfo.InvariantCulture));
@@ -451,13 +457,34 @@ public partial class SlideAssistant
         }
         catch (Exception e)
         {
-            this.Logger.LogError(e, "Creating the PowerPoint file '{FilePath}' failed.", response.SaveFilePath);
+            this.Logger.LogError(e, "Creating the PowerPoint file '{FilePath}' failed.", targetPath);
             await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.")));
         }
         finally
         {
             this.isWritingPresentation = false;
             this.StateHasChanged();
+            this.DeleteTemporaryPresentation(temporaryPath);
+        }
+    }
+
+    /// <summary>
+    /// Removes the copy of the template which a failed attempt left next to the target.
+    /// </summary>
+    /// <remarks>
+    /// After a success, the copy has become the presentation, and there is nothing left to remove.
+    /// Left behind, it would pile up in the folder of the user with every failed attempt.
+    /// </remarks>
+    private void DeleteTemporaryPresentation(string temporaryPath)
+    {
+        try
+        {
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogWarning(e, "The temporary file '{TemporaryPath}' cannot be deleted.", temporaryPath);
         }
     }
 }

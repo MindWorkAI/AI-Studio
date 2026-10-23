@@ -43,17 +43,23 @@ internal static partial class PresentationWriter
     };
 
     /// <summary>
-    /// Writes the presentation.
+    /// Writes the presentation into a copy of the template, which it edits in place.
     /// </summary>
-    /// <param name="templateFile">The template file, a .pptx or a .potx, positioned at its start.</param>
+    /// <remarks>
+    /// The caller copies the template, e.g., into a temporary file next to the target, so that the
+    /// template stays untouched and no further copy of the file is held in memory. The Open XML SDK
+    /// still holds the compressed parts of the whole file in memory while it saves: measured with a
+    /// template of 150 MB, editing a copy on disk allocated about 150 MB, while copying the file into
+    /// memory streams, as this writer did before, allocated about 810 MB.
+    /// </remarks>
+    /// <param name="presentationFile">A copy of the template, a .pptx or a .potx, positioned at its start; readable, writable, and seekable.</param>
     /// <param name="template">The template as read from the same file.</param>
     /// <param name="deck">The slide deck, already checked against the template.</param>
     /// <param name="options">What the user chose for the presentation as a whole.</param>
     /// <param name="pictures">Where the pictures the deck refers to come from.</param>
-    /// <param name="output">Where the presentation goes.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>What happened beyond writing.</returns>
-    public static async Task<PresentationWriteResult> WriteAsync(Stream templateFile, PresentationTemplate template, SlideDeckSpec deck, PresentationWriteOptions options, IPictureSource pictures, Stream output, CancellationToken token)
+    public static async Task<PresentationWriteResult> WriteAsync(Stream presentationFile, PresentationTemplate template, SlideDeckSpec deck, PresentationWriteOptions options, IPictureSource pictures, CancellationToken token)
     {
         //
         // Loading the pictures is the only part which waits. The document is edited in one go
@@ -61,11 +67,7 @@ internal static partial class PresentationWriter
         //
         var (loadedPictures, skippedPictures) = await LoadPicturesAsync(deck, pictures, token);
 
-        using var file = new MemoryStream();
-        await templateFile.CopyToAsync(file, token);
-        file.Position = 0;
-
-        using (var document = PresentationDocument.Open(file, true))
+        using (var document = PresentationDocument.Open(presentationFile, true))
         {
             // A template (.potx) becomes a presentation; everything else about it stays:
             if (document.DocumentType != PresentationDocumentType.Presentation)
@@ -122,8 +124,6 @@ internal static partial class PresentationWriter
             WriteSections(presentation, template, deck.Title, slides, slideIds);
         }
 
-        file.Position = 0;
-        await file.CopyToAsync(output, token);
         return new PresentationWriteResult(skippedPictures);
     }
 

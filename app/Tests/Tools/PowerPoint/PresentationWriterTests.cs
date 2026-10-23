@@ -268,7 +268,9 @@ public sealed class PresentationWriterTests
         templateFile.Position = 0;
 
         using var output = new MemoryStream();
-        await PresentationWriter.WriteAsync(templateFile, template, new SlideDeckSpec("Weekly", [Keep(1)]), OPTIONS with { VariantLabel = "B" }, new FakePictureSource(), output, CancellationToken.None);
+        await templateFile.CopyToAsync(output);
+        output.Position = 0;
+        await PresentationWriter.WriteAsync(output, template, new SlideDeckSpec("Weekly", [Keep(1)]), OPTIONS with { VariantLabel = "B" }, new FakePictureSource(), CancellationToken.None);
         output.Position = 0;
 
         using var document = PresentationDocument.Open(output, false);
@@ -636,8 +638,11 @@ public sealed class PresentationWriterTests
         var template = PresentationTemplate.Read(templateFile);
         templateFile.Position = 0;
 
+        // The writer edits a copy of the template, as the slide planner does with one on disk:
         var output = new MemoryStream();
-        var result = await PresentationWriter.WriteAsync(templateFile, template, deck, options, pictures ?? new FakePictureSource(), output, CancellationToken.None);
+        await templateFile.CopyToAsync(output);
+        output.Position = 0;
+        var result = await PresentationWriter.WriteAsync(output, template, deck, options, pictures ?? new FakePictureSource(), CancellationToken.None);
         output.Position = 0;
         return (output, result);
     }
