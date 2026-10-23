@@ -1,0 +1,19 @@
+namespace AIStudio.Assistants.SlideBuilder;
+
+/// <summary>
+/// The explanations which the Slide Planner Assistant and its settings dialog share, so that both say the same.
+/// </summary>
+public static class SlidePlannerTexts
+{
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(SlidePlannerTexts).Namespace, nameof(SlidePlannerTexts));
+
+    /// <summary>
+    /// What the LLM knows about the layouts of a template, and why their names matter.
+    /// </summary>
+    public static string WhatTheLLMKnowsOfLayouts => TB("The LLM does not see what your layouts look like. It knows only their names from the slide master of your template, where their placeholders sit, and how much text fits into them. Clear names such as “Chapter” or “Content with picture” therefore help it choose well; in PowerPoint, you rename a layout in the slide master view. Logo, background, and footer come with the layout. Layouts which differ only in their color count as one, and the color applies to the whole presentation.");
+
+    /// <summary>
+    /// What the choice of a layout for a kind of slide does, and what it does not.
+    /// </summary>
+    public static string WhatALayoutChoiceDoes => TB("Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Only for the framing slides, e.g., the table of contents or the imprint, does a choice also add such a slide; their help says so. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline.");
+}
