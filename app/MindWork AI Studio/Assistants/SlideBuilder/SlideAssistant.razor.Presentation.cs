@@ -424,7 +424,7 @@ public partial class SlideAssistant
     private string PromptBulletPoints()
     {
         var count = this.numberOfBulletPoints > 0
-            ? $"    - Every text slot holding a list has exactly {this.numberOfBulletPoints} main points, as far as its space allows."
+            ? $"    - A slide has at most {this.numberOfBulletPoints} main points, all its text slots together. Fewer are fine where the content needs fewer."
             : "    - Choose between 1 and 7 main points per text slot, as its space allows.";
 
         return $"""
@@ -442,7 +442,7 @@ public partial class SlideAssistant
         if (!SlideDeckSpec.TryParse(answer, out var deck, out var issue))
             return new CheckedAnswer(null, [issue]);
 
-        return new CheckedAnswer(deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, chosenTemplateSlideUses, chosenLayouts));
+        return new CheckedAnswer(deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, chosenTemplateSlideUses, chosenLayouts, this.numberOfBulletPoints));
     }
 
     private static string RepairPromptOf(IReadOnlyList<string> issues)

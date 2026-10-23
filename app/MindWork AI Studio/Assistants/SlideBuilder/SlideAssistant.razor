@@ -28,7 +28,7 @@
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Extent of the planned presentation")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @T("Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.")
+    @T("Please specify the extent of the planned presentation. This can be the number of slides, the maximum number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.")
 </MudJustifiedText>
 <MudGrid>
     <MudItem xs="4">
@@ -41,7 +41,7 @@
     
     <MudItem xs="4">
         <MudNumericField @bind-Value="@this.numberOfBulletPoints"
-                         Label="@T("Number of bullet points")"
+                         Label="@T("Maximum number of bullet points per slide")"
                          Variant="Variant.Outlined"
                          Min="0"
                          Max="7"

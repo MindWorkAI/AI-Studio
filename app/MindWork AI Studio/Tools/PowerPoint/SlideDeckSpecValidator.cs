@@ -40,8 +40,9 @@ internal static class SlideDeckSpecValidator
     /// <param name="expectedSlideCount">How many slides the user asked for, or 0 when the model may choose.</param>
     /// <param name="templateSlideUses">What the user chose for each slide of the template, by its number; null or empty when the deck uses no template slides.</param>
     /// <param name="chosenLayouts">The layouts the user chose for kinds of slides; null when the model decides every layout.</param>
+    /// <param name="maxMainPointsPerSlide">How many main points a slide may have at most, all its texts together, or 0 when the model may choose.</param>
     /// <returns>The issues, written for the model; empty when the deck fits.</returns>
-    public static IReadOnlyList<string> Validate(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, int expectedSlideCount, IReadOnlyList<TemplateSlideUse>? templateSlideUses = null, ChosenLayouts? chosenLayouts = null)
+    public static IReadOnlyList<string> Validate(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, int expectedSlideCount, IReadOnlyList<TemplateSlideUse>? templateSlideUses = null, ChosenLayouts? chosenLayouts = null, int maxMainPointsPerSlide = 0)
     {
         var uses = templateSlideUses ?? [];
         var chosen = chosenLayouts ?? ChosenLayouts.NONE;
@@ -59,10 +60,30 @@ internal static class SlideDeckSpecValidator
             issues.Add($"The presentation has {spec.Slides.Count} slides, but exactly {expectedSlideCount} were asked for.");
 
         for (var index = 0; index < spec.Slides.Count; index++)
+        {
             ValidateSlide(spec.Slides[index], index + 1, template, uses, chosen, pictureCount, issues);
+            ValidateMainPoints(spec.Slides[index], index + 1, maxMainPointsPerSlide, issues);
+        }
 
         ValidateTemplateSlides(spec, template, uses, issues);
         return issues;
+    }
+
+    /// <summary>
+    /// Checks that a slide has no more main points than the user asked for, all its texts together.
+    /// </summary>
+    /// <remarks>
+    /// Main points are the paragraphs on the top level; a sub-point belongs to its main point. A kept
+    /// template slide has no texts of its own, so it never has too many.
+    /// </remarks>
+    private static void ValidateMainPoints(SlideSpec slide, int number, int maxMainPoints, List<string> issues)
+    {
+        if (maxMainPoints <= 0)
+            return;
+
+        var mainPoints = slide.Texts.Sum(text => text.Paragraphs.Count(paragraph => paragraph.Level == 0));
+        if (mainPoints > maxMainPoints)
+            issues.Add($"Slide {number} has {mainPoints} main points, but at most {maxMainPoints} per slide were asked for, all its texts together. Merge or shorten them, or move some to another slide.");
     }
 
     /// <summary>

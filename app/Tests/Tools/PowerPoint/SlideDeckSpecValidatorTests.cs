@@ -297,6 +297,21 @@ public sealed class SlideDeckSpecValidatorTests
     }
 
     [Test]
+    public void ASlideHasNoMoreMainPointsThanAskedFor()
+    {
+        var points = Text("Close to Earth", "Has water ice");
+        var morePoints = new SlideTextBlock([new SlideParagraph("Has a day of 24.6 hours", 0), new SlideParagraph("Close to the day on Earth", 1)]);
+        var deck = new SlideDeckSpec("Mars", [Slide("L1", "Mars"), Slide("L4", "Why Mars", texts: [points, morePoints])]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0, maxMainPointsPerSlide: 3), Is.Empty, "A sub-point belongs to its main point.");
+            Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0, maxMainPointsPerSlide: 2), Has.Some.Contains("Slide 2 has 3 main points, but at most 2 per slide were asked for, all its texts together."), "The texts of a slide count together.");
+            Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0), Is.Empty, "Without a maximum, the model chooses.");
+        });
+    }
+
+    [Test]
     public void ATemplateSlideKeepsItsLayoutWhateverTheChoices()
     {
         var template = TemplateWithSlides();
