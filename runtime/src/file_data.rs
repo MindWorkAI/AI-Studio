@@ -1871,9 +1871,14 @@ fn document_metadata_to_markdown(metadata: &DocumentMetadata) -> Option<String> 
     }
     push_presentation_metadata_field(&mut fields, "Created", metadata.created_at.as_deref());
     push_presentation_metadata_field(&mut fields, "Modified", metadata.modified_at.as_deref());
-    for (name, value) in &metadata.custom {
-        fields.push(format!("Custom {name}: {}", sanitize_presentation_metadata_value(value)));
-    }
+
+    //
+    // The custom properties of the document are left out. Most of them are internal properties of
+    // document libraries such as SharePoint, e.g., content type and document ids, which tell the
+    // AI nothing and would only add noise to the first chunk, where the search finds them. A
+    // sensitivity label, which does matter, consists of several such properties and needs reading
+    // of its own.
+    //
     if fields.is_empty() { None } else { Some(format!("<!-- Document Metadata\n{}\n-->", fields.join("\n"))) }
 }
 
@@ -2150,5 +2155,24 @@ mod tests {
         let extracted = extract_text_file(content).await;
         assert_eq!(extracted.redacted_count, 0, "nothing should be filtered here: {:?}", extracted.rule_ids);
         assert_eq!(extracted.lines, content.lines().collect::<Vec<_>>());
+    }
+
+    /// The metadata comment in front of the first page keeps what tells the AI about the document,
+    /// but none of its custom properties: content type and document ids of a library such as
+    /// SharePoint would only add noise to the first chunk.
+    #[test]
+    fn the_custom_properties_of_a_document_stay_out_of_its_metadata() {
+        let metadata = DocumentMetadata {
+            title: Some("REST API".to_string()),
+            custom: std::collections::BTreeMap::from([
+                ("ContentTypeId".to_string(), "0x0101002586".to_string()),
+                ("Order".to_string(), "48800".to_string()),
+            ]),
+            ..DocumentMetadata::default()
+        };
+
+        let comment = document_metadata_to_markdown(&metadata).expect("the title makes a comment");
+        assert!(comment.contains("Title: REST API"), "got: {comment}");
+        assert!(!comment.contains("Custom") && !comment.contains("48800"), "got: {comment}");
     }
 }
