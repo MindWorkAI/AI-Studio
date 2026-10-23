@@ -73,7 +73,7 @@
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("Choose a PowerPoint presentation or template (.pptx, .potx) whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export.")
 </MudJustifiedText>
-<SelectFile File="@this.templatePath" FileChanged="@this.OnTemplateChanged" Label="@T("PowerPoint template")" FileDialogTitle="@T("Select a PowerPoint template")" Filter="@([FileTypes.POWER_POINT_TEMPLATE])" Validation="@this.ValidateTemplate" Disabled="@this.IsTemplateLocked"/>
+<SelectFile File="@this.templatePath" FileChanged="@this.OnTemplateChanged" Label="@T("PowerPoint template")" FileDialogTitle="@T("Select a PowerPoint template")" Filter="@([FileTypes.POWER_POINT_TEMPLATE])" Validation="@this.ValidateTemplate" Disabled="@this.IsTemplateLocked" EnableDragDrop="true"/>
 @if (this.IsLockedTemplateUnavailable)
 {
     <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@T("The PowerPoint template of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans an outline only.")</MudAlert>
