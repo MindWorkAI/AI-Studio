@@ -676,10 +676,15 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
+-- Configure defaults for the Slide Planner Assistant.
+-- Preselection must be enabled for the template and the footer text to take effect. It is
+-- enabled by default; lock it as well to make sure users cannot do without your template.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
+--
 -- Configure the PowerPoint template of the Slide Planner Assistant.
 -- The slides then use the layouts of this presentation or template (.pptx, .potx), and users
 -- can create a PowerPoint file from the result. Without a template, the assistant plans an
--- outline only. The template applies whether preselection is enabled or not.
+-- outline only.
 --
 -- The simplest way is to ship the template with this plugin: put the file next to this
 -- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The
@@ -694,10 +699,11 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "C:\\Templates\\Corporate.potx"
 --
 -- Configure the footer text for every slide whose layout has a footer, e.g., the name of
--- the organization. Leave it empty for no footer. Requires preselection to be enabled.
+-- the organization. Leave it empty for no footer.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
 --
 -- Allow users to choose another template or change the defaults locally.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
 

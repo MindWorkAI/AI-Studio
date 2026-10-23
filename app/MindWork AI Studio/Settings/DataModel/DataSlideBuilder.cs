@@ -22,9 +22,9 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     /// The PowerPoint presentation or template (.pptx, .potx) whose layouts the slides use.
     /// </summary>
     /// <remarks>
-    /// Empty for no template, which makes the assistant plan an outline only. Unlike the
-    /// preselections below, the template applies whether preselection is enabled or not: an
-    /// organization which provides its corporate template wants it used.
+    /// Empty for no template, which makes the assistant plan an outline only. Like the other
+    /// preselections, the template applies only while preselection is enabled: an organization
+    /// which wants its corporate template used for sure locks PreselectOptions as well.
     /// </remarks>
     public string TemplatePath { get; set; } = ManagedConfiguration.Register(configSelection, value => value.TemplatePath, string.Empty);
 
@@ -36,7 +36,7 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     /// <summary>
     /// Preselect any Slide Builder  options?
     /// </summary>
-    public bool PreselectOptions { get; set; } = true;
+    public bool PreselectOptions { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectOptions, true);
     
     /// <summary>
     /// Preselect a profile?

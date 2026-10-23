@@ -1197,6 +1197,14 @@ AI Studio stores the full path of the file inside the plugin directory. With `Al
 your template is preselected, and users may still choose another one; without it, the template is
 locked.
 
+Like the footer text, the template is one of the preselections of the Slide Planner, so it applies
+only while preselection is enabled, which it is by default. Users who switch preselection off start
+without your template. To make sure they cannot do without it, lock the preselection as well:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
+```
+
 The relative path must stay inside the plugin directory. AI Studio rejects `..` segments and links
 pointing out of that directory. A missing or rejected file is never fatal: AI Studio logs a warning
 and treats the template as if your plugin did not configure it. Users then keep the template they

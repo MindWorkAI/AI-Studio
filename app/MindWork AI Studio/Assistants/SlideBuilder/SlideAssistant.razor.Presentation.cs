@@ -90,7 +90,14 @@ public partial class SlideAssistant
     /// </summary>
     private PresentationTemplate Catalog => this.template ?? DEFAULT_CATALOG;
 
-    private bool IsTemplateLocked => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.TemplatePath, out var meta) && meta.IsLocked;
+    /// <summary>
+    /// Whether the organization dictates the template.
+    /// </summary>
+    /// <remarks>
+    /// The template is a preselection, so a lock binds only while preselection is enabled. Without
+    /// preselection, the assistant starts without a template, and the user may choose one.
+    /// </remarks>
+    private bool IsTemplateLocked => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions && ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.TemplatePath, out var meta) && meta.IsLocked;
 
     /// <summary>
     /// Whether the template of the organization is locked, but cannot be read right now, e.g.,

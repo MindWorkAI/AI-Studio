@@ -206,20 +206,17 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
             this.footerText = string.Empty;
+            this.templatePath = string.Empty;
+            this.LoadTemplate();
         }
     }
 
     protected override bool MightPreselectValues()
     {
-        //
-        // The template is no preselection: an organization which provides its corporate template
-        // wants it used, whether the user preselects anything else or not.
-        //
-        this.templatePath = this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath;
-        this.LoadTemplate();
-
         if (this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)
         {
+            this.templatePath = this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath;
+            this.LoadTemplate();
             this.footerText = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage;
