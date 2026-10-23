@@ -221,15 +221,28 @@ public partial class SlideAssistant
     /// </summary>
     private List<FileAttachment> PicturesOfRequest() => this.loadedDocumentPaths.Where(n => n is { Exists: true, IsImage: true }).ToList();
 
-    private string PromptPictures()
-    {
-        var pictures = this.PicturesOfRequest();
-        if (pictures.Count == 0)
-            return "    - No pictures are attached. Leave out \"pictures\" on every slide.";
+    private string PromptPictures() => this.PicturesOfRequest().Count == 0
+        ? "    - No pictures are attached. Leave out \"pictures\" on every slide."
+        : "    - PICTURES lists the attached pictures by their numbers. Where a picture supports the content, place it by its number on a slide with a picture slot, each picture at most once.";
 
-        var list = string.Join(Environment.NewLine, pictures.Select((picture, index) => $"    - Picture {index + 1}: {picture.FileName}"));
+    /// <summary>
+    /// The attached pictures by their numbers, for the user's request.
+    /// </summary>
+    /// <remarks>
+    /// The names are those of the user's files, so they go with the request, like the paths of the
+    /// attached documents, rather than into the system prompt.
+    /// </remarks>
+    /// <param name="pictures">The pictures taken at the start of the request, in the order the model numbers them.</param>
+    /// <returns>The section of the request; empty without pictures.</returns>
+    private static string PromptPictureList(IReadOnlyList<FileAttachment> pictures)
+    {
+        if (pictures.Count == 0)
+            return string.Empty;
+
+        var list = string.Join(Environment.NewLine, pictures.Select((picture, index) => $"- Picture {index + 1}: {picture.FileName}"));
         return $"""
-                    - The following pictures are attached. Where a picture supports the content, place it by its number on a slide with a picture slot, each picture at most once:
+
+                # PICTURES
                 {list}
                 """;
     }
@@ -283,6 +296,33 @@ public partial class SlideAssistant
         : string.Empty;
 
     /// <summary>
+    /// The layouts the model plans with, for the user's request.
+    /// </summary>
+    /// <remarks>
+    /// The catalog names the layouts as the author of the template named them. These names come from
+    /// a file, which may carry instructions of somebody else, so the catalog goes with the request
+    /// rather than into the system prompt, and the layouts of a template pass the prompt injection
+    /// filter like its slides. The layouts of a plain presentation come from the code.
+    /// </remarks>
+    /// <param name="guardService">The prompt injection filter.</param>
+    /// <param name="promptInjectionScope">The action of the request, which reports what the filter removed.</param>
+    /// <param name="catalog">The layouts taken at the start of the request.</param>
+    /// <param name="templatePath">The template the layouts were read from; empty for the layouts of a plain presentation.</param>
+    /// <returns>The section of the request.</returns>
+    private static async Task<string> PromptLayoutsAsync(PromptInjectionGuardService guardService, PromptInjectionReportingScope promptInjectionScope, PresentationTemplate catalog, string templatePath)
+    {
+        var layouts = catalog.ToCatalogPrompt();
+        if (templatePath.Length > 0)
+            layouts = await guardService.SanitizeAsync(layouts, PromptInjectionSource.FileContent(templatePath), promptInjectionScope);
+
+        return $"""
+
+                # LAYOUTS
+                {layouts}
+                """;
+    }
+
+    /// <summary>
     /// The slides of the template the user chose, with what they hold, for the user's request.
     /// </summary>
     /// <remarks>
@@ -291,14 +331,16 @@ public partial class SlideAssistant
     /// </remarks>
     /// <param name="guardService">The prompt injection filter.</param>
     /// <param name="promptInjectionScope">The action of the request, which reports what the filter removed.</param>
+    /// <param name="catalog">The layouts and slides taken at the start of the request.</param>
+    /// <param name="templatePath">The template they were read from; empty without a template.</param>
     /// <param name="templateSlideUses">What the user chose for each slide of the template.</param>
     /// <returns>The section of the request; empty when the user chose no slide.</returns>
-    private async Task<string> PromptTemplateSlidesAsync(PromptInjectionGuardService guardService, PromptInjectionReportingScope promptInjectionScope, IReadOnlyList<TemplateSlideUse> templateSlideUses)
+    private static async Task<string> PromptTemplateSlidesAsync(PromptInjectionGuardService guardService, PromptInjectionReportingScope promptInjectionScope, PresentationTemplate catalog, string templatePath, IReadOnlyList<TemplateSlideUse> templateSlideUses)
     {
-        if (this.template is not { } loadedTemplate || loadedTemplate.ToTemplateSlidesPrompt(templateSlideUses) is not { Length: > 0 } templateSlides)
+        if (templatePath.Length == 0 || catalog.ToTemplateSlidesPrompt(templateSlideUses) is not { Length: > 0 } templateSlides)
             return string.Empty;
 
-        var sanitizedTemplateSlides = await guardService.SanitizeAsync(templateSlides, PromptInjectionSource.FileContent(this.templatePath), promptInjectionScope);
+        var sanitizedTemplateSlides = await guardService.SanitizeAsync(templateSlides, PromptInjectionSource.FileContent(templatePath), promptInjectionScope);
         return $"""
 
                 # TEMPLATE_SLIDES

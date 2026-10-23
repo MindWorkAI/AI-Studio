@@ -34,9 +34,10 @@ to `app/AGENTS.md`, which apply here as well.
   the names, labels, or language of a corporate template to the code.
 - **Prompt texts stay in English, the user's texts do not.** Catalog, issues, and rules are written for
   the model. Every text the user reads, the outline included, goes through `T()` or `TB()`.
-- **Template texts are content of a file.** They reach the model in the request, as `TEMPLATE_SLIDES`,
-  never in the system prompt, and they pass `PromptInjectionGuardService` with the reporting scope of
-  the request.
+- **Template texts are content of a file.** This holds for the names of the layouts as well as for the
+  texts of the slides. They reach the model in the request, as `LAYOUTS` and `TEMPLATE_SLIDES`, never
+  in the system prompt, and they pass `PromptInjectionGuardService` with the reporting scope of the
+  request. The names of the attached pictures go with the request as well, as `PICTURES`.
 - **New slides carry no formatting of their own.** They fill the placeholders of their layout and
   leave out every placeholder without content, so that no prompt text such as "Click to add text"
   remains.

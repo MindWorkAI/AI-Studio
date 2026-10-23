@@ -40,7 +40,8 @@ internal sealed partial class PresentationTemplate
     /// The model never sees the slide in front of it, so the catalog says in words what a designer sees
     /// at a glance: where each slot sits, what a label belongs to, and how much text fits. The layout
     /// names stay as the template's author wrote them, since they often say what a layout is meant
-    /// for, in whatever language the template speaks.
+    /// for, in whatever language the template speaks. They come from the template file, so the caller
+    /// passes the catalog through the prompt injection filter.
     /// </remarks>
     /// <returns>The catalog, e.g., <c>- L3 "Inhalt/Content 1": title (up to 2 lines of about 48 characters); text 1 (full width, middle, up to 15 lines of about 85 characters)</c>.</returns>
     public string ToCatalogPrompt()

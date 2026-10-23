@@ -18,14 +18,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     protected override string SystemPrompt =>
         $$$"""
         You are a professional presentation editor and writer.
-        Plan a presentation from the user's inputs and describe it slide by slide as JSON, using the slide layouts listed below.
+        Plan a presentation from the user's inputs and describe it slide by slide as JSON, using the slide layouts LAYOUTS lists.
 
         # Presentation title:
             - IGNORE the language of the PRESENTATION_TITLE.
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
 
         # Content
-            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, and any attached documents that may provide additional context or source material (DOCUMENTS).
+            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, the layouts the slides use (LAYOUTS), and any attached documents (DOCUMENTS) or pictures (PICTURES) that may provide additional context or source material.
             - Base the slides on the provided source material: PRESENTATION_CONTENT, DOCUMENTS, and attached images.
             - If both PRESENTATION_CONTENT and attached source material are provided, use all of them, while prioritizing direct user instructions from PRESENTATION_CONTENT when resolving ambiguity.
             - If PRESENTATION_CONTENT is empty but attached source material is available, create the slides from the attached source material.
@@ -35,9 +35,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         {{{this.PromptImportantAspects()}}}
 
         # Layouts
-        Every slide uses one of these layouts. A layout offers slots, listed in reading order with their place on the slide and how much text fits:
-        {{{this.Catalog.ToCatalogPrompt()}}}
-
+        Every slide uses one of the layouts LAYOUTS lists. A layout offers slots, listed in reading order with their place on the slide and how much text fits.
             - Choose for each slide the layout whose slots suit its content, and vary the layouts where the content allows.
             - Fill only slots the layout offers, and stay within the stated lines and characters. Spread content over more slides rather than overfilling one.
             - A label is a short text, e.g., a heading above a text or the source below a picture.
@@ -533,16 +531,18 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
         //
         // One report for the whole request: reading twenty documents must produce one dialog
-        // listing all of them, not twenty dialogs in a row. The template slides come from a file
-        // as well, so they belong to the same report:
+        // listing all of them, not twenty dialogs in a row. The layouts and the slides of the
+        // template come from a file as well, so they belong to the same report:
         //
         string documentContent;
+        string layouts;
         string templateSlides;
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
         await using (var promptInjectionScope = guardService.BeginAction())
         {
             documentContent = await this.PromptLoadDocumentsContent(promptInjectionScope);
-            templateSlides = await this.PromptTemplateSlidesAsync(guardService, promptInjectionScope, templateSlideUses);
+            layouts = await PromptLayoutsAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath);
+            templateSlides = await PromptTemplateSlidesAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath, templateSlideUses);
         }
 
         var time = this.AddUserRequest(
@@ -559,6 +559,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
              ```
              
              {documentContent}
+             {layouts}
+             {PromptPictureList(imageAttachments)}
              {templateSlides}
          """,
         hideContentFromUser: true,
