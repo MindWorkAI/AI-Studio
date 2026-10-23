@@ -1,4 +1,5 @@
-﻿using AIStudio.Settings;
+﻿using AIStudio.Assistants.SlideBuilder;
+using AIStudio.Settings;
 using AIStudio.Tools.PowerPoint;
 
 using Microsoft.AspNetCore.Components;
@@ -20,16 +21,21 @@ public partial class SettingsDialogSlideBuilder : SettingsDialogBase
     private List<ConfigurationSelectData<string>> layoutOptions = [];
 
     /// <summary>
-    /// The template the layout options were read from; null before the first reading.
+    /// The preselected template, whose slides the dialog offers; null while none is preselected or it cannot be read.
     /// </summary>
-    private string? layoutOptionsTemplatePath;
+    private PresentationTemplate? template;
+
+    /// <summary>
+    /// The path the template and the layout options were read from; null before the first reading.
+    /// </summary>
+    private string? templatePathRead;
 
     #region Overrides of SettingsDialogBase
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        this.ReadLayoutOptions();
+        this.ReadTemplate();
         await base.OnInitializedAsync();
     }
 
@@ -38,7 +44,7 @@ public partial class SettingsDialogSlideBuilder : SettingsDialogBase
     {
         // The template may change in this dialog, or through a configuration plugin:
         if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
-            this.ReadLayoutOptions();
+            this.ReadTemplate();
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
@@ -46,23 +52,23 @@ public partial class SettingsDialogSlideBuilder : SettingsDialogBase
     #endregion
 
     /// <summary>
-    /// Reads the layouts of the preselected template, unless they were read from it already.
+    /// Reads the layouts and the slides of the preselected template, unless they were read from it already.
     /// </summary>
-    private void ReadLayoutOptions()
+    private void ReadTemplate()
     {
         var templatePath = this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath;
-        if (string.Equals(templatePath, this.layoutOptionsTemplatePath, StringComparison.Ordinal))
+        if (string.Equals(templatePath, this.templatePathRead, StringComparison.Ordinal))
             return;
 
-        this.layoutOptionsTemplatePath = templatePath;
+        this.templatePathRead = templatePath;
+        this.template = null;
         this.layoutOptions = [];
         if (string.IsNullOrWhiteSpace(templatePath) || !File.Exists(templatePath))
             return;
 
-        PresentationTemplate template;
         try
         {
-            template = PresentationTemplate.ReadFile(templatePath);
+            this.template = PresentationTemplate.ReadFile(templatePath);
         }
         catch (Exception e)
         {
@@ -70,7 +76,60 @@ public partial class SettingsDialogSlideBuilder : SettingsDialogBase
             return;
         }
 
-        this.layoutOptions = [new(LayoutPurposeExtensions.NoPreference, string.Empty), ..template.FamilyNames.Select(name => new ConfigurationSelectData<string>(name, name))];
+        this.layoutOptions = [new(LayoutPurposeExtensions.NoPreference, string.Empty), ..this.template.FamilyNames.Select(name => new ConfigurationSelectData<string>(name, name))];
+    }
+
+    /// <summary>
+    /// Preselects a template, and forgets what was preselected for the slides of the previous one.
+    /// </summary>
+    /// <remarks>
+    /// The choices number the slides of a template, so they mean nothing for another one. A lock of
+    /// the organization keeps them, though: its template and its choices belong together.
+    /// </remarks>
+    private void SetTemplatePath(string path)
+    {
+        var settings = this.SettingsManager.ConfigurationData.SlideBuilder;
+        if (string.Equals(settings.TemplatePath, path, StringComparison.Ordinal))
+            return;
+
+        settings.TemplatePath = path;
+        if (!AreTemplateSlideUsesLocked())
+            settings.PreselectedTemplateSlideUses = new();
+    }
+
+    private static bool AreTemplateSlideUsesLocked() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedTemplateSlideUses, out var meta) && meta.IsLocked;
+
+    /// <summary>
+    /// What the dialog offers for a slide of the template: editing only where the slide has placeholders for content.
+    /// </summary>
+    private static List<ConfigurationSelectData<TemplateSlideUse>> UseOptionsOf(TemplateSlide slide) => Enum.GetValues<TemplateSlideUse>()
+        .Where(use => use is not TemplateSlideUse.EDIT || slide.IsEditable)
+        .Select(use => new ConfigurationSelectData<TemplateSlideUse>(use.Name(), use))
+        .ToList();
+
+    /// <summary>
+    /// What is preselected for a slide of the template, as the assistant applies it.
+    /// </summary>
+    /// <returns>The use; a slide which is missing is left out, and one which cannot be edited is kept unchanged instead.</returns>
+    private TemplateSlideUse PreselectedUseOf(TemplateSlide slide) => this.template is null ? TemplateSlideUse.OMIT : this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTemplateSlideUses.ToTemplateSlideUses(this.template).UseOf(slide.Number);
+
+    /// <summary>
+    /// Preselects what the presentation does with a slide of the template.
+    /// </summary>
+    /// <remarks>
+    /// Leaving a slide out is the default, so it is stored as no entry. The dictionary is replaced
+    /// instead of changed, so that no other holder of it, such as the default of a configuration
+    /// plugin, changes along.
+    /// </remarks>
+    private void SetPreselectedUse(int number, TemplateSlideUse use)
+    {
+        var uses = new Dictionary<int, TemplateSlideUse>(this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTemplateSlideUses);
+        if (use is TemplateSlideUse.OMIT)
+            uses.Remove(number);
+        else
+            uses[number] = use;
+
+        this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTemplateSlideUses = uses;
     }
 
     /// <summary>

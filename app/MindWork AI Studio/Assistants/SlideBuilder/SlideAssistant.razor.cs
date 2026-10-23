@@ -229,6 +229,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         {
             this.templatePath = this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath;
             this.LoadTemplate();
+            this.ApplyPreselectedTemplateSlideUses();
             this.footerText = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText;
             this.layoutNames.Clear();
             foreach (var (purpose, layoutName) in this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedLayouts)

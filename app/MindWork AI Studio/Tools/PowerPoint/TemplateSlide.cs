@@ -25,6 +25,11 @@ namespace AIStudio.Tools.PowerPoint;
 internal sealed record TemplateSlide(int Number, Uri PartUri, Uri? LayoutPartUri, string? FamilyId, string Title, IReadOnlyList<TemplateSlideContent> Contents, IReadOnlyList<TemplateSlot> MovedSlots, IReadOnlyList<TemplateSlot> Slots, IReadOnlyList<TemplateSlotCopy> SlotCopies, IReadOnlyList<TemplateSlideElement> Elements, bool IsHidden)
 {
     /// <summary>
+    /// Whether the model can edit the slide, which takes a layout with room for content.
+    /// </summary>
+    public bool IsEditable => this.FamilyId is not null;
+
+    /// <summary>
     /// Finds an element of the slide by the name the model used for it.
     /// </summary>
     /// <param name="name">The name, e.g., "element 2"; a bare number is understood as well.</param>

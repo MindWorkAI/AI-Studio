@@ -29,11 +29,6 @@ public partial class SlideAssistant
     /// </remarks>
     private const int MAX_REPORTED_ISSUES = 12;
 
-    /// <summary>
-    /// How much of the title of a template slide its label in the form shows.
-    /// </summary>
-    private const int MAX_SLIDE_TITLE_CHARACTERS = 60;
-
     private string templatePath = string.Empty;
     private string footerText = string.Empty;
     private string? variantLabel;
@@ -116,6 +111,20 @@ public partial class SlideAssistant
     /// Like the template, the layouts are a preselection, so a lock binds only while preselection is enabled.
     /// </remarks>
     private bool AreLayoutsLocked => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions && ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked;
+
+    /// <summary>
+    /// Whether the organization locked what the presentation does with the slides of the template.
+    /// </summary>
+    /// <remarks>
+    /// The lock binds only for the preselected template, whose slides the choices number. For any
+    /// other template, the user chooses freely.
+    /// </remarks>
+    private bool AreTemplateSlideUsesLocked => this.IsPreselectedTemplate && ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedTemplateSlideUses, out var meta) && meta.IsLocked;
+
+    /// <summary>
+    /// Whether preselection is enabled and the chosen template is the preselected one.
+    /// </summary>
+    private bool IsPreselectedTemplate => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions && this.template is not null && string.Equals(this.templatePath, this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath, StringComparison.Ordinal);
 
     /// <summary>
     /// What the user chose for the slides of the template, as the model and the check of its answer see it; empty without a template.
@@ -203,6 +212,7 @@ public partial class SlideAssistant
         this.templatePath = path;
         this.templateSlideUses = [];
         this.LoadTemplate();
+        this.ApplyPreselectedTemplateSlideUses();
         if (this.Form is not null)
             await this.Form.Validate();
     }
@@ -217,6 +227,25 @@ public partial class SlideAssistant
     /// </remarks>
     private static List<TemplateSlideUse> DefaultTemplateSlideUsesOf(PresentationTemplate template) => Enumerable.Repeat(TemplateSlideUse.OMIT, template.Slides.Count).ToList();
 
+    /// <summary>
+    /// Applies what the settings preselect for the slides of the template, as long as it is the preselected template.
+    /// </summary>
+    /// <remarks>
+    /// The choices number the slides of the preselected template, so they mean nothing for another
+    /// one. A choice which the template cannot follow, e.g., for a slide it lost since, is logged.
+    /// </remarks>
+    private void ApplyPreselectedTemplateSlideUses()
+    {
+        if (!this.IsPreselectedTemplate || this.template is null)
+            return;
+
+        var choices = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTemplateSlideUses;
+        this.templateSlideUses = choices.ToTemplateSlideUses(this.template);
+        foreach (var (number, use) in choices)
+            if (this.templateSlideUses.UseOf(number) != use)
+                this.Logger.LogWarning("The PowerPoint template '{TemplatePath}' cannot follow the preselected use '{Use}' of its slide {Number}: it has no such slide, or the slide has no placeholders for content.", this.templatePath, use, number);
+    }
+
     private TemplateSlideUse TemplateSlideUseOf(int number) => this.templateSlideUses.UseOf(number);
 
     private void SetTemplateSlideUse(int number, TemplateSlideUse use)
@@ -227,7 +256,7 @@ public partial class SlideAssistant
 
     private string? ValidateTemplateSlideUse(TemplateSlide slide, TemplateSlideUse use)
     {
-        if (use is TemplateSlideUse.EDIT && slide.FamilyId is null)
+        if (use is TemplateSlideUse.EDIT && !slide.IsEditable)
             return T("The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out.");
 
         return null;
@@ -251,23 +280,6 @@ public partial class SlideAssistant
     /// The rules for the layouts the user chose; empty when the LLM decides every layout.
     /// </summary>
     private string PromptChosenLayouts() => this.ChosenLayoutsOfTemplate.ToPromptRules();
-
-    /// <summary>
-    /// How the form names a slide of the template: by its number and its title, and what is special about it.
-    /// </summary>
-    /// <remarks>
-    /// The title tells the slides apart at a glance, since a template rarely gives its slides more
-    /// than a title. A long one is cut, so that the label stays on one line.
-    /// </remarks>
-    private string TemplateSlideLabelOf(TemplateSlide slide)
-    {
-        var title = slide.Title.Length > MAX_SLIDE_TITLE_CHARACTERS ? $"{slide.Title[..MAX_SLIDE_TITLE_CHARACTERS].TrimEnd()}…" : slide.Title;
-        var label = title.Length > 0 ? string.Format(T("Slide {0}: {1}"), slide.Number, title) : string.Format(T("Slide {0}"), slide.Number);
-        if (slide.IsHidden)
-            label = $"{label} ({T("hidden")})";
-
-        return label;
-    }
 
     private async Task UseNoTemplate() => await this.OnTemplateChanged(string.Empty);
 

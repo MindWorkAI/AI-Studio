@@ -39,7 +39,7 @@
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
                 @SlidePlannerTexts.WhatTheLLMKnowsOfLayouts
             </MudJustifiedText>
-            <ConfigurationFile OptionDescription="@T("Preselect a PowerPoint template")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" Icon="@Icons.Material.Filled.Slideshow" Text="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath = updatedText)" FileDialogTitle="@T("Select a PowerPoint template")" Filter="@([FileTypes.POWER_POINT_TEMPLATE])" OptionHelp="@T("The slides use the layouts of this PowerPoint presentation or template (.pptx, .potx), and you can create a PowerPoint file (.pptx) from the result. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Leave it empty to plan an outline only.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.TemplatePath, out var meta) && meta.IsLocked"/>
+            <ConfigurationFile OptionDescription="@T("Preselect a PowerPoint template")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" Icon="@Icons.Material.Filled.Slideshow" Text="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath)" TextUpdate="@this.SetTemplatePath" FileDialogTitle="@T("Select a PowerPoint template")" Filter="@([FileTypes.POWER_POINT_TEMPLATE])" OptionHelp="@T("The slides use the layouts of this PowerPoint presentation or template (.pptx, .potx), and you can create a PowerPoint file (.pptx) from the result. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Leave it empty to plan an outline only.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.TemplatePath, out var meta) && meta.IsLocked"/>
             <ConfigurationText OptionDescription="@T("Preselect the footer text")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" Icon="@Icons.Material.Filled.ShortText" Text="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText = updatedText)" OptionHelp="@T("Shown on every slide whose layout has a footer, e.g., your name, organization, and date. Leave it empty for no footer.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedFooterText, out var meta) && meta.IsLocked"/>
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Layouts for kinds of slides")</MudText>
@@ -60,6 +60,29 @@
                         <ConfigurationSelect OptionDescription="@purpose.Label()" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedLayoutOf(purpose))" Data="@this.layoutOptions" SelectionUpdate="@(selectedValue => this.SetPreselectedLayout(purpose, selectedValue))" OptionHelp="@purpose.Help()" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked"/>
                     </ChoiceContent>
                 </LayoutChoicePanels>
+            }
+
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Slides of the template")</MudText>
+            <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+                @if (this.template is { Slides.Count: > 0 })
+                {
+                    @SlidePlannerTexts.WhatHappensToTemplateSlides
+                }
+                else if (this.template is not null)
+                {
+                    @T("The preselected template contains no slides besides its layouts.")
+                }
+                else
+                {
+                    @T("Preselect a readable template above to choose what the presentation does with its slides.")
+                }
+            </MudJustifiedText>
+            @if (this.template is { } loadedTemplate)
+            {
+                @foreach (var templateSlide in loadedTemplate.Slides)
+                {
+                    <ConfigurationSelect OptionDescription="@templateSlide.Label()" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedUseOf(templateSlide))" Data="@UseOptionsOf(templateSlide)" SelectionUpdate="@(selectedValue => this.SetPreselectedUse(templateSlide.Number, selectedValue))" IsLocked="@AreTemplateSlideUsesLocked"/>
+                }
             }
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("AI selection")</MudText>

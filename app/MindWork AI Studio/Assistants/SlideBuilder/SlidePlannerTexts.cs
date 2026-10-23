@@ -16,4 +16,9 @@ public static class SlidePlannerTexts
     /// What the choice of a layout for a kind of slide does, and what it does not.
     /// </summary>
     public static string WhatALayoutChoiceDoes => TB("Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Only for the framing slides, e.g., the table of contents or the imprint, does a choice also add such a slide; their help says so. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline.");
+
+    /// <summary>
+    /// What the presentation does with the slides a template carries besides its layouts.
+    /// </summary>
+    public static string WhatHappensToTemplateSlides => TB("Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template.");
 }
