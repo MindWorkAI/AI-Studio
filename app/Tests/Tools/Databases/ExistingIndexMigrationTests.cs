@@ -9,12 +9,13 @@ namespace AIStudio.Tests.Tools.Databases;
 /// Checks the migrations since ChunkEndPageNumber on an index which was built before them.
 /// </summary>
 /// <remarks>
-/// They add the hash of its text and its generation to every chunk, and the hash of its content to
-/// every file. An index somebody built before keeps all of its rows, and its full-text index keeps
-/// following them: the migrations add columns with raw SQL rather than rebuilding a table, which
-/// would drop the triggers behind the full-text index. A chunk stored before has no hash and is
-/// hashed from its text when it is needed, it is generation 0, and its file has no content hash
-/// until the file is read again. So nothing has to be filled in.
+/// They add the hash of its text and its generation to every chunk, and the hash of its content and
+/// the generation it is searched by to every file. An index somebody built before keeps all of its
+/// rows, and its full-text index keeps following them: the migrations add columns with raw SQL
+/// rather than rebuilding a table, which would drop the triggers behind the full-text index. A
+/// chunk stored before has no hash and is hashed from its text when it is needed, it is generation
+/// 0, and its file has no content hash until the file is read again. So nothing else has to be
+/// filled in.
 /// </remarks>
 [TestFixture]
 public sealed class ExistingIndexMigrationTests
@@ -62,8 +63,11 @@ public sealed class ExistingIndexMigrationTests
         var foundOldChunk = await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "quarterly", 10, TOKEN);
         var storedChunks = await store.Client.GetStoredChunksAsync(DATA_SOURCE_ID, PATH, TOKEN);
 
+        //
+        // Generation 0 as well, since the file is searched by it, and the search finds no other:
+        //
         const string NEW_TEXT = "An appendix lists the budget.";
-        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, FINGERPRINT, 1), parentFileId, null, null, 1, NEW_TEXT, DateTimeOffset.UtcNow, ChunkTextHash.Of(NEW_TEXT), 1)], TOKEN);
+        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, FINGERPRINT, 1), parentFileId, null, null, 1, NEW_TEXT, DateTimeOffset.UtcNow, ChunkTextHash.Of(NEW_TEXT))], TOKEN);
         var foundNewChunk = await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "budget", 10, TOKEN);
         List<(string? TextHash, int Generation)> storedColumns;
         await using (var context = store.CreateContext())
@@ -78,11 +82,58 @@ public sealed class ExistingIndexMigrationTests
         {
             Assert.That(manifest.Files[PATH].Fingerprint, Is.EqualTo(FINGERPRINT), "The file survives the migrations as it was.");
             Assert.That(manifest.Files[PATH].ContentHash, Is.Null, "A file indexed before has no content hash until it is read again.");
+            Assert.That(manifest.Files[PATH].Generation, Is.Zero, "Its chunks are generation 0, and so is the file.");
             Assert.That(foundOldChunk.Select(result => result.ChunkText), Is.EqualTo(new[] { OLD_TEXT }), "The chunk and its entry in the full-text index survive the migrations.");
             Assert.That(storedChunks, Is.EqualTo(new[] { new StoredChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, FINGERPRINT, 0), ChunkTextHash.Of(OLD_TEXT), 0) }), "A chunk stored before is hashed from its text, and it is generation 0.");
             Assert.That(foundNewChunk.Select(result => result.ChunkText), Is.EqualTo(new[] { NEW_TEXT }), "A chunk stored after the migrations reaches the full-text index.");
-            Assert.That(storedColumns, Is.EqualTo(new (string?, int)[] { (null, 0), (ChunkTextHash.Of(NEW_TEXT), 1) }), "The old chunk is left as it was, and a new one keeps its hash and its generation.");
+            Assert.That(storedColumns, Is.EqualTo(new (string?, int)[] { (null, 0), (ChunkTextHash.Of(NEW_TEXT), 0) }), "The old chunk is left as it was, and a new one keeps its hash.");
             Assert.That(foundAfterDeleting, Is.Empty, "Deleting the document removes its chunks from the full-text index.");
+        });
+    }
+
+    /// <remarks>
+    /// A file indexed again since chunks have generations, but before files named theirs, has
+    /// chunks of a later generation than 0. It starts with the highest of them, or its own chunks
+    /// would count as an attempt to discard. Afterwards, two generations may hold the same position.
+    /// </remarks>
+    [Test]
+    public async Task AFileStartsWithTheHighestGenerationOfItsChunks()
+    {
+        await using var store = await TemporaryIndexStore.CreateAsync("20261023000002_IndexedFileContentHash");
+        var parentFileId = IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, PATH);
+        var now = IndexStoreDateTimeOffset.ToUtcText(DateTimeOffset.UtcNow);
+
+        await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "LOCAL_DIRECTORY", "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "signature", string.Empty, 3, TOKEN);
+        await using (var context = store.CreateContext())
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                "INSERT INTO embedded_files (parent_file_id, data_source_id, absolute_path, file_name, relative_path, file_type, fingerprint, file_size, creation_utc, last_write_utc, embedded_at_utc, chunk_count) VALUES ({0}, {1}, {2}, 'report.md', 'report.md', 'md', {3}, 64, {4}, {4}, {4}, 1)",
+                parentFileId,
+                DATA_SOURCE_ID,
+                PATH,
+                FINGERPRINT,
+                now);
+
+            await context.Database.ExecuteSqlRawAsync(
+                "INSERT INTO embedding_chunks (chunk_id, parent_file_id, chunk_index, chunk_text, embedded_at_utc, text_hash, generation) VALUES ({0}, {1}, 0, {2}, {3}, {4}, 2)",
+                IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, IndexedDocumentIds.CreateChunkIdSource(DATA_SOURCE_ID, PATH, parentFileId, FINGERPRINT, 2), 0),
+                parentFileId,
+                OLD_TEXT,
+                now,
+                ChunkTextHash.Of(OLD_TEXT));
+        }
+
+        await store.MigrateAsync();
+
+        var manifest = await store.Client.GetManifestAsync(DATA_SOURCE_ID, TOKEN);
+        const string NEXT_TEXT = "The next version of the report.";
+        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, IndexedDocumentIds.CreateChunkIdSource(DATA_SOURCE_ID, PATH, parentFileId, FINGERPRINT, 3), 0), parentFileId, null, null, 0, NEXT_TEXT, DateTimeOffset.UtcNow, ChunkTextHash.Of(NEXT_TEXT), 3)], TOKEN);
+        var storedChunks = await store.Client.GetStoredChunksAsync(DATA_SOURCE_ID, PATH, TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(manifest.Files[PATH].Generation, Is.EqualTo(2));
+            Assert.That(storedChunks.Select(chunk => chunk.Generation), Is.EquivalentTo(new[] { 2, 3 }), "A new generation may hold the position of the stored one until it replaces it.");
         });
     }
 }

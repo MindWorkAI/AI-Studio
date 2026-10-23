@@ -113,6 +113,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("fingerprint");
 
+            entity.Property<int>("Generation")
+                .HasColumnType("INTEGER")
+                .HasColumnName("generation");
+
             entity.Property<DateTimeOffset>("LastWriteUtc")
                 .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
@@ -205,9 +209,9 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.HasIndex("ParentFileId")
                 .HasDatabaseName("idx_embedding_chunks_parent_file");
 
-            entity.HasIndex("ParentFileId", "ChunkIndex")
+            entity.HasIndex("ParentFileId", "Generation", "ChunkIndex")
                 .IsUnique()
-                .HasDatabaseName("idx_embedding_chunks_parent_file_chunk_index");
+                .HasDatabaseName("idx_embedding_chunks_parent_file_generation_chunk_index");
 
             entity.ToTable("embedding_chunks");
         });

@@ -1,3 +1,4 @@
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.VectorStore;
 
 namespace AIStudio.Tests.Tools;
@@ -21,6 +22,11 @@ internal sealed class RelocationVectorStore() : VectorStoreClient("Relocation te
     public int DeletedStores { get; private set; }
 
     public int DeletedDocuments { get; private set; }
+
+    /// <summary>
+    /// How often a failed attempt was discarded while the document kept its stored version.
+    /// </summary>
+    public int DiscardedAttempts { get; private set; }
 
     public int InsertedBatches { get; private set; }
 
@@ -58,6 +64,13 @@ internal sealed class RelocationVectorStore() : VectorStoreClient("Relocation te
 
     public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, IReadOnlyCollection<string> keepPointIds, CancellationToken token)
     {
+        // Only identities are kept here, so points to keep mean the document keeps its identity:
+        if (keepPointIds.Count > 0)
+        {
+            this.DiscardedAttempts++;
+            return Task.CompletedTask;
+        }
+
         this.DeletedDocuments++;
         foreach (var id in this.Locations.Where(entry => entry.Key == parentFileId || entry.Value == filePath).Select(entry => entry.Key).ToArray())
             this.Locations.Remove(id);
@@ -73,9 +86,9 @@ internal sealed class RelocationVectorStore() : VectorStoreClient("Relocation te
 
     public override Task OptimizeVectorStore(string storeName, CancellationToken token) => Task.CompletedTask;
 
-    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token) => throw new NotSupportedException();
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) => throw new NotSupportedException();
 
-    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token) => throw new NotSupportedException();
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) => throw new NotSupportedException();
 
     // Only the identities and locations are kept here, never a vector:
     public override Task<IReadOnlyList<StoredVector>> RetrieveVectorsAsync(string storeName, IReadOnlyList<string> pointIds, CancellationToken token) => Task.FromResult<IReadOnlyList<StoredVector>>([]);

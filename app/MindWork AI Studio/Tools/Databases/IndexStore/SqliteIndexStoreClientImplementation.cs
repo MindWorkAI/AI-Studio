@@ -152,7 +152,8 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                 file.TranscriptKey,
                 file.RelativePath,
                 file.ParentFileId,
-                file.ContentHash);
+                file.ContentHash,
+                file.Generation);
         }
 
         var permanentFailures = await context.PermanentIndexingFailures
@@ -363,6 +364,52 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         return storedChunks;
     }
 
+    public override async Task<IReadOnlyList<string>> GetChunkIdsAsync(string dataSourceId, string filePath, IReadOnlyCollection<int> generations, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var parentFileIds = context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId && file.AbsolutePath == filePath)
+            .Select(file => file.ParentFileId);
+
+        return await context.EmbeddingChunks
+            .Where(chunk => parentFileIds.Contains(chunk.ParentFileId) && generations.Contains(chunk.Generation))
+            .Select(chunk => chunk.ChunkId)
+            .ToListAsync(token);
+    }
+
+    public override async Task DeleteOtherGenerationsAsync(string dataSourceId, string filePath, IReadOnlyCollection<int> generations, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var parentFileIds = context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId && file.AbsolutePath == filePath)
+            .Select(file => file.ParentFileId);
+
+        await context.EmbeddingChunks
+            .Where(chunk => parentFileIds.Contains(chunk.ParentFileId) && !generations.Contains(chunk.Generation))
+            .ExecuteDeleteAsync(token);
+    }
+
+    public override async Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(string dataSourceId, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+
+        //
+        // Asked before every vector search. For a document without hidden chunks, which is nearly
+        // every document, this costs two lookups in the index over parent, generation and position:
+        // one below the generation of its row and one above it.
+        //
+        var documents = await context.EmbeddedFiles
+            .AsNoTracking()
+            .Where(file => file.DataSourceId == dataSourceId)
+            .Where(file => file.ChunkCount <= 0
+                || context.EmbeddingChunks.Any(chunk => chunk.ParentFileId == file.ParentFileId && chunk.Generation < file.Generation)
+                || context.EmbeddingChunks.Any(chunk => chunk.ParentFileId == file.ParentFileId && chunk.Generation > file.Generation))
+            .Select(file => new { file.ParentFileId, file.ChunkCount, file.Generation })
+            .ToListAsync(token);
+
+        return documents.Select(document => new HiddenChunks(document.ParentFileId, document.ChunkCount > 0 ? document.Generation : null)).ToList();
+    }
+
     public override async Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token)
     {
         if (maxMatches <= 0)
@@ -385,7 +432,9 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
     /// </summary>
     /// <remarks>
     /// Kept free of ORDER BY and LIMIT, so EF Core can wrap it and filter it further before either
-    /// of them applies, cf. InSearchOrder.
+    /// of them applies, cf. InSearchOrder.<br/><br/>
+    /// Only the generation the row of a document names can be found, and only once the row says it
+    /// is complete. These are the same chunks the vector search finds, cf. GetHiddenChunksAsync.
     /// </remarks>
     private static IQueryable<IndexStoreSearchResultEntity> MatchChunks(IndexStoreDbContext context, string dataSourceId, string ftsQuery) => context.SearchResults
         .FromSqlInterpolated($"""
@@ -414,6 +463,8 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                               JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
                               JOIN data_sources ds ON ds.data_source_id = f.data_source_id
                               WHERE ds.data_source_id = {dataSourceId}
+                                AND f.chunk_count > 0
+                                AND c.generation = f.generation
                                 AND embedding_chunks_fts MATCH {ftsQuery}
                               """)
         .AsNoTracking();
@@ -735,6 +786,7 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         fileEntity.ChunkCount = file.ChunkCount;
         fileEntity.TranscriptKey = file.TranscriptKey;
         fileEntity.ContentHash = file.ContentHash;
+        fileEntity.Generation = file.Generation;
     }
 
     private static void ApplyPermanentFailure(IndexingFailureEntity failureEntity, string dataSourceId, PermanentIndexingFailure failure)

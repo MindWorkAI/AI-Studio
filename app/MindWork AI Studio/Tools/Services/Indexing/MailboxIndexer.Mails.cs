@@ -98,10 +98,14 @@ internal sealed partial class MailboxIndexer
             document = this.CreateMailDocument(context, mailbox, summary, key, mailId, mailHash, displayName, foundAtUtc, text, attachments);
 
             var reportBlockProgress = progress.BeginDocument(document);
-            var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
-            await progress.RecordDocumentIndexedAsync(document, chunkCount, isNew, token);
+            var indexed = await context.IndexDocumentAsync(document, reportBlockProgress, token);
+            await progress.RecordDocumentIndexedAsync(document, indexed, isNew, token);
 
-            // Only after the last chunk: indexing the document deleted whatever the index kept of the mail.
+            //
+            // Only after the last chunk: a mail indexed for the first time gets its row with its
+            // first chunk, and the rows of the mail point at it. One indexed before keeps its rows,
+            // which are written anew here.
+            //
             await context.IndexStore.UpsertMailAsync(mailbox.Id, CreateMailRecord(mailId, summary, text, attachments, mailHash, location, foundAtUtc), token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)

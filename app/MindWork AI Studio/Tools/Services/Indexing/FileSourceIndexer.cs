@@ -253,13 +253,13 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 if (PersistentMediaTranscript.IsMediaPath(file.FullName))
                     document = this.CreateFileDocument(context, dataSource, file, fingerprint, await this.ReadOrCreateTranscriptAsync(dataSource, file.FullName, token), contentHash);
 
-                var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
+                var indexed = await context.IndexDocumentAsync(document, reportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
                 if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
                     throw new IOException(string.Format(TB("The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."), file.FullName));
 
-                await progress.RecordDocumentIndexedAsync(document, chunkCount, existingRecord is null, token);
+                await progress.RecordDocumentIndexedAsync(document, indexed, existingRecord is null, token);
 
                 // The recording changed, so its old transcript is no longer what it says:
                 if (existingRecord?.TranscriptKey is { } previousTranscriptKey && !string.Equals(previousTranscriptKey, document.State.TranscriptKey, StringComparison.Ordinal))
@@ -270,7 +270,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                     file.FullName,
                     dataSource.Name,
                     dataSource.Id,
-                    chunkCount,
+                    indexed.ChunkCount,
                     (DateTimeOffset.UtcNow - startedAtUtc).TotalMilliseconds);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -575,14 +575,16 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// <remarks>
     /// A file counts as settled when it was indexed or when it was skipped for good, both with a
     /// matching fingerprint. Counting only the indexed ones would let a single unreadable document
-    /// send the whole folder through the slow path on every run.
+    /// send the whole folder through the slow path on every run. A file which was indexed before
+    /// and then failed for good keeps its stored version, so it is in both lists: it counts once,
+    /// as settled by its failure.
     /// </remarks>
     private static bool CanSkipDataSourceByHash(DataSourceEmbeddingManifest manifest, DataSourceMetadataSnapshot metadataSnapshot, IReadOnlyCollection<FileInfo> indexedFiles)
     {
         if (!string.Equals(manifest.SourceHash, metadataSnapshot.SourceHash, StringComparison.Ordinal))
             return false;
 
-        if (manifest.Files.Count + manifest.PermanentFailures.Count != indexedFiles.Count)
+        if (manifest.Files.Keys.Union(manifest.PermanentFailures.Keys, DataSourceEmbeddingManifest.PATH_COMPARER).Count() != indexedFiles.Count)
             return false;
 
         foreach (var file in indexedFiles)
@@ -590,18 +592,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             if (!metadataSnapshot.FileHashes.TryGetValue(file.FullName, out var currentHash))
                 return false;
 
-            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord))
-            {
-                if (!string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal))
-                    return false;
-
-                continue;
-            }
-
-            if (!manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure))
-                return false;
-
-            if (!string.Equals(permanentFailure.Fingerprint, currentHash, StringComparison.Ordinal))
+            var isIndexed = manifest.Files.TryGetValue(file.FullName, out var existingRecord) && string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal);
+            var isUnreadable = manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) && string.Equals(permanentFailure.Fingerprint, currentHash, StringComparison.Ordinal);
+            if (!isIndexed && !isUnreadable)
                 return false;
         }
 

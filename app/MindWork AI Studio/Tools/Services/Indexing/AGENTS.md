@@ -18,13 +18,18 @@ The parts:
   write time, and once a fingerprint changed, the hash of the content (`FileContentHash`), so a file saved again
   without edits keeps its chunks without being read.
 - **`IndexedRunContext`** - one prepared run: both stores, the embedding provider, the manifest, the
-  collection, and the scope for reporting prompt injections. `IndexDocumentAsync` embeds and stores one
-  document; the cleanup methods remove what a failed attempt left behind. A chunk whose text the document had
-  stored before keeps its vector (`ReusableVectors`), found by the hash of exactly the text that goes to the
-  embedding provider (`ChunkTextHash`), so hash whatever is sent, and send whatever is stored. That is why the
-  old vectors of a document go only after all of its new chunks are stored. The new chunks belong to the next
-  generation, which is part of their ids (`IndexedDocumentIds.CreateChunkIdSource`), so they never overwrite an
-  old chunk, not even for a mail, whose fingerprint never changes.
+  collection, and the scope for reporting prompt injections. `IndexDocumentAsync` embeds one document into a
+  new generation, next to the version it had stored; `DocumentRunProgress.RecordDocumentIndexedAsync` completes
+  it (`CompleteDocumentAsync`), and `CleanupFailedDocumentAsync` sorts out a failed attempt. A document indexed
+  before keeps its stored version whatever the failure, so never remove its manifest entry on a failure. Once
+  the embedding provider fails, the attempt asks it nothing more and reads the rest of the document for the
+  chunks with a stored vector; a document with nothing stored stops at the failure, since none of its chunks
+  could take over a vector. Either way, the attempt stays next to the stored version, so the next one reuses
+  its vectors; one which stopped for any other reason goes. A document keeps two generations at most. A chunk whose text the document had stored before keeps its vector (`ReusableVectors`),
+  found by the hash of exactly the text that goes to the embedding provider (`ChunkTextHash`), so hash whatever
+  is sent, and send whatever is stored. The new chunks belong to the next generation, which is part of their
+  ids (`IndexedDocumentIds.CreateChunkIdSource`), so they never overwrite an old chunk, not even for a mail,
+  whose fingerprint never changes.
 - **`EmbeddingDocument`** - one document: its key, its index row, its display name, and how to read its chunks.
 - **`DocumentRunProgress`** - counts the documents, records indexed and failed ones in the stores, publishes the
   status, and completes or pauses the run.
@@ -69,6 +74,12 @@ Rules which are easy to break:
   index it is part of, so raise it only when every stored vector is wrong. A change to how documents are read, or
   to what is stored next to a chunk, raises neither. A new value which old chunks may lack without being wrong,
   such as the end page of a chunk, reads as unknown, and a chunk gains it once its document is indexed again.
+- **A search finds the generation the row of a document names, and nothing else.** A row whose chunk count is
+  zero names none yet. The keyword search joins on it (`SqliteIndexStoreClientImplementation.MatchChunks`), and
+  the vector search leaves out `IndexStoreClient.GetHiddenChunksAsync`, which the runtime matches against the
+  `generation` of every point. A new way to search the index, or to list chunks for a search, follows the same
+  rule, or it finds failed attempts and documents which are not complete. Remove a point from the vector store
+  before its chunk from the index store: a point the index store no longer knows cannot be hidden.
 - **The service decides when, the indexer decides how.** Whether changes are tracked at all depends on the
   automatic refresh setting and the startup hash check, and only the embedding service decides that.
 - **A pause stores the source hash only when a partial index may be searched.** A stored source hash tells the

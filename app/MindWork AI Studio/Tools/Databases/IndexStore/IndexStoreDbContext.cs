@@ -82,6 +82,7 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.Property(file => file.ChunkCount).HasColumnName("chunk_count");
             entity.Property(file => file.TranscriptKey).HasColumnName("transcript_key");
             entity.Property(file => file.ContentHash).HasColumnName("content_hash");
+            entity.Property(file => file.Generation).HasColumnName("generation");
 
             entity.HasIndex(file => file.DataSourceId).HasDatabaseName("idx_embedded_files_data_source");
             entity.HasIndex(file => file.AbsolutePath).HasDatabaseName("idx_embedded_files_absolute_path");
@@ -114,7 +115,7 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.HasIndex(chunk => chunk.ChunkId).HasDatabaseName("idx_embedding_chunks_chunk_id").IsUnique();
             entity.HasIndex(chunk => chunk.ParentFileId).HasDatabaseName("idx_embedding_chunks_parent_file");
             entity.HasIndex(chunk => chunk.PageNumber).HasDatabaseName("idx_embedding_chunks_page");
-            entity.HasIndex(chunk => new { chunk.ParentFileId, chunk.ChunkIndex }).HasDatabaseName("idx_embedding_chunks_parent_file_chunk_index").IsUnique();
+            entity.HasIndex(chunk => new { chunk.ParentFileId, chunk.Generation, chunk.ChunkIndex }).HasDatabaseName("idx_embedding_chunks_parent_file_generation_chunk_index").IsUnique();
         });
 
         modelBuilder.Entity<IndexingFailureEntity>(entity =>

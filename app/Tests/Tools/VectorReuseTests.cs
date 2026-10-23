@@ -2,6 +2,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tests.Tools.Databases;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
@@ -12,12 +13,14 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace AIStudio.Tests.Tools;
 
 /// <summary>
-/// Checks that a document read again keeps the vectors of its chunks whose text did not change.
+/// Checks what a document read again keeps: the vectors of its chunks whose text did not change,
+/// and its whole stored version until the new one is complete.
 /// </summary>
 /// <remarks>
 /// Every chunk sent to the embedding provider costs time, and at a cloud provider money. A file
 /// which was only touched, or changed near its end, yields the same texts as before for most of its
-/// chunks, and the vectors of those texts are already stored.
+/// chunks, and the vectors of those texts are already stored. An attempt which fails must not cost
+/// the document the version it had, nor make the next attempt embed it all again.
 /// </remarks>
 [TestFixture]
 public sealed class VectorReuseTests
@@ -25,6 +28,8 @@ public sealed class VectorReuseTests
     private const string DATA_SOURCE_ID = "6f1d6a4e-6a5e-4c62-9a4f-0f2d2c8b7a11";
     private const string EMBEDDING_ID = "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01";
     private const string PATH = "/tmp/test-data/handbook.md";
+
+    private static readonly string PARENT_ID = IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, PATH);
 
     [Test]
     public async Task AnUnchangedDocumentIsNotEmbeddedAgain()
@@ -91,13 +96,18 @@ public sealed class VectorReuseTests
         await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
         await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
         var thirdGeneration = await run.Store.Client.GetStoredChunksAsync(DATA_SOURCE_ID, PATH, CancellationToken.None);
+        var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
+        var hiddenChunks = await run.Store.Client.GetHiddenChunksAsync(DATA_SOURCE_ID, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
             Assert.That(firstGeneration.Select(chunk => chunk.Generation), Is.All.Zero, "A document stored for the first time gets the ids documents got before generations existed.");
-            Assert.That(thirdGeneration.Select(chunk => chunk.Generation), Is.All.EqualTo(2));
+            Assert.That(thirdGeneration.Select(chunk => chunk.Generation), Is.All.EqualTo(2), "Only the chunks of the last generation remain.");
             Assert.That(thirdGeneration.Select(chunk => chunk.TextHash), Is.EquivalentTo(new[] { ChunkTextHash.Of("Chapter one."), ChunkTextHash.Of("Chapter two.") }), "Every chunk stores the hash of its text.");
             Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(thirdGeneration.Select(chunk => chunk.ChunkId)), "Only the points of the last generation remain.");
+            Assert.That(run.Vectors.Points.Values.Select(point => point.Generation), Is.All.EqualTo(2), "Every point knows its generation, by which the vector search hides the others.");
+            Assert.That(manifest.Files[PATH].Generation, Is.EqualTo(2), "The row of the document names the generation it is searched by.");
+            Assert.That(hiddenChunks, Is.Empty, "A complete document has nothing to hide.");
         });
     }
 
@@ -123,46 +133,212 @@ public sealed class VectorReuseTests
     }
 
     /// <remarks>
-    /// The old vectors go only once every new chunk is stored, so a chunk late in the document can
-    /// still take over a vector.
+    /// The provider fails for the fourth chapter, and is asked nothing more for the document: once
+    /// the cause is fixed, a chunk boundary may move, and whatever the provider answered meanwhile
+    /// would be paid for nothing. The rest of the document is still read, so the attempt holds
+    /// every chunk it has a vector for, the chapters the provider embedded included. It stays next
+    /// to the stored version, which is still what every search finds, and the next attempt asks the
+    /// provider only for what is missing.
     /// </remarks>
     [Test]
-    public async Task TheOldVectorsStayUntilTheNewChunksAreStored()
+    public async Task AnAttemptWhichFailsAtTheProviderKeepsWhatItPaidForUntilTheNextOne()
     {
-        await using var run = await IndexRun.CreateAsync();
+        await using var run = await IndexRun.CreateAsync(embeddingBatchSize: 1);
         await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
-        var oldPointIds = run.Vectors.Points.Keys.ToList();
-        run.Provider.FailOn = "Chapter two, revised.";
+        run.Provider.EmbeddedTexts.Clear();
+        run.Provider.FailOn = "Chapter four.";
 
-        Assert.ThrowsAsync<InvalidOperationException>(() => run.IndexAsync("fingerprint-2", "Chapter one.", "Chapter two, revised."));
-        Assert.That(run.Vectors.Points.Keys, Is.SupersetOf(oldPointIds), "A run which fails half way has deleted none of the old vectors yet.");
+        var indexed = await run.IndexAsync("fingerprint-2", "Chapter one.", "Chapter two, revised.", "Chapter three.", "Chapter four.", "Chapter five.");
+
+        var embeddedByTheAttempt = run.Provider.EmbeddedTexts.ToList();
+        var chunksRead = run.ChunksRead;
+        var chunksAfterTheAttempt = await run.StoredChunksAsync();
+        var pointsAfterTheAttempt = run.Vectors.Points.Keys.ToList();
+        var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
+        var hiddenChunks = await run.Store.Client.GetHiddenChunksAsync(DATA_SOURCE_ID, CancellationToken.None);
+        var foundChapterOne = await run.SearchAsync("one");
+        var foundChapterThree = await run.SearchAsync("three");
+
+        run.Provider.FailOn = null;
+        run.Provider.EmbeddedTexts.Clear();
+        var indexedAgain = await run.IndexAsync("fingerprint-3", "Chapter one.", "Chapter two, revised.", "Chapter three.", "Chapter four.", "Chapter five.");
+        var chunksAtTheEnd = await run.StoredChunksAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(indexed, Is.False);
+            Assert.That(embeddedByTheAttempt, Is.EqualTo(new[] { "Chapter two, revised.", "Chapter three." }), "After the failure, the provider is not asked for the fifth chapter.");
+            Assert.That(chunksRead, Is.EqualTo(5), "The document is still read to its end, since a later chunk could have taken over a stored vector.");
+            Assert.That(chunksAfterTheAttempt.Where(chunk => chunk.Generation == 0).Select(chunk => chunk.TextHash), Is.EquivalentTo(new[] { "Chapter one.", "Chapter two." }.Select(ChunkTextHash.Of)), "The stored version stays.");
+            Assert.That(chunksAfterTheAttempt.Where(chunk => chunk.Generation == 1).Select(chunk => chunk.TextHash), Is.EquivalentTo(new[] { "Chapter one.", "Chapter two, revised.", "Chapter three." }.Select(ChunkTextHash.Of)), "The attempt keeps every chunk it has a vector for.");
+            Assert.That(pointsAfterTheAttempt, Is.EquivalentTo(chunksAfterTheAttempt.Select(chunk => chunk.ChunkId)), "The vector store keeps exactly the chunks the index keeps.");
+            Assert.That(manifest.Files[PATH].Fingerprint, Is.EqualTo("fingerprint-1"), "The document is still known in its stored version, and read again in the next pass.");
+            Assert.That(manifest.Files[PATH].Generation, Is.Zero);
+            Assert.That(hiddenChunks, Is.EqualTo(new[] { new HiddenChunks(PARENT_ID, 0) }), "The vector search leaves out every generation but the stored one.");
+            Assert.That(foundChapterOne, Is.EqualTo(new[] { "Chapter one." }), "The keyword search finds the first chapter once, in the stored version.");
+            Assert.That(foundChapterThree, Is.Empty, "The third chapter is only in the attempt.");
+            Assert.That(indexedAgain, Is.True);
+            Assert.That(run.Provider.EmbeddedTexts, Is.EqualTo(new[] { "Chapter four.", "Chapter five." }), "The next attempt asks the provider only for what is missing.");
+            Assert.That(chunksAtTheEnd.Select(chunk => chunk.Generation), Is.All.EqualTo(2));
+            Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(chunksAtTheEnd.Select(chunk => chunk.ChunkId)));
+        });
     }
 
     /// <remarks>
-    /// A run which was interrupted leaves points behind whose rows are gone. Once the document is
-    /// stored again, every point of it which the run did not write goes, those included.
+    /// Here the file cannot be read to its end, e.g., since another program locked it. What this
+    /// attempt stored goes. Whatever the document had stored before stays as it was: its stored
+    /// version, and an earlier attempt which got through, whose vectors the next one still needs.
     /// </remarks>
     [Test]
-    public async Task APointAnInterruptedRunLeftBehindGoes()
+    public async Task AnAttemptWhichStopsEarlyLeavesWhatWasStoredBefore()
+    {
+        await using var run = await IndexRun.CreateAsync(embeddingBatchSize: 1);
+        await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
+        run.Provider.FailOn = "Chapter three.";
+        await run.IndexAsync("fingerprint-2", "Chapter one.", "Chapter two, revised.", "Chapter three.");
+        var chunksBefore = await run.StoredChunksAsync();
+        run.Provider.FailOn = null;
+
+        var indexed = await run.IndexAsync("fingerprint-3", "Chapter one.", "Chapter two, revised again.", IndexRun.UNREADABLE);
+
+        var chunksAfterwards = await run.StoredChunksAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(indexed, Is.False);
+            Assert.That(chunksBefore.Select(chunk => chunk.Generation).Distinct(), Is.EquivalentTo(new[] { 0, 1 }), "The stored version, and the attempt which failed at the provider.");
+            Assert.That(chunksAfterwards, Is.EquivalentTo(chunksBefore), "Only what the attempt which stopped early stored goes.");
+            Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(chunksBefore.Select(chunk => chunk.ChunkId)));
+            Assert.That(run.Manifest.Files[PATH].Fingerprint, Is.EqualTo("fingerprint-1"));
+        });
+    }
+
+    /// <remarks>
+    /// A failure which lies in the document itself, here a document which yields no text, keeps the
+    /// stored version as well: a file broken by an edit may be fixed again. The failure is recorded,
+    /// so the file is not read again until it changes.
+    /// </remarks>
+    [Test]
+    public async Task APermanentFailureKeepsTheStoredVersion()
     {
         await using var run = await IndexRun.CreateAsync();
         await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
-        await run.Store.Client.DeleteFileAsync(DATA_SOURCE_ID, PATH, CancellationToken.None);
+        var storedPointIds = run.Vectors.Points.Keys.ToList();
 
-        await run.IndexAsync("fingerprint-2", "Chapter one.", "Chapter two.");
+        var indexed = await run.IndexAsync("fingerprint-2");
 
-        Assert.That(run.Vectors.Points.Values.Select(point => point.Fingerprint), Is.All.EqualTo("fingerprint-2"));
+        var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(indexed, Is.False);
+            Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(storedPointIds));
+            Assert.That(manifest.Files[PATH].Fingerprint, Is.EqualTo("fingerprint-1"), "The stored version can still be found.");
+            Assert.That(manifest.PermanentFailures[PATH].Fingerprint, Is.EqualTo("fingerprint-2"), "The broken version is not read again until it changes.");
+        });
+    }
+
+    /// <remarks>
+    /// A document indexed for the first time has no stored version, and none of its chunks could
+    /// take over a vector, so the attempt stops at the failure. What it got from the provider until
+    /// then stays for the next attempt, under a row whose chunk count stays zero, and no search
+    /// finds any of it until the document is complete.
+    /// </remarks>
+    [Test]
+    public async Task ANewDocumentKeepsWhatItPaidForWhenTheProviderFails()
+    {
+        await using var run = await IndexRun.CreateAsync(embeddingBatchSize: 1);
+        run.Provider.FailOn = "Chapter two.";
+
+        var indexed = await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.", "Chapter three.");
+
+        var chunksRead = run.ChunksRead;
+        var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
+        var storedChunks = await run.StoredChunksAsync();
+        var storedPoints = run.Vectors.Points.Keys.ToList();
+        var hiddenChunks = await run.Store.Client.GetHiddenChunksAsync(DATA_SOURCE_ID, CancellationToken.None);
+        var found = await run.SearchAsync("one");
+
+        run.Provider.FailOn = null;
+        run.Provider.EmbeddedTexts.Clear();
+        var indexedAgain = await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.", "Chapter three.");
+        var manifestAtTheEnd = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
+        var foundAtTheEnd = await run.SearchAsync("one");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(indexed, Is.False);
+            Assert.That(chunksRead, Is.EqualTo(2), "The third chapter is never read: nothing stored could spare the provider a chunk.");
+            Assert.That(manifest.Files, Is.Empty, "The document cannot be searched yet.");
+            Assert.That(manifest.UnfinishedFiles, Is.EquivalentTo(new[] { PATH }));
+            Assert.That(storedChunks.Select(chunk => chunk.TextHash), Is.EqualTo(new[] { ChunkTextHash.Of("Chapter one.") }), "The first chapter was embedded before the provider failed.");
+            Assert.That(storedPoints, Is.EquivalentTo(storedChunks.Select(chunk => chunk.ChunkId)));
+            Assert.That(hiddenChunks, Is.EqualTo(new[] { new HiddenChunks(PARENT_ID, null) }), "The vector search leaves out the whole document.");
+            Assert.That(found, Is.Empty, "So does the keyword search.");
+            Assert.That(indexedAgain, Is.True);
+            Assert.That(run.Provider.EmbeddedTexts, Is.EqualTo(new[] { "Chapter two.", "Chapter three." }), "The next attempt reuses the first chapter.");
+            Assert.That(manifestAtTheEnd.UnfinishedFiles, Is.Empty);
+            Assert.That(foundAtTheEnd, Is.EqualTo(new[] { "Chapter one." }));
+        });
+    }
+
+    /// <remarks>
+    /// The provider fails for the first chunk already, so the attempt has nothing to keep.
+    /// </remarks>
+    [Test]
+    public async Task ADocumentWhoseFirstIndexingFailsLeavesNothingBehind()
+    {
+        await using var run = await IndexRun.CreateAsync();
+        run.Provider.FailOn = "Chapter one.";
+
+        var indexed = await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
+
+        var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
+        var storedChunks = await run.Store.Client.GetStoredChunksAsync(DATA_SOURCE_ID, PATH, CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(indexed, Is.False);
+            Assert.That(run.Vectors.Points, Is.Empty, "There is no stored version to keep.");
+            Assert.That(storedChunks, Is.Empty);
+            Assert.That(manifest.Files, Is.Empty);
+            Assert.That(manifest.UnfinishedFiles, Is.Empty);
+        });
+    }
+
+    /// <remarks>
+    /// A run which was interrupted, e.g., since the app was closed, leaves a generation behind which
+    /// was never completed. The next run reuses its vectors as well, and once the document is
+    /// stored, everything of it but the last generation goes.
+    /// </remarks>
+    [Test]
+    public async Task WhatAnInterruptedRunLeftBehindIsReusedAndThenRemoved()
+    {
+        await using var run = await IndexRun.CreateAsync();
+        await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
+        await run.IndexAsync("fingerprint-2", record: false, "Chapter one.", "Chapter two, revised.");
+        run.Provider.EmbeddedTexts.Clear();
+
+        await run.IndexAsync("fingerprint-3", "Chapter one.", "Chapter two, revised.");
+
+        var storedChunks = await run.Store.Client.GetStoredChunksAsync(DATA_SOURCE_ID, PATH, CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(run.Provider.EmbeddedTexts, Is.Empty, "The interrupted run had embedded the revised chapter already.");
+            Assert.That(storedChunks.Select(chunk => chunk.Generation), Is.All.EqualTo(2));
+            Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(storedChunks.Select(chunk => chunk.ChunkId)));
+        });
     }
 
     /// <summary>
-    /// One data source with one document, indexed through IndexedRunContext as the app does it, into
-    /// a real index store and a vector store in memory.
+    /// One data source with one document, indexed through IndexedRunContext and recorded through
+    /// DocumentRunProgress as the indexers do it, into a real index store and a vector store in memory.
     /// </summary>
-    private sealed class IndexRun(TemporaryIndexStore store) : IAsyncDisposable
+    private sealed class IndexRun(TemporaryIndexStore store, int embeddingBatchSize) : IAsyncDisposable
     {
-        private readonly DataSourceEmbeddingManifest manifest = new();
+        /// <summary>
+        /// A chunk text at which the document cannot be read any further, as a file locked by another program.
+        /// </summary>
+        public const string UNREADABLE = "<unreadable>";
 
-        private readonly EmbeddingProvider embeddingProvider = new(1, EMBEDDING_ID, "Test embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-small", "text-embedding-3-small"));
+        private readonly EmbeddingProvider embeddingProvider = new EmbeddingProvider(1, EMBEDDING_ID, "Test embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-small", "text-embedding-3-small")) with { EmbeddingBatchSize = embeddingBatchSize };
 
         private readonly DataSourceLocalDirectory dataSource = new()
         {
@@ -177,23 +353,51 @@ public sealed class VectorReuseTests
 
         public TemporaryIndexStore Store => store;
 
+        public DataSourceEmbeddingManifest Manifest { get; } = new();
+
         public MemoryVectorStore Vectors { get; } = new();
 
         public CountingProvider Provider { get; } = new();
 
-        public static async Task<IndexRun> CreateAsync()
+        /// <summary>
+        /// How many chunks the last attempt read of the document.
+        /// </summary>
+        public int ChunksRead { get; private set; }
+
+        /// <param name="embeddingBatchSize">How many chunks go to the embedding provider at once. Zero for the default.</param>
+        public static async Task<IndexRun> CreateAsync(int embeddingBatchSize = 0)
         {
             var store = await TemporaryIndexStore.CreateAsync();
             await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "LOCAL_DIRECTORY", EMBEDDING_ID, "signature", string.Empty, 0, CancellationToken.None);
-            return new IndexRun(store);
+            return new IndexRun(store, embeddingBatchSize);
         }
 
         /// <summary>
-        /// Indexes the document with the given chunks, in place of whatever it had stored.
+        /// The chunks the document has stored now, of every generation.
+        /// </summary>
+        public Task<IReadOnlyList<StoredChunk>> StoredChunksAsync() => store.Client.GetStoredChunksAsync(DATA_SOURCE_ID, PATH, CancellationToken.None);
+
+        /// <summary>
+        /// Searches the keyword index of the data source.
+        /// </summary>
+        /// <param name="word">The word to search for.</param>
+        /// <returns>The texts of the chunks found.</returns>
+        public async Task<IReadOnlyList<string>> SearchAsync(string word) =>
+            (await store.Client.SearchChunksAsync(DATA_SOURCE_ID, word, 10, CancellationToken.None)).Select(result => result.ChunkText).ToList();
+
+        /// <summary>
+        /// Indexes the document with the given chunks, and records it as indexed or as failed.
         /// </summary>
         /// <param name="fingerprint">The fingerprint of the document, which its chunk ids derive from.</param>
         /// <param name="chunkTexts">The texts of its chunks.</param>
-        public async Task IndexAsync(string fingerprint, params string[] chunkTexts)
+        /// <returns>Whether the document was indexed.</returns>
+        public Task<bool> IndexAsync(string fingerprint, params string[] chunkTexts) => this.IndexAsync(fingerprint, true, chunkTexts);
+
+        /// <param name="fingerprint">The fingerprint of the document, which its chunk ids derive from.</param>
+        /// <param name="record">Whether the document is recorded at all. Without, the run ends after the chunks are stored, as if the app were closed.</param>
+        /// <param name="chunkTexts">The texts of its chunks.</param>
+        /// <returns>Whether the document was indexed.</returns>
+        public async Task<bool> IndexAsync(string fingerprint, bool record, params string[] chunkTexts)
         {
             var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
             var context = new IndexedRunContext(
@@ -202,7 +406,7 @@ public sealed class VectorReuseTests
                 this.Provider,
                 this.Vectors,
                 store.Client,
-                this.manifest,
+                this.Manifest,
                 new RunShare(RunShare.DEFAULT_DURATION),
                 new IndexingPass(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE", string.Empty)),
                 new PromptInjectionGuardService(null!, settingsManager, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance).BeginAction(),
@@ -210,23 +414,45 @@ public sealed class VectorReuseTests
                 _ => { },
                 NullLogger.Instance);
 
+            var progress = new DocumentRunProgress(context, 1, 0, string.Empty, [], NullLogger.Instance);
             var now = DateTimeOffset.UtcNow;
             var document = new EmbeddingDocument(
                 PATH,
                 new EmbeddingStateFile(IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, PATH), PATH, "handbook.md", "handbook.md", "md", fingerprint, 64, now, now, now, 0),
                 "handbook.md",
-                _ => Chunks(chunkTexts));
+                _ => this.Chunks(chunkTexts));
 
-            await context.IndexDocumentAsync(document, (_, _) => { }, CancellationToken.None);
+            this.ChunksRead = 0;
+            var isNew = !this.Manifest.Files.ContainsKey(PATH);
+            try
+            {
+                var indexed = await context.IndexDocumentAsync(document, (_, _) => { }, CancellationToken.None);
+                if (!record)
+                    return false;
+
+                await progress.RecordDocumentIndexedAsync(document, indexed, isNew, CancellationToken.None);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                await progress.RecordDocumentFailureAsync(document, exception, CancellationToken.None);
+                return false;
+            }
         }
 
         public ValueTask DisposeAsync() => store.DisposeAsync();
 
-        private static async IAsyncEnumerable<EmbeddingChunk> Chunks(IEnumerable<string> texts)
+        private async IAsyncEnumerable<EmbeddingChunk> Chunks(IEnumerable<string> texts)
         {
             await Task.CompletedTask;
             foreach (var text in texts)
+            {
+                if (text == UNREADABLE)
+                    throw new IOException("The file is locked by another program.");
+
+                this.ChunksRead++;
                 yield return new EmbeddingChunk(text, null, null);
+            }
         }
     }
 

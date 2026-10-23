@@ -103,9 +103,10 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
             }
 
             var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
+            var hiddenChunks = await this.GetHiddenChunksAsync(dataSource, token);
             var results = filter is null
-                ? await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, token)
-                : await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, filter, token);
+                ? await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, hiddenChunks, token)
+                : await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, filter, hiddenChunks, token);
 
             return this.LimitSearchResults(dataSource, "vector", results, maxMatches);
         }
@@ -279,6 +280,32 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// The chunks of a data source which its vector search must not find, cf. IndexStoreClient.GetHiddenChunksAsync.
+    /// </summary>
+    /// <remarks>
+    /// Without the index store, nothing is hidden. Its keyword search fails then as well, which the
+    /// retrieval reports, and a hidden chunk is still text of its document, only perhaps not the
+    /// version the document is searched by.
+    /// </remarks>
+    /// <param name="dataSource">The data source to search.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The hidden chunks, document by document.</returns>
+    private async Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(IIndexedDataSource dataSource, CancellationToken token)
+    {
+        var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
+        if (indexStore.IsAvailable)
+            return await indexStore.GetHiddenChunksAsync(dataSource.Id, token);
+
+        logger.LogWarning(
+            "Searching the vectors of data source '{DataSourceName}' ({DataSourceId}) without hiding incomplete generations, because local RAG index '{DatabaseName}' is unavailable.",
+            dataSource.Name,
+            dataSource.Id,
+            indexStore.Name);
+
+        return [];
     }
 
     private IReadOnlyList<T> LimitSearchResults<T>(IIndexedDataSource dataSource, string searchName, IReadOnlyList<T> results, int maxMatches)

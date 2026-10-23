@@ -144,19 +144,19 @@ public sealed class QdrantEdgeClientImplementation(
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, INSERT_PATH, new InsertEmbeddingRequest(storeName, points), token);
 
-    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token) =>
-        this.QueryEmbeddingAsync(storeName, vector, maxMatches, null, token);
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) =>
+        this.QueryEmbeddingAsync(storeName, vector, maxMatches, null, hiddenChunks, token);
 
-    public override async Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token)
+    public override async Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token)
     {
         if (maxMatches <= 0 || filter.MatchesNothing)
             return [];
 
-        var candidates = await this.QueryEmbeddingAsync(storeName, vector, filter.GetCandidateCount(maxMatches), filter.GetRequestPointIds(), token);
+        var candidates = await this.QueryEmbeddingAsync(storeName, vector, filter.GetCandidateCount(maxMatches), filter.GetRequestPointIds(), hiddenChunks, token);
         return filter.Apply(candidates, maxMatches);
     }
 
-    private async Task<IReadOnlyList<VectorSearchResult>> QueryEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<string>? pointIds, CancellationToken token)
+    private async Task<IReadOnlyList<VectorSearchResult>> QueryEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<string>? pointIds, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token)
     {
         if (maxMatches <= 0)
             return [];
@@ -164,7 +164,7 @@ public sealed class QdrantEdgeClientImplementation(
         return await rustService.ExecuteDatabaseQuery<SearchEmbeddingRequest, List<VectorSearchResult>>(
             DATABASE_NAME,
             SEARCH_PATH,
-            new SearchEmbeddingRequest(storeName, vector, maxMatches, pointIds),
+            new SearchEmbeddingRequest(storeName, vector, maxMatches, pointIds, hiddenChunks),
             token) ?? [];
     }
 
@@ -223,7 +223,7 @@ public sealed class QdrantEdgeClientImplementation(
     private sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
 
     /// <param name="PointIds">The only points the search may return, or null for the whole store.</param>
-    private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches, IReadOnlyList<string>? PointIds);
+    private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches, IReadOnlyList<string>? PointIds, IReadOnlyList<HiddenChunks> HiddenChunks);
 
     private sealed record RetrieveVectorsRequest(string StoreName, IReadOnlyList<string> PointIds);
 

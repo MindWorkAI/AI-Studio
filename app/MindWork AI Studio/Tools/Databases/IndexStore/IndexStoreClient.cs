@@ -55,6 +55,44 @@ public abstract partial class IndexStoreClient(string name, string path) : Datab
     /// <returns>The chunks, in no particular order.</returns>
     public abstract Task<IReadOnlyList<StoredChunk>> GetStoredChunksAsync(string dataSourceId, string filePath, CancellationToken token);
 
+    /// <summary>
+    /// The ids of the chunks of some generations of a document.
+    /// </summary>
+    /// <param name="dataSourceId">The data source the document belongs to.</param>
+    /// <param name="filePath">The key of the document, as DeleteFileAsync takes it.</param>
+    /// <param name="generations">The generations.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The chunk ids, in no particular order.</returns>
+    public abstract Task<IReadOnlyList<string>> GetChunkIdsAsync(string dataSourceId, string filePath, IReadOnlyCollection<int> generations, CancellationToken token);
+
+    /// <summary>
+    /// Removes the chunks of every generation of a document but the given ones.
+    /// </summary>
+    /// <remarks>
+    /// Keeping the new generation completes a document read again. Keeping the stored one, and an
+    /// attempt which failed but holds the vectors the document needs, makes room for the next attempt.
+    /// </remarks>
+    /// <param name="dataSourceId">The data source the document belongs to.</param>
+    /// <param name="filePath">The key of the document, as DeleteFileAsync takes it.</param>
+    /// <param name="generations">The generations which stay.</param>
+    /// <param name="token">The cancellation token.</param>
+    public abstract Task DeleteOtherGenerationsAsync(string dataSourceId, string filePath, IReadOnlyCollection<int> generations, CancellationToken token);
+
+    /// <summary>
+    /// The chunks of a data source which no search may find, document by document.
+    /// </summary>
+    /// <remarks>
+    /// A document is searched by the generation its row names, once its chunk count says that
+    /// generation is complete. Every other chunk of it is hidden: a generation which is still being
+    /// written, an attempt which failed and stays for the vectors of the next one, and all chunks of
+    /// a document whose first indexing is not complete. The keyword search applies the same rule
+    /// itself, cf. SearchChunksAsync. Only documents with such chunks are listed, which are few.
+    /// </remarks>
+    /// <param name="dataSourceId">The data source.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>One entry per document with hidden chunks, in no particular order.</returns>
+    public abstract Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(string dataSourceId, CancellationToken token);
+
     public abstract Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token);
 
     public abstract Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token);

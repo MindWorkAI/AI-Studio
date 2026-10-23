@@ -13,4 +13,5 @@ public sealed record EmbeddingStateFile(
     DateTimeOffset EmbeddedAtUtc,
     int ChunkCount,
     string? TranscriptKey = null,
-    string? ContentHash = null);
+    string? ContentHash = null,
+    int Generation = 0);

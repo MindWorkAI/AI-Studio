@@ -10,7 +10,7 @@ use qdrant_edge::external::serde_json::{json, Value};
 use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
     Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
-    FieldCondition, Filter, HasIdCondition, HnswIndexConfig, Match, MatchValue, NamedQuery,
+    FieldCondition, Filter, HasIdCondition, HnswIndexConfig, IsEmptyCondition, JsonPath, Match, MatchValue, NamedQuery,
     Payload, PayloadOps, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
     QueryRequest, RetrieveRequest, ScoredPoint, ScoringQuery, UpdateOperation, ValueVariants,
     VectorInternal, VectorStructInternal, SetPayloadOp, Vectors, WithPayloadInterface, WithVector,
@@ -92,6 +92,12 @@ pub struct QdrantEdgeStoragePoint {
     pub page_number: Option<i32>,
     pub end_page_number: Option<i32>,
     pub chunk_index: i32,
+
+    /// Which indexing of its document wrote the point. A search leaves out every generation of a
+    /// document but the one which can be searched, cf. `QdrantEdgeHiddenChunks`. A point written
+    /// before points had a generation has none in its payload and counts as generation 0.
+    #[serde(default)]
+    pub generation: i32,
     pub text: String,
     pub fingerprint: String,
     pub creation_utc: String,
@@ -126,6 +132,21 @@ pub struct SearchQdrantEdgeEmbeddingRequest {
     /// The only points the search may return. Missing means the whole store. An empty list means
     /// no point at all, so the search finds nothing -- it never falls back to the whole store.
     pub point_ids: Option<Vec<String>>,
+
+    /// The points of documents which the search must not return, e.g., what an indexing attempt
+    /// wrote before the document was complete. Missing means none.
+    #[serde(default)]
+    pub hidden_chunks: Vec<QdrantEdgeHiddenChunks>,
+}
+
+/// The points of one document which a search leaves out.
+#[derive(Deserialize)]
+pub struct QdrantEdgeHiddenChunks {
+    pub parent_file_id: String,
+
+    /// The generation of the document which can be searched, so every other one is left out.
+    /// Missing while the document has no complete generation yet, so every point of it is left out.
+    pub searchable_generation: Option<i32>,
 }
 
 #[derive(Deserialize)]
@@ -454,16 +475,25 @@ impl QdrantEdgeDatabase {
         Ok(())
     }
 
-    fn search_embedding(&mut self, store_name: &str, vector: Vec<f32>, max_matches: usize, point_ids: Option<Vec<String>>) -> QdrantEdgeResult<Vec<QdrantEdgeSearchResult>> {
+    fn search_embedding(&mut self, store_name: &str, vector: Vec<f32>, max_matches: usize, point_ids: Option<Vec<String>>, hidden_chunks: &[QdrantEdgeHiddenChunks]) -> QdrantEdgeResult<Vec<QdrantEdgeSearchResult>> {
         if max_matches == 0 {
             return Ok(vec![]);
         }
 
-        let filter = match point_ids {
+        let mut filter = match point_ids {
             None => None,
             Some(point_ids) if point_ids.is_empty() => return Ok(vec![]),
             Some(point_ids) => Some(point_id_filter(&point_ids)?),
         };
+
+        if !hidden_chunks.is_empty() {
+            let hidden = hidden_chunks
+                .iter()
+                .map(|document| hidden_chunks_filter(document).map(Condition::Filter))
+                .collect::<QdrantEdgeResult<Vec<_>>>()?;
+
+            filter.get_or_insert_with(Filter::default).must_not = Some(hidden);
+        }
 
         validate_vector_size(vector.len())?;
         let Some(shard) = self.get_existing_store(store_name)? else {
@@ -877,7 +907,7 @@ pub async fn insert_qdrant_edge_embedding(Json(request): Json<InsertQdrantEdgeEm
 
 pub async fn search_qdrant_edge_embeddings(Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeSearchResult>>> {
     run_qdrant_edge_request(move |database| {
-        database.search_embedding(&request.store_name, request.vector, request.max_matches, request.point_ids)
+        database.search_embedding(&request.store_name, request.vector, request.max_matches, request.point_ids, &request.hidden_chunks)
     }).await
 }
 
@@ -1337,6 +1367,7 @@ fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> QdrantEdgeResult<qdran
             "page_number": point.page_number,
             "end_page_number": point.end_page_number,
             "chunk_index": point.chunk_index,
+            "generation": point.generation,
             "text": point.text,
             "fingerprint": point.fingerprint,
             "creation_utc": point.creation_utc,
@@ -1431,6 +1462,33 @@ fn document_points_filter(field_name: &str, value: &str, keep_point_ids: &[Strin
             .collect::<QdrantEdgeResult<HasIdCondition>>()?;
 
         filter.must_not = Some(vec![Condition::HasId(keep)]);
+    }
+
+    Ok(filter)
+}
+
+/// The points of one document which a search leaves out, cf. `QdrantEdgeHiddenChunks`.
+///
+/// A point without a generation was written before points had one, and is generation 0. So for a
+/// document searched by generation 0, such a point stays searchable, and for any other generation,
+/// it is left out like every other generation.
+fn hidden_chunks_filter(document: &QdrantEdgeHiddenChunks) -> QdrantEdgeResult<Filter> {
+    let mut filter = match_keyword_filter("parent_file_id", &document.parent_file_id)?;
+    if let Some(generation) = document.searchable_generation {
+        let mut searchable = vec![Condition::Field(FieldCondition::new_match(
+            "generation".try_into().map_err(|_| "Invalid payload field name 'generation'.")?,
+            Match::Value(MatchValue {
+                value: ValueVariants::Integer(generation.into()),
+            }),
+        ))];
+
+        if generation == 0 {
+            searchable.push(Condition::IsEmpty(IsEmptyCondition::from(
+                JsonPath::try_from("generation").map_err(|_| "Invalid payload field name 'generation'.")?,
+            )));
+        }
+
+        filter.must_not = Some(searchable);
     }
 
     Ok(filter)
@@ -1588,7 +1646,7 @@ mod tests {
         let test_directory = test_directory("no-points");
         let mut database = store_with_one_point_per_axis(&test_directory);
 
-        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, Some(vec![])).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, Some(vec![]), &[]).unwrap();
 
         // An empty restriction comes from conditions which matched nothing. Searching the whole
         // store instead would answer with exactly what those conditions ruled out.
@@ -1603,17 +1661,87 @@ mod tests {
         let test_directory = test_directory("some-points");
         let mut database = store_with_one_point_per_axis(&test_directory);
 
-        let unrestricted = database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap();
+        let unrestricted = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
         assert_eq!(found_point_ids(&unrestricted), vec![POINT_X, POINT_Y, POINT_Z]);
 
         let restricted = database
-            .search_embedding(SEARCH_STORE, search_vector(), 10, Some(vec![POINT_Y.to_string(), POINT_Z.to_string()]))
+            .search_embedding(SEARCH_STORE, search_vector(), 10, Some(vec![POINT_Y.to_string(), POINT_Z.to_string()]), &[])
             .unwrap();
         assert_eq!(
             found_point_ids(&restricted),
             vec![POINT_Y, POINT_Z],
             "the closest point lies outside the restriction, so it must not be found"
         );
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// A document read again keeps its searchable generation until the new one is complete, and an
+    /// attempt which failed may stay next to it, so its vectors can be reused. Neither must be
+    /// found twice, nor a document whose first indexing is not complete.
+    #[test]
+    fn a_search_leaves_out_the_hidden_chunks_of_a_document() {
+        let test_directory = test_directory("hidden-chunks");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.ensure_store_exists(SEARCH_STORE, "Some source", 3).unwrap();
+
+        let mut stored = test_point(POINT_X, vec![1.0, 0.0, 0.0]);
+        stored.parent_file_id = "report".to_string();
+        let mut attempt = test_point(POINT_Y, vec![0.0, 1.0, 0.0]);
+        attempt.parent_file_id = "report".to_string();
+        attempt.generation = 1;
+        let mut other = test_point(POINT_Z, vec![0.0, 0.0, 1.0]);
+        other.parent_file_id = "notes".to_string();
+        database.insert_embedding(SEARCH_STORE, vec![stored, attempt, other]).unwrap();
+
+        let hidden = |parent_file_id: &str, searchable_generation: Option<i32>| QdrantEdgeHiddenChunks {
+            parent_file_id: parent_file_id.to_string(),
+            searchable_generation,
+        };
+
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[hidden("report", Some(0))]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Z], "the attempt is left out, the stored generation is found");
+
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[hidden("report", Some(1))]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_Y, POINT_Z], "once the attempt is the searchable generation, the one before is left out");
+
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[hidden("notes", None)]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y], "a document without a searchable generation is left out entirely");
+
+        let found = database
+            .search_embedding(SEARCH_STORE, search_vector(), 10, Some(vec![POINT_X.to_string(), POINT_Y.to_string()]), &[hidden("report", Some(0))])
+            .unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X], "hidden chunks stay hidden when the search is restricted to some points");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// Points written before points had a generation are generation 0 without saying so.
+    #[test]
+    fn a_point_without_a_generation_counts_as_generation_0() {
+        let test_directory = test_directory("no-generation");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let mut point = test_point(POINT_X, vec![1.0, 0.0, 0.0]);
+        point.parent_file_id = "report".to_string();
+        let mut point = to_qdrant_edge_point(point).unwrap();
+        point.payload.as_mut().unwrap().0.remove("generation");
+        let (shard, _) = database.get_or_create_store(SEARCH_STORE, 3).unwrap();
+        shard
+            .update(UpdateOperation::PointOperation(PointOperations::UpsertPoints(PointInsertOperations::PointsList(vec![point]))))
+            .unwrap();
+
+        let hidden = |searchable_generation: i32| [QdrantEdgeHiddenChunks {
+            parent_file_id: "report".to_string(),
+            searchable_generation: Some(searchable_generation),
+        }];
+
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &hidden(0)).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X], "the document is searched by the generation of its old points");
+
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &hidden(1)).unwrap();
+        assert!(found.is_empty(), "once the document is searched by another generation, its old points are left out");
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
@@ -1651,7 +1779,7 @@ mod tests {
         drop(database);
 
         let mut database = QdrantEdgeDatabase::new(test_directory.clone());
-        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].point_id, POINT_X);
         assert_eq!(found[0].parent_file_id, "original-parent");
@@ -1668,7 +1796,7 @@ mod tests {
         // SQLite may still know the old path when a relocation was interrupted. Its stable parent
         // id must be enough to remove the vectors if the document changed before the next retry.
         database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/notes.md", "original-parent", &[]).unwrap();
-        assert!(database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap().is_empty());
+        assert!(database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap().is_empty());
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
     }
@@ -1735,7 +1863,7 @@ mod tests {
         drop(database);
 
         let mut database = QdrantEdgeDatabase::new(test_directory.clone());
-        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None, &[]).unwrap();
 
         assert_eq!(closed_wal_segments(&store_path).len(), 1);
         assert_eq!(
@@ -1764,7 +1892,7 @@ mod tests {
         database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
 
         let found = database
-            .search_embedding(SEARCH_STORE, search_vector(), 1, Some(vec![newest_point_id.clone()]))
+            .search_embedding(SEARCH_STORE, search_vector(), 1, Some(vec![newest_point_id.clone()]), &[])
             .unwrap();
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].text, "Updated text.");
@@ -1788,7 +1916,7 @@ mod tests {
         updated_point.text = "Updated text.".to_string();
         database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
 
-        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None, &[]).unwrap();
         assert_eq!(
             found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
             point_ids.iter().map(String::as_str).collect::<HashSet<_>>()
@@ -1853,11 +1981,11 @@ mod tests {
         // The copy lies where the store lies below the data directory, and it is a complete store:
         let staging_path = PathBuf::from(&preparation.staging_path);
         let mut copy = QdrantEdgeDatabase::new(staging_path.join("databases").join("vector_database"));
-        let found = copy.search_embedding(SEARCH_STORE, search_vector(), 3, None).unwrap();
+        let found = copy.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
         assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
 
         // The copy unloaded the store, and the next request loads it again:
-        let found = database.search_embedding(SEARCH_STORE, search_vector(), 3, None).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
         assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
 
         drop(copy);
@@ -1907,7 +2035,7 @@ mod tests {
             drop(restored);
 
             let mut restored = QdrantEdgeDatabase::new(restored_base);
-            let found = restored.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None).unwrap();
+            let found = restored.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None, &[]).unwrap();
             assert_eq!(found.len(), 1);
             assert_eq!(found[0].point_id, POINT_X);
             assert_eq!(found[0].parent_file_id, "original-parent");
@@ -1917,7 +2045,7 @@ mod tests {
             assert_eq!(found[0].embedded_at_utc, "2026-10-01T12:00:00Z");
             assert!((found[0].score - 1.0).abs() < 0.0001);
 
-            let original = database.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None).unwrap();
+            let original = database.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None, &[]).unwrap();
             assert_eq!(original[0].file_path, old_path, "relocating a restored copy must not change the original store");
             drop(restored);
             drop(database);
@@ -2059,6 +2187,7 @@ mod tests {
             page_number: None,
             end_page_number: None,
             chunk_index: 0,
+            generation: 0,
             text: "Some text.".to_string(),
             fingerprint: String::new(),
             creation_utc: String::new(),

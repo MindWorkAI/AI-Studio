@@ -611,22 +611,27 @@ public sealed class DataSourceRelocationWorkflowTests
     }
 
     /// <remarks>
-    /// This fixture has no runtime, so reading a file fails, and the failure removes what the file
-    /// had in the index. That is how these tests see that a file was read.
+    /// This fixture has no runtime, so reading a file fails, and the failed attempt is discarded.
+    /// That is how these tests see that a file was read. The file keeps the version it had.
     /// </remarks>
     [Test]
     public async Task AFileWhoseContentChangedIsReadAgain()
     {
         await this.SeedLegacyIndexAsync(false, withContentHash: true);
-        await File.WriteAllTextAsync(Path.Combine(this.OriginalFolder, "notes.md"), "A changed report");
+        var changed = Path.Combine(this.OriginalFolder, "notes.md");
+        await File.WriteAllTextAsync(changed, "A changed report");
 
         await this.service.QueueDataSourceAsync(this.source);
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
 
+        await this.AssertOriginalChunksAsync();
+        var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
         Assert.Multiple(() =>
         {
-            Assert.That(this.vectors.DeletedDocuments, Is.EqualTo(1), "Only the changed file was read.");
+            Assert.That(this.vectors.DiscardedAttempts, Is.EqualTo(1), "Only the changed file was read.");
+            Assert.That(this.vectors.DeletedDocuments, Is.Zero, "A failed attempt keeps the version the file had.");
             Assert.That(this.vectors.RelocatedPaths, Is.Empty);
+            Assert.That(manifest.Files.Keys, Does.Contain(changed));
         });
     }
 
@@ -645,9 +650,11 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.service.QueueDataSourceAsync(this.source);
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
 
+        await this.AssertOriginalChunksAsync();
         Assert.Multiple(() =>
         {
-            Assert.That(this.vectors.DeletedDocuments, Is.EqualTo(1));
+            Assert.That(this.vectors.DiscardedAttempts, Is.EqualTo(1));
+            Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.RelocatedPaths, Is.Empty);
         });
     }

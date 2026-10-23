@@ -39,6 +39,17 @@ internal sealed class EmbeddingStateFileEntity
     /// </remarks>
     public string? ContentHash { get; set; }
 
+    /// <summary>
+    /// The generation of the chunks the document is searched by, cf. IndexedDocumentIds.CreateChunkIdSource.
+    /// </summary>
+    /// <remarks>
+    /// A document read again writes its chunks under the next generation, while the chunks of this
+    /// one stay. Only once all new chunks are stored does this switch to the new generation, and
+    /// the old chunks go. An attempt which fails leaves this as it was, and only its own chunks go,
+    /// so the document keeps the version it had.
+    /// </remarks>
+    public int Generation { get; set; }
+
     public EmbeddingStateDataSourceEntity? DataSource { get; set; }
 
     public List<EmbeddingStateChunkEntity> Chunks { get; set; } = [];

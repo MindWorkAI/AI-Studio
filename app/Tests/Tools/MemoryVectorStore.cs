@@ -1,3 +1,4 @@
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.VectorStore;
 
 namespace AIStudio.Tests.Tools;
@@ -58,9 +59,9 @@ internal sealed class MemoryVectorStore() : VectorStoreClient("Test vectors in m
 
     public override Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) => throw new NotSupportedException();
 
-    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token) => throw new NotSupportedException();
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) => throw new NotSupportedException();
 
-    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token) => throw new NotSupportedException();
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) => throw new NotSupportedException();
 
     public override Task<VectorStoreBackupPreparation> PrepareBackupAsync(CancellationToken token) => throw new NotSupportedException();
 

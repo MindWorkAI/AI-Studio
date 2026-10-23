@@ -35,9 +35,12 @@ public sealed partial class SqliteIndexStoreClientImplementation
     {
         await using var context = this.CreateContext();
         var mailIds = FilterMails(context, dataSourceId, filter).Select(mail => mail.ParentFileId);
+
+        // Only the chunks a search may find, cf. GetHiddenChunksAsync:
         return await context.EmbeddingChunks
             .AsNoTracking()
             .Where(chunk => mailIds.Contains(chunk.ParentFileId))
+            .Where(chunk => context.EmbeddedFiles.Any(file => file.ParentFileId == chunk.ParentFileId && file.ChunkCount > 0 && file.Generation == chunk.Generation))
             .Select(chunk => chunk.ChunkId)
             .ToListAsync(token);
     }

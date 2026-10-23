@@ -33,12 +33,18 @@ internal sealed class ReusableVectors
         // starts at generation 0, which gives the ids documents got before generations existed:
         //
         this.NextGeneration = storedChunks.Count is 0 ? 0 : storedChunks.Max(storedChunk => storedChunk.Generation) + 1;
+        this.StoredGenerations = storedChunks.Select(storedChunk => storedChunk.Generation).ToHashSet();
     }
 
     /// <summary>
     /// The generation of the chunks about to be written, cf. IndexedDocumentIds.CreateChunkIdSource.
     /// </summary>
     public int NextGeneration { get; }
+
+    /// <summary>
+    /// The generations the document has stored chunks of.
+    /// </summary>
+    public IReadOnlyCollection<int> StoredGenerations { get; }
 
     /// <summary>
     /// Reads which chunks a document has stored now, before anything of it is deleted.
