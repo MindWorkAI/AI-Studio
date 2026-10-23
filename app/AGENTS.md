@@ -136,6 +136,14 @@ active language plugin. Storage sizes are the exception: they keep using the byt
 **Area guide:** `app/MindWork AI Studio/Tools/Databases/AGENTS.md`, with both stores and what to keep in
 mind when working on them, EF Core migrations included.
 
+## Slide Planner and PowerPoint
+
+The Slide Planner Assistant plans slides for the layouts of a PowerPoint template and writes the
+presentation with the Open XML SDK (`DocumentFormat.OpenXml`), in `app/MindWork AI Studio/Tools/PowerPoint/`.
+
+**Area guide:** `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md`, with how a presentation comes about
+and the rules which are easy to break.
+
 ## Enterprise IT Support
 
 AI Studio supports centralized configuration for enterprise environments:

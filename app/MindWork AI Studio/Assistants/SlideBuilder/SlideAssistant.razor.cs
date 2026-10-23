@@ -2,6 +2,7 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.PowerPoint;
 using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.SlideBuilder;
@@ -12,50 +13,71 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     protected override string Title => T("Slide Planner Assistant");
     
-    protected override string Description => T("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.");
+    protected override string Description => T("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.");
     
     protected override string SystemPrompt =>
         $$$"""
         You are a professional presentation editor and writer.
-        Create a clear, single-slide outline from the user's inputs.
-        
+        Plan a presentation from the user's inputs and describe it slide by slide as JSON, using the slide layouts LAYOUTS lists.
+
         # Presentation title:
             - IGNORE the language of the PRESENTATION_TITLE.
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
-        
-        # Content
-            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, and any attached documents that may provide additional context or source material (DOCUMENTS).
-            
-        {{{this.GetDocumentTaskDescription()}}}
-        {{{this.PromptImportantAspects()}}}
-        
-        # Subheadings
-        - Rule for creating the individual subheadings:
-            - If {{{this.numberOfSheets}}} is NOT 0
-                - Generate exactly {{{this.numberOfSheets}}} precise subheadings, each heading represents one slide in a presentation.
-            - If {{{this.timeSpecification}}} is NOT 0
-                - Generate exactly {{{this.calculatedNumberOfSlides}}} precise subheadings, each heading represents one slide in a presentation.
-            - If either parameter is 0, ignore that rules.
-            - Each subheadings must have:
-                - A clear, concise, and thematically meaningful heading.
-                - Place *** on its own line immediately before each heading.
-            
-        # Bullet points (per subheading)
-            - You MUST generate exactly this {{{this.numberOfBulletPoints}}} many bullet points per subheading:
-                - If {{{this.numberOfBulletPoints}}} == 0 → choose a number between 1 and 7 (your choice, but max 7).
-            - Each bullet point must have:
-                - Each bullet point must be max 12 words.
-                - Clear and directly related to the subheading and summarizing the slide’s content.
 
-        # Output requirements:
-            - Output only Markdown.
-            - Start with a single H1 title that contains the user's PRESENTATION_TITLE.
-            - Then add headings with own bullet lists based on the provided source material: PRESENTATION_CONTENT, DOCUMENTS, and attached images.
+        # Content
+            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, the layouts the slides use (LAYOUTS), and any attached documents (DOCUMENTS) or pictures (PICTURES) that may provide additional context or source material.
+            - Base the slides on the provided source material: PRESENTATION_CONTENT, DOCUMENTS, and attached images.
             - If both PRESENTATION_CONTENT and attached source material are provided, use all of them, while prioritizing direct user instructions from PRESENTATION_CONTENT when resolving ambiguity.
             - If PRESENTATION_CONTENT is empty but attached source material is available, create the slides from the attached source material.
-            - If neither PRESENTATION_CONTENT nor any attached source material is available, output the title and one bullet: "No content provided."
+            - If neither PRESENTATION_CONTENT nor any attached source material is available, create a single slide with the title and the text "No content provided."
+
+        {{{this.GetDocumentTaskDescription()}}}
+        {{{this.PromptImportantAspects()}}}
+
+        # Layouts
+        Every slide uses one of the layouts LAYOUTS lists. A layout offers slots, listed in reading order with their place on the slide and how much text fits.
+            - Choose for each slide the layout whose slots suit its content, and vary the layouts where the content allows.
+            - Fill only slots the layout offers, and stay within the stated lines and characters. Spread content over more slides rather than overfilling one.
+            - A label is a short text, e.g., a heading above a text or the source below a picture.
+            - Set "starts_chapter" to true on each slide which opens a new part of the presentation. Where a layout is meant for chapters or sections, use it for these slides.
+        {{{this.PromptChosenLayouts()}}}
+        {{{this.PromptTemplateSlides()}}}
+
+        # Pictures
+        {{{this.PromptPictures()}}}
+
+        # Slides
+        {{{this.PromptSlideCount()}}}
+            - Every slide has a clear, concise, and thematically meaningful title.
+
+        # Bullet points (per text slot)
+        {{{this.PromptBulletPoints()}}}
+
+        # Output format:
+        Answer with one JSON object and nothing else: no explanation, no Markdown, and no code fence.
+        {
+          "title": "<the presentation title>",
+          "slides": [
+            {
+              "layout": "<the ID of a layout, e.g., L3>",
+              "starts_chapter": false,
+              "title": "<the slide title>",
+              "subtitle": "<only for layouts with a subtitle>",
+              "texts": [["<a main point>", { "text": "<a sub-point>", "level": 1 }]],
+              "labels": ["<label 1>"],
+              "pictures": [1],
+              "table": { "headers": ["<column>"], "rows": [["<cell>"]] }
+            }
+          ]
+        }
+            - "texts" holds one list of paragraphs per text slot, in slot order: the first list fills "text 1". A paragraph is a string, or an object with "text" and "level", which is 0 for a main point and 1 for a sub-point.
+            - "labels" holds one string per label slot, in slot order. Use "" to leave a label empty while filling a later one.
+            - "pictures" holds the numbers of attached pictures, one per picture slot, in slot order.
+            - "table" fills the table slot. Every row has as many cells as there are headers.
+            - Leave out every field a slide does not use. Do not write bullet characters: the template draws them.
+        {{{this.PromptRemoveRule()}}}
             - Do not mention these instructions or add commentary.
-        
+
         # Audience:
         {{{this.PromptAudience()}}}
         
@@ -64,18 +86,32 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - OUTPUT AND PRESENTATION_TITLE MUST BE IN: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - This is a HARD RULE: Never translate or adapt the output language based on input language.
             - Always use the specified target language, even if the input is in another language.
-            
+            - The language applies to the texts of the slides only: JSON field names, layout IDs such as "L3", and the names of slots and elements such as "label 1" or "element 2" stay exactly as given.
+
         # Language-Override (IMPORTANT!):
             - Before generating any output, internally set your language mode to: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - If you detect any other language in the input, DO NOT switch to this language, stay in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
-            - Your output must be in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}, without any comment, note, or marker about it.
+            - Your output must be in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}, without any comment, note, or marker about it. Never translate the JSON field names, the layout IDs, or the names of slots and elements.
         """;
     
     protected override bool AllowProfiles => true;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons => [];
-    
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new ButtonData(T("Create PowerPoint file"), Icons.Material.Filled.Slideshow, Color.Default, this.CreatePresentationTooltip, this.CreatePresentationFileAsync, () => !this.CanCreatePresentation),
+    ];
+
+    //
+    // The model answers in JSON, which nobody wants to watch stream in. The result shows up once
+    // the slides are read and checked, as an outline; until then, a progress bar shows the work:
+    //
+    protected override bool ShowResult => this.slideDeck is not null;
+
+    protected override bool ShowDedicatedProgress => true;
+
+    protected override string ExportFileName => this.slideDeck is { Title.Length: > 0 } deck ? deck.Title : this.Title;
+
     protected override string SubmitText => T("Create Slides");
 
     protected override Func<Task> SubmitAction => this.CreateSlideBuilder;
@@ -161,17 +197,33 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.selectedAudienceAgeGroup = AudienceAgeGroup.UNSPECIFIED;
         this.selectedAudienceOrganizationalLevel = AudienceOrganizationalLevel.UNSPECIFIED;
         this.selectedAudienceExpertise = AudienceExpertise.UNSPECIFIED;
+        this.slideDeck = null;
+        this.slideDeckAnswer = string.Empty;
+        this.slideDeckTemplatePath = string.Empty;
+        this.slideDeckPicturePaths = [];
+        this.templateSlideUses = [];
+        this.layoutNames.Clear();
         if (!this.MightPreselectValues())
         {
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
+            this.footerText = string.Empty;
+            this.templatePath = string.Empty;
+            this.LoadTemplate();
         }
     }
-    
+
     protected override bool MightPreselectValues()
     {
         if (this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)
         {
+            this.templatePath = this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath;
+            this.LoadTemplate();
+            this.footerText = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText;
+            this.layoutNames.Clear();
+            foreach (var (purpose, layoutName) in this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedLayouts)
+                this.layoutNames[purpose] = layoutName;
+
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage;
             this.selectedAudienceProfile = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceProfile;
@@ -196,7 +248,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private int numberOfSheets;
     private int numberOfBulletPoints;
     private int timeSpecification;
-    private int calculatedNumberOfSlides;
     private string importantAspects = string.Empty;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     private static readonly AssistantSessionStateKey<string> INPUT_TITLE_STATE_KEY = new(nameof(inputTitle));
@@ -210,7 +261,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private static readonly AssistantSessionStateKey<int> NUMBER_OF_SHEETS_STATE_KEY = new(nameof(numberOfSheets));
     private static readonly AssistantSessionStateKey<int> NUMBER_OF_BULLET_POINTS_STATE_KEY = new(nameof(numberOfBulletPoints));
     private static readonly AssistantSessionStateKey<int> TIME_SPECIFICATION_STATE_KEY = new(nameof(timeSpecification));
-    private static readonly AssistantSessionStateKey<int> CALCULATED_NUMBER_OF_SLIDES_STATE_KEY = new(nameof(calculatedNumberOfSlides));
     private static readonly AssistantSessionStateKey<string> IMPORTANT_ASPECTS_STATE_KEY = new(nameof(importantAspects));
     private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
 
@@ -228,9 +278,17 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(NUMBER_OF_SHEETS_STATE_KEY, this.numberOfSheets);
         state.Set(NUMBER_OF_BULLET_POINTS_STATE_KEY, this.numberOfBulletPoints);
         state.Set(TIME_SPECIFICATION_STATE_KEY, this.timeSpecification);
-        state.Set(CALCULATED_NUMBER_OF_SLIDES_STATE_KEY, this.calculatedNumberOfSlides);
         state.Set(IMPORTANT_ASPECTS_STATE_KEY, this.importantAspects);
         state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.Set(TEMPLATE_PATH_STATE_KEY, this.templatePath);
+        state.Set(FOOTER_TEXT_STATE_KEY, this.footerText);
+        state.Set(VARIANT_LABEL_STATE_KEY, this.variantLabel ?? string.Empty);
+        state.Set(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, this.advancedOptionsExpanded);
+        state.SetList(TEMPLATE_SLIDE_USES_STATE_KEY, this.templateSlideUses);
+        state.SetDictionary(LAYOUT_NAMES_STATE_KEY, this.layoutNames);
+        state.Set(SLIDE_DECK_ANSWER_STATE_KEY, this.slideDeckAnswer);
+        state.Set(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, this.slideDeckTemplatePath);
+        state.SetList(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
     }
 
     /// <inheritdoc />
@@ -247,9 +305,21 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(NUMBER_OF_SHEETS_STATE_KEY, value => this.numberOfSheets = value);
         state.Restore(NUMBER_OF_BULLET_POINTS_STATE_KEY, value => this.numberOfBulletPoints = value);
         state.Restore(TIME_SPECIFICATION_STATE_KEY, value => this.timeSpecification = value);
-        state.Restore(CALCULATED_NUMBER_OF_SLIDES_STATE_KEY, value => this.calculatedNumberOfSlides = value);
         state.Restore(IMPORTANT_ASPECTS_STATE_KEY, value => this.importantAspects = value);
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.Restore(TEMPLATE_PATH_STATE_KEY, value => this.templatePath = value);
+        state.Restore(FOOTER_TEXT_STATE_KEY, value => this.footerText = value);
+        state.Restore(VARIANT_LABEL_STATE_KEY, value => this.variantLabel = value.Length > 0 ? value : null);
+        state.Restore(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, value => this.advancedOptionsExpanded = value);
+        state.Restore(TEMPLATE_SLIDE_USES_STATE_KEY, value => this.templateSlideUses = value.ToList());
+        state.RestoreDictionary(LAYOUT_NAMES_STATE_KEY, this.layoutNames);
+        state.Restore(SLIDE_DECK_ANSWER_STATE_KEY, value => this.slideDeckAnswer = value);
+        state.Restore(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, value => this.slideDeckTemplatePath = value);
+        state.Restore(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, value => this.slideDeckPicturePaths = value);
+
+        // Neither the template nor the slides are kept themselves, only what they were read from:
+        this.LoadTemplate();
+        this.RestoreSlideDeck();
     }
 
     #region Overrides of ComponentBase
@@ -296,11 +366,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         return null;
     }
 
-    private int CalculateNumberOfSlides()
-    {
-        return this.calculatedNumberOfSlides = (int)Math.Round(this.timeSpecification / 1.5);
-    }
-    
     private string PromptImportantAspects()
     {
         if (string.IsNullOrWhiteSpace(this.importantAspects))
@@ -358,7 +423,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         };
     }
 
-    private async Task<string> PromptLoadDocumentsContent()
+    private async Task<string> PromptLoadDocumentsContent(PromptInjectionReportingScope promptInjectionScope)
     {
         if (this.loadedDocumentPaths.Count == 0)
             return string.Empty;
@@ -373,13 +438,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
                           """);
         }
-
-        //
-        // One report for the whole batch: reading twenty documents must produce one dialog
-        // listing all of them, not twenty dialogs in a row.
-        //
-        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await using var promptInjectionScope = guardService.BeginAction();
 
         var numDocuments = 1;
         foreach (var document in documents)
@@ -460,12 +518,38 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         await this.Form!.Validate();
         if (!this.InputIsValid)
             return;
-        
-        this.calculatedNumberOfSlides = this.timeSpecification > 0 ? this.CalculateNumberOfSlides() : 0;
-        
+
+        //
+        // The slides of an earlier run stay out of sight until this run has a result of its own.
+        // Catalog, template, and pictures are taken once, so that the prompt, the check, and the
+        // file later on all see the same layouts and the same numbering, even when the user
+        // chooses another template while the LLM is still planning:
+        //
+        this.slideDeck = null;
+        this.slideDeckAnswer = string.Empty;
+        var catalog = this.Catalog;
+        var plannedTemplatePath = this.template is null ? string.Empty : this.templatePath;
+        var chosenTemplateSlideUses = this.ChosenTemplateSlideUses;
+        var chosenLayouts = this.ChosenLayoutsOfTemplate;
+        var imageAttachments = this.PicturesOfRequest();
+
         this.CreateChatThread();
-        var documentContent = await this.PromptLoadDocumentsContent();
-        var imageAttachments = this.loadedDocumentPaths.Where(n => n is { Exists: true, IsImage: true }).ToList();
+
+        //
+        // One report for the whole request: reading twenty documents must produce one dialog
+        // listing all of them, not twenty dialogs in a row. The layouts and the slides of the
+        // template come from a file as well, so they belong to the same report:
+        //
+        string documentContent;
+        string layouts;
+        string templateSlides;
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using (var promptInjectionScope = guardService.BeginAction())
+        {
+            documentContent = await this.PromptLoadDocumentsContent(promptInjectionScope);
+            layouts = await PromptLayoutsAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath);
+            templateSlides = await PromptTemplateSlidesAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath, chosenTemplateSlideUses);
+        }
 
         var time = this.AddUserRequest(
         $"""
@@ -481,10 +565,60 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
              ```
              
              {documentContent}
+             {layouts}
+             {PromptPictureList(imageAttachments)}
+             {templateSlides}
          """,
         hideContentFromUser: true,
         imageAttachments);
 
-        await this.AddAIResponseAsync(time);
+        var answer = await this.AddAIResponseAsync(time, hideContentFromUser: true);
+
+        // The provider failed and the base class has said so already:
+        if (string.IsNullOrWhiteSpace(answer))
+            return;
+
+        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, chosenTemplateSlideUses, chosenLayouts);
+        if (deck is null || issues.Count > 0)
+        {
+            //
+            // One repair round in the same chat, so the model sees its own answer next to what is
+            // wrong with it. A repaired answer which cannot be read at all is worse than the first
+            // one, though, so it only replaces an answer it improves on:
+            //
+            var repairTime = this.AddUserRequest(RepairPromptOf(issues), hideContentFromUser: true);
+            var repairedAnswer = await this.AddAIResponseAsync(repairTime, hideContentFromUser: true);
+            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? new CheckedAnswer(null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, chosenTemplateSlideUses, chosenLayouts);
+            if (repairedDeck is not null)
+            {
+                answer = repairedAnswer;
+                deck = repairedDeck;
+                issues = repairedIssues;
+            }
+        }
+
+        //
+        // Slides on layouts the template does not have, or on template slides the user did not
+        // choose, cannot be shown, let alone written. Any other issue, such as a text which runs
+        // long, leaves slides worth looking at:
+        //
+        if (deck is null || deck.Slides.Count == 0 || deck.Slides.Any(slide => !SlideDeckSpecValidator.CanWrite(slide, catalog, chosenTemplateSlideUses)))
+        {
+            this.Logger.LogWarning("The slides the model planned cannot be used: {Issues}", string.Join(" | ", issues));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model.")));
+            return;
+        }
+
+        if (issues.Count > 0)
+        {
+            this.Logger.LogInformation("The slides the model planned still have issues after the repair round: {Issues}", string.Join(" | ", issues));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Slideshow, T("Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting.")));
+        }
+
+        this.slideDeck = deck;
+        this.slideDeckAnswer = answer;
+        this.slideDeckTemplatePath = plannedTemplatePath;
+        this.slideDeckPicturePaths = imageAttachments.Select(picture => picture.FilePath).ToList();
+        this.ShowOutline(deck, catalog, imageAttachments.Select(picture => picture.FileName).ToList());
     }
 }

@@ -1,14 +1,53 @@
-﻿using AIStudio.Assistants.SlideBuilder;
+﻿using System.Linq.Expressions;
+
+using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Provider;
+using AIStudio.Tools.PowerPoint;
 
 namespace AIStudio.Settings.DataModel;
 
-public class DataSlideBuilder
+/// <summary>
+/// Stores the settings of the Slide Planner Assistant.
+/// </summary>
+/// <param name="configSelection">The managed-configuration selector.</param>
+public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSelection = null)
 {
+    /// <summary>
+    /// Initializes an unmanaged Slide Planner settings instance.
+    /// </summary>
+    public DataSlideBuilder() : this(null)
+    {
+    }
+
+    /// <summary>
+    /// The PowerPoint presentation or template (.pptx, .potx) whose layouts the slides use.
+    /// </summary>
+    /// <remarks>
+    /// Empty for no template, which makes the assistant plan an outline only. Like the other
+    /// preselections, the template applies only while preselection is enabled: an organization
+    /// which wants its corporate template used for sure locks PreselectOptions as well.
+    /// </remarks>
+    public string TemplatePath { get; set; } = ManagedConfiguration.Register(configSelection, value => value.TemplatePath, string.Empty);
+
+    /// <summary>
+    /// Preselect the footer text of the slides?
+    /// </summary>
+    public string PreselectedFooterText { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedFooterText, string.Empty);
+
+    /// <summary>
+    /// Preselect the layouts for kinds of slides, i.e., the name of a layout of the template by kind of slide?
+    /// </summary>
+    /// <remarks>
+    /// A kind of slide which is missing has no preference, and the LLM decides. Names instead of IDs
+    /// keep the choices valid across sessions, computers, and versions of the template; a name which
+    /// the current template lacks counts as no preference.
+    /// </remarks>
+    public Dictionary<LayoutPurpose, string> PreselectedLayouts { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedLayouts, new Dictionary<LayoutPurpose, string>());
+
     /// <summary>
     /// Preselect any Slide Builder  options?
     /// </summary>
-    public bool PreselectOptions { get; set; } = true;
+    public bool PreselectOptions { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectOptions, true);
     
     /// <summary>
     /// Preselect a profile?

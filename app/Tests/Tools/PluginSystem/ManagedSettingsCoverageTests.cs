@@ -36,9 +36,23 @@ public sealed class ManagedSettingsCoverageTests
     /// </summary>
     /// <remarks>
     /// Free text accepts any value, and the settings which hold the ID of a provider or a profile
-    /// accept nothing but a GUID, so a GUID suits them all.
+    /// accept nothing but a GUID, so a GUID suits almost all of them. The others are listed in
+    /// SAMPLE_TEXTS_BY_SETTING.
     /// </remarks>
     private const string SAMPLE_TEXT = "e2f4bebe-1a3a-4f98-bbb9-e40e0b9daa14";
+
+    /// <summary>
+    /// The values configured for the settings holding a string which accept no GUID, by the name of the setting.
+    /// </summary>
+    /// <remarks>
+    /// A path relative to the plugin has to name a file the plugin ships, and the plugin of this test
+    /// ships none. An absolute path is taken as the organization wrote it, so it suits these settings.
+    /// Forward slashes keep the path free of escapes in Lua and work on every system.
+    /// </remarks>
+    private static readonly IReadOnlyDictionary<string, string> SAMPLE_TEXTS_BY_SETTING = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["DataSlideBuilder.TemplatePath"] = Path.Combine(Path.GetTempPath(), "Corporate.potx").Replace('\\', '/'),
+    };
 
     /// <summary>
     /// The registered settings this test does not expect a configuration plugin to manage, each with
@@ -179,7 +193,7 @@ public sealed class ManagedSettingsCoverageTests
             return "true";
 
         if (valueType == typeof(string))
-            return $"\"{SAMPLE_TEXT}\"";
+            return $"\"{SAMPLE_TEXTS_BY_SETTING.GetValueOrDefault(setting.SettingName, SAMPLE_TEXT)}\"";
 
         if (valueType.IsEnum)
             return $"\"{Enum.GetName(valueType, defaultValue!)}\"";

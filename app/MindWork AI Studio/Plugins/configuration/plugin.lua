@@ -676,6 +676,54 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
+-- Configure defaults for the Slide Planner Assistant.
+-- Preselection must be enabled for the template, the footer text, and the layouts to take
+-- effect. It is enabled by default; lock it as well to make sure users cannot do without your
+-- template.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
+--
+-- Configure the PowerPoint template of the Slide Planner Assistant.
+-- The slides then use the layouts of this presentation or template (.pptx, .potx), and users
+-- can create a PowerPoint file from the result. Without a template, the assistant plans an
+-- outline only.
+--
+-- The simplest way is to ship the template with this plugin: put the file next to this
+-- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The
+-- path must stay inside the plugin directory, i.e., no '..' segments and no links pointing
+-- out of it. When the file is missing or the path is rejected, AI Studio logs a warning, and
+-- this plugin does not manage the template: users keep the one they chose, or have none.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "Corporate.potx"
+--
+-- An absolute path works as well. It must be readable on every machine, e.g., on a network
+-- share or in a folder your software distribution fills; for Flatpak installations, it must
+-- be readable inside the sandbox.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "C:\\Templates\\Corporate.potx"
+--
+-- Configure the footer text for every slide whose layout has a footer, e.g., the name of
+-- the organization. Leave it empty for no footer.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
+--
+-- Configure the layout of your template for kinds of slides, e.g., which layout opens each
+-- chapter. Give the name of the layout as the slide master of your template shows it. A kind
+-- of slide you leave out has no preference, and the LLM decides; a name the template lacks
+-- counts as no preference as well.
+-- Allowed kinds of slides are: TITLE, AGENDA, CHAPTER, CONTENT, LITTLE_CONTENT, MUCH_CONTENT,
+--   MEDIA, COMPARISON, TIMELINE, PROCESS, HYPOTHESIS, RESEARCH_QUESTION, FEEDBACK, CODE,
+--   AUDIENCE_QUESTION, SUMMARY, CLOSING
+--
+-- Replaces, does not merge: the table applies as a whole, also with AllowUserOverride.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts"] = {
+--     ["TITLE"] = "Title Slide",
+--     ["CHAPTER"] = "Section Header",
+--     ["CONTENT"] = "Title and Content",
+-- }
+--
+-- Allow users to choose another template or change the defaults locally.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
+
 -- Configure defaults for the Batch Processing Assistant.
 -- Preselection must be enabled for the remaining batch settings to take effect.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectOptions"] = true
