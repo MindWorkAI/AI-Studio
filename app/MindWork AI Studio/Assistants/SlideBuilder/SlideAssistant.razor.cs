@@ -40,6 +40,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Fill only slots the layout offers, and stay within the stated lines and characters. Spread content over more slides rather than overfilling one.
             - A label is a short text, e.g., a heading above a text or the source below a picture.
             - Set "starts_chapter" to true on each slide which opens a new part of the presentation. Where a layout is meant for chapters or sections, use it for these slides.
+        {{{this.PromptChosenLayouts()}}}
         {{{this.PromptTemplateSlides()}}}
 
         # Pictures
@@ -201,6 +202,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeckTemplatePath = string.Empty;
         this.slideDeckPicturePaths = [];
         this.templateSlideUses = [];
+        this.layoutNames.Clear();
         if (!this.MightPreselectValues())
         {
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
@@ -279,6 +281,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(VARIANT_LABEL_STATE_KEY, this.variantLabel ?? string.Empty);
         state.Set(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, this.advancedOptionsExpanded);
         state.SetList(TEMPLATE_SLIDE_USES_STATE_KEY, this.templateSlideUses);
+        state.SetDictionary(LAYOUT_NAMES_STATE_KEY, this.layoutNames);
         state.Set(SLIDE_DECK_ANSWER_STATE_KEY, this.slideDeckAnswer);
         state.Set(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, this.slideDeckTemplatePath);
         state.SetList(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
@@ -305,6 +308,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(VARIANT_LABEL_STATE_KEY, value => this.variantLabel = value.Length > 0 ? value : null);
         state.Restore(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, value => this.advancedOptionsExpanded = value);
         state.Restore(TEMPLATE_SLIDE_USES_STATE_KEY, value => this.templateSlideUses = value.ToList());
+        state.RestoreDictionary(LAYOUT_NAMES_STATE_KEY, this.layoutNames);
         state.Restore(SLIDE_DECK_ANSWER_STATE_KEY, value => this.slideDeckAnswer = value);
         state.Restore(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, value => this.slideDeckTemplatePath = value);
         state.Restore(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, value => this.slideDeckPicturePaths = value);
@@ -522,6 +526,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         var catalog = this.Catalog;
         var plannedTemplatePath = this.template is null ? string.Empty : this.templatePath;
         var chosenTemplateSlideUses = this.ChosenTemplateSlideUses;
+        var chosenLayouts = this.ChosenLayoutsOfTemplate;
         var imageAttachments = this.PicturesOfRequest();
 
         this.CreateChatThread();
@@ -569,7 +574,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if (string.IsNullOrWhiteSpace(answer))
             return;
 
-        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, chosenTemplateSlideUses);
+        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, chosenTemplateSlideUses, chosenLayouts);
         if (deck is null || issues.Count > 0)
         {
             //
@@ -579,7 +584,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             //
             var repairTime = this.AddUserRequest(RepairPromptOf(issues), hideContentFromUser: true);
             var repairedAnswer = await this.AddAIResponseAsync(repairTime, hideContentFromUser: true);
-            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? new CheckedAnswer(null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, chosenTemplateSlideUses);
+            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? new CheckedAnswer(null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, chosenTemplateSlideUses, chosenLayouts);
             if (repairedDeck is not null)
             {
                 answer = repairedAnswer;

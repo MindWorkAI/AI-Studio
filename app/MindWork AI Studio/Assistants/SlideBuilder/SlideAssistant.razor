@@ -104,6 +104,21 @@
 
         <MudTextField T="string" @bind-Text="@this.footerText" Label="@T("(Optional) Footer")" HelperText="@T("Shown on every slide whose layout has a footer, e.g., your name, organization, and date.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ShortText" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
+        <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Layouts for kinds of slides")</MudText>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline.")
+        </MudJustifiedText>
+        @foreach (var purpose in Enum.GetValues<LayoutPurpose>())
+        {
+            <MudSelect T="string" Value="@this.LayoutNameOf(purpose)" ValueChanged="@(name => this.SetLayoutName(purpose, name))" Label="@purpose.Label()" HelperText="@purpose.Question()" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewQuilt" Class="mb-3">
+                <MudSelectItem T="string" Value="@string.Empty">@LayoutPurposeExtensions.NoPreference</MudSelectItem>
+                @foreach (var layoutName in LayoutNamesOf(loadedTemplate))
+                {
+                    <MudSelectItem T="string" Value="@layoutName">@layoutName</MudSelectItem>
+                }
+            </MudSelect>
+        }
+
         @if (loadedTemplate.Slides.Count > 0)
         {
             <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Slides of the template")</MudText>

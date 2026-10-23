@@ -52,6 +52,15 @@ public partial class SlideAssistant
     private List<TemplateSlideUse> templateSlideUses = [];
 
     /// <summary>
+    /// The name of the layout the user chose for each kind of slide; a kind left to the LLM is missing.
+    /// </summary>
+    /// <remarks>
+    /// Names stay when the user chooses another template, so that they apply again once a template
+    /// with these layouts is back. A name the current template does not have counts as no choice.
+    /// </remarks>
+    private readonly Dictionary<LayoutPurpose, string> layoutNames = new();
+
+    /// <summary>
     /// The answer the slide deck was read from, which the session keeps to restore the deck.
     /// </summary>
     private string slideDeckAnswer = string.Empty;
@@ -71,6 +80,7 @@ public partial class SlideAssistant
     private static readonly AssistantSessionStateKey<string> VARIANT_LABEL_STATE_KEY = new(nameof(variantLabel));
     private static readonly AssistantSessionStateKey<bool> ADVANCED_OPTIONS_EXPANDED_STATE_KEY = new(nameof(advancedOptionsExpanded));
     private static readonly AssistantSessionStateKey<List<TemplateSlideUse>> TEMPLATE_SLIDE_USES_STATE_KEY = new(nameof(templateSlideUses));
+    private static readonly AssistantSessionStateKey<Dictionary<LayoutPurpose, string>> LAYOUT_NAMES_STATE_KEY = new(nameof(layoutNames));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_ANSWER_STATE_KEY = new(nameof(slideDeckAnswer));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_TEMPLATE_PATH_STATE_KEY = new(nameof(slideDeckTemplatePath));
     private static readonly AssistantSessionStateKey<List<string>> SLIDE_DECK_PICTURE_PATHS_STATE_KEY = new(nameof(slideDeckPicturePaths));
@@ -105,6 +115,11 @@ public partial class SlideAssistant
     private IReadOnlyList<TemplateSlideUse> ChosenTemplateSlideUses => this.template is null ? [] : this.templateSlideUses.ToList();
 
     private bool HasChosenTemplateSlides => this.template is not null && this.templateSlideUses.Any(use => use is not TemplateSlideUse.OMIT);
+
+    /// <summary>
+    /// The layouts the user chose for kinds of slides, as the current template offers them; none without a template.
+    /// </summary>
+    private ChosenLayouts ChosenLayoutsOfTemplate => this.template is null ? ChosenLayouts.NONE : ChosenLayouts.Of(this.template, this.layoutNames);
 
     /// <summary>
     /// How many slides the user asked for, or 0 when the model may choose.
@@ -209,6 +224,30 @@ public partial class SlideAssistant
 
         return null;
     }
+
+    /// <summary>
+    /// The name of the layout chosen for a kind of slide, as the form shows it.
+    /// </summary>
+    /// <returns>The name, or empty when the LLM decides, which it also does when the template has no layout of this name.</returns>
+    private string LayoutNameOf(LayoutPurpose purpose) => this.template is not null && this.layoutNames.TryGetValue(purpose, out var name) && this.template.FindFamilyByName(name) is not null ? name : string.Empty;
+
+    private void SetLayoutName(LayoutPurpose purpose, string name)
+    {
+        if (name.Length == 0)
+            this.layoutNames.Remove(purpose);
+        else
+            this.layoutNames[purpose] = name;
+    }
+
+    /// <summary>
+    /// The names of the layouts the user may choose from, each one once, in the order of the template.
+    /// </summary>
+    private static IEnumerable<string> LayoutNamesOf(PresentationTemplate template) => template.Families.Select(family => family.Name).Distinct(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The rules for the layouts the user chose; empty when the LLM decides every layout.
+    /// </summary>
+    private string PromptChosenLayouts() => this.ChosenLayoutsOfTemplate.ToPromptRules();
 
     /// <summary>
     /// How the form names a slide of the template: by its number and its title, and what is special about it.
@@ -395,12 +434,12 @@ public partial class SlideAssistant
     /// Reads the slide deck out of an answer and checks it against the layouts it was planned for.
     /// </summary>
     /// <returns>The deck, or none when the answer cannot be read, with the issues, written for the model.</returns>
-    private CheckedAnswer CheckAnswer(string answer, PresentationTemplate catalog, int pictureCount, IReadOnlyList<TemplateSlideUse> chosenTemplateSlideUses)
+    private CheckedAnswer CheckAnswer(string answer, PresentationTemplate catalog, int pictureCount, IReadOnlyList<TemplateSlideUse> chosenTemplateSlideUses, ChosenLayouts chosenLayouts)
     {
         if (!SlideDeckSpec.TryParse(answer, out var deck, out var issue))
             return new CheckedAnswer(null, [issue]);
 
-        return new CheckedAnswer(deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, chosenTemplateSlideUses));
+        return new CheckedAnswer(deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, chosenTemplateSlideUses, chosenLayouts));
     }
 
     private static string RepairPromptOf(IReadOnlyList<string> issues)
