@@ -4,6 +4,7 @@ using System.Text;
 
 using AIStudio.Assistants.ERI;
 using AIStudio.Components;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
@@ -51,6 +52,11 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, ISecretId
     private bool IsConnectionEncrypted() => this.DataSource.Hostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
     
     private string Port => this.DataSource.Port == 0 ? string.Empty : $"{this.DataSource.Port}";
+
+    /// <summary>
+    /// The level which applies, including what the organization or the security policy demands.
+    /// </summary>
+    private string OutboundDataRestrictionName => this.DataSource.GetEffectiveOutboundDataRestriction(this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction).GetName();
 
     private async Task<(bool Success, DataSourceERI_V1 EffectiveDataSource)> CreateEffectiveDataSource()
     {

@@ -2251,9 +2251,9 @@ public partial class ChatComponent : MSGComponentBase
     /// its static definition: the one a request offers lists the data sources as well, which only
     /// the request asks for.
     ///
-    /// Read Web Page, Search Confluence, and Search Mails likewise count with their registered
-    /// instructions, which assume the default settings and a chat which holds no internal content,
-    /// and warn that internal content ends web search. A request words them after the actual settings, the chat,
+    /// Read Web Page, Search Confluence, Search Mails, and Semantic Search likewise count with their
+    /// registered instructions, which assume the default settings and a chat which holds no internal
+    /// content, and warn that internal content ends web search. A request words them after the actual settings, the chat,
     /// and the tools it offers, so the count comes out a few tokens off. One case it gets wrong as a
     /// whole: a chat restricted to the configured services only, with neither a wiki nor allowed
     /// private hosts configured, leaves Read Web Page nothing to offer, and only the request finds

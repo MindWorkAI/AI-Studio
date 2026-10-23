@@ -48,8 +48,8 @@ public enum ToolOfferBlockReason
     PROVIDER_CONFIDENCE_TOO_LOW,
 
     /// <summary>
-    /// The chat read from a mailbox, and the tool would send data further than the mailbox allows.
-    /// A new chat can use the tool again.
+    /// The chat holds internal content, such as mails or passages of a data source, and the tool
+    /// would send data further than their source allows. A new chat can use the tool again.
     /// </summary>
     OUTBOUND_DATA_RESTRICTED,
 }

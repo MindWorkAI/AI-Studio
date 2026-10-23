@@ -21,6 +21,10 @@ public sealed class ChatThreadOutboundDataRestrictionTests
     private const string PRIVATE_MAILBOX_ID = "5c9e2a7b-3f1d-4e8a-b6c4-2d7f9a1e3b5c";
     private const string WORK_MAILBOX_ID = "8d1f4b6a-2e9c-4a7d-9b3e-6c5a8f2d1e4b";
     private const string INTRANET_HOST = "intranet.example.org";
+    private const string DATA_SOURCE_ID = "3e8b1d6f-9a2c-4f7e-b5d1-6c4a9e2f8b17";
+
+    // A level of a newer version, or a number written into a file by hand:
+    private const OutboundDataRestriction UNKNOWN_RESTRICTION = (OutboundDataRestriction)5;
 
     [Test]
     public void AChatWhichReadNoMailboxDemandsNothing() =>
@@ -88,7 +92,49 @@ public sealed class ChatThreadOutboundDataRestrictionTests
         thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE_MAILBOX_ID));
         thread.RequireOutboundDataRestriction(OutboundDataRequirement.NONE);
 
-        Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE_MAILBOX_ID)), "A search of the local files, say, says nothing about mailboxes and must leave the chat as it was.");
+        Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE_MAILBOX_ID)), "A search which found nothing, say, brought nothing in and must leave the chat as it was.");
+    }
+
+    [TestCase(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES)]
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT)]
+    [TestCase(OutboundDataRestriction.UNRESTRICTED)]
+    public void ARestrictionThisVersionDoesNotKnowCountsAsTheStrictest(OutboundDataRestriction known)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(UNKNOWN_RESTRICTION.StricterOf(known), Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
+            Assert.That(known.StricterOf(UNKNOWN_RESTRICTION), Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
+            Assert.That(UNKNOWN_RESTRICTION.StricterOf(UNKNOWN_RESTRICTION), Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
+        });
+    }
+
+    [Test]
+    public void ARequirementThisVersionDoesNotKnowTightensTheChat()
+    {
+        var thread = new ChatThread();
+        thread.RequireOutboundDataRestriction(new(UNKNOWN_RESTRICTION, OutboundDataOrigin.MAILBOX, PRIVATE_MAILBOX_ID));
+
+        Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE_MAILBOX_ID)));
+    }
+
+    [TestCase(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES)]
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT)]
+    [TestCase(OutboundDataRestriction.UNRESTRICTED)]
+    public void AChatSavedWithARestrictionThisVersionDoesNotKnowStaysStrict(OutboundDataRestriction arriving)
+    {
+        const string CHAT_WITH_UNKNOWN_RESTRICTION = $$"""
+                                                     {
+                                                       "chat_id": "7a2d5f9c-1e4b-4c8a-b3f6-9d2e5a1c7b84",
+                                                       "name": "A chat of a newer version",
+                                                       "blocks": [],
+                                                       "required_outbound_data_restriction": { "restriction": 5, "origin": "MAILBOX", "reference": "{{WORK_MAILBOX_ID}}" }
+                                                     }
+                                                     """;
+
+        var loaded = JsonSerializer.Deserialize<ChatThread>(CHAT_WITH_UNKNOWN_RESTRICTION, WorkspaceBehaviour.JSON_OPTIONS)!;
+        loaded.RequireOutboundDataRestriction(new(arriving, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty));
+
+        Assert.That(loaded.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, WORK_MAILBOX_ID)), "Content read later must neither loosen the chat nor take over the name of the source.");
     }
 
     [Test]
@@ -104,6 +150,7 @@ public sealed class ChatThreadOutboundDataRestrictionTests
 
     [TestCase(OutboundDataOrigin.CONFLUENCE_WIKI, "")]
     [TestCase(OutboundDataOrigin.INTERNAL_WEB_PAGE, INTRANET_HOST)]
+    [TestCase(OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID)]
     public void TheOriginSurvivesSavingTheChat(OutboundDataOrigin origin, string reference)
     {
         var thread = new ChatThread { ChatId = Guid.NewGuid() };

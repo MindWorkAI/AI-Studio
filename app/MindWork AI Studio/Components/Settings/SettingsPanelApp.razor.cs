@@ -1,4 +1,3 @@
-using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
