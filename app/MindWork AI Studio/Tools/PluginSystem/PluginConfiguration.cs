@@ -436,6 +436,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesRetrievalMode, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.SendToChatDataSourceBehavior, this.Id, settingsTable, dryRun);
 
+        // Config: chat feedback?
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.FeedbackEnabled, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.FeedbackEndpoint, this.Id, settingsTable, dryRun);
+
         // Config: Batch Processing Assistant defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.InputDirectory, this.Id, settingsTable, dryRun);

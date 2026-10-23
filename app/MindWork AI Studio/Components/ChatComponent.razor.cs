@@ -84,6 +84,9 @@ public partial class ChatComponent : MSGComponentBase
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
 
+    [Inject]
+    private FeedbackService FeedbackService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -2371,6 +2374,7 @@ public partial class ChatComponent : MSGComponentBase
                     {
                         this.hasUnsavedChanges = false;
                         this.previousInputForbidden = true;
+                        this.FeedbackService.AnswerFinished(snapshot.SubjectId);
                     }
 
                     this.StateHasChanged();

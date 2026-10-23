@@ -104,4 +104,14 @@ public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection =
     /// Should we show the latest message after loading? When false, we show the first (aka oldest) message.
     /// </summary>
     public bool ShowLatestMessageAfterLoading { get; set; } = true;
+
+    /// <summary>
+    /// Should the chat ask for feedback after an answer?
+    /// </summary>
+    public bool FeedbackEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.FeedbackEnabled, false);
+
+    /// <summary>
+    /// The address of the feedback server, e.g., http://localhost:8080/feedback.
+    /// </summary>
+    public string FeedbackEndpoint { get; set; } = ManagedConfiguration.Register(configSelection, n => n.FeedbackEndpoint, string.Empty);
 }

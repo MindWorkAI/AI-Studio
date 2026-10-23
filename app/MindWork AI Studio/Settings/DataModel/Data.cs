@@ -228,5 +228,7 @@ public sealed class Data
     
     public DataI18N I18N { get; init; } = new();
 
+    public DataFeedback Feedback { get; init; } = new();
+
     public DataTools Tools { get; init; } = new(x => x.Tools);
 }
