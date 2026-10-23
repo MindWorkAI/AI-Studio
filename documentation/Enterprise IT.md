@@ -823,6 +823,17 @@ The workspace goes by its name, because a workspace has an ID of its own on ever
 
 On the chat page, the chat moves into the workspace with its first message, and only then is the workspace created when it does not exist yet. Opening the chat page or trying out a template creates no workspace, so one that users deleted stays gone until they actually start a chat with the template. An assistant chat launcher creates the workspace right away, because it opens its chat at once.
 
+## Where a chat may send data after searching data sources
+
+The AI searches the data sources of a chat, local files and folders as well as external data sources (ERI servers), either itself through Semantic Search or with every message. Each data source decides where a chat may still send data once the AI found something in it, with the same levels as a mailbox, see [Where a chat may send data](#where-a-chat-may-send-data). New data sources start with `ONLY_LINKS_FROM_CHAT`, and so do the ones users added before the setting existed. An external data source whose security policy is `SELF_HOSTED` always gets `ONLY_CONFIGURED_SERVICES`, since its data must not leave your infrastructure through a tool either. Your Confluence wiki and the hosts in `read_web_page.allowedPrivateHosts` stay readable on that level, so the links of such a data source into your intranet still work, while a link to a public page does not.
+
+| Setting | Effect |
+|---|---|
+| `DataSourceSecuritySettings.MinimumOutboundDataRestriction` | The least strict level a data source may have. A data source set to a less strict one gets your level whenever its passages reach a chat, and its dialog no longer offers the less strict levels. |
+| `OutboundDataRestriction` in an entry of `CONFIG["DATA_SOURCES"]` | The level of an external data source your configuration provides. Without it, the data source gets `ONLY_LINKS_FROM_CHAT`, and a value AI Studio cannot read counts as `ONLY_CONFIGURED_SERVICES`. Older versions of AI Studio ignore the field. |
+
+Only the data sources whose passages reached the AI count, so a search which found nothing leaves the chat as it was. A chat which found something before keeps the level it got then. When a chat searches its data sources with every message, the web search ends with the first message which finds something in a restricted data source.
+
 ## Mailboxes
 
 Mailboxes are still a preview: enable `PRE_MAILBOXES_2026` together with `PRE_RAG_2024` in `DataApp.EnabledPreviewFeatures`. Users add a mailbox as a data source, with their own username and password for its IMAP server. AI Studio synchronizes it every 16 minutes and keeps a local index of it, which the tool collection `mailboxes` searches, reads, and counts.
