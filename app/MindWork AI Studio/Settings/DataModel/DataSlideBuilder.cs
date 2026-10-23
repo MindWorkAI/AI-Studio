@@ -88,7 +88,17 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     /// Preselect the audience expertise?
     /// </summary>
     public AudienceExpertise PreselectedAudienceExpertise { get; set; }
-    
+
+    /// <summary>
+    /// Preselect the occasion of the presentation?
+    /// </summary>
+    public PresentationOccasion PreselectedOccasion { get; set; }
+
+    /// <summary>
+    /// Preselect any other occasion?
+    /// </summary>
+    public string PreselectedOtherOccasion { get; set; } = string.Empty;
+
     /// <summary>
     /// Preselect any important aspects that the Slide Builder should take into account?
     /// </summary>

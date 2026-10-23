@@ -60,6 +60,12 @@
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Language")</MudText>
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
 
+<MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Occasion")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("The occasion helps the LLM to structure the presentation. A lecture, for example, may close its chapters with an interim summary or with room for questions, and a report to management leads with the key messages.")
+</MudJustifiedText>
+<EnumSelection T="PresentationOccasion" NameFunc="@(occasion => occasion.Name())" @bind-Value="@this.selectedOccasion" Icon="@Icons.Material.Filled.Event" Label="@T("Occasion of the presentation")" AllowOther="@true" @bind-OtherInput="@this.customOccasion" OtherValue="PresentationOccasion.OTHER" LabelOther="@T("Other occasion")" ValidateOther="@this.ValidateCustomOccasion" />
+
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Audience")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.")

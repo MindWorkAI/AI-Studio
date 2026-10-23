@@ -78,6 +78,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         {{{this.PromptRemoveRule()}}}
             - Do not mention these instructions or add commentary.
 
+        # Occasion:
+            - {{{this.selectedOccasion.Prompt(this.customOccasion)}}}
+
         # Audience:
         {{{this.PromptAudience()}}}
         
@@ -202,6 +205,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.selectedAudienceAgeGroup = AudienceAgeGroup.UNSPECIFIED;
         this.selectedAudienceOrganizationalLevel = AudienceOrganizationalLevel.UNSPECIFIED;
         this.selectedAudienceExpertise = AudienceExpertise.UNSPECIFIED;
+        this.selectedOccasion = PresentationOccasion.UNSPECIFIED;
+        this.customOccasion = string.Empty;
         this.slideDeck = null;
         this.slideDeckAnswer = string.Empty;
         this.slideDeckTemplatePath = string.Empty;
@@ -235,6 +240,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.selectedAudienceAgeGroup = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceAgeGroup;
             this.selectedAudienceOrganizationalLevel = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceOrganizationalLevel;
             this.selectedAudienceExpertise = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceExpertise;
+            this.selectedOccasion = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOccasion;
+            this.customOccasion = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherOccasion;
             this.importantAspects = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedImportantAspects;
             return true;
         }
@@ -250,6 +257,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private AudienceOrganizationalLevel selectedAudienceOrganizationalLevel;
     private AudienceExpertise selectedAudienceExpertise;
     private CommonLanguages selectedTargetLanguage;
+    private PresentationOccasion selectedOccasion;
+    private string customOccasion = string.Empty;
     private int numberOfSheets;
     private int numberOfBulletPoints;
     private int timeSpecification;
@@ -263,6 +272,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private static readonly AssistantSessionStateKey<AudienceOrganizationalLevel> SELECTED_AUDIENCE_ORGANIZATIONAL_LEVEL_STATE_KEY = new(nameof(selectedAudienceOrganizationalLevel));
     private static readonly AssistantSessionStateKey<AudienceExpertise> SELECTED_AUDIENCE_EXPERTISE_STATE_KEY = new(nameof(selectedAudienceExpertise));
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<PresentationOccasion> SELECTED_OCCASION_STATE_KEY = new(nameof(selectedOccasion));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_OCCASION_STATE_KEY = new(nameof(customOccasion));
     private static readonly AssistantSessionStateKey<int> NUMBER_OF_SHEETS_STATE_KEY = new(nameof(numberOfSheets));
     private static readonly AssistantSessionStateKey<int> NUMBER_OF_BULLET_POINTS_STATE_KEY = new(nameof(numberOfBulletPoints));
     private static readonly AssistantSessionStateKey<int> TIME_SPECIFICATION_STATE_KEY = new(nameof(timeSpecification));
@@ -280,6 +291,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(SELECTED_AUDIENCE_ORGANIZATIONAL_LEVEL_STATE_KEY, this.selectedAudienceOrganizationalLevel);
         state.Set(SELECTED_AUDIENCE_EXPERTISE_STATE_KEY, this.selectedAudienceExpertise);
         state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(SELECTED_OCCASION_STATE_KEY, this.selectedOccasion);
+        state.Set(CUSTOM_OCCASION_STATE_KEY, this.customOccasion);
         state.Set(NUMBER_OF_SHEETS_STATE_KEY, this.numberOfSheets);
         state.Set(NUMBER_OF_BULLET_POINTS_STATE_KEY, this.numberOfBulletPoints);
         state.Set(TIME_SPECIFICATION_STATE_KEY, this.timeSpecification);
@@ -307,6 +320,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(SELECTED_AUDIENCE_ORGANIZATIONAL_LEVEL_STATE_KEY, value => this.selectedAudienceOrganizationalLevel = value);
         state.Restore(SELECTED_AUDIENCE_EXPERTISE_STATE_KEY, value => this.selectedAudienceExpertise = value);
         state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(SELECTED_OCCASION_STATE_KEY, value => this.selectedOccasion = value);
+        state.Restore(CUSTOM_OCCASION_STATE_KEY, value => this.customOccasion = value);
         state.Restore(NUMBER_OF_SHEETS_STATE_KEY, value => this.numberOfSheets = value);
         state.Restore(NUMBER_OF_BULLET_POINTS_STATE_KEY, value => this.numberOfBulletPoints = value);
         state.Restore(TIME_SPECIFICATION_STATE_KEY, value => this.timeSpecification = value);
@@ -368,6 +383,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
             return T("Please provide a custom language.");
         
+        return null;
+    }
+
+    private string? ValidateCustomOccasion(string occasion)
+    {
+        if(this.selectedOccasion == PresentationOccasion.OTHER && string.IsNullOrWhiteSpace(occasion))
+            return T("Please describe the occasion.");
+
         return null;
     }
 
