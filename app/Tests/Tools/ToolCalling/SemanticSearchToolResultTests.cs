@@ -38,7 +38,11 @@ public sealed class SemanticSearchToolResultTests
     {
         var requirements = SemanticSearchTool.GetRequirements([HANDBOOK, MINUTES, INTRANET], [0, 2, 0], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.That((requirements.Confidence, requirements.Security), Is.EqualTo((ConfidenceLevel.LOW, DataSourceSecurity.ALLOW_ANY)), "Neither the highly confidential handbook nor the self-hosted intranet brought anything into the chat.");
+        Assert.Multiple(() =>
+        {
+            Assert.That((requirements.Confidence, requirements.Security), Is.EqualTo((ConfidenceLevel.LOW, DataSourceSecurity.ALLOW_ANY)), "Neither the highly confidential handbook nor the self-hosted intranet brought anything into the chat.");
+            Assert.That(requirements.OutboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, MINUTES.Id)), "Only the minutes restrict where the chat may still send data.");
+        });
     }
 
     [Test]

@@ -1,9 +1,11 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -32,7 +34,7 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
 
         Assert.Multiple(() =>
         {
-            foreach (var toolId in new[] { ToolSelectionRules.SEARCH_MAILS_TOOL_ID, ToolSelectionRules.READ_MAIL_TOOL_ID, ToolSelectionRules.COUNT_MAILS_TOOL_ID, ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID })
+            foreach (var toolId in new[] { ToolSelectionRules.SEARCH_MAILS_TOOL_ID, ToolSelectionRules.READ_MAIL_TOOL_ID, ToolSelectionRules.COUNT_MAILS_TOOL_ID, ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID, ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID })
                 Assert.That(instructions, Does.Not.Contain($"`{toolId}`"), "The web search would name tools the request may not offer, and each of these words the rule itself.");
         });
     }
@@ -80,6 +82,46 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
         var instructions = await tool.ResolveSystemPromptInstructionsAsync(tool.GetDefinition(), this.ResolutionContext(new ChatThread(), ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID, ToolSelectionRules.READ_WEB_PAGE_TOOL_ID));
 
         Assert.That(instructions, Does.Not.Contain("web_search"), "The request does not offer the web search, so a rule about it would only confuse the model.");
+    }
+
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, true, true)]
+    [TestCase(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, true, true)]
+    [TestCase(OutboundDataRestriction.UNRESTRICTED, true, false)]
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, false, false)]
+    public async Task TheSemanticSearchSaysSoWhenItEndsTheWebSearch(OutboundDataRestriction restriction, bool offersWebSearch, bool expected)
+    {
+        var dataSource = new DataSourceLocalDirectory { Id = "6f1a8c3e-9d2b-4e7a-b4c5-1e8d3f6a9c72", Name = "Project files", OutboundDataRestriction = restriction };
+        this.SettingsManager.ConfigurationData.DataSources.Add(dataSource);
+        var chat = new ChatThread { DataSourceOptions = new() { PreselectedDataSourceIds = [dataSource.Id] } };
+        var tool = new SemanticSearchTool(this.SettingsManager, null!, null!, null!, NullLogger<SemanticSearchTool>.Instance);
+        string[] candidates = offersWebSearch ? [ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID, ToolSelectionRules.WEB_SEARCH_TOOL_ID] : [ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID];
+
+        var instructions = await tool.ResolveSystemPromptInstructionsAsync(tool.GetDefinition(), this.ResolutionContext(chat, candidates));
+
+        Assert.That(instructions.Contains("search the web before you search the data sources", StringComparison.Ordinal), Is.EqualTo(expected), "Without a restriction, a search leaves the web search in place, and the rule would only cost the model a detour.");
+    }
+
+    [Test]
+    public void OnlyTheDataSourcesTheModelMaySearchCount()
+    {
+        var open = new DataSourceLocalFile { Id = "3c9e1a7f-2b5d-4f8c-a6e1-9d4b7c2a5f13", Name = "Press releases", OutboundDataRestriction = OutboundDataRestriction.UNRESTRICTED };
+        var closed = new DataSourceLocalDirectory { Id = "7b4d2f9a-5e1c-4a6b-8d3f-2c9a6e1b4d58", Name = "Project files" };
+        var settings = new Data { DataSources = [open, closed] };
+        var selected = new ChatThread { DataSourceOptions = new() { PreselectedDataSourceIds = [open.Id] } };
+        var automatic = new ChatThread { DataSourceOptions = new() { AutomaticDataSourceSelection = true } };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(SemanticSearchTool.EndsWebSearch(this.ResolutionContext(selected), settings), Is.False, "The project files are not selected, so the model cannot find anything in them.");
+            Assert.That(SemanticSearchTool.EndsWebSearch(this.ResolutionContext(automatic), settings), Is.True, "With the automatic selection, the model may search the project files as well.");
+        });
+    }
+
+    [Test]
+    public void TheSemanticSearchCountsWithTheRule()
+    {
+        var instructions = new SemanticSearchTool(null!, null!, null!, null!, null!).GetDefinition().SystemPromptInstructions;
+        Assert.That(instructions, Does.Contain("search the web before you search the data sources"), "The token count assumes a request which offers the web search and a data source which ends it.");
     }
 
     [TestCase(true)]
