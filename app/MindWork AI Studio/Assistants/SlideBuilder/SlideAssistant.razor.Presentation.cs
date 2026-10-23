@@ -29,6 +29,16 @@ public partial class SlideAssistant
     /// </remarks>
     private const int MAX_REPORTED_ISSUES = 12;
 
+    /// <summary>
+    /// How a template is opened for reading.
+    /// </summary>
+    /// <remarks>
+    /// Other programs may go on writing or deleting the file meanwhile. PowerPoint keeps a file open
+    /// for writing as long as it shows it, and a template which is still open there has to be
+    /// readable all the same.
+    /// </remarks>
+    private const FileShare TEMPLATE_FILE_SHARE = FileShare.ReadWrite | FileShare.Delete;
+
     private string templatePath = string.Empty;
     private string footerText = string.Empty;
     private string? variantLabel;
@@ -76,6 +86,16 @@ public partial class SlideAssistant
     private PresentationTemplate Catalog => this.template ?? DEFAULT_CATALOG;
 
     private bool IsTemplateLocked => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.TemplatePath, out var meta) && meta.IsLocked;
+
+    /// <summary>
+    /// Whether the template of the organization is locked, but cannot be read right now, e.g.,
+    /// because its network drive cannot be reached.
+    /// </summary>
+    /// <remarks>
+    /// The user cannot choose another template then, so it must not block the form. The assistant
+    /// plans an outline instead, as without a template, and the form says why.
+    /// </remarks>
+    private bool IsLockedTemplateUnavailable => this.IsTemplateLocked && !string.IsNullOrWhiteSpace(this.templatePath) && this.template is null;
 
     /// <summary>
     /// What the user chose for the slides of the template, as the model and the check of its answer see it; empty without a template.
@@ -126,12 +146,18 @@ public partial class SlideAssistant
     private void LoadTemplate()
     {
         this.template = null;
-        if (string.IsNullOrWhiteSpace(this.templatePath) || !File.Exists(this.templatePath))
+        if (string.IsNullOrWhiteSpace(this.templatePath))
             return;
+
+        if (!File.Exists(this.templatePath))
+        {
+            this.Logger.LogWarning("The PowerPoint template '{TemplatePath}' does not exist.", this.templatePath);
+            return;
+        }
 
         try
         {
-            using var stream = new FileStream(this.templatePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var stream = new FileStream(this.templatePath, FileMode.Open, FileAccess.Read, TEMPLATE_FILE_SHARE);
             this.template = PresentationTemplate.Read(stream);
         }
         catch (Exception e)
@@ -201,7 +227,8 @@ public partial class SlideAssistant
 
     private string? ValidateTemplate(string path)
     {
-        if (string.IsNullOrWhiteSpace(path))
+        // The warning below the field explains this case, since the user cannot change the template:
+        if (string.IsNullOrWhiteSpace(path) || this.IsLockedTemplateUnavailable)
             return null;
 
         if (!File.Exists(path))
@@ -428,7 +455,7 @@ public partial class SlideAssistant
         this.StateHasChanged();
         try
         {
-            await using (var templateFile = new FileStream(this.slideDeckTemplatePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            await using (var templateFile = new FileStream(this.slideDeckTemplatePath, FileMode.Open, FileAccess.Read, TEMPLATE_FILE_SHARE))
             await using (var copy = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 await templateFile.CopyToAsync(copy);
 
