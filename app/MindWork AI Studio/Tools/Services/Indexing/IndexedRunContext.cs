@@ -53,7 +53,10 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// <summary>
     /// One chunk on its way to the stores, with the id it is stored under and the hash of its text.
     /// </summary>
-    private sealed record EmbeddingChunkDraft(string ChunkId, string Text, string TextHash, int ChunkIndex, int? PageNumber, int? EndPageNumber);
+    private sealed record EmbeddingChunkDraft(string ChunkId, EmbeddingChunk Chunk, string TextHash, int ChunkIndex)
+    {
+        public string Text => this.Chunk.Text;
+    }
 
     /// <summary>
     /// One attempt to index a document, from reading what it had stored until it is completed or cleaned up.
@@ -220,7 +223,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         await foreach (var chunk in document.StreamChunks(token))
         {
             var chunkId = IndexedDocumentIds.CreateChunkId(dataSource.Id, chunkIdSource, totalChunkCount);
-            batch.Add(new(chunkId, chunk.Text, ChunkTextHash.Of(chunk.Text), totalChunkCount, chunk.PageNumber, chunk.EndPageNumber));
+            batch.Add(new(chunkId, chunk, ChunkTextHash.Of(chunk.Text), totalChunkCount));
             storedChunkIds.Add(chunkId);
             totalChunkCount++;
             reportBlockProgress(totalChunkCount, chunk.PageNumber);
@@ -580,8 +583,8 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
                 state.FileName,
                 state.RelativePath,
                 state.FileType,
-                batch[index].PageNumber,
-                batch[index].EndPageNumber,
+                batch[index].Chunk.PageNumber,
+                batch[index].Chunk.EndPageNumber,
                 batch[index].ChunkIndex,
                 batch[index].Text,
                 state.Fingerprint,
@@ -593,9 +596,28 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
             await vectorStore.InsertEmbedding(this.CollectionName, points, token);
             token.ThrowIfCancellationRequested();
 
+            //
+            // The vector store keeps the pages only, cf. VectorStoragePoint. Everything else about
+            // where a chunk is goes into the index store alone:
+            //
             var chunks = chunksToStore
                 .Select(index => batch[index])
-                .Select(chunk => new EmbeddingStateChunk(chunk.ChunkId, state.ParentFileId, chunk.PageNumber, chunk.EndPageNumber, chunk.ChunkIndex, chunk.Text, embeddedAtUtc, chunk.TextHash, attempt.Generation))
+                .Select(draft => new EmbeddingStateChunk(
+                    draft.ChunkId,
+                    state.ParentFileId,
+                    draft.Chunk.PageNumber,
+                    draft.Chunk.EndPageNumber,
+                    draft.ChunkIndex,
+                    draft.Text,
+                    embeddedAtUtc,
+                    draft.TextHash,
+                    attempt.Generation,
+                    draft.Chunk.Start.SheetName,
+                    draft.Chunk.Start.RowNumber,
+                    draft.Chunk.End.RowNumber,
+                    draft.Chunk.Start.LineNumber,
+                    draft.Chunk.End.LineNumber,
+                    draft.Chunk.AttachmentPosition))
                 .ToList();
 
             await indexStore.UpsertChunksAsync(dataSource.Id, chunks, token);

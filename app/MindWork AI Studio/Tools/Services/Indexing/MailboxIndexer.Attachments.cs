@@ -73,29 +73,36 @@ internal sealed partial class MailboxIndexer
     /// </summary>
     /// <remarks>
     /// Each attachment is cut on its own, by the strategy of its file type, and its first chunk
-    /// names it. A chunk of an attachment carries no page: the chunks of a mail are told apart by
-    /// the mail alone, so a page would not say which attachment it is a page of.
+    /// names it. A chunk of an attachment knows which one it is from, by the position of that
+    /// attachment among all attachments of the mail, the way the index numbers them in mail_parts,
+    /// so its pages, rows or lines say where in that attachment it is.
     /// </remarks>
+    /// <param name="textChunker">Cuts the text of the mail and of its attachments into chunks.</param>
     /// <param name="mailContent">The header block and the text of the mail.</param>
     /// <param name="attachments">The attachments, those whose text was not read included.</param>
     /// <param name="options">How large a chunk may become.</param>
     /// <param name="embeddingProvider">The embedding provider whose tokenizer measures the chunks.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The chunks of the mail, in order.</returns>
-    private async IAsyncEnumerable<EmbeddingChunk> StreamMailChunksAsync(SegmentedText mailContent, IReadOnlyList<MailAttachmentText> attachments, ChunkingOptions options, EmbeddingProvider embeddingProvider, [EnumeratorCancellation] CancellationToken token)
+    internal static async IAsyncEnumerable<EmbeddingChunk> StreamMailChunksAsync(TextChunker textChunker, SegmentedText mailContent, IReadOnlyList<MailAttachmentText> attachments, ChunkingOptions options, EmbeddingProvider embeddingProvider, [EnumeratorCancellation] CancellationToken token)
     {
         await foreach (var chunk in textChunker.SplitAsync(mailContent, TextChunker.DOCUMENT_STRATEGY, options, embeddingProvider, token))
             yield return chunk;
 
-        foreach (var attachment in attachments)
+        //
+        // Counted over every attachment, those without text included, since the index numbers
+        // them that way, cf. CreateMailRecord:
+        //
+        for (var position = 0; position < attachments.Count; position++)
         {
+            var attachment = attachments[position];
             if (attachment.TextState is not MailPartTextState.EXTRACTED || attachment.Content.Text.Length is 0)
                 continue;
 
             // In English like the header block, cf. MailTextBuilder:
             var heading = attachment.Name.Length > 0 ? $"Attachment: {attachment.Name}" : "Attachment without a name";
             await foreach (var chunk in textChunker.SplitAsync(attachment.Content, attachment.Strategy, options, embeddingProvider, token, heading))
-                yield return chunk with { PageNumber = null, EndPageNumber = null };
+                yield return chunk with { AttachmentPosition = position };
         }
     }
 }

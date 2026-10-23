@@ -110,6 +110,12 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.Property(chunk => chunk.ChunkText).HasColumnName("chunk_text").IsRequired();
             entity.Property(chunk => chunk.TextHash).HasColumnName("text_hash");
             entity.Property(chunk => chunk.Generation).HasColumnName("generation");
+            entity.Property(chunk => chunk.SheetName).HasColumnName("sheet_name");
+            entity.Property(chunk => chunk.StartRow).HasColumnName("start_row");
+            entity.Property(chunk => chunk.EndRow).HasColumnName("end_row");
+            entity.Property(chunk => chunk.StartLine).HasColumnName("start_line");
+            entity.Property(chunk => chunk.EndLine).HasColumnName("end_line");
+            entity.Property(chunk => chunk.AttachmentPosition).HasColumnName("attachment_position");
             entity.Property(chunk => chunk.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
 
             entity.HasIndex(chunk => chunk.ChunkId).HasDatabaseName("idx_embedding_chunks_chunk_id").IsUnique();

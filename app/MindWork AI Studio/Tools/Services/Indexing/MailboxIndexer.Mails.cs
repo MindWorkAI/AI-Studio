@@ -200,10 +200,10 @@ internal sealed partial class MailboxIndexer
         // search for a sender or a subject finds the mail. The attachments follow it.
         //
         var fullText = text?.FullText ?? string.Empty;
-        var content = new SegmentedText(fullText, fullText.Length is 0 ? [] : [new TextSegment(fullText, null, null)]);
+        var content = new SegmentedText(fullText, fullText.Length is 0 ? [] : [new TextSegment(fullText, null, default)]);
         var chunkingOptions = DataSourceEmbeddingService.GetChunkingOptions(mailbox, context.EmbeddingProvider);
 
-        return new(key, state, displayName, chunkToken => this.StreamMailChunksAsync(content, attachments, chunkingOptions, context.EmbeddingProvider, chunkToken));
+        return new(key, state, displayName, chunkToken => StreamMailChunksAsync(textChunker, content, attachments, chunkingOptions, context.EmbeddingProvider, chunkToken));
     }
 
     /// <summary>

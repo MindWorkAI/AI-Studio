@@ -1342,6 +1342,13 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
             };
 
             number_of_sheets += 1;
+
+            //
+            // Rows are numbered as the spreadsheet program numbers them, so a passage can be found
+            // there again. The range of a sheet starts at its first cell with content, which need
+            // not be in the first row. Row 0 is the fence in front of the first row.
+            //
+            let rows_before_range = range.start().map_or(0, |(row, _)| row as usize);
             let mut row_idx = 0;
             tx.blocking_send(Ok(Chunk::new(
                 "```csv".to_string(),
@@ -1350,7 +1357,7 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                     row_number: row_idx,
                 }
             ))).ok();
-            
+
             for row in range.rows() {
                 row_idx += 1;
                 let cells = row.iter().map(|cell| cell.to_string()).collect::<Vec<_>>();
@@ -1367,7 +1374,7 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                     content,
                     Metadata::Spreadsheet {
                         sheet_name: sheet_name.clone(),
-                        row_number: row_idx,
+                        row_number: rows_before_range + row_idx,
                     }
                 ))).is_err() {
                     return;
@@ -1378,7 +1385,7 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                 "```".to_string(),
                 Metadata::Spreadsheet {
                     sheet_name: sheet_name.clone(),
-                    row_number: row_idx,
+                    row_number: rows_before_range + row_idx,
                 }
             ))).ok();
         }

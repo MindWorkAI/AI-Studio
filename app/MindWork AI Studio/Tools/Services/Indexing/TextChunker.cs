@@ -114,14 +114,67 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
     /// <returns>The chunks, in the order of the text.</returns>
     public async IAsyncEnumerable<EmbeddingChunk> SplitAsync(SegmentedText content, ChunkingStrategy strategy, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token, string heading = "")
     {
-        var estimatedTokenCount = SumTokenCounts(content.SourceSegments);
+        var requiredPrefix = heading;
+        foreach (var part in SplitBySheets(content))
+        {
+            var estimatedTokenCount = SumTokenCounts(part.SourceSegments);
 
-        // The whole text starts where the first segment starts, so that is the page it is on until
-        // the splitting reaches a segment boundary:
-        var firstPageNumber = content.SourceSegments.Count > 0 ? content.SourceSegments[0].PageNumber : null;
-        await foreach (var chunk in this.SplitTextByRulesAsync(content.Text, content.SourceSegments, strategy, 0, options, embeddingProvider, firstPageNumber, token, heading, estimatedTokenCount))
-            yield return chunk;
+            // The part starts where its first segment starts, so that is where it is until the
+            // splitting reaches a segment boundary:
+            var firstLocation = part.SourceSegments.Count > 0 ? part.SourceSegments[0].Location : default;
+            await foreach (var chunk in this.SplitTextByRulesAsync(part.Text, part.SourceSegments, strategy, 0, options, embeddingProvider, firstLocation, token, requiredPrefix, estimatedTokenCount))
+                yield return chunk;
+
+            requiredPrefix = string.Empty;
+        }
     }
+
+    /// <summary>
+    /// The parts of a text which no chunk may run across: each sheet of a spreadsheet on its own,
+    /// and any other text as a whole.
+    /// </summary>
+    /// <remarks>
+    /// Every sheet is a table of its own, with columns of its own, so a chunk which ran from one
+    /// sheet into the next would mix what two tables mean. Neither does a chunk start with the
+    /// overlap of another sheet. A sheet without a single row holds nothing but its heading and its
+    /// fences, and is left out.
+    /// </remarks>
+    /// <param name="content">The text, in the pieces its source delivered it in.</param>
+    /// <returns>The parts, in the order of the text.</returns>
+    private static IEnumerable<SegmentedText> SplitBySheets(SegmentedText content)
+    {
+        if (content.SourceSegments.All(segment => segment.Location.SheetName is null))
+        {
+            yield return content;
+            yield break;
+        }
+
+        var sheet = new List<TextSegment>();
+        string? sheetName = null;
+        foreach (var segment in content.SourceSegments)
+        {
+            if (segment.Location.SheetName is { } segmentSheetName && sheetName is not null && !string.Equals(segmentSheetName, sheetName, StringComparison.Ordinal))
+            {
+                if (TryCreateSheet(sheet) is { } completeSheet)
+                    yield return completeSheet;
+
+                sheet = [];
+            }
+
+            sheetName = segment.Location.SheetName ?? sheetName;
+            sheet.Add(segment);
+        }
+
+        if (TryCreateSheet(sheet) is { } lastSheet)
+            yield return lastSheet;
+    }
+
+    /// <summary>
+    /// The text of one sheet, joined the way the whole text was, or null when the sheet has no row.
+    /// </summary>
+    private static SegmentedText? TryCreateSheet(List<TextSegment> segments) => segments.Any(segment => segment.Location.RowNumber is not null)
+        ? new SegmentedText(string.Join("\n", segments.Select(segment => segment.Text)).Trim(), segments)
+        : null;
 
     private async IAsyncEnumerable<EmbeddingChunk> SplitTextByRulesAsync(
         string text,
@@ -130,7 +183,7 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
         int ruleIndex,
         ChunkingOptions options,
         EmbeddingProvider embeddingProvider,
-        int? currentPageNumber,
+        SourceLocation currentLocation,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token,
         string requiredOverlapPrefix = "",
         int? estimatedTokenCount = null)
@@ -147,15 +200,16 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
             tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, textWithOverlap, token);
             if (tokenCount <= options.MaxChunkTokenLength)
             {
-                // The whole text is one chunk, so it ends where its last segment is:
-                yield return new(textWithOverlap, currentPageNumber, sourceSegments.LastOrDefault(segment => segment.PageNumber is not null)?.PageNumber ?? currentPageNumber);
+                // The whole text is one chunk, so it spans all of its segments:
+                var (start, end) = Locate(sourceSegments.Select(segment => segment.Location).ToList(), currentLocation);
+                yield return new(textWithOverlap, start, end);
                 yield break;
             }
         }
 
         if (ruleIndex >= strategy.Rules.Count)
         {
-            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, currentPageNumber, token, requiredOverlapPrefix, estimatedTokenCount))
+            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, currentLocation, token, requiredOverlapPrefix, estimatedTokenCount))
                 yield return hardChunk;
 
             yield break;
@@ -164,7 +218,7 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
         var rule = strategy.Rules[ruleIndex];
         if (rule.Split is null)
         {
-            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, currentPageNumber, token, requiredOverlapPrefix, estimatedTokenCount))
+            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, currentLocation, token, requiredOverlapPrefix, estimatedTokenCount))
                 yield return hardChunk;
 
             yield break;
@@ -173,7 +227,7 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
         var units = NormalizeSplitUnits(rule.Split(text, sourceSegments.Select(segment => segment.Text).ToList()), text);
         if (units.Count <= 1)
         {
-            await foreach (var chunk in this.SplitTextByRulesAsync(text, sourceSegments, strategy, ruleIndex + 1, options, embeddingProvider, currentPageNumber, token, requiredOverlapPrefix, estimatedTokenCount))
+            await foreach (var chunk in this.SplitTextByRulesAsync(text, sourceSegments, strategy, ruleIndex + 1, options, embeddingProvider, currentLocation, token, requiredOverlapPrefix, estimatedTokenCount))
                 yield return chunk;
 
             yield break;
@@ -194,12 +248,15 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
 
         //
         // The first rule of every strategy cuts along the segments the runtime delivered, so there
-        // a unit is a segment and carries that segment's page. Every later rule cuts inside a
-        // single segment, where all units share the page they were handed. This is what ties a
-        // chunk to a page without anybody reading the text.
+        // a unit is a segment and carries that segment's location. Every later rule cuts inside a
+        // single segment, where all units share the location they were handed. This is what ties a
+        // chunk to its pages, rows or lines without anybody reading the text. A segment without a
+        // page is on the page of the text it is part of:
         //
         var unitsAreSourceSegments = rule.UsesSourceSegmentCounts && sourceSegments.Count == units.Count;
-        int? PageOfUnit(int unitIndex) => unitsAreSourceSegments ? sourceSegments[unitIndex].PageNumber ?? currentPageNumber : currentPageNumber;
+        SourceLocation LocationOfUnit(int unitIndex) => unitsAreSourceSegments
+            ? sourceSegments[unitIndex].Location with { PageNumber = sourceSegments[unitIndex].Location.PageNumber ?? currentLocation.PageNumber }
+            : currentLocation;
 
         while (index < units.Count)
         {
@@ -213,12 +270,15 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
                 overlapPrefix = string.Empty;
 
                 //
-                // From the page of the first unit this chunk covers, not of the overlap prefix in
-                // front of it: the prefix repeats what the chunk before already said, while the page
-                // has to name where this chunk's own content begins. To the page of its last unit.
+                // From the first unit this chunk covers, not from the overlap prefix in front of
+                // it: the prefix repeats what the chunk before already said, while the location has
+                // to name where this chunk's own content begins. To its last unit.
                 //
                 if (!string.IsNullOrWhiteSpace(chunk))
-                    yield return new(chunk, PageOfUnit(index), PageOfUnit(index + unitCount - 1));
+                {
+                    var (start, end) = Locate(Enumerable.Range(index, unitCount).Select(LocationOfUnit).ToList(), currentLocation);
+                    yield return new(chunk, start, end);
+                }
 
                 var nextIndex = index + unitCount;
                 if (nextIndex >= units.Count)
@@ -250,8 +310,8 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
 
             string? lastSplitUnit = null;
             var unitTokenCount = unitTokenCounts?[index];
-            var unitPageNumber = PageOfUnit(index);
-            await foreach (var splitUnit in this.SplitTextByRulesAsync(units[index], [new(units[index], unitTokenCount, unitPageNumber)], strategy, ruleIndex + 1, options, embeddingProvider, unitPageNumber, token, overlapPrefix, unitTokenCount))
+            var unitLocation = LocationOfUnit(index);
+            await foreach (var splitUnit in this.SplitTextByRulesAsync(units[index], [new(units[index], unitTokenCount, unitLocation)], strategy, ruleIndex + 1, options, embeddingProvider, unitLocation, token, overlapPrefix, unitTokenCount))
             {
                 lastSplitUnit = splitUnit.Text;
                 yield return splitUnit;
@@ -445,15 +505,48 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
         return bestStartIndex <= chunkStartIndex ? chunkEndIndex : bestStartIndex;
     }
 
+    /// <summary>
+    /// Where a chunk starts and ends, from the locations of the units it covers, in their order.
+    /// </summary>
+    /// <remarks>
+    /// The chunk starts on the page of its first unit and ends on the last page among its units.
+    /// Its rows and lines run from the first unit which has one to the last which has one: the
+    /// heading of a sheet and the fences around a table are no row or line, so a chunk starting
+    /// with them starts at the row after them. A chunk lies within one sheet, cf. SplitBySheets.
+    /// </remarks>
+    /// <param name="locations">The locations of the units the chunk covers.</param>
+    /// <param name="current">The location of the text being cut, for what none of the units states.</param>
+    /// <returns>Where the chunk starts and where it ends.</returns>
+    private static (SourceLocation Start, SourceLocation End) Locate(IReadOnlyList<SourceLocation> locations, SourceLocation current)
+    {
+        if (locations.Count is 0)
+            return (current, current);
+
+        var sheetName = locations.FirstOrDefault(location => location.SheetName is not null).SheetName ?? current.SheetName;
+        var start = new SourceLocation(
+            locations[0].PageNumber ?? current.PageNumber,
+            sheetName,
+            locations.FirstOrDefault(location => location.RowNumber is not null).RowNumber ?? current.RowNumber,
+            locations.FirstOrDefault(location => location.LineNumber is not null).LineNumber ?? current.LineNumber);
+
+        var end = new SourceLocation(
+            locations.LastOrDefault(location => location.PageNumber is not null).PageNumber ?? current.PageNumber,
+            sheetName,
+            locations.LastOrDefault(location => location.RowNumber is not null).RowNumber ?? current.RowNumber,
+            locations.LastOrDefault(location => location.LineNumber is not null).LineNumber ?? current.LineNumber);
+
+        return (start, end);
+    }
+
     /// <remarks>
     /// The hard cut is only ever reached inside a single piece of text which no rule could split
-    /// any further, so every chunk it produces sits on the page that piece was handed.
+    /// any further, so every chunk it produces sits where that piece was handed.
     /// </remarks>
     private async IAsyncEnumerable<EmbeddingChunk> SplitTextByHardCutAsync(
         string text,
         ChunkingOptions options,
         EmbeddingProvider embeddingProvider,
-        int? currentPageNumber,
+        SourceLocation currentLocation,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token,
         string requiredOverlapPrefix = "",
         int? estimatedTokenCount = null)
@@ -531,10 +624,10 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
                 throw new InvalidOperationException(string.Format(TB("The chunk size configured for the embedding provider '{0}' is too small: the smallest piece the text can be cut into still has {1} tokens, while the limit is {2}."), embeddingProvider.Name, smallestCandidateTokenCount, options.MaxChunkTokenLength));
             }
 
-            // A hard cut works inside a single piece of text, so the chunk stays on its page:
+            // A hard cut works inside a single piece of text, so the chunk stays where it is:
             var chunk = AddOverlapPrefix(text[startIndex..bestEndIndex].Trim(), overlapPrefix);
             if (!string.IsNullOrWhiteSpace(chunk))
-                yield return new(chunk, currentPageNumber, currentPageNumber);
+                yield return new(chunk, currentLocation, currentLocation);
 
             if (bestEndIndex >= text.Length)
                 yield break;

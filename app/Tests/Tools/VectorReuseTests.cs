@@ -451,7 +451,7 @@ public sealed class VectorReuseTests
                     throw new IOException("The file is locked by another program.");
 
                 this.ChunksRead++;
-                yield return new EmbeddingChunk(text, null, null);
+                yield return new EmbeddingChunk(text, default, default);
             }
         }
     }

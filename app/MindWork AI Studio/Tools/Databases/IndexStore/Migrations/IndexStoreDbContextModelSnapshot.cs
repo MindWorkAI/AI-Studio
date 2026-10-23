@@ -157,6 +157,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnName("id")
                 .HasAnnotation("Sqlite:Autoincrement", true);
 
+            entity.Property<int?>("AttachmentPosition")
+                .HasColumnType("INTEGER")
+                .HasColumnName("attachment_position");
+
             entity.Property<string>("ChunkId")
                 .IsRequired()
                 .HasColumnType("TEXT")
@@ -176,9 +180,17 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("embedded_at_utc");
 
+            entity.Property<int?>("EndLine")
+                .HasColumnType("INTEGER")
+                .HasColumnName("end_line");
+
             entity.Property<int?>("EndPageNumber")
                 .HasColumnType("INTEGER")
                 .HasColumnName("end_page_number");
+
+            entity.Property<int?>("EndRow")
+                .HasColumnType("INTEGER")
+                .HasColumnName("end_row");
 
             entity.Property<int>("Generation")
                 .HasColumnType("INTEGER")
@@ -192,6 +204,18 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT")
                 .HasColumnName("parent_file_id");
+
+            entity.Property<string>("SheetName")
+                .HasColumnType("TEXT")
+                .HasColumnName("sheet_name");
+
+            entity.Property<int?>("StartLine")
+                .HasColumnType("INTEGER")
+                .HasColumnName("start_line");
+
+            entity.Property<int?>("StartRow")
+                .HasColumnType("INTEGER")
+                .HasColumnName("start_row");
 
             entity.Property<string>("TextHash")
                 .HasColumnType("TEXT")

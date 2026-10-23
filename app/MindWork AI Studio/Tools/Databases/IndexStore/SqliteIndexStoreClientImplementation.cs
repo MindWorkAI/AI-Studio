@@ -817,6 +817,12 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         chunkEntity.ChunkText = chunk.ChunkText;
         chunkEntity.TextHash = chunk.TextHash;
         chunkEntity.Generation = chunk.Generation;
+        chunkEntity.SheetName = chunk.SheetName;
+        chunkEntity.StartRow = chunk.StartRow;
+        chunkEntity.EndRow = chunk.EndRow;
+        chunkEntity.StartLine = chunk.StartLine;
+        chunkEntity.EndLine = chunk.EndLine;
+        chunkEntity.AttachmentPosition = chunk.AttachmentPosition;
         chunkEntity.EmbeddedAtUtc = chunk.EmbeddedAtUtc;
     }
 

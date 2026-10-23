@@ -41,7 +41,9 @@ The parts:
   which documents failed during an earlier step, so the next steps do not read them again, and which failures
   were reported to the user already.
 - **`TextChunker`** - cuts text into chunks the embedding provider accepts. Pick one of its strategies; do not
-  write a chunker of your own.
+  write a chunker of your own. It also says where each chunk starts and ends (`SourceLocation`: page, sheet and
+  row, or line), from the segments the runtime delivered; never read a location back out of the chunk text.
+  Only the pages go into the vector store, everything else about a location into the index store alone.
 
 To add a kind of data source:
 1. Write its indexer in `Tools/Services/Indexing/` and create it in `DataSourceEmbeddingService.CreateIndexers`,
