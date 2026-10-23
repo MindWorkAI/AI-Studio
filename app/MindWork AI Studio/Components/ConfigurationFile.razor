@@ -1,15 +1,16 @@
 @inherits ConfigurationBaseCore
 
-<PathDropZone Disabled="@(() => this.IsDisabled)" OnPathsDropped="@this.PathsDropped">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+<PathDropZone Frameless="@true" Disabled="@(() => this.IsDisabled)" OnPathsDropped="@this.PathsDropped" Context="isDropTarget">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Style="@(isDropTarget ? DROP_TARGET_STYLE : string.Empty)">
         <MudTextField
             T="string"
             Text="@this.Text()"
             TextChanged="@this.InternalUpdate"
             Disabled="@this.IsDisabled"
+            Placeholder="@(this.IsDisabled ? string.Empty : T("You can also drag & drop the file here."))"
             Adornment="Adornment.Start"
             AdornmentIcon="@this.Icon"
-            AdornmentColor="@this.IconColor"
+            AdornmentColor="@(isDropTarget ? Color.Primary : this.IconColor)"
             UserAttributes="@SPELLCHECK_ATTRIBUTES"
             Immediate="@true"
             Underline="false"
@@ -26,7 +27,4 @@
             @T("Choose File")
         </MudButton>
     </MudStack>
-    <MudText Typo="Typo.body2">
-        @T("You can also drag & drop the file here.")
-    </MudText>
 </PathDropZone>

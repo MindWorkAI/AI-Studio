@@ -51,6 +51,15 @@ public partial class ConfigurationFile : ConfigurationBaseCore
     [Inject]
     private ILogger<ConfigurationFile> Logger { get; init; } = null!;
 
+    /// <summary>
+    /// Marks the field while a file hovers over it.
+    /// </summary>
+    /// <remarks>
+    /// The field sits in the frame of its option already, so it gets no drop frame of its own. An
+    /// outline takes no room, which keeps the layout still while the cursor moves over the field.
+    /// </remarks>
+    private const string DROP_TARGET_STYLE = "outline: 2px dashed var(--mud-palette-primary); outline-offset: 4px; border-radius: 4px;";
+
     private string internalText = string.Empty;
     private bool isFileDialogOpen;
     private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
