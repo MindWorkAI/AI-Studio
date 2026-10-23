@@ -276,6 +276,13 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 -- }
 
 -- ERI v1 data sources for retrieval-augmented generation:
+--
+-- "OutboundDataRestriction" is optional and decides where a chat may still send data once the
+-- AI found something in the data source: ONLY_CONFIGURED_SERVICES, ONLY_LINKS_FROM_CHAT, or
+-- UNRESTRICTED, see DataSourceSecuritySettings.MinimumOutboundDataRestriction below. Without it,
+-- the data source gets ONLY_LINKS_FROM_CHAT, and a value AI Studio cannot read counts as
+-- ONLY_CONFIGURED_SERVICES. A data source with the security policy SELF_HOSTED always gets
+-- ONLY_CONFIGURED_SERVICES, whatever it says here.
 CONFIG["DATA_SOURCES"] = {}
 
 -- Example: ERI v1 data source with a shared access token.
@@ -288,6 +295,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["AuthMethod"] = "TOKEN",
 --     ["Token"] = "ENC:v2:<base64-encoded encrypted token>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -304,6 +312,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Username"] = "<shared username>",
 --     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -319,6 +328,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
 --     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
