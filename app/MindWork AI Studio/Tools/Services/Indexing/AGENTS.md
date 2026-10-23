@@ -59,11 +59,10 @@ Rules which are easy to break:
   `Path` APIs: on Windows, `Path.GetFullPath` reads a key like `mail:…` as a file with an alternate data stream.
 - **Ids and signature are pinned.** The formats in `IndexedDocumentIds` and the embedding signature
   (`DataSourceEmbeddingService.BuildEmbeddingSignature`) are fixed by tests, because every stored chunk and every
-  index depends on them. When the metadata stored next to a chunk changes, raise `CHUNK_METADATA_VERSION`
-  deliberately: that rebuilds every index. The exception is a new, optional value which old chunks may lack
-  without being wrong, such as the end page of a chunk: readers treat it as unknown, and a chunk gains it once its
-  document is indexed again. Rebuilding every index for it would send every document to the embedding provider
-  once more.
+  index depends on them. `CHUNK_METADATA_VERSION` and `MAIL_TEXT_VERSION` are frozen: raising one rebuilds every
+  index it is part of, so raise it only when every stored vector is wrong. A change to how documents are read, or
+  to what is stored next to a chunk, raises neither. A new value which old chunks may lack without being wrong,
+  such as the end page of a chunk, reads as unknown, and a chunk gains it once its document is indexed again.
 - **The service decides when, the indexer decides how.** Whether changes are tracked at all depends on the
   automatic refresh setting and the startup hash check, and only the embedding service decides that.
 - **A pause stores the source hash only when a partial index may be searched.** A stored source hash tells the

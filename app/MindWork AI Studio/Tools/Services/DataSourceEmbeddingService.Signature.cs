@@ -13,18 +13,22 @@ public sealed partial class DataSourceEmbeddingService
     internal const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
 
     /// <summary>
-    /// What this build writes next to a chunk besides its text. Raise it whenever that changes.
+    /// The version of the chunk metadata, part of every embedding signature and frozen at 2. Raise it
+    /// only for a change which makes every stored vector wrong.
     /// </summary>
     /// <remarks>
-    /// A stored chunk keeps the metadata of the run which wrote it, and nothing recomputes it: the
-    /// fingerprint of a file says whether the file changed, not whether we got better at reading
-    /// it. Raising this number makes the embedding signature differ, which drops the index and
-    /// builds it again — the only way corrected page numbers reach a data source somebody indexed
-    /// earlier.
+    /// Raising this number makes the embedding signature of every data source differ, files and
+    /// mailboxes alike. That drops every index and sends every document to the embedding provider
+    /// once more, which is right only when no stored vector is valid anymore, e.g., because every
+    /// chunk would get another text. A better way of reading some files, or a new value stored next
+    /// to a chunk, does not justify it: a chunk which lacks the value reads as not knowing it, and
+    /// gains it once its document is indexed again.
     ///
     /// Version 2: the page of a chunk is taken from the runtime metadata instead of being read back
     /// out of the chunk text, which is what left Word and OpenDocument files, and passages
-    /// continuing across a page break, without a page.
+    /// continuing across a page break, without a page. It rebuilt every mailbox as well, although
+    /// mails have no pages, and fetched every mail from the server once more. That is why this
+    /// number is frozen.
     ///
     /// Not raised for the page a chunk ends on, which chunks store since v26.10.1. It adds to what
     /// a chunk says and corrects nothing: a chunk without it still names its start page, which is
@@ -34,13 +38,17 @@ public sealed partial class DataSourceEmbeddingService
     private const string CHUNK_METADATA_VERSION = "2";
 
     /// <summary>
-    /// What this build makes of a mail before it is cut into chunks. Raise it whenever that changes.
+    /// The version of what this build makes of a mail before it is cut into chunks, part of the
+    /// embedding signature of every mailbox and frozen at 2. Raise it only for a change which makes
+    /// every stored vector of a mailbox wrong.
     /// </summary>
     /// <remarks>
     /// The counterpart of CHUNK_METADATA_VERSION for mailboxes alone. A mail on the server never
     /// changes, so nothing reads it again once it is indexed, however differently MailTextBuilder
-    /// would write it today. Raising this number rebuilds the index of every mailbox and leaves
-    /// every other data source alone.
+    /// would write it today. Raising this number rebuilds the index of every mailbox, which fetches
+    /// every mail from the server and embeds it once more, and leaves every other data source alone.
+    /// A change which alters the text of some mails, such as those with attachments, does not
+    /// justify that.
     ///
     /// Version 1: the header block and the text from the HTML part, without attachments.
     ///
