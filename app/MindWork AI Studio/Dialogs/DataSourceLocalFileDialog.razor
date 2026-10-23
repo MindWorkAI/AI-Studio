@@ -83,6 +83,8 @@
                 }
             </MudSelect>
 
+            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@T("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction"/>
+
             @if (this.MediaTranscriptionHint is { } mediaTranscriptionHint)
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="mb-3">

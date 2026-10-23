@@ -33,6 +33,11 @@ public partial class DataSourceLocalFileInfoDialog : MSGComponentBase
     private bool IsFileAvailable => this.fileInfo.Exists;
     
     private string FileSize => this.fileInfo.FileSize();
+
+    /// <summary>
+    /// The level which applies, including what the organization demands.
+    /// </summary>
+    private string OutboundDataRestrictionName => this.DataSource.GetEffectiveOutboundDataRestriction(this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction).GetName();
     
     private void Close() => this.MudDialog.Close();
 }
