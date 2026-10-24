@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
@@ -24,19 +23,18 @@ public sealed class TemporaryChatService(ILogger<TemporaryChatService> logger, S
             return;
         }
 
-        await this.StartMaintenance();
+        this.StartMaintenance();
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(CHECK_INTERVAL, stoppingToken);
-            await this.StartMaintenance();
+            this.StartMaintenance();
         }
     }
 
     #endregion
 
-    private async Task StartMaintenance()
+    private void StartMaintenance()
     {
-        var deletedChatIds = new List<Guid>();
         logger.LogInformation("Starting maintenance of temporary chat storage.");
         var temporaryDirectories = Path.Join(SettingsManager.DataDirectory, "tempChats");
         if(!Directory.Exists(temporaryDirectories))
@@ -69,14 +67,9 @@ public sealed class TemporaryChatService(ILogger<TemporaryChatService> logger, S
                 logger.LogInformation($"Deleting temporary chat storage directory '{tempChatDirPath}' due to maintenance policy.");
                 Directory.Delete(tempChatDirPath, true);
                 WorkspaceBehaviour.InvalidateWorkspaceTreeCache();
-
-                if (Guid.TryParse(Path.GetFileName(tempChatDirPath), out var chatId))
-                    deletedChatIds.Add(chatId);
             }
         }
 
-        // What the deleted chats received goes with them:
-        await ChatProvenance.ForgetChatsAsync(deletedChatIds);
         logger.LogInformation("Finished maintenance of temporary chat storage.");
     }
     

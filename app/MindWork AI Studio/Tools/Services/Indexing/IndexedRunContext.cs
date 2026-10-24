@@ -206,11 +206,13 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
             this.CollectionName,
             attempt.Generation);
 
+        //
+        // A document which was never indexed completely gets its row now, whose chunk count of zero
+        // hides it from every search. An attempt it kept before stays under the same row, so this one
+        // reuses its vectors, and a failure leaves them in place, cf. CleanupFailedDocumentAsync:
+        //
         if (!manifest.Files.ContainsKey(document.Key))
-        {
-            await indexStore.DeleteFileAsync(dataSource.Id, document.Key, token);
             await indexStore.UpsertFileAsync(dataSource.Id, document.State with { Generation = attempt.Generation }, token);
-        }
 
         var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
         var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
@@ -376,7 +378,8 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// keeps two at most. Any other attempt goes instead, and what the document had stored before
     /// it stays as it was.<br/><br/>
     /// A document indexed for the first time has no version to keep. It keeps an attempt which
-    /// holds its vectors, under a row whose chunk count stays zero, and loses everything otherwise.<br/><br/>
+    /// holds its vectors, under a row whose chunk count stays zero. Otherwise, it keeps what an
+    /// earlier attempt kept, and loses everything when there is none.<br/><br/>
     /// Never throws for a store which refuses: the document already failed, and that failure is the
     /// one the user has to hear about.
     /// </remarks>
@@ -387,16 +390,15 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         var storedVersion = manifest.Files.GetValueOrDefault(documentKey);
         this.attempts.Remove(documentKey, out var attempt);
 
-        // The attempt failed before it wrote anything:
-        if (attempt is null && storedVersion is not null)
+        // The attempt failed before it wrote anything, so what the document had stays as it was:
+        if (attempt is null)
             return;
 
         IReadOnlyCollection<int> keptGenerations = (storedVersion, attempt) switch
         {
             (null, { HoldsEveryStoredVector: true } kept) => [kept.Generation],
             ({ } stored, { HoldsEveryStoredVector: true } kept) => [stored.Generation, kept.Generation],
-            (not null, { } stoppedEarly) => stoppedEarly.EarlierGenerations,
-            _ => [],
+            _ => attempt.EarlierGenerations,
         };
 
         try

@@ -113,11 +113,15 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             
             //
             // No outcome means the round failed: the request errored out, or the stream ended
-            // mid-sentence. Either way the adapter has already reported it.
+            // mid-sentence. Either way the adapter has already reported it. The answer keeps what
+            // was written so far, and with it what the tools of the earlier rounds contributed:
             //
             if (round is null)
             {
                 await context.ResetToolRuntimeStatusAsync();
+                if (toolSources.Count > 0 || toolPassages.Count > 0)
+                    yield return WithWhatTheToolsContributed(string.Empty);
+
                 yield break;
             }
             

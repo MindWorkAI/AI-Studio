@@ -172,8 +172,13 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
             var settingsJson = JsonSerializer.Serialize(settings, SettingsManager.JSON_OPTIONS);
             var organizationPluginFolders = DataBackupContents.FindOrganizationPluginsAmongUserPlugins(PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>(), dataDirectory);
 
-            provenanceCopyDirectory = await this.CopyProvenanceStoreAsync(dataDirectory, token);
+            //
+            // The texts the chats received are copied last, right before the chats themselves are
+            // read: copying the indexes may take minutes, and an answer completed meanwhile then
+            // still finds its texts in the backup.
+            //
             indexCopiesDirectory = await this.CopyIndexesAsync(dataDirectory, token);
+            provenanceCopyDirectory = await this.CopyProvenanceStoreAsync(dataDirectory, token);
 
             var sources = new DataBackupSources(dataDirectory, configDirectory, settingsJson, indexCopiesDirectory, organizationPluginFolders, provenanceCopyDirectory);
             var manifest = new DataBackupManifest(
@@ -271,7 +276,8 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
     /// backup leaves those out.<br/><br/>
     ///
     /// A store which AI Studio could not open is taken from the data folder as it lies there:
-    /// nothing writes to it then, and the backup keeps whatever there is.
+    /// nothing writes to it then, and the backup keeps whatever there is. So is a store which could
+    /// not be copied, e.g., since it is damaged: that must not cost the backup of the chats.
     /// </remarks>
     /// <param name="dataDirectory">The data folder, which holds the directory of the copies.</param>
     /// <param name="token">The cancellation token.</param>
@@ -293,10 +299,16 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
             await provenanceStore.BackupToDirectoryAsync(Path.Join(copyDirectory, provenanceEntry.RelativePath.Replace(DataBackupContents.SEPARATOR, Path.DirectorySeparatorChar)), token);
             return copyDirectory;
         }
-        catch
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             this.TryDeleteCopies(copyDirectory);
             throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Copying the provenance store failed, so the backup takes it from the data folder as it lies there.");
+            this.TryDeleteCopies(copyDirectory);
+            return string.Empty;
         }
     }
 

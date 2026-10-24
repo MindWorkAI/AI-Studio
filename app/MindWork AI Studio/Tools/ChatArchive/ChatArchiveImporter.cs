@@ -25,6 +25,11 @@ public static class ChatArchiveImporter
 
     private const int BUFFER_SIZE = 64 * 1024;
 
+    /// <summary>
+    /// What SQLite appends to the name of a database for its write-ahead log.
+    /// </summary>
+    private const string WRITE_AHEAD_LOG_SUFFIX = "-wal";
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatArchiveImporter).Namespace, nameof(ChatArchiveImporter));
 
     /// <summary>
@@ -207,9 +212,14 @@ public static class ChatArchiveImporter
         {
             Directory.CreateDirectory(directory);
             var path = Path.Join(directory, SqliteProvenanceStoreClientImplementation.DATABASE_FILENAME);
-            await using (var entryStream = entry.Open())
-            await using (var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan))
-                await entryStream.CopyToAsync(fileStream, token);
+            await ExtractEntryAsync(entry, path, token);
+
+            //
+            // A backup which took the store as it lay in the data folder may hold its newest entries
+            // in the write-ahead log next to it, which SQLite reads along:
+            //
+            if (archive.GetEntry(ChatArchiveFormat.PROVENANCE_STORE_ENTRY + WRITE_AHEAD_LOG_SUFFIX) is { } logEntry)
+                await ExtractEntryAsync(logEntry, path + WRITE_AHEAD_LOG_SUFFIX, token);
 
             return new(provenanceStore, path);
         }
@@ -223,6 +233,19 @@ public static class ChatArchiveImporter
             LOG.LogWarning(exception, "The provenance store of the backup could not be unpacked, so its chats arrive without what they received besides their messages.");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Writes one entry of the backup into a file, as a stream.
+    /// </summary>
+    /// <param name="entry">The entry.</param>
+    /// <param name="destinationPath">The file, which is replaced when it exists.</param>
+    /// <param name="token">The cancellation token.</param>
+    private static async Task ExtractEntryAsync(ZipArchiveEntry entry, string destinationPath, CancellationToken token)
+    {
+        await using var entryStream = entry.Open();
+        await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await entryStream.CopyToAsync(fileStream, token);
     }
 
     /// <summary>
@@ -521,10 +544,7 @@ public static class ChatArchiveImporter
 
                 var destinationPath = ZipEntryNames.GetDestinationPath(chatDirectory, relativePath);
                 Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-
-                await using var entryStream = entry.Entry.Open();
-                await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
-                await entryStream.CopyToAsync(fileStream, token);
+                await ExtractEntryAsync(entry.Entry, destinationPath, token);
 
                 extractedPaths.Add(relativePath);
             }

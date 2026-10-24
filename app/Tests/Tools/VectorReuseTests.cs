@@ -281,6 +281,39 @@ public sealed class VectorReuseTests
     }
 
     /// <remarks>
+    /// The next attempt of a new document stops early for a reason which is not the provider's,
+    /// here a file which cannot be read to its end. What the attempt before kept stays, so the
+    /// provider is not paid twice for the same chunks.
+    /// </remarks>
+    [Test]
+    public async Task ANewDocumentKeepsWhatItPaidForWhenItsNextAttemptStopsEarly()
+    {
+        await using var run = await IndexRun.CreateAsync(embeddingBatchSize: 1);
+        run.Provider.FailOn = "Chapter two.";
+        await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.", "Chapter three.");
+        var keptChunks = await run.StoredChunksAsync();
+        run.Provider.FailOn = null;
+
+        var indexed = await run.IndexAsync("fingerprint-1", "Chapter one.", IndexRun.UNREADABLE);
+
+        var chunksAfterwards = await run.StoredChunksAsync();
+        var pointsAfterwards = run.Vectors.Points.Keys.ToList();
+        var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
+        run.Provider.EmbeddedTexts.Clear();
+        var indexedAtLast = await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.", "Chapter three.");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(indexed, Is.False);
+            Assert.That(chunksAfterwards, Is.EquivalentTo(keptChunks), "Only what the attempt which stopped early stored goes.");
+            Assert.That(pointsAfterwards, Is.EquivalentTo(keptChunks.Select(chunk => chunk.ChunkId)));
+            Assert.That(manifest.UnfinishedFiles, Is.EquivalentTo(new[] { PATH }), "The document still cannot be searched.");
+            Assert.That(indexedAtLast, Is.True);
+            Assert.That(run.Provider.EmbeddedTexts, Is.EqualTo(new[] { "Chapter two.", "Chapter three." }), "The first chapter was paid for once.");
+        });
+    }
+
+    /// <remarks>
     /// The provider fails for the first chunk already, so the attempt has nothing to keep.
     /// </remarks>
     [Test]

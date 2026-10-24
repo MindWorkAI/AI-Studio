@@ -12,6 +12,7 @@ namespace AIStudio.Chat;
 /// <item>a message which was removed, edited, or answered anew, together with its passages and attached documents;</item>
 /// <item>a text which a preview stored, while its chat was never stored with it, or sending could not remove it;</item>
 /// <item>an assistant whose conversation was never sent to a chat;</item>
+/// <item>a temporary chat which the maintenance deleted: it may still be open, and storing it again brings it back;</item>
 /// <item>a chat which was never stored, or deleted while the store was not available.</item>
 /// </list>
 /// Each chat file is read for its references, which only a cleanup at the start can do safely:

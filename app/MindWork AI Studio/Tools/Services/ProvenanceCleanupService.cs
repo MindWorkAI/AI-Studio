@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.ProvenanceStore;
 
@@ -24,6 +25,17 @@ public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClie
 
         if (stoppingToken.IsCancellationRequested)
             return;
+
+        //
+        // A restore which the runtime could not finish leaves chats and store of two different states
+        // in the data folder, while the chats it replaced wait elsewhere to be moved back. Nothing
+        // tells then which chat refers to what:
+        //
+        if (SettingsManager.DataDirectory is { } dataDirectory && DataRestoreFollowUp.IsRestoreUnfinished(dataDirectory))
+        {
+            logger.LogWarning("A restore is not finished yet, so the provenance startup cleanup waits for a later start.");
+            return;
+        }
 
         try
         {
