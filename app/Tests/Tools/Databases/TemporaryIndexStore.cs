@@ -31,7 +31,7 @@ internal sealed class TemporaryIndexStore(string directory, string databasePath)
     /// The client maps the current schema, so it may fail on such a store. Write the rows of the
     /// older schema with raw SQL through CreateContext, then call MigrateAsync.
     /// </remarks>
-    /// <param name="targetMigration">The id of the last migration to apply, e.g., "20261022000000_ChunkEndPageNumber".</param>
+    /// <param name="targetMigration">The id of the last migration to apply, e.g., "20261018000000_MediaTranscriptKey".</param>
     public static async Task<TemporaryIndexStore> CreateAsync(string targetMigration)
     {
         var store = Create();

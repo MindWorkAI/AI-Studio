@@ -62,11 +62,26 @@
                 Kind="@this.ViewerKind"
                 Text="@this.fileContent"
                 MediaUrl="@(this.document?.FilePathAsUrl ?? string.Empty)"
-                Label="@T("Loaded Content")"
                 HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"
                 CharacterLimit="@PREVIEW_CHARACTER_LIMIT"
                 CutOffNotice="@this.CutOffNotice"
-                MaxHeight="@ContentViewer.NO_HEIGHT_LIMIT"/>
+                MaxHeight="@ContentViewer.NO_HEIGHT_LIMIT">
+                <Toolbar>
+                    @* The label takes the free width, so the button stands right, next to the views. *@
+                    <MudText Typo="Typo.subtitle2" Class="flex-grow-1">
+                        @T("Loaded Content")
+                    </MudText>
+
+                    @if (this.document?.Exists ?? false)
+                    {
+                        @* On hover only: the focus comes back to the button from the program the file opens
+                           in, and a tooltip shown on focus would then stay until the user clicks somewhere else. *@
+                        <MudTooltip Text="@T("Opens the file in the program your system uses for it")" Placement="Placement.Top" ShowOnFocus="@false">
+                            <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" OnClick="@this.OpenDocument"/>
+                        </MudTooltip>
+                    }
+                </Toolbar>
+            </ContentViewer>
         }
         </div>
         </PathDropZone>
