@@ -102,6 +102,15 @@ public sealed record ChatThread
     /// <summary>
     /// The augmented data for this chat thread. Will be inserted into the system prompt.
     /// </summary>
+    /// <remarks>
+    /// Not stored: it belongs to one request. The classic RAG process empties and writes it anew for
+    /// every message, a regenerated answer included, and a rollback empties it, so nothing reads it
+    /// once the answer is there. What the AI read of it is kept with the answer instead, as the
+    /// passages of its sources, see ContentText.StoreReceivedContentAsync. Stored, it was often the
+    /// largest part of a chat file. Older chat files still hold it; it is ignored on loading and
+    /// left out on their next save.
+    /// </remarks>
+    [JsonIgnore]
     public string AugmentedData { get; set; } = string.Empty;
 
     /// <summary>
