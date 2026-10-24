@@ -7,8 +7,9 @@ namespace AIStudio.Tools.RAG;
 /// </summary>
 /// <remarks>
 /// Stored with the answer, so the user can still read what the answer rests on after the chat was
-/// reloaded. The texts are the filtered ones: whatever the prompt injection filter removed did not
-/// reach the AI, so it is not shown as if it had.<br/><br/>
+/// reloaded: where it is with the answer, its texts in the provenance store, see ProvenanceId. The
+/// texts are the filtered ones: whatever the prompt injection filter removed did not reach the AI,
+/// so it is not shown as if it had.<br/><br/>
 /// A passage belongs to the source it is listed under, which is why it is only made for a context
 /// with a source, see SourceUrl. A context without one, e.g., a file known by a relative path only,
 /// has nothing below the answer to show its passage at, so it gets none.<br/><br/>
@@ -47,7 +48,19 @@ public sealed record SourcePassage
     public RetrievalContentType Type { get; init; }
 
     /// <summary>
-    /// The matched text, filtered for prompt injections.
+    /// The entry of the provenance store which holds the matched text and the content around it,
+    /// or null when the passage holds them itself.
+    /// </summary>
+    /// <remarks>
+    /// Set once the answer is complete, see ContentText.StoreReceivedContentAsync. Until then, and
+    /// whenever the store could not take them, the passage holds both texts itself; once they are
+    /// stored, Text and SurroundingContent are empty. Left out of the chat file while null.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? ProvenanceId { get; init; }
+
+    /// <summary>
+    /// The matched text, filtered for prompt injections, as long as it is not stored, see ProvenanceId.
     /// </summary>
     /// <remarks>
     /// Empty for an image which matched: the AI is only told that it did, never shown the image.
@@ -55,7 +68,7 @@ public sealed record SourcePassage
     public string Text { get; init; } = string.Empty;
 
     /// <summary>
-    /// The content around the matched text, filtered for prompt injections.
+    /// The content around the matched text, filtered for prompt injections, as long as it is not stored, see ProvenanceId.
     /// </summary>
     public IReadOnlyList<string> SurroundingContent { get; init; } = [];
 

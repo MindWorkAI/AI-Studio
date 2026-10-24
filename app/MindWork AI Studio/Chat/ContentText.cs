@@ -3,6 +3,8 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.RAG.RAGProcesses;
@@ -80,6 +82,93 @@ public sealed class ContentText : IContent
         this.Sources.MergeSources(sources);
         this.SourcePassages.MergePassages(passages);
         this.Sources.NamePassagesInTitles(this.SourcePassages);
+    }
+
+    /// <summary>
+    /// Whether the user was told that a text stays in the chat file, since the provenance store could not take it.
+    /// </summary>
+    /// <remarks>
+    /// Once per run of the app: a store which cannot be written stays so for a while, and a message
+    /// with every answer would tell the user nothing new.
+    /// </remarks>
+    private static int UNSTORED_CONTENT_REPORTED;
+
+    /// <summary>
+    /// Moves what the AI received for this answer into the provenance store, so the chat keeps only references to it.
+    /// </summary>
+    /// <remarks>
+    /// Called once the answer is complete, also when it was stopped or failed: until then, a passage
+    /// found twice is told apart by its text, see SourcePassageExtensions.MergePassages, and only the
+    /// passages which made it into the answer get stored. Nothing here may stop the answer from being
+    /// stored, so every failure ends in the passages keeping their texts.
+    /// </remarks>
+    /// <param name="chatId">The chat this answer belongs to.</param>
+    public async Task StoreReceivedContentAsync(Guid chatId)
+    {
+        // Most answers, those of the agents among them, received nothing to store, and need no database:
+        if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore()))
+            return;
+
+        try
+        {
+            var store = await Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync();
+            if (await this.StoreReceivedContentAsync(store, chatId))
+                return;
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogError(exception, "Failed to store what the AI received for an answer of the chat '{ChatId}'. It stays in the chat file.", chatId);
+        }
+
+        if (Interlocked.Exchange(ref UNSTORED_CONTENT_REPORTED, 1) is 0)
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Storage, TB("AI Studio could not store what the AI received apart from your chat. It stays in the chat itself, so you can still read it.")));
+    }
+
+    /// <summary>
+    /// Moves what the AI received for this answer into the given provenance store.
+    /// </summary>
+    /// <remarks>
+    /// The list of passages is replaced as a whole rather than changed: the user interface may read
+    /// it meanwhile. A passage which the store could not take keeps its texts.
+    /// </remarks>
+    /// <param name="store">The provenance store.</param>
+    /// <param name="chatId">The chat this answer belongs to.</param>
+    /// <returns>True when everything was stored, false when something stays in the chat itself.</returns>
+    internal async Task<bool> StoreReceivedContentAsync(ProvenanceStoreClient store, Guid chatId)
+    {
+        var allStored = true;
+        var passages = new List<SourcePassage>(this.SourcePassages.Count);
+        foreach (var passage in this.SourcePassages)
+        {
+            if (!passage.HoldsTextsToStore())
+            {
+                passages.Add(passage);
+                continue;
+            }
+
+            Guid? provenanceId = null;
+            try
+            {
+                // Not cancellable: the answer is complete, also when the user stopped it.
+                provenanceId = await store.StoreAsync(chatId, passage.GetProvenanceKind(), passage.Text, passage.SurroundingContent, CancellationToken.None);
+            }
+            catch (Exception exception)
+            {
+                LOGGER.LogWarning(exception, "Failed to store a passage of the source '{SourceUrl}'. It stays in the chat file.", passage.SourceUrl);
+            }
+
+            if (provenanceId is null)
+            {
+                allStored = false;
+                passages.Add(passage);
+                continue;
+            }
+
+            passages.Add(passage with { ProvenanceId = provenanceId, Text = string.Empty, SurroundingContent = [] });
+        }
+
+        this.SourcePassages = passages;
+        return allStored;
     }
 
     /// <summary>
@@ -311,6 +400,9 @@ public sealed class ContentText : IContent
         {
             this.Text = this.Text.RemoveThinkTags().Trim();
             this.EndToolRun();
+
+            // Before whoever is told next stores the chat, so that it refers to what the AI received instead of holding it:
+            await this.StoreReceivedContentAsync(chatThread.ChatId);
 
             // Inform the UI that the streaming is done:
             await this.StreamingDone();

@@ -1,3 +1,4 @@
+using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.RAG;
@@ -12,6 +13,29 @@ public static class SourcePassageExtensions
     /// <param name="passage">The passage.</param>
     /// <returns>True for a transcript.</returns>
     public static bool IsTranscript(this SourcePassage passage) => passage.Type is RetrievalContentType.TEXT_TRANSCRIPT;
+
+    /// <summary>
+    /// What sort of content the passage is, as the provenance store files it.
+    /// </summary>
+    /// <remarks>
+    /// Told by what the content is rather than by where it came from: a mail is a mail, whether a
+    /// mailbox data source or a tool handed it over.
+    /// </remarks>
+    /// <param name="passage">The passage.</param>
+    /// <returns>The kind of its entry.</returns>
+    public static ProvenanceKind GetProvenanceKind(this SourcePassage passage) => passage.Type switch
+    {
+        RetrievalContentType.TEXT_EMAIL => ProvenanceKind.MAIL,
+        RetrievalContentType.TEXT_WEBSITE => ProvenanceKind.WEB_PAGE,
+        _ => ProvenanceKind.DATA_SOURCE_PASSAGE,
+    };
+
+    /// <summary>
+    /// Whether the passage holds texts which belong into the provenance store, see SourcePassage.ProvenanceId.
+    /// </summary>
+    /// <param name="passage">The passage.</param>
+    /// <returns>False once the texts are stored, and for a passage without any, such as an image.</returns>
+    public static bool HoldsTextsToStore(this SourcePassage passage) => passage.ProvenanceId is null && (passage.Text.Length > 0 || passage.SurroundingContent.Count > 0);
 
     /// <summary>
     /// What stands between the sheets of a spreadsheet in a location, e.g., "Budget: rows 3–9 · Summary: row 2".
@@ -204,19 +228,20 @@ public static class SourcePassageExtensions
     /// <remarks>
     /// A passage is known when one with the same address and the same text is, e.g., the same chunk
     /// found by two searches for one answer. Unlike the sources, the address counts with its page:
-    /// the same sentence on two pages of a document is two passages.
+    /// the same sentence on two pages of a document is two passages. A stored passage is told
+    /// apart by its entry, since its text lies in the provenance store.
     /// </remarks>
     /// <param name="passages">The existing list of passages to merge into.</param>
     /// <param name="addedPassages">The passages to add.</param>
     public static void MergePassages(this IList<SourcePassage> passages, IEnumerable<SourcePassage> addedPassages)
     {
         var knownPassages = passages
-            .Select(passage => (passage.SourceUrl, passage.Text))
+            .Select(passage => (passage.SourceUrl, passage.Text, passage.ProvenanceId))
             .ToHashSet();
 
         foreach (var addedPassage in addedPassages)
         {
-            if (knownPassages.Add((addedPassage.SourceUrl, addedPassage.Text)))
+            if (knownPassages.Add((addedPassage.SourceUrl, addedPassage.Text, addedPassage.ProvenanceId)))
                 passages.Add(addedPassage);
         }
     }

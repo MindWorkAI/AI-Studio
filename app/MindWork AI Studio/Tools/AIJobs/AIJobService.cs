@@ -363,6 +363,13 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
         RemoveEmptyAIResponse(state);
 
+        //
+        // Before the last checkpoint, so that the stored chat refers to what the AI received instead
+        // of holding it. An answer which was removed for being empty keeps nothing:
+        //
+        if (request.ChatThread.Blocks.Any(block => ReferenceEquals(block.Content, aiText)))
+            await aiText.StoreReceivedContentAsync(request.ChatThread.ChatId);
+
         lock (state.SyncRoot)
         {
             state.Snapshot = state.Snapshot with

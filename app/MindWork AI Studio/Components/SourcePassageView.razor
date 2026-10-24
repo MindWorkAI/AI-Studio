@@ -9,6 +9,17 @@
 }
 else
 {
+    @if (this.isTextMissing)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-2">
+            @T("AI Studio no longer has the text the AI received from this passage. Only where it was found is still known.")
+        </MudAlert>
+    }
+    else if (this.isReadingText)
+    {
+        <MudProgressLinear Indeterminate="@true" Color="Color.Primary" Size="Size.Small" Class="mb-2"/>
+    }
+
     <ContentViewer Text="@this.text" MaxHeight="@this.MaxHeight">
         <Toolbar>
             @* The heading takes the free width, so the button stands right, next to the views. *@

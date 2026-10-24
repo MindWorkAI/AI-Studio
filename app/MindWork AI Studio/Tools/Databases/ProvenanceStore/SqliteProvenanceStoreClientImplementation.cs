@@ -110,8 +110,7 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
     private static string GetKindLabel(ProvenanceKind kind) => kind switch
     {
         ProvenanceKind.ATTACHMENT => TB("Attached files"),
-        ProvenanceKind.DATA_SOURCE_PASSAGE => TB("Passages of local data sources"),
-        ProvenanceKind.ERI_PASSAGE => TB("Passages of ERI servers"),
+        ProvenanceKind.DATA_SOURCE_PASSAGE => TB("Passages of data sources"),
         ProvenanceKind.MAIL => TB("Mails"),
         ProvenanceKind.WEB_PAGE => TB("Web pages"),
         ProvenanceKind.TOOL_RESULT => TB("Tool results"),

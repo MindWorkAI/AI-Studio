@@ -15,22 +15,18 @@ public enum ProvenanceKind
     ATTACHMENT,
 
     /// <summary>
-    /// A passage a local data source handed to the AI.
+    /// A passage a data source handed to the AI: a local one or an ERI server, through the classic
+    /// process or the semantic search.
     /// </summary>
     DATA_SOURCE_PASSAGE,
 
     /// <summary>
-    /// A passage an ERI server handed to the AI, possibly with content around it.
-    /// </summary>
-    ERI_PASSAGE,
-
-    /// <summary>
-    /// A mail, or a part of one, which a tool handed to the AI.
+    /// A mail, or a part of one, which the AI received from a mailbox.
     /// </summary>
     MAIL,
 
     /// <summary>
-    /// A web page which a tool read for the AI.
+    /// A web page the AI received, e.g., which a tool read for it.
     /// </summary>
     WEB_PAGE,
 

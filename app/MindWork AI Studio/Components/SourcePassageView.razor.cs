@@ -1,3 +1,5 @@
+using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -13,7 +15,10 @@ namespace AIStudio.Components;
 /// The content is the filtered one, see SourcePassage. The bar above it says where in the document
 /// the passage stands, and whether it is the transcript of a recording, since the AI then read the
 /// words of the recording rather than the recording itself. An image the AI was only told about is
-/// said to be one, rather than shown as if the AI had seen it.
+/// said to be one, rather than shown as if the AI had seen it.<br/><br/>
+///
+/// The texts of a passage lie in the provenance store once its answer is complete, and are read
+/// from there. Should the store no longer hold them, the view says so instead of showing nothing.
 /// </remarks>
 public partial class SourcePassageView : MSGComponentBase
 {
@@ -44,6 +49,12 @@ public partial class SourcePassageView : MSGComponentBase
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    [Inject]
+    private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
+
+    [Inject]
+    private ILogger<SourcePassageView> Logger { get; init; } = null!;
+
     private string heading = string.Empty;
 
     private string text = string.Empty;
@@ -55,9 +66,26 @@ public partial class SourcePassageView : MSGComponentBase
 
     private string openTooltip = string.Empty;
 
+    /// <summary>
+    /// The passage whose texts are shown or being read, so that a render with the same passage does not read them again.
+    /// </summary>
+    private SourcePassage? shownPassage;
+
+    /// <summary>
+    /// Numbers the reads, so that a read which another passage overtook leaves the texts alone.
+    /// </summary>
+    private int readNumber;
+
+    private bool isReadingText;
+
+    /// <summary>
+    /// Whether the provenance store no longer holds the texts of the passage.
+    /// </summary>
+    private bool isTextMissing;
+
     #region Overrides of ComponentBase
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         var parts = new[] { this.Passage.GetLocationLabel(), this.GetTranscriptLabel() }.Where(part => part.Length > 0).ToList();
         this.heading = parts.Count > 0 ? string.Join(" · ", parts) : T("Text the AI received");
@@ -70,18 +98,66 @@ public partial class SourcePassageView : MSGComponentBase
         this.documentAtPassage = this.Document is { } document ? document with { PageNumber = page } : null;
         this.openTooltip = page is null ? T("Opens the document") : string.Format(T("Opens the document at page {0}"), page);
 
-        //
-        // The surrounding content follows the matched text, the way the AI received both, so that
-        // all of it reads in one place:
-        //
-        this.text = this.Passage.SurroundingContent.Count is 0
-            ? this.Passage.Text
-            : $"{this.Passage.Text}{PART_SEPARATOR}**{T("Surrounding content")}**{PART_SEPARATOR}{string.Join(PART_SEPARATOR, this.Passage.SurroundingContent)}";
+        if (!ReferenceEquals(this.shownPassage, this.Passage))
+        {
+            this.shownPassage = this.Passage;
+            await this.ReadTextAsync(this.Passage);
+        }
 
-        base.OnParametersSet();
+        await base.OnParametersSetAsync();
     }
 
     #endregion
+
+    /// <summary>
+    /// Reads the texts of a passage: from the provenance store once they lie there, otherwise from the passage itself.
+    /// </summary>
+    /// <param name="passage">The passage.</param>
+    private async Task ReadTextAsync(SourcePassage passage)
+    {
+        var currentRead = ++this.readNumber;
+        this.isTextMissing = false;
+        if (passage.ProvenanceId is not { } provenanceId)
+        {
+            this.isReadingText = false;
+            this.text = this.ComposeText(passage.Text, passage.SurroundingContent);
+            return;
+        }
+
+        this.isReadingText = true;
+        this.text = string.Empty;
+
+        ProvenanceEntry? entry = null;
+        try
+        {
+            var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
+            var entries = await store.GetEntriesAsync([provenanceId], CancellationToken.None);
+            entry = entries.GetValueOrDefault(provenanceId);
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogError(exception, "Failed to read the passage '{ProvenanceId}' from the provenance store.", provenanceId);
+        }
+
+        // The user went on to another passage meanwhile, which shows its own texts:
+        if (currentRead != this.readNumber)
+            return;
+
+        this.isReadingText = false;
+        this.isTextMissing = entry is null;
+        this.text = entry is null ? string.Empty : this.ComposeText(entry.Content, entry.SurroundingContent);
+    }
+
+    /// <summary>
+    /// Writes the texts of a passage as one text.
+    /// </summary>
+    /// <remarks>
+    /// The surrounding content follows the matched text, the way the AI received both, so that all
+    /// of it reads in one place.
+    /// </remarks>
+    private string ComposeText(string matchedText, IReadOnlyList<string> surroundingContent) => surroundingContent.Count is 0
+        ? matchedText
+        : $"{matchedText}{PART_SEPARATOR}**{T("Surrounding content")}**{PART_SEPARATOR}{string.Join(PART_SEPARATOR, surroundingContent)}";
 
     /// <summary>
     /// Says what the passage is a transcript of, or nothing when it is no transcript.

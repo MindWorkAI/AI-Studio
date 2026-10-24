@@ -33,7 +33,7 @@ public sealed class ProvenanceStoreTests
         var chatId = Guid.NewGuid();
         var before = DateTimeOffset.UtcNow.AddSeconds(-1);
 
-        var id = await store.Client.StoreAsync(chatId, ProvenanceKind.ERI_PASSAGE, "The budget grew by 4 %.\nÄnderungen folgen.", ["Before the passage.", "After the passage."], TOKEN);
+        var id = await store.Client.StoreAsync(chatId, ProvenanceKind.DATA_SOURCE_PASSAGE, "The budget grew by 4 %.\nÄnderungen folgen.", ["Before the passage.", "After the passage."], TOKEN);
         var entries = await store.Client.GetEntriesAsync([id!.Value], TOKEN);
 
         Assert.That(entries, Contains.Key(id.Value));
@@ -41,7 +41,7 @@ public sealed class ProvenanceStoreTests
         Assert.Multiple(() =>
         {
             Assert.That(entry.Id, Is.EqualTo(id.Value));
-            Assert.That(entry.Kind, Is.EqualTo(ProvenanceKind.ERI_PASSAGE));
+            Assert.That(entry.Kind, Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
             Assert.That(entry.Content, Is.EqualTo("The budget grew by 4 %.\nÄnderungen folgen."));
             Assert.That(entry.SurroundingContent, Is.EqualTo(new[] { "Before the passage.", "After the passage." }));
             Assert.That(entry.CreatedAtUtc, Is.GreaterThan(before));
@@ -186,7 +186,7 @@ public sealed class ProvenanceStoreTests
     public async Task TheBackupCopyHoldsEveryEntry()
     {
         await using var store = await TemporaryProvenanceStore.CreateAsync();
-        var id = await store.Client.StoreAsync(Guid.NewGuid(), ProvenanceKind.ERI_PASSAGE, "a passage", ["around it"], TOKEN);
+        var id = await store.Client.StoreAsync(Guid.NewGuid(), ProvenanceKind.DATA_SOURCE_PASSAGE, "a passage", ["around it"], TOKEN);
         var copyDirectory = CreateCopyDirectory();
 
         try
@@ -216,7 +216,7 @@ public sealed class ProvenanceStoreTests
         var chatInBackup = Guid.NewGuid();
         var otherChatInBackup = Guid.NewGuid();
         var importedChat = Guid.NewGuid();
-        var passage = await backup.Client.StoreAsync(chatInBackup, ProvenanceKind.ERI_PASSAGE, "a passage", ["around it"], TOKEN);
+        var passage = await backup.Client.StoreAsync(chatInBackup, ProvenanceKind.DATA_SOURCE_PASSAGE, "a passage", ["around it"], TOKEN);
         var page = await backup.Client.StoreAsync(chatInBackup, ProvenanceKind.WEB_PAGE, "a page", null, TOKEN);
         var otherChatsMail = await backup.Client.StoreAsync(otherChatInBackup, ProvenanceKind.MAIL, "a mail of another chat", null, TOKEN);
         var copyDirectory = CreateCopyDirectory();
@@ -235,7 +235,7 @@ public sealed class ProvenanceStoreTests
                 Assert.That(imported, Is.EqualTo(2));
                 Assert.That(importedAgain, Is.Zero, "Entries the chat holds already stay as they are.");
                 Assert.That(entries.Keys, Is.EquivalentTo(new[] { passage.Value, page.Value }), "The chat refers to its entries by their ids, also under its new id. Another chat's entries stay behind.");
-                Assert.That(entries[passage.Value].Kind, Is.EqualTo(ProvenanceKind.ERI_PASSAGE));
+                Assert.That(entries[passage.Value].Kind, Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
                 Assert.That(entries[passage.Value].SurroundingContent, Is.EqualTo(new[] { "around it" }));
                 Assert.That(chatIds, Is.EquivalentTo(new[] { importedChat }));
             });
