@@ -243,6 +243,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         var mails = searches.Select(_ => new JsonArray()).ToArray();
         var leftOutCounts = new int[searches.Length];
         var sources = new List<Source>();
+        var passages = new List<SourcePassage>();
         var resultCharacters = 0;
         var mostMails = pendingMails.Select(list => list.Count).DefaultIfEmpty(0).Max();
         for (var rank = 0; rank < mostMails; rank++)
@@ -265,7 +266,11 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 
                 resultCharacters += mailCharacters;
                 mails[index].Add(mail);
-                sources.Add(pendingMail.ToSource(texts, timeZone));
+
+                // Mails are listed without a link, so what the model received of one is all there is to read under it:
+                var source = pendingMail.ToSource(texts, timeZone);
+                sources.Add(source);
+                passages.Add(pendingMail.ToPassage(source, texts, timeZone));
             }
         }
 
@@ -297,6 +302,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
                 ["mailboxes"] = mailboxResults,
             },
             Sources = sources,
+            Passages = passages,
             RequiredProviderConfidence = requirements.Confidence,
             RequiredOutboundDataRestriction = requirements.OutboundData,
         };
@@ -485,6 +491,26 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
             }
 
             return description;
+        }
+
+        /// <summary>
+        /// Writes what the model received of this mail, for the user to read under its source.
+        /// </summary>
+        /// <param name="source">The source of this mail, see ToSource.</param>
+        /// <param name="texts">The filtered texts of the result.</param>
+        /// <param name="timeZone">The time zone of the user.</param>
+        /// <returns>The passage of this mail.</returns>
+        public SourcePassage ToPassage(Source source, MailTexts texts, TimeZoneInfo timeZone)
+        {
+            var attachment = this.LocatePassageInAttachment(texts);
+            return source.ToMailPassage(MailToolResults.ComposePassage(
+                texts[this.From],
+                [..this.Recipients.Select(recipient => texts[recipient])],
+                texts[this.Subject],
+                MailToolResults.FormatTime(this.Summary.ReceivedAtUtc, timeZone),
+                [..this.Attachments.Select(name => texts[name])],
+                attachment is null ? null : attachment.Value.Where is null ? attachment.Value.Name : $"{attachment.Value.Name}, {attachment.Value.Where}",
+                this.Passage is { } passage ? texts[passage] : null));
         }
 
         public Source ToSource(MailTexts texts, TimeZoneInfo timeZone) => MailToolResults.CreateSource(

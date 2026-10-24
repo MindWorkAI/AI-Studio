@@ -1,10 +1,12 @@
 using System.Globalization;
+using System.Text;
 using System.Text.Json.Nodes;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Mail;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
@@ -18,8 +20,54 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
 /// </remarks>
 internal static class MailToolResults
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MailToolResults).Namespace, nameof(MailToolResults));
+
     public const string NO_SUBJECT = "(no subject)";
     public const string UNKNOWN_SENDER = "(unknown sender)";
+
+    /// <summary>
+    /// Writes what the model received of a mail, for the user to read under the source of the mail.
+    /// </summary>
+    /// <remarks>
+    /// Every value is the filtered one the model got. Only the layout is made for the user: a short
+    /// list of the header, then the text of the mail, or the passage the search found, where the
+    /// model got one. A mail listed by its sender or date carries the header alone, which is all
+    /// the model received of it.
+    /// </remarks>
+    /// <param name="from">The sender, as the model got it.</param>
+    /// <param name="recipients">The recipients, as the model got them.</param>
+    /// <param name="subject">The subject.</param>
+    /// <param name="received">When the mail arrived, as the model got it.</param>
+    /// <param name="attachments">The names of the attachments.</param>
+    /// <param name="readFrom">The attachment the text is from, and where in it, or null for the text of the mail itself.</param>
+    /// <param name="text">The text of the mail, or the passage found, or null when the model got neither.</param>
+    /// <returns>The mail as Markdown.</returns>
+    public static string ComposePassage(string from, IReadOnlyList<string> recipients, string subject, string received, IReadOnlyList<string> attachments, string? readFrom, string? text)
+    {
+        var builder = new StringBuilder();
+        AppendField(TB("From"), from);
+        AppendField(TB("To"), string.Join(", ", recipients));
+        AppendField(TB("Subject"), subject);
+        AppendField(TB("Received"), received);
+        AppendField(TB("Attachments"), string.Join(", ", attachments));
+        AppendField(TB("Text from the attachment"), readFrom);
+
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            builder.AppendLine();
+            builder.AppendLine("---");
+            builder.AppendLine();
+            builder.Append(text);
+        }
+
+        return builder.ToString().TrimEnd();
+
+        void AppendField(string label, string? value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                builder.AppendLine($"- **{label}:** {value}");
+        }
+    }
 
     /// <summary>
     /// How many folders a result lists when the folder the model asked for does not exist.

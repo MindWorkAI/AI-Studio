@@ -53,6 +53,26 @@ public static class SourcePassageExtensions
     };
 
     /// <summary>
+    /// Makes the passage of a mail which a tool handed to the AI, so that the user can read under
+    /// the source of the mail what the AI received of it.
+    /// </summary>
+    /// <remarks>
+    /// Listed and named like the passage of a web page, see ToWebPagePassage. A mail has no path:
+    /// its address names it for AI Studio only, so there is nothing to copy or to open.
+    /// </remarks>
+    /// <param name="source">The source of the mail, as the tool lists it.</param>
+    /// <param name="content">What the model received of the mail, filtered for prompt injections.</param>
+    /// <returns>The passage of the mail.</returns>
+    public static SourcePassage ToMailPassage(this Source source, string content) => new()
+    {
+        SourceUrl = source.URL,
+        DataSourceName = source.Title,
+        Category = RetrievalContentCategory.TEXT,
+        Type = RetrievalContentType.TEXT_EMAIL,
+        Text = content,
+    };
+
+    /// <summary>
     /// Whether the passage holds texts which belong into the provenance store, see SourcePassage.ProvenanceId.
     /// </summary>
     /// <param name="passage">The passage.</param>
