@@ -5,6 +5,9 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.ProvenanceStore;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.Web;
@@ -522,6 +525,42 @@ public sealed record ChatThread
             this.Draft.RestoreFromMessage(textContent);
 
         this.Blocks.Remove(block);
+    }
+
+    /// <summary>
+    /// Stores the documents attached to the messages of this chat which were never sent, so that each
+    /// one is read from the disk once.
+    /// </summary>
+    /// <remarks>
+    /// Called before every request of the chat, see AIJobService. The request then sends the stored
+    /// texts, see ContentText.PrepareTextContentForAI, and so does every later one. Assistants do not
+    /// call this: their messages are made anew with every run, so every run would store its documents
+    /// once more.<br/><br/>
+    ///
+    /// Nothing here may stop the request. A document which is not stored, e.g., since the store is not
+    /// available, is read when the message is built, as every request did before.
+    /// </remarks>
+    public async Task StoreAttachedDocumentsAsync()
+    {
+        var messages = this.Blocks.Select(block => block.Content).OfType<ContentText>().Where(text => text.HasDocumentsToStore()).ToList();
+        if (messages.Count is 0)
+            return;
+
+        try
+        {
+            var store = await Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync();
+            if (store is NoProvenanceStoreClient)
+                return;
+
+            // One report for everything filtered out of the documents, as for the request itself:
+            await using var reportingScope = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>().BeginAction();
+            foreach (var message in messages)
+                await message.StoreAttachedDocumentsAsync(store, this.ChatId, Program.RUST_SERVICE, reportingScope);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogError(exception, "Failed to store the attached documents of the chat '{ChatId}'. They are read from the disk with every request.", this.ChatId);
+        }
     }
 
     /// <summary>

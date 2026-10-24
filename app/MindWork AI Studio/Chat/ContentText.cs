@@ -10,6 +10,7 @@ using AIStudio.Tools.RAG;
 using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Web;
 
@@ -529,20 +530,158 @@ public sealed class ContentText : IContent
     /// WebAddresses.CreateRequestKey.
     /// </summary>
     /// <remarks>
-    /// The documents are read from disk only when a message is sent, so their addresses are
-    /// collected right then, see PrepareTextContentForAI, and count as given to the model, see
-    /// ChatThread.IsWebAddressGivenToTheModel. Not stored: every request reads the documents anew,
-    /// and a document changed or gone since no longer gives an address.
+    /// The texts of the documents are known only when a message is sent, from the provenance store
+    /// or from the disk, so their addresses are collected right then, see PrepareTextContentForAI,
+    /// and count as given to the model, see ChatThread.IsWebAddressGivenToTheModel. Not stored:
+    /// every request collects them anew from what it sends.
     /// </remarks>
     [JsonIgnore]
     public IReadOnlySet<string> RuntimeAttachmentWebAddresses { get; internal set; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Whether this message holds attached documents which were never stored, see StoreAttachedDocumentsAsync.
+    /// </summary>
+    internal bool HasDocumentsToStore() => this.FileAttachments.Any(attachment => attachment is { ProvenanceId: null, Type: FileAttachmentType.DOCUMENT });
+
+    /// <summary>
+    /// Stores the attached documents of this message which were never sent, reading each one from the disk once.
+    /// </summary>
+    /// <remarks>
+    /// A document which cannot be read or stored right now keeps no entry: the message reads it when
+    /// it is built, as every message did before, and tells the user then what went wrong. The list of
+    /// attachments is replaced as a whole rather than changed, since the user interface may read it
+    /// meanwhile.
+    /// </remarks>
+    /// <param name="store">The provenance store.</param>
+    /// <param name="chatId">The chat of this message.</param>
+    /// <param name="rustService">The runtime, which reads the documents.</param>
+    /// <param name="reportingScope">The request the documents are read for, which tells the user once about everything filtered out of them.</param>
+    internal async Task StoreAttachedDocumentsAsync(ProvenanceStoreClient store, Guid chatId, RustService rustService, PromptInjectionReportingScope? reportingScope)
+    {
+        var attachments = new List<FileAttachment>(this.FileAttachments.Count);
+        var changed = false;
+        foreach (var attachment in this.FileAttachments)
+        {
+            var storedAttachment = await StoreAttachedDocumentAsync(attachment, store, chatId, rustService, reportingScope);
+            changed |= !ReferenceEquals(storedAttachment, attachment);
+            attachments.Add(storedAttachment);
+        }
+
+        if (changed)
+            this.FileAttachments = attachments;
+    }
+
+    /// <summary>
+    /// Stores one attached document which was never sent.
+    /// </summary>
+    /// <returns>The attachment with the entry of its text, or the attachment as it was when there is nothing to store, or nothing could be.</returns>
+    private static async Task<FileAttachment> StoreAttachedDocumentAsync(FileAttachment attachment, ProvenanceStoreClient store, Guid chatId, RustService rustService, PromptInjectionReportingScope? reportingScope)
+    {
+        if (attachment.ProvenanceId is not null || attachment.Type is not FileAttachmentType.DOCUMENT)
+            return attachment;
+
+        var document = attachment.Normalize();
+        if (document.Type is not FileAttachmentType.DOCUMENT || !document.Exists)
+            return attachment;
+
+        try
+        {
+            // Quietly: building the message tells the user about a missing Pandoc, when it reads the document after all.
+            if (FileTypes.RequiresPandoc(document.FilePath))
+            {
+                var pandocState = await Pandoc.CheckAvailabilityAsync(rustService, showMessages: false, showSuccessMessage: false);
+                if (pandocState is not { IsAvailable: true, CheckWasSuccessful: true })
+                    return attachment;
+            }
+
+            var extraction = await rustService.ReadArbitraryFileData(document.FilePath, int.MaxValue, reportingScope: reportingScope);
+            if (!extraction.HasUsableContent)
+                return attachment;
+
+            // Told here, since no later request reads the document again:
+            await ReportIncompleteReadingAsync(document, extraction);
+
+            // Not cancellable: what was read is what the request sends.
+            var provenanceId = await store.StoreAsync(chatId, ProvenanceKind.ATTACHMENT, extraction.Content, null, CancellationToken.None);
+            return provenanceId is null ? attachment : attachment with { ProvenanceId = provenanceId };
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogWarning(exception, "Failed to store the file attachment '{FilePath}'. It is read from the disk with every request.", document.FilePath);
+            return attachment;
+        }
+    }
+
+    /// <summary>
+    /// Tells the user when a document could be read, but not as it should have been.
+    /// </summary>
+    /// <param name="document">The document.</param>
+    /// <param name="extraction">What reading it gave.</param>
+    private static async Task ReportIncompleteReadingAsync(FileAttachment document, FileExtractionResult extraction)
+    {
+        //
+        // The file is usable, but we lost parts of it. The user has to know which
+        // parts are missing, because the answer will be based on the rest.
+        //
+        if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
+        {
+            LOGGER.LogWarning("Parts of the file attachment '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+        }
+
+        // The file was read correctly, but its extension lies about what it contains:
+        if (extraction.HasExtensionMismatch)
+        {
+            LOGGER.LogWarning("The file attachment '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+        }
+    }
+
+    /// <summary>
+    /// Reads the stored texts of the attached documents.
+    /// </summary>
+    /// <param name="attachments">The attachments.</param>
+    /// <param name="getProvenanceStore">Gets the provenance store, which is asked only when a document has an entry.</param>
+    /// <returns>The texts by the ids of their entries. An entry the store lacks, or cannot read, is missing.</returns>
+    private static async Task<IReadOnlyDictionary<Guid, string>> ReadStoredDocumentTextsAsync(IEnumerable<FileAttachment> attachments, Func<Task<ProvenanceStoreClient>> getProvenanceStore)
+    {
+        var provenanceIds = attachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>().Distinct().ToList();
+        if (provenanceIds.Count is 0)
+            return new Dictionary<Guid, string>();
+
+        try
+        {
+            var store = await getProvenanceStore();
+            var entries = await store.GetEntriesAsync(provenanceIds, CancellationToken.None);
+            return entries.ToDictionary(entry => entry.Key, entry => entry.Value.Content);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogWarning(exception, "Failed to read the stored texts of the file attachments. Their files are read instead.");
+            return new Dictionary<Guid, string>();
+        }
+    }
 
     /// <summary>
     /// Builds the text the AI gets for this message, with the content of its attached documents.
     /// </summary>
     /// <param name="reportingScope">The request this message is part of, which tells the user once about everything filtered out of its attachments, or null when the request reads no documents.</param>
     /// <returns>The text for the AI.</returns>
-    public async Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope)
+    public Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope) => this.PrepareTextContentForAI(reportingScope, Program.RUST_SERVICE, () => Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync());
+
+    /// <summary>
+    /// Builds the text the AI gets for this message, with the content of its attached documents.
+    /// </summary>
+    /// <remarks>
+    /// A document stored at its first send comes from the provenance store, also when its file
+    /// changed or is gone by now, see FileAttachment.ProvenanceId: the AI gets the same text with
+    /// every request. Only a document without a stored text is read from the disk, as before.
+    /// </remarks>
+    /// <param name="reportingScope">The request this message is part of, which tells the user once about everything filtered out of its attachments, or null when the request reads no documents.</param>
+    /// <param name="rustService">The runtime, which reads the documents without a stored text.</param>
+    /// <param name="getProvenanceStore">Gets the provenance store, which is asked only when a document has an entry.</param>
+    /// <returns>The text for the AI.</returns>
+    internal async Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope, RustService rustService, Func<Task<ProvenanceStoreClient>> getProvenanceStore)
     {
         var sb = new StringBuilder();
         var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);
@@ -554,8 +693,10 @@ public sealed class ContentText : IContent
                 .Select(attachment => attachment.Normalize())
                 .ToList();
 
-            // Get the list of existing documents:
-            var existingDocuments = normalizedAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
+            var storedTexts = await ReadStoredDocumentTextsAsync(normalizedAttachments, getProvenanceStore);
+
+            // Get the list of existing documents, those with a stored text included, whether their file is still there or not:
+            var existingDocuments = normalizedAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && (StoredTextOf(x) is not null || x.Exists)).ToList();
 
             //
             // Report missing files. We tell the user about them instead of only logging: on a
@@ -578,9 +719,9 @@ public sealed class ContentText : IContent
                 // Pandoc installation must not stop them.
                 //
                 var pandocIsUsable = true;
-                if (existingDocuments.Any(document => FileTypes.RequiresPandoc(document.FilePath)))
+                if (existingDocuments.Any(document => StoredTextOf(document) is null && FileTypes.RequiresPandoc(document.FilePath)))
                 {
-                    var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
+                    var pandocState = await Pandoc.CheckAvailabilityAsync(rustService, showMessages: true, showSuccessMessage: false);
                     pandocIsUsable = pandocState is { IsAvailable: true, CheckWasSuccessful: true };
 
                     if (!pandocState.IsAvailable)
@@ -597,42 +738,32 @@ public sealed class ContentText : IContent
                 var documentBlocks = new StringBuilder();
                 foreach(var document in existingDocuments)
                 {
-                    if (document.IsForbidden)
+                    var content = StoredTextOf(document);
+                    if (content is null)
                     {
-                        LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", document.FilePath);
-                        continue;
-                    }
+                        if (document.IsForbidden)
+                        {
+                            LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", document.FilePath);
+                            continue;
+                        }
 
-                    if (!pandocIsUsable && FileTypes.RequiresPandoc(document.FilePath))
-                    {
-                        LOGGER.LogWarning("The file attachment '{FilePath}' needs Pandoc and will be skipped.", document.FilePath);
-                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
-                        continue;
-                    }
+                        if (!pandocIsUsable && FileTypes.RequiresPandoc(document.FilePath))
+                        {
+                            LOGGER.LogWarning("The file attachment '{FilePath}' needs Pandoc and will be skipped.", document.FilePath);
+                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
+                            continue;
+                        }
 
-                    var extraction = await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue, reportingScope: reportingScope);
-                    if (!extraction.HasUsableContent)
-                    {
-                        LOGGER.LogError("Reading the file attachment '{FilePath}' failed and it will not be sent: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
-                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
-                        continue;
-                    }
+                        var extraction = await rustService.ReadArbitraryFileData(document.FilePath, int.MaxValue, reportingScope: reportingScope);
+                        if (!extraction.HasUsableContent)
+                        {
+                            LOGGER.LogError("Reading the file attachment '{FilePath}' failed and it will not be sent: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
+                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                            continue;
+                        }
 
-                    //
-                    // The file is usable, but we lost parts of it. The user has to know which
-                    // parts are missing, because the answer will be based on the rest.
-                    //
-                    if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
-                    {
-                        LOGGER.LogWarning("Parts of the file attachment '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
-                        await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
-                    }
-
-                    // The file was read correctly, but its extension lies about what it contains:
-                    if (extraction.HasExtensionMismatch)
-                    {
-                        LOGGER.LogWarning("The file attachment '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
-                        await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+                        await ReportIncompleteReadingAsync(document, extraction);
+                        content = extraction.Content;
                     }
 
                     documentBlocks.AppendLine();
@@ -640,10 +771,10 @@ public sealed class ContentText : IContent
                     documentBlocks.AppendLine($"File path: {document.FilePath}");
                     documentBlocks.AppendLine("File content:");
                     documentBlocks.AppendLine("````");
-                    documentBlocks.AppendLine(extraction.Content);
+                    documentBlocks.AppendLine(content);
                     documentBlocks.AppendLine("````");
 
-                    foreach (var address in WebAddresses.Find(extraction.Content))
+                    foreach (var address in WebAddresses.Find(content))
                         if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
                             attachmentWebAddresses.Add(requestKey);
                 }
@@ -663,6 +794,8 @@ public sealed class ContentText : IContent
                     sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
                 }
             }
+
+            string? StoredTextOf(FileAttachment document) => document.ProvenanceId is { } provenanceId ? storedTexts.GetValueOrDefault(provenanceId) : null;
         }
 
         this.RuntimeAttachmentWebAddresses = attachmentWebAddresses;

@@ -32,13 +32,7 @@
         @* The frame shows where a dropped file would land. It is drawn only while this dialog can
            take one, and keeps its width in both states so that nothing jumps during a drag: *@
         <div class="dialog-fit @this.PreviewAreaClass(isDropTarget)">
-        @if (!this.document?.Exists ?? false)
-        {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
-                @T("The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.")
-            </MudAlert>
-        }
-        else if (this.isLoadingContent)
+        @if (this.isLoadingContent)
         {
             <MudJustifiedText Typo="Typo.body1" Class="my-3">
                 @T("Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.")
@@ -48,6 +42,12 @@
             <MudSkeleton Width="100%"/>
             <MudSkeleton Width="90%"/>
         }
+        else if (this.IsFileMissing && !this.showsStoredText)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                @T("The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.")
+            </MudAlert>
+        }
         else if (this.loadFailureMessage is not null)
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
@@ -56,20 +56,28 @@
         }
         else
         {
+            @if (this.IsFileMissing)
+            {
+                @* The text the AI received outlives the file, so the file being gone is worth a note, not an error: *@
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="my-2">
+                    @T("The file is no longer at its place. Below is the text the AI received from it when you sent it.")
+                </MudAlert>
+            }
+
             @* Keyed by the document: every document starts on the first panel of its own. *@
             <ContentViewer
                 @key="@($"preview-tabs-{this.document?.FilePath}")"
                 Kind="@this.ViewerKind"
                 Text="@this.fileContent"
                 MediaUrl="@(this.document?.FilePathAsUrl ?? string.Empty)"
-                HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"
+                HelperText="@(this.showsStoredText ? T("This is the text the AI received from your file when you first sent it. Later changes to the file do not reach the AI in this chat.") : T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected."))"
                 CharacterLimit="@PREVIEW_CHARACTER_LIMIT"
                 CutOffNotice="@this.CutOffNotice"
                 MaxHeight="@ContentViewer.NO_HEIGHT_LIMIT">
                 <Toolbar>
                     @* The label takes the free width, so the button stands right, next to the views. *@
                     <MudText Typo="Typo.subtitle2" Class="flex-grow-1">
-                        @T("Loaded Content")
+                        @(this.showsStoredText ? T("Text the AI received") : T("Loaded Content"))
                     </MudText>
 
                     @if (this.document?.Exists ?? false)

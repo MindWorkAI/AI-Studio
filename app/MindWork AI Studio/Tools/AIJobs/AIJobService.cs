@@ -297,6 +297,10 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
             token.ThrowIfCancellationRequested();
 
+            // Read each attached document once, before the request sends it, see ChatThread.StoreAttachedDocumentsAsync:
+            await chatThread.StoreAttachedDocumentsAsync();
+            token.ThrowIfCancellationRequested();
+
             var lastStreamingEvent = DateTimeOffset.MinValue;
             if (!TrySetWaitingForRemote(state, token))
                 return;

@@ -59,9 +59,25 @@ public record FileAttachment(FileAttachmentType Type, string FileName, [property
     public bool Exists => File.Exists(this.FilePath);
 
     /// <summary>
+    /// The entry of the provenance store which holds the text this document was first sent with, or
+    /// null while it was never sent, or could not be stored.
+    /// </summary>
+    /// <remarks>
+    /// A document is read from the disk once, see ChatThread.StoreAttachedDocumentsAsync. Every later
+    /// request of the chat sends the stored text, also when the file changed or is gone by now, so
+    /// what the AI received stays the same and can be shown as it was. Left out of the chat file, and
+    /// of chat templates, while null.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? ProvenanceId { get; init; }
+
+    /// <summary>
     /// Rebuilds the attachment from its current file path so file type detection uses the latest rules.
     /// </summary>
-    public virtual FileAttachment Normalize() => FromPath(this.FilePath);
+    /// <remarks>
+    /// The entry of its text stays: it belongs to the attachment, not to the rules.
+    /// </remarks>
+    public virtual FileAttachment Normalize() => FromPath(this.FilePath) with { ProvenanceId = this.ProvenanceId };
 
     /// <summary>
     /// Makes the same attachment for its file at another place, e.g. after the chat holding the file moved.
@@ -72,7 +88,7 @@ public record FileAttachment(FileAttachmentType Type, string FileName, [property
     /// </remarks>
     /// <param name="filePath">The path of the file now.</param>
     /// <returns>An attachment of the same kind, with the new path.</returns>
-    public virtual FileAttachment WithFilePath(string filePath) => new(this.Type, this.FileName, filePath, this.FileSizeBytes);
+    public virtual FileAttachment WithFilePath(string filePath) => new(this.Type, this.FileName, filePath, this.FileSizeBytes) { ProvenanceId = this.ProvenanceId };
 
     /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,

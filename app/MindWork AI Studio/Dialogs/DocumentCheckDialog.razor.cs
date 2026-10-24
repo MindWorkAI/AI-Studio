@@ -1,5 +1,6 @@
 ﻿using AIStudio.Chat;
 using AIStudio.Components;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -102,6 +103,20 @@ public partial class DocumentCheckDialog : MSGComponentBase
     /// </summary>
     private bool isLoadingContent;
 
+    /// <summary>
+    /// True when the content is the text the AI received from the document when it was sent, rather
+    /// than what the file holds now, see FileAttachment.ProvenanceId.
+    /// </summary>
+    private bool showsStoredText;
+
+    /// <summary>
+    /// Whether the document we show is no longer at its place.
+    /// </summary>
+    private bool IsFileMissing => this.document is not null && !this.document.Exists;
+
+    [Inject]
+    private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -136,13 +151,14 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
     /// <summary>
     /// Whether the document we show has to be read before we can show anything of it. Images are
-    /// shown as they are, a missing file shows its own message, and content a caller already handed
-    /// us is reused instead of being extracted a second time.
+    /// shown as they are, a missing file shows its own message unless the text the AI received from
+    /// it is stored, and content a caller already handed us is reused instead of being extracted a
+    /// second time.
     /// </summary>
     private bool NeedsExtraction() =>
         this.document is not null &&
         !this.document.IsImage &&
-        this.document.Exists &&
+        (this.document.ProvenanceId is not null || this.document.Exists) &&
         string.IsNullOrWhiteSpace(this.fileContent);
 
     /// <summary>
@@ -177,6 +193,28 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
         try
         {
+            //
+            // A document sent before shows the text the AI received from it, which the provenance
+            // store keeps, also when the file changed or is gone by now. Without it, we read the file:
+            //
+            if (documentToLoad.ProvenanceId is { } provenanceId)
+            {
+                var storedText = await this.ReadStoredTextAsync(provenanceId);
+                if (this.isDisposed || generation != this.loadGeneration)
+                    return;
+
+                if (storedText is not null)
+                {
+                    this.fileContent = storedText;
+                    this.showsStoredText = true;
+                    return;
+                }
+
+                // Nothing left to read, which the dialog says:
+                if (!documentToLoad.Exists)
+                    return;
+            }
+
             var extraction = await UserFile.LoadFileData(documentToLoad.FilePath, this.RustService, this.PandocAvailability, cancellationToken);
             if (this.isDisposed || generation != this.loadGeneration)
                 return;
@@ -287,7 +325,28 @@ public partial class DocumentCheckDialog : MSGComponentBase
         this.document = attachment;
         this.fileContent = string.Empty;
         this.loadFailureMessage = null;
+        this.showsStoredText = false;
         this.isLoadingContent = this.NeedsExtraction();
+    }
+
+    /// <summary>
+    /// Reads the text the AI received from a document when it was sent.
+    /// </summary>
+    /// <param name="provenanceId">The entry of the text.</param>
+    /// <returns>The text, or null when the provenance store no longer holds it, or cannot be read.</returns>
+    private async Task<string?> ReadStoredTextAsync(Guid provenanceId)
+    {
+        try
+        {
+            var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
+            var entries = await store.GetEntriesAsync([provenanceId], CancellationToken.None);
+            return entries.GetValueOrDefault(provenanceId)?.Content;
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogWarning(exception, "Failed to read the stored text of the document '{ProvenanceId}'. Its file is read instead.", provenanceId);
+            return null;
+        }
     }
 
     /// <summary>

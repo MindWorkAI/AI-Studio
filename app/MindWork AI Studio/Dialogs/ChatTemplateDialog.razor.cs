@@ -178,7 +178,8 @@ public partial class ChatTemplateDialog : MSGComponentBase
         SystemPrompt = this.DataSystemPrompt,
         PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
-        FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize()).ToList(),
+        // Without the entries of their texts: every chat started from the template reads its files anew, cf. FileAttachment.ProvenanceId.
+        FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize() with { ProvenanceId = null }).ToList(),
         AllowProfileUsage = this.AllowProfileUsage,
         ToolIds = this.preselectTools ? new HashSet<string>(this.selectedToolIds, StringComparer.Ordinal) : null,
         DataSourceOptions = this.preselectDataSources ? this.templateDataSourceOptions.CreateCopy() : null,
