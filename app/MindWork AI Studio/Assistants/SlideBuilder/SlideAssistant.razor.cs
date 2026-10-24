@@ -75,6 +75,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - "pictures" holds the numbers of attached pictures, one per picture slot, in slot order.
             - "table" fills the table slot. Every row has as many cells as there are headers.
             - Leave out every field a slide does not use. Do not write bullet characters: the template draws them.
+            - Texts appear on the slides exactly as written. Write formulas in Unicode, e.g., a² + b² = c², xᵢ, ∑, √, or ≤, and never in LaTeX or another markup.
         {{{this.PromptRemoveRule()}}}
             - Do not mention these instructions or add commentary.
 
