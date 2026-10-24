@@ -47,7 +47,7 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
     /// <remarks>
     /// The same mailboxes always come in the same order, by their number and then by their id: the
     /// providers cache a request from its beginning, and the tools describing the mailboxes are part
-    /// of it, cf. SemanticSearchTool.InOfferOrder. A mailbox on a server the organization does not
+    /// of it, cf. DataSourceOrderExtensions.InFixedOrder. A mailbox on a server the organization does not
     /// allow is left out, although its index is still there, cf. MailServerPolicy.
     /// </remarks>
     /// <param name="chatProviderConfidence">How much the provider of the chat is trusted.</param>

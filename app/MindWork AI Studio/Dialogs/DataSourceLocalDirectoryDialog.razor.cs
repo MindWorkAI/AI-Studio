@@ -63,6 +63,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private bool showExpertSettings;
     private bool revalidateAfterRender;
     private ConfidenceLevel dataConfidenceLevel = ConfidenceLevel.UNKNOWN;
+    private OutboundDataRestriction dataOutboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -117,6 +118,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
+            this.dataOutboundDataRestriction = this.DataSource.OutboundDataRestriction;
             this.dataMaxMatches = this.DataSource.MaxMatches;
         }
         
@@ -207,6 +209,22 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
 
+    private OutboundDataRestriction OrganizationMinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction;
+
+    /// <summary>
+    /// The level the data source gets: the one chosen, as far as the organization allows it.
+    /// </summary>
+    /// <remarks>
+    /// The organization may rule out a level while the dialog is open, or after the data source was
+    /// stored with it. The choice itself stays, so the dialog shows it again once the organization
+    /// allows it again.
+    /// </remarks>
+    private OutboundDataRestriction SelectedOutboundDataRestriction
+    {
+        get => this.dataOutboundDataRestriction.StricterOf(this.OrganizationMinimumOutboundDataRestriction);
+        set => this.dataOutboundDataRestriction = value;
+    }
+
     private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
         ? T("No embedding selected")
         : string.IsNullOrWhiteSpace(this.SelectedEmbedding.TokenizerPath)
@@ -243,6 +261,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
+        OutboundDataRestriction = this.SelectedOutboundDataRestriction,
         MaxMatches = this.dataMaxMatches,
     };
 

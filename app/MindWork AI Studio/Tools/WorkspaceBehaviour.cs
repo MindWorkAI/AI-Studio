@@ -737,6 +737,36 @@ public static partial class WorkspaceBehaviour
         }
     }
 
+    /// <summary>
+    /// Opens or creates the workspace a chat template keeps its chats in, by its name.
+    /// </summary>
+    /// <remarks>
+    /// Both the chat page and assistant chat launchers come here, so that a chat finds the workspace
+    /// of its template the same way wherever it starts. Unlike a workspace a launcher names itself,
+    /// a failure stops nothing: like everything else a chat template names, a workspace which cannot
+    /// be used leaves the chat to start as it would without the template, i.e., without a workspace.
+    /// The failure is logged here, once, so the callers need no handling of their own.
+    /// </remarks>
+    /// <param name="workspaceName">The name of the workspace, as the chat template names it.</param>
+    /// <param name="chatTemplateName">The name of the chat template, for the log.</param>
+    /// <returns>The ID of the workspace, or Guid.Empty when it can be neither opened nor created.</returns>
+    public static async Task<Guid> ResolveOrCreateChatTemplateWorkspaceAsync(string workspaceName, string chatTemplateName)
+    {
+        try
+        {
+            var workspaceId = await ResolveOrCreateWorkspaceIdByNameAsync(workspaceName);
+            if (workspaceId == Guid.Empty)
+                LOG.LogWarning("The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", workspaceName, chatTemplateName);
+
+            return workspaceId;
+        }
+        catch (Exception exception)
+        {
+            LOG.LogError(exception, "The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", workspaceName, chatTemplateName);
+            return Guid.Empty;
+        }
+    }
+
     public static async Task<TryCreateWorkspaceResult> TryCreateWorkspaceAsync(string workspaceName)
     {
         var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);

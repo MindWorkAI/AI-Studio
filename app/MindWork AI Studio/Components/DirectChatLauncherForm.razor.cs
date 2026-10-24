@@ -96,37 +96,6 @@ public partial class DirectChatLauncherForm : MSGComponentBase
         ? this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT)
         : this.SettingsManager.GetChatTemplateById(this.ChatTemplateId);
 
-    private IReadOnlyList<WorkspaceTreeWorkspace> availableWorkspaces = [];
-
-    private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
-
-    #region Overrides of MSGComponentBase
-
-    protected override async Task OnInitializedAsync()
-    {
-        // Configure the spellchecking for the workspace name input:
-        this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
-
-        await base.OnInitializedAsync();
-
-        var workspaceSnapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-        this.availableWorkspaces = workspaceSnapshot.Workspaces;
-    }
-
-    #endregion
-
-    //
-    // Picking an existing workspace fills the name field. Clearing the select must not wipe a name
-    // the user typed, though, so an empty selection is ignored:
-    //
-    private async Task SelectExistingWorkspace(string workspaceName)
-    {
-        if (string.IsNullOrWhiteSpace(workspaceName))
-            return;
-
-        await this.SetWorkspaceName(workspaceName);
-    }
-
     private async Task SetWorkspaceName(string workspaceName)
     {
         this.WorkspaceName = workspaceName;

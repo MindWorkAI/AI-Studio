@@ -175,6 +175,7 @@ internal sealed class Program
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<AIGeneratedContentDisclosureService>();
         builder.Services.AddSingleton<PromptInjectionGuardService>();
+        builder.Services.AddSingleton<ModelImageService>();
         builder.Services.AddSingleton<ToolSettingsService>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();

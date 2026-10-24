@@ -21,6 +21,17 @@ public interface IDataSource : IDataSourceBase
     public ushort MaxMatches { get; init; }
 
     /// <summary>
+    /// Where a chat may still send data, once content of this data source reached it.
+    /// </summary>
+    /// <remarks>
+    /// Read it through DataSourceOutboundDataExtensions.GetEffectiveOutboundDataRestriction, never
+    /// on its own: an organization may demand a stricter level, see
+    /// DataSourceSecuritySettings.MinimumOutboundDataRestriction, and so does a data source which only
+    /// self-hosted providers may see.
+    /// </remarks>
+    public OutboundDataRestriction OutboundDataRestriction { get; init; }
+
+    /// <summary>
     /// The last page which can be retrieved from this data source.
     /// </summary>
     /// <remarks>

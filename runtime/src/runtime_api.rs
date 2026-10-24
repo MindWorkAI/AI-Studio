@@ -87,6 +87,7 @@ fn create_router() -> Router {
         .route("/media/jobs/{id}/events", get(crate::media::get_job_events))
         .route("/media/jobs/{id}", delete(crate::media::cancel_job))
         .route("/image/prepare", post(crate::image::prepare_image))
+        .route("/image/prepare-for-model", post(crate::image::prepare_image_for_model))
         .route("/log/paths", get(crate::log::get_log_paths))
         .route("/log/event", post(crate::log::log_event))
         .route("/tokenizer/count", post(crate::tokenizer::token_count))

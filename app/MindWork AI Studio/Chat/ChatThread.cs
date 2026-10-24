@@ -158,15 +158,15 @@ public sealed record ChatThread
 
     /// <summary>
     /// Where this chat may still send data, because of the internal content it holds: mails, a
-    /// search of the wiki, or an internal web page.
+    /// search of the wiki, an internal web page, or passages of a data source.
     /// </summary>
     /// <remarks>
     /// The third thing the thread ratchets, next to the data security and the required provider
     /// confidence: once internal content is in the thread, every tool which runs afterwards could
     /// carry it out, in a search query or in the address of a web page. It only ever gets stricter,
-    /// and a later change of the settings of a mailbox or of Read Web Page does not loosen it
-    /// either, because the content was read under the old one. A chat which holds no internal
-    /// content demands nothing.
+    /// and a later change of the settings of a mailbox, a data source, or Read Web Page does not
+    /// loosen it either, because the content was read under the old one. A chat which holds no
+    /// internal content demands nothing.
     /// </remarks>
     [JsonInclude]
     public OutboundDataRequirement RequiredOutboundDataRestriction { get; private set; } = OutboundDataRequirement.NONE;

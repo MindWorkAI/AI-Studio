@@ -5,7 +5,7 @@ namespace AIStudio.Tools.ToolCallingSystem;
 /// </summary>
 /// <remarks>
 /// What counts is where the arguments of the model go: every argument may carry content the chat
-/// read before, a mail for instance. A chat which read from a mailbox keeps the tools whose data
+/// read before, a mail for instance. A chat which holds internal content keeps the tools whose data
 /// goes too far from running, see OutboundDataRestriction and ToolSelectionRules.IsOutboundDataAllowed.
 /// The members run from the most contained to the most open.
 /// </remarks>

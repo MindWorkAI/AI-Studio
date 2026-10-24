@@ -299,7 +299,7 @@ public static partial class ManagedConfiguration
     /// <summary>
     /// Determines the configuration plugin which currently manages a setting, if any.
     /// </summary>
-    private static Guid GetSettingOwner(ConfigMetaBase configMeta)
+    internal static Guid GetSettingOwner(ConfigMetaBase configMeta)
     {
         if (configMeta.IsLocked && configMeta.LockedByConfigPluginId != Guid.Empty)
             return configMeta.LockedByConfigPluginId;

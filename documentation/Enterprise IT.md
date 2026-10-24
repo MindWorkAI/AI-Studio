@@ -361,12 +361,13 @@ Plan for it in these settings:
 | Setting | What a partial list costs you |
 |---|---|
 | `DataApp.HiddenAssistants` | Assistants hidden by the base configuration become **visible** again |
+| `DataApp.ProhibitedProviders` | Providers prohibited by the base configuration become **usable** again |
 | `DataSourceSecuritySettings.TrustedProviderIds` | Providers trusted by the base configuration lose that status |
 | `DataApp.ExternalHttpCustomRootCertificateAllowedHosts` | Hosts of the base configuration stop trusting your root certificates |
 | `DataConfidence.CustomConfidenceScheme` | Providers left out fall back to the AI Studio default confidence |
 | `DataChat.PreselectedDataSourceIds` | Data sources preselected by the base configuration are no longer preselected |
 
-The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` in particular, because it is the only one in this list that opens something up instead of restricting it.
+The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` and `DataApp.ProhibitedProviders` in particular, because a partial list of them opens something up instead of restricting it.
 
 Two settings are the exception and add up instead of replacing:
 
@@ -424,6 +425,7 @@ Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
 - Any number of transcription providers for voice-to-text functionality
 - Any number of embedding providers for RAG
+- Providers which your organization prohibits, see [Prohibiting providers](#prohibiting-providers)
 - Any number of ERI data sources for RAG
 - Any number of profiles and chat templates, including the tools and data sources a template brings along
 - Any number of policies for the Document Analysis assistant
@@ -795,7 +797,42 @@ Writing the `DataSourceOptions` table at all is already the statement that this 
 
 Semantic search only works where `semantic_search` can be offered: the model has to be able to call tools, neither `DataTools.EnableTools` nor `DataTools.DisabledToolIds` may switch it off, and the provider has to meet a minimum confidence you set for it in `DataTools.MinimumProviderConfidenceByToolId`. Otherwise, the chat searches with every message instead. A template that leaves `RetrievalMode` out gets `SEMANTIC_SEARCH`, not the chat default. That chat default is the setting `DataChat.PreselectedDataSourcesRetrievalMode`, with the same two values.
 
-When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools or data sources, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools, data sources, a provider, or a profile, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+
+## Chat templates with a provider, a profile, and a workspace
+
+A chat template may also decide the provider, and with it the model, and the profile a chat started with it begins with, and the workspace that keeps such chats. Use case: a template for working with mails preselects the mailbox as its data source, the provider whose confidence level the mailbox requires, a profile that suits mail work, and a workspace for these chats, so that users no longer set all of this up by hand for every chat.
+
+| What the template says | What a chat started with it does |
+|---|---|
+| no `ProviderId` at all | starts with the provider it would start with anyway |
+| `ProviderId` present | starts with that provider, if it exists and meets the confidence level required for chats |
+| no `ProfileId` at all | starts with the profile it would start with anyway |
+| `ProfileId` = `00000000-0000-0000-0000-000000000000` | starts without a profile, whatever that default says |
+| `ProfileId` present | starts with that profile, if it exists |
+| no `WorkspaceName` at all | goes where it would go anyway |
+| `WorkspaceName` present | goes into that workspace, which is created when it does not exist yet, wherever the chat would otherwise be a disappearing chat |
+
+All three are a preselection, not a lock: users change the provider and the profile in the chat as usual, and move the chat to another workspace. A provider that does not exist or is below the confidence level of chats is ignored, and the chat starts with the provider it would start with anyway. A profile that does not exist is ignored as well, and the chat starts with the default profile of the user's chat settings, which may be none. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
+
+What one template preselects does not carry over to the next one. When users switch from a template with a provider or a profile to one without, the chat starts with the default provider and the default profile of their chat settings, unless they had picked another one by hand in the meantime.
+
+The IDs may name a provider from `CONFIG["LLM_PROVIDERS"]` or a profile from `CONFIG["PROFILES"]` of the same configuration, whose IDs are the same on every computer, or one of another configuration of your organization. A chat template exported from the app carries the provider and profile IDs of the computer it was exported from, mostly the user's own, and the export starts with a comment saying so. Replace them with IDs from your configuration.
+
+The workspace goes by its name, because a workspace has an ID of its own on every computer. It fills in only where a chat would otherwise be a disappearing chat: the first chat when users open the chat page, a new chat they start outside the workspaces, and picking the template in a new chat. A chat users start in a workspace on purpose, for example, from the workspace list, stays there, and so does a chat of an assistant chat launcher that names a workspace of its own. A chat in the workspace of its template is no such choice: when users pick another template there, the new chat goes where that template sends it. While users have switched workspaces off in their workspace settings, the template names no workspace.
+
+On the chat page, the chat moves into the workspace with its first message, and only then is the workspace created when it does not exist yet. Opening the chat page or trying out a template creates no workspace, so one that users deleted stays gone until they actually start a chat with the template. An assistant chat launcher creates the workspace right away, because it opens its chat at once.
+
+## Where a chat may send data after searching data sources
+
+The AI searches the data sources of a chat, local files and folders as well as external data sources (ERI servers), either itself through Semantic Search or with every message. Each data source decides where a chat may still send data once the AI found something in it, with the same levels as a mailbox, see [Where a chat may send data](#where-a-chat-may-send-data). New data sources start with `ONLY_LINKS_FROM_CHAT`, and so do the ones users added before the setting existed. An external data source whose security policy is `SELF_HOSTED` always gets `ONLY_CONFIGURED_SERVICES`, since its data must not leave your infrastructure through a tool either. Your Confluence wiki and the hosts in `read_web_page.allowedPrivateHosts` stay readable on that level, so the links of such a data source into your intranet still work, while a link to a public page does not.
+
+| Setting | Effect |
+|---|---|
+| `DataSourceSecuritySettings.MinimumOutboundDataRestriction` | The least strict level a data source may have. A data source set to a less strict one gets your level whenever its passages reach a chat, and its dialog no longer offers the less strict levels. |
+| `OutboundDataRestriction` in an entry of `CONFIG["DATA_SOURCES"]` | The level of an external data source your configuration provides. Without it, the data source gets `ONLY_LINKS_FROM_CHAT`, and a value AI Studio cannot read counts as `ONLY_CONFIGURED_SERVICES`. Older versions of AI Studio ignore the field. |
+
+Only the data sources whose passages reached the AI count, so a search which found nothing leaves the chat as it was. A chat which found something before keeps the level it got then. When a chat searches its data sources with every message, the web search ends with the first message which finds something in a restricted data source.
 
 ## Mailboxes
 
@@ -1107,6 +1144,41 @@ Two things to keep in mind when you prepare the icon:
 - **Your organization holds the rights.** Whatever icon you ship -- for a provider through
   `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
   responsible for holding the rights to use it.
+
+## Prohibiting providers
+
+Some organizations must not send any data to certain providers, for example, for legal reasons. List
+such providers in your configuration, and AI Studio uses them neither for chats nor for embeddings or
+transcriptions:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "<PROVIDER_KEY>" }
+```
+
+Replace `<PROVIDER_KEY>` with the keys of the providers you prohibit, as listed for
+`DataConfidence.CustomConfidenceScheme` in the example configuration. A name AI Studio does not know is
+ignored and logged as a warning.
+
+- **A prohibition names the operator, not the models.** Prohibiting the API of a model maker keeps AI
+  Studio away from that API. The models of that maker may remain available through a hub which offers
+  the models of several makers, and on a server of your own. Prohibit these as well if you need to.
+- **Users still find the provider.** When they add a provider and select a prohibited one, the dialog
+  explains that your organization does not allow it instead of showing the form, and nothing can be
+  saved.
+- **Providers set up before stay.** They remain in the settings, marked as prohibited, and users can
+  delete them. AI Studio no longer offers them and sends nothing to them: a chat which used one
+  continues with another provider, and a data source whose embedding provider is prohibited is
+  neither indexed nor searched until somebody selects another one. Once you lift the prohibition,
+  these providers work again.
+- **A prohibited provider is untrusted.** Its confidence level is always `UNTRUSTED`, whatever the
+  confidence scheme says. A level which `DataConfidence.CustomConfidenceScheme` names for it is ignored
+  and logged as a warning, and users cannot change it in the app. Once you lift the prohibition, that
+  level applies again.
+- **The list replaces, it does not add up.** A configuration with a higher priority has to repeat the
+  providers of the base configuration, see [Settings that hold a list or a table](#settings-that-hold-a-list-or-a-table).
+- **Older versions ignore the setting.** It is available since AI Studio v26.10.1. Until all devices
+  run that version, you can in addition use the `CUSTOM` confidence scheme, set the provider to
+  `UNTRUSTED` there, and enforce a global minimum confidence level of at least `VERY_LOW`.
 
 ## Labeling AI-generated content
 
