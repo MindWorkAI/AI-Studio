@@ -21,7 +21,8 @@ public static class ChatProvenance
     /// </summary>
     /// <remarks>
     /// The passages of its answers, the documents attached to its messages, and those attached to
-    /// the message being written, whose text a preview may have stored already.
+    /// the message being written, which may come from a message sent before, e.g., one being edited,
+    /// together with the texts a preview read of them.
     /// </remarks>
     /// <param name="thread">The chat.</param>
     /// <returns>The ids of the entries.</returns>
@@ -38,6 +39,7 @@ public static class ChatProvenance
         }
 
         provenanceIds.UnionWith(thread.Draft.FileAttachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>());
+        provenanceIds.UnionWith(thread.Draft.PreviewedTexts.Select(text => text.ProvenanceId));
         return provenanceIds;
     }
 

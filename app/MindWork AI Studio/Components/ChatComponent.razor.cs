@@ -1331,39 +1331,100 @@ public partial class ChatComponent : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// The text belongs to a chat, so a preview in a new chat creates that chat, as attaching a
-    /// recording does. The attachment returns to the composer with the entry of its text, which the
-    /// draft keeps as well, see FileAttachment.ProvenanceId. Nothing here may stop the preview: should
-    /// the text not be kept, sending reads the file as before.
+    /// recording does, and its draft notes the text, see ChatDraft.PreviewedTexts. Another preview of
+    /// a file which did not change keeps nothing new; one of a file which changed replaces the text
+    /// kept before. Nothing here may stop the preview: should the text not be kept, sending reads the
+    /// file as before.
     /// </remarks>
     /// <param name="attachment">The attachment, as the composer holds it.</param>
     /// <param name="text">The text the preview read, after the prompt injection filter.</param>
-    /// <returns>The attachment with the entry of its text, or null when nothing was kept.</returns>
-    private async Task<FileAttachment?> KeepPreviewedTextAsync(FileAttachment attachment, string text)
+    /// <param name="lastWriteUtc">When the file was last written before the preview read it.</param>
+    private async Task KeepPreviewedTextAsync(FileAttachment attachment, string text, DateTime lastWriteUtc)
     {
-        if (attachment.ProvenanceId is not null)
-            return attachment;
-
         try
         {
             var chat = await this.EnsureChatAsync(attachment.FileName);
             if (chat is null)
-                return null;
+                return;
+
+            if (chat.Draft.GetPreviewedText(attachment.FilePath)?.LastWriteUtc == lastWriteUtc)
+                return;
 
             var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
             var provenanceId = await store.StoreAsync(chat.ChatId, ProvenanceKind.ATTACHMENT, text, null, CancellationToken.None);
             if (provenanceId is null)
-                return null;
+                return;
 
-            // The composer holds its attachments normalized, which compare by their values:
-            var kept = attachment with { ProvenanceId = provenanceId };
-            this.ComposerAttachmentsChanged([..this.ComposerState.FileAttachments.Select(existing => existing == attachment ? kept : existing)]);
-            await this.InvokeAsync(this.StateHasChanged);
-            return kept;
+            // Stored with the chat like a change in the composer, so the text still counts after leaving the chat:
+            var replacedId = chat.Draft.NotePreviewedText(new(attachment.FilePath, provenanceId.Value, lastWriteUtc));
+            this.KeepComposerInDraft();
+
+            if (replacedId is { } id)
+                await this.ForgetPreviewedTextsAsync(chat.ChatId, [id]);
         }
         catch (Exception exception)
         {
             this.Logger.LogWarning(exception, "Failed to keep the previewed text of the attachment '{FilePath}'. Sending reads the file instead.", attachment.FilePath);
-            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gives an attachment of the message being sent the text its preview kept, as long as its file did not change since.
+    /// </summary>
+    /// <remarks>
+    /// A file which changed, or which is gone, is read when the message is sent, as it would be
+    /// without a preview. An attachment of a message sent before has its text already.
+    /// </remarks>
+    /// <param name="attachment">The attachment, normalized.</param>
+    /// <param name="draft">The draft being sent, which notes the texts its previews read.</param>
+    /// <returns>The attachment with the entry of its text, or the attachment as it was.</returns>
+    private static FileAttachment WithPreviewedText(FileAttachment attachment, ChatDraft draft)
+    {
+        if (attachment.ProvenanceId is not null || draft.GetPreviewedText(attachment.FilePath) is not { } previewed)
+            return attachment;
+
+        return attachment.Exists && File.GetLastWriteTimeUtc(attachment.FilePath) == previewed.LastWriteUtc
+            ? attachment with { ProvenanceId = previewed.ProvenanceId }
+            : attachment;
+    }
+
+    /// <summary>
+    /// Removes the texts the previews read for a message which was just sent from the provenance store, when the message went without them.
+    /// </summary>
+    /// <remarks>
+    /// The message went without the text of an attachment which the user removed, and without that
+    /// of a file which changed since its preview or is gone.
+    /// </remarks>
+    /// <param name="chatId">The chat the message went to.</param>
+    /// <param name="previewedTexts">The texts the draft of the message noted.</param>
+    /// <param name="sentAttachments">The attachments of the message.</param>
+    private Task ForgetUnsentPreviewsAsync(Guid chatId, IEnumerable<PreviewedText> previewedTexts, IEnumerable<FileAttachment> sentAttachments)
+    {
+        var sentIds = sentAttachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>().ToHashSet();
+        return this.ForgetPreviewedTextsAsync(chatId, previewedTexts.Select(text => text.ProvenanceId).Where(id => !sentIds.Contains(id)).ToList());
+    }
+
+    /// <summary>
+    /// Removes texts the preview kept from the provenance store, since no message will be sent with them.
+    /// </summary>
+    /// <remarks>
+    /// Should that fail, the next start removes them, since the chat does not refer to them.
+    /// </remarks>
+    /// <param name="chatId">The chat the texts were kept for.</param>
+    /// <param name="provenanceIds">The entries of the texts.</param>
+    private async Task ForgetPreviewedTextsAsync(Guid chatId, IReadOnlyCollection<Guid> provenanceIds)
+    {
+        if (provenanceIds.Count is 0)
+            return;
+
+        try
+        {
+            var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
+            await store.DeleteEntriesAsync(chatId, provenanceIds, CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogWarning(exception, "Failed to remove {Count} previewed texts which no message of the chat '{ChatId}' was sent with. The next start removes them.", provenanceIds.Count, chatId);
         }
     }
 
@@ -1456,9 +1517,11 @@ public partial class ChatComponent : MSGComponentBase
         IContent? lastUserPrompt;
         if (!reuseLastUserPrompt)
         {
+            var draft = this.ChatThread.Draft;
             var normalizedAttachments = this.ComposerState.FileAttachments
                 .Select(attachment => attachment.Normalize())
                 .Where(attachment => attachment.IsValid)
+                .Select(attachment => WithPreviewedText(attachment, draft))
                 .ToList();
 
             lastUserPrompt = new ContentText
@@ -1466,7 +1529,10 @@ public partial class ChatComponent : MSGComponentBase
                 Text = this.ComposerState.UserInput,
                 FileAttachments = normalizedAttachments,
             };
-            this.ChatThread.Draft.Clear();
+
+            var previewedTexts = draft.PreviewedTexts;
+            draft.Clear();
+            await this.ForgetUnsentPreviewsAsync(this.ChatThread.ChatId, previewedTexts, normalizedAttachments);
 
             //
             // Add the user message to the thread:

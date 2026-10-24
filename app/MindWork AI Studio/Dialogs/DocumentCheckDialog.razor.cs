@@ -49,12 +49,13 @@ public partial class DocumentCheckDialog : MSGComponentBase
     /// read the file again, see FileAttachment.ProvenanceId.
     /// </summary>
     /// <remarks>
-    /// Answers the attachment with the entry of its text, or null when nothing was kept. Only the
-    /// chat hands one over, for the attachments of the message being written: a sent message has
-    /// its texts already, and elsewhere, nothing is sent later.
+    /// Gets the document, the text read from it, and when its file was last written before it was
+    /// read, so that a file which changed afterward is read again; never throws. Only the chat hands
+    /// one over, for the attachments of the message being written: a sent message has its texts
+    /// already, and elsewhere, nothing is sent later.
     /// </remarks>
     [Parameter]
-    public Func<FileAttachment, string, Task<FileAttachment?>>? KeepReadText { get; set; }
+    public Func<FileAttachment, string, DateTime, Task>? KeepReadText { get; set; }
 
     /// <summary>
     /// The document we show right now. It starts out as the one we were opened with and changes
@@ -203,6 +204,8 @@ public partial class DocumentCheckDialog : MSGComponentBase
         if (this.isDisposed || generation != this.loadGeneration)
             return;
 
+        string? textToKeep = null;
+        var lastWriteUtc = default(DateTime);
         try
         {
             //
@@ -227,6 +230,10 @@ public partial class DocumentCheckDialog : MSGComponentBase
                     return;
             }
 
+            // Taken before reading, so that a change while reading counts as a change:
+            if (this.KeepReadText is not null)
+                lastWriteUtc = await Task.Run(() => File.GetLastWriteTimeUtc(documentToLoad.FilePath), cancellationToken);
+
             var extraction = await UserFile.LoadFileData(documentToLoad.FilePath, this.RustService, this.PandocAvailability, cancellationToken);
             if (this.isDisposed || generation != this.loadGeneration)
                 return;
@@ -240,7 +247,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
             if (!extraction.HasUsableContent)
                 this.loadFailureMessage = extraction.ToUserMessage(documentToLoad.FileName);
             else if (this.KeepReadText is not null && documentToLoad.ProvenanceId is null)
-                await this.KeepReadTextAsync(documentToLoad, extraction, generation);
+                textToKeep = extraction.Content;
         }
         catch (OperationCanceledException)
         {
@@ -264,6 +271,14 @@ public partial class DocumentCheckDialog : MSGComponentBase
                 this.StateHasChanged();
             }
         }
+
+        //
+        // Kept once the user sees the text, since keeping may first have to create the chat. Reading
+        // the file told the user already what could not be read, so sending the kept text tells
+        // nothing of it again:
+        //
+        if (textToKeep is not null)
+            await this.KeepReadText!(documentToLoad, textToKeep, lastWriteUtc);
     }
 
     /// <summary>
@@ -341,25 +356,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
         this.loadFailureMessage = null;
         this.showsStoredText = false;
         this.isLoadingContent = this.NeedsExtraction();
-    }
-
-    /// <summary>
-    /// Keeps what this dialog read of a document, so that sending it does not read the file again.
-    /// </summary>
-    /// <param name="documentToKeep">The document, as the caller holds it.</param>
-    /// <param name="extraction">What reading it gave.</param>
-    /// <param name="generation">The number of the load, which tells whether this dialog still shows the document.</param>
-    private async Task KeepReadTextAsync(FileAttachment documentToKeep, FileExtractionResult extraction, int generation)
-    {
-        // Sending reads the file no more, so it would no longer tell what was missing or mislabeled:
-        await ContentText.ReportIncompleteReadingAsync(documentToKeep, extraction);
-
-        var kept = await this.KeepReadText!(documentToKeep, extraction.Content);
-        if (kept is null || this.isDisposed || generation != this.loadGeneration)
-            return;
-
-        // A second preview of the same attachment then shows the kept text without reading the file:
-        this.document = kept;
     }
 
     /// <summary>

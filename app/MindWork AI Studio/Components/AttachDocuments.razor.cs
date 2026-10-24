@@ -82,15 +82,14 @@ public partial class AttachDocuments : MSGComponentBase
     public Func<string, Task<ChatThread?>> EnsureOwnerChatAsync { get; set; } = _ => Task.FromResult<ChatThread?>(null);
 
     /// <summary>
-    /// Keeps what the preview read of an attached document, so that sending it does not read the file
-    /// again; answers the attachment with the entry of its text, or null when nothing was kept.
+    /// Keeps what the preview read of an attached document, so that sending it does not read the file again.
     /// </summary>
     /// <remarks>
     /// Only the chat hands one over, cf. DocumentCheckDialog.KeepReadText. Elsewhere, e.g., in the
     /// assistants, the documents are read for every run anyway.
     /// </remarks>
     [Parameter]
-    public Func<FileAttachment, string, Task<FileAttachment?>>? KeepPreviewedText { get; set; }
+    public Func<FileAttachment, string, DateTime, Task>? KeepPreviewedText { get; set; }
 
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;

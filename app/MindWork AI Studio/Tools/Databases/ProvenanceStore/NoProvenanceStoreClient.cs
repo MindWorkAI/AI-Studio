@@ -45,6 +45,8 @@ public sealed class NoProvenanceStoreClient(string name, string? unavailableReas
 
     public override Task<int> DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token, DateTimeOffset? createdBefore = null) => Task.FromResult(0);
 
+    public override Task<int> DeleteEntriesAsync(Guid chatId, IReadOnlyCollection<Guid> ids, CancellationToken token) => Task.FromResult(0);
+
     public override Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<Guid>>([]);
 
     /// <inheritdoc />

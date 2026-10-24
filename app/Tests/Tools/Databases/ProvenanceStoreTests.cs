@@ -170,6 +170,29 @@ public sealed class ProvenanceStoreTests
     }
 
     [Test]
+    public async Task DeletingSomeEntriesOfAChatKeepsTheRest()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var chat = Guid.NewGuid();
+        var copy = Guid.NewGuid();
+        var sent = await store.Client.StoreAsync(chat, ProvenanceKind.ATTACHMENT, "sent with the message", null, TOKEN);
+        var unsent = await store.Client.StoreAsync(chat, ProvenanceKind.ATTACHMENT, "previewed, then removed", null, TOKEN);
+        await store.Client.CopyChatAsync(chat, copy, TOKEN);
+
+        var deleted = await store.Client.DeleteEntriesAsync(chat, [unsent!.Value], TOKEN);
+        var entries = await store.Client.GetEntriesAsync([sent!.Value, unsent.Value], TOKEN);
+        await store.Client.DeleteChatAsync(copy, TOKEN);
+        var entriesWithoutTheCopy = await store.Client.GetEntriesAsync([sent.Value, unsent.Value], TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(deleted, Is.EqualTo(1), "Only the entry of the chat goes, not the one of its copy, which keeps the same id.");
+            Assert.That(entries.Keys, Is.EquivalentTo(new[] { sent.Value, unsent.Value }), "The copy still holds the entry.");
+            Assert.That(entriesWithoutTheCopy.Keys, Is.EquivalentTo(new[] { sent.Value }));
+        });
+    }
+
+    [Test]
     public async Task DeletingUpToAMomentKeepsWhatCameAfter()
     {
         await using var store = await TemporaryProvenanceStore.CreateAsync();

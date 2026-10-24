@@ -200,6 +200,17 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         return await CreatedBefore(context.Entries.Where(entry => entry.ChatId == chatKey && !keptKeys.Contains(entry.Id)), createdBefore).ExecuteDeleteAsync(token);
     }
 
+    public override async Task<int> DeleteEntriesAsync(Guid chatId, IReadOnlyCollection<Guid> ids, CancellationToken token)
+    {
+        if (ids.Count is 0)
+            return 0;
+
+        var chatKey = ToKey(chatId);
+        var keys = ids.Select(ToKey).Distinct().ToList();
+        await using var context = this.CreateContext();
+        return await context.Entries.Where(entry => entry.ChatId == chatKey && keys.Contains(entry.Id)).ExecuteDeleteAsync(token);
+    }
+
     /// <summary>
     /// Narrows entries down to those stored before a moment.
     /// </summary>

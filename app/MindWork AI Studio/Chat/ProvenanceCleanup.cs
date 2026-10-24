@@ -10,7 +10,7 @@ namespace AIStudio.Chat;
 /// comes from changes inside a chat, or from runs which ended before they could clean up:
 /// <list type="bullet">
 /// <item>a message which was removed, edited, or answered anew, together with its passages and attached documents;</item>
-/// <item>an attachment which a preview stored and which was removed before sending;</item>
+/// <item>a text which a preview stored, while its chat was never stored with it, or sending could not remove it;</item>
 /// <item>an assistant whose conversation was never sent to a chat;</item>
 /// <item>a chat which was never stored, or deleted while the store was not available.</item>
 /// </list>

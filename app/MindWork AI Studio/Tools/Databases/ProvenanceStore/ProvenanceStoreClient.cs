@@ -72,6 +72,15 @@ public abstract class ProvenanceStoreClient(string name, string path) : Database
     public abstract Task<int> DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token, DateTimeOffset? createdBefore = null);
 
     /// <summary>
+    /// Deletes some entries of a chat, e.g., texts which a preview kept for a message that went without them.
+    /// </summary>
+    /// <param name="chatId">The chat.</param>
+    /// <param name="ids">The ids of the entries.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>How many entries were deleted.</returns>
+    public abstract Task<int> DeleteEntriesAsync(Guid chatId, IReadOnlyCollection<Guid> ids, CancellationToken token);
+
+    /// <summary>
     /// Lists the chats this store holds entries of.
     /// </summary>
     /// <param name="token">The cancellation token.</param>

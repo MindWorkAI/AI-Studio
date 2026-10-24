@@ -43,6 +43,19 @@ public sealed class ChatDraft
     public IReadOnlyList<FileAttachment> FileAttachments { get; private set; } = [];
 
     /// <summary>
+    /// The texts a preview read of the attached files, which sending takes along instead of reading the files again.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from the attachments, which stay as the user attached them: the composer, this
+    /// draft, and the attachment dialogs tell attachments apart by their values, and one which changed
+    /// underneath them would count as removed and added. Stored with the chat like everything else of
+    /// the draft, so a preview still counts when the user comes back to the chat. The provenance
+    /// store holds the texts themselves.
+    /// </remarks>
+    [JsonInclude]
+    public IReadOnlyList<PreviewedText> PreviewedTexts { get; private set; } = [];
+
+    /// <summary>
     /// Whether the draft holds neither text nor attachments.
     /// </summary>
     [JsonIgnore]
@@ -141,14 +154,45 @@ public sealed class ChatDraft
     }
 
     /// <summary>
+    /// Finds the text a preview read of an attached file.
+    /// </summary>
+    /// <param name="filePath">The path of the file.</param>
+    /// <returns>The text, or null when no preview read the file.</returns>
+    public PreviewedText? GetPreviewedText(string filePath)
+    {
+        lock (this.stateLock)
+            return this.PreviewedTexts.FirstOrDefault(text => string.Equals(text.FilePath, filePath, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Notes the text a preview read of an attached file, in place of one noted for the same file before.
+    /// </summary>
+    /// <param name="previewedText">The text.</param>
+    /// <returns>The entry of the text noted before, which nothing refers to any longer, or null.</returns>
+    public Guid? NotePreviewedText(PreviewedText previewedText)
+    {
+        lock (this.stateLock)
+        {
+            var replaced = this.PreviewedTexts.FirstOrDefault(text => string.Equals(text.FilePath, previewedText.FilePath, StringComparison.Ordinal));
+            this.PreviewedTexts = [..this.PreviewedTexts.Where(text => !ReferenceEquals(text, replaced)), previewedText];
+            return replaced?.ProvenanceId;
+        }
+    }
+
+    /// <summary>
     /// Empties the draft, which is what sending it does: its attachments belong to the new message from then on.
     /// </summary>
+    /// <remarks>
+    /// The texts a preview read go as well. Whoever sends the draft removes those the message went
+    /// without from the provenance store.
+    /// </remarks>
     public void Clear()
     {
         lock (this.stateLock)
         {
             this.Text = string.Empty;
             this.FileAttachments = [];
+            this.PreviewedTexts = [];
         }
     }
 
