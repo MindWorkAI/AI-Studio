@@ -13779,6 +13779,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T1909
 -- Structure and framing
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T2152680157"] = "Ablauf und Rahmen"
 
+-- Medicine
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T2556266301"] = "Medizin"
+
+-- Law
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T2984971435"] = "Recht"
+
 -- Other kinds of slides
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T574173375"] = "Weitere Folienarten"
 
@@ -13790,6 +13796,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T8977
 
 -- Layout for partners
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1014233027"] = "Layout für Partner"
+
+-- Which slide layout should a single court ruling use, e.g., with court, date, case number, and headnote?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1020148914"] = "Welches Folienlayout soll für ein einzelnes Urteil verwendet werden, z. B. mit Gericht, Datum, Aktenzeichen und Leitsatz?"
 
 -- Which slide layout should a single opportunity use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T103149100"] = "Welches Folienlayout soll für eine einzelne, prominent dargestellte Chance verwendet werden?"
@@ -13866,11 +13875,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T13530981
 -- Which slide layout should the definition of a single term use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1354815318"] = "Welches Folienlayout soll für die Definition eines einzelnen Begriffs verwendet werden?"
 
+-- Layout for one contract clause
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1364307455"] = "Layout für eine Vertragsklausel"
+
 -- Layout for one goal
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1366104671"] = "Layout für ein Ziel"
 
 -- Layout for SWOT analyses
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T136706369"] = "Layout für SWOT-Analysen"
+
+-- Layout for guideline recommendations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1403379894"] = "Layout für Leitlinienempfehlungen"
+
+-- Which slide layout should the medical history of a patient use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1410100783"] = "Welches Folienlayout soll für die Anamnese verwendet werden?"
+
+-- Which slide layout should clinical findings use, e.g., of a physical examination?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T142386677"] = "Welches Folienlayout soll für klinische Befunde verwendet werden, z. B. aus einer körperlichen Untersuchung?"
 
 -- Layout for one scenario
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1428654470"] = "Layout für ein Szenario"
@@ -13902,6 +13923,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T15348940
 -- Layout for the title slide
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1535308880"] = "Layout für die Titelfolie"
 
+-- Which slide layout should the proof of a theorem use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1568120253"] = "Welches Folienlayout soll für den Beweis eines Satzes verwendet werden?"
+
 -- Which slide layout should the context or the starting point use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T158061098"] = "Welches Folienlayout soll für die Ausgangslage oder den Kontext verwendet werden?"
 
@@ -13913,6 +13937,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T16106522
 
 -- Which slide layout should timelines use, e.g., the course of a project?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1625275711"] = "Welches Folienlayout soll für Zeitleisten verwendet werden, z. B. für den Verlauf eines Projekts?"
+
+-- Which slide layout should several court rulings use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1627282810"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Urteile verwendet werden?"
 
 -- Which slide layout should a single quote use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1633664977"] = "Welches Folienlayout soll für ein einzelnes, prominent dargestelltes Zitat verwendet werden?"
@@ -13929,11 +13956,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T16784804
 -- Layout for introducing several speakers
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1680921944"] = "Layout für die Vorstellung mehrerer Vortragender"
 
+-- Which slide layout should the presentation of a patient case use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1685663750"] = "Welches Folienlayout soll für die Vorstellung eines Patientenfalls verwendet werden?"
+
+-- Which slide layout should imaging use, e.g., an X-ray, CT, or MRI with its findings?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1695270380"] = "Welches Folienlayout soll für die Bildgebung verwendet werden, z. B. für Röntgen-, CT- oder MRT-Aufnahmen mit den Befunden?"
+
+-- Which slide layout should the study population use, e.g., with inclusion and exclusion criteria?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1710911895"] = "Welches Folienlayout soll für die Studienpopulation verwendet werden, z. B. mit Ein- und Ausschlusskriterien?"
+
 -- Which slide layout should the state of research use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1747258262"] = "Welches Folienlayout soll für den Forschungsstand verwendet werden?"
 
 -- Layout for one user story
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1754624674"] = "Layout für eine User Story"
+
+-- Layout for one piece of evidence
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1761362584"] = "Layout für ein Beweismittel"
 
 -- Layout for one learning objective
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1771256293"] = "Layout für ein Lernziel"
@@ -13943,6 +13982,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T17769320
 
 -- Which slide layout should a key message use, which states the one thing to remember?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1787619917"] = "Welches Folienlayout soll für eine Kernaussage verwendet werden, also für das eine, was im Gedächtnis bleiben soll?"
+
+-- Which slide layout should a theorem use, e.g., in mathematics?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1802886934"] = "Welches Folienlayout soll für einen Satz oder ein Theorem verwendet werden, z. B. in der Mathematik?"
 
 -- Layout for the project status
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1807351352"] = "Layout für den Projektstatus"
@@ -13962,6 +14004,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T18470726
 -- Which slide layout should organizational notes use, e.g., on rooms or Wi-Fi?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1857170293"] = "Welches Folienlayout soll für organisatorische Hinweise verwendet werden, z. B. zu Räumen oder zum WLAN?"
 
+-- Layout for lab values
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1875667171"] = "Layout für Laborwerte"
+
 -- Layout for several research questions
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1877198900"] = "Layout für mehrere Forschungsfragen"
 
@@ -13974,6 +14019,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T19292740
 -- Layout for an overview of work packages
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1950946185"] = "Layout für eine Übersicht der Arbeitspakete"
 
+-- Which slide layout should medication use, e.g., with agent, dose, and duration?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1955333344"] = "Welches Folienlayout soll für die Medikation verwendet werden, z. B. mit Wirkstoff, Dosis und Dauer?"
+
 -- Which slide layout should acceptance criteria use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1959540330"] = "Welches Folienlayout soll für Akzeptanzkriterien verwendet werden?"
 
@@ -13982,6 +14030,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T19799842
 
 -- Which slide layout should a single scenario use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1982380825"] = "Welches Folienlayout soll für ein einzelnes, prominent dargestelltes Szenario verwendet werden?"
+
+-- Which slide layout should several formulas use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2030308484"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Formeln verwendet werden?"
 
 -- Which slide layout should the methodology use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T203822370"] = "Welches Folienlayout soll für die Methodik verwendet werden?"
@@ -14004,6 +14055,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T21146853
 -- Which slide layout should a slide with a table use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2147948257"] = "Welches Folienlayout soll für eine Folie mit einer Tabelle verwendet werden?"
 
+-- Layout for to-dos
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2149537898"] = "Layout für To-dos"
+
 -- Layout for one quote
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2150775408"] = "Layout für ein Zitat"
 
@@ -14012,6 +14066,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T21665184
 
 -- Which slide layout should a single goal use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2178279832"] = "Welches Folienlayout soll für ein einzelnes, prominent dargestelltes Ziel verwendet werden?"
+
+-- Which slide layout should several pieces of evidence use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2198315510"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Beweismittel verwendet werden?"
 
 -- Default layout for content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2216550238"] = "Standardlayout für Inhalte"
@@ -14022,17 +14079,26 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T22173938
 -- Which slide layout should an overview of several milestones use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2251715184"] = "Welches Folienlayout soll für eine Übersicht mehrerer Meilensteine verwendet werden?"
 
+-- Layout for several pieces of evidence
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2257157973"] = "Layout für mehrere Beweismittel"
+
 -- Layout for the contribution
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2263473163"] = "Layout für den Beitrag"
 
 -- Which slide layout should several reasons use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2280792678"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Gründe verwendet werden?"
 
+-- Layout for the positions of the parties
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2297947419"] = "Layout für die Standpunkte der Parteien"
+
 -- Layout for polls
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2299527458"] = "Layout für Umfragen"
 
 -- Which slide layout should the experimental setup use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2300173724"] = "Welches Folienlayout soll für den Versuchsaufbau verwendet werden?"
+
+-- Layout for legal consequences
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2323155405"] = "Layout für Rechtsfolgen"
 
 -- Layout for one reason
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2324022664"] = "Layout für einen Grund"
@@ -14046,11 +14112,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T23335379
 -- Layout for expectations
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2371205947"] = "Layout für Erwartungen"
 
+-- Which slide layout should the endpoints of a study use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2381313738"] = "Welches Folienlayout soll für die Endpunkte einer Studie verwendet werden?"
+
 -- Layout for one KPI
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2388056074"] = "Layout für einen KPI"
 
 -- Which slide layout should several goals use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2417807229"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Ziele verwendet werden?"
+
+-- Which slide layout should the therapy or the treatment plan use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2420939131"] = "Welches Folienlayout soll für die Therapie oder den Behandlungsplan verwendet werden?"
 
 -- Layout for one opportunity
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2428145985"] = "Layout für eine Chance"
@@ -14063,6 +14135,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T24514379
 
 -- Which slide layout should the design of a study use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2454384104"] = "Welches Folienlayout soll für das Design einer Studie verwendet werden?"
+
+-- Layout for endpoints
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2457995550"] = "Layout für Endpunkte"
 
 -- Which slide layout should a round use in which the participants introduce themselves?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T246747363"] = "Welches Folienlayout soll für eine Runde verwendet werden, in der sich die Teilnehmenden vorstellen?"
@@ -14082,6 +14157,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T25373152
 -- Layout for tables
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2540038829"] = "Layout für Tabellen"
 
+-- Which slide layout should several contract clauses use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2550841501"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Vertragsklauseln verwendet werden?"
+
 -- Layout for chains of arguments
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2559513003"] = "Layout für Argumentationsketten"
 
@@ -14093,6 +14171,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T25701538
 
 -- Which slide layout should reflecting on and recording the results use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2576096519"] = "Welches Folienlayout soll für die Reflexion und die Sicherung der Ergebnisse verwendet werden?"
+
+-- Layout for theorems
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T259369873"] = "Layout für mathematische Sätze"
+
+-- Which slide layout should a single piece of evidence use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2606871105"] = "Welches Folienlayout soll für ein einzelnes, prominent dargestelltes Beweismittel verwendet werden?"
 
 -- Which slide layout should the next steps use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2607482691"] = "Welches Folienlayout soll für die nächsten Schritte verwendet werden?"
@@ -14112,20 +14196,38 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T26978209
 -- No preference (the LLM decides)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2736980667"] = "Keine Vorgabe (das LLM entscheidet)"
 
+-- Layout for several contract clauses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2738284820"] = "Layout für mehrere Vertragsklauseln"
+
+-- Which slide layout should a single note or remark use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2752575508"] = "Welches Folienlayout soll für eine einzelne, prominent dargestellte Anmerkung oder Notiz verwendet werden?"
+
 -- Layout for one work package
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2760560305"] = "Layout für ein Arbeitspaket"
 
 -- Which slide layout should a single reason use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2764805851"] = "Welches Folienlayout soll für einen einzelnen, prominent dargestellten Grund verwendet werden?"
 
+-- Which slide layout should a scheme use by which a legal question is examined step by step?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2772805348"] = "Welches Folienlayout soll für ein Prüfungsschema verwendet werden, nach dem eine Rechtsfrage Schritt für Schritt geprüft wird?"
+
 -- Layout for one thesis
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2776067892"] = "Layout für eine These"
+
+-- Layout for deadlines
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2797417629"] = "Layout für Fristen"
 
 -- Which slide layout should an overview of several work packages use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2799714841"] = "Welches Folienlayout soll für eine Übersicht mehrerer Arbeitspakete verwendet werden?"
 
 -- Which slide layout should several risks use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2809967041"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Risiken verwendet werden?"
+
+-- Layout for the therapy
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2814677978"] = "Layout für die Therapie"
+
+-- Which slide layout should several legal questions use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T282499161"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Rechtsfragen verwendet werden?"
 
 -- Layout for several theses
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2832902216"] = "Layout für mehrere Thesen"
@@ -14136,6 +14238,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T28385980
 -- Layout for a look back
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2854650733"] = "Layout für einen Rückblick"
 
+-- Layout for the diagnosis
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2872699274"] = "Layout für die Diagnose"
+
 -- Layout for one example
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2884053898"] = "Layout für ein Beispiel"
 
@@ -14145,14 +14250,26 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T28870825
 -- Which slide layout should a single work package use, e.g., in a project report?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2892903451"] = "Welches Folienlayout soll für ein einzelnes Arbeitspaket verwendet werden, z. B. in einem Projektbericht?"
 
+-- Layout for examination schemes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2897211069"] = "Layout für Prüfungsschemata"
+
+-- Layout for clinical findings
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2897905529"] = "Layout für klinische Befunde"
+
 -- Layout for one definition
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2901571581"] = "Layout für eine Definition"
+
+-- Which slide layout should a single legal question use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2905824880"] = "Welches Folienlayout soll für eine einzelne, prominent dargestellte Rechtsfrage verwendet werden?"
 
 -- Which slide layout should the title slide use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2927095458"] = "Welches Folienlayout soll für die Titelfolie verwendet werden?"
 
 -- Which slide layout should a single research question use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2929392338"] = "Welches Folienlayout soll für eine einzelne, prominent dargestellte Forschungsfrage verwendet werden?"
+
+-- Which slide layout should the facts of a legal case use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2937844829"] = "Welches Folienlayout soll für den Sachverhalt eines Rechtsfalls verwendet werden?"
 
 -- Layout for decision requests
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2970628172"] = "Layout für Entscheidungsvorlagen"
@@ -14163,8 +14280,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T29759296
 -- Layout for questions to the audience
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2984056773"] = "Layout für Fragen an das Publikum"
 
+-- Which slide layout should the positions of the parties use, e.g., of plaintiff and defendant?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2988925171"] = "Welches Folienlayout soll für die Standpunkte der Parteien verwendet werden, z. B. der klagenden und der beklagten Partei?"
+
+-- Layout for several rulings
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2991603466"] = "Layout für mehrere Urteile"
+
 -- Which slide layout should several counterarguments use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2999624893"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Gegenargumente verwendet werden?"
+
+-- Layout for the prognosis
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3007491939"] = "Layout für die Prognose"
 
 -- Which slide layout should a single use case use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3051456178"] = "Welches Folienlayout soll für einen einzelnen, prominent dargestellten Anwendungsfall verwendet werden?"
@@ -14172,17 +14298,26 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T30514561
 -- Which slide layout should several research questions use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3073525085"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Forschungsfragen verwendet werden?"
 
+-- Which slide layout should to-dos use, e.g., with who does them and by when?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3075071043"] = "Welches Folienlayout soll für To-dos verwendet werden, z. B. mit Angaben dazu, wer sie bis wann erledigt?"
+
 -- Which slide layout should a description of the data use, e.g., of a dataset?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3083535091"] = "Welches Folienlayout soll für die Beschreibung der Daten verwendet werden, z. B. eines Datensatzes?"
 
 -- Which slide layout should a single thesis or central claim use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3085355069"] = "Welches Folienlayout soll für eine einzelne, prominent dargestellte These oder zentrale Behauptung verwendet werden?"
 
+-- Which slide layout should a dispute of legal opinions use, e.g., the prevailing and a minority opinion?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3097909957"] = "Welches Folienlayout soll für einen Meinungsstreit verwendet werden, z. B. zwischen herrschender Meinung und Mindermeinung?"
+
 -- Which slide layout should slides with much content use, e.g., many points or a longer explanation?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3100562182"] = "Welches Folienlayout soll für Folien mit viel Inhalt verwendet werden, z. B. für viele Aufzählungspunkte oder eine längere Erklärung?"
 
 -- Layout for roadmaps
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3108446521"] = "Layout für Roadmaps"
+
+-- Layout for the study population
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3133129441"] = "Layout für die Studienpopulation"
 
 -- Which slide layout should a single assumption use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3134718364"] = "Welches Folienlayout soll für eine einzelne, prominent dargestellte Annahme verwendet werden?"
@@ -14220,17 +14355,29 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T32965990
 -- Layout for several assumptions
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3303991020"] = "Layout für mehrere Annahmen"
 
+-- Which slide layout should the prognosis use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3337342787"] = "Welches Folienlayout soll für die Prognose verwendet werden?"
+
 -- Layout for organizational notes
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3337686411"] = "Layout für organisatorische Hinweise"
 
 -- Layout for the agenda
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3343931801"] = "Layout für die Agenda"
 
+-- Layout for medication
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3344067059"] = "Layout für die Medikation"
+
+-- Which slide layout should several notes or remarks use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3344123040"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Anmerkungen oder Notizen verwendet werden?"
+
 -- Which slide layout should the research gap use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3350032786"] = "Welches Folienlayout soll für die Forschungslücke verwendet werden?"
 
 -- Which slide layout should open an appendix with backup slides?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3360010463"] = "Welches Folienlayout soll einen Anhang mit Backup-Folien eröffnen?"
+
+-- Layout for differential diagnoses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3376045644"] = "Layout für Differenzialdiagnosen"
 
 -- Which slide layout should a roadmap use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3376320251"] = "Welches Folienlayout soll für eine Roadmap verwendet werden?"
@@ -14259,6 +14406,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T34550065
 -- Layout for several use cases
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3455648654"] = "Layout für mehrere Anwendungsfälle"
 
+-- Which slide layout should a single formula use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3465105335"] = "Welches Folienlayout soll für eine einzelne, prominent dargestellte Formel verwendet werden?"
+
 -- Layout for funding notes
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3479554352"] = "Layout für Förderhinweise"
 
@@ -14270,6 +14420,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T34827001
 
 -- Which slide layout should a slide use which presents partners, e.g., with their logos?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3497108376"] = "Welches Folienlayout soll für eine Folie verwendet werden, die Partner vorstellt, z. B. mit ihren Logos?"
+
+-- Which slide layout should several legal provisions use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3497982524"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Rechtsvorschriften verwendet werden?"
+
+-- Layout for the course of a disease
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3505206048"] = "Layout für den Krankheitsverlauf"
 
 -- Layout for the research gap
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3509558196"] = "Layout für die Forschungslücke"
@@ -14283,6 +14439,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T35438858
 -- Which slide layout should feedback use, e.g., of customers or users?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3550149798"] = "Welches Folienlayout soll für Feedback verwendet werden, z. B. von Kunden oder Nutzern?"
 
+-- Layout for proofs
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3550214783"] = "Layout für Beweise"
+
 -- Which slide layout should a single risk use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3556807844"] = "Welches Folienlayout soll für ein einzelnes, prominent dargestelltes Risiko verwendet werden?"
 
@@ -14294,6 +14453,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T35644975
 
 -- Layout for one research question
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3565608351"] = "Layout für eine Forschungsfrage"
+
+-- Which slide layout should the approval of an ethics committee use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3582048079"] = "Welches Folienlayout soll für das Votum einer Ethikkommission verwendet werden?"
+
+-- Layout for one formula
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3582301086"] = "Layout für eine Formel"
 
 -- Which slide layout should several pictures use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T358514112"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Bilder verwendet werden?"
@@ -14316,6 +14481,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T36930366
 -- Which slide layout should a break use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T370295206"] = "Welches Folienlayout soll für eine Pause verwendet werden?"
 
+-- Layout for the medical history
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3716905152"] = "Layout für die Anamnese"
+
 -- Layout for several risks
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3766935148"] = "Layout für mehrere Risiken"
 
@@ -14334,6 +14502,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T38327358
 -- Which slide layout should a single picture use, shown prominently, e.g., a screenshot, a photo, or a sketch?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3855855203"] = "Welches Folienlayout soll für ein einzelnes, prominent dargestelltes Bild verwendet werden, z. B. einen Screenshot, ein Foto oder eine Skizze?"
 
+-- Layout for one legal provision
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3856771638"] = "Layout für eine Rechtsvorschrift"
+
 -- Layout for much content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T38628112"] = "Layout für viel Inhalt"
 
@@ -14342,6 +14513,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T38926177
 
 -- Layout for several scenarios
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3919966111"] = "Layout für mehrere Szenarien"
+
+-- Which slide layout should deadlines use, e.g., for an appeal?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3924921260"] = "Welches Folienlayout soll für Fristen verwendet werden, z. B. für ein Rechtsmittel?"
 
 -- Which slide layout should group work use, e.g., the groups and their tasks?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3944216706"] = "Welches Folienlayout soll für Gruppenarbeit verwendet werden, z. B. die Gruppen und ihre Aufgaben?"
@@ -14361,6 +14535,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T39884972
 -- Layout for one picture
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4004724742"] = "Layout für ein Bild"
 
+-- Which slide layout should differential diagnoses use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4007791050"] = "Welches Folienlayout soll für Differenzialdiagnosen verwendet werden?"
+
 -- Which slide layout should several user stories use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4020220483"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte User Stories verwendet werden?"
 
@@ -14370,14 +14547,29 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T40247274
 -- Which slide layout should a single learning objective use, shown prominently?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4043291982"] = "Welches Folienlayout soll für ein einzelnes, prominent dargestelltes Lernziel verwendet werden?"
 
+-- Layout for one ruling
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4064917261"] = "Layout für ein Urteil"
+
+-- Which slide layout should the course of a disease use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4086697966"] = "Welches Folienlayout soll für den Krankheitsverlauf verwendet werden?"
+
+-- Layout for one legal question
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4097508115"] = "Layout für eine Rechtsfrage"
+
 -- Which slide layout should a vision use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T411531801"] = "Welches Folienlayout soll für eine Vision verwendet werden?"
+
+-- Layout for patient cases
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4126193860"] = "Layout für Patientenfälle"
 
 -- Which slide layout should several use cases use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T412705947"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Anwendungsfälle verwendet werden?"
 
 -- Layout for exercises
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4139918235"] = "Layout für Übungen"
+
+-- Which slide layout should a single contract clause use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4148748174"] = "Welches Folienlayout soll für eine einzelne, prominent dargestellte Vertragsklausel verwendet werden?"
 
 -- Layout for one recommendation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4152682543"] = "Layout für eine Empfehlung"
@@ -14387,6 +14579,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T41571016
 
 -- Layout for several dependencies
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4167135281"] = "Layout für mehrere Abhängigkeiten"
+
+-- Which slide layout should a single legal provision use, e.g., a quoted section of a law?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4240339049"] = "Welches Folienlayout soll für eine einzelne Rechtsvorschrift verwendet werden, z. B. für einen zitierten Paragrafen eines Gesetzes?"
 
 -- Which slide layout should the sources and the literature use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T424325956"] = "Welches Folienlayout soll für Quellen und Literatur verwendet werden?"
@@ -14402,6 +14597,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T42916969
 
 -- Layout for group work
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4352908"] = "Layout für Gruppenarbeit"
+
+-- Which slide layout should side effects and adverse events use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T436684467"] = "Welches Folienlayout soll für Nebenwirkungen und unerwünschte Ereignisse verwendet werden?"
 
 -- Which slide layout should processes use, e.g., the steps of a workflow?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T472481710"] = "Welches Folienlayout soll für Prozesse verwendet werden, z. B. für die Schritte eines Arbeitsablaufs?"
@@ -14424,8 +14622,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T49999244
 -- Layout for one risk
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T520213671"] = "Layout für ein Risiko"
 
+-- Layout for the facts of the case
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T525510334"] = "Layout für den Sachverhalt"
+
 -- Layout for the outlook
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T532661312"] = "Layout für den Ausblick"
+
+-- Which slide layout should legal consequences use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T534233457"] = "Welches Folienlayout soll für Rechtsfolgen verwendet werden?"
+
+-- Layout for one note
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T542913088"] = "Layout für eine Anmerkung"
 
 -- Layout for a key message
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T580205055"] = "Layout für eine Kernaussage"
@@ -14438,6 +14645,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T59702760
 
 -- Layout for several reasons
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T642594705"] = "Layout für mehrere Gründe"
+
+-- Layout for adverse events
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T644446987"] = "Layout für unerwünschte Ereignisse"
+
+-- Layout for disputes of opinions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T654393377"] = "Layout für Meinungsstreite"
 
 -- Which slide layout should an executive summary use, which sums up the presentation for decision makers?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T656187586"] = "Welches Folienlayout soll für eine Management-Zusammenfassung verwendet werden, die die Präsentation für Entscheidungstragende zusammenfasst?"
@@ -14454,14 +14667,35 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T71200912
 -- Layout for the closing slide
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T720559061"] = "Layout für die Abschlussfolie"
 
+-- Layout for several notes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T72227865"] = "Layout für mehrere Anmerkungen"
+
+-- Layout for several legal provisions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T732679023"] = "Layout für mehrere Rechtsvorschriften"
+
+-- Which slide layout should lab values use, e.g., with their reference ranges?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T775796006"] = "Welches Folienlayout soll für Laborwerte verwendet werden, z. B. mit ihren Referenzbereichen?"
+
+-- Layout for the ethics approval
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T776275760"] = "Layout für das Ethikvotum"
+
+-- Which slide layout should a recommendation of a guideline use, e.g., with its level of evidence?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T779609788"] = "Welches Folienlayout soll für eine Leitlinienempfehlung verwendet werden, z. B. mit ihrem Evidenzgrad?"
+
 -- Which slide layout should ordinary slides with content use by default?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T786472161"] = "Welches Folienlayout soll standardmäßig für gewöhnliche Inhaltsfolien verwendet werden?"
+
+-- Layout for imaging
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T792438990"] = "Layout für die Bildgebung"
 
 -- Layout for interpretations
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T805484287"] = "Layout für Interpretationen"
 
 -- Layout for little content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T80953305"] = "Layout für wenig Inhalt"
+
+-- Layout for several legal questions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T811795984"] = "Layout für mehrere Rechtsfragen"
 
 -- Which slide layout should an outlook on what comes next use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T813908001"] = "Welches Folienlayout soll für einen Ausblick auf das Kommende verwendet werden?"
@@ -14481,8 +14715,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T84281602
 -- Which slide layout should lessons learned use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T843945672"] = "Welches Folienlayout soll für Lessons Learned verwendet werden?"
 
+-- Which slide layout should the diagnosis use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T847877816"] = "Welches Folienlayout soll für die Diagnose verwendet werden?"
+
 -- Which slide layout should several results use, shown together?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T852132531"] = "Welches Folienlayout soll für mehrere gemeinsam dargestellte Ergebnisse verwendet werden?"
+
+-- Layout for several formulas
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T852509607"] = "Layout für mehrere Formeln"
 
 -- Which slide layout should source code use?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T875188064"] = "Welches Folienlayout soll für Quellcode verwendet werden?"
