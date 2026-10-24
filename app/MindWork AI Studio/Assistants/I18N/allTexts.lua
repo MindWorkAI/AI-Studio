@@ -4465,11 +4465,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T232759947"] = "Opens the fi
 -- Opens the file in the program your system uses for it
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T2951618663"] = "Opens the file in the program your system uses for it"
 
+-- AI Studio cannot find this file on your computer: {0}. It was moved, renamed, or deleted, or it lies on another computer, such as the server of a data source.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T2970139249"] = "AI Studio cannot find this file on your computer: {0}. It was moved, renamed, or deleted, or it lies on another computer, such as the server of a data source."
+
 -- Open this page in your browser
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3101354152"] = "Open this page in your browser"
-
--- This file is no longer at its place. It was moved, renamed, or deleted: {0}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3301132902"] = "This file is no longer at its place. It was moved, renamed, or deleted: {0}"
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
