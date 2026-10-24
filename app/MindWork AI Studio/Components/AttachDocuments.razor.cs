@@ -81,6 +81,17 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public Func<string, Task<ChatThread?>> EnsureOwnerChatAsync { get; set; } = _ => Task.FromResult<ChatThread?>(null);
 
+    /// <summary>
+    /// Keeps what the preview read of an attached document, so that sending it does not read the file
+    /// again; answers the attachment with the entry of its text, or null when nothing was kept.
+    /// </summary>
+    /// <remarks>
+    /// Only the chat hands one over, cf. DocumentCheckDialog.KeepReadText. Elsewhere, e.g., in the
+    /// assistants, the documents are read for every run anyway.
+    /// </remarks>
+    [Parameter]
+    public Func<FileAttachment, string, Task<FileAttachment?>>? KeepPreviewedText { get; set; }
+
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
 
@@ -263,7 +274,7 @@ public partial class AttachDocuments : MSGComponentBase
             return;
 
         var previousAttachments = this.DocumentPaths.ToHashSet();
-        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable);
+        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable, this.KeepPreviewedText);
         var removedAttachments = previousAttachments.Except(this.DocumentPaths).ToList();
         foreach (var removedAttachment in removedAttachments)
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
@@ -452,6 +463,7 @@ public partial class AttachDocuments : MSGComponentBase
             { x => x.Document, fileAttachment },
             { x => x.AttachPaths, this.AttachDroppedPathsAsync },
             { x => x.IsAttachingUnavailable, () => this.IsUnavailable },
+            { x => x.KeepReadText, this.KeepPreviewedText },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

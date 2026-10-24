@@ -38,6 +38,15 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     [Parameter]
     public Func<bool>? IsAttachingUnavailable { get; set; }
 
+    /// <summary>
+    /// Keeps what the preview reads of an attachment, so that sending it does not read the file again, cf. DocumentCheckDialog.KeepReadText.
+    /// </summary>
+    /// <remarks>
+    /// Null for a message which was already sent, and wherever nothing is sent later.
+    /// </remarks>
+    [Parameter]
+    public Func<FileAttachment, string, Task<FileAttachment?>>? KeepReadText { get; set; }
+
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
 
@@ -120,7 +129,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
 
     private async Task PathsDropped(List<string> paths) => await this.AttachPathsAsync(paths);
 
-    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, HashSet<FileAttachment> documentPaths, Func<List<string>, Task<IReadOnlyList<FileAttachment>>>? attachPaths = null, Func<bool>? isAttachingUnavailable = null)
+    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, HashSet<FileAttachment> documentPaths, Func<List<string>, Task<IReadOnlyList<FileAttachment>>>? attachPaths = null, Func<bool>? isAttachingUnavailable = null, Func<FileAttachment, string, Task<FileAttachment?>>? keepReadText = null)
     {
         var dialogParameters = new DialogParameters<ReviewAttachmentsDialog>
         {
@@ -132,6 +141,9 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
 
         if (isAttachingUnavailable is not null)
             dialogParameters.Add(x => x.IsAttachingUnavailable, isAttachingUnavailable);
+
+        if (keepReadText is not null)
+            dialogParameters.Add(x => x.KeepReadText, keepReadText);
 
         var dialogReference = await dialogService.ShowAsync<ReviewAttachmentsDialog>(TB("Your attached files"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
@@ -161,6 +173,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
             { x => x.Document, fileAttachment },
+            { x => x.KeepReadText, this.KeepReadText },
         };
 
         //

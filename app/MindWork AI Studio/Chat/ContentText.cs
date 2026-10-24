@@ -617,7 +617,7 @@ public sealed class ContentText : IContent
     /// </summary>
     /// <param name="document">The document.</param>
     /// <param name="extraction">What reading it gave.</param>
-    private static async Task ReportIncompleteReadingAsync(FileAttachment document, FileExtractionResult extraction)
+    internal static async Task ReportIncompleteReadingAsync(FileAttachment document, FileExtractionResult extraction)
     {
         //
         // The file is usable, but we lost parts of it. The user has to know which

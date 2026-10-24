@@ -45,6 +45,18 @@ public partial class DocumentCheckDialog : MSGComponentBase
     public Func<bool>? IsAttachingUnavailable { get; set; }
 
     /// <summary>
+    /// Keeps what this dialog read of a document which was never sent, so that sending it does not
+    /// read the file again, see FileAttachment.ProvenanceId.
+    /// </summary>
+    /// <remarks>
+    /// Answers the attachment with the entry of its text, or null when nothing was kept. Only the
+    /// chat hands one over, for the attachments of the message being written: a sent message has
+    /// its texts already, and elsewhere, nothing is sent later.
+    /// </remarks>
+    [Parameter]
+    public Func<FileAttachment, string, Task<FileAttachment?>>? KeepReadText { get; set; }
+
+    /// <summary>
     /// The document we show right now. It starts out as the one we were opened with and changes
     /// whenever the user drops another file onto this dialog.
     /// </summary>
@@ -227,6 +239,8 @@ public partial class DocumentCheckDialog : MSGComponentBase
             //
             if (!extraction.HasUsableContent)
                 this.loadFailureMessage = extraction.ToUserMessage(documentToLoad.FileName);
+            else if (this.KeepReadText is not null && documentToLoad.ProvenanceId is null)
+                await this.KeepReadTextAsync(documentToLoad, extraction, generation);
         }
         catch (OperationCanceledException)
         {
@@ -327,6 +341,25 @@ public partial class DocumentCheckDialog : MSGComponentBase
         this.loadFailureMessage = null;
         this.showsStoredText = false;
         this.isLoadingContent = this.NeedsExtraction();
+    }
+
+    /// <summary>
+    /// Keeps what this dialog read of a document, so that sending it does not read the file again.
+    /// </summary>
+    /// <param name="documentToKeep">The document, as the caller holds it.</param>
+    /// <param name="extraction">What reading it gave.</param>
+    /// <param name="generation">The number of the load, which tells whether this dialog still shows the document.</param>
+    private async Task KeepReadTextAsync(FileAttachment documentToKeep, FileExtractionResult extraction, int generation)
+    {
+        // Sending reads the file no more, so it would no longer tell what was missing or mislabeled:
+        await ContentText.ReportIncompleteReadingAsync(documentToKeep, extraction);
+
+        var kept = await this.KeepReadText!(documentToKeep, extraction.Content);
+        if (kept is null || this.isDisposed || generation != this.loadGeneration)
+            return;
+
+        // A second preview of the same attachment then shows the kept text without reading the file:
+        this.document = kept;
     }
 
     /// <summary>

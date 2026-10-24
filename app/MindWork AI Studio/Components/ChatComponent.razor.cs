@@ -5,6 +5,8 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Media;
@@ -83,6 +85,9 @@ public partial class ChatComponent : MSGComponentBase
 
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
+
+    [Inject]
+    private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
 
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
@@ -1319,7 +1324,56 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>Creates and stores a stable draft immediately after media import confirmation.</summary>
-    private async Task<ChatThread?> EnsureMediaImportChatAsync(string firstMediaPath)
+    private Task<ChatThread?> EnsureMediaImportChatAsync(string firstMediaPath) => this.EnsureChatAsync(string.Format(T("Transcription: {0}"), Path.GetFileName(firstMediaPath)));
+
+    /// <summary>
+    /// Keeps the text the preview read of an attached document, so that sending the message does not read the file again.
+    /// </summary>
+    /// <remarks>
+    /// The text belongs to a chat, so a preview in a new chat creates that chat, as attaching a
+    /// recording does. The attachment returns to the composer with the entry of its text, which the
+    /// draft keeps as well, see FileAttachment.ProvenanceId. Nothing here may stop the preview: should
+    /// the text not be kept, sending reads the file as before.
+    /// </remarks>
+    /// <param name="attachment">The attachment, as the composer holds it.</param>
+    /// <param name="text">The text the preview read, after the prompt injection filter.</param>
+    /// <returns>The attachment with the entry of its text, or null when nothing was kept.</returns>
+    private async Task<FileAttachment?> KeepPreviewedTextAsync(FileAttachment attachment, string text)
+    {
+        if (attachment.ProvenanceId is not null)
+            return attachment;
+
+        try
+        {
+            var chat = await this.EnsureChatAsync(attachment.FileName);
+            if (chat is null)
+                return null;
+
+            var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
+            var provenanceId = await store.StoreAsync(chat.ChatId, ProvenanceKind.ATTACHMENT, text, null, CancellationToken.None);
+            if (provenanceId is null)
+                return null;
+
+            // The composer holds its attachments normalized, which compare by their values:
+            var kept = attachment with { ProvenanceId = provenanceId };
+            this.ComposerAttachmentsChanged([..this.ComposerState.FileAttachments.Select(existing => existing == attachment ? kept : existing)]);
+            await this.InvokeAsync(this.StateHasChanged);
+            return kept;
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogWarning(exception, "Failed to keep the previewed text of the attachment '{FilePath}'. Sending reads the file instead.", attachment.FilePath);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Creates and stores the chat the composer belongs to, when there is none yet, e.g., for what an
+    /// attachment brings along before the first message is sent.
+    /// </summary>
+    /// <param name="nameWithoutInput">The name of the chat while the user typed nothing yet.</param>
+    /// <returns>The chat of the composer.</returns>
+    private async Task<ChatThread?> EnsureChatAsync(string nameWithoutInput)
     {
         if (this.ChatThread is not null)
             return this.ChatThread;
@@ -1327,7 +1381,7 @@ public partial class ChatComponent : MSGComponentBase
         this.RefreshCurrentProfileAndChatTemplate();
         var promptName = this.ExtractThreadName(this.ComposerState.UserInput);
         var threadName = string.IsNullOrWhiteSpace(this.ComposerState.UserInput)
-            ? string.Format(T("Transcription: {0}"), Path.GetFileName(firstMediaPath))
+            ? nameWithoutInput
             : promptName;
 
         this.ChatThread = this.NewChatThread(threadName);
