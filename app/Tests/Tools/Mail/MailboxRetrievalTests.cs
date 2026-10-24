@@ -1,6 +1,7 @@
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tests.Tools.Databases;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Mail;
 using AIStudio.Tools.Services;
@@ -82,10 +83,13 @@ public sealed class MailboxRetrievalTests
     [Test]
     public void EveryMailIsListedOnceWithItsBestPassage()
     {
-        var passages = MailboxRetrievalService.BestPassagePerMail([new("a", "a1"), new("b", "b1"), new("a", "a2"), new("c", "c1"), new("b", "b2")]);
+        var onAPageOfAnAttachment = new ChunkLocation(PageNumber: 3, AttachmentPosition: 0);
+        var passages = MailboxRetrievalService.BestPassagePerMail([new("a", "a1", onAPageOfAnAttachment), Passage("b", "b1"), Passage("a", "a2"), Passage("c", "c1"), Passage("b", "b2")]);
 
-        Assert.That(passages, Is.EqualTo(new MailPassage[] { new("a", "a1"), new("b", "b1"), new("c", "c1") }));
+        Assert.That(passages, Is.EqualTo(new[] { new MailPassage("a", "a1", onAPageOfAnAttachment), Passage("b", "b1"), Passage("c", "c1") }), "The best passage keeps where it is in its mail.");
     }
+
+    private static MailPassage Passage(string mailId, string text) => new(mailId, text, new ChunkLocation());
 
     [Test]
     public void AChannelWhichFilledItsWindowMayHoldMoreMails()

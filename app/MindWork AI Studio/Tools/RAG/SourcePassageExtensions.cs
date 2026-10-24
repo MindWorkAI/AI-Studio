@@ -14,25 +14,41 @@ public static class SourcePassageExtensions
     public static bool IsTranscript(this SourcePassage passage) => passage.Type is RetrievalContentType.TEXT_TRANSCRIPT;
 
     /// <summary>
-    /// Names where the passage is in its document, e.g., "Page 4", "Pages 4–5", or "Part 3".
+    /// What stands between the sheets of a spreadsheet in a location, e.g., "Budget: rows 3–9 · Summary: row 2".
+    /// </summary>
+    private const string SHEET_SEPARATOR = " · ";
+
+    /// <summary>
+    /// Names where the passage is in its document, e.g., "Page 4", "Pages 4–5", "Budget: rows 3–9", "Lines 40–85", or "Part 3".
     /// </summary>
     /// <param name="passage">The passage.</param>
     /// <returns>The location, or an empty string when the data source does not say.</returns>
     public static string GetLocationLabel(this SourcePassage passage) => GetLocationLabel([passage]);
 
     /// <summary>
-    /// Where the passage is in its document, as numbers only, e.g., its pages 4–5 or its part 3.
+    /// Where the passage is in its document, as numbers only, e.g., its pages 4–5, its lines 40–85, or its part 3.
     /// </summary>
+    /// <remarks>
+    /// Orders the passages of one document, in the order of the document. The passages of the
+    /// sheets of a spreadsheet give their parts, since rows start anew in every sheet.
+    /// </remarks>
     /// <param name="passage">The passage.</param>
-    /// <returns>The pages or the part, or null when the data source does not say.</returns>
+    /// <returns>The numbers, or null when the data source does not say.</returns>
     public static LocationRange? GetLocationRange(this SourcePassage passage) => GetLocation([passage])?.Ranges[0];
 
     /// <summary>
-    /// Names where several passages are in their document, e.g., "Pages 1, 11" or "Parts 2, 5".
+    /// Names where several passages are in their document, e.g., "Pages 1, 11", "Budget: rows 3–9 · Summary: row 2", "Lines 40–85, 120" or "Parts 2, 5".
     /// </summary>
     /// <param name="passages">The passages.</param>
     /// <returns>The location, or an empty string when the data source does not say.</returns>
-    public static string GetLocationLabel(this IEnumerable<SourcePassage> passages) => passages.GetLocation()?.ToString() ?? string.Empty;
+    public static string GetLocationLabel(this IEnumerable<SourcePassage> passages)
+    {
+        var passagesOfDocument = passages.ToList();
+        if (passagesOfDocument.All(passage => passage.PageNumber is not > 0) && GetSheetsLabel(passagesOfDocument) is { } sheets)
+            return sheets;
+
+        return passagesOfDocument.GetLocation()?.ToString() ?? string.Empty;
+    }
 
     /// <summary>
     /// Finds where several passages are in their document, in parts, so that each page can be shown
@@ -40,23 +56,43 @@ public static class SourcePassageExtensions
     /// </summary>
     /// <remarks>
     /// A document with pages is named by its pages: they are what the user finds again in the
-    /// document, and what a program can open it at. A document without pages, such as a text file,
-    /// is named by the parts it was split into for the search. Either way, the numbers follow the
-    /// order of the document, each once: two passages on the same page name that page once. An end
-    /// page which is not after the start page names no range, so the passage is on one page.
+    /// document, and what a program can open it at. A table without sheets, such as a CSV file, is
+    /// named by its rows, and a text by its lines. Rows and lines are nothing a program can open a
+    /// document at, so they become no links. A document which says none of them is named by the
+    /// parts it was split into for the search. Either way, the numbers follow the order of the
+    /// document, each once: two passages on the same page name that page once. An end which is not
+    /// after the start names no range.<br/><br/>
+    /// The rows of a spreadsheet start anew in every sheet, so they need the name of their sheet
+    /// and are named by GetLocationLabel, sheet by sheet. Here, its passages give their parts.
     /// </remarks>
     /// <param name="passages">The passages.</param>
-    /// <returns>The location, or null when the data source says neither pages nor parts.</returns>
+    /// <returns>The location, or null when the data source says nothing about it.</returns>
     public static PassageLocation? GetLocation(this IEnumerable<SourcePassage> passages)
     {
         var passagesOfDocument = passages.ToList();
         var pages = passagesOfDocument
             .Where(passage => passage.PageNumber is > 0)
-            .Select(passage => new LocationRange(passage.PageNumber!.Value, Math.Max(passage.PageNumber!.Value, passage.EndPageNumber ?? 0)))
+            .Select(passage => RangeOf(passage.PageNumber!.Value, passage.EndPageNumber))
             .ToList();
 
         if (pages.Count > 0)
             return CreateLocation(pages, TB("Page {0}"), TB("Pages {0}"), arePages: true);
+
+        var rows = passagesOfDocument
+            .Where(passage => passage is { StartRow: > 0, SheetName: null or "" })
+            .Select(passage => RangeOf(passage.StartRow!.Value, passage.EndRow))
+            .ToList();
+
+        if (rows.Count > 0)
+            return CreateLocation(rows, TB("Row {0}"), TB("Rows {0}"), arePages: false);
+
+        var lines = passagesOfDocument
+            .Where(passage => passage.StartLine is > 0)
+            .Select(passage => RangeOf(passage.StartLine!.Value, passage.EndLine))
+            .ToList();
+
+        if (lines.Count > 0)
+            return CreateLocation(lines, TB("Line {0}"), TB("Lines {0}"), arePages: false);
 
         var parts = passagesOfDocument
             .Where(passage => passage.ChunkNumber is > 0)
@@ -65,6 +101,44 @@ public static class SourcePassageExtensions
 
         return parts.Count > 0 ? CreateLocation(parts, TB("Part {0}"), TB("Parts {0}"), arePages: false) : null;
     }
+
+    /// <summary>
+    /// Names the rows of passages from the sheets of a spreadsheet, sheet by sheet, e.g., "Budget: rows 3–9, 20 · Summary: row 2".
+    /// </summary>
+    /// <remarks>
+    /// The sheets follow the order of the document, which is the order of the parts the passages
+    /// are. A passage never runs from one sheet into the next, cf. TextChunker.SplitBySheets.
+    /// </remarks>
+    /// <param name="passages">The passages of one document.</param>
+    /// <returns>The location, or null when no passage names a sheet.</returns>
+    private static string? GetSheetsLabel(IReadOnlyList<SourcePassage> passages)
+    {
+        var sheets = passages
+            .Where(passage => passage is { StartRow: > 0, SheetName.Length: > 0 })
+            .OrderBy(passage => passage.ChunkNumber ?? int.MaxValue)
+            .GroupBy(passage => passage.SheetName!, StringComparer.Ordinal)
+            .Select(sheet => GetSheetLabel(sheet.Key, sheet.Select(passage => RangeOf(passage.StartRow!.Value, passage.EndRow))))
+            .ToList();
+
+        return sheets.Count > 0 ? string.Join(SHEET_SEPARATOR, sheets) : null;
+    }
+
+    private static string GetSheetLabel(string sheetName, IEnumerable<LocationRange> rows)
+    {
+        var orderedRows = rows
+            .Distinct()
+            .OrderBy(range => range.First)
+            .ThenBy(range => range.Last)
+            .ToList();
+
+        var format = orderedRows is [var single] && single.First == single.Last ? TB("{0}: row {1}") : TB("{0}: rows {1}");
+        return string.Format(format, sheetName, string.Join(PassageLocation.RANGE_SEPARATOR, orderedRows));
+    }
+
+    /// <summary>
+    /// The numbers from a start to an end; an end which is not after the start names no range.
+    /// </summary>
+    private static LocationRange RangeOf(int first, int? last) => new(first, Math.Max(first, last ?? 0));
 
     private static PassageLocation CreateLocation(IEnumerable<LocationRange> ranges, string oneFormat, string severalFormat, bool arePages)
     {
@@ -93,7 +167,8 @@ public static class SourcePassageExtensions
     /// The list of sources keeps one entry per document, see SourceExtensions.MergeSources, and its
     /// title came from the passage found first, e.g., "handbook.pdf (Page 1)". A second passage on
     /// page 11 would go unmentioned, so the title is made anew from all passages of the source. A
-    /// text file is named by its parts the same way, see GetLocation. Passages whose data source
+    /// spreadsheet is named by its sheets and rows the same way, a text file by its lines, see
+    /// GetLocationLabel. Passages whose data source
     /// says neither, e.g., an external one, are counted instead as soon as there are several of
     /// them. Otherwise, a source keeps the title its data source gave it, and so does every source
     /// without passages, such as a web page.

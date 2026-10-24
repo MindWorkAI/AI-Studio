@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Tools.RAG;
 
 /// <summary>
@@ -67,13 +69,49 @@ public sealed record SourcePassage
     /// </summary>
     public int? EndPageNumber { get; init; }
 
+    //
+    // Where a passage without pages is. Left out of the chat file while unknown, which they are for
+    // every passage of a document with pages, and for every passage stored before they existed:
+    //
+
+    /// <summary>
+    /// The sheet of a spreadsheet the passage is from, or null.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? SheetName { get; init; }
+
+    /// <summary>
+    /// The row the passage starts at, counted from one: a row of its sheet, or of a table such as a CSV file.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? StartRow { get; init; }
+
+    /// <summary>
+    /// The row the passage ends at, or null when it is not known.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? EndRow { get; init; }
+
+    /// <summary>
+    /// The line the passage starts at, counted from one, for text and source code, or null.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? StartLine { get; init; }
+
+    /// <summary>
+    /// The line the passage ends at, or null when it is not known.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? EndLine { get; init; }
+
     /// <summary>
     /// Which part of its document the passage is, counted from one, or null when the data source
     /// does not say.
     /// </summary>
     /// <remarks>
-    /// Names the place of a passage in a document without pages, such as a text file. Where there
-    /// are pages, they say it better, see SourcePassageExtensions.GetLocation.
+    /// Names the place of a passage which says neither pages, nor rows, nor lines, e.g., one
+    /// indexed before these were kept. Wherever they are known, they say it better, see
+    /// SourcePassageExtensions.GetLocation.
     /// </remarks>
     public int? ChunkNumber { get; init; }
 }

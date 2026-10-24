@@ -69,6 +69,8 @@ public sealed partial class NoIndexStoreClient(string name, string? unavailableR
 
     public override Task DeleteOtherGenerationsAsync(string dataSourceId, string filePath, IReadOnlyCollection<int> generations, CancellationToken token) => Task.CompletedTask;
 
+    public override Task<IReadOnlyDictionary<string, ChunkLocation>> GetChunkLocationsAsync(string dataSourceId, IReadOnlyCollection<string> chunkIds, CancellationToken token) => Task.FromResult<IReadOnlyDictionary<string, ChunkLocation>>(new Dictionary<string, ChunkLocation>(StringComparer.Ordinal));
+
     public override Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(string dataSourceId, CancellationToken token) => Task.FromResult<IReadOnlyList<HiddenChunks>>([]);
 
     public override Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token) =>

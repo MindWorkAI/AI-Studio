@@ -1,3 +1,4 @@
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Services.Indexing;
 
@@ -48,5 +49,34 @@ public sealed class IndexStoreChunkLocationTests
             (null, null, null, 12, 40, 1),
             (null, null, null, null, null, null),
         }), "A chunk without a location keeps none, which reads as unknown.");
+    }
+
+    /// <remarks>
+    /// The keyword search reads the location along with the chunk. The vector store keeps only the
+    /// pages, so its hits are completed by their chunk ids.
+    /// </remarks>
+    [Test]
+    public async Task BothSearchesLearnWhereAChunkIs()
+    {
+        await using var store = await TemporaryIndexStore.CreateAsync();
+        await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "LOCAL_DIRECTORY", "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "signature", string.Empty, 3, TOKEN);
+
+        var parentFileId = IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, PATH);
+        var chunkId = IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, "fingerprint", 0);
+        var now = DateTimeOffset.UtcNow;
+        await store.Client.UpsertFileAsync(DATA_SOURCE_ID, new EmbeddingStateFile(parentFileId, PATH, "budget.xlsx", "budget.xlsx", "xlsx", "fingerprint", 64, now, now, now, 1), TOKEN);
+        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(chunkId, parentFileId, null, null, 0, "The rent rose.", now, SheetName: "Budget", StartRow: 3, EndRow: 7)], TOKEN);
+
+        var found = (await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "rent", 10, TOKEN)).Single();
+        var locations = await store.Client.GetChunkLocationsAsync(DATA_SOURCE_ID, [chunkId, Guid.NewGuid().ToString()], TOKEN);
+        var ofAnotherDataSource = await store.Client.GetChunkLocationsAsync("0e2f4c6a-8b1d-4e3f-a5c7-9d1b3f5e7a90", [chunkId], TOKEN);
+
+        var expected = new ChunkLocation(SheetName: "Budget", StartRow: 3, EndRow: 7);
+        Assert.Multiple(() =>
+        {
+            Assert.That(found.Location, Is.EqualTo(expected));
+            Assert.That(locations, Is.EquivalentTo(new Dictionary<string, ChunkLocation> { [chunkId] = expected }), "A chunk the index does not know is left out.");
+            Assert.That(ofAnotherDataSource, Is.Empty, "A chunk is looked up within its own data source only.");
+        });
     }
 }

@@ -295,6 +295,9 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT");
 
+            entity.Property<int?>("AttachmentPosition")
+                .HasColumnType("INTEGER");
+
             entity.Property<int>("ChunkCount")
                 .HasColumnType("INTEGER");
 
@@ -325,7 +328,13 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT");
 
+            entity.Property<int?>("EndLine")
+                .HasColumnType("INTEGER");
+
             entity.Property<int?>("EndPageNumber")
+                .HasColumnType("INTEGER");
+
+            entity.Property<int?>("EndRow")
                 .HasColumnType("INTEGER");
 
             entity.Property<string>("FileName")
@@ -360,6 +369,15 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
 
             entity.Property<double>("Score")
                 .HasColumnType("REAL");
+
+            entity.Property<string>("SheetName")
+                .HasColumnType("TEXT");
+
+            entity.Property<int?>("StartLine")
+                .HasColumnType("INTEGER");
+
+            entity.Property<int?>("StartRow")
+                .HasColumnType("INTEGER");
 
             entity.HasNoKey();
 

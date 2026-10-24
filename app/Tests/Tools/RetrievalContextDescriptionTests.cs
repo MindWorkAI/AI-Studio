@@ -40,7 +40,23 @@ public sealed class RetrievalContextDescriptionTests
     {
         var description = Describe(TextContext(pageNumber: null));
 
-        Assert.That(description, Does.Not.Contain("Content location"), "A slide or a sheet has no page, and none is invented for it.");
+        Assert.That(description, Does.Not.Contain("Content location"), "A slide names no location, and none is invented for it.");
+    }
+
+    /// <remarks>
+    /// A document without pages names where a passage is the same way: a spreadsheet by its sheet
+    /// and rows, a table without sheets, such as a CSV file, by its rows alone, a text by its lines.
+    /// </remarks>
+    [Test]
+    public void APassageWithoutPagesNamesItsRowsOrItsLines()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(Describe(TableContext(sheetName: "Budget", startRow: 3, endRow: 9)), Does.Contain("Content location: sheet \"Budget\", rows 3 to 9"));
+            Assert.That(Describe(TableContext(startRow: 12)), Does.Contain("Content location: row 12"));
+            Assert.That(Describe(TableContext(startLine: 40, endLine: 85)), Does.Contain("Content location: lines 40 to 85"));
+            Assert.That(Describe(TableContext(startLine: 40, endLine: 40)), Does.Contain("Content location: line 40").And.Not.Contain("lines"), "A passage on one line names one line.");
+        });
     }
 
     /// <remarks>
@@ -159,5 +175,19 @@ public sealed class RetrievalContextDescriptionTests
         MatchedText = "The mixing console is described here.",
         PageNumber = pageNumber,
         EndPageNumber = endPageNumber,
+    };
+
+    private static RetrievalTextContext TableContext(string? sheetName = null, int? startRow = null, int? endRow = null, int? startLine = null, int? endLine = null) => new()
+    {
+        DataSourceName = "Budgets",
+        Category = RetrievalContentCategory.TEXT,
+        Type = RetrievalContentType.TEXT_SPREADSHEET,
+        Path = "/docs/budget.xlsx",
+        MatchedText = "rent,1200",
+        SheetName = sheetName,
+        StartRow = startRow,
+        EndRow = endRow,
+        StartLine = startLine,
+        EndLine = endLine,
     };
 }

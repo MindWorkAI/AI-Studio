@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.RAG;
@@ -15,6 +16,11 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         VECTOR,
         BM25,
     }
+
+    /// <summary>
+    /// The rows or lines of a passage which names none.
+    /// </summary>
+    private static readonly (int? Start, int? End) NO_RANGE = (null, null);
 
     //
     // A hit keeps the complete shape both retrieval channels deliver, even where nothing reads a
@@ -33,8 +39,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         string FileName,
         string RelativePath,
         string FileType,
-        int? PageNumber,
-        int? EndPageNumber,
+        ChunkLocation Location,
         int ChunkIndex,
         string Text,
         double Score,
@@ -134,8 +139,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
             result.FileName,
             result.RelativePath,
             result.FileType,
-            result.PageNumber,
-            result.EndPageNumber,
+            result.Location,
             result.ChunkIndex,
             result.Text,
             result.Score,
@@ -152,8 +156,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
             result.FileName,
             result.RelativePath,
             result.FileType,
-            result.PageNumber,
-            result.EndPageNumber,
+            result.Location,
             result.ChunkIndex,
             result.ChunkText,
             result.Score,
@@ -164,41 +167,76 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
         var path = FirstNonEmpty(hit.AbsolutePath, hit.RelativePath);
         var referenceLink = string.IsNullOrWhiteSpace(path) ? string.Empty : BuildReferenceLink(path, hit);
-
-        //
-        // An end page only names a range when the passage goes on beyond the page it starts on. A
-        // chunk indexed before the end page was kept has none, and then names its start page only:
-        //
-        var pageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null;
-        var endPageNumber = pageNumber is not null && hit.EndPageNumber > pageNumber ? hit.EndPageNumber : null;
-        var chunkNumber = hit.ChunkIndex + 1;
+        var type = GetRetrievalContentType(hit.FileType);
+        var located = LocatePassage(hit.Location, type, hit.ChunkIndex + 1);
 
         return new RetrievalTextContext
         {
             DataSourceName = sourceName,
             Category = RetrievalContentCategory.TEXT,
-            Type = GetRetrievalContentType(hit.FileType),
+            Type = type,
             Path = path,
             Links = [],
             MatchedText = hit.Text,
             SurroundingContent = [],
-            ReferenceTitle = BuildReferenceTitle(sourceName, pageNumber, endPageNumber, chunkNumber),
+            ReferenceTitle = BuildReferenceTitle(sourceName, located),
             ReferenceLink = referenceLink,
+            PageNumber = located.PageNumber,
+            EndPageNumber = located.EndPageNumber,
+            SheetName = located.SheetName,
+            StartRow = located.StartRow,
+            EndRow = located.EndRow,
+            StartLine = located.StartLine,
+            EndLine = located.EndLine,
+            ChunkNumber = located.ChunkNumber,
+        };
+    }
+
+    /// <summary>
+    /// Where a hit is in its document, as its passage names it.
+    /// </summary>
+    /// <remarks>
+    /// An end only names a range when the passage goes on beyond where it starts. A chunk indexed
+    /// before an end, a row or a line was kept has none, and names what it has. The lines of a
+    /// table, such as a CSV file, are its rows. A transcript names no lines: it is a file the user
+    /// never sees, so its lines would point nowhere.
+    /// </remarks>
+    /// <param name="location">Where the chunk of the hit is.</param>
+    /// <param name="type">What kind of content the hit is.</param>
+    /// <param name="chunkNumber">Which part of its document the hit is, counted from one.</param>
+    /// <returns>A passage holding nothing but where the hit is.</returns>
+    internal static SourcePassage LocatePassage(ChunkLocation location, RetrievalContentType type, int chunkNumber)
+    {
+        var pageNumber = location.PageNumber is > 0 ? location.PageNumber : null;
+        var rows = RangeOf(location.StartRow, location.EndRow);
+        var lines = type is RetrievalContentType.TEXT_TRANSCRIPT ? NO_RANGE : RangeOf(location.StartLine, location.EndLine);
+        if (type is RetrievalContentType.TEXT_SPREADSHEET && rows.Start is null)
+        {
+            rows = lines;
+            lines = NO_RANGE;
+        }
+
+        return new SourcePassage
+        {
+            Type = type,
             PageNumber = pageNumber,
-            EndPageNumber = endPageNumber,
+            EndPageNumber = pageNumber is not null && location.EndPageNumber > pageNumber ? location.EndPageNumber : null,
+            SheetName = rows.Start is null ? null : location.SheetName,
+            StartRow = rows.Start,
+            EndRow = rows.End,
+            StartLine = lines.Start,
+            EndLine = lines.End,
             ChunkNumber = chunkNumber,
         };
     }
+
+    private static (int? Start, int? End) RangeOf(int? start, int? end) => start is > 0 ? (start, end > start ? end : null) : NO_RANGE;
 
     //
     // Worded like the location of every passage, so that the title reads the same before and after
     // the passages of an answer rename it, cf. SourcePassageExtensions.NamePassagesInTitles:
     //
-    private static string BuildReferenceTitle(string sourceName, int? pageNumber, int? endPageNumber, int chunkNumber)
-    {
-        var location = new SourcePassage { PageNumber = pageNumber, EndPageNumber = endPageNumber, ChunkNumber = chunkNumber }.GetLocationLabel();
-        return $"{sourceName} ({location})";
-    }
+    private static string BuildReferenceTitle(string sourceName, SourcePassage located) => $"{sourceName} ({located.GetLocationLabel()})";
 
     /// <remarks>
     /// A known page is written as the fragment `#page=N`, which is what the PDF open parameters
@@ -210,8 +248,8 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
     {
         var link = NormalizeLocalReferencePath(path);
         var separator = link.Contains('#', StringComparison.Ordinal) ? "&" : "#";
-        return hit.PageNumber is > 0
-            ? $"{link}{separator}page={hit.PageNumber}"
+        return hit.Location.PageNumber is > 0
+            ? $"{link}{separator}page={hit.Location.PageNumber}"
             : $"{link}{separator}chunk={hit.ChunkIndex}";
     }
 
@@ -275,7 +313,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 FirstNonEmpty(result.Result.AbsolutePath, result.Result.FilePath),
-                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.PageNumber, result.Result.EndPageNumber, result.Result.ChunkIndex + 1));
+                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), LocatePassage(result.Result.Location, GetRetrievalContentType(result.Result.FileType), result.Result.ChunkIndex + 1)));
         }
     }
 
@@ -299,7 +337,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 result.Result.AbsolutePath,
-                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.PageNumber, result.Result.EndPageNumber, result.Result.ChunkIndex + 1));
+                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), LocatePassage(result.Result.Location, GetRetrievalContentType(result.Result.FileType), result.Result.ChunkIndex + 1)));
         }
     }
 }

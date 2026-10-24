@@ -79,6 +79,18 @@ public abstract partial class IndexStoreClient(string name, string path) : Datab
     public abstract Task DeleteOtherGenerationsAsync(string dataSourceId, string filePath, IReadOnlyCollection<int> generations, CancellationToken token);
 
     /// <summary>
+    /// Where some chunks of a data source are in their documents, by their chunk ids.
+    /// </summary>
+    /// <remarks>
+    /// The vector store keeps only the pages of a chunk, so its hits learn the rest from here.
+    /// </remarks>
+    /// <param name="dataSourceId">The data source.</param>
+    /// <param name="chunkIds">The ids of the chunks.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The location of every chunk the index store knows, by its id.</returns>
+    public abstract Task<IReadOnlyDictionary<string, ChunkLocation>> GetChunkLocationsAsync(string dataSourceId, IReadOnlyCollection<string> chunkIds, CancellationToken token);
+
+    /// <summary>
     /// The chunks of a data source which no search may find, document by document.
     /// </summary>
     /// <remarks>

@@ -389,6 +389,28 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
             .ExecuteDeleteAsync(token);
     }
 
+    public override async Task<IReadOnlyDictionary<string, ChunkLocation>> GetChunkLocationsAsync(string dataSourceId, IReadOnlyCollection<string> chunkIds, CancellationToken token)
+    {
+        if (chunkIds.Count is 0)
+            return new Dictionary<string, ChunkLocation>(StringComparer.Ordinal);
+
+        await using var context = this.CreateContext();
+        var parentFileIds = context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId)
+            .Select(file => file.ParentFileId);
+
+        // The locations only, never the texts of the chunks:
+        return await context.EmbeddingChunks
+            .AsNoTracking()
+            .Where(chunk => chunkIds.Contains(chunk.ChunkId) && parentFileIds.Contains(chunk.ParentFileId))
+            .Select(chunk => new
+            {
+                chunk.ChunkId,
+                Location = new ChunkLocation(chunk.PageNumber, chunk.EndPageNumber, chunk.SheetName, chunk.StartRow, chunk.EndRow, chunk.StartLine, chunk.EndLine, chunk.AttachmentPosition),
+            })
+            .ToDictionaryAsync(chunk => chunk.ChunkId, chunk => chunk.Location, StringComparer.Ordinal, token);
+    }
+
     public override async Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(string dataSourceId, CancellationToken token)
     {
         await using var context = this.CreateContext();
@@ -449,6 +471,12 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                                   f.file_type AS FileType,
                                   c.page_number AS PageNumber,
                                   c.end_page_number AS EndPageNumber,
+                                  c.sheet_name AS SheetName,
+                                  c.start_row AS StartRow,
+                                  c.end_row AS EndRow,
+                                  c.start_line AS StartLine,
+                                  c.end_line AS EndLine,
+                                  c.attachment_position AS AttachmentPosition,
                                   c.chunk_index AS ChunkIndex,
                                   c.chunk_text AS ChunkText,
                                   bm25(embedding_chunks_fts) AS Score,
@@ -845,7 +873,13 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         result.CreationUtc,
         result.LastWriteUtc,
         result.EmbeddedAtUtc,
-        result.ChunkCount);
+        result.ChunkCount,
+        result.SheetName,
+        result.StartRow,
+        result.EndRow,
+        result.StartLine,
+        result.EndLine,
+        result.AttachmentPosition);
 
     private static string BuildFtsQuery(string query)
     {

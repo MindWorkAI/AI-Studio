@@ -15,8 +15,9 @@ public static class IRetrievalContextExtensions
     /// The location is what lets the AI say where an answer comes from. Naming only the file is
     /// not enough in a document of two hundred pages, and we know the page: it travels from the
     /// runtime through the index into the context, together with the page a passage ends on when it
-    /// goes on beyond its first one. A slide or a sheet has no page, and then nothing is claimed
-    /// rather than something made up.
+    /// goes on beyond its first one. A document without pages names its sheet and rows, or its
+    /// lines, the same way. A slide has none of them, and then nothing is claimed rather than
+    /// something made up.
     /// </remarks>
     /// <param name="contextBuilder">The builder to write into.</param>
     /// <param name="retrievalContext">The context to describe.</param>
@@ -30,10 +31,8 @@ public static class IRetrievalContextExtensions
         contextBuilder.AppendLine($"Content type: {retrievalContext.Type}");
         contextBuilder.AppendLine($"Content path: {retrievalContext.Path}");
 
-        if(retrievalContext is RetrievalTextContext { PageNumber: > 0 } locatedContext)
-            contextBuilder.AppendLine(locatedContext.EndPageNumber > locatedContext.PageNumber
-                ? $"Content location: pages {locatedContext.PageNumber} to {locatedContext.EndPageNumber}"
-                : $"Content location: page {locatedContext.PageNumber}");
+        if(retrievalContext is RetrievalTextContext textContext && DescribeLocation(textContext.PageNumber, textContext.EndPageNumber, textContext.SheetName, textContext.StartRow, textContext.EndRow, textContext.StartLine, textContext.EndLine) is { } location)
+            contextBuilder.AppendLine($"Content location: {location}");
 
         if(retrievalContext.Links.Count is 0)
             return;
@@ -42,6 +41,38 @@ public static class IRetrievalContextExtensions
         foreach(var link in retrievalContext.Links)
             contextBuilder.AppendLine($"- {link}");
     }
+
+    /// <summary>
+    /// Says where a passage is, the way the AI is told, e.g., "pages 12 to 14", "sheet "Budget", rows 3 to 9" or "lines 40 to 85".
+    /// </summary>
+    /// <remarks>
+    /// In English, like everything else the AI is told about a passage. Pages come first, then
+    /// rows, then lines: a passage names one kind only. An end only names a range when it lies
+    /// beyond the start.
+    /// </remarks>
+    /// <param name="pageNumber">The page the passage starts on.</param>
+    /// <param name="endPageNumber">The page it ends on.</param>
+    /// <param name="sheetName">The sheet its rows are of, or null for a table without sheets.</param>
+    /// <param name="startRow">The row it starts at.</param>
+    /// <param name="endRow">The row it ends at.</param>
+    /// <param name="startLine">The line it starts at.</param>
+    /// <param name="endLine">The line it ends at.</param>
+    /// <returns>Where the passage is, or null when it names nothing.</returns>
+    internal static string? DescribeLocation(int? pageNumber, int? endPageNumber, string? sheetName, int? startRow, int? endRow, int? startLine, int? endLine)
+    {
+        if (pageNumber is > 0)
+            return DescribeRange("page", "pages", pageNumber.Value, endPageNumber);
+
+        if (startRow is > 0)
+        {
+            var rows = DescribeRange("row", "rows", startRow.Value, endRow);
+            return string.IsNullOrEmpty(sheetName) ? rows : $"sheet \"{sheetName}\", {rows}";
+        }
+
+        return startLine is > 0 ? DescribeRange("line", "lines", startLine.Value, endLine) : null;
+    }
+
+    private static string DescribeRange(string one, string several, int start, int? end) => end > start ? $"{several} {start} to {end}" : $"{one} {start}";
 
     /// <summary>
     /// Writes what the AI is told about an image which matched, in place of the image itself.
@@ -202,6 +233,11 @@ public static class IRetrievalContextExtensions
             SurroundingContent = surroundingContent,
             PageNumber = textContext?.PageNumber is > 0 ? textContext.PageNumber : null,
             EndPageNumber = textContext?.EndPageNumber is > 0 ? textContext.EndPageNumber : null,
+            SheetName = textContext?.SheetName is { Length: > 0 } sheetName ? sheetName : null,
+            StartRow = textContext?.StartRow is > 0 ? textContext.StartRow : null,
+            EndRow = textContext?.EndRow is > 0 ? textContext.EndRow : null,
+            StartLine = textContext?.StartLine is > 0 ? textContext.StartLine : null,
+            EndLine = textContext?.EndLine is > 0 ? textContext.EndLine : null,
             ChunkNumber = textContext?.ChunkNumber is > 0 ? textContext.ChunkNumber : null,
         };
     }

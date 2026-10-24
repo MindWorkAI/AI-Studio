@@ -71,6 +71,31 @@ public sealed class RetrievalTextContext : IRetrievalContext
     public int? EndPageNumber { get; init; }
 
     /// <summary>
+    /// The sheet of a spreadsheet this passage is from, or null when it is from none.
+    /// </summary>
+    public string? SheetName { get; init; }
+
+    /// <summary>
+    /// The row this passage starts at, counted from one: a row of its sheet, or of a table such as a CSV file.
+    /// </summary>
+    public int? StartRow { get; init; }
+
+    /// <summary>
+    /// The row this passage ends at when it goes on beyond the row it starts at, or null.
+    /// </summary>
+    public int? EndRow { get; init; }
+
+    /// <summary>
+    /// The line this passage starts at, counted from one, for text and source code, or null.
+    /// </summary>
+    public int? StartLine { get; init; }
+
+    /// <summary>
+    /// The line this passage ends at when it goes on beyond the line it starts at, or null.
+    /// </summary>
+    public int? EndLine { get; init; }
+
+    /// <summary>
     /// Which part of its document this passage is, counted from one, or null when the data source does not say.
     /// </summary>
     /// <remarks>

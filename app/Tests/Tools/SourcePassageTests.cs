@@ -168,6 +168,49 @@ public sealed class SourcePassageTests
     }
 
     [Test]
+    public void APassageWithoutPagesNamesItsLinesOrItsRows()
+    {
+        SourcePassage[] lines = [Passage(MANUAL_URL, "Later.", chunkNumber: 9) with { StartLine = 120 }, Passage(MANUAL_URL, "Earlier.", chunkNumber: 2) with { StartLine = 40, EndLine = 85 }];
+        var rows = Passage(MANUAL_URL, "Rent.", chunkNumber: 1) with { StartRow = 12, EndRow = 30 };
+
+        var location = lines.GetLocation();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(location, Is.Not.Null);
+            Assert.That(location!.Ranges, Is.EqualTo(new[] { new LocationRange(40, 85), new LocationRange(120, 120) }), "The lines follow the order of the document, and a line range stays a range.");
+            Assert.That(location.ArePages, Is.False, "No program can be told to open a document at a line, so a line becomes no link.");
+            Assert.That(rows.GetLocationLabel(), Does.Contain("12–30"));
+            Assert.That(rows.GetLocationLabel(), Is.Not.EqualTo((rows with { StartRow = null, EndRow = null, StartLine = 12, EndLine = 30 }).GetLocationLabel()), "Rows are not called lines.");
+            Assert.That((Passage(MANUAL_URL, "Later.", chunkNumber: 120) with { StartLine = 120 }).GetLocationLabel(), Is.Not.EqualTo(Passage(MANUAL_URL, "Later.", chunkNumber: 120).GetLocationLabel()), "Lines are not called parts.");
+            Assert.That(new[] { lines[1] with { PageNumber = 3 } }.GetLocation()!.ArePages, Is.True, "Where there are pages, they say better where a passage is.");
+        });
+    }
+
+    /// <remarks>
+    /// Rows start anew in every sheet, so each sheet is named with its rows. The AI receives the
+    /// passages in any order; the sheets follow the order of the document, which is the order of
+    /// the parts the passages are.
+    /// </remarks>
+    [Test]
+    public void ThePassagesOfASpreadsheetNameTheirSheetsAndRows()
+    {
+        var label = new[]
+        {
+            Passage(HANDBOOK_URL, "Totals.", chunkNumber: 7) with { SheetName = "Summary", StartRow = 2 },
+            Passage(HANDBOOK_URL, "Food.", chunkNumber: 3) with { SheetName = "Budget", StartRow = 20 },
+            Passage(HANDBOOK_URL, "Rent.", chunkNumber: 1) with { SheetName = "Budget", StartRow = 3, EndRow = 9 },
+        }.GetLocationLabel();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(label, Does.Contain("Budget").And.Contain("3–9, 20").And.Contain("Summary"), "Each sheet with its rows, each row once, in the order of the document.");
+            Assert.That(label.IndexOf("Budget", StringComparison.Ordinal), Is.LessThan(label.IndexOf("Summary", StringComparison.Ordinal)), "The sheets follow the order of the document.");
+            Assert.That(label.IndexOf("Budget", StringComparison.Ordinal), Is.EqualTo(label.LastIndexOf("Budget", StringComparison.Ordinal)), "A sheet is named once.");
+        });
+    }
+
+    [Test]
     public void APassageKnowsItsPlaceInTheDocumentAsNumbers()
     {
         Assert.Multiple(() =>
