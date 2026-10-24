@@ -57,7 +57,9 @@ public abstract class ProvenanceStoreClient(string name, string path) : Database
     /// </summary>
     /// <param name="chatId">The chat.</param>
     /// <param name="token">The cancellation token.</param>
-    public abstract Task DeleteChatAsync(Guid chatId, CancellationToken token);
+    /// <param name="createdBefore">Deletes only the entries stored before this moment, or all of them when null.</param>
+    /// <returns>How many entries were deleted.</returns>
+    public abstract Task<int> DeleteChatAsync(Guid chatId, CancellationToken token, DateTimeOffset? createdBefore = null);
 
     /// <summary>
     /// Deletes the entries of a chat which it no longer refers to.
@@ -65,7 +67,9 @@ public abstract class ProvenanceStoreClient(string name, string path) : Database
     /// <param name="chatId">The chat.</param>
     /// <param name="keptIds">The ids the chat still refers to.</param>
     /// <param name="token">The cancellation token.</param>
-    public abstract Task DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token);
+    /// <param name="createdBefore">Deletes only the entries stored before this moment, or all of them when null.</param>
+    /// <returns>How many entries were deleted.</returns>
+    public abstract Task<int> DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token, DateTimeOffset? createdBefore = null);
 
     /// <summary>
     /// Lists the chats this store holds entries of.

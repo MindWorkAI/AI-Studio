@@ -185,20 +185,31 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
             token);
     }
 
-    public override async Task DeleteChatAsync(Guid chatId, CancellationToken token)
+    public override async Task<int> DeleteChatAsync(Guid chatId, CancellationToken token, DateTimeOffset? createdBefore = null)
     {
         var chatKey = ToKey(chatId);
         await using var context = this.CreateContext();
-        await context.Entries.Where(entry => entry.ChatId == chatKey).ExecuteDeleteAsync(token);
+        return await CreatedBefore(context.Entries.Where(entry => entry.ChatId == chatKey), createdBefore).ExecuteDeleteAsync(token);
     }
 
-    public override async Task DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token)
+    public override async Task<int> DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token, DateTimeOffset? createdBefore = null)
     {
         var chatKey = ToKey(chatId);
         var keptKeys = keptIds.Select(ToKey).Distinct().ToList();
         await using var context = this.CreateContext();
-        await context.Entries.Where(entry => entry.ChatId == chatKey && !keptKeys.Contains(entry.Id)).ExecuteDeleteAsync(token);
+        return await CreatedBefore(context.Entries.Where(entry => entry.ChatId == chatKey && !keptKeys.Contains(entry.Id)), createdBefore).ExecuteDeleteAsync(token);
     }
+
+    /// <summary>
+    /// Narrows entries down to those stored before a moment.
+    /// </summary>
+    /// <remarks>
+    /// The time is stored as text in the round-trip format of UTC, whose order is the order of time,
+    /// so SQLite compares it as text, after the parameter went through the same conversion.
+    /// </remarks>
+    private static IQueryable<ProvenanceEntity> CreatedBefore(IQueryable<ProvenanceEntity> entries, DateTimeOffset? createdBefore) => createdBefore is { } moment
+        ? entries.Where(entry => entry.CreatedAtUtc < moment)
+        : entries;
 
     public override async Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token)
     {

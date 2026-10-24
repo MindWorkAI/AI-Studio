@@ -826,6 +826,38 @@ public static partial class WorkspaceBehaviour
     public static bool IsWorkspaceExisting(Guid workspaceId) => workspaceId == Guid.Empty || Directory.Exists(Path.Join(WorkspaceRootDirectory, workspaceId.ToString()));
 
     /// <summary>
+    /// Reads where every chat on the disk lies: in which workspace, or among the temporary chats.
+    /// </summary>
+    /// <remarks>
+    /// Only the directories are read, no thread, so this stays fast with many chats.
+    /// </remarks>
+    /// <returns>The workspace of every chat by its ID, Guid.Empty for a temporary chat.</returns>
+    public static IReadOnlyDictionary<Guid, Guid> ReadAllChatLocations()
+    {
+        var chatLocations = new Dictionary<Guid, Guid>();
+        if (Directory.Exists(WorkspaceRootDirectory))
+        {
+            foreach (var workspacePath in Directory.EnumerateDirectories(WorkspaceRootDirectory))
+            {
+                if (!Guid.TryParse(Path.GetFileName(workspacePath), out var workspaceId))
+                    continue;
+
+                foreach (var chatId in ReadChatIdsOfWorkspace(workspaceId))
+                    chatLocations[chatId] = workspaceId;
+            }
+        }
+
+        if (Directory.Exists(TemporaryChatsRootDirectory))
+        {
+            foreach (var chatPath in Directory.EnumerateDirectories(TemporaryChatsRootDirectory))
+                if (Guid.TryParse(Path.GetFileName(chatPath), out var chatId))
+                    chatLocations[chatId] = Guid.Empty;
+        }
+
+        return chatLocations;
+    }
+
+    /// <summary>
     /// Reads the IDs of the chats the given workspace holds on the disk.
     /// </summary>
     /// <param name="workspaceId">The workspace to read.</param>
@@ -956,6 +988,8 @@ public static partial class WorkspaceBehaviour
             if (!await StoreChatAsync(copiedChat))
                 throw new IOException($"The copied chat could not be stored: '{targetDirectory}'.");
 
+            // The copy refers to the same entries as its original, and gets entries of its own, so that deleting either chat leaves the other whole:
+            await ChatProvenance.CopyChatAsync(sourceChat.ChatId, copiedChat.ChatId);
             return copiedChat;
         }
         catch
@@ -1008,12 +1042,16 @@ public static partial class WorkspaceBehaviour
         if (File.Exists(sourcePath))
             File.Copy(sourcePath, targetPath);
 
+        // The copy of the file holds the same transcript, so it keeps the entry of the text it was sent with:
         var copiedAttachment = new ManagedTranscriptAttachment(
             Path.GetFileName(targetPath),
             targetPath,
             File.Exists(targetPath) ? new FileInfo(targetPath).Length : source.FileSizeBytes,
             source.OriginalFileName,
-            false);
+            false)
+        {
+            ProvenanceId = source.ProvenanceId,
+        };
         copiedPaths[sourcePath] = copiedAttachment;
         return copiedAttachment;
     }
@@ -1404,6 +1442,8 @@ public static partial class WorkspaceBehaviour
             ForgetChatSemaphore(workspaceId, chatId);
         }
 
+        // What the chat received goes with it:
+        await ChatProvenance.ForgetChatsAsync([chatId]);
         return true;
     }
 
@@ -1436,6 +1476,8 @@ public static partial class WorkspaceBehaviour
         foreach (var chatId in chatIds)
             ForgetChatSemaphore(workspaceId, chatId);
 
+        // What its chats received goes with them:
+        await ChatProvenance.ForgetChatsAsync(chatIds);
         return true;
     }
 

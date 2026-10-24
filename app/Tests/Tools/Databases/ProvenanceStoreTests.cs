@@ -170,6 +170,27 @@ public sealed class ProvenanceStoreTests
     }
 
     [Test]
+    public async Task DeletingUpToAMomentKeepsWhatCameAfter()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var chat = Guid.NewGuid();
+        var entry = await store.Client.StoreAsync(chat, ProvenanceKind.ATTACHMENT, "stored just now", null, TOKEN);
+
+        var deletedBefore = await store.Client.DeleteChatAsync(chat, TOKEN, DateTimeOffset.UtcNow.AddMinutes(-1));
+        var deletedExceptBefore = await store.Client.DeleteChatEntriesExceptAsync(chat, [], TOKEN, DateTimeOffset.UtcNow.AddMinutes(-1));
+        var kept = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
+        var deletedAfter = await store.Client.DeleteChatAsync(chat, TOKEN, DateTimeOffset.UtcNow.AddMinutes(1));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(deletedBefore, Is.Zero);
+            Assert.That(deletedExceptBefore, Is.Zero);
+            Assert.That(kept.Keys, Is.EquivalentTo(new[] { entry.Value }), "The time is compared as stored text, which has to keep the order of time.");
+            Assert.That(deletedAfter, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
     public async Task TheChatsWithEntriesAreListedOnce()
     {
         await using var store = await TemporaryProvenanceStore.CreateAsync();
