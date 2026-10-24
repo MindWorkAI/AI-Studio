@@ -44,6 +44,7 @@ internal static partial class LayoutPurposeExtensions
         LayoutPurpose.RECOMMENDATIONS => Business(TB("Layout for several recommendations"), TB("Which slide layout should several recommendations use, shown together?"), "several recommendations, shown together"),
         LayoutPurpose.DECISION_REQUEST => Business(TB("Layout for decision requests"), TB("Which slide layout should a decision use which the audience is asked to make?"), "a decision which the audience is asked to make"),
         LayoutPurpose.NEXT_STEPS => Business(TB("Layout for next steps"), TB("Which slide layout should the next steps use?"), "the next steps"),
+        LayoutPurpose.ACTION_ITEMS => Business(TB("Layout for to-dos"), TB("Which slide layout should to-dos use, e.g., with who does them and by when?"), "to-dos, i.e., open tasks, e.g., with who does them and by when"),
         LayoutPurpose.CALL_TO_ACTION => Business(TB("Layout for calls to action"), TB("Which slide layout should a call to action use?"), "a call to action"),
 
         _ => null,

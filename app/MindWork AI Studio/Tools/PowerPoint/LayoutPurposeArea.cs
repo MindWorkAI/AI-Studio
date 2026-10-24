@@ -33,4 +33,14 @@ public enum LayoutPurposeArea
     /// Science and research, e.g., hypotheses, methodology, or results.
     /// </summary>
     SCIENCE,
+
+    /// <summary>
+    /// Medicine, e.g., patient cases, findings, or therapies.
+    /// </summary>
+    MEDICINE,
+
+    /// <summary>
+    /// Law, e.g., the facts of a case, legal provisions, or court rulings.
+    /// </summary>
+    LAW,
 }

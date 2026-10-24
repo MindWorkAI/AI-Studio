@@ -10,6 +10,8 @@ internal static partial class LayoutPurposeExtensions
         LayoutPurpose.RESEARCH_QUESTIONS => Science(TB("Layout for several research questions"), TB("Which slide layout should several research questions use, shown together?"), "several research questions, shown together"),
         LayoutPurpose.DEFINITION => Science(TB("Layout for one definition"), TB("Which slide layout should the definition of a single term use?"), "the definition of a single term, shown prominently"),
         LayoutPurpose.DEFINITIONS => Science(TB("Layout for several definitions"), TB("Which slide layout should the definitions of several terms use?"), "the definitions of several terms, shown together"),
+        LayoutPurpose.THEOREM => Science(TB("Layout for theorems"), TB("Which slide layout should a theorem use, e.g., in mathematics?"), "a theorem, e.g., in mathematics, with its premises and its claim"),
+        LayoutPurpose.PROOF => Science(TB("Layout for proofs"), TB("Which slide layout should the proof of a theorem use?"), "the proof of a theorem, step by step"),
         LayoutPurpose.ASSUMPTION => Science(TB("Layout for one assumption"), TB("Which slide layout should a single assumption use, shown prominently?"), "a single assumption, shown prominently"),
         LayoutPurpose.ASSUMPTIONS => Science(TB("Layout for several assumptions"), TB("Which slide layout should several assumptions use, shown together?"), "several assumptions, shown together"),
         LayoutPurpose.DELIMITATION => Science(TB("Layout for one delimitation"), TB("Which slide layout should a single delimitation use, i.e., what the work leaves out?"), "a single delimitation, i.e., what the work deliberately leaves out, shown prominently"),

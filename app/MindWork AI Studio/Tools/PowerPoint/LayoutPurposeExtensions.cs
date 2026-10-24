@@ -83,5 +83,7 @@ internal static partial class LayoutPurposeExtensions
         ?? DescribeTeaching(purpose)
         ?? DescribeBusiness(purpose)
         ?? DescribeScience(purpose)
+        ?? DescribeMedicine(purpose)
+        ?? DescribeLaw(purpose)
         ?? throw new ArgumentOutOfRangeException(nameof(purpose), purpose, "There is no description for this kind of slide.");
 }

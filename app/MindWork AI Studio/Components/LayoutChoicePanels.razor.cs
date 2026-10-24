@@ -50,6 +50,8 @@ public partial class LayoutChoicePanels : ComponentBase
         LayoutPurposeArea.TEACHING => Icons.Material.Filled.School,
         LayoutPurposeArea.BUSINESS => Icons.Material.Filled.BusinessCenter,
         LayoutPurposeArea.SCIENCE => Icons.Material.Filled.Science,
+        LayoutPurposeArea.MEDICINE => Icons.Material.Filled.MedicalServices,
+        LayoutPurposeArea.LAW => Icons.Material.Filled.Gavel,
 
         _ => Icons.Material.Filled.ViewQuilt,
     };

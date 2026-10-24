@@ -18,6 +18,8 @@ internal static class LayoutPurposeAreaExtensions
         LayoutPurposeArea.TEACHING => TB("Teaching and workshops"),
         LayoutPurposeArea.BUSINESS => TB("Business and projects"),
         LayoutPurposeArea.SCIENCE => TB("Science and research"),
+        LayoutPurposeArea.MEDICINE => TB("Medicine"),
+        LayoutPurposeArea.LAW => TB("Law"),
 
         _ => TB("Other kinds of slides"),
     };
