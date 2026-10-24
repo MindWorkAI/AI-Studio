@@ -97,7 +97,7 @@ public partial class SourcesList : MSGComponentBase
                 var name = passages.Count > 0 ? passages[0].DataSourceName : string.Empty;
                 var pages = document is not null && !string.IsNullOrWhiteSpace(name) && passages.GetLocation() is { ArePages: true } pageLocation ? pageLocation : null;
 
-                entries.Add(new(numberedSource.Number, numberedSource.Source.Title, numberedSource.Source.URL, document, numberedSource.Source.IsMailSource(), passages, name, pages));
+                entries.Add(new(numberedSource.Number, numberedSource.Source.Title, numberedSource.Source.URL, document, numberedSource.Source.HasNoLink(), passages, name, pages));
             }
 
             this.groups.Add(new(group.Heading, entries));
@@ -147,9 +147,9 @@ public partial class SourcesList : MSGComponentBase
     /// <param name="Title">The title of the source.</param>
     /// <param name="Link">The address of the source, which a web source is opened by.</param>
     /// <param name="Document">The document the source names, or null when it names none.</param>
-    /// <param name="IsMail">Whether the source names a mail, which is shown as text.</param>
+    /// <param name="HasNoLink">Whether nothing can open the source by its address, e.g., a mail, so that it is shown as text.</param>
     /// <param name="Passages">The passages the AI received from the source; empty when it received none, or the chat is older than these.</param>
     /// <param name="Name">The name of the source without its location, or empty when it has no passages.</param>
     /// <param name="Location">The pages of the passages in the document, each to be opened on its own, or null when there are none.</param>
-    private readonly record struct SourceEntry(int Number, string Title, string Link, SourceDocumentLocation? Document, bool IsMail, IReadOnlyList<SourcePassage> Passages, string Name, PassageLocation? Location);
+    private readonly record struct SourceEntry(int Number, string Title, string Link, SourceDocumentLocation? Document, bool HasNoLink, IReadOnlyList<SourcePassage> Passages, string Name, PassageLocation? Location);
 }

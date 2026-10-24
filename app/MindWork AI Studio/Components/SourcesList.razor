@@ -61,9 +61,9 @@
                                 </MudLink>
                             </MudTooltip>
                         }
-                        else if (entry.IsMail)
+                        else if (entry.HasNoLink)
                         {
-                            @* Nothing opens a mail by its address yet, so a link would lead nowhere. *@
+                            @* Nothing opens a mail by its address yet, nor what only a data source knows, so a link would lead nowhere. *@
                             <MudText Typo="Typo.body1" Inline="true">
                                 @entry.Title
                             </MudText>

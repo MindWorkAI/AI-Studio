@@ -214,9 +214,9 @@ public static class IRetrievalContextExtensions
     private static SourcePassage? CreatePassage(IRetrievalContext retrievalContext, IReadOnlyList<Source> sources, string matchedText, IReadOnlyList<string> surroundingContent)
     {
         //
-        // The user finds a passage under the source it belongs to. A context without a source, such
-        // as a file known by a relative path only, is listed nowhere, so its passage could never be
-        // shown and would only take up room in the chat file:
+        // The user finds a passage under the source it belongs to. A context without a source, i.e.,
+        // one which names neither a document nor its data source, is listed nowhere, so its passage
+        // could never be shown and would only take up room:
         //
         if (sources.Count is 0)
             return null;
@@ -248,18 +248,26 @@ public static class IRetrievalContextExtensions
     /// <remarks>
     /// The reference comes first: the title and link of the passage itself where the data source
     /// names them, e.g., a local file with its page, and otherwise the data source and the path.
-    /// The further links of the context follow. Only what can be opened becomes a source, i.e., a
+    /// The further links of the context follow. Only what can be opened becomes a link, i.e., a
     /// web address or a file with an absolute path. A relative path would point elsewhere depending
-    /// on where it is opened from.
+    /// on where it is opened from.<br/><br/>
+    ///
+    /// A context which names nothing to open at all, e.g., by a path which only its ERI server knows,
+    /// still lends one source: the AI received it, and its passage needs a place to be read at. That
+    /// source is named as text, see SourceExtensions.CreateRetrievalSourceUrl.
     /// </remarks>
     /// <param name="retrievalContext">The retrieval context.</param>
-    /// <returns>The sources, which may be none.</returns>
+    /// <returns>The sources; none only for a context which names neither a document nor its data source.</returns>
     public static IReadOnlyList<Source> ToSources(this IRetrievalContext retrievalContext)
     {
         var sources = new List<Source>();
-        AddSource(sources, GetReferenceTitle(retrievalContext), GetReferenceLink(retrievalContext));
+        var referenceTitle = GetReferenceTitle(retrievalContext);
+        AddSource(sources, referenceTitle, GetReferenceLink(retrievalContext));
         foreach (var link in retrievalContext.Links)
             AddSource(sources, retrievalContext.DataSourceName, link);
+
+        if (sources.Count is 0 && !string.IsNullOrWhiteSpace(referenceTitle))
+            sources.Add(new Source(referenceTitle, SourceExtensions.CreateRetrievalSourceUrl(referenceTitle, retrievalContext.Path), SourceOrigin.RAG));
 
         return sources;
     }

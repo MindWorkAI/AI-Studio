@@ -11,8 +11,8 @@ namespace AIStudio.Tools.RAG;
 /// texts are the filtered ones: whatever the prompt injection filter removed did not reach the AI,
 /// so it is not shown as if it had.<br/><br/>
 /// A passage belongs to the source it is listed under, which is why it is only made for a context
-/// with a source, see SourceUrl. A context without one, e.g., a file known by a relative path only,
-/// has nothing below the answer to show its passage at, so it gets none.<br/><br/>
+/// with a source, see SourceUrl. A context which names nothing to open, e.g., by a path which only
+/// its ERI server knows, gets a source named as text, see IRetrievalContextExtensions.ToSources.<br/><br/>
 /// Plain stored values only: a computed property would be written into every chat file as well.
 /// </remarks>
 public sealed record SourcePassage

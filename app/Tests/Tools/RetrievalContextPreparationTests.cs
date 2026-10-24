@@ -2,6 +2,7 @@ using System.Text;
 
 using AIStudio.Settings;
 using AIStudio.Tests.Tools.Security;
+using AIStudio.Tools;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
@@ -207,15 +208,17 @@ public sealed class RetrievalContextPreparationTests
     }
 
     [Test]
-    public async Task AContextWithoutASourceGetsNoPassage()
+    public async Task AContextWithoutALinkKeepsItsPassageUnderASourceNamedAsText()
     {
-        var prepared = (await this.PrepareAsync(this.TextContext(Path.Combine("docs", "handbook.pdf"), links: []))).Single();
+        var prepared = (await this.PrepareAsync(this.TextContext(Path.Combine("docs", "handbook.pdf"), surroundingContent: ["The paragraph before."], links: []))).Single();
 
         Assert.Multiple(() =>
         {
-            Assert.That(prepared.Sources, Is.Empty, "A relative path becomes no source, and there is no link either.");
-            Assert.That(prepared.Passage, Is.Null, "Nothing below the answer could show the passage.");
-            Assert.That(prepared.Body, Does.Contain("The mixing console is described here."), "The AI still receives the context.");
+            Assert.That(prepared.Sources, Has.Count.EqualTo(1), "A relative path becomes no link, but the AI received the context all the same.");
+            Assert.That(prepared.Sources[0].HasNoLink(), Is.True);
+            Assert.That(prepared.Passage?.SourceUrl, Is.EqualTo(prepared.Sources[0].URL), "The passage is read under that source, e.g., one an ERI server named by a path of its own.");
+            Assert.That(prepared.Passage?.SurroundingContent, Is.EqualTo(new[] { "The paragraph before." }));
+            Assert.That(prepared.Body, Does.Contain("The mixing console is described here."));
         });
     }
 
