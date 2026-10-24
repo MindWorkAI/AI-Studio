@@ -3,7 +3,7 @@
 <MudDialog ContentClass="dialog-content-fit">
     <TitleContent>
         @* Named after the document once there is one, and after what the caller opened us for until then: *@
-        <FileDialogTitle Title="@(this.document?.FileName ?? this.MudDialog.Title ?? string.Empty)" Path="@(this.document?.FilePath ?? string.Empty)" OffersFileManager="@(this.document?.Exists ?? false)"/>
+        <FileDialogTitle Title="@(this.document?.FileName ?? this.MudDialog.Title ?? string.Empty)" Path="@(this.document?.FilePath ?? string.Empty)"/>
     </TitleContent>
     <DialogContent>
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
@@ -80,14 +80,8 @@
                         @(this.showsStoredText ? T("Text the AI received") : T("Loaded Content"))
                     </MudText>
 
-                    @if (this.document?.Exists ?? false)
-                    {
-                        @* On hover only: the focus comes back to the button from the program the file opens
-                           in, and a tooltip shown on focus would then stay until the user clicks somewhere else. *@
-                        <MudTooltip Text="@T("Opens the file in the program your system uses for it")" Placement="Placement.Top" ShowOnFocus="@false">
-                            <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" OnClick="@this.OpenDocument"/>
-                        </MudTooltip>
-                    }
+                    @* At its beginning: the preview shows how we read the file, not a place in it. *@
+                    <FileActions Path="@(this.document?.FilePath ?? string.Empty)" ShowCopy="@false" ShowFileManager="@false" OpenTooltip="@T("Opens the file in the program your system uses for it")"/>
                 </Toolbar>
             </ContentViewer>
         }

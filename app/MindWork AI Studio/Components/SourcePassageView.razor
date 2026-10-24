@@ -27,14 +27,7 @@ else
                 @this.heading
             </MudText>
 
-            @if (this.documentAtPassage is { } document)
-            {
-                @* On hover only: the focus comes back to the button from the program the document opens
-                   in, and a tooltip shown on focus would then stay until the user clicks somewhere else. *@
-                <MudTooltip Text="@this.openTooltip" Placement="Placement.Top" ShowOnFocus="@false">
-                    <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" OnClick="@(() => document.OpenAsync(this.RustService))"/>
-                </MudTooltip>
-            }
+            <FileActions Path="@this.openPath" PageNumber="@this.openPage" ShowCopy="@false" ShowFileManager="@false" OpenTooltip="@this.openTooltip"/>
         </Toolbar>
     </ContentViewer>
 }

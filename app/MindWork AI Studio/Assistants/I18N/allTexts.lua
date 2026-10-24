@@ -4451,10 +4451,25 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Change what this tile opens"
 
 -- Copy the path: {0}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEDIALOGTITLE::T1140628382"] = "Copy the path: {0}"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1140628382"] = "Copy the path: {0}"
 
 -- Show this file in the file manager of your system
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEDIALOGTITLE::T1587653504"] = "Show this file in the file manager of your system"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1587653504"] = "Show this file in the file manager of your system"
+
+-- Copy the address: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1663694701"] = "Copy the address: {0}"
+
+-- Opens the file at page {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T232759947"] = "Opens the file at page {0}"
+
+-- Opens the file in the program your system uses for it
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T2951618663"] = "Opens the file in the program your system uses for it"
+
+-- Open this page in your browser
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3101354152"] = "Open this page in your browser"
+
+-- This file is no longer at its place. It was moved, renamed, or deleted: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3301132902"] = "This file is no longer at its place. It was moved, renamed, or deleted: {0}"
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
@@ -5586,9 +5601,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T989893925"] = "An ima
 
 -- Opens this document at page {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1529977753"] = "Opens this document at page {0}"
-
--- Show this file in the file manager of your system
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1587653504"] = "Show this file in the file manager of your system"
 
 -- Show the {0} passages the AI received from this source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T2556408625"] = "Show the {0} passages the AI received from this source"

@@ -2,7 +2,6 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Rust;
-using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -47,9 +46,6 @@ public partial class SourcePassageView : MSGComponentBase
     public string MaxHeight { get; set; } = "40vh";
 
     [Inject]
-    private RustService RustService { get; init; } = null!;
-
-    [Inject]
     private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
 
     [Inject]
@@ -60,11 +56,19 @@ public partial class SourcePassageView : MSGComponentBase
     private string text = string.Empty;
 
     /// <summary>
-    /// The document, at the page of the passage where it has one, or null when there is no document to open.
+    /// What the bar above the text opens: the document, or the web page of the passage; empty when there is neither.
     /// </summary>
-    private SourceDocumentLocation? documentAtPassage;
+    private string openPath = string.Empty;
 
-    private string openTooltip = string.Empty;
+    /// <summary>
+    /// The page of the passage, which a document opens at, or null.
+    /// </summary>
+    private int? openPage;
+
+    /// <summary>
+    /// The tooltip of opening a document, or null for a web page, whose tooltip FileActions knows.
+    /// </summary>
+    private string? openTooltip;
 
     /// <summary>
     /// The passage whose texts are shown or being read, so that a render with the same passage does not read them again.
@@ -93,10 +97,13 @@ public partial class SourcePassageView : MSGComponentBase
         //
         // A document opens at the page of the passage. One without pages, such as a CSV file, opens
         // at its beginning: no program can be sent to a part, but the user may still want to look.
+        // Without a document, the passage of a web page opens its page; any other passage, such as
+        // that of a mail, has nothing to open, see FileActions:
         //
         var page = this.Passage.PageNumber is > 0 ? this.Passage.PageNumber : null;
-        this.documentAtPassage = this.Document is { } document ? document with { PageNumber = page } : null;
-        this.openTooltip = page is null ? T("Opens the document") : string.Format(T("Opens the document at page {0}"), page);
+        this.openPath = this.Document?.Path ?? this.Passage.Path;
+        this.openPage = this.Document is null ? null : page;
+        this.openTooltip = this.Document is null ? null : page is null ? T("Opens the document") : string.Format(T("Opens the document at page {0}"), page);
 
         if (!ReferenceEquals(this.shownPassage, this.Passage))
         {

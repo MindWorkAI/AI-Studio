@@ -1,17 +1,16 @@
-using AIStudio.Tools.Services;
-
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
 /// <summary>
-/// The title of a dialog about one file: its name, and at the side, ways to copy its path or to
-/// find it in the file manager.
+/// The title of a dialog about one file or web page: its name, and at the side, ways to copy its
+/// path and to find it in the file manager, see FileActions.
 /// </summary>
 /// <remarks>
 /// The path is what the copy button copies, so that is where it shows, in the tooltip of that
 /// button, instead of taking a line of its own. Every dialog about a file names it the same way,
-/// which is why this lives here instead of in each of them.
+/// which is why this lives here instead of in each of them. A file which is no longer at its place
+/// gets a warning instead of the button of the file manager.
 /// </remarks>
 public partial class FileDialogTitle : MSGComponentBase
 {
@@ -22,21 +21,13 @@ public partial class FileDialogTitle : MSGComponentBase
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// The path of the file, or nothing when there is no file to name.
+    /// The path of the file or the address of the web page, or nothing when there is neither to name.
     /// </summary>
     [Parameter]
     public string Path { get; set; } = string.Empty;
 
     /// <summary>
-    /// Whether the file can be shown in the file manager, i.e., whether it is a file on this computer.
+    /// Whether the path is the address of a web page, which this title then opens in the browser.
     /// </summary>
-    [Parameter]
-    public bool OffersFileManager { get; set; }
-
-    [Inject]
-    private RustService RustService { get; init; } = null!;
-
-    private async Task CopyPath() => await this.RustService.CopyText2Clipboard(this.Path);
-
-    private async Task ShowInFileManager() => await new SourceDocumentLocation(this.Path, null).ShowInFileManagerAsync(this.RustService);
+    private bool OpensWebPages => Uri.TryCreate(this.Path, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https";
 }

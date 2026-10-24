@@ -681,3 +681,10 @@ tr:has(> .provider-group-header) .mud-icon-button {
 .mud-icon-button.icon-button-compact .mud-icon-root {
     font-size: 1rem;
 }
+
+/* The warning of a file which is gone, sized and spaced like the compact buttons it stands in for. */
+.mud-icon-root.file-action-warning {
+    font-size: 1rem;
+    margin: 5px;
+    vertical-align: middle;
+}

@@ -17,7 +17,14 @@
                 <li class="source-entry">
                     <div class="source-entry-title">
                         @($"[{entry.Number}] ")
-                        @if (entry.Document is { } pagedDocument && entry.Location is { } location)
+                        @if (this.IsMissing(entry))
+                        {
+                            @* A link would only fail. The warning next to the entry says why: *@
+                            <MudText Typo="Typo.body1" Inline="true">
+                                @entry.Title
+                            </MudText>
+                        }
+                        else if (entry.Document is { } pagedDocument && entry.Location is { } location)
                         {
                             @* Each page the AI read is a link of its own, which opens the document there. The
                                name would only open it at one of them, so it is no link. *@
@@ -70,18 +77,14 @@
                     </div>
 
                     @* The passages come last, so their button lines up at the right edge also where a
-                       source has no folder to show. The tooltips open to the left, where there is room
+                       source has no file to show. The tooltips open to the left, where there is room
                        for them; above a button at the edge, they would be pushed around and cover the
                        row above. They show on hover only: the focus comes back to the button when the
                        dialog closes, or the file manager does, and a tooltip shown on focus would then
-                       stay until the user clicks somewhere else. *@
+                       stay until the user clicks somewhere else. The title opens the file or the page,
+                       so the actions only copy and find it; a mail gets none, see FileActions. *@
                     <div class="source-entry-actions">
-                        @if (entry.Document is { } folderDocument)
-                        {
-                            <MudTooltip Text="@T("Show this file in the file manager of your system")" Placement="Placement.Left" ShowOnFocus="@false">
-                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" OnClick="@(() => this.ShowInFileManager(folderDocument))"/>
-                            </MudTooltip>
-                        }
+                        <FileActions Path="@(entry.Document?.Path ?? entry.Link)" ShowOpen="@false" TooltipPlacement="Placement.Left" OnExistenceChecked="@(exists => this.NoteExistence(entry, exists))"/>
 
                         @if (entry.Passages.Count > 0)
                         {

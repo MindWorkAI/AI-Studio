@@ -1,0 +1,62 @@
+@inherits MSGComponentBase
+
+@*
+    The tooltips of the buttons which open something show on hover only: the focus comes back to the
+    button from the program, the browser, or the file manager it opened, and a tooltip shown on focus
+    would then stay until the user clicks somewhere else.
+*@
+@switch (this.kind)
+{
+    case FileActionsKind.WEB_PAGE:
+        @if (this.ShowCopy)
+        {
+            <MudTooltip Text="@string.Format(T("Copy the address: {0}"), this.Path)" Placement="@this.TooltipPlacement">
+                <MudIconButton Icon="@Icons.Material.Outlined.ContentCopy" Size="Size.Small" Class="icon-button-compact" OnClick="@this.CopyPath"/>
+            </MudTooltip>
+        }
+
+        @if (this.ShowOpen)
+        {
+            <MudTooltip Text="@T("Open this page in your browser")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
+                <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" Href="@this.Path" Target="_blank"/>
+            </MudTooltip>
+        }
+        break;
+
+    case FileActionsKind.FILE:
+        @if (this.ShowCopy)
+        {
+            <MudTooltip Text="@string.Format(T("Copy the path: {0}"), this.Path)" Placement="@this.TooltipPlacement">
+                <MudIconButton Icon="@Icons.Material.Outlined.ContentCopy" Size="Size.Small" Class="icon-button-compact" OnClick="@this.CopyPath"/>
+            </MudTooltip>
+        }
+
+        @if (this.isMissing)
+        {
+            @* Instead of buttons which would only fail, and only where there would have been one: *@
+            @if (this.ShowFileManager || this.ShowOpen)
+            {
+                @* Not necessarily gone: the server of an ERI data source may name a file of its own, which was never on this computer. *@
+                <MudTooltip Text="@string.Format(T("AI Studio cannot find this file on your computer: {0}. It was moved, renamed, or deleted, or it lies on another computer, such as the server of a data source."), this.Path)" Placement="@this.TooltipPlacement">
+                    <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Color="Color.Warning" Size="Size.Small" Class="file-action-warning"/>
+                </MudTooltip>
+            }
+        }
+        else
+        {
+            @if (this.ShowFileManager)
+            {
+                <MudTooltip Text="@T("Show this file in the file manager of your system")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
+                    <MudIconButton Icon="@Icons.Material.Outlined.FolderOpen" Size="Size.Small" Class="icon-button-compact" OnClick="@this.ShowInFileManager"/>
+                </MudTooltip>
+            }
+
+            @if (this.ShowOpen)
+            {
+                <MudTooltip Text="@this.OpenTooltipText" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
+                    <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" OnClick="@this.Open"/>
+                </MudTooltip>
+            }
+        }
+        break;
+}

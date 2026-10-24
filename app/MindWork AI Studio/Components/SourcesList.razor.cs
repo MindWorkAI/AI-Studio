@@ -112,7 +112,26 @@ public partial class SourcesList : MSGComponentBase
 
     private async Task OpenDocument(SourceDocumentLocation document) => await document.OpenAsync(this.RustService);
 
-    private async Task ShowInFileManager(SourceDocumentLocation document) => await document.ShowInFileManagerAsync(this.RustService);
+    /// <summary>
+    /// The files of sources which are no longer at their place, by their paths, as FileActions found out.
+    /// </summary>
+    private readonly HashSet<string> missingFiles = new(PathTools.COMPARER);
+
+    private bool IsMissing(SourceEntry entry) => entry.Document is { } document && this.missingFiles.Contains(document.Path);
+
+    /// <summary>
+    /// Keeps whether the file of a source is at its place, so that its title stops being a link when it is not.
+    /// </summary>
+    private void NoteExistence(SourceEntry entry, bool exists)
+    {
+        if (entry.Document is not { } document)
+            return;
+
+        if (exists)
+            this.missingFiles.Remove(document.Path);
+        else
+            this.missingFiles.Add(document.Path);
+    }
 
     /// <summary>
     /// One group of the list, prepared so that the markup only has to show it.

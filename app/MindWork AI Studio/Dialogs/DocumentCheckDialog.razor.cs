@@ -388,18 +388,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
     private ContentViewerKind ViewerKind => (this.document?.IsImage ?? false) ? ContentViewerKind.IMAGE : ContentViewerKind.TEXT;
 
     /// <summary>
-    /// Opens the document we show in the program the system uses for it, at its beginning: the
-    /// preview shows how we read the file, not a place in it.
-    /// </summary>
-    private async Task OpenDocument()
-    {
-        if (this.document is null)
-            return;
-
-        await new SourceDocumentLocation(this.document.FilePath, null).OpenAsync(this.RustService);
-    }
-
-    /// <summary>
     /// Explains why we show only the beginning of a large document. The preview only answers how we
     /// read the file, so it may leave out the rest; the AI does not.
     /// </summary>
