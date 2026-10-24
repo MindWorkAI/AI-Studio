@@ -78,6 +78,7 @@ public partial class DataFolders : MSGComponentBase
         DataBackupEntryKind.SETTINGS => T("Your settings."),
         DataBackupEntryKind.WORKSPACES => T("Your chats in workspaces, along with their transcripts."),
         DataBackupEntryKind.TEMPORARY_CHATS => T("Your temporary chats, along with their transcripts."),
+        DataBackupEntryKind.CHAT_PROVENANCE => T("What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It belongs to your chats."),
         DataBackupEntryKind.PLUGINS => T("Your plugins, such as the assistants you built, apart from the folders listed below."),
         DataBackupEntryKind.TOKENIZERS => T("The tokenizers you chose for your providers."),
         DataBackupEntryKind.VISUAL_BRIEFINGS => T("Your projects in the Visual Briefing Assistant."),

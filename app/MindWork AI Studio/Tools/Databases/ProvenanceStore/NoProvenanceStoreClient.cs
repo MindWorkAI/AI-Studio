@@ -47,6 +47,16 @@ public sealed class NoProvenanceStoreClient(string name, string? unavailableReas
 
     public override Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<Guid>>([]);
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Unlike the other methods, this one does not pretend success: a backup would take an empty
+    /// copy for the real one. Whoever makes the backup decides what to do instead.
+    /// </remarks>
+    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) =>
+        Task.FromException<string>(new InvalidOperationException(unavailableReason ?? "The provenance store is not available."));
+
+    public override Task<int> ImportChatAsync(string sourceDatabasePath, Guid sourceChatId, Guid targetChatId, CancellationToken token) => Task.FromResult(0);
+
     public override void Dispose()
     {
     }

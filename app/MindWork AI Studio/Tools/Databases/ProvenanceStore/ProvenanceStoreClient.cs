@@ -73,4 +73,26 @@ public abstract class ProvenanceStoreClient(string name, string path) : Database
     /// <param name="token">The cancellation token.</param>
     /// <returns>The ids of the chats.</returns>
     public abstract Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token);
+
+    /// <summary>
+    /// Writes a copy of this store into a directory, for a backup.
+    /// </summary>
+    /// <param name="targetDirectory">The directory of the copy. A copy written there before is replaced.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The path of the copy.</returns>
+    public abstract Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token);
+
+    /// <summary>
+    /// Adds the entries of one chat from a copy of this store, such as the one a backup holds.
+    /// </summary>
+    /// <remarks>
+    /// The entries keep their ids, so the chat's references stay valid, also when the chat is added
+    /// under another id. Entries the target chat holds already stay as they are.
+    /// </remarks>
+    /// <param name="sourceDatabasePath">The copy to read from. It is only read.</param>
+    /// <param name="sourceChatId">The chat in the copy.</param>
+    /// <param name="targetChatId">The chat in this store.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>How many entries were added.</returns>
+    public abstract Task<int> ImportChatAsync(string sourceDatabasePath, Guid sourceChatId, Guid targetChatId, CancellationToken token);
 }

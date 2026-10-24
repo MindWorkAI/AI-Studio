@@ -7,7 +7,6 @@ using AIStudio.Tools.Mail;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace AIStudio.Tools.Databases.IndexStore;
@@ -716,70 +715,14 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
 
     /// <inheritdoc />
     /// <remarks>
-    /// VACUUM INTO writes a consistent snapshot of the database, including what the write-ahead log
-    /// still holds, and in WAL mode, reading it holds back no writer.<br/><br/>
-    ///
-    /// It runs on connections of their own, although the databases guide has raw SQL go through
-    /// GetDbConnection. The connections of the context share one cache, and a shared cache locks
-    /// whole tables: reading the whole database for the copy would hold back every writer until the
-    /// copy is done. Without pooling, nothing keeps the copy open afterward, so the backup can
-    /// delete it on every OS.<br/><br/>
-    ///
-    /// SQLite runs its async methods synchronously, and copying and checking a large index takes a
-    /// while. The copy therefore runs on a thread of its own, so that it never holds up its caller.
+    /// A consistent snapshot which holds back no writer, made on a thread of its own, cf. SqliteDatabaseCopy.
     /// </remarks>
-    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) => Task.Run(() => this.CopyAndCheckAsync(targetDirectory, token), token);
-
-    private async Task<string> CopyAndCheckAsync(string targetDirectory, CancellationToken token)
+    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) => Task.Run(async () =>
     {
-        Directory.CreateDirectory(targetDirectory);
         var targetPath = Path.Join(targetDirectory, DATABASE_FILENAME);
-
-        // VACUUM INTO refuses to write into a file which holds anything:
-        if (File.Exists(targetPath))
-            File.Delete(targetPath);
-
-        try
-        {
-            await using (var connection = new SqliteConnection(BuildBackupConnectionString(this.databasePath, SqliteOpenMode.ReadWrite)))
-            {
-                await connection.OpenAsync(token);
-                await using var command = connection.CreateCommand();
-                command.CommandText = "VACUUM INTO $targetPath;";
-                command.Parameters.AddWithValue("$targetPath", targetPath);
-                await command.ExecuteNonQueryAsync(token);
-            }
-
-            await using (var connection = new SqliteConnection(BuildBackupConnectionString(targetPath, SqliteOpenMode.ReadOnly)))
-            {
-                await connection.OpenAsync(token);
-                await using var command = connection.CreateCommand();
-                command.CommandText = "PRAGMA quick_check;";
-
-                var checkResult = (await command.ExecuteScalarAsync(token))?.ToString();
-                if (checkResult is not "ok")
-                    throw new InvalidOperationException($"The copy of the index at '{targetPath}' failed its check: '{checkResult}'.");
-            }
-
-            return targetPath;
-        }
-        catch
-        {
-            if (File.Exists(targetPath))
-                File.Delete(targetPath);
-
-            throw;
-        }
-    }
-
-    private static string BuildBackupConnectionString(string path, SqliteOpenMode mode) => new SqliteConnectionStringBuilder
-    {
-        DataSource = path,
-        Mode = mode,
-        Cache = SqliteCacheMode.Private,
-        Pooling = false,
-        DefaultTimeout = 30,
-    }.ToString();
+        await SqliteDatabaseCopy.CopyAndCheckAsync(this.databasePath, targetPath, token);
+        return targetPath;
+    }, token);
 
     private IndexStoreDbContext CreateContext() => new(this.dbContextOptions);
 

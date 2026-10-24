@@ -1,5 +1,6 @@
 using AIStudio.Tools.Databases.ProvenanceStore;
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace AIStudio.Tests.Tools.Databases;
@@ -182,6 +183,78 @@ public sealed class ProvenanceStoreTests
     }
 
     [Test]
+    public async Task TheBackupCopyHoldsEveryEntry()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var id = await store.Client.StoreAsync(Guid.NewGuid(), ProvenanceKind.ERI_PASSAGE, "a passage", ["around it"], TOKEN);
+        var copyDirectory = CreateCopyDirectory();
+
+        try
+        {
+            var copyPath = await store.Client.BackupToDirectoryAsync(copyDirectory, TOKEN);
+            var copy = new SqliteProvenanceStoreClientImplementation("SQLite", copyPath, copyDirectory, string.Empty);
+            var entries = await copy.GetEntriesAsync([id!.Value], TOKEN);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(Path.GetFileName(copyPath), Is.EqualTo(SqliteProvenanceStoreClientImplementation.DATABASE_FILENAME), "A restore puts the copy where the store belongs, under the same name.");
+                Assert.That(entries[id.Value].Content, Is.EqualTo("a passage"));
+                Assert.That(entries[id.Value].SurroundingContent, Is.EqualTo(new[] { "around it" }));
+            });
+        }
+        finally
+        {
+            RemoveCopyDirectory(copyDirectory);
+        }
+    }
+
+    [Test]
+    public async Task AChatOfABackupArrivesWithItsEntriesAndTheirIds()
+    {
+        await using var backup = await TemporaryProvenanceStore.CreateAsync();
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var chatInBackup = Guid.NewGuid();
+        var otherChatInBackup = Guid.NewGuid();
+        var importedChat = Guid.NewGuid();
+        var passage = await backup.Client.StoreAsync(chatInBackup, ProvenanceKind.ERI_PASSAGE, "a passage", ["around it"], TOKEN);
+        var page = await backup.Client.StoreAsync(chatInBackup, ProvenanceKind.WEB_PAGE, "a page", null, TOKEN);
+        var otherChatsMail = await backup.Client.StoreAsync(otherChatInBackup, ProvenanceKind.MAIL, "a mail of another chat", null, TOKEN);
+        var copyDirectory = CreateCopyDirectory();
+
+        try
+        {
+            var copyPath = await backup.Client.BackupToDirectoryAsync(copyDirectory, TOKEN);
+
+            var imported = await store.Client.ImportChatAsync(copyPath, chatInBackup, importedChat, TOKEN);
+            var importedAgain = await store.Client.ImportChatAsync(copyPath, chatInBackup, importedChat, TOKEN);
+            var entries = await store.Client.GetEntriesAsync([passage!.Value, page!.Value, otherChatsMail!.Value], TOKEN);
+            var chatIds = await store.Client.GetChatIdsAsync(TOKEN);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(imported, Is.EqualTo(2));
+                Assert.That(importedAgain, Is.Zero, "Entries the chat holds already stay as they are.");
+                Assert.That(entries.Keys, Is.EquivalentTo(new[] { passage.Value, page.Value }), "The chat refers to its entries by their ids, also under its new id. Another chat's entries stay behind.");
+                Assert.That(entries[passage.Value].Kind, Is.EqualTo(ProvenanceKind.ERI_PASSAGE));
+                Assert.That(entries[passage.Value].SurroundingContent, Is.EqualTo(new[] { "around it" }));
+                Assert.That(chatIds, Is.EquivalentTo(new[] { importedChat }));
+            });
+        }
+        finally
+        {
+            RemoveCopyDirectory(copyDirectory);
+        }
+    }
+
+    [Test]
+    public void TheStandInMakesNoCopy()
+    {
+        var client = new NoProvenanceStoreClient("SQLite", "not available");
+
+        Assert.That(async () => await client.BackupToDirectoryAsync(Path.GetTempPath(), TOKEN), Throws.InvalidOperationException, "An empty copy would pass for the real one.");
+    }
+
+    [Test]
     public async Task TheStandInKeepsNothing()
     {
         var client = new NoProvenanceStoreClient("SQLite", "not available");
@@ -229,6 +302,16 @@ public sealed class ProvenanceStoreTests
             Assert.That(lines["Chats with stored contents"], Is.EqualTo("0"));
             Assert.That(lines, Does.Not.ContainKey("Attached files"));
         });
+    }
+
+    private static string CreateCopyDirectory() => Path.Combine(Path.GetTempPath(), $"ai-studio-provenance-copy-{Guid.NewGuid():N}");
+
+    private static void RemoveCopyDirectory(string copyDirectory)
+    {
+        // The copy is read without a pool, but the clients of the stores keep theirs:
+        SqliteConnection.ClearAllPools();
+        if (Directory.Exists(copyDirectory))
+            Directory.Delete(copyDirectory, true);
     }
 
     private static async Task<Dictionary<string, string>> ReadDisplayInfoAsync(TemporaryProvenanceStore store)

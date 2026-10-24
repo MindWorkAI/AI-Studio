@@ -3967,6 +3967,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2422278827"] = "Data folder
 -- The transcripts of the audio and video files in your local data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T260303721"] = "The transcripts of the audio and video files in your local data sources."
 
+-- What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It belongs to your chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T270376422"] = "What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It belongs to your chats."
+
 -- Explanation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2840582448"] = "Explanation"
 

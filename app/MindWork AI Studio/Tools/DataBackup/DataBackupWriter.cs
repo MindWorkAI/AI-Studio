@@ -88,7 +88,8 @@ public static class DataBackupWriter
     /// Collects the files of the data folder which belong into a backup, cf. DataBackupContents.
     /// </summary>
     /// <remarks>
-    /// The settings are no part of it: they come from memory. The indexes come from their copies.
+    /// The settings are no part of it: they come from memory. The indexes and the provenance store
+    /// come from their copies.
     /// </remarks>
     private static List<BackupFile> CollectFiles(DataBackupSources sources, CancellationToken token)
     {
@@ -101,9 +102,12 @@ public static class DataBackupWriter
         var files = new List<BackupFile>();
         foreach (var entry in DataBackupContents.ENTRIES.Where(entry => entry.IsIncluded && entry.Location is DataBackupLocation.DATA_DIRECTORY))
         {
-            var root = entry.ComesFromIndexCopies
-                ? sources.IndexCopiesDirectory
-                : sources.DataDirectory;
+            var root = entry switch
+            {
+                { ComesFromIndexCopies: true } => sources.IndexCopiesDirectory,
+                { ComesFromProvenanceCopy: true } when !string.IsNullOrWhiteSpace(sources.ProvenanceCopyDirectory) => sources.ProvenanceCopyDirectory,
+                _ => sources.DataDirectory,
+            };
 
             if (string.IsNullOrWhiteSpace(root))
                 continue;

@@ -3,8 +3,10 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 
 using AIStudio.Settings;
+using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.PluginSystem;
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace AIStudio.Tools.Databases.ProvenanceStore;
@@ -12,7 +14,11 @@ namespace AIStudio.Tools.Databases.ProvenanceStore;
 public sealed class SqliteProvenanceStoreClientImplementation(string name, string databasePath, string basePath, string version) : ProvenanceStoreClient(name, basePath)
 {
     private const string DATABASE_NAME = "SQLite";
-    private const string DATABASE_FILENAME = "provenance.sqlite3";
+
+    /// <summary>
+    /// The file of the store, in its folder in the data folder and in a backup alike.
+    /// </summary>
+    public const string DATABASE_FILENAME = "provenance.sqlite3";
 
     /// <summary>
     /// Writes the content around a passage the way it reads: the default encoder would turn every
@@ -204,6 +210,60 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
             .Select(chatKey => Guid.TryParse(chatKey, out var chatId) ? chatId : Guid.Empty)
             .Where(chatId => chatId != Guid.Empty)
             .ToList();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// A consistent snapshot which holds back no writer, made on a thread of its own, cf. SqliteDatabaseCopy.
+    /// </remarks>
+    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) => Task.Run(async () =>
+    {
+        var targetPath = Path.Join(targetDirectory, DATABASE_FILENAME);
+        await SqliteDatabaseCopy.CopyAndCheckAsync(this.databasePath, targetPath, token);
+        return targetPath;
+    }, token);
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// The copy is read on a connection of its own, read-only and without a pool, so nothing keeps it
+    /// open afterward and the caller can delete it. Only the columns this version knows are read: a
+    /// copy made by a newer version may hold more.
+    /// </remarks>
+    public override async Task<int> ImportChatAsync(string sourceDatabasePath, Guid sourceChatId, Guid targetChatId, CancellationToken token)
+    {
+        var targetKey = ToKey(targetChatId);
+        var rows = new List<ProvenanceEntity>();
+        await using (var connection = new SqliteConnection(SqliteDatabaseCopy.BuildConnectionString(sourceDatabasePath, SqliteOpenMode.ReadOnly)))
+        {
+            await connection.OpenAsync(token);
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT id, kind, content, surrounding_content, created_at_utc FROM provenance WHERE chat_id = $chatId;";
+            command.Parameters.AddWithValue("$chatId", ToKey(sourceChatId));
+
+            await using var reader = await command.ExecuteReaderAsync(token);
+            while (await reader.ReadAsync(token))
+            {
+                rows.Add(new ProvenanceEntity
+                {
+                    ChatId = targetKey,
+                    Id = reader.GetString(0),
+                    Kind = reader.GetString(1),
+                    Content = reader.GetString(2),
+                    SurroundingContent = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    CreatedAtUtc = IndexStoreDateTimeOffset.ParseUtc(reader.GetString(4)),
+                });
+            }
+        }
+
+        if (rows.Count is 0)
+            return 0;
+
+        await using var context = this.CreateContext();
+        var knownIds = (await context.Entries.Where(entry => entry.ChatId == targetKey).Select(entry => entry.Id).ToListAsync(token)).ToHashSet(StringComparer.Ordinal);
+        var newRows = rows.Where(row => knownIds.Add(row.Id)).ToList();
+        context.Entries.AddRange(newRows);
+        await context.SaveChangesAsync(token);
+        return newRows.Count;
     }
 
     public override void Dispose()
