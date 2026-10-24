@@ -5,7 +5,7 @@ These instructions cover the databases in `app/MindWork AI Studio/Tools/Database
 
 ## Databases
 
-Local RAG runs on two databases, addressed through `DatabaseRole`:
+AI Studio keeps three databases, addressed through `DatabaseRole`. Local RAG runs on the first two:
 
 - **`VECTOR_STORE`** — Qdrant Edge through the `qdrant-edge` crate, running **in-process inside the
   Rust runtime**. There is no sidecar process, no port 6333 and no Qdrant API key; .NET reaches it
@@ -15,6 +15,11 @@ Local RAG runs on two databases, addressed through `DatabaseRole`:
 - **`INDEX_STORE`** — SQLite at `<data directory>/databases/sqlite/rag-index.sqlite3`, reached
   through EF Core. It holds the data sources, the file fingerprints, the chunk texts and an FTS5
   index over them, plus the files which permanently failed to index.
+- **`PROVENANCE_STORE`** — SQLite at `<data directory>/databases/provenance/provenance.sqlite3`,
+  reached through EF Core with migrations of its own. It holds what chats received besides their
+  messages, exactly as the AI received it: attached files, tool results, and passages of data
+  sources. A chat keeps only the ids. Never put this into the index store: the index can be
+  rebuilt from the files and is treated that way, while what a chat received cannot.
 
 When working on these, keep in mind:
 
@@ -32,7 +37,8 @@ When working on these, keep in mind:
 - **Raw SQL against SQLite goes through `context.Database.GetDbConnection()`**, not through
   `SqlQueryRaw<T>`: that one expects a column named `Value` and wraps the statement, so a `PRAGMA`
   never works with it.
-- **A new EF Core migration needs a `[DynamicDependency]`** in `IndexStoreSchemaMigrator`, because
-  `PublishTrimmed` is on and the migration type would otherwise be trimmed away. The "Schema version"
+- **A new EF Core migration needs a `[DynamicDependency]`** in the schema migrator of its store,
+  `IndexStoreSchemaMigrator` or `ProvenanceStoreSchemaMigrator`, because `PublishTrimmed` is on and
+  the migration type would otherwise be trimmed away. The "Schema version"
   line on the information page shows the applied and pending counts, so a forgotten entry becomes
   visible there.

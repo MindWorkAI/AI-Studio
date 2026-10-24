@@ -58,6 +58,25 @@
                             @(this.indexStoreSection.ShowDetails ? T("Hide Details") : T("Show Details"))
                         </MudButton>
                     </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Source">
+                        <MudText Typo="Typo.body1">
+                            @this.DatabaseHeaderText(this.provenanceStoreSection)
+                        </MudText>
+                        <MudCollapse Expanded="@this.provenanceStoreSection.ShowDetails">
+                            <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                @foreach (var item in this.BuildDatabaseInfoItems(this.provenanceStoreSection))
+                                {
+                                    <ConfigInfoRow Item="@item"/>
+                                }
+                            </MudText>
+                        </MudCollapse>
+                        <MudButton StartIcon="@(this.provenanceStoreSection.ShowDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                   Size="Size.Small"
+                                   Variant="Variant.Text"
+                                   OnClick="@(() => this.ToggleDatabaseDetails(this.provenanceStoreSection))">
+                            @(this.provenanceStoreSection.ShowDetails ? T("Hide Details") : T("Show Details"))
+                        </MudButton>
+                    </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.DocumentScanner" Text="@this.VersionPdfium"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Article" Text="@this.versionPandoc"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>

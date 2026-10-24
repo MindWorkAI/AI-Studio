@@ -102,7 +102,7 @@ public partial class Information : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// The vector store names the version from the build metadata, which is what this page always
-    /// showed. The index store names the one its client read from the running database instead:
+    /// showed. The SQLite stores name the one their client read from the running database instead:
     /// there, which SQLite build actually got loaded is the whole point of showing it.
     /// </remarks>
     private string DatabaseHeaderText(DatabaseSection section)
@@ -110,6 +110,7 @@ public partial class Information : MSGComponentBase
         var nameLabel = section.Role switch
         {
             DatabaseRole.VECTOR_STORE => T("Vector database"),
+            DatabaseRole.PROVENANCE_STORE => T("Provenance database"),
             _ => T("Index database"),
         };
 
@@ -163,8 +164,8 @@ public partial class Information : MSGComponentBase
     /// Everything one database block on this page needs to show itself.
     /// </summary>
     /// <remarks>
-    /// Both blocks work the same way, so they share their state and their methods and differ only
-    /// in their role. Whoever adds a third database adds one field here, not another set of methods.
+    /// The blocks work the same way, so they share their state and their methods and differ only
+    /// in their role. Whoever adds another database adds one field here, not another set of methods.
     /// </remarks>
     private sealed class DatabaseSection(DatabaseRole role)
     {
@@ -181,6 +182,7 @@ public partial class Information : MSGComponentBase
 
     private readonly DatabaseSection vectorStoreSection = new(DatabaseRole.VECTOR_STORE);
     private readonly DatabaseSection indexStoreSection = new(DatabaseRole.INDEX_STORE);
+    private readonly DatabaseSection provenanceStoreSection = new(DatabaseRole.PROVENANCE_STORE);
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
     
@@ -231,12 +233,16 @@ public partial class Information : MSGComponentBase
         // and this way that client is already cached when it does.
         await this.RefreshDatabaseInfo(this.indexStoreSection, CancellationToken.None);
         await this.RefreshDatabaseInfo(this.vectorStoreSection, CancellationToken.None);
+        await this.RefreshDatabaseInfo(this.provenanceStoreSection, CancellationToken.None);
 
         if (this.indexStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
             this.StartShortDatabaseRefreshLoop(this.indexStoreSection);
 
         if (this.vectorStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
             this.StartShortDatabaseRefreshLoop(this.vectorStoreSection);
+
+        if (this.provenanceStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
+            this.StartShortDatabaseRefreshLoop(this.provenanceStoreSection);
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
@@ -590,6 +596,7 @@ public partial class Information : MSGComponentBase
     {
         this.CancelDatabaseRefreshLoop(this.vectorStoreSection);
         this.CancelDatabaseRefreshLoop(this.indexStoreSection);
+        this.CancelDatabaseRefreshLoop(this.provenanceStoreSection);
         base.DisposeResources();
     }
 
