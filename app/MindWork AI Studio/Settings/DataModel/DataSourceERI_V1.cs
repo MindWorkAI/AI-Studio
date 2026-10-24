@@ -154,6 +154,10 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 //
                 // Next, we have to transform the ERI context back to our generic retrieval context:
                 //
+                //
+                // The server writes the JSON, and a field it leaves out arrives as null, whatever the
+                // contract says. Everything after this point counts on texts and lists:
+                //
                 var genericRetrievalContexts = new List<IRetrievalContext>(retrievalResponse.Data.Count);
                 foreach (var eriContext in retrievalResponse.Data)
                 {
@@ -164,26 +168,26 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                             {
                                 Path = eriContext.Path ?? string.Empty,
                                 Type = eriContext.ToRetrievalContentType(),
-                                Links = eriContext.Links,
+                                Links = eriContext.Links ?? [],
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 SourceCategory = eriContext.Category ?? string.Empty,
-                                MatchedText = eriContext.MatchedContent,
-                                DataSourceName = eriContext.Name,
-                                SurroundingContent = eriContext.SurroundingContent,
+                                MatchedText = eriContext.MatchedContent ?? string.Empty,
+                                DataSourceName = eriContext.Name ?? string.Empty,
+                                SurroundingContent = eriContext.SurroundingContent ?? [],
                             });
                             break;
-                        
+
                         case ContentType.IMAGE:
                             genericRetrievalContexts.Add(new RetrievalImageContext
                             {
                                 Path = eriContext.Path ?? string.Empty,
                                 Type = eriContext.ToRetrievalContentType(),
-                                Links = eriContext.Links,
-                                Source = eriContext.MatchedContent,
+                                Links = eriContext.Links ?? [],
+                                Source = eriContext.MatchedContent ?? string.Empty,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 SourceCategory = eriContext.Category ?? string.Empty,
                                 SourceType = ContentImageSource.BASE64,
-                                DataSourceName = eriContext.Name,
+                                DataSourceName = eriContext.Name ?? string.Empty,
                             });
                             break;
                         

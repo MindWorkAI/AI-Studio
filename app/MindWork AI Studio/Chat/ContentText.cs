@@ -106,12 +106,12 @@ public sealed class ContentText : IContent
     /// <param name="chatId">The chat this answer belongs to.</param>
     public async Task StoreReceivedContentAsync(Guid chatId)
     {
-        // Most answers, those of the agents among them, received nothing to store, and need no database:
-        if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore()))
-            return;
-
         try
         {
+            // Most answers, those of the agents among them, received nothing to store, and need no database:
+            if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore()))
+                return;
+
             var store = await Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync();
             if (await this.StoreReceivedContentAsync(store, chatId))
                 return;
