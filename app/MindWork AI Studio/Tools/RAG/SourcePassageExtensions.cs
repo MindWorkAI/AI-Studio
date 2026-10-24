@@ -31,6 +31,28 @@ public static class SourcePassageExtensions
     };
 
     /// <summary>
+    /// Makes the passage of a web page which a tool read for the AI, so that the user can read under
+    /// the source of the page what the AI received from it.
+    /// </summary>
+    /// <remarks>
+    /// Listed under the source by its address, see GetPassagesOf, and named by its title in the
+    /// dialog of its passages. A page says nothing about pages or lines, so its source keeps the
+    /// title the tool gave it, see NamePassagesInTitles.
+    /// </remarks>
+    /// <param name="source">The source of the page, as the tool lists it.</param>
+    /// <param name="content">The content of the page as the model received it: filtered for prompt injections, and cut where the tool cut it.</param>
+    /// <returns>The passage of the page.</returns>
+    public static SourcePassage ToWebPagePassage(this Source source, string content) => new()
+    {
+        SourceUrl = source.URL,
+        DataSourceName = source.Title,
+        Path = source.URL,
+        Category = RetrievalContentCategory.TEXT,
+        Type = RetrievalContentType.TEXT_WEBSITE,
+        Text = content,
+    };
+
+    /// <summary>
     /// Whether the passage holds texts which belong into the provenance store, see SourcePassage.ProvenanceId.
     /// </summary>
     /// <param name="passage">The passage.</param>

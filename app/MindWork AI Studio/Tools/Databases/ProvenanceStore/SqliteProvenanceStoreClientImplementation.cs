@@ -113,7 +113,6 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         ProvenanceKind.DATA_SOURCE_PASSAGE => TB("Passages of data sources"),
         ProvenanceKind.MAIL => TB("Mails"),
         ProvenanceKind.WEB_PAGE => TB("Web pages"),
-        ProvenanceKind.TOOL_RESULT => TB("Tool results"),
         _ => kind.ToString(),
     };
 

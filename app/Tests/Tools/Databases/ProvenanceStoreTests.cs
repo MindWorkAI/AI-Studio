@@ -83,7 +83,7 @@ public sealed class ProvenanceStoreTests
     public async Task AnUnknownIdIsMissingFromTheAnswer()
     {
         await using var store = await TemporaryProvenanceStore.CreateAsync();
-        var known = await store.Client.StoreAsync(Guid.NewGuid(), ProvenanceKind.TOOL_RESULT, "{\"result_count\": 0}", null, TOKEN);
+        var known = await store.Client.StoreAsync(Guid.NewGuid(), ProvenanceKind.WEB_PAGE, "A page.", null, TOKEN);
 
         var entries = await store.Client.GetEntriesAsync([known!.Value, Guid.NewGuid()], TOKEN);
 
@@ -176,7 +176,7 @@ public sealed class ProvenanceStoreTests
         var firstChat = Guid.NewGuid();
         var secondChat = Guid.NewGuid();
         await store.Client.StoreAsync(firstChat, ProvenanceKind.ATTACHMENT, "one", null, TOKEN);
-        await store.Client.StoreAsync(firstChat, ProvenanceKind.TOOL_RESULT, "two", null, TOKEN);
+        await store.Client.StoreAsync(firstChat, ProvenanceKind.WEB_PAGE, "two", null, TOKEN);
         await store.Client.StoreAsync(secondChat, ProvenanceKind.MAIL, "three", null, TOKEN);
 
         Assert.That(await store.Client.GetChatIdsAsync(TOKEN), Is.EquivalentTo(new[] { firstChat, secondChat }));
@@ -283,7 +283,7 @@ public sealed class ProvenanceStoreTests
             Assert.That(lines["Attached files"], Is.EqualTo("1"));
             Assert.That(lines["Web pages"], Is.EqualTo("2"));
             Assert.That(lines["Mails"], Is.EqualTo("1"));
-            Assert.That(lines, Does.Not.ContainKey("Tool results"), "A kind no chat received would only say zero.");
+            Assert.That(lines, Does.Not.ContainKey("Passages of data sources"), "A kind no chat received would only say zero.");
             Assert.That(lines["Journal mode"], Is.EqualTo("WAL"));
             Assert.That(lines["Schema version"], Does.StartWith("20261024000000_InitialProvenanceStore"));
         });

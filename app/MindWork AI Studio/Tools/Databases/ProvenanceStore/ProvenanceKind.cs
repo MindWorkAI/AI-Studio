@@ -29,9 +29,4 @@ public enum ProvenanceKind
     /// A web page the AI received, e.g., which a tool read for it.
     /// </summary>
     WEB_PAGE,
-
-    /// <summary>
-    /// The whole result of one tool call, exactly as the AI received it.
-    /// </summary>
-    TOOL_RESULT,
 }
