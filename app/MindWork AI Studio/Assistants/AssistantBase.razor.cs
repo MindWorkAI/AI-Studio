@@ -107,6 +107,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual bool ShowProfileSelection => true;
     
     protected virtual bool ShowDedicatedProgress => false;
+
+    /// <summary>
+    /// What the assistant is doing right now, shown below the dedicated progress bar; empty for no text.
+    /// </summary>
+    protected virtual string ProgressText => string.Empty;
     
     protected virtual bool ShowSendTo => true;
     

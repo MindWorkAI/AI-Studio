@@ -309,6 +309,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(SLIDE_DECK_ANSWER_STATE_KEY, this.slideDeckAnswer);
         state.Set(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, this.slideDeckTemplatePath);
         state.SetList(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
+        state.Set(PLANNING_STEP_STATE_KEY, this.planningStep);
     }
 
     /// <inheritdoc />
@@ -338,6 +339,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(SLIDE_DECK_ANSWER_STATE_KEY, value => this.slideDeckAnswer = value);
         state.Restore(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, value => this.slideDeckTemplatePath = value);
         state.Restore(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, value => this.slideDeckPicturePaths = value);
+        state.Restore(PLANNING_STEP_STATE_KEY, value => this.planningStep = value);
 
         // Neither the template nor the slides are kept themselves, only what they were read from:
         this.LoadTemplate();
@@ -557,6 +559,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         //
         this.slideDeck = null;
         this.slideDeckAnswer = string.Empty;
+        this.planningStep = PlanningStep.NONE;
         var catalog = this.Catalog;
         var plannedTemplatePath = this.template is null ? string.Empty : this.templatePath;
         var chosenTemplateSlideUses = this.ChosenTemplateSlideUses;
@@ -602,6 +605,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
         var time = this.AddUserRequest(request, hideContentFromUser: true, imageAttachments);
 
+        this.planningStep = PlanningStep.PLANNING;
         var answer = await this.AddAIResponseAsync(time, hideContentFromUser: true);
 
         // The provider failed and the base class has said so already:
@@ -618,6 +622,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             // one, though, so it only replaces an answer it improves on:
             //
             var repairTime = this.AddUserRequest(RepairPromptOf(issues), hideContentFromUser: true);
+            this.planningStep = PlanningStep.REPAIRING;
             var repairedAnswer = await this.AddAIResponseAsync(repairTime, hideContentFromUser: true);
             var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? new CheckedAnswer(null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, chosenTemplateSlideUses, chosenLayouts);
             if (repairedDeck is not null)
