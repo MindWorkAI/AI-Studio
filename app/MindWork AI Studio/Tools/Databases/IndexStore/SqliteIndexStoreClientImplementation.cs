@@ -410,7 +410,12 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
             .ToDictionaryAsync(chunk => chunk.ChunkId, chunk => chunk.Location, StringComparer.Ordinal, token);
     }
 
-    public override async Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(string dataSourceId, CancellationToken token)
+    /// <inheritdoc />
+    /// <remarks>
+    /// On a thread of its own, cf. the Databases AGENTS.md: it runs before every vector search,
+    /// which a message in the chat may start, and it looks at every document of the data source.
+    /// </remarks>
+    public override Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(string dataSourceId, CancellationToken token) => Task.Run<IReadOnlyList<HiddenChunks>>(async () =>
     {
         await using var context = this.CreateContext();
 
@@ -429,7 +434,7 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
             .ToListAsync(token);
 
         return documents.Select(document => new HiddenChunks(document.ParentFileId, document.ChunkCount > 0 ? document.Generation : null)).ToList();
-    }
+    }, token);
 
     public override async Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token)
     {
