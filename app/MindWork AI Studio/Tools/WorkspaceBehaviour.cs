@@ -1329,6 +1329,16 @@ public static partial class WorkspaceBehaviour
         ? Path.Join(SettingsManager.DataDirectory, "tempChats", chatId.ToString())
         : Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString(), chatId.ToString());
 
+    /// <summary>
+    /// Reads when a chat was last written to the disk.
+    /// </summary>
+    /// <returns>The moment, or null when the chat has no file.</returns>
+    public static DateTimeOffset? GetChatWrittenAt(Guid workspaceId, Guid chatId)
+    {
+        var chatPath = Path.Join(GetChatDirectory(workspaceId, chatId), "thread.json");
+        return File.Exists(chatPath) ? new DateTimeOffset(File.GetLastWriteTimeUtc(chatPath)) : null;
+    }
+
     public static async Task<ChatThread?> LoadChatAsync(LoadChat loadChat)
     {
         var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(loadChat.WorkspaceId, loadChat.ChatId, nameof(LoadChatAsync));

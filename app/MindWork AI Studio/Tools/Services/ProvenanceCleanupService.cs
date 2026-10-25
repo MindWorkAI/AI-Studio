@@ -9,7 +9,7 @@ namespace AIStudio.Tools.Services;
 /// <summary>
 /// One-shot startup service that removes from the provenance store what no stored chat refers to, see ProvenanceCleanup.
 /// </summary>
-public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClientProvider, ILogger<ProvenanceCleanupService> logger) : BackgroundService
+public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClientProvider, DataRestoreService dataRestoreService, ILogger<ProvenanceCleanupService> logger) : BackgroundService
 {
     /// <summary>
     /// When this run of the app started. Entries stored since belong to it and stay.
@@ -47,17 +47,33 @@ public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClie
             }
 
             //
-            // SQLite works synchronously behind its async methods, and every chat with entries is read
-            // once, so the whole pass runs on a thread of its own:
+            // A restore at this start may have brought back the chats of one moment and kept the store
+            // of another, e.g., from a backup without the store. Then the time of the last cleanup
+            // tells nothing about the chats, and every chat is read:
             //
-            var (orphaned, unreferenced) = await Task.Run(() => ProvenanceCleanup.CleanUpAsync(
+            await dataRestoreService.StartupStateLoaded.WaitAsync(stoppingToken);
+            var lastCleanup = dataRestoreService.Report is null ? await store.GetLastCleanupAsync(stoppingToken) : null;
+
+            //
+            // SQLite works synchronously behind its async methods, and every changed chat with entries
+            // is read once, so the whole pass runs on a thread of its own:
+            //
+            var result = await Task.Run(() => ProvenanceCleanup.CleanUpAsync(
                 store,
                 WorkspaceBehaviour.ReadAllChatLocations(),
                 (workspaceId, chatId) => WorkspaceBehaviour.LoadChatAsync(new(workspaceId, chatId)),
+                WorkspaceBehaviour.GetChatWrittenAt,
                 this.startedAt,
+                lastCleanup,
                 stoppingToken), stoppingToken);
 
-            logger.LogInformation("The provenance startup cleanup removed {OrphanedCount} entries of chats which no longer exist and {UnreferencedCount} entries their chats no longer refer to.", orphaned, unreferenced);
+            logger.LogInformation("The provenance startup cleanup removed {OrphanedCount} entries of chats which no longer exist and {UnreferencedCount} entries their chats no longer refer to. It skipped {SkippedCount} unchanged chats.", result.Orphaned, result.Unreferenced, result.Skipped);
+
+            // A chat which could not be read is read again at the next start, as long as the time of this cleanup is not noted:
+            if (result.Unreadable is 0)
+                await store.SetLastCleanupAsync(this.startedAt, stoppingToken);
+            else
+                logger.LogWarning("The provenance startup cleanup could not read {UnreadableCount} chats, which keep all their entries. The next start reads them again.", result.Unreadable);
         }
         catch (OperationCanceledException)
         {

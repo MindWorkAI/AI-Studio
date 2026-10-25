@@ -1,6 +1,10 @@
+using System.Reflection;
+
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.ProvenanceStore;
 
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.Tools.Databases;
 
@@ -30,6 +34,17 @@ internal sealed class TemporaryProvenanceStore(string directory, string database
         await using var context = store.CreateContext();
         await ProvenanceStoreSchemaMigrator.MigrateAsync(context, CancellationToken.None);
         return store;
+    }
+
+    /// <summary>
+    /// Makes a provider of the database clients which hands out this store, and nothing else.
+    /// </summary>
+    public DatabaseClientProvider CreateClientProvider()
+    {
+        var databases = new DatabaseClientProvider(null!, NullLoggerFactory.Instance);
+        var clients = (Dictionary<DatabaseRole, DatabaseClient>)typeof(DatabaseClientProvider).GetField("clients", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(databases)!;
+        clients.Add(DatabaseRole.PROVENANCE_STORE, this.Client);
+        return databases;
     }
 
     /// <summary>

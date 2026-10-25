@@ -47,7 +47,11 @@ public sealed class NoProvenanceStoreClient(string name, string? unavailableReas
 
     public override Task<int> DeleteEntriesAsync(Guid chatId, IReadOnlyCollection<Guid> ids, CancellationToken token) => Task.FromResult(0);
 
-    public override Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<Guid>>([]);
+    public override Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token, DateTimeOffset? createdSince = null) => Task.FromResult<IReadOnlyList<Guid>>([]);
+
+    public override Task<DateTimeOffset?> GetLastCleanupAsync(CancellationToken token) => Task.FromResult<DateTimeOffset?>(null);
+
+    public override Task SetLastCleanupAsync(DateTimeOffset startedAt, CancellationToken token) => Task.CompletedTask;
 
     /// <inheritdoc />
     /// <remarks>

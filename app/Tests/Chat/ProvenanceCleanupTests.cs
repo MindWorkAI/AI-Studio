@@ -18,6 +18,8 @@ public sealed class ProvenanceCleanupTests
 {
     private static readonly CancellationToken TOKEN = CancellationToken.None;
 
+    private static readonly Func<Guid, Guid, Task<ChatThread?>> UNREADABLE = (_, _) => Task.FromResult<ChatThread?>(null);
+
     [Test]
     public void AChatRefersToItsPassagesItsAttachmentsAndItsDraft()
     {
@@ -45,14 +47,14 @@ public sealed class ProvenanceCleanupTests
         var ofDeletedChat = await store.Client.StoreAsync(deletedChatId, ProvenanceKind.WEB_PAGE, "of a deleted chat", null, TOKEN);
         var chat = ChatWith(referenced!.Value, attachmentId: null, keptChatId);
 
-        var (orphaned, unreferenced) = await ProvenanceCleanup.CleanUpAsync(store.Client, Locations(keptChatId), LoaderOf(chat), DateTimeOffset.UtcNow.AddMinutes(1), TOKEN);
+        var result = await CleanUpAsync(store, Locations(keptChatId), LoaderOf(chat), DateTimeOffset.UtcNow.AddMinutes(1));
         var entries = await store.Client.GetEntriesAsync([referenced.Value, ofRemovedMessage!.Value, ofDeletedChat!.Value], TOKEN);
 
         Assert.Multiple(() =>
         {
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { referenced.Value }));
-            Assert.That(orphaned, Is.EqualTo(1));
-            Assert.That(unreferenced, Is.EqualTo(1));
+            Assert.That(result.Orphaned, Is.EqualTo(1));
+            Assert.That(result.Unreferenced, Is.EqualTo(1));
         });
     }
 
@@ -66,7 +68,7 @@ public sealed class ProvenanceCleanupTests
         var previewed = await store.Client.StoreAsync(openChatId, ProvenanceKind.ATTACHMENT, "previewed, not yet in the chat file", null, TOKEN);
         var ofNewChat = await store.Client.StoreAsync(newChatId, ProvenanceKind.ATTACHMENT, "of a chat not stored yet", null, TOKEN);
 
-        await ProvenanceCleanup.CleanUpAsync(store.Client, Locations(openChatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, openChatId)), startedAt, TOKEN);
+        await CleanUpAsync(store, Locations(openChatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, openChatId)), startedAt);
         var entries = await store.Client.GetEntriesAsync([previewed!.Value, ofNewChat!.Value], TOKEN);
 
         Assert.That(entries.Keys, Is.EquivalentTo(new[] { previewed.Value, ofNewChat.Value }), "A chat in memory may refer to entries its file does not know yet.");
@@ -78,13 +80,13 @@ public sealed class ProvenanceCleanupTests
         await using var store = await TemporaryProvenanceStore.CreateAsync();
         var entry = await store.Client.StoreAsync(Guid.Empty, ProvenanceKind.WEB_PAGE, "of an assistant's conversation without an id", null, TOKEN);
 
-        var (orphaned, _) = await ProvenanceCleanup.CleanUpAsync(store.Client, Locations(Guid.NewGuid()), (_, _) => Task.FromResult<ChatThread?>(null), DateTimeOffset.UtcNow.AddMinutes(1), TOKEN);
+        var result = await CleanUpAsync(store, Locations(Guid.NewGuid()), UNREADABLE, DateTimeOffset.UtcNow.AddMinutes(1));
         var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
 
         Assert.Multiple(() =>
         {
             Assert.That(entries, Is.Empty, "No chat on the disk has no id, so nothing would ever remove such an entry.");
-            Assert.That(orphaned, Is.EqualTo(1));
+            Assert.That(result.Orphaned, Is.EqualTo(1));
         });
     }
 
@@ -95,10 +97,107 @@ public sealed class ProvenanceCleanupTests
         var chatId = Guid.NewGuid();
         var entry = await store.Client.StoreAsync(chatId, ProvenanceKind.MAIL, "a mail", null, TOKEN);
 
-        await ProvenanceCleanup.CleanUpAsync(store.Client, Locations(chatId), (_, _) => Task.FromResult<ChatThread?>(null), DateTimeOffset.UtcNow.AddMinutes(1), TOKEN);
+        var result = await CleanUpAsync(store, Locations(chatId), UNREADABLE, DateTimeOffset.UtcNow.AddMinutes(1));
         var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
 
-        Assert.That(entries.Keys, Is.EquivalentTo(new[] { entry.Value }), "Nothing tells what an unreadable chat refers to, e.g., one written by a newer version.");
+        Assert.Multiple(() =>
+        {
+            Assert.That(entries.Keys, Is.EquivalentTo(new[] { entry.Value }), "Nothing tells what an unreadable chat refers to, e.g., one written by a newer version.");
+            Assert.That(result.Unreadable, Is.EqualTo(1), "The next start has to read it again.");
+        });
+    }
+
+    [Test]
+    public async Task AChatWhichDidNotChangeSinceTheLastCleanupIsNotRead()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var chatId = Guid.NewGuid();
+        var entry = await store.Client.StoreAsync(chatId, ProvenanceKind.ATTACHMENT, "kept by the last cleanup", null, TOKEN);
+        var lastCleanup = DateTimeOffset.UtcNow.AddMinutes(1);
+        var reads = new List<Guid>();
+
+        var result = await CleanUpAsync(store, Locations(chatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, chatId), reads), lastCleanup.AddMinutes(1), lastCleanup, writtenAt: lastCleanup.AddHours(-1));
+        var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reads, Is.Empty, "Reading every chat at every start costs much on a small computer.");
+            Assert.That(result.Skipped, Is.EqualTo(1));
+            Assert.That(entries.Keys, Is.EquivalentTo(new[] { entry.Value }), "Skipping a chat never removes anything.");
+        });
+    }
+
+    [Test]
+    public async Task AChatWhichReceivedAnEntrySinceTheLastCleanupIsRead()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var lastCleanup = DateTimeOffset.UtcNow.AddMinutes(-1);
+        var chatId = Guid.NewGuid();
+        var previewed = await store.Client.StoreAsync(chatId, ProvenanceKind.ATTACHMENT, "previewed, but never sent", null, TOKEN);
+        var reads = new List<Guid>();
+
+        await CleanUpAsync(store, Locations(chatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, chatId), reads), DateTimeOffset.UtcNow.AddMinutes(1), lastCleanup, writtenAt: lastCleanup.AddHours(-1));
+        var entries = await store.Client.GetEntriesAsync([previewed!.Value], TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reads, Is.EquivalentTo(new[] { chatId }), "The last cleanup had to leave alone what was stored after it began.");
+            Assert.That(entries, Is.Empty);
+        });
+    }
+
+    [TestCase(60, TestName = "AChatWrittenSinceTheLastCleanupIsRead")]
+    [TestCase(-2, TestName = "AChatWrittenShortlyBeforeTheLastCleanupIsRead")]
+    public async Task AChatWrittenAroundTheLastCleanupIsRead(int secondsAfterTheLastCleanup)
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var chatId = Guid.NewGuid();
+        var ofRemovedMessage = await store.Client.StoreAsync(chatId, ProvenanceKind.DATA_SOURCE_PASSAGE, "of a message removed after the last cleanup", null, TOKEN);
+        var lastCleanup = DateTimeOffset.UtcNow.AddMinutes(1);
+        var reads = new List<Guid>();
+
+        // Shortly before counts as well: the time of a file may be coarse, e.g., two seconds on FAT.
+        await CleanUpAsync(store, Locations(chatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, chatId), reads), lastCleanup.AddMinutes(1), lastCleanup, writtenAt: lastCleanup.AddSeconds(secondsAfterTheLastCleanup));
+        var entries = await store.Client.GetEntriesAsync([ofRemovedMessage!.Value], TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reads, Is.EquivalentTo(new[] { chatId }));
+            Assert.That(entries, Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task AChatWhoseTimeOfWritingIsNotKnownIsRead()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var chatId = Guid.NewGuid();
+        await store.Client.StoreAsync(chatId, ProvenanceKind.MAIL, "a mail", null, TOKEN);
+        var lastCleanup = DateTimeOffset.UtcNow.AddMinutes(1);
+        var reads = new List<Guid>();
+
+        await CleanUpAsync(store, Locations(chatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, chatId), reads), lastCleanup.AddMinutes(1), lastCleanup, writtenAt: null);
+
+        Assert.That(reads, Is.EquivalentTo(new[] { chatId }), "Only a chat known to be unchanged may be skipped.");
+    }
+
+    [Test]
+    public async Task AChatWhichNoLongerExistsIsRemovedAfterEveryCleanup()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var entry = await store.Client.StoreAsync(Guid.NewGuid(), ProvenanceKind.WEB_PAGE, "of a chat deleted while the store was not available", null, TOKEN);
+        var lastCleanup = DateTimeOffset.UtcNow.AddMinutes(1);
+        var reads = new List<Guid>();
+
+        var result = await CleanUpAsync(store, Locations(), LoaderOf(ChatWith(passageId: null, attachmentId: null), reads), lastCleanup.AddMinutes(1), lastCleanup, writtenAt: lastCleanup.AddHours(-1));
+        var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(entries, Is.Empty, "Telling that a chat no longer exists costs no reading.");
+            Assert.That(result.Orphaned, Is.EqualTo(1));
+            Assert.That(reads, Is.Empty);
+        });
     }
 
     private static ChatThread ChatWith(Guid? passageId, Guid? attachmentId, Guid? chatId = null) => new()
@@ -131,5 +230,18 @@ public sealed class ProvenanceCleanupTests
 
     private static IReadOnlyDictionary<Guid, Guid> Locations(params Guid[] chatIds) => chatIds.ToDictionary(chatId => chatId, _ => Guid.Empty);
 
-    private static Func<Guid, Guid, Task<ChatThread?>> LoaderOf(ChatThread chat) => (_, chatId) => Task.FromResult<ChatThread?>(chatId == chat.ChatId ? chat : null);
+    /// <summary>
+    /// Reads the given chat, and notes every chat it was asked for.
+    /// </summary>
+    private static Func<Guid, Guid, Task<ChatThread?>> LoaderOf(ChatThread chat, List<Guid>? reads = null) => (_, chatId) =>
+    {
+        reads?.Add(chatId);
+        return Task.FromResult<ChatThread?>(chatId == chat.ChatId ? chat : null);
+    };
+
+    /// <summary>
+    /// Runs the cleanup on chats which were all written at the same moment.
+    /// </summary>
+    private static Task<ProvenanceCleanupResult> CleanUpAsync(TemporaryProvenanceStore store, IReadOnlyDictionary<Guid, Guid> chatLocations, Func<Guid, Guid, Task<ChatThread?>> loadChat, DateTimeOffset createdBefore, DateTimeOffset? lastCleanup = null, DateTimeOffset? writtenAt = null) =>
+        ProvenanceCleanup.CleanUpAsync(store.Client, chatLocations, loadChat, (_, _) => writtenAt, createdBefore, lastCleanup, TOKEN);
 }

@@ -280,6 +280,40 @@ public sealed class ProvenanceStoreTests
     }
 
     [Test]
+    public async Task ListingTheChatsSinceAMomentLeavesOutWhatCameBefore()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var chat = Guid.NewGuid();
+        await store.Client.StoreAsync(chat, ProvenanceKind.ATTACHMENT, "stored just now", null, TOKEN);
+
+        var sinceBefore = await store.Client.GetChatIdsAsync(TOKEN, DateTimeOffset.UtcNow.AddMinutes(-1));
+        var sinceAfter = await store.Client.GetChatIdsAsync(TOKEN, DateTimeOffset.UtcNow.AddMinutes(1));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sinceBefore, Is.EquivalentTo(new[] { chat }));
+            Assert.That(sinceAfter, Is.Empty, "The time is compared as stored text, which has to keep the order of time.");
+        });
+    }
+
+    [Test]
+    public async Task TheStartOfTheLastCleanupIsKept()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var startedAt = DateTimeOffset.UtcNow;
+
+        var beforeAnyCleanup = await store.Client.GetLastCleanupAsync(TOKEN);
+        await store.Client.SetLastCleanupAsync(startedAt, TOKEN);
+        var afterTheCleanup = await store.Client.GetLastCleanupAsync(TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(beforeAnyCleanup, Is.Null, "A store without a cleanup, e.g., one a restore brought back, needs every chat read.");
+            Assert.That(afterTheCleanup, Is.EqualTo(startedAt));
+        });
+    }
+
+    [Test]
     public async Task TheBackupCopyHoldsEveryEntry()
     {
         await using var store = await TemporaryProvenanceStore.CreateAsync();

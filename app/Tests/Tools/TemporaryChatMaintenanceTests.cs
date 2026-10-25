@@ -1,11 +1,8 @@
-using System.Reflection;
-
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tests.Tools.Databases;
 using AIStudio.Tools;
-using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.Services;
 
@@ -46,12 +43,8 @@ public sealed class TemporaryChatMaintenanceTests
         await WorkspaceBehaviour.ForceReloadWorkspaceTreeAsync();
 
         this.store = await TemporaryProvenanceStore.CreateAsync();
-        var databases = new DatabaseClientProvider(null!, NullLoggerFactory.Instance);
-        var clients = (Dictionary<DatabaseRole, DatabaseClient>)typeof(DatabaseClientProvider).GetField("clients", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(databases)!;
-        clients.Add(DatabaseRole.PROVENANCE_STORE, this.store.Client);
-
         this.previousServiceProvider = Program.SERVICE_PROVIDER;
-        this.serviceProvider = new ServiceCollection().AddSingleton(databases).BuildServiceProvider();
+        this.serviceProvider = new ServiceCollection().AddSingleton(this.store.CreateClientProvider()).BuildServiceProvider();
         Program.SERVICE_PROVIDER = this.serviceProvider;
     }
 

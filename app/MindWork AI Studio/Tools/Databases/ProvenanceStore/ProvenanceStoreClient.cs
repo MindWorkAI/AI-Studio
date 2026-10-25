@@ -87,8 +87,23 @@ public abstract class ProvenanceStoreClient(string name, string path) : Database
     /// Lists the chats this store holds entries of.
     /// </summary>
     /// <param name="token">The cancellation token.</param>
+    /// <param name="createdSince">Lists only the chats with an entry stored at or after this moment, or all of them when null.</param>
     /// <returns>The ids of the chats, Guid.Empty included when entries were stored for a chat without an id.</returns>
-    public abstract Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token);
+    public abstract Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token, DateTimeOffset? createdSince = null);
+
+    /// <summary>
+    /// Reads when the last complete cleanup of this store began, see ProvenanceCleanup.
+    /// </summary>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The moment, or null when no cleanup was noted, e.g., for a store a restore brought back.</returns>
+    public abstract Task<DateTimeOffset?> GetLastCleanupAsync(CancellationToken token);
+
+    /// <summary>
+    /// Notes when a complete cleanup of this store began, see ProvenanceCleanup.
+    /// </summary>
+    /// <param name="startedAt">The moment the cleanup began.</param>
+    /// <param name="token">The cancellation token.</param>
+    public abstract Task SetLastCleanupAsync(DateTimeOffset startedAt, CancellationToken token);
 
     /// <summary>
     /// Writes a copy of this store into a directory, for a backup.

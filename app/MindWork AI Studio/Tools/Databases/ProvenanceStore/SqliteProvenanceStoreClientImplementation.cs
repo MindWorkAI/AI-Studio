@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -30,12 +31,18 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
     public const string DATABASE_FILENAME = "provenance.sqlite3";
 
     /// <summary>
+    /// The file which notes when the last complete cleanup began, see GetLastCleanupAsync.
+    /// </summary>
+    private const string LAST_CLEANUP_FILENAME = "last-cleanup.txt";
+
+    /// <summary>
     /// Writes the content around a passage the way it reads: the default encoder would turn every
     /// character outside ASCII into an escape, cf. ToolExecutionResult.MODEL_CONTENT_OPTIONS.
     /// </summary>
     private static readonly JsonSerializerOptions JSON_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     private readonly string databasePath = databasePath;
+    private readonly string lastCleanupPath = Path.Join(basePath, LAST_CLEANUP_FILENAME);
     private readonly DbContextOptions<ProvenanceStoreDbContext> dbContextOptions = ProvenanceStoreDbContext.CreateOptions(databasePath);
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SqliteProvenanceStoreClientImplementation).Namespace, nameof(SqliteProvenanceStoreClientImplementation));
@@ -234,10 +241,11 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         ? entries.Where(entry => entry.CreatedAtUtc < moment)
         : entries;
 
-    public override Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token) => Task.Run<IReadOnlyList<Guid>>(async () =>
+    public override Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token, DateTimeOffset? createdSince = null) => Task.Run<IReadOnlyList<Guid>>(async () =>
     {
         await using var context = this.CreateContext();
-        var chatKeys = await context.Entries.Select(entry => entry.ChatId).Distinct().ToListAsync(token);
+        var entries = createdSince is { } moment ? context.Entries.Where(entry => entry.CreatedAtUtc >= moment) : context.Entries;
+        var chatKeys = await entries.Select(entry => entry.ChatId).Distinct().ToListAsync(token);
 
         // Guid.Empty included: entries stored for a chat without an id belong to no chat on the disk, so the cleanup takes them:
         return chatKeys
@@ -245,6 +253,31 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
             .OfType<Guid>()
             .ToList();
     }, token);
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Kept in a file next to the database rather than in it: the copy of the store which a backup
+    /// holds comes without it, so the first cleanup of a store brought back from a backup reads every chat.
+    /// </remarks>
+    public override async Task<DateTimeOffset?> GetLastCleanupAsync(CancellationToken token)
+    {
+        if (!File.Exists(this.lastCleanupPath))
+            return null;
+
+        // A file which cannot be read costs one cleanup which reads every chat, and then it is written anew:
+        try
+        {
+            var text = await File.ReadAllTextAsync(this.lastCleanupPath, token);
+            return DateTimeOffset.TryParse(text.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var moment) ? moment : null;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            this.Logger?.LogWarning(exception, "Failed to read when the provenance store was cleaned up last.");
+            return null;
+        }
+    }
+
+    public override Task SetLastCleanupAsync(DateTimeOffset startedAt, CancellationToken token) => File.WriteAllTextAsync(this.lastCleanupPath, IndexStoreDateTimeOffset.ToUtcText(startedAt), token);
 
     /// <inheritdoc />
     /// <remarks>
