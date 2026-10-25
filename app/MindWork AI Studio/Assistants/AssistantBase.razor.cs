@@ -536,10 +536,27 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             InitialRemoteWait = true,
         };
 
+        //
+        // The stream calls this for every chunk and waits for it. A checkpoint captures the whole
+        // state of the assistant and makes the main layout render as well, so both happen only now
+        // and then. When the stream is done, both happen in any case:
+        //
+        var lastRendering = DateTimeOffset.MinValue;
+        var lastCheckpoint = DateTimeOffset.MinValue;
         aiText.StreamingEvent = async () =>
         {
-            await this.CheckpointAssistantSession();
-            await this.RefreshAssistantUIAsync();
+            var now = DateTimeOffset.Now;
+            if (now - lastCheckpoint >= STREAMING_CHECKPOINT_MIN_TIME)
+            {
+                lastCheckpoint = now;
+                await this.CheckpointAssistantSession();
+            }
+
+            if (now - lastRendering >= STREAMING_RENDER_MIN_TIME)
+            {
+                lastRendering = now;
+                await this.RefreshAssistantUIAsync();
+            }
         };
 
         aiText.StreamingDone = async () =>
