@@ -80,8 +80,9 @@ Rules which are easy to break:
   zero names none yet. The keyword search joins on it (`SqliteIndexStoreClientImplementation.MatchChunks`), and
   the vector search leaves out `IndexStoreClient.GetHiddenChunksAsync`, which the runtime matches against the
   `generation` of every point. A new way to search the index, or to list chunks for a search, follows the same
-  rule, or it finds failed attempts and documents which are not complete. Remove a point from the vector store
-  before its chunk from the index store: a point the index store no longer knows cannot be hidden.
+  rule, or it finds failed attempts and documents which are not complete. Write a chunk into the index store
+  before its point into the vector store, and remove the point before the chunk: a point the index store does
+  not know cannot be hidden.
 - **The service decides when, the indexer decides how.** Whether changes are tracked at all depends on the
   automatic refresh setting and the startup hash check, and only the embedding service decides that.
 - **A pause stores the source hash only when a partial index may be searched.** A stored source hash tells the

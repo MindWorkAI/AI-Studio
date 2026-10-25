@@ -15,16 +15,22 @@ internal sealed class MemoryVectorStore() : VectorStoreClient("Test vectors in m
     /// </summary>
     public List<IReadOnlyList<string>> RetrieveRequests { get; } = [];
 
+    /// <summary>
+    /// Called with the points of every InsertEmbedding before they are kept, to look at the other store at that moment.
+    /// </summary>
+    public Func<IReadOnlyList<VectorStoragePoint>, Task>? BeforeInsert { get; set; }
+
     public override Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) => Task.FromResult(new VectorStoreEnsureResult(this.Points.Count == 0));
 
     public override Task<bool> VectorStoreExists(string storeName, CancellationToken token) => Task.FromResult(true);
 
-    public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token)
+    public override async Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token)
     {
+        if (this.BeforeInsert is not null)
+            await this.BeforeInsert(points);
+
         foreach (var point in points)
             this.Points[point.PointId] = point;
-
-        return Task.CompletedTask;
     }
 
     public override Task<IReadOnlyList<StoredVector>> RetrieveVectorsAsync(string storeName, IReadOnlyList<string> pointIds, CancellationToken token)

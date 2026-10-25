@@ -360,6 +360,23 @@ public sealed class VectorReuseTests
         });
     }
 
+    [Test]
+    public async Task TheIndexStoreKnowsEveryChunkBeforeItsPointIsWritten()
+    {
+        await using var run = await IndexRun.CreateAsync();
+        await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
+        var unknownPoints = new List<string>();
+        run.Vectors.BeforeInsert = async points =>
+        {
+            var knownChunks = (await run.StoredChunksAsync()).Select(chunk => chunk.ChunkId).ToHashSet(StringComparer.Ordinal);
+            unknownPoints.AddRange(points.Select(point => point.PointId).Where(pointId => !knownChunks.Contains(pointId)));
+        };
+
+        await run.IndexAsync("fingerprint-2", "Chapter one.", "Chapter two, revised.");
+
+        Assert.That(unknownPoints, Is.Empty, "A point the index store does not know cannot be hidden: had the app stopped right after writing it, the vector search would find it next to the stored version.");
+    }
+
     /// <summary>
     /// One data source with one document, indexed through IndexedRunContext and recorded through
     /// DocumentRunProgress as the indexers do it, into a real index store and a vector store in memory.

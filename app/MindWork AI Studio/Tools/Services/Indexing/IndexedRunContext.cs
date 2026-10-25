@@ -595,9 +595,6 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
                 embeddedAtUtc,
                 attempt.Generation)).ToList();
 
-            await vectorStore.InsertEmbedding(this.CollectionName, points, token);
-            token.ThrowIfCancellationRequested();
-
             //
             // The vector store keeps the pages only, cf. VectorStoragePoint. Everything else about
             // where a chunk is goes into the index store alone:
@@ -622,7 +619,15 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
                     draft.Chunk.AttachmentPosition))
                 .ToList();
 
+            //
+            // The index store first: as long as it knows the chunks of the new generation, no search
+            // finds them, cf. IndexStoreClient.GetHiddenChunksAsync. A point it did not know yet, e.g.,
+            // after the app stopped right here, would be found next to the stored version:
+            //
             await indexStore.UpsertChunksAsync(dataSource.Id, chunks, token);
+            token.ThrowIfCancellationRequested();
+
+            await vectorStore.InsertEmbedding(this.CollectionName, points, token);
             await this.RecordStoredChunksAsync(chunksToStore.Count, token);
 
             logger.LogDebug(
