@@ -14,6 +14,11 @@ internal sealed class TemporaryProvenanceStore(string directory, string database
 {
     public SqliteProvenanceStoreClientImplementation Client { get; } = new("SQLite", databasePath, directory, string.Empty);
 
+    /// <summary>
+    /// The file of the database, to check what it holds on the disk.
+    /// </summary>
+    public string DatabasePath => databasePath;
+
     public static async Task<TemporaryProvenanceStore> CreateAsync()
     {
         SQLitePCL.Batteries_V2.Init();

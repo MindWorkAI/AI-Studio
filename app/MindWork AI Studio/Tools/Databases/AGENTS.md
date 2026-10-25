@@ -19,7 +19,9 @@ AI Studio keeps three databases, addressed through `DatabaseRole`. Local RAG run
   reached through EF Core with migrations of its own. It holds what chats received besides their
   messages, exactly as the AI received it: attached files, tool results, and passages of data
   sources. A chat keeps only the ids. Never put this into the index store: the index can be
-  rebuilt from the files and is treated that way, while what a chat received cannot.
+  rebuilt from the files and is treated that way, while what a chat received cannot. Its
+  connections run with `secure_delete`, see `SecureDeleteInterceptor`, so that the text of a
+  deleted chat does not stay readable in the file; a new way to connect to it keeps that.
 
 When working on these, keep in mind:
 

@@ -7,8 +7,11 @@ namespace AIStudio.Tools.Databases.ProvenanceStore;
 
 internal sealed class ProvenanceStoreDbContext(DbContextOptions<ProvenanceStoreDbContext> options) : DbContext(options)
 {
+    private static readonly SecureDeleteInterceptor SECURE_DELETE = new();
+
     public static DbContextOptions<ProvenanceStoreDbContext> CreateOptions(string databasePath) => new DbContextOptionsBuilder<ProvenanceStoreDbContext>()
         .UseSqlite(BuildConnectionString(databasePath))
+        .AddInterceptors(SECURE_DELETE)
         .Options;
 
     public DbSet<ProvenanceEntity> Entries => this.Set<ProvenanceEntity>();

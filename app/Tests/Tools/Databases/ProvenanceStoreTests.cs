@@ -176,6 +176,26 @@ public sealed class ProvenanceStoreTests
     }
 
     [Test]
+    public async Task ADeletedTextLeavesNothingInTheFile()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var chat = Guid.NewGuid();
+        const string MARKER = "confidential-minutes-of-the-board-7f3a";
+        await store.Client.StoreAsync(chat, ProvenanceKind.ATTACHMENT, $"{MARKER} The board met on Monday.", null, TOKEN);
+
+        await store.Client.DeleteChatsAsync([chat], TOKEN);
+
+        // Moves everything from the write-ahead log into the file and empties the log, so the file is all there is to read:
+        await using (var context = store.CreateContext())
+            await context.Database.ExecuteSqlRawAsync("PRAGMA wal_checkpoint(TRUNCATE);", TOKEN);
+
+        SqliteConnection.ClearAllPools();
+        var fileContent = System.Text.Encoding.UTF8.GetString(await File.ReadAllBytesAsync(store.DatabasePath, TOKEN));
+
+        Assert.That(fileContent.Contains(MARKER, StringComparison.Ordinal), Is.False, "Deleting a chat has to remove its text from the file, not only mark its pages as free.");
+    }
+
+    [Test]
     public async Task AChatWithoutAnIdIsListedToo()
     {
         await using var store = await TemporaryProvenanceStore.CreateAsync();
