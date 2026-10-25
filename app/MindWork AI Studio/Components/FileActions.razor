@@ -17,7 +17,7 @@
 
         @if (this.ShowOpen)
         {
-            <MudTooltip Text="@T("Open this page in your browser")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
+            <MudTooltip Text="@T("Open this web page in your browser")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
                 <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" Href="@this.Path" Target="_blank"/>
             </MudTooltip>
         }
@@ -37,7 +37,7 @@
             @if (this.WarnIfMissing && (this.ShowFileManager || this.ShowOpen))
             {
                 @* Not necessarily gone: the server of an ERI data source may name a file of its own, which was never on this computer. *@
-                <MudTooltip Text="@string.Format(T("AI Studio cannot find this file on your computer: {0}. It was moved, renamed, or deleted, or it lies on another computer, such as the server of a data source."), this.Path)" Placement="@this.TooltipPlacement">
+                <MudTooltip Text="@string.Format(T("AI Studio cannot find the file {0} on this computer. It may have been moved, renamed, or deleted, or it is on another computer, such as the server of a data source."), this.Path)" Placement="@this.TooltipPlacement">
                     <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Color="Color.Warning" Size="Size.Small" Class="file-action-warning"/>
                 </MudTooltip>
             }

@@ -411,8 +411,8 @@ public sealed class ProvenanceStoreTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(lines["Stored contents in all chats"], Is.EqualTo("4"));
-            Assert.That(lines["Chats with stored contents"], Is.EqualTo("2"));
+            Assert.That(lines["Stored items across all chats"], Is.EqualTo("4"));
+            Assert.That(lines["Chats with stored items"], Is.EqualTo("2"));
             Assert.That(lines["Attached files"], Is.EqualTo("1"));
             Assert.That(lines["Web pages"], Is.EqualTo("2"));
             Assert.That(lines["Mails"], Is.EqualTo("1"));
@@ -431,8 +431,8 @@ public sealed class ProvenanceStoreTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(lines["Stored contents in all chats"], Is.EqualTo("0"));
-            Assert.That(lines["Chats with stored contents"], Is.EqualTo("0"));
+            Assert.That(lines["Stored items across all chats"], Is.EqualTo("0"));
+            Assert.That(lines["Chats with stored items"], Is.EqualTo("0"));
             Assert.That(lines, Does.Not.ContainKey("Attached files"));
         });
     }

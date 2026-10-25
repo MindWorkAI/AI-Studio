@@ -129,7 +129,7 @@ public sealed class ContentText : IContent
         }
 
         if (Interlocked.Exchange(ref UNSTORED_CONTENT_REPORTED, 1) is 0)
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Storage, TB("AI Studio could not store what the AI received apart from your chat. It stays in the chat itself, so you can still read it.")));
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Storage, TB("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
     }
 
     /// <summary>

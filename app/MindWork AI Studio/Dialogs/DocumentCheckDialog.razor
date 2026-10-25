@@ -46,7 +46,7 @@
         else if (this.IsFileMissing && !this.showsStoredText)
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
-                @T("The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.")
+                @T("The file could not be found. It may have been moved, renamed, or deleted, or it is otherwise inaccessible.")
             </MudAlert>
         }
         else if (this.loadFailureMessage is not null)
@@ -61,7 +61,7 @@
             {
                 @* The text the AI received outlives the file, so the file being gone is worth a note, not an error: *@
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="my-2">
-                    @T("The file is no longer at its place. Below is the text the AI received from it when you sent it.")
+                    @T("The file is no longer in its original location. Below is the text the AI received from it when you sent it.")
                 </MudAlert>
             }
 

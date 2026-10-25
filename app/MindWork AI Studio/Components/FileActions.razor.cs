@@ -98,8 +98,8 @@ public partial class FileActions : MSGComponentBase
     /// <param name="pageNumber">The page the file opens at, or null when it opens at its beginning.</param>
     /// <returns>The tooltip.</returns>
     internal static string GetOpenTooltip(int? pageNumber) => pageNumber is { } page
-        ? string.Format(TB("Opens the file at page {0}"), page)
-        : TB("Opens the file in the program your system uses for it");
+        ? string.Format(TB("Open the file at page {0}"), page)
+        : TB("Open the file in the program your system uses for it");
 
     #region Overrides of ComponentBase
 

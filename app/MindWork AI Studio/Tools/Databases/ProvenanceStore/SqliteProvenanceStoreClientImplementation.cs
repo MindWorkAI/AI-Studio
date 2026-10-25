@@ -111,8 +111,8 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         yield return (TB("Storage size"), this.GetStorageSize());
 
         // The total counts an entry of a kind this version does not know as well, e.g., one written by a newer version:
-        yield return (TB("Stored contents in all chats"), countsByKind?.Values.Sum().CompactCount() ?? TB("unknown"));
-        yield return (TB("Chats with stored contents"), chatCount?.CompactCount() ?? TB("unknown"));
+        yield return (TB("Stored items across all chats"), countsByKind?.Values.Sum().CompactCount() ?? TB("unknown"));
+        yield return (TB("Chats with stored items"), chatCount?.CompactCount() ?? TB("unknown"));
 
         // One line per kind which any chat received, in the order of the kinds. A kind no chat received would only say zero:
         if (countsByKind is null)

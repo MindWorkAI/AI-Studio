@@ -13,7 +13,7 @@ else
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
-                <MudText>@T("AI Studio cannot read the text the AI received from this passage at the moment, e.g., while AI Studio is still starting.")</MudText>
+                <MudText>@T("At the moment, AI Studio cannot read the text of this passage that the AI received, e.g., while AI Studio is still starting.")</MudText>
                 <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReadTextAgainAsync">
                     @T("Try again")
                 </MudButton>
@@ -23,7 +23,7 @@ else
     else if (this.isTextMissing)
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-2">
-            @T("AI Studio no longer has the text the AI received from this passage. Only where it was found is still known.")
+            @T("AI Studio no longer has the text of this passage that the AI received. Only where it was found is still known.")
         </MudAlert>
     }
     else if (this.isReadingText)
