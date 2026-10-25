@@ -581,7 +581,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             templateSlides = await PromptTemplateSlidesAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath, chosenTemplateSlideUses);
         }
 
-        var time = this.AddUserRequest(
+        var request =
         $"""
             # PRESENTATION_TITLE
             ```
@@ -598,9 +598,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
              {layouts}
              {PromptPictureList(imageAttachments)}
              {templateSlides}
-         """,
-        hideContentFromUser: true,
-        imageAttachments);
+         """;
+
+        var time = this.AddUserRequest(request, hideContentFromUser: true, imageAttachments);
 
         var answer = await this.AddAIResponseAsync(time, hideContentFromUser: true);
 
@@ -609,7 +609,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             return;
 
         var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, chosenTemplateSlideUses, chosenLayouts);
-        if (deck is null || issues.Count > 0)
+        var neededRepairRound = deck is null || issues.Count > 0;
+        if (neededRepairRound)
         {
             //
             // One repair round in the same chat, so the model sees its own answer next to what is
@@ -626,6 +627,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                 issues = repairedIssues;
             }
         }
+
+        this.Logger.LogInformation("The slide assistant asked with {RequestCharacters} characters and {PictureCount} pictures and got {SlideCount} slides, {RepairRound}.", request.Length, imageAttachments.Count, deck?.Slides.Count ?? 0, neededRepairRound ? "after a repair round" : "without a repair round");
 
         //
         // Slides on layouts the template does not have, or on template slides the user did not
