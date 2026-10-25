@@ -54,7 +54,7 @@ public class ContentBlock
             text.SourcePassages = [];
 
         if (clone.Content is not null)
-            clone.Content.FileAttachments = clone.Content.FileAttachments.Select(attachment => attachment with { ProvenanceId = null }).ToList();
+            clone.Content.FileAttachments = clone.Content.FileAttachments.Select(attachment => attachment.WithoutStoredText()).ToList();
 
         return clone;
     }

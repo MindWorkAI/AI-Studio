@@ -1493,7 +1493,7 @@ public partial class ChatComponent : MSGComponentBase
             return attachment;
 
         return FileVersion.Of(attachment.FilePath) == previewed.Version
-            ? attachment with { ProvenanceId = previewed.ProvenanceId }
+            ? attachment with { ProvenanceId = previewed.ProvenanceId, Version = previewed.Version }
             : attachment;
     }
 

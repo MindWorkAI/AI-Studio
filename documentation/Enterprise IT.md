@@ -823,6 +823,14 @@ The workspace goes by its name, because a workspace has an ID of its own on ever
 
 On the chat page, the chat moves into the workspace with its first message, and only then is the workspace created when it does not exist yet. Opening the chat page or trying out a template creates no workspace, so one that users deleted stays gone until they actually start a chat with the template. An assistant chat launcher creates the workspace right away, because it opens its chat at once.
 
+## Attached files which change later
+
+A chat reads a document attached to a message once, when the message is sent for the first time, and keeps its text. Every later message of the chat sends the AI that same text, also when the file changed or is gone by now, and users can look up what the AI received. Users who want the AI to work with the current state of their files switch on reading changed files again in the chat options. The AI then receives the new content with the next message, and viewing the attachment shows what was sent last.
+
+| Setting | Effect |
+|---|---|
+| `DataChat.ReadChangedAttachmentsAgain` | `true` reads an attached file again when it changed since it was sent. A file which is gone keeps the text it was sent with. Starts as `false`. |
+
 ## Where a chat may send data after searching data sources
 
 The AI searches the data sources of a chat, local files and folders as well as external data sources (ERI servers), either itself through Semantic Search or with every message. Each data source decides where a chat may still send data once the AI found something in it, with the same levels as a mailbox, see [Where a chat may send data](#where-a-chat-may-send-data). New data sources start with `ONLY_LINKS_FROM_CHAT`, and so do the ones users added before the setting existed. An external data source whose security policy is `SELF_HOSTED` always gets `ONLY_CONFIGURED_SERVICES`, since its data must not leave your infrastructure through a tool either. Your Confluence wiki and the hosts in `read_web_page.allowedPrivateHosts` stay readable on that level, so the links of such a data source into your intranet still work, while a link to a public page does not.

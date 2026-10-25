@@ -540,9 +540,10 @@ public sealed record ChatThread
     /// Nothing here may stop the request. A document which is not stored, e.g., since the store is not
     /// available, is read when the message is built, as every request did before.
     /// </remarks>
-    public async Task StoreAttachedDocumentsAsync()
+    /// <param name="readChangedAgain">Whether documents whose files changed since they were stored are read again, see DataChat.ReadChangedAttachmentsAgain.</param>
+    public async Task StoreAttachedDocumentsAsync(bool readChangedAgain)
     {
-        var messages = this.Blocks.Select(block => block.Content).OfType<ContentText>().Where(text => text.HasDocumentsToStore()).ToList();
+        var messages = this.Blocks.Select(block => block.Content).OfType<ContentText>().Where(text => text.HasDocumentsToStore(readChangedAgain)).ToList();
         if (messages.Count is 0)
             return;
 
@@ -555,7 +556,7 @@ public sealed record ChatThread
             // One report for everything filtered out of the documents, as for the request itself:
             await using var reportingScope = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>().BeginAction();
             foreach (var message in messages)
-                await message.StoreAttachedDocumentsAsync(store, this.ChatId, Program.RUST_SERVICE, reportingScope);
+                await message.StoreAttachedDocumentsAsync(store, this.ChatId, Program.RUST_SERVICE, reportingScope, readChangedAgain);
         }
         catch (Exception exception)
         {

@@ -29,5 +29,6 @@ public record FileAttachmentImage(string FileName, string FilePath, long FileSiz
         SourceType = this.SourceType,
         Source = this.SourceType is ContentImageSource.LOCAL_PATH ? filePath : this.Source,
         ProvenanceId = this.ProvenanceId,
+        Version = this.Version,
     };
 }

@@ -77,7 +77,7 @@ public sealed class AttachmentProvenanceTests
     {
         var message = this.MessageWithDocument();
 
-        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null);
+        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
         var firstRequest = await this.PrepareAsync(message);
         var secondRequest = await this.PrepareAsync(message);
 
@@ -94,9 +94,10 @@ public sealed class AttachmentProvenanceTests
     public async Task AChangedFileKeepsTheTextItWasFirstSentWith()
     {
         var message = this.MessageWithDocument();
-        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null);
+        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
 
         await File.WriteAllTextAsync(this.documentPath, "The board never met.");
+        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
         var prepared = await this.PrepareAsync(message);
 
         Assert.Multiple(() =>
@@ -107,10 +108,65 @@ public sealed class AttachmentProvenanceTests
     }
 
     [Test]
+    public async Task WhenChosenAChangedFileIsReadAgain()
+    {
+        var message = this.MessageWithDocument();
+        var chatId = Guid.NewGuid();
+        await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: true);
+        var firstId = message.FileAttachments.Single().ProvenanceId;
+
+        await File.WriteAllTextAsync(this.documentPath, "The board met on Monday and on Tuesday.");
+        await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: true);
+        var prepared = await this.PrepareAsync(message);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(prepared, Does.Contain("and on Tuesday"), "The user chose that the AI works with the files as they are now.");
+            Assert.That(message.FileAttachments.Single().ProvenanceId, Is.Not.EqualTo(firstId), "The text sent before belongs to what the AI received then.");
+            Assert.That(message.FileAttachments.Single().Version, Is.EqualTo(FileVersion.Of(this.documentPath)));
+            Assert.That(this.runtime.ReadFiles, Has.Count.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public async Task WhenChosenAnUnchangedFileIsNotReadAgain()
+    {
+        var message = this.MessageWithDocument();
+        var chatId = Guid.NewGuid();
+        await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: true);
+        var firstId = message.FileAttachments.Single().ProvenanceId;
+
+        await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(message.HasDocumentsToStore(readChangedAgain: true), Is.False);
+            Assert.That(message.FileAttachments.Single().ProvenanceId, Is.EqualTo(firstId));
+            Assert.That(this.runtime.ReadFiles, Has.Count.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public async Task WhenChosenADeletedFileIsStillSent()
+    {
+        var message = this.MessageWithDocument();
+        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: true);
+
+        File.Delete(this.documentPath);
+        var prepared = await this.PrepareAsync(message);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(message.HasDocumentsToStore(readChangedAgain: true), Is.False, "A file which is gone did not change: its stored text is all there is.");
+            Assert.That(prepared, Does.Contain("The board met on Monday."));
+        });
+    }
+
+    [Test]
     public async Task ADeletedFileIsStillSent()
     {
         var message = this.MessageWithDocument();
-        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null);
+        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
 
         File.Delete(this.documentPath);
         var prepared = await this.PrepareAsync(message);
@@ -124,7 +180,7 @@ public sealed class AttachmentProvenanceTests
         await File.WriteAllTextAsync(this.documentPath, $"The board met on Monday. {SUSPICIOUS_PASSAGE}");
         var message = this.MessageWithDocument();
 
-        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null);
+        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
         var provenanceId = message.FileAttachments.Single().ProvenanceId!.Value;
         var entries = await this.store.Client.GetEntriesAsync([provenanceId], CancellationToken.None);
 
@@ -142,14 +198,14 @@ public sealed class AttachmentProvenanceTests
         var message = this.MessageWithDocument();
         var chatId = Guid.NewGuid();
 
-        await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null);
+        await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: false);
         var firstId = message.FileAttachments.Single().ProvenanceId;
-        await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null);
+        await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: false);
 
         await using var context = this.store.CreateContext();
         Assert.Multiple(() =>
         {
-            Assert.That(message.HasDocumentsToStore(), Is.False);
+            Assert.That(message.HasDocumentsToStore(readChangedAgain: false), Is.False);
             Assert.That(message.FileAttachments.Single().ProvenanceId, Is.EqualTo(firstId));
             Assert.That(context.Entries.Count(), Is.EqualTo(1));
             Assert.That(this.runtime.ReadFiles, Has.Count.EqualTo(1));
@@ -161,7 +217,7 @@ public sealed class AttachmentProvenanceTests
     {
         var message = this.MessageWithDocument();
 
-        await message.StoreAttachedDocumentsAsync(new NoProvenanceStoreClient("SQLite", "not available"), Guid.NewGuid(), this.rustService, null);
+        await message.StoreAttachedDocumentsAsync(new NoProvenanceStoreClient("SQLite", "not available"), Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
         var prepared = await this.PrepareAsync(message);
 
         Assert.Multiple(() =>
@@ -192,12 +248,12 @@ public sealed class AttachmentProvenanceTests
         await File.WriteAllBytesAsync(imagePath, [0x89, 0x50, 0x4E, 0x47]);
         var message = new ContentText { Text = "What does the chart show?", FileAttachments = [FileAttachment.FromPath(imagePath)] };
 
-        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null);
+        await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
         var chatsWithEntries = await this.store.Client.GetChatIdsAsync(CancellationToken.None);
 
         Assert.Multiple(() =>
         {
-            Assert.That(message.HasDocumentsToStore(), Is.False, "An image goes to the AI as an image, not as a text to keep.");
+            Assert.That(message.HasDocumentsToStore(readChangedAgain: false), Is.False, "An image goes to the AI as an image, not as a text to keep.");
             Assert.That(message.FileAttachments.Single().ProvenanceId, Is.Null);
             Assert.That(chatsWithEntries, Is.Empty);
         });
@@ -206,7 +262,7 @@ public sealed class AttachmentProvenanceTests
     [Test]
     public void TheEntryStaysWithTheAttachment()
     {
-        var attachment = FileAttachment.FromPath(this.documentPath) with { ProvenanceId = Guid.NewGuid() };
+        var attachment = FileAttachment.FromPath(this.documentPath) with { ProvenanceId = Guid.NewGuid(), Version = FileVersion.Of(this.documentPath) };
         var transcript = new ManagedTranscriptAttachment("meeting.md", this.documentPath, 24, "meeting.mp4", false) { ProvenanceId = Guid.NewGuid() };
 
         var json = JsonSerializer.Serialize(new ContentText { FileAttachments = [attachment, FileAttachment.FromPath(this.documentPath)] }, WorkspaceBehaviour.JSON_OPTIONS);
@@ -217,6 +273,10 @@ public sealed class AttachmentProvenanceTests
         Assert.Multiple(() =>
         {
             Assert.That(attachment.Normalize().ProvenanceId, Is.EqualTo(attachment.ProvenanceId), "Every request normalizes its attachments first.");
+            Assert.That(attachment.Normalize().Version, Is.EqualTo(attachment.Version), "Otherwise, a chat which reads changed files again would read every file again.");
+            Assert.That(attachment.WithFilePath(Path.Combine(this.directoryPath, "moved.txt")).Version, Is.EqualTo(attachment.Version));
+            Assert.That(loaded.FileAttachments[0].Version, Is.EqualTo(attachment.Version));
+            Assert.That(attachment.WithoutStoredText(), Is.EqualTo(FileAttachment.FromPath(this.documentPath)), "A place apart from the chat reads the file anew.");
             Assert.That(attachment.WithFilePath(Path.Combine(this.directoryPath, "moved.txt")).ProvenanceId, Is.EqualTo(attachment.ProvenanceId), "A chat which moved keeps what its documents were sent with.");
             Assert.That(transcript.WithFilePath(Path.Combine(this.directoryPath, "moved.md")).ProvenanceId, Is.EqualTo(transcript.ProvenanceId));
             Assert.That(loaded.FileAttachments[0].ProvenanceId, Is.EqualTo(attachment.ProvenanceId));

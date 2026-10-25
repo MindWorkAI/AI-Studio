@@ -212,7 +212,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
         // Without the entries of their texts: every chat started from the template reads its files anew, cf. FileAttachment.ProvenanceId.
-        FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize() with { ProvenanceId = null }).ToList(),
+        FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize().WithoutStoredText()).ToList(),
         AllowProfileUsage = this.AllowProfileUsage,
         ToolIds = this.preselectTools ? new HashSet<string>(this.selectedToolIds, StringComparer.Ordinal) : null,
         DataSourceOptions = this.preselectDataSources ? this.templateDataSourceOptions.CreateCopy() : null,

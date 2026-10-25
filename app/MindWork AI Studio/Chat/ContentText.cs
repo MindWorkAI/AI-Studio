@@ -568,7 +568,14 @@ public sealed class ContentText : IContent
     /// <summary>
     /// Whether this message holds attached documents which were never stored, see StoreAttachedDocumentsAsync.
     /// </summary>
-    internal bool HasDocumentsToStore() => this.FileAttachments.Any(attachment => attachment is { ProvenanceId: null, Type: FileAttachmentType.DOCUMENT });
+    /// <param name="readChangedAgain">Whether documents whose files changed since they were stored count as well, see DataChat.ReadChangedAttachmentsAgain.</param>
+    internal bool HasDocumentsToStore(bool readChangedAgain) => this.FileAttachments.Any(attachment => IsToStore(attachment, readChangedAgain));
+
+    /// <summary>
+    /// Whether an attachment is a document to read and store: one which was never stored, or, when
+    /// the user chose so, one whose file changed since.
+    /// </summary>
+    private static bool IsToStore(FileAttachment attachment, bool readChangedAgain) => attachment.Type is FileAttachmentType.DOCUMENT && (attachment.ProvenanceId is null || readChangedAgain && attachment.ChangedSinceStored());
 
     /// <summary>
     /// Stores the attached documents of this message which were never sent, reading each one from the disk once.
@@ -583,13 +590,14 @@ public sealed class ContentText : IContent
     /// <param name="chatId">The chat of this message.</param>
     /// <param name="rustService">The runtime, which reads the documents.</param>
     /// <param name="reportingScope">The request the documents are read for, which tells the user once about everything filtered out of them.</param>
-    internal async Task StoreAttachedDocumentsAsync(ProvenanceStoreClient store, Guid chatId, RustService rustService, PromptInjectionReportingScope? reportingScope)
+    /// <param name="readChangedAgain">Whether documents whose files changed since they were stored are read again, see DataChat.ReadChangedAttachmentsAgain.</param>
+    internal async Task StoreAttachedDocumentsAsync(ProvenanceStoreClient store, Guid chatId, RustService rustService, PromptInjectionReportingScope? reportingScope, bool readChangedAgain)
     {
         var attachments = new List<FileAttachment>(this.FileAttachments.Count);
         var changed = false;
         foreach (var attachment in this.FileAttachments)
         {
-            var storedAttachment = await StoreAttachedDocumentAsync(attachment, store, chatId, rustService, reportingScope);
+            var storedAttachment = await StoreAttachedDocumentAsync(attachment, store, chatId, rustService, reportingScope, readChangedAgain);
             changed |= !ReferenceEquals(storedAttachment, attachment);
             attachments.Add(storedAttachment);
         }
@@ -599,12 +607,16 @@ public sealed class ContentText : IContent
     }
 
     /// <summary>
-    /// Stores one attached document which was never sent.
+    /// Stores one attached document which was never sent, or whose file changed since, when the user chose so.
     /// </summary>
+    /// <remarks>
+    /// A document read again gets an entry of its own: the one before belongs to what the AI
+    /// received then, and the cleanup at the next start removes it once nothing refers to it.
+    /// </remarks>
     /// <returns>The attachment with the entry of its text, or the attachment as it was when there is nothing to store, or nothing could be.</returns>
-    private static async Task<FileAttachment> StoreAttachedDocumentAsync(FileAttachment attachment, ProvenanceStoreClient store, Guid chatId, RustService rustService, PromptInjectionReportingScope? reportingScope)
+    private static async Task<FileAttachment> StoreAttachedDocumentAsync(FileAttachment attachment, ProvenanceStoreClient store, Guid chatId, RustService rustService, PromptInjectionReportingScope? reportingScope, bool readChangedAgain)
     {
-        if (attachment.ProvenanceId is not null || attachment.Type is not FileAttachmentType.DOCUMENT)
+        if (!IsToStore(attachment, readChangedAgain))
             return attachment;
 
         var document = attachment.Normalize();
@@ -621,6 +633,8 @@ public sealed class ContentText : IContent
                     return attachment;
             }
 
+            // Taken before reading, so that a change while reading counts as a change:
+            var version = FileVersion.Of(document.FilePath);
             var extraction = await rustService.ReadArbitraryFileData(document.FilePath, int.MaxValue, reportingScope: reportingScope);
             if (!extraction.HasUsableContent)
                 return attachment;
@@ -630,7 +644,7 @@ public sealed class ContentText : IContent
 
             // Not cancellable: what was read is what the request sends.
             var provenanceId = await store.StoreAsync(chatId, ProvenanceKind.ATTACHMENT, extraction.Content, null, CancellationToken.None);
-            return provenanceId is null ? attachment : attachment with { ProvenanceId = provenanceId };
+            return provenanceId is null ? attachment : attachment with { ProvenanceId = provenanceId, Version = version };
         }
         catch (Exception exception)
         {
