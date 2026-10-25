@@ -183,7 +183,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         if (this.CreateFromExistingChatThread && this.ExistingChatThread is not null)
         {
             this.DataSystemPrompt = this.ExistingChatThread.SystemPrompt;
-            this.dataExampleConversation = this.ExistingChatThread.Blocks.Select(n => n.DeepClone(true)).ToList();
+            this.dataExampleConversation = this.ExistingChatThread.Blocks.Select(n => n.CloneApartFromChat(true)).ToList();
             this.DataName = this.ExistingChatThread.Name;
         }
 
