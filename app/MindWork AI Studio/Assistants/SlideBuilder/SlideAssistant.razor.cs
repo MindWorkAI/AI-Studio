@@ -140,7 +140,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             return new ChatThread
             {
                 ChatId = Guid.NewGuid(),
-                Name = string.Format(T("{0} - Slide Builder Session"), this.inputTitle),
+                Name = string.Format(T("{0} - Slide Assistant Session"), this.inputTitle),
                 SystemPrompt = SystemPrompts.DEFAULT,
                 Blocks =
                 [
@@ -153,7 +153,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                         ContentType = ContentType.TEXT,
                         Content = new ContentText
                         {
-                            Text = this.T("The result of your previous slide builder session."),
+                            Text = this.T("The result of your previous Slide Assistant session."),
                             FileAttachments = this.loadedDocumentPaths.ToList(),
                         }
                     },
