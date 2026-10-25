@@ -3157,6 +3157,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Opened the visual briefing project folder.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2964042492"] = "Opened the visual briefing project folder."
 
+-- The visual briefing could not be exported. Please check that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3136382170"] = "The visual briefing could not be exported. Please check that the target file is not open in another program."
+
 -- Visual assets
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3226971402"] = "Visual assets"
 
@@ -3285,6 +3288,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 
 -- If you need help, report the problem and include the project ID.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4292361710"] = "If you need help, report the problem and include the project ID."
+
+-- The visual briefing could not be written completely.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T442972740"] = "The visual briefing could not be written completely."
 
 -- The briefing was recompiled with the current AI Studio version.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T453632597"] = "The briefing was recompiled with the current AI Studio version."
@@ -4701,6 +4707,30 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Change what this tile opens"
+
+-- Could not open the file location.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T1118835751"] = "Could not open the file location."
+
+-- Could not open the file: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T1290686840"] = "Could not open the file: {0}"
+
+-- Open with the default program
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T1332010305"] = "Open with the default program"
+
+-- Could not open the file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T1455637941"] = "Could not open the file location: {0}"
+
+-- Show in the file manager
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T3007835369"] = "Show in the file manager"
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T3461425987"] = "Unknown error"
+
+-- Could not open the file.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T362546438"] = "Could not open the file."
+
+-- Saving '{0}'...
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] = "Saving '{0}'..."
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
