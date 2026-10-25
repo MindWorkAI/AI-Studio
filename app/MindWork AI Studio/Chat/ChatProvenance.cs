@@ -85,12 +85,21 @@ public static class ChatProvenance
     }
 
     /// <summary>
-    /// Gets the provenance store, or nothing when there is none to keep in step, e.g., in a test without the app's services.
+    /// Gets the provenance store for chats and their messages, or nothing when there is none to use.
     /// </summary>
-    private static async Task<ProvenanceStoreClient?> GetStoreAsync()
+    /// <remarks>
+    /// The one way to the store for code which the app's services do not create, such as a chat or a
+    /// message. Components and services get the DatabaseClientProvider injected instead. It never
+    /// throws: there is no store while the app has not started its services, e.g., in a test, or when
+    /// the store is not available. Every caller carries on without it then.
+    /// </remarks>
+    /// <returns>The provenance store, or null when there is none.</returns>
+    internal static async Task<ProvenanceStoreClient?> GetStoreAsync()
     {
         try
         {
+            // Declared as never null, but it is null until the app has started its services:
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
             if (Program.SERVICE_PROVIDER?.GetService<DatabaseClientProvider>() is not { } databaseClientProvider)
                 return null;
 
@@ -99,7 +108,7 @@ public static class ChatProvenance
         }
         catch (Exception exception)
         {
-            LOGGER.LogWarning(exception, "The provenance store is not available to keep in step with the chats.");
+            LOGGER.LogWarning(exception, "The provenance store is not available to the chats.");
             return null;
         }
     }

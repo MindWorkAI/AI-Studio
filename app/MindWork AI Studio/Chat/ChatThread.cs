@@ -5,8 +5,6 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Databases;
-using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
@@ -549,8 +547,7 @@ public sealed record ChatThread
 
         try
         {
-            var store = await Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync();
-            if (store is NoProvenanceStoreClient)
+            if (await ChatProvenance.GetStoreAsync() is not { } store)
                 return;
 
             // One report for everything filtered out of the documents, as for the request itself:

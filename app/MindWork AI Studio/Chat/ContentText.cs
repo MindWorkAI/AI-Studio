@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
@@ -113,8 +112,7 @@ public sealed class ContentText : IContent
             if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore()))
                 return;
 
-            var store = await Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync();
-            if (await this.StoreReceivedContentAsync(store, chatId))
+            if (await ChatProvenance.GetStoreAsync() is { } store && await this.StoreReceivedContentAsync(store, chatId))
                 return;
         }
         catch (Exception exception)
@@ -682,9 +680,9 @@ public sealed class ContentText : IContent
     /// Reads the stored texts of the attached documents.
     /// </summary>
     /// <param name="attachments">The attachments.</param>
-    /// <param name="getProvenanceStore">Gets the provenance store, which is asked only when a document has an entry.</param>
+    /// <param name="getProvenanceStore">Gets the provenance store, or null when there is none. It is asked only when a document has an entry.</param>
     /// <returns>The texts by the ids of their entries. An entry the store lacks, or cannot read, is missing.</returns>
-    private static async Task<IReadOnlyDictionary<Guid, string>> ReadStoredDocumentTextsAsync(IEnumerable<FileAttachment> attachments, Func<Task<ProvenanceStoreClient>> getProvenanceStore)
+    private static async Task<IReadOnlyDictionary<Guid, string>> ReadStoredDocumentTextsAsync(IEnumerable<FileAttachment> attachments, Func<Task<ProvenanceStoreClient?>> getProvenanceStore)
     {
         var provenanceIds = attachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>().Distinct().ToList();
         if (provenanceIds.Count is 0)
@@ -692,7 +690,9 @@ public sealed class ContentText : IContent
 
         try
         {
-            var store = await getProvenanceStore();
+            if (await getProvenanceStore() is not { } store)
+                return new Dictionary<Guid, string>();
+
             var entries = await store.GetEntriesAsync(provenanceIds, CancellationToken.None);
             return entries.ToDictionary(entry => entry.Key, entry => entry.Value.Content);
         }
@@ -736,7 +736,7 @@ public sealed class ContentText : IContent
     /// </summary>
     /// <param name="reportingScope">The request this message is part of, which tells the user once about everything filtered out of its attachments, or null when the request reads no documents.</param>
     /// <returns>The text for the AI.</returns>
-    public Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope) => this.PrepareTextContentForAI(reportingScope, Program.RUST_SERVICE, () => Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync(), () => Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>());
+    public Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope) => this.PrepareTextContentForAI(reportingScope, Program.RUST_SERVICE, ChatProvenance.GetStoreAsync, () => Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>());
 
     /// <summary>
     /// Builds the text the AI gets for this message, with the content of its attached documents.
@@ -749,10 +749,10 @@ public sealed class ContentText : IContent
     /// </remarks>
     /// <param name="reportingScope">The request this message is part of, which tells the user once about everything filtered out of its attachments, or null when the request reads no documents.</param>
     /// <param name="rustService">The runtime, which reads the documents without a stored text.</param>
-    /// <param name="getProvenanceStore">Gets the provenance store, which is asked only when a document has an entry.</param>
+    /// <param name="getProvenanceStore">Gets the provenance store, or null when there is none. It is asked only when a document has an entry.</param>
     /// <param name="getPromptInjectionGuard">Gets the prompt injection filter, which is asked only when a document has a stored text.</param>
     /// <returns>The text for the AI.</returns>
-    internal async Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope, RustService rustService, Func<Task<ProvenanceStoreClient>> getProvenanceStore, Func<PromptInjectionGuardService> getPromptInjectionGuard)
+    internal async Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope, RustService rustService, Func<Task<ProvenanceStoreClient?>> getProvenanceStore, Func<PromptInjectionGuardService> getPromptInjectionGuard)
     {
         var sb = new StringBuilder();
         var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);

@@ -305,5 +305,5 @@ public sealed class AttachmentProvenanceTests
 
     private ContentText MessageWithDocument() => new() { Text = "Summarize the minutes.", FileAttachments = [FileAttachment.FromPath(this.documentPath)] };
 
-    private Task<string> PrepareAsync(ContentText message) => message.PrepareTextContentForAI(null, this.rustService, () => Task.FromResult<ProvenanceStoreClient>(this.store.Client), () => this.serviceProvider.GetRequiredService<PromptInjectionGuardService>());
+    private Task<string> PrepareAsync(ContentText message) => message.PrepareTextContentForAI(null, this.rustService, () => Task.FromResult<ProvenanceStoreClient?>(this.store.Client), () => this.serviceProvider.GetRequiredService<PromptInjectionGuardService>());
 }
