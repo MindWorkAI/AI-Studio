@@ -180,6 +180,24 @@ public sealed class ChatDraft
     }
 
     /// <summary>
+    /// Lets go of the texts a preview read of files which are no longer attached, e.g., since the user took them out.
+    /// </summary>
+    /// <returns>The entries of those texts, which nothing refers to any longer, so the caller removes them from the provenance store.</returns>
+    public IReadOnlyList<Guid> ForgetPreviewsOfDetachedFiles()
+    {
+        lock (this.stateLock)
+        {
+            var attachedPaths = this.FileAttachments.Select(attachment => attachment.FilePath).ToHashSet(StringComparer.Ordinal);
+            var detached = this.PreviewedTexts.Where(text => !attachedPaths.Contains(text.FilePath)).ToList();
+            if (detached.Count is 0)
+                return [];
+
+            this.PreviewedTexts = this.PreviewedTexts.Except(detached).ToList();
+            return detached.Select(text => text.ProvenanceId).ToList();
+        }
+    }
+
+    /// <summary>
     /// Empties the draft, which is what sending it does: its attachments belong to the new message from then on.
     /// </summary>
     /// <remarks>

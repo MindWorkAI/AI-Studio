@@ -136,6 +136,27 @@ public sealed class ChatDraftTests
     }
 
     [Test]
+    public void AFileTakenOutTakesTheTextOfItsPreviewAlong()
+    {
+        var draft = new ChatDraft();
+        var agendaPreview = new PreviewedText(AGENDA.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc), 42));
+        var minutesPreview = new PreviewedText(MINUTES.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc), 42));
+        draft.MirrorAttachments([AGENDA, MINUTES]);
+        draft.NotePreviewedText(agendaPreview);
+        draft.NotePreviewedText(minutesPreview);
+
+        draft.MirrorAttachments([MINUTES]);
+        var forgotten = draft.ForgetPreviewsOfDetachedFiles();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(forgotten, Is.EqualTo(new[] { agendaPreview.ProvenanceId }), "Nothing refers to the text any longer, so the caller removes it from the store.");
+            Assert.That(draft.PreviewedTexts, Is.EqualTo(new[] { minutesPreview }));
+            Assert.That(draft.ForgetPreviewsOfDetachedFiles(), Is.Empty);
+        });
+    }
+
+    [Test]
     public void TheTextsAPreviewReadAreStoredWithTheChat()
     {
         var thread = new ChatThread { ChatId = Guid.NewGuid(), Name = "Meeting notes" };

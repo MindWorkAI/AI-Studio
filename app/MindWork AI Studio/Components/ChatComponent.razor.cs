@@ -1278,7 +1278,7 @@ public partial class ChatComponent : MSGComponentBase
         this.hasUnsavedChanges = true;
     }
 
-    private void ComposerAttachmentsChanged(HashSet<FileAttachment> attachments)
+    private async Task ComposerAttachmentsChanged(HashSet<FileAttachment> attachments)
     {
         if (!ReferenceEquals(this.ComposerState.FileAttachments, attachments))
             this.ComposerState.ReplaceFileAttachments(attachments);
@@ -1286,6 +1286,10 @@ public partial class ChatComponent : MSGComponentBase
         this.ComposerState.MarkUserDraft();
         this.KeepComposerInDraft();
         this.hasUnsavedChanges = true;
+
+        // A file the user took out goes without the text its preview read:
+        if (this.ChatThread is { } chat)
+            await this.ForgetPreviewedTextsAsync(chat.ChatId, chat.Draft.ForgetPreviewsOfDetachedFiles());
     }
 
     /// <summary>
@@ -1439,11 +1443,12 @@ public partial class ChatComponent : MSGComponentBase
     /// Keeps the text the preview read of an attached document, so that sending the message does not read the file again.
     /// </summary>
     /// <remarks>
-    /// The text belongs to a chat, so a preview in a new chat creates that chat, as attaching a
-    /// recording does, and its draft notes the text, see ChatDraft.PreviewedTexts. Another preview of
-    /// a file which did not change keeps nothing new; one of a file which changed replaces the text
-    /// kept before. Nothing here may stop the preview: should the text not be kept, sending reads the
-    /// file as before.
+    /// The text belongs to a chat, and its draft notes it, see ChatDraft.PreviewedTexts. Only a chat
+    /// which exists keeps it: looking at a file must not create a chat, which the user may never have
+    /// meant to keep. In a new chat, sending reads the file, as it did before. Another preview of a
+    /// file which did not change keeps nothing new; one of a file which changed replaces the text kept
+    /// before. Nothing here may stop the preview: should the text not be kept, sending reads the file
+    /// as before.
     /// </remarks>
     /// <param name="attachment">The attachment, as the composer holds it.</param>
     /// <param name="text">The text the preview read, after the prompt injection filter.</param>
@@ -1452,8 +1457,7 @@ public partial class ChatComponent : MSGComponentBase
     {
         try
         {
-            var chat = await this.EnsureChatAsync(attachment.FileName);
-            if (chat is null)
+            if (this.ChatThread is not { } chat)
                 return;
 
             if (chat.Draft.GetPreviewedText(attachment.FilePath)?.Version == version)
