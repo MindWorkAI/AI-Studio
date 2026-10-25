@@ -47,23 +47,20 @@ public static class ChatProvenance
     /// Deletes what the given chats received from the provenance store, for chats which were deleted.
     /// </summary>
     /// <param name="chatIds">The deleted chats.</param>
-    public static async Task ForgetChatsAsync(IEnumerable<Guid> chatIds)
+    public static async Task ForgetChatsAsync(IReadOnlyCollection<Guid> chatIds)
     {
-        if (await GetStoreAsync() is not { } store)
+        if (chatIds.Count is 0 || await GetStoreAsync() is not { } store)
             return;
 
-        foreach (var chatId in chatIds)
+        try
         {
-            try
-            {
-                var deleted = await store.DeleteChatAsync(chatId, CancellationToken.None);
-                if (deleted > 0)
-                    LOGGER.LogInformation("Deleted {Count} provenance entries of the deleted chat '{ChatId}'.", deleted, chatId);
-            }
-            catch (Exception exception)
-            {
-                LOGGER.LogWarning(exception, "Failed to delete the provenance entries of the deleted chat '{ChatId}'. The next start removes them.", chatId);
-            }
+            var deleted = await store.DeleteChatsAsync(chatIds, CancellationToken.None);
+            if (deleted > 0)
+                LOGGER.LogInformation("Deleted {Count} provenance entries of {ChatCount} deleted chats.", deleted, chatIds.Count);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogWarning(exception, "Failed to delete the provenance entries of {ChatCount} deleted chats. The next start removes them.", chatIds.Count);
         }
     }
 

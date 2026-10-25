@@ -108,7 +108,7 @@ public sealed class ProvenanceStoreTests
         var page = await store.Client.StoreAsync(assistantChat, ProvenanceKind.WEB_PAGE, "a page", null, TOKEN);
 
         await store.Client.CopyChatAsync(assistantChat, chat, TOKEN);
-        await store.Client.DeleteChatAsync(assistantChat, TOKEN);
+        await store.Client.DeleteChatsAsync([assistantChat], TOKEN);
         var entries = await store.Client.GetEntriesAsync([passage!.Value, page!.Value], TOKEN);
 
         Assert.Multiple(() =>
@@ -142,7 +142,7 @@ public sealed class ProvenanceStoreTests
         var deleted = await store.Client.StoreAsync(deletedChat, ProvenanceKind.ATTACHMENT, "deleted", null, TOKEN);
         var kept = await store.Client.StoreAsync(keptChat, ProvenanceKind.ATTACHMENT, "kept", null, TOKEN);
 
-        await store.Client.DeleteChatAsync(deletedChat, TOKEN);
+        await store.Client.DeleteChatsAsync([deletedChat], TOKEN);
         var entries = await store.Client.GetEntriesAsync([deleted!.Value, kept!.Value], TOKEN);
         var chatIds = await store.Client.GetChatIdsAsync(TOKEN);
 
@@ -151,6 +151,39 @@ public sealed class ProvenanceStoreTests
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { kept.Value }));
             Assert.That(chatIds, Is.EquivalentTo(new[] { keptChat }));
         });
+    }
+
+    [Test]
+    public async Task SeveralChatsGoInOneCall()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var firstChat = Guid.NewGuid();
+        var secondChat = Guid.NewGuid();
+        var keptChat = Guid.NewGuid();
+        await store.Client.StoreAsync(firstChat, ProvenanceKind.ATTACHMENT, "first", null, TOKEN);
+        await store.Client.StoreAsync(secondChat, ProvenanceKind.WEB_PAGE, "second", null, TOKEN);
+        await store.Client.StoreAsync(secondChat, ProvenanceKind.MAIL, "second, again", null, TOKEN);
+        await store.Client.StoreAsync(keptChat, ProvenanceKind.ATTACHMENT, "kept", null, TOKEN);
+
+        var deleted = await store.Client.DeleteChatsAsync([firstChat, secondChat], TOKEN);
+        var chatIds = await store.Client.GetChatIdsAsync(TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(deleted, Is.EqualTo(3));
+            Assert.That(chatIds, Is.EquivalentTo(new[] { keptChat }));
+        });
+    }
+
+    [Test]
+    public async Task AChatWithoutAnIdIsListedToo()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        await store.Client.StoreAsync(Guid.Empty, ProvenanceKind.WEB_PAGE, "of a conversation without an id", null, TOKEN);
+
+        var chatIds = await store.Client.GetChatIdsAsync(TOKEN);
+
+        Assert.That(chatIds, Is.EquivalentTo(new[] { Guid.Empty }), "Only a listed chat is cleaned up.");
     }
 
     [Test]
@@ -181,7 +214,7 @@ public sealed class ProvenanceStoreTests
 
         var deleted = await store.Client.DeleteEntriesAsync(chat, [unsent!.Value], TOKEN);
         var entries = await store.Client.GetEntriesAsync([sent!.Value, unsent.Value], TOKEN);
-        await store.Client.DeleteChatAsync(copy, TOKEN);
+        await store.Client.DeleteChatsAsync([copy], TOKEN);
         var entriesWithoutTheCopy = await store.Client.GetEntriesAsync([sent.Value, unsent.Value], TOKEN);
 
         Assert.Multiple(() =>
@@ -199,10 +232,10 @@ public sealed class ProvenanceStoreTests
         var chat = Guid.NewGuid();
         var entry = await store.Client.StoreAsync(chat, ProvenanceKind.ATTACHMENT, "stored just now", null, TOKEN);
 
-        var deletedBefore = await store.Client.DeleteChatAsync(chat, TOKEN, DateTimeOffset.UtcNow.AddMinutes(-1));
+        var deletedBefore = await store.Client.DeleteChatsAsync([chat], TOKEN, DateTimeOffset.UtcNow.AddMinutes(-1));
         var deletedExceptBefore = await store.Client.DeleteChatEntriesExceptAsync(chat, [], TOKEN, DateTimeOffset.UtcNow.AddMinutes(-1));
         var kept = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
-        var deletedAfter = await store.Client.DeleteChatAsync(chat, TOKEN, DateTimeOffset.UtcNow.AddMinutes(1));
+        var deletedAfter = await store.Client.DeleteChatsAsync([chat], TOKEN, DateTimeOffset.UtcNow.AddMinutes(1));
 
         Assert.Multiple(() =>
         {

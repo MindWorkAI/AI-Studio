@@ -185,11 +185,14 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
             token);
     }
 
-    public override async Task<int> DeleteChatAsync(Guid chatId, CancellationToken token, DateTimeOffset? createdBefore = null)
+    public override async Task<int> DeleteChatsAsync(IReadOnlyCollection<Guid> chatIds, CancellationToken token, DateTimeOffset? createdBefore = null)
     {
-        var chatKey = ToKey(chatId);
+        if (chatIds.Count is 0)
+            return 0;
+
+        var chatKeys = chatIds.Select(ToKey).Distinct().ToList();
         await using var context = this.CreateContext();
-        return await CreatedBefore(context.Entries.Where(entry => entry.ChatId == chatKey), createdBefore).ExecuteDeleteAsync(token);
+        return await CreatedBefore(context.Entries.Where(entry => chatKeys.Contains(entry.ChatId)), createdBefore).ExecuteDeleteAsync(token);
     }
 
     public override async Task<int> DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token, DateTimeOffset? createdBefore = null)
@@ -226,9 +229,11 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
     {
         await using var context = this.CreateContext();
         var chatKeys = await context.Entries.Select(entry => entry.ChatId).Distinct().ToListAsync(token);
+
+        // Guid.Empty included: entries stored for a chat without an id belong to no chat on the disk, so the cleanup takes them:
         return chatKeys
-            .Select(chatKey => Guid.TryParse(chatKey, out var chatId) ? chatId : Guid.Empty)
-            .Where(chatId => chatId != Guid.Empty)
+            .Select(chatKey => Guid.TryParse(chatKey, out var chatId) ? chatId : (Guid?)null)
+            .OfType<Guid>()
             .ToList();
     }
 

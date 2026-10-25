@@ -6,13 +6,13 @@ namespace AIStudio.Chat;
 /// Removes from the provenance store what no stored chat refers to anymore.
 /// </summary>
 /// <remarks>
-/// Deleting a chat takes its entries along right away, see ChatProvenance. What is left over
-/// comes from changes inside a chat, or from runs which ended before they could clean up:
+/// Deleting a chat takes its entries along right away, see ChatProvenance, and so does the
+/// maintenance of the temporary chats. What is left over comes from changes inside a chat, or from
+/// runs which ended before they could clean up:
 /// <list type="bullet">
 /// <item>a message which was removed, edited, or answered anew, together with its passages and attached documents;</item>
 /// <item>a text which a preview stored, while its chat was never stored with it, or sending could not remove it;</item>
 /// <item>an assistant whose conversation was never sent to a chat;</item>
-/// <item>a temporary chat which the maintenance deleted: it may still be open, and storing it again brings it back;</item>
 /// <item>a chat which was never stored, or deleted while the store was not available.</item>
 /// </list>
 /// Each chat file is read for its references, which only a cleanup at the start can do safely:
@@ -32,14 +32,14 @@ public static class ProvenanceCleanup
     /// <returns>How many entries of chats which no longer exist were removed, and how many of chats which no longer refer to them.</returns>
     public static async Task<(int Orphaned, int Unreferenced)> CleanUpAsync(ProvenanceStoreClient store, IReadOnlyDictionary<Guid, Guid> chatLocations, Func<Guid, Guid, Task<ChatThread?>> loadChat, DateTimeOffset createdBefore, CancellationToken token)
     {
-        var orphaned = 0;
         var unreferenced = 0;
+        var orphanedChats = new List<Guid>();
         foreach (var chatId in await store.GetChatIdsAsync(token))
         {
             token.ThrowIfCancellationRequested();
             if (!chatLocations.TryGetValue(chatId, out var workspaceId))
             {
-                orphaned += await store.DeleteChatAsync(chatId, token, createdBefore);
+                orphanedChats.Add(chatId);
                 continue;
             }
 
@@ -51,6 +51,8 @@ public static class ProvenanceCleanup
             unreferenced += await store.DeleteChatEntriesExceptAsync(chatId, chat.CollectProvenanceIds(), token, createdBefore);
         }
 
+        // The chats which no longer exist all at once, since there may be many of them after a long time without a start:
+        var orphaned = await store.DeleteChatsAsync(orphanedChats, token, createdBefore);
         return (orphaned, unreferenced);
     }
 }

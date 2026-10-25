@@ -1449,12 +1449,27 @@ public static partial class WorkspaceBehaviour
                 return false;
         }
 
-        var chatDirectory = chat.WorkspaceId == Guid.Empty
-            ? Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString())
-            : Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
+        return await DeleteChatWithoutAskingAsync(workspaceId, chatId);
+    }
 
-        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(workspaceId, chatId, nameof(DeleteChatAsync));
-        
+    /// <summary>
+    /// Deletes the given chat without asking, together with what it received.
+    /// </summary>
+    /// <param name="workspaceId">Workspace that owns the chat; an empty id means a temporary chat.</param>
+    /// <param name="chatId">Chat to delete.</param>
+    /// <returns>True when the chat is gone, which includes it never having been there. False when another operation holds it.</returns>
+    /// <remarks>
+    /// The way every chat leaves the disk: the one the user deletes, see DeleteChatAsync, and the
+    /// temporary one which the maintenance deletes, see TemporaryChatService. What a chat received,
+    /// e.g., the documents and web pages in the provenance store, goes along right away, so that it
+    /// does not outlive the chat until the next start. A chat which is still open and gets stored
+    /// again afterward comes back without it.
+    /// </remarks>
+    internal static async Task<bool> DeleteChatWithoutAskingAsync(Guid workspaceId, Guid chatId)
+    {
+        var chatDirectory = GetChatDirectory(workspaceId, chatId);
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(workspaceId, chatId, nameof(DeleteChatWithoutAskingAsync));
+
         // Another operation holds the chat, so it stays where it is:
         if (!acquired)
             return false;

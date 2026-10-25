@@ -73,6 +73,22 @@ public sealed class ProvenanceCleanupTests
     }
 
     [Test]
+    public async Task WhatWasStoredForAChatWithoutAnIdIsRemoved()
+    {
+        await using var store = await TemporaryProvenanceStore.CreateAsync();
+        var entry = await store.Client.StoreAsync(Guid.Empty, ProvenanceKind.WEB_PAGE, "of an assistant's conversation without an id", null, TOKEN);
+
+        var (orphaned, _) = await ProvenanceCleanup.CleanUpAsync(store.Client, Locations(Guid.NewGuid()), (_, _) => Task.FromResult<ChatThread?>(null), DateTimeOffset.UtcNow.AddMinutes(1), TOKEN);
+        var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(entries, Is.Empty, "No chat on the disk has no id, so nothing would ever remove such an entry.");
+            Assert.That(orphaned, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
     public async Task AChatWhichCannotBeReadKeepsEverything()
     {
         await using var store = await TemporaryProvenanceStore.CreateAsync();

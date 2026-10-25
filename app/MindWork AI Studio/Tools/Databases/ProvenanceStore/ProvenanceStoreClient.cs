@@ -53,13 +53,16 @@ public abstract class ProvenanceStoreClient(string name, string path) : Database
     public abstract Task CopyChatAsync(Guid sourceChatId, Guid targetChatId, CancellationToken token);
 
     /// <summary>
-    /// Deletes every entry of a chat.
+    /// Deletes every entry of some chats.
     /// </summary>
-    /// <param name="chatId">The chat.</param>
+    /// <remarks>
+    /// All of them at once: deleting a workspace or cleaning up at the start may concern many chats.
+    /// </remarks>
+    /// <param name="chatIds">The chats.</param>
     /// <param name="token">The cancellation token.</param>
     /// <param name="createdBefore">Deletes only the entries stored before this moment, or all of them when null.</param>
     /// <returns>How many entries were deleted.</returns>
-    public abstract Task<int> DeleteChatAsync(Guid chatId, CancellationToken token, DateTimeOffset? createdBefore = null);
+    public abstract Task<int> DeleteChatsAsync(IReadOnlyCollection<Guid> chatIds, CancellationToken token, DateTimeOffset? createdBefore = null);
 
     /// <summary>
     /// Deletes the entries of a chat which it no longer refers to.
@@ -84,7 +87,7 @@ public abstract class ProvenanceStoreClient(string name, string path) : Database
     /// Lists the chats this store holds entries of.
     /// </summary>
     /// <param name="token">The cancellation token.</param>
-    /// <returns>The ids of the chats.</returns>
+    /// <returns>The ids of the chats, Guid.Empty included when entries were stored for a chat without an id.</returns>
     public abstract Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token);
 
     /// <summary>
