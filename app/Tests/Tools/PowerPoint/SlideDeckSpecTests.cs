@@ -126,7 +126,7 @@ public sealed class SlideDeckSpecTests
             """;
 
         // The literal takes the line breaks of this file, which depend on the checkout:
-        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.CreateDefault(), ["rocket.png"]), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
+        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.CreateDefault(), new Dictionary<int, string> { [1] = "rocket.png" }), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
     }
 
     [Test]
@@ -218,7 +218,7 @@ public sealed class SlideDeckSpecTests
             - Ask us
             """;
 
-        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), []), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
+        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), new Dictionary<int, string>()), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
     }
 
     [Test]
@@ -240,7 +240,7 @@ public sealed class SlideDeckSpecTests
             *Slide 1 of the template, edited*
             """;
 
-        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), []), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
+        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), new Dictionary<int, string>()), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
     }
 
     [Test]
@@ -268,6 +268,6 @@ public sealed class SlideDeckSpecTests
             - Duis autem
             """;
 
-        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), []), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")), "The second heading and its text keep the content of the template; the third ones are removed.");
+        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), new Dictionary<int, string>()), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")), "The second heading and its text keep the content of the template; the third ones are removed.");
     }
 }

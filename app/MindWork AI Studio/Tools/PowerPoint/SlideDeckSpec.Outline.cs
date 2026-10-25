@@ -22,9 +22,9 @@ internal sealed partial record SlideDeckSpec
     /// notes of the outline itself are in the language of the app, since the user reads them.
     /// </remarks>
     /// <param name="template">The template the deck was written for, which gives the reading order and the template slides.</param>
-    /// <param name="pictureNames">The names of the attached pictures, in the order the model numbered them.</param>
+    /// <param name="pictureNames">The names of the pictures the slides use, by the numbers the model gave them.</param>
     /// <returns>The outline.</returns>
-    public string ToMarkdownOutline(PresentationTemplate template, IReadOnlyList<string> pictureNames)
+    public string ToMarkdownOutline(PresentationTemplate template, IReadOnlyDictionary<int, string> pictureNames)
     {
         var outline = new StringBuilder();
         outline.Append("# ").Append(this.Title).Append('\n');
@@ -63,7 +63,7 @@ internal sealed partial record SlideDeckSpec
     }
 
     /// <returns>Whether the slide has content for the slot, which was appended.</returns>
-    private static bool AppendSlot(StringBuilder outline, SlideSpec slide, TemplateSlot slot, IReadOnlyList<string> pictureNames)
+    private static bool AppendSlot(StringBuilder outline, SlideSpec slide, TemplateSlot slot, IReadOnlyDictionary<int, string> pictureNames)
     {
         var index = slot.Ordinal - 1;
         switch (slot.Role)
@@ -85,7 +85,7 @@ internal sealed partial record SlideDeckSpec
 
             case PlaceholderRole.PICTURE when index < slide.Pictures.Count:
                 var number = slide.Pictures[index];
-                var name = number >= 1 && number <= pictureNames.Count ? pictureNames[number - 1] : $"#{number}";
+                var name = pictureNames.TryGetValue(number, out var pictureName) ? pictureName : $"#{number}";
                 outline.Append('\n').Append('*').Append(string.Format(TB("Picture: {0}"), name)).Append("*\n");
                 return true;
 

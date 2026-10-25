@@ -33,10 +33,11 @@ internal static class PictureLibrary
     /// </summary>
     /// <param name="folder">The library folder.</param>
     /// <param name="random">Where the sample of a large library comes from.</param>
+    /// <param name="maxPictures">The most pictures the sample holds, e.g., MAX_LIBRARY_PICTURES, or 0 to count the pictures only.</param>
     /// <param name="reportInaccessibleFolder">Told about every folder which could not be read.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>What the library offers.</returns>
-    public static Task<PictureLibraryContent> ReadAsync(string folder, Random random, Action<string, Exception>? reportInaccessibleFolder, CancellationToken token) => Task.Run(() => Read(folder, random, MAX_LIBRARY_PICTURES, reportInaccessibleFolder, token), token);
+    public static Task<PictureLibraryContent> ReadAsync(string folder, Random random, int maxPictures, Action<string, Exception>? reportInaccessibleFolder, CancellationToken token) => Task.Run(() => Read(folder, random, maxPictures, reportInaccessibleFolder, token), token);
 
     /// <summary>
     /// Reads a library.

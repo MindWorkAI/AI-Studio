@@ -43,6 +43,13 @@ to `app/AGENTS.md`, which apply here as well.
   each goes on exactly one slide, which the validator checks. Images among the documents are source
   material, which the model reads and never places. A file is never both: the pictures for the slides
   win. Pictures go to the model as images only when it reads images; otherwise their names are all it has.
+- **A picture library offers names, never pictures.** `PictureLibrary` reads PNG and JPEG files of a
+  folder, at most `MAX_LIBRARY_PICTURES`, sampled anew for every planning. Their numbers follow those
+  of the pictures for the slides. The names are content of a folder which others may write to, so
+  `PICTURE_LIBRARY` passes `PromptInjectionGuardService` like the texts of a template. A picture
+  counts as an icon when its name or one of its folders starts with "icon": icons may repeat, are
+  never cropped, and never go into a backdrop (`PresentationTemplate.IsBackdrop`), which the catalog
+  marks and the validator checks.
 - **Layout choices travel by name.** The user chooses layouts for kinds of slides (`LayoutPurpose`) by
   their names, which outlive sessions and new versions of a template. `ChosenLayouts` finds them in the
   template, and only their IDs go into the system prompt. The validator checks the two kinds which show

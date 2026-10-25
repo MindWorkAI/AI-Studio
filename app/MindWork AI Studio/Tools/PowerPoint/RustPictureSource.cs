@@ -10,23 +10,24 @@ namespace AIStudio.Tools.PowerPoint;
 /// down, so that a presentation full of photos stays small enough to send by mail.
 /// </remarks>
 /// <param name="rustService">The runtime.</param>
-/// <param name="picturePaths">The paths of the attached pictures, in the order the model numbered them.</param>
-internal sealed class RustPictureSource(RustService rustService, IReadOnlyList<string> picturePaths) : IPictureSource
+/// <param name="picturePaths">The paths of the pictures the slides use, by the numbers the model gave them.</param>
+/// <param name="iconNumbers">The numbers of the pictures which are icons of a picture library.</param>
+internal sealed class RustPictureSource(RustService rustService, IReadOnlyDictionary<int, string> picturePaths, IReadOnlySet<int> iconNumbers) : IPictureSource
 {
     /// <inheritdoc />
     public async Task<SlidePicture?> LoadAsync(int number, CancellationToken token)
     {
-        if (number < 1 || number > picturePaths.Count)
+        if (!picturePaths.TryGetValue(number, out var picturePath))
             return null;
 
         try
         {
-            var prepared = await rustService.PrepareImageAsync(picturePaths[number - 1], true, token);
+            var prepared = await rustService.PrepareImageAsync(picturePath, true, token);
             var dataStart = prepared.DataUrl.IndexOf(',');
             if (dataStart < 0)
                 return null;
 
-            return new SlidePicture(Convert.FromBase64String(prepared.DataUrl[(dataStart + 1)..]), prepared.MimeType, (int)prepared.Width, (int)prepared.Height);
+            return new SlidePicture(Convert.FromBase64String(prepared.DataUrl[(dataStart + 1)..]), prepared.MimeType, (int)prepared.Width, (int)prepared.Height, iconNumbers.Contains(number));
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {

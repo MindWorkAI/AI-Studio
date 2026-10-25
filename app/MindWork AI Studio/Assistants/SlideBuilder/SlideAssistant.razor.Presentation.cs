@@ -67,9 +67,15 @@ public partial class SlideAssistant
     private string slideDeckTemplatePath = string.Empty;
 
     /// <summary>
-    /// The pictures the model numbered while planning, in its order.
+    /// The pictures the slide deck may use, by the numbers the model gave them: every picture for the
+    /// slides, and those of the library which the deck uses, not the thousands it was offered.
     /// </summary>
-    private List<string> slideDeckPicturePaths = [];
+    private readonly Dictionary<int, string> slideDeckPicturePaths = new();
+
+    /// <summary>
+    /// The numbers of the pictures in slideDeckPicturePaths which are icons.
+    /// </summary>
+    private readonly HashSet<int> slideDeckIconNumbers = [];
 
     /// <summary>
     /// What the slide deck was planned on: the layouts and template slides it uses, as the model read them.
@@ -88,7 +94,8 @@ public partial class SlideAssistant
     private static readonly AssistantSessionStateKey<Dictionary<LayoutPurpose, string>> LAYOUT_NAMES_STATE_KEY = new(nameof(layoutNames));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_ANSWER_STATE_KEY = new(nameof(slideDeckAnswer));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_TEMPLATE_PATH_STATE_KEY = new(nameof(slideDeckTemplatePath));
-    private static readonly AssistantSessionStateKey<List<string>> SLIDE_DECK_PICTURE_PATHS_STATE_KEY = new(nameof(slideDeckPicturePaths));
+    private static readonly AssistantSessionStateKey<Dictionary<int, string>> SLIDE_DECK_PICTURE_PATHS_STATE_KEY = new(nameof(slideDeckPicturePaths));
+    private static readonly AssistantSessionStateKey<HashSet<int>> SLIDE_DECK_ICON_NUMBERS_STATE_KEY = new(nameof(slideDeckIconNumbers));
     private static readonly AssistantSessionStateKey<Dictionary<string, string>> SLIDE_DECK_BASIS_STATE_KEY = new(nameof(slideDeckBasis));
 
     /// <summary>
@@ -324,16 +331,20 @@ public partial class SlideAssistant
 
     private string PromptPictures()
     {
-        var rules = this.PicturesOfRequest().Count == 0
-            ? "    - No pictures for the slides are attached. Leave out \"pictures\" on every slide."
-            : "    - PICTURES lists the pictures the presentation must show, by their numbers. Place each of them exactly once, by its number, on a slide with a picture slot whose content it fits.";
+        var rules = new List<string>();
+        if (this.PicturesOfRequest().Count > 0)
+            rules.Add("    - PICTURES lists the pictures the presentation must show, by their numbers. Place each of them exactly once, by its number, on a slide with a picture slot whose content it fits.");
 
-        return this.SourceImagesOfRequest().Count == 0
-            ? rules
-            : $"""
-               {rules}
-                   - Images attached as source material are for reading only. Never place them on a slide.
-               """;
+        if (this.PromptPictureLibraryRules() is { Length: > 0 } libraryRules)
+            rules.Add(libraryRules);
+
+        if (rules.Count == 0)
+            rules.Add("    - No pictures for the slides are attached. Leave out \"pictures\" on every slide.");
+
+        if (this.SourceImagesOfRequest().Count > 0)
+            rules.Add("    - Images attached as source material are for reading only. Never place them on a slide.");
+
+        return string.Join(Environment.NewLine, rules);
     }
 
     /// <summary>
@@ -482,12 +493,12 @@ public partial class SlideAssistant
     /// Reads the slide deck out of an answer and checks it against the layouts it was planned for.
     /// </summary>
     /// <returns>The deck, or none when the answer cannot be read, with the issues, written for the model.</returns>
-    private CheckedAnswer CheckAnswer(string answer, PresentationTemplate catalog, int pictureCount, IReadOnlyList<TemplateSlideUse> chosenTemplateSlideUses, ChosenLayouts chosenLayouts)
+    private CheckedAnswer CheckAnswer(string answer, PresentationTemplate catalog, int pictureCount, LibraryPictures libraryPictures, IReadOnlyList<TemplateSlideUse> chosenTemplateSlideUses, ChosenLayouts chosenLayouts)
     {
         if (!SlideDeckSpec.TryParse(answer, out var deck, out var issue))
             return new CheckedAnswer(null, [issue]);
 
-        return new CheckedAnswer(deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, chosenTemplateSlideUses, chosenLayouts, this.numberOfBulletPoints));
+        return new CheckedAnswer(deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, chosenTemplateSlideUses, chosenLayouts, this.numberOfBulletPoints, libraryPictures));
     }
 
     private static string RepairPromptOf(IReadOnlyList<string> issues)
@@ -508,7 +519,7 @@ public partial class SlideAssistant
     /// The outline becomes the last block of the chat, so copying the result, exporting it, and
     /// sending it to a chat all work with the outline rather than with the JSON behind it.
     /// </remarks>
-    private void ShowOutline(SlideDeckSpec deck, PresentationTemplate catalog, IReadOnlyList<string> pictureNames)
+    private void ShowOutline(SlideDeckSpec deck, PresentationTemplate catalog, IReadOnlyDictionary<int, string> pictureNames)
     {
         var outline = new ContentBlock
         {
@@ -567,13 +578,13 @@ public partial class SlideAssistant
                 }
 
                 var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim(), this.keepEmptyPicturePlaceholders);
-                result = await PresentationWriter.WriteAsync(presentationFile, currentTemplate, deck, options, new RustPictureSource(this.RustService, this.slideDeckPicturePaths), CancellationToken.None);
+                result = await PresentationWriter.WriteAsync(presentationFile, currentTemplate, deck, options, new RustPictureSource(this.RustService, this.slideDeckPicturePaths, this.slideDeckIconNumbers), CancellationToken.None);
             }
 
             File.Move(temporaryPath, targetPath, true);
             if (result.SkippedPictures.Count > 0)
             {
-                var names = result.SkippedPictures.Select(number => number >= 1 && number <= this.slideDeckPicturePaths.Count ? Path.GetFileName(this.slideDeckPicturePaths[number - 1]) : number.ToString(CultureInfo.InvariantCulture));
+                var names = result.SkippedPictures.Select(number => this.slideDeckPicturePaths.TryGetValue(number, out var picturePath) ? Path.GetFileName(picturePath) : number.ToString(CultureInfo.InvariantCulture));
                 await this.MessageBus.SendWarning(new(Icons.Material.Filled.HideImage, string.Format(T("These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"), string.Join(", ", names))));
             }
 

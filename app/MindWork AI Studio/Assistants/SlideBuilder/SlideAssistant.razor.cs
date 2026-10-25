@@ -213,7 +213,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeck = null;
         this.slideDeckAnswer = string.Empty;
         this.slideDeckTemplatePath = string.Empty;
-        this.slideDeckPicturePaths = [];
+        this.slideDeckPicturePaths.Clear();
+        this.slideDeckIconNumbers.Clear();
         this.slideDeckBasis.Clear();
         this.templateSlideUses = [];
         this.layoutNames.Clear();
@@ -223,6 +224,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.customTargetLanguage = string.Empty;
             this.footerText = string.Empty;
             this.keepEmptyPicturePlaceholders = false;
+            this.pictureLibraryPath = string.Empty;
+            this.pictureLibraryOverview = PictureLibraryContent.NONE;
             this.templatePath = string.Empty;
             this.LoadTemplate();
         }
@@ -321,7 +324,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.SetDictionary(LAYOUT_NAMES_STATE_KEY, this.layoutNames);
         state.Set(SLIDE_DECK_ANSWER_STATE_KEY, this.slideDeckAnswer);
         state.Set(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, this.slideDeckTemplatePath);
-        state.SetList(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
+        state.SetDictionary(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
+        state.SetHashSet(SLIDE_DECK_ICON_NUMBERS_STATE_KEY, this.slideDeckIconNumbers);
+        state.Set(PICTURE_LIBRARY_PATH_STATE_KEY, this.pictureLibraryPath);
         state.SetDictionary(SLIDE_DECK_BASIS_STATE_KEY, this.slideDeckBasis);
         state.Set(PLANNING_STEP_STATE_KEY, this.planningStep);
     }
@@ -354,13 +359,16 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.RestoreDictionary(LAYOUT_NAMES_STATE_KEY, this.layoutNames);
         state.Restore(SLIDE_DECK_ANSWER_STATE_KEY, value => this.slideDeckAnswer = value);
         state.Restore(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, value => this.slideDeckTemplatePath = value);
-        state.Restore(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, value => this.slideDeckPicturePaths = value);
+        state.RestoreDictionary(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
+        state.RestoreHashSet(SLIDE_DECK_ICON_NUMBERS_STATE_KEY, this.slideDeckIconNumbers);
+        state.Restore(PICTURE_LIBRARY_PATH_STATE_KEY, value => this.pictureLibraryPath = value);
         state.RestoreDictionary(SLIDE_DECK_BASIS_STATE_KEY, this.slideDeckBasis);
         state.Restore(PLANNING_STEP_STATE_KEY, value => this.planningStep = value);
 
         // Neither the template nor the slides are kept themselves, only what they were read from:
         this.LoadTemplate();
         this.RestoreSlideDeck();
+        this.ReadPictureLibraryOverviewAsync().Observe($"{nameof(SlideAssistant)}: counting the pictures of the library");
     }
 
     #region Overrides of ComponentBase
@@ -605,6 +613,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeck = null;
         this.slideDeckAnswer = string.Empty;
         this.slideDeckBasis.Clear();
+        this.slideDeckPicturePaths.Clear();
+        this.slideDeckIconNumbers.Clear();
         this.planningStep = PlanningStep.NONE;
         var catalog = this.Catalog;
         var plannedTemplatePath = this.template is null ? string.Empty : this.templatePath;
@@ -612,7 +622,17 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         var chosenLayouts = this.ChosenLayoutsOfTemplate;
         var imageAttachments = this.PicturesOfRequest();
 
+        //
+        // The pictures of the library follow the pictures for the slides in one numbering, so the
+        // JSON names every picture the same way. The system prompt needs the library only while
+        // it is written, so the planning keeps it no longer than that:
+        //
+        var library = await this.ReadPictureLibraryForPlanningAsync();
+        var firstLibraryNumber = imageAttachments.Count + 1;
+        var libraryPictures = new LibraryPictures(library.Pictures.Count, library.Pictures.Select((picture, index) => (Picture: picture, Number: firstLibraryNumber + index)).Where(entry => entry.Picture.IsIcon).Select(entry => entry.Number).ToHashSet());
+        this.planningLibrary = library;
         this.CreateChatThread();
+        this.planningLibrary = PictureLibraryContent.NONE;
 
         //
         // One report for the whole request: reading twenty documents must produce one dialog
@@ -622,12 +642,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         string documentContent;
         string layouts;
         string templateSlides;
+        string pictureLibrary;
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
         await using (var promptInjectionScope = guardService.BeginAction())
         {
             documentContent = await this.PromptLoadDocumentsContent(promptInjectionScope);
             layouts = await PromptLayoutsAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath);
             templateSlides = await PromptTemplateSlidesAsync(guardService, promptInjectionScope, catalog, plannedTemplatePath, chosenTemplateSlideUses);
+            pictureLibrary = await PromptPictureLibraryAsync(guardService, promptInjectionScope, library, firstLibraryNumber, this.pictureLibraryPath);
         }
 
         var request =
@@ -646,6 +668,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
              {documentContent}
              {layouts}
              {PromptPictureList(imageAttachments, this.ProviderSettings.SupportsImageInput())}
+             {pictureLibrary}
              {templateSlides}
          """;
 
@@ -662,7 +685,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if (string.IsNullOrWhiteSpace(answer))
             return;
 
-        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, chosenTemplateSlideUses, chosenLayouts);
+        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, libraryPictures, chosenTemplateSlideUses, chosenLayouts);
         var neededRepairRound = deck is null || issues.Count > 0;
         if (neededRepairRound)
         {
@@ -674,7 +697,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             var repairTime = this.AddUserRequest(RepairPromptOf(issues), hideContentFromUser: true);
             this.planningStep = PlanningStep.REPAIRING;
             var repairedAnswer = await this.AddAIResponseAsync(repairTime, hideContentFromUser: true);
-            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? new CheckedAnswer(null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, chosenTemplateSlideUses, chosenLayouts);
+            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? new CheckedAnswer(null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, libraryPictures, chosenTemplateSlideUses, chosenLayouts);
             if (repairedDeck is not null)
             {
                 answer = repairedAnswer;
@@ -683,7 +706,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             }
         }
 
-        this.Logger.LogInformation("The slide assistant asked with {RequestCharacters} characters and {PictureCount} pictures and got {SlideCount} slides, {RepairRound}.", request.Length, imageAttachments.Count, deck?.Slides.Count ?? 0, neededRepairRound ? "after a repair round" : "without a repair round");
+        this.Logger.LogInformation("The slide assistant asked with {RequestCharacters} characters, {PictureCount} pictures for the slides, and {LibraryPictureCount} pictures of the library, and got {SlideCount} slides, {RepairRound}.", request.Length, imageAttachments.Count, library.Pictures.Count, deck?.Slides.Count ?? 0, neededRepairRound ? "after a repair round" : "without a repair round");
 
         //
         // Slides on layouts the template does not have, or on template slides the user did not
@@ -706,10 +729,28 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeck = deck;
         this.slideDeckAnswer = answer;
         this.slideDeckTemplatePath = plannedTemplatePath;
-        this.slideDeckPicturePaths = imageAttachments.Select(picture => picture.FilePath).ToList();
         foreach (var (id, description) in catalog.DescribeBasisOf(deck))
             this.slideDeckBasis[id] = description;
 
-        this.ShowOutline(deck, catalog, imageAttachments.Select(picture => picture.FileName).ToList());
+        //
+        // Of the library, only the pictures the deck uses are kept, not the thousands it was offered:
+        //
+        var pictureNames = new Dictionary<int, string>();
+        for (var index = 0; index < imageAttachments.Count; index++)
+        {
+            this.slideDeckPicturePaths[index + 1] = imageAttachments[index].FilePath;
+            pictureNames[index + 1] = imageAttachments[index].FileName;
+        }
+
+        foreach (var number in deck.Slides.SelectMany(slide => slide.Pictures).Where(number => number >= firstLibraryNumber && number < firstLibraryNumber + library.Pictures.Count).Distinct())
+        {
+            var picture = library.Pictures[number - firstLibraryNumber];
+            this.slideDeckPicturePaths[number] = picture.FilePath;
+            pictureNames[number] = picture.Name;
+            if (picture.IsIcon)
+                this.slideDeckIconNumbers.Add(number);
+        }
+
+        this.ShowOutline(deck, catalog, pictureNames);
     }
 }
