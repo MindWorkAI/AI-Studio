@@ -50,7 +50,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
               "severity": "critical | medium | low",
               "category": "brief category",
               "location": "system prompt | BuildPrompt | component name | plugin.lua",
-              "description": "what is risky",
+              "description": "what is risky"
             }
           ]
         }
