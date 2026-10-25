@@ -180,6 +180,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private AssistantSessionKey assistantSessionKey;
     private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
+
+    /// <summary>
+    /// When the running session started, which the time below the progress bar counts from; null while
+    /// no session runs. It comes from the session, so an instance which returns to a running session
+    /// goes on counting where the first one was.
+    /// </summary>
+    private DateTimeOffset? processingStartedAt;
+
     private AssistantSessionSnapshot? pendingRenderedAssistantSessionSnapshot;
     private AssistantSessionSnapshot? lastAttachedAssistantSessionSnapshot;
 
@@ -311,6 +319,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
 
         this.assistantSessionId = startedSession.SessionId;
+        this.processingStartedAt = startedSession.StartedAt;
         await this.RefreshAssistantUIAsync();
 
         var sessionStatus = AssistantSessionStatus.COMPLETED;
@@ -343,6 +352,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         finally
         {
             this.IsProcessing = false;
+            this.processingStartedAt = null;
             var sessionCancellationTokenSource = this.CancellationTokenSource;
             this.CancellationTokenSource = null;
             if (this.assistantSessionId is { } sessionId)
@@ -1060,6 +1070,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.lastAttachedAssistantSessionSnapshot = snapshot;
         this.ChatThread = snapshot.ChatThread ?? this.ChatThread;
         this.IsProcessing = snapshot.IsActive;
+        this.processingStartedAt = snapshot.IsActive ? snapshot.StartedAt : null;
 
         if (!snapshot.IsActive)
             this.CancellationTokenSource = null;
