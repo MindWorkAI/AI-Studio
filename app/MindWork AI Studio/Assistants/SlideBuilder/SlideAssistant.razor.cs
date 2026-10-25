@@ -346,6 +346,10 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     /// <inheritdoc />
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
+        var previousTemplatePath = this.templatePath;
+        var previousSlideDeckAnswer = this.slideDeckAnswer;
+        var previousPictureLibraryPath = this.pictureLibraryPath;
+
         state.Restore(INPUT_TITLE_STATE_KEY, value => this.inputTitle = value);
         state.Restore(INPUT_CONTENT_STATE_KEY, value => this.inputContent = value);
         state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
@@ -377,10 +381,22 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.RestoreDictionary(SLIDE_DECK_BASIS_STATE_KEY, this.slideDeckBasis);
         state.Restore(PLANNING_STEP_STATE_KEY, value => this.planningStep = value);
 
-        // Neither the template nor the slides are kept themselves, only what they were read from:
-        this.LoadTemplate();
-        this.RestoreSlideDeck();
-        this.StartCountingPictureLibrary();
+        //
+        // Neither the template nor the slides nor the count of the library are kept themselves, only
+        // what they were read from. A running session stores its state every few seconds, and the
+        // template is read on the thread of the renderer, maybe from a network drive. So each one is
+        // read again only when what it was read from has changed:
+        //
+        if (string.Equals(previousTemplatePath, this.templatePath, StringComparison.Ordinal))
+            this.FitChoicesToTemplate();
+        else
+            this.LoadTemplate();
+
+        if (!string.Equals(previousSlideDeckAnswer, this.slideDeckAnswer, StringComparison.Ordinal))
+            this.RestoreSlideDeck();
+
+        if (!string.Equals(previousPictureLibraryPath, this.pictureLibraryPath, StringComparison.Ordinal))
+            this.StartCountingPictureLibrary();
     }
 
     #region Overrides of ComponentBase
