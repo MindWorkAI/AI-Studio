@@ -18,6 +18,12 @@ public static class ModelAnswerJson
     private const string OBJECT_CONTENT_STARTS = "\"}/";
 
     /// <summary>
+    /// What may follow the opening bracket of a list of objects, apart from whitespace: the brace of
+    /// its first object, or the closing bracket of an empty list.
+    /// </summary>
+    private const string OBJECT_LIST_CONTENT_STARTS = "{]";
+
+    /// <summary>
     /// Reads the first JSON object out of a model answer.
     /// </summary>
     /// <remarks>
@@ -28,6 +34,19 @@ public static class ModelAnswerJson
     /// <param name="answer">The answer of the model.</param>
     /// <returns>The first complete JSON object, or an empty span when there is none, e.g., because the answer breaks off.</returns>
     public static ReadOnlySpan<char> ExtractObject(ReadOnlySpan<char> answer) => Extract(answer, '{', '}', OBJECT_CONTENT_STARTS);
+
+    /// <summary>
+    /// Reads the first JSON list of objects out of a model answer.
+    /// </summary>
+    /// <remarks>
+    /// Brackets in prose, such as a reference like [1] or a link like [text](url), are skipped,
+    /// because a list of objects starts with a bracket followed by a brace or a closing bracket. Only
+    /// when the answer holds no such bracket, the first bracket at all counts, so that broken JSON
+    /// still reaches the deserializer.
+    /// </remarks>
+    /// <param name="answer">The answer of the model.</param>
+    /// <returns>The first complete JSON list, or an empty span when there is none, e.g., because the answer breaks off.</returns>
+    public static ReadOnlySpan<char> ExtractObjectList(ReadOnlySpan<char> answer) => Extract(answer, '[', ']', OBJECT_LIST_CONTENT_STARTS);
 
     private static ReadOnlySpan<char> Extract(ReadOnlySpan<char> answer, char opening, char closing, ReadOnlySpan<char> contentStarts)
     {

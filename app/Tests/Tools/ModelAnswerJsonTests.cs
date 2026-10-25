@@ -5,11 +5,21 @@ namespace AIStudio.Tests.Tools;
 /// <summary>
 /// Checks how the JSON part is read out of a model answer, for the kinds of answers models write and
 /// the callers rely on: the Assistant Builder, the launcher texts, the Slide Assistant, the assistant
-/// audit, and the retrieval context validation.
+/// audit, the retrieval context validation, and the data source selection.
 /// </summary>
 [TestFixture]
 public sealed class ModelAnswerJsonTests
 {
+    /// <summary>
+    /// A data source selection as the agent is asked to write it.
+    /// </summary>
+    private const string SELECTION = """
+        [
+          {"id": "4f2c", "reason": "It holds the meeting notes.", "confidence": 0.87},
+          {"id": "9a1b", "reason": "It holds the [draft] of the report.", "confidence": 0.54}
+        ]
+        """;
+
     [Test]
     public void AnObjectAloneIsReadAsItIs()
     {
@@ -190,5 +200,81 @@ public sealed class ModelAnswerJsonTests
             """;
 
         Assert.That(ModelAnswerJson.ExtractObject(ANSWER).ToString(), Is.EqualTo("""{"decision": true, "reason": "It answers the question.", "confidence": 0.9}"""));
+    }
+
+    [Test]
+    public void AListWithItsBracketsOnLinesOfTheirOwnIsRead()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(ModelAnswerJson.ExtractObjectList(SELECTION).ToString(), Is.EqualTo(SELECTION));
+            Assert.That(ModelAnswerJson.ExtractObjectList($"```json\n{SELECTION}\n```").ToString(), Is.EqualTo(SELECTION));
+        });
+    }
+
+    [Test]
+    public void AListOnASingleLineIsRead()
+    {
+        const string JSON = """[{"id": "4f2c", "reason": "It holds the notes.", "confidence": 0.87}]""";
+
+        Assert.That(ModelAnswerJson.ExtractObjectList(JSON).ToString(), Is.EqualTo(JSON));
+    }
+
+    [Test]
+    public void AnEmptyListIsAList()
+    {
+        Assert.That(ModelAnswerJson.ExtractObjectList("No data source is needed: []").ToString(), Is.EqualTo("[]"));
+    }
+
+    [Test]
+    public void AListInACodeFenceAfterProseIsRead()
+    {
+        const string ANSWER = $"These data sources fit your question:\n\n```json\n{SELECTION}\n```\n\nI left out the others.";
+
+        Assert.That(ModelAnswerJson.ExtractObjectList(ANSWER).ToString(), Is.EqualTo(SELECTION));
+    }
+
+    [Test]
+    public void AListAfterSeveralParagraphsOfProseIsRead()
+    {
+        const string ANSWER = $"I looked at every data source.\n\nTwo of them fit.\n\n{SELECTION}";
+
+        Assert.That(ModelAnswerJson.ExtractObjectList(ANSWER).ToString(), Is.EqualTo(SELECTION));
+    }
+
+    [Test]
+    public void AListMayStartAtTheEndOfALineOfProse()
+    {
+        const string ANSWER = $"Here you go: {SELECTION}";
+
+        Assert.That(ModelAnswerJson.ExtractObjectList(ANSWER).ToString(), Is.EqualTo(SELECTION));
+    }
+
+    [Test]
+    public void BracketsInProseBeforeTheListAreSkipped()
+    {
+        const string ANSWER = $"As described in [1] and in [the manual](https://example.org), these fit:\n{SELECTION}";
+
+        Assert.That(ModelAnswerJson.ExtractObjectList(ANSWER).ToString(), Is.EqualTo(SELECTION));
+    }
+
+    [Test]
+    public void BracketsInsideStringsDoNotEndTheList()
+    {
+        const string JSON = """[{"id": "4f2c", "reason": "See chapter ] and [ appendix", "confidence": 0.87}]""";
+
+        Assert.That(ModelAnswerJson.ExtractObjectList(JSON).ToString(), Is.EqualTo(JSON));
+    }
+
+    [Test]
+    public void AListWhichBreaksOffIsNoList()
+    {
+        Assert.That(ModelAnswerJson.ExtractObjectList("""[{"id": "4f2c", "reason": "It holds the""").ToString(), Is.Empty);
+    }
+
+    [Test]
+    public void AnAnswerWithoutAListHasNoList()
+    {
+        Assert.That(ModelAnswerJson.ExtractObjectList("No data source fits your question.").ToString(), Is.Empty);
     }
 }
