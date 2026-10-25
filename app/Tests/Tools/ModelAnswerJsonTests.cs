@@ -4,8 +4,8 @@ namespace AIStudio.Tests.Tools;
 
 /// <summary>
 /// Checks how the JSON part is read out of a model answer, for the kinds of answers models write and
-/// the callers rely on: the Assistant Builder, the launcher texts, the Slide Assistant, and the
-/// assistant audit.
+/// the callers rely on: the Assistant Builder, the launcher texts, the Slide Assistant, the assistant
+/// audit, and the retrieval context validation.
 /// </summary>
 [TestFixture]
 public sealed class ModelAnswerJsonTests
@@ -155,5 +155,40 @@ public sealed class ModelAnswerJsonTests
             """;
 
         Assert.That(ModelAnswerJson.ExtractObject($"Here is my audit:\n```json\n{JSON}\n```").ToString(), Is.EqualTo(JSON), "A summary ending with an escaped backslash ends at its quote, so the findings still belong to the audit.");
+    }
+
+    [Test]
+    public void AValidationDecisionIsReadAsItIs()
+    {
+        const string JSON = """{"decision": true, "reason": "The context names the launch date.", "confidence": 0.87}""";
+
+        Assert.That(ModelAnswerJson.ExtractObject(JSON).ToString(), Is.EqualTo(JSON));
+    }
+
+    [Test]
+    public void AValidationDecisionIsReadWhateverTheOrderOfItsNames()
+    {
+        const string JSON = """{"reason": "The context names the launch date.", "confidence": 0.87, "decision": true}""";
+
+        Assert.That(ModelAnswerJson.ExtractObject(JSON).ToString(), Is.EqualTo(JSON));
+    }
+
+    [Test]
+    public void AValidationReasonMayHoldBracesAndQuotes()
+    {
+        const string JSON = """{"decision": false, "reason": "The context only shows the template {date}} and a 5\" screen.", "confidence": 0.6}""";
+
+        Assert.That(ModelAnswerJson.ExtractObject(JSON).ToString(), Is.EqualTo(JSON));
+    }
+
+    [Test]
+    public void AValidationDecisionIsReadOutOfProse()
+    {
+        const string ANSWER = """
+            After reading the retrieval context, my decision is:
+            {"decision": true, "reason": "It answers the question.", "confidence": 0.9}
+            """;
+
+        Assert.That(ModelAnswerJson.ExtractObject(ANSWER).ToString(), Is.EqualTo("""{"decision": true, "reason": "It answers the question.", "confidence": 0.9}"""));
     }
 }
