@@ -704,11 +704,39 @@ public sealed class ContentText : IContent
     }
 
     /// <summary>
+    /// Filters the stored texts of the attached documents for prompt injections once more.
+    /// </summary>
+    /// <remarks>
+    /// The texts were filtered when they were read from their files. Filtering them again with every
+    /// request applies the rules of today, as when every request read the files anew. All documents of
+    /// the message go in one request to the runtime, and the user hears about them with the request.
+    /// </remarks>
+    /// <param name="storedTexts">The stored texts by the ids of their entries.</param>
+    /// <param name="attachments">The attachments, which name the files of the texts.</param>
+    /// <param name="getPromptInjectionGuard">Gets the prompt injection filter.</param>
+    /// <param name="reportingScope">The request the texts are sent with.</param>
+    /// <returns>The filtered texts by the ids of their entries.</returns>
+    private static async Task<IReadOnlyDictionary<Guid, string>> FilterStoredTextsAsync(IReadOnlyDictionary<Guid, string> storedTexts, IReadOnlyList<FileAttachment> attachments, Func<PromptInjectionGuardService> getPromptInjectionGuard, PromptInjectionReportingScope? reportingScope)
+    {
+        if (storedTexts.Count is 0)
+            return storedTexts;
+
+        var filePaths = attachments
+            .Where(attachment => attachment.ProvenanceId is not null)
+            .GroupBy(attachment => attachment.ProvenanceId!.Value)
+            .ToDictionary(group => group.Key, group => group.First().FilePath);
+
+        var ids = storedTexts.Keys.ToList();
+        var filteredTexts = await getPromptInjectionGuard().SanitizeAsync(ids.Select(id => new PromptInjectionText(storedTexts[id], PromptInjectionSource.ChatAttachment(filePaths[id]))).ToList(), reportingScope);
+        return ids.Zip(filteredTexts).ToDictionary(pair => pair.First, pair => pair.Second);
+    }
+
+    /// <summary>
     /// Builds the text the AI gets for this message, with the content of its attached documents.
     /// </summary>
     /// <param name="reportingScope">The request this message is part of, which tells the user once about everything filtered out of its attachments, or null when the request reads no documents.</param>
     /// <returns>The text for the AI.</returns>
-    public Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope) => this.PrepareTextContentForAI(reportingScope, Program.RUST_SERVICE, () => Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync());
+    public Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope) => this.PrepareTextContentForAI(reportingScope, Program.RUST_SERVICE, () => Program.SERVICE_PROVIDER.GetRequiredService<DatabaseClientProvider>().GetProvenanceStoreAsync(), () => Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>());
 
     /// <summary>
     /// Builds the text the AI gets for this message, with the content of its attached documents.
@@ -716,13 +744,15 @@ public sealed class ContentText : IContent
     /// <remarks>
     /// A document stored at its first send comes from the provenance store, also when its file
     /// changed or is gone by now, see FileAttachment.ProvenanceId: the AI gets the same text with
-    /// every request. Only a document without a stored text is read from the disk, as before.
+    /// every request. Only a document without a stored text is read from the disk, as before. A stored
+    /// text passes the prompt injection filter once more, see FilterStoredTextsAsync.
     /// </remarks>
     /// <param name="reportingScope">The request this message is part of, which tells the user once about everything filtered out of its attachments, or null when the request reads no documents.</param>
     /// <param name="rustService">The runtime, which reads the documents without a stored text.</param>
     /// <param name="getProvenanceStore">Gets the provenance store, which is asked only when a document has an entry.</param>
+    /// <param name="getPromptInjectionGuard">Gets the prompt injection filter, which is asked only when a document has a stored text.</param>
     /// <returns>The text for the AI.</returns>
-    internal async Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope, RustService rustService, Func<Task<ProvenanceStoreClient>> getProvenanceStore)
+    internal async Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope, RustService rustService, Func<Task<ProvenanceStoreClient>> getProvenanceStore, Func<PromptInjectionGuardService> getPromptInjectionGuard)
     {
         var sb = new StringBuilder();
         var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);
@@ -734,7 +764,7 @@ public sealed class ContentText : IContent
                 .Select(attachment => attachment.Normalize())
                 .ToList();
 
-            var storedTexts = await ReadStoredDocumentTextsAsync(normalizedAttachments, getProvenanceStore);
+            var storedTexts = await FilterStoredTextsAsync(await ReadStoredDocumentTextsAsync(normalizedAttachments, getProvenanceStore), normalizedAttachments, getPromptInjectionGuard, reportingScope);
 
             // Get the list of existing documents, those with a stored text included, whether their file is still there or not:
             var existingDocuments = normalizedAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && (StoredTextOf(x) is not null || x.Exists)).ToList();

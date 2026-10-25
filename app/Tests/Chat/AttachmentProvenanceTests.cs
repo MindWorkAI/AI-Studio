@@ -193,6 +193,25 @@ public sealed class AttachmentProvenanceTests
     }
 
     [Test]
+    public async Task AStoredTextPassesTheFilterAgainWhenSent()
+    {
+        // As if stored before the filter knew this kind of injection:
+        var chatId = Guid.NewGuid();
+        var provenanceId = await this.store.Client.StoreAsync(chatId, ProvenanceKind.ATTACHMENT, $"The board met on Monday. {SUSPICIOUS_PASSAGE}", null, CancellationToken.None);
+        var message = new ContentText { Text = "Summarize the minutes.", FileAttachments = [FileAttachment.FromPath(this.documentPath) with { ProvenanceId = provenanceId }] };
+
+        var prepared = await this.PrepareAsync(message);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(prepared, Does.Contain("The board met on Monday."));
+            Assert.That(prepared, Does.Not.Contain(SUSPICIOUS_PASSAGE), "Every way of content to the AI goes through the filter, with the rules of today.");
+            Assert.That(prepared, Does.Contain(FakeRuntime.REDACTION_MARKER));
+            Assert.That(this.runtime.ReadFiles, Is.Empty, "The stored text is filtered, not the file read again.");
+        });
+    }
+
+    [Test]
     public async Task AStoredDocumentIsNotStoredAgain()
     {
         var message = this.MessageWithDocument();
@@ -286,5 +305,5 @@ public sealed class AttachmentProvenanceTests
 
     private ContentText MessageWithDocument() => new() { Text = "Summarize the minutes.", FileAttachments = [FileAttachment.FromPath(this.documentPath)] };
 
-    private Task<string> PrepareAsync(ContentText message) => message.PrepareTextContentForAI(null, this.rustService, () => Task.FromResult<ProvenanceStoreClient>(this.store.Client));
+    private Task<string> PrepareAsync(ContentText message) => message.PrepareTextContentForAI(null, this.rustService, () => Task.FromResult<ProvenanceStoreClient>(this.store.Client), () => this.serviceProvider.GetRequiredService<PromptInjectionGuardService>());
 }
