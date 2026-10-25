@@ -40,6 +40,26 @@ public sealed class PictureLibraryTests
     }
 
     [Test]
+    public void AFolderOfIconsMakesAllOfItsPicturesIcons()
+    {
+        //
+        // The library folder counts like the folders below it, so a folder "Icons" holds icons only.
+        // The folders above it say where the library lies, so a library inside "iconography" gains nothing:
+        //
+        var iconFolder = Path.Combine(this.folder, "Icons");
+        var iconSetFolder = Path.Combine(this.folder, "IconSet");
+        var photoFolder = Path.Combine(this.folder, "iconography", "Photos");
+        this.CreateFiles("Icons/rocket.png", "Icons/planets/mars.png", "IconSet/moon.jpg", "iconography/Photos/crater.png");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(PictureLibrary.Read(iconFolder, new Random(1), PictureLibrary.MAX_LIBRARY_PICTURES, null, CancellationToken.None).Pictures.Select(picture => picture.IsIcon), Is.EqualTo(new[] { true, true }));
+            Assert.That(PictureLibrary.Read(iconSetFolder + Path.DirectorySeparatorChar, new Random(1), PictureLibrary.MAX_LIBRARY_PICTURES, null, CancellationToken.None).IconCount, Is.EqualTo(1), "A trailing separator changes nothing.");
+            Assert.That(PictureLibrary.Read(photoFolder, new Random(1), PictureLibrary.MAX_LIBRARY_PICTURES, null, CancellationToken.None).IconCount, Is.Zero);
+        });
+    }
+
+    [Test]
     public void ALargeLibraryIsSampledAtRandom()
     {
         this.CreateFiles([..Enumerable.Range(1, 30).Select(number => $"picture-{number:00}.png")]);

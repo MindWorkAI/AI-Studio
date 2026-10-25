@@ -1310,8 +1310,9 @@ The Slide Assistant can choose pictures and icons for the slides from a folder, 
 library of your organization. The LLM reads only the names of the pictures, never the pictures
 themselves, so clear names such as `rocket-launch.jpg` help. Only PNG and JPEG pictures count; the
 assistant leaves out every other file, SVG icons included. A picture whose name, or the name of one of
-its folders, starts with `icon` counts as an icon, which may appear on several slides. From a folder
-with more than 5,000 pictures, the LLM gets a random 5,000 of them for each planning.
+its folders, starts with `icon` counts as an icon, which may appear on several slides. This includes
+the folder you configure, so a folder `Icons` holds icons only. From a folder with more than 5,000
+pictures, the LLM gets a random 5,000 of them for each planning.
 
 Like the template, you can ship the folder with your configuration plugin and give its path relative
 to your `plugin.lua`, under the same rules: no `..` segments and no links pointing out of the plugin

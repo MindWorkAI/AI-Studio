@@ -24,6 +24,11 @@ internal static class PictureLibrary
     /// <summary>
     /// What the name of an icon, or of one of the folders it is in, starts with, in any case.
     /// </summary>
+    /// <remarks>
+    /// The library folder counts as well, so that a folder of icons, such as "Icons", makes all of
+    /// its pictures icons. The folders above the library do not count: they say where the library
+    /// lies, not what it holds.
+    /// </remarks>
     public const string ICON_PREFIX = "icon";
 
     private static readonly HashSet<string> PICTURE_EXTENSIONS = new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg" };
@@ -56,6 +61,7 @@ internal static class PictureLibrary
     public static PictureLibraryContent Read(string folder, Random random, int maxPictures, Action<string, Exception>? reportInaccessibleFolder, CancellationToken token)
     {
         var sample = new List<LibraryPicture>();
+        var isIconFolder = StartsWithIconPrefix(Path.GetFileName(Path.TrimEndingDirectorySeparator(folder)));
         var pictureCount = 0;
         var iconCount = 0;
         var skippedFileCount = 0;
@@ -69,7 +75,7 @@ internal static class PictureLibrary
             }
 
             var name = Path.GetRelativePath(folder, path).Replace(Path.DirectorySeparatorChar, '/');
-            var picture = new LibraryPicture(path, name, IsIcon(name));
+            var picture = new LibraryPicture(path, name, isIconFolder || IsIcon(name));
             pictureCount++;
             if (picture.IsIcon)
                 iconCount++;
@@ -85,8 +91,10 @@ internal static class PictureLibrary
     }
 
     /// <summary>
-    /// Whether a picture is an icon: its name or the name of one of its folders below the library starts with "icon".
+    /// Whether a picture is an icon by its own path: its name or the name of one of its folders below the library starts with "icon".
     /// </summary>
     /// <param name="name">The path of the picture below the library folder, with forward slashes.</param>
-    private static bool IsIcon(string name) => name.Split('/').Any(part => part.StartsWith(ICON_PREFIX, StringComparison.OrdinalIgnoreCase));
+    private static bool IsIcon(string name) => name.Split('/').Any(StartsWithIconPrefix);
+
+    private static bool StartsWithIconPrefix(string name) => name.StartsWith(ICON_PREFIX, StringComparison.OrdinalIgnoreCase);
 }
