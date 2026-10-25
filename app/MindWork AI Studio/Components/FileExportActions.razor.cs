@@ -29,12 +29,6 @@ public partial class FileExportActions : MSGComponentBase
     [Parameter]
     public bool OffersOpening { get; set; }
 
-    /// <summary>
-    /// Called after the user took one of the ways, whether it worked or not.
-    /// </summary>
-    [Parameter]
-    public EventCallback ActionTaken { get; set; }
-
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -57,10 +51,6 @@ public partial class FileExportActions : MSGComponentBase
             this.Logger.LogWarning(e, "Could not show an exported file in the file manager.");
             await this.MessageBus.SendError(new(Icons.Material.Filled.FolderOpen, T("Could not open the file location.")));
         }
-        finally
-        {
-            await this.ActionTaken.InvokeAsync();
-        }
     }
 
     private async Task OpenWithDefaultProgram()
@@ -78,10 +68,6 @@ public partial class FileExportActions : MSGComponentBase
         {
             this.Logger.LogWarning(e, "Could not open an exported file with the default program.");
             await this.MessageBus.SendError(new(Icons.Material.Filled.OpenInNew, T("Could not open the file.")));
-        }
-        finally
-        {
-            await this.ActionTaken.InvokeAsync();
         }
     }
 }

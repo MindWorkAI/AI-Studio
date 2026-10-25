@@ -6,8 +6,8 @@ namespace AIStudio.Tools;
 /// The notification that a file was exported, with the ways to reach it.
 /// </summary>
 /// <remarks>
-/// It stays until the user closes it or takes one of its ways: whoever exports a file wants to get
-/// to it, and that may well happen later than a timeout would allow.
+/// It stays until the user closes it, also after they took one of its ways: whoever exports a file
+/// wants to get to it, often in both ways, and that may well happen later than a timeout would allow.
 /// </remarks>
 /// <param name="Key">The key of the export. The notification that the export runs has the same one and gets replaced.</param>
 /// <param name="Icon">The icon of the notification.</param>
@@ -23,8 +23,7 @@ public readonly record struct DataFileExportSuccessMessage(string Key, string Ic
         {
             [nameof(FileExportSuccessMessage.Message)] = this.Message,
             [nameof(FileExportSuccessMessage.FilePath)] = this.FilePath,
-            [nameof(FileExportSuccessMessage.OffersOpening)] = this.OffersOpening,
-            [nameof(FileExportSuccessMessage.SnackbarKey)] = this.Key
+            [nameof(FileExportSuccessMessage.OffersOpening)] = this.OffersOpening
         };
 
         var icon = this.Icon;
