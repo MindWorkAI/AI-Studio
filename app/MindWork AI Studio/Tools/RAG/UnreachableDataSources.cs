@@ -8,8 +8,9 @@ namespace AIStudio.Tools.RAG;
 /// Tells the model which data sources of the chat could not be searched because their server could not be reached.
 /// </summary>
 /// <remarks>
-/// Semantic Search writes this into the description of its tool, the classic RAG process next to
-/// the passages it found. Both use the same words, so that the model hears the same in either way.
+/// Semantic Search writes this into the description of its tool, or into the system prompt when no
+/// data source of the chat can be searched and the tool stays out. The classic RAG process writes it
+/// next to the passages it found. All use the same words, so that the model hears the same in either way.
 /// Only external data sources have a server which may be out of reach, hence their kind is not
 /// listed.<br/><br/>
 /// The note holds nothing but the names the data sources have in AI Studio, configured by the user
