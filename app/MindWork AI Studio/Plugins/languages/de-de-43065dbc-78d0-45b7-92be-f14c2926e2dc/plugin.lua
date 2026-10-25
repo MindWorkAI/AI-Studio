@@ -2829,8 +2829,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T21117
 -- When a new slide has no picture for a picture placeholder of its layout, it leaves the placeholder out, as every other placeholder without content. Keep these placeholders to insert pictures of your own later: PowerPoint shows them while you edit and hides them in the slide show.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T2143216044"] = "Wenn für einen Bildplatzhalter im Layout einer neuen Folie kein Bild vorhanden ist, wird er – wie jeder andere leere Platzhalter auch – weggelassen. Behalten Sie diese Platzhalter bei, um später eigene Bilder einzufügen: PowerPoint zeigt sie beim Bearbeiten an und blendet sie in der Bildschirmpräsentation aus."
 
--- Choose a folder with pictures and icons, e.g., the picture library of your organization. The LLM reads only their names, never the pictures themselves, and uses a picture where its name fits a slide; it does not have to use any. So clear names such as “rocket-launch.jpg” help. Only PNG and JPEG pictures count: many icons come as SVG, which the assistant leaves out. A picture whose name, or the name of one of its folders, starts with “icon” is an icon. An icon may appear on several slides and goes into picture placeholders of any size, except those which cover half the slide or more, as a background picture does. From a folder with more than {0} pictures, the LLM gets a random {0} of them for each planning.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T3590520870"] = "Wählen Sie einen Ordner mit Bildern und Icons, z. B. die Bildbibliothek Ihrer Organisation. Das LLM liest nur ihre Namen, nie die Bilder selbst, und verwendet ein Bild dort, wo sein Name zu einer Folie passt; es muss keines verwenden. Aussagekräftige Namen wie „rocket-launch.jpg“ helfen daher. Es zählen nur PNG- und JPEG-Bilder: Viele Icons liegen als SVG vor, die der Assistent auslässt. Ein Bild, dessen Name oder der Name eines seiner Ordner mit „icon“ beginnt, ist ein Icon. Ein Icon darf auf mehreren Folien vorkommen und kommt in Bildplatzhalter jeder Größe, außer in solche, die die halbe Folie oder mehr bedecken, wie es ein Hintergrundbild tut. Aus einem Ordner mit mehr als {0} Bildern erhält das LLM bei jeder Planung zufällig {0} davon."
+-- Choose a folder with pictures and icons, e.g., the picture library of your organization. The LLM reads only their names, never the pictures themselves, and uses a picture where its name fits a slide; it does not have to use any. So clear names such as “rocket-launch.jpg” help. Only PNG and JPEG pictures count: many icons come as SVG, which the assistant leaves out. A picture whose name, or the name of one of its folders, the chosen folder included, starts with “icon” is an icon. An icon may appear on several slides and goes into picture placeholders of any size, except those which cover half the slide or more, as a background picture does. From a folder with more than {0} pictures, the LLM gets a random {0} of them for each planning.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T4122949257"] = "Wählen Sie einen Ordner mit Bildern und Icons, z. B. die Bildbibliothek Ihrer Organisation. Das LLM liest nur ihre Namen, nie die Bilder selbst, und verwendet ein Bild dort, wo sein Name zu einer Folie passt; es muss keines verwenden. Aussagekräftige Namen wie „rocket-launch.jpg“ helfen daher. Es zählen nur PNG- und JPEG-Bilder: Viele Icons liegen als SVG vor, die der Assistent auslässt. Ein Bild, dessen Name oder der Name eines seiner Ordner, den gewählten Ordner eingeschlossen, mit „icon“ beginnt, ist ein Icon. Ein Icon darf auf mehreren Folien vorkommen und kommt in Bildplatzhalter jeder Größe, außer in solche, die die halbe Folie oder mehr bedecken, wie es ein Hintergrundbild tut. Aus einem Ordner mit mehr als {0} Bildern erhält das LLM bei jeder Planung zufällig {0} davon."
 
 -- Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T554384175"] = "Ihre Datei enthält neben den Layouts auch Folien, z. B. Beispielfolien der Vorlage oder die Folien einer früheren Präsentation. Standardmäßig lässt die Präsentation sie weg. Legen Sie für jede Folie fest, ob die Präsentation sie unverändert übernimmt oder ihren Inhalt vom LLM bearbeiten lässt. Das LLM verwendet jede dieser Folien genau einmal, behält ihre Reihenfolge bei und kann davor, dazwischen und danach neue Folien einfügen. Es kopiert nie eine Folie als Muster: Neue Folien entstehen immer aus den Layouts Ihrer Vorlage."
@@ -9783,6 +9783,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T29315
 -- Preselect a readable template above to choose its layouts for kinds of slides.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3212897766"] = "Wählen Sie oben eine lesbare Vorlage aus, um ihre Layouts für Folienarten vorauszuwählen."
 
+-- Preselect the maximum number of bullet points per slide
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3214836964"] = "Maximale Anzahl der Aufzählungspunkte pro Folie vorauswählen"
+
 -- Assistant: Slide Assistant Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3215549988"] = "Assistent: Optionen für den Folien-Assistenten"
 
@@ -9816,6 +9819,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T37059
 -- Empty picture placeholders are kept
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3852335360"] = "Leere Bildplatzhalter bleiben erhalten"
 
+-- No maximum
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3915183720"] = "Kein Höchstwert"
+
 -- No Slide Assistant options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T4214398691"] = "Für den Folien-Assistenten sind keine Optionen vorausgewählt"
 
@@ -9842,6 +9848,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T95684
 
 -- Which audience profile should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T973572510"] = "Welches Zielgruppenprofil soll vorausgewählt sein?"
+
+-- A slide holds at most this many bullet points, in all of its text slots together. Match it to the room for text in the layouts of your template.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T995644230"] = "Eine Folie enthält höchstens so viele Aufzählungspunkte, in allen ihren Textfeldern zusammen. Stimmen Sie den Wert auf den Platz für Text in den Layouts Ihrer Vorlage ab."
 
 -- When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T183953912"] = "Wenn diese Option aktiviert ist, können Sie Synonymoptionen im Voraus auswählen. Dies kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
