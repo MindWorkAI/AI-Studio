@@ -1447,8 +1447,8 @@ public partial class ChatComponent : MSGComponentBase
     /// </remarks>
     /// <param name="attachment">The attachment, as the composer holds it.</param>
     /// <param name="text">The text the preview read, after the prompt injection filter.</param>
-    /// <param name="lastWriteUtc">When the file was last written before the preview read it.</param>
-    private async Task KeepPreviewedTextAsync(FileAttachment attachment, string text, DateTime lastWriteUtc)
+    /// <param name="version">The state of the file before the preview read it.</param>
+    private async Task KeepPreviewedTextAsync(FileAttachment attachment, string text, FileVersion version)
     {
         try
         {
@@ -1456,7 +1456,7 @@ public partial class ChatComponent : MSGComponentBase
             if (chat is null)
                 return;
 
-            if (chat.Draft.GetPreviewedText(attachment.FilePath)?.LastWriteUtc == lastWriteUtc)
+            if (chat.Draft.GetPreviewedText(attachment.FilePath)?.Version == version)
                 return;
 
             var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
@@ -1465,7 +1465,7 @@ public partial class ChatComponent : MSGComponentBase
                 return;
 
             // Stored with the chat like a change in the composer, so the text still counts after leaving the chat:
-            var replacedId = chat.Draft.NotePreviewedText(new(attachment.FilePath, provenanceId.Value, lastWriteUtc));
+            var replacedId = chat.Draft.NotePreviewedText(new(attachment.FilePath, provenanceId.Value, version));
             this.KeepComposerInDraft();
 
             if (replacedId is { } id)
@@ -1492,7 +1492,7 @@ public partial class ChatComponent : MSGComponentBase
         if (attachment.ProvenanceId is not null || draft.GetPreviewedText(attachment.FilePath) is not { } previewed)
             return attachment;
 
-        return attachment.Exists && File.GetLastWriteTimeUtc(attachment.FilePath) == previewed.LastWriteUtc
+        return FileVersion.Of(attachment.FilePath) == previewed.Version
             ? attachment with { ProvenanceId = previewed.ProvenanceId }
             : attachment;
     }

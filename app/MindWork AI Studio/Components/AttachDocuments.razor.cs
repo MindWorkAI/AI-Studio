@@ -89,7 +89,7 @@ public partial class AttachDocuments : MSGComponentBase
     /// assistants, the documents are read for every run anyway.
     /// </remarks>
     [Parameter]
-    public Func<FileAttachment, string, DateTime, Task>? KeepPreviewedText { get; set; }
+    public Func<FileAttachment, string, FileVersion, Task>? KeepPreviewedText { get; set; }
 
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
@@ -393,7 +393,7 @@ public partial class AttachDocuments : MSGComponentBase
             // about whether it happened to be new to us.
             //
             var attachment = FileAttachment.FromPath(path);
-            this.DocumentPaths.Add(attachment);
+            this.DocumentPaths.AttachInPlaceOfSameFile(attachment);
             attached.Add(attachment);
         }
 

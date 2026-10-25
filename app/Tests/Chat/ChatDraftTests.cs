@@ -103,7 +103,7 @@ public sealed class ChatDraftTests
         var draft = new ChatDraft();
         draft.SetText("Summarize the meeting");
         draft.AddAttachments([TRANSCRIPT]);
-        draft.NotePreviewedText(new(TRANSCRIPT.FilePath, Guid.NewGuid(), DateTime.UtcNow));
+        draft.NotePreviewedText(new(TRANSCRIPT.FilePath, Guid.NewGuid(), new(DateTime.UtcNow, 42)));
 
         draft.Clear();
 
@@ -118,9 +118,9 @@ public sealed class ChatDraftTests
     public void APreviewOfTheSameFileReplacesTheTextNotedBefore()
     {
         var draft = new ChatDraft();
-        var firstPreview = new PreviewedText(AGENDA.FilePath, Guid.NewGuid(), new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc));
-        var otherFile = new PreviewedText(MINUTES.FilePath, Guid.NewGuid(), new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc));
-        var secondPreview = firstPreview with { ProvenanceId = Guid.NewGuid(), LastWriteUtc = new DateTime(2026, 10, 24, 10, 0, 0, DateTimeKind.Utc) };
+        var firstPreview = new PreviewedText(AGENDA.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc), 42));
+        var otherFile = new PreviewedText(MINUTES.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc), 42));
+        var secondPreview = firstPreview with { ProvenanceId = Guid.NewGuid(), Version = new(new DateTime(2026, 10, 24, 10, 0, 0, DateTimeKind.Utc), 43) };
 
         var replacedByFirst = draft.NotePreviewedText(firstPreview);
         draft.NotePreviewedText(otherFile);
@@ -139,7 +139,7 @@ public sealed class ChatDraftTests
     public void TheTextsAPreviewReadAreStoredWithTheChat()
     {
         var thread = new ChatThread { ChatId = Guid.NewGuid(), Name = "Meeting notes" };
-        var previewed = new PreviewedText(AGENDA.FilePath, Guid.NewGuid(), new DateTime(2026, 10, 24, 9, 30, 15, 123, DateTimeKind.Utc).AddTicks(4567));
+        var previewed = new PreviewedText(AGENDA.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 30, 15, 123, DateTimeKind.Utc).AddTicks(4567), 42));
         thread.Draft.AddAttachments([AGENDA]);
         thread.Draft.NotePreviewedText(previewed);
 

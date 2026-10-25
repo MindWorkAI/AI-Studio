@@ -45,7 +45,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     /// Null for a message which was already sent, and wherever nothing is sent later.
     /// </remarks>
     [Parameter]
-    public Func<FileAttachment, string, DateTime, Task>? KeepReadText { get; set; }
+    public Func<FileAttachment, string, FileVersion, Task>? KeepReadText { get; set; }
 
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
@@ -129,7 +129,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
 
     private async Task PathsDropped(List<string> paths) => await this.AttachPathsAsync(paths);
 
-    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, HashSet<FileAttachment> documentPaths, Func<List<string>, Task<IReadOnlyList<FileAttachment>>>? attachPaths = null, Func<bool>? isAttachingUnavailable = null, Func<FileAttachment, string, DateTime, Task>? keepReadText = null)
+    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, HashSet<FileAttachment> documentPaths, Func<List<string>, Task<IReadOnlyList<FileAttachment>>>? attachPaths = null, Func<bool>? isAttachingUnavailable = null, Func<FileAttachment, string, FileVersion, Task>? keepReadText = null)
     {
         var dialogParameters = new DialogParameters<ReviewAttachmentsDialog>
         {

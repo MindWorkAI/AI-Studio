@@ -31,7 +31,7 @@ public sealed class ProvenanceCleanupTests
 
         // A message being edited brings its attachment along, and a preview read another one:
         chat.Draft.AddAttachments([new FileAttachment(FileAttachmentType.DOCUMENT, "draft.txt", "/tmp/draft.txt", 12) { ProvenanceId = draftAttachmentId }]);
-        chat.Draft.NotePreviewedText(new("/tmp/notes.txt", previewedTextId, DateTime.UtcNow));
+        chat.Draft.NotePreviewedText(new("/tmp/notes.txt", previewedTextId, new(DateTime.UtcNow, 12)));
 
         Assert.That(chat.CollectProvenanceIds(), Is.EquivalentTo(new[] { passageId, attachmentId, draftAttachmentId, previewedTextId }), "The message being written is referred to as well, or the cleanup would take the texts it sends.");
     }

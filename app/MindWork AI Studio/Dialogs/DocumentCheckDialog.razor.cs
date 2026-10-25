@@ -49,13 +49,13 @@ public partial class DocumentCheckDialog : MSGComponentBase
     /// read the file again, see FileAttachment.ProvenanceId.
     /// </summary>
     /// <remarks>
-    /// Gets the document, the text read from it, and when its file was last written before it was
-    /// read, so that a file which changed afterward is read again; never throws. Only the chat hands
+    /// Gets the document, the text read from it, and the state of its file before it was read, so
+    /// that a file which changed afterward is read again; never throws. Only the chat hands
     /// one over, for the attachments of the message being written: a sent message has its texts
     /// already, and elsewhere, nothing is sent later.
     /// </remarks>
     [Parameter]
-    public Func<FileAttachment, string, DateTime, Task>? KeepReadText { get; set; }
+    public Func<FileAttachment, string, FileVersion, Task>? KeepReadText { get; set; }
 
     /// <summary>
     /// The document we show right now. It starts out as the one we were opened with and changes
@@ -205,7 +205,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
             return;
 
         string? textToKeep = null;
-        var lastWriteUtc = default(DateTime);
+        FileVersion? version = null;
         try
         {
             //
@@ -232,7 +232,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
             // Taken before reading, so that a change while reading counts as a change:
             if (this.KeepReadText is not null)
-                lastWriteUtc = await Task.Run(() => File.GetLastWriteTimeUtc(documentToLoad.FilePath), cancellationToken);
+                version = await Task.Run(() => FileVersion.Of(documentToLoad.FilePath), cancellationToken);
 
             var extraction = await UserFile.LoadFileData(documentToLoad.FilePath, this.RustService, this.PandocAvailability, cancellationToken);
             if (this.isDisposed || generation != this.loadGeneration)
@@ -277,8 +277,8 @@ public partial class DocumentCheckDialog : MSGComponentBase
         // the file told the user already what could not be read, so sending the kept text tells
         // nothing of it again:
         //
-        if (textToKeep is not null)
-            await this.KeepReadText!(documentToLoad, textToKeep, lastWriteUtc);
+        if (textToKeep is not null && version is not null)
+            await this.KeepReadText!(documentToLoad, textToKeep, version);
     }
 
     /// <summary>
