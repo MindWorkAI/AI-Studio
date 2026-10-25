@@ -360,6 +360,51 @@ public sealed class VectorReuseTests
         });
     }
 
+    /// <remarks>
+    /// An edit of the file failed at the provider, and the attempt stays for its vectors. Then the
+    /// edit is undone: the content is the stored one again, so no attempt would ever come which
+    /// removes the one kept.
+    /// </remarks>
+    [Test]
+    public async Task AnAttemptKeptForItsVectorsGoesOnceTheEditIsUndone()
+    {
+        await using var run = await IndexRun.CreateAsync(embeddingBatchSize: 1);
+        await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
+        run.Provider.FailOn = "Chapter three.";
+        await run.IndexAsync("fingerprint-2", "Chapter one.", "Chapter two, revised.", "Chapter three.");
+        var generationsAfterTheAttempt = (await run.StoredChunksAsync()).Select(chunk => chunk.Generation).Distinct().ToList();
+
+        await run.RecordContentUnchangedAsync("fingerprint-3");
+
+        var chunksAtTheEnd = await run.StoredChunksAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(generationsAfterTheAttempt, Is.EquivalentTo(new[] { 0, 1 }));
+            Assert.That(chunksAtTheEnd.Select(chunk => chunk.TextHash), Is.EquivalentTo(new[] { "Chapter one.", "Chapter two." }.Select(ChunkTextHash.Of)), "Only the stored version stays.");
+            Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(chunksAtTheEnd.Select(chunk => chunk.ChunkId)), "The vector store keeps exactly the chunks the index keeps.");
+        });
+    }
+
+    [Test]
+    public async Task WhatAnInterruptedRunLeftOfAnUnchangedDocumentGoesWithTheNextRun()
+    {
+        await using var run = await IndexRun.CreateAsync();
+        await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.");
+        await run.IndexAsync("fingerprint-2", record: false, "Chapter one.", "Chapter two, revised.");
+
+        await run.RemoveLeftoverGenerationsAsync(isUnchanged: false);
+        var generationsOfAChangedDocument = (await run.StoredChunksAsync()).Select(chunk => chunk.Generation).Distinct().ToList();
+        await run.RemoveLeftoverGenerationsAsync(isUnchanged: true);
+
+        var chunksAtTheEnd = await run.StoredChunksAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(generationsOfAChangedDocument, Is.EquivalentTo(new[] { 0, 1 }), "A document which changed is indexed again, and that attempt takes over the vectors.");
+            Assert.That(chunksAtTheEnd.Select(chunk => chunk.Generation), Is.All.EqualTo(0), "Nothing else would ever remove what the interrupted run left of a document which did not change since.");
+            Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(chunksAtTheEnd.Select(chunk => chunk.ChunkId)));
+        });
+    }
+
     [Test]
     public async Task TheIndexStoreKnowsEveryChunkBeforeItsPointIsWritten()
     {
@@ -449,28 +494,9 @@ public sealed class VectorReuseTests
         /// <returns>Whether the document was indexed.</returns>
         public async Task<bool> IndexAsync(string fingerprint, bool record, params string[] chunkTexts)
         {
-            var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
-            var context = new IndexedRunContext(
-                this.dataSource,
-                this.embeddingProvider,
-                this.Provider,
-                this.Vectors,
-                store.Client,
-                this.Manifest,
-                new RunShare(RunShare.DEFAULT_DURATION),
-                new IndexingPass(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE", string.Empty)),
-                new PromptInjectionGuardService(null!, settingsManager, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance).BeginAction(),
-                settingsManager,
-                _ => { },
-                NullLogger.Instance);
-
+            var context = this.CreateContext();
             var progress = new DocumentRunProgress(context, 1, 0, string.Empty, [], NullLogger.Instance);
-            var now = DateTimeOffset.UtcNow;
-            var document = new EmbeddingDocument(
-                PATH,
-                new EmbeddingStateFile(IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, PATH), PATH, "handbook.md", "handbook.md", "md", fingerprint, 64, now, now, now, 0),
-                "handbook.md",
-                _ => this.Chunks(chunkTexts));
+            var document = this.CreateDocument(fingerprint, chunkTexts);
 
             this.ChunksRead = 0;
             var isNew = !this.Manifest.Files.ContainsKey(PATH);
@@ -490,7 +516,48 @@ public sealed class VectorReuseTests
             }
         }
 
+        /// <summary>
+        /// Records the document as read again under another fingerprint, while its content stayed the same, as a file saved again without edits.
+        /// </summary>
+        /// <param name="fingerprint">The new fingerprint of the document.</param>
+        public Task RecordContentUnchangedAsync(string fingerprint) =>
+            new DocumentRunProgress(this.CreateContext(), 1, 0, string.Empty, [], NullLogger.Instance).RecordContentUnchangedAsync(this.CreateDocument(fingerprint, []), this.Manifest.Files[PATH], CancellationToken.None);
+
+        /// <summary>
+        /// Removes what earlier runs left behind of the document, as a run of the file indexer does before it reads anything.
+        /// </summary>
+        /// <param name="isUnchanged">Whether the document did not change since its row was written.</param>
+        public Task RemoveLeftoverGenerationsAsync(bool isUnchanged) => this.CreateContext().RemoveLeftoverGenerationsAsync(_ => isUnchanged, CancellationToken.None);
+
         public ValueTask DisposeAsync() => store.DisposeAsync();
+
+        private IndexedRunContext CreateContext()
+        {
+            var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
+            return new IndexedRunContext(
+                this.dataSource,
+                this.embeddingProvider,
+                this.Provider,
+                this.Vectors,
+                store.Client,
+                this.Manifest,
+                new RunShare(RunShare.DEFAULT_DURATION),
+                new IndexingPass(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE", string.Empty)),
+                new PromptInjectionGuardService(null!, settingsManager, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance).BeginAction(),
+                settingsManager,
+                _ => { },
+                NullLogger.Instance);
+        }
+
+        private EmbeddingDocument CreateDocument(string fingerprint, string[] chunkTexts)
+        {
+            var now = DateTimeOffset.UtcNow;
+            return new EmbeddingDocument(
+                PATH,
+                new EmbeddingStateFile(IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, PATH), PATH, "handbook.md", "handbook.md", "md", fingerprint, 64, now, now, now, 0),
+                "handbook.md",
+                _ => this.Chunks(chunkTexts));
+        }
 
         private async IAsyncEnumerable<EmbeddingChunk> Chunks(IEnumerable<string> texts)
         {

@@ -129,6 +129,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(context, inputFiles, token);
         token.ThrowIfCancellationRequested();
 
+        // Before the data source may be skipped as unchanged, since nothing else removes what is left of an unchanged file:
+        await context.RemoveLeftoverGenerationsAsync(key => manifest.Files.TryGetValue(key, out var record) && metadataSnapshot.FileHashes.TryGetValue(key, out var fingerprint) && string.Equals(record.Fingerprint, fingerprint, StringComparison.Ordinal), token);
+
         logger.LogInformation(
             "Compared data source hash for '{DataSourceName}' ({DataSourceId}). StoredSourceHashPrefix={StoredSourceHashPrefix}, CurrentSourceHashPrefix={CurrentSourceHashPrefix}, StoredFileRecords={StoredFileRecords}, CurrentFiles={CurrentFiles}, RemovedMissingFiles={RemovedMissingFiles}.",
             dataSource.Name,

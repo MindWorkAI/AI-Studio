@@ -323,6 +323,63 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     }
 
     /// <summary>
+    /// Removes what failed attempts and interrupted runs left behind of documents which are complete and did not change since.
+    /// </summary>
+    /// <remarks>
+    /// The next indexing of a document removes such generations, cf. CompleteDocumentAsync. A
+    /// document which did not change since is not indexed again, though, e.g., a file whose edit was
+    /// undone, or one whose run stopped while removing them, so nothing else would ever remove
+    /// them. No search finds them, so they cost space only, and a failure here costs the run nothing.
+    /// </remarks>
+    /// <param name="isUnchanged">Whether the document with the given key is the same as what its row describes.</param>
+    /// <param name="token">The cancellation token.</param>
+    public async Task RemoveLeftoverGenerationsAsync(Func<string, bool> isUnchanged, CancellationToken token)
+    {
+        try
+        {
+            // The documents with hidden chunks, which are few. A document whose first indexing is not complete has none to search by, and stays as it is:
+            var documents = await indexStore.GetHiddenChunksAsync(dataSource.Id, token);
+            if (documents.Count is 0)
+                return;
+
+            var keysByParentId = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var (key, record) in manifest.Files)
+                if (record.ParentFileId is { } parentFileId)
+                    keysByParentId.TryAdd(parentFileId, key);
+
+            foreach (var document in documents)
+            {
+                token.ThrowIfCancellationRequested();
+                if (document.SearchableGeneration is { } generation && keysByParentId.TryGetValue(document.ParentFileId, out var key) && manifest.Files[key].Generation == generation && isUnchanged(key))
+                    await this.KeepOnlyGenerationAsync(key, generation, token);
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not remove what earlier runs left behind of the documents in data source '{DataSourceName}' ({DataSourceId}). No search finds it, and the next run tries again.", dataSource.Name, dataSource.Id);
+        }
+    }
+
+    /// <summary>
+    /// Removes every generation of a document but the given one, when it has any other.
+    /// </summary>
+    /// <param name="documentKey">The key of the document.</param>
+    /// <param name="generation">The generation which stays, the one its row names.</param>
+    /// <param name="token">The cancellation token.</param>
+    public async Task KeepOnlyGenerationAsync(string documentKey, int generation, CancellationToken token)
+    {
+        var storedChunks = await indexStore.GetStoredChunksAsync(dataSource.Id, documentKey, token);
+        if (storedChunks.All(chunk => chunk.Generation == generation))
+            return;
+
+        await this.KeepGenerationsAsync(documentKey, [generation], storedChunks.Where(chunk => chunk.Generation == generation).Select(chunk => chunk.ChunkId).ToList(), token);
+    }
+
+    /// <summary>
     /// Removes every generation of a document but the given ones, from the vector store first.
     /// </summary>
     /// <remarks>

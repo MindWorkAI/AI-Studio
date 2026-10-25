@@ -63,7 +63,13 @@ internal sealed class MemoryVectorStore() : VectorStoreClient("Test vectors in m
 
     public override Task OptimizeVectorStore(string storeName, CancellationToken token) => Task.CompletedTask;
 
-    public override Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) => throw new NotSupportedException();
+    public override Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token)
+    {
+        foreach (var point in this.Points.Values.Where(point => point.ParentFileId == parentFileId).ToList())
+            this.Points[point.PointId] = point with { AbsolutePath = absolutePath, RelativePath = relativePath, Fingerprint = fingerprint };
+
+        return Task.CompletedTask;
+    }
 
     public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) => throw new NotSupportedException();
 

@@ -25,7 +25,10 @@ The parts:
   the embedding provider fails, the attempt asks it nothing more and reads the rest of the document for the
   chunks with a stored vector; a document with nothing stored stops at the failure, since none of its chunks
   could take over a vector. Either way, the attempt stays next to the stored version, so the next one reuses
-  its vectors; one which stopped for any other reason goes. A document keeps two generations at most. A chunk whose text the document had stored before keeps its vector (`ReusableVectors`),
+  its vectors; one which stopped for any other reason goes. Between attempts, a document keeps two generations at
+  most: the one its row names, and an attempt which stays for its vectors. A run of the file indexer removes the
+  others of every file which did not change since (`IndexedRunContext.RemoveLeftoverGenerationsAsync`), since no
+  attempt would ever come for it. A chunk whose text the document had stored before keeps its vector (`ReusableVectors`),
   found by the hash of exactly the text that goes to the embedding provider (`ChunkTextHash`), so hash whatever
   is sent, and send whatever is stored. The new chunks belong to the next generation, which is part of their
   ids (`IndexedDocumentIds.CreateChunkIdSource`), so they never overwrite an old chunk, not even for a mail,

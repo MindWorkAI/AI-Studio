@@ -244,7 +244,8 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// Its chunks and vectors stay as they are, under the ids they have. Only the new fingerprint
     /// is written, into the vector store as well as into the index store, the way a relocation
     /// writes it, so the next run finds the document unchanged. Nothing is read through the
-    /// runtime, and nothing goes to the embedding provider.
+    /// runtime, and nothing goes to the embedding provider. An attempt which failed in between and
+    /// stays for its vectors is of no use any longer, and goes.
     /// </remarks>
     /// <param name="document">The document, as it would be indexed now.</param>
     /// <param name="storedRecord">What the manifest knows about the document from its last indexing.</param>
@@ -255,6 +256,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         await context.VectorStore.RelocateEmbeddingFileAsync(context.CollectionName, state.ParentFileId, state.AbsolutePath, state.RelativePath, state.Fingerprint, token);
         token.ThrowIfCancellationRequested();
         await this.StoreDocumentStateAsync(document.Key, state, token);
+        await context.KeepOnlyGenerationAsync(document.Key, storedRecord.Generation, token);
 
         this.UnchangedDocuments++;
     }
