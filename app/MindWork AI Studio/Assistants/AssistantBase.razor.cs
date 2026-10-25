@@ -181,6 +181,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
     private AssistantSessionSnapshot? pendingRenderedAssistantSessionSnapshot;
+    private AssistantSessionSnapshot? lastAttachedAssistantSessionSnapshot;
 
     /// <summary>
     /// Gets whether the Blazor component instance has already been disposed.
@@ -1042,13 +1043,21 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <summary>
     /// Applies an assistant session snapshot to this component instance.
     /// </summary>
+    /// <remarks>
+    /// When the user leaves an assistant while it runs and comes back, this component only shows the run.
+    /// The component which started it keeps working out of sight and reports every few seconds, yet its
+    /// form stays as it was when the user left. So once this component has taken over a run, it takes over
+    /// only what the running assistant changed since, such as the progress and the result. What the user
+    /// changes here stays, just as it would in the component which started the run.
+    /// </remarks>
     /// <param name="snapshot">The snapshot to attach.</param>
     /// <param name="restoreClientOnlyContent">Whether derived assistants should restore client-only UI state.</param>
     /// <returns>A task that completes after the component was refreshed.</returns>
     private async Task AttachAssistantSession(AssistantSessionSnapshot snapshot, bool restoreClientOnlyContent)
     {
         this.assistantSessionId = snapshot.SessionId;
-        this.ImportAssistantSessionState(snapshot.State);
+        this.ImportAssistantSessionState(snapshot.StateChangedSince(this.lastAttachedAssistantSessionSnapshot));
+        this.lastAttachedAssistantSessionSnapshot = snapshot;
         this.ChatThread = snapshot.ChatThread ?? this.ChatThread;
         this.IsProcessing = snapshot.IsActive;
 

@@ -217,7 +217,20 @@ public partial class SlideAssistant
             return;
         }
 
-        // A variant of another template means nothing for this one, nor do choices for its slides:
+        this.FitChoicesToTemplate();
+    }
+
+    /// <summary>
+    /// Fits the color variant and the choices for the slides to the loaded template.
+    /// </summary>
+    /// <remarks>
+    /// A variant of another template means nothing for this one, nor do choices for its slides.
+    /// </remarks>
+    private void FitChoicesToTemplate()
+    {
+        if (this.template is null)
+            return;
+
         if (this.variantLabel is null || !this.template.VariantLabels.Contains(this.variantLabel))
             this.variantLabel = this.template.VariantLabels.FirstOrDefault();
 
