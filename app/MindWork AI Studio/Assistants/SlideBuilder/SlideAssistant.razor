@@ -110,6 +110,13 @@
 
         <MudTextField T="string" @bind-Text="@this.footerText" Label="@T("(Optional) Footer")" HelperText="@T("Shown on every slide whose layout has a footer, e.g., your name, organization, and date.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ShortText" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
+        <MudSwitch T="bool" @bind-Value="@this.keepEmptyPicturePlaceholders" Color="Color.Primary" Class="mx-1">
+            @T("Keep empty picture placeholders")
+        </MudSwitch>
+        <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+            @SlideAssistantTexts.WhatKeepingEmptyPicturePlaceholdersDoes
+        </MudJustifiedText>
+
         <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Layouts for kinds of slides")</MudText>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @SlideAssistantTexts.WhatALayoutChoiceDoes

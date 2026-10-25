@@ -703,6 +703,11 @@ CONFIG["SETTINGS"] = {}
 -- the organization. Leave it empty for no footer.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
 --
+-- Configure whether new slides keep the picture placeholders of their layout which they have no
+-- picture for. PowerPoint shows them while editing, so users can insert pictures of their own,
+-- and hides them in the slide show. By default, the slides leave them out.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders"] = false
+--
 -- Configure the layout of your template for kinds of slides, e.g., which layout opens each
 -- chapter. Give the name of the layout as the slide master of your template shows it. A kind
 -- of slide you leave out has no preference, and the LLM decides; a name the template lacks
@@ -759,6 +764,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses.AllowUserOverride"] = true
 

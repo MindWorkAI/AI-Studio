@@ -31,6 +31,7 @@ public partial class SlideAssistant
 
     private string templatePath = string.Empty;
     private string footerText = string.Empty;
+    private bool keepEmptyPicturePlaceholders;
     private string? variantLabel;
     private PresentationTemplate? template;
     private SlideDeckSpec? slideDeck;
@@ -72,6 +73,7 @@ public partial class SlideAssistant
 
     private static readonly AssistantSessionStateKey<string> TEMPLATE_PATH_STATE_KEY = new(nameof(templatePath));
     private static readonly AssistantSessionStateKey<string> FOOTER_TEXT_STATE_KEY = new(nameof(footerText));
+    private static readonly AssistantSessionStateKey<bool> KEEP_EMPTY_PICTURE_PLACEHOLDERS_STATE_KEY = new(nameof(keepEmptyPicturePlaceholders));
     private static readonly AssistantSessionStateKey<string> VARIANT_LABEL_STATE_KEY = new(nameof(variantLabel));
     private static readonly AssistantSessionStateKey<bool> ADVANCED_OPTIONS_EXPANDED_STATE_KEY = new(nameof(advancedOptionsExpanded));
     private static readonly AssistantSessionStateKey<List<TemplateSlideUse>> TEMPLATE_SLIDE_USES_STATE_KEY = new(nameof(templateSlideUses));
@@ -527,7 +529,7 @@ public partial class SlideAssistant
                 var currentTemplate = PresentationTemplate.Read(presentationFile);
                 presentationFile.Position = 0;
 
-                var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim());
+                var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim(), this.keepEmptyPicturePlaceholders);
                 result = await PresentationWriter.WriteAsync(presentationFile, currentTemplate, deck, options, new RustPictureSource(this.RustService, this.slideDeckPicturePaths), CancellationToken.None);
             }
 

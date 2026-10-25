@@ -49,7 +49,8 @@ to `app/AGENTS.md`, which apply here as well.
   area, `LayoutPurposeExtensions.<Area>.cs`; a new kind goes there and into `LayoutPurpose`, within its area.
 - **New slides carry no formatting of their own.** They fill the placeholders of their layout and
   leave out every placeholder without content, so that no prompt text such as "Click to add text"
-  remains.
+  remains. Only empty picture placeholders stay when the user asks for it
+  (`PresentationWriteOptions.KeepEmptyPicturePlaceholders`), for pictures of their own.
 - **No copy of a file in memory.** Templates of organizations carry pictures and videos and easily reach
   a hundred megabytes, and AI Studio also runs on small devices. Read templates from their file, and
   let the writer edit a copy on disk. The Open XML SDK holds the compressed parts of the file in memory

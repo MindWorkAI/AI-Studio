@@ -1219,6 +1219,16 @@ again, the Slide Assistant uses it the next time users open it.
 Keep in mind that every client downloads the whole configuration plugin, template included, whenever
 AI Studio starts and whenever your configuration changes.
 
+By default, a new slide leaves out every placeholder of its layout which it has no content for, so
+that no prompt text such as "Click to add text" remains. When your users rather insert pictures of
+their own, let new slides keep the picture placeholders they have no picture for. PowerPoint shows
+them while editing and hides them in the slide show:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders"] = true
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
+```
+
 You can also tell the Slide Assistant which layout of your template to use for certain kinds of slides,
 e.g., which layout opens each chapter. Give each layout by its name in the slide master of your
 template:

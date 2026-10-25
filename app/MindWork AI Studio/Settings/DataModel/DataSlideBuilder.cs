@@ -35,6 +35,15 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     public string PreselectedFooterText { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedFooterText, string.Empty);
 
     /// <summary>
+    /// Preselect keeping the picture placeholders which a new slide has no picture for?
+    /// </summary>
+    /// <remarks>
+    /// Off by default: the slide leaves them out, as every other placeholder without content. When
+    /// on, PowerPoint shows them while editing, for pictures of the user's own.
+    /// </remarks>
+    public bool PreselectedKeepEmptyPicturePlaceholders { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedKeepEmptyPicturePlaceholders, false);
+
+    /// <summary>
     /// Preselect the layouts for kinds of slides, i.e., the name of a layout of the template by kind of slide?
     /// </summary>
     /// <remarks>

@@ -219,6 +219,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
             this.footerText = string.Empty;
+            this.keepEmptyPicturePlaceholders = false;
             this.templatePath = string.Empty;
             this.LoadTemplate();
         }
@@ -232,6 +233,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.LoadTemplate();
             this.ApplyPreselectedTemplateSlideUses();
             this.footerText = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText;
+            this.keepEmptyPicturePlaceholders = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedKeepEmptyPicturePlaceholders;
             this.layoutNames.Clear();
             foreach (var (purpose, layoutName) in this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedLayouts)
                 this.layoutNames[purpose] = layoutName;
@@ -302,6 +304,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Set(TEMPLATE_PATH_STATE_KEY, this.templatePath);
         state.Set(FOOTER_TEXT_STATE_KEY, this.footerText);
+        state.Set(KEEP_EMPTY_PICTURE_PLACEHOLDERS_STATE_KEY, this.keepEmptyPicturePlaceholders);
         state.Set(VARIANT_LABEL_STATE_KEY, this.variantLabel ?? string.Empty);
         state.Set(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, this.advancedOptionsExpanded);
         state.SetList(TEMPLATE_SLIDE_USES_STATE_KEY, this.templateSlideUses);
@@ -332,6 +335,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Restore(TEMPLATE_PATH_STATE_KEY, value => this.templatePath = value);
         state.Restore(FOOTER_TEXT_STATE_KEY, value => this.footerText = value);
+        state.Restore(KEEP_EMPTY_PICTURE_PLACEHOLDERS_STATE_KEY, value => this.keepEmptyPicturePlaceholders = value);
         state.Restore(VARIANT_LABEL_STATE_KEY, value => this.variantLabel = value.Length > 0 ? value : null);
         state.Restore(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, value => this.advancedOptionsExpanded = value);
         state.Restore(TEMPLATE_SLIDE_USES_STATE_KEY, value => this.templateSlideUses = value.ToList());

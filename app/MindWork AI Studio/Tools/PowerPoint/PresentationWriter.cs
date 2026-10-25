@@ -14,7 +14,10 @@ namespace AIStudio.Tools.PowerPoint;
 /// and table styles stay exactly as their author made them. Every new slide is based on a layout of
 /// the template and fills that layout's placeholders, without any formatting of its own, so the
 /// corporate design applies to everything written here. Slots without content get no placeholder
-/// at all, which leaves no prompt text such as "Click to add text" behind.
+/// at all, which leaves no prompt text such as "Click to add text" behind. Picture slots are the
+/// exception when the user asks for it: an empty one keeps its placeholder, which shows the prompt
+/// text of the layout while editing and nothing in the slide show, so that the user can insert a
+/// picture of their own.
 ///
 /// The template slides the deck refers to stay, with their pictures and notes. They take the color
 /// variant and the footer of the presentation, so that they look like the slides around them. A
@@ -100,7 +103,7 @@ internal static partial class PresentationWriter
                         if (layout is null)
                             throw new InvalidOperationException($"The slide deck writes content into template slide {number}, whose layout has no slots for it. Check the deck before writing it.");
 
-                        EditTemplateSlide(slidePart, templateSlide, new SlideContent(slide, layout, slidePart.SlideLayoutPart?.SlideLayout, loadedPictures, tableStyleId, options.FooterText, slideArea));
+                        EditTemplateSlide(slidePart, templateSlide, new SlideContent(slide, layout, slidePart.SlideLayoutPart?.SlideLayout, loadedPictures, tableStyleId, options.FooterText, slideArea, options.KeepEmptyPicturePlaceholders));
                     }
                 }
                 else
@@ -110,7 +113,7 @@ internal static partial class PresentationWriter
                     var layoutPart = LayoutPartOf(layoutParts, layout);
                     slidePart = presentationPart.AddNewPart<SlidePart>();
                     slidePart.AddPart(layoutPart);
-                    var content = new SlideContent(slide, layout, layoutPart.SlideLayout, loadedPictures, tableStyleId, options.FooterText, slideArea);
+                    var content = new SlideContent(slide, layout, layoutPart.SlideLayout, loadedPictures, tableStyleId, options.FooterText, slideArea, options.KeepEmptyPicturePlaceholders);
                     slidePart.Slide = new P.Slide(
                         new P.CommonSlideData(ShapeTreeOf(slidePart, content)),
                         new P.ColorMapOverride(new A.MasterColorMapping()));
@@ -208,7 +211,8 @@ internal static partial class PresentationWriter
     /// <param name="TableStyleId">The default table style of the template, if it states one.</param>
     /// <param name="FooterText">The footer text; empty for no footer.</param>
     /// <param name="SlideArea">The area of a slide, in square EMU.</param>
-    private sealed record SlideContent(SlideSpec Slide, TemplateLayout Layout, P.SlideLayout? LayoutElement, IReadOnlyDictionary<int, SlidePicture> Pictures, string? TableStyleId, string FooterText, double SlideArea);
+    /// <param name="KeepEmptyPicturePlaceholders">Whether a new slide keeps the picture placeholders which no picture fills.</param>
+    private sealed record SlideContent(SlideSpec Slide, TemplateLayout Layout, P.SlideLayout? LayoutElement, IReadOnlyDictionary<int, SlidePicture> Pictures, string? TableStyleId, string FooterText, double SlideArea, bool KeepEmptyPicturePlaceholders);
 
     /// <summary>
     /// The pictures a slide deck refers to, as far as they could be loaded.

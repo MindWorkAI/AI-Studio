@@ -34,7 +34,7 @@ public sealed class PresentationWriterTests
     /// </summary>
     private static readonly SlidePicture WIDE_PICTURE = new([1, 2, 3], "image/png", 400, 100);
 
-    private static readonly PresentationWriteOptions OPTIONS = new("A", "Mission team");
+    private static readonly PresentationWriteOptions OPTIONS = new("A", "Mission team", false);
 
     private static readonly SlideDeckSpec DECK = new("Mars",
     [
@@ -151,6 +151,46 @@ public sealed class PresentationWriterTests
         {
             Assert.That(result.SkippedPictures, Is.EqualTo(new[] { 1 }));
             Assert.That(SlidesOf(document)[2].Slide!.Descendants<P.Picture>(), Is.Empty, "The slot stays empty rather than holding a picture nobody can see.");
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task AnEmptyPictureSlotStaysOnlyWhenTheUserAsksForIt()
+    {
+        var deck = new SlideDeckSpec("Mars",
+        [
+            new SlideSpec("L3", false, "The rocket", string.Empty, [Text(new SlideParagraph("Reusable", 0))], [], [], null),
+        ]);
+
+        var (left, _) = await WriteAsync(deck, OPTIONS);
+        var (kept, _) = await WriteAsync(deck, OPTIONS with { KeepEmptyPicturePlaceholders = true });
+        using var leftDocument = PresentationDocument.Open(left, false);
+        using var keptDocument = PresentationDocument.Open(kept, false);
+        var keptSlide = SlidesOf(keptDocument)[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(PicturePlaceholdersOf(SlidesOf(leftDocument)[0]), Is.Empty, "By default, no prompt text stays behind.");
+            Assert.That(PicturePlaceholdersOf(keptSlide), Has.Count.EqualTo(1));
+            Assert.That(PlaceholderShapeOf(keptSlide, "pic", 20).TextBody, Is.Null, "Without a text of its own, the placeholder shows the prompt text of the layout.");
+            Assert.That(keptSlide.ImageParts, Is.Empty);
+            Assert.That(ValidationErrorsOf(keptDocument), Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task ASkippedPictureLeavesItsPlaceholderWhenTheUserAsksForIt()
+    {
+        var (file, result) = await WriteAsync(DECK, OPTIONS with { KeepEmptyPicturePlaceholders = true }, pictures: new FakePictureSource(WIDE_PICTURE with { ContentType = "image/webp" }, WIDE_PICTURE));
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[2];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.SkippedPictures, Is.EqualTo(new[] { 1 }));
+            Assert.That(slide.Slide!.Descendants<P.Picture>(), Is.Empty);
+            Assert.That(PicturePlaceholdersOf(slide), Has.Count.EqualTo(1), "The user can insert the picture there themselves.");
             Assert.That(ValidationErrorsOf(document), Is.Empty);
         });
     }
@@ -605,6 +645,13 @@ public sealed class PresentationWriterTests
     /// </summary>
     private static P.Shape PlaceholderShapeOf(SlidePart slide, string type, uint? index) => slide.Slide!.Descendants<P.Shape>()
         .Single(shape => shape.Descendants<P.PlaceholderShape>().Any(placeholder => (placeholder.Type?.InnerText ?? "obj") == type && placeholder.Index?.Value == index));
+
+    /// <summary>
+    /// The empty placeholders of a slide which wait for a picture.
+    /// </summary>
+    private static List<P.Shape> PicturePlaceholdersOf(SlidePart slide) => slide.Slide!.Descendants<P.Shape>()
+        .Where(shape => shape.Descendants<P.PlaceholderShape>().Any(placeholder => placeholder.Type?.InnerText == "pic"))
+        .ToList();
 
     /// <summary>
     /// The shape of a slide with the given ID, e.g., a text box the template slide carries.

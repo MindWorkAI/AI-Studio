@@ -55,6 +55,7 @@ internal static partial class PresentationWriter
                 PlaceholderRole.TEXT when index < slide.Texts.Count && slide.Texts[index].Paragraphs.Count > 0 => TextShape(nextId, $"Text {nextId}", placeholder, slide.Texts[index].Paragraphs.Select(ParagraphOf), true),
                 PlaceholderRole.LABEL when index < slide.Labels.Count && slide.Labels[index].Length > 0 => TextShape(nextId, $"Label {nextId}", placeholder, ParagraphsOf(slide.Labels[index]), false),
                 PlaceholderRole.PICTURE when index < slide.Pictures.Count && content.Pictures.TryGetValue(slide.Pictures[index], out var picture) => PictureShape(nextId, placeholder, slidePart, picture, slot.Bounds, slot.Bounds.Area >= content.SlideArea * BACKDROP_AREA_SHARE),
+                PlaceholderRole.PICTURE when content.KeepEmptyPicturePlaceholders => EmptyPlaceholderShape(nextId, $"Picture Placeholder {nextId}", placeholder),
                 PlaceholderRole.TABLE when index == 0 && slide.Table is { Headers.Count: > 0 } table => TableShape(nextId, placeholder, table, slot.Bounds, content.TableStyleId),
 
                 _ => null,
@@ -126,6 +127,17 @@ internal static partial class PresentationWriter
             new P.ShapeProperties(),
             textBody);
     }
+
+    /// <summary>
+    /// A placeholder without content. PowerPoint shows the prompt text of the layout in it while
+    /// editing, and nothing in the slide show.
+    /// </summary>
+    private static P.Shape EmptyPlaceholderShape(uint id, string name, P.PlaceholderShape placeholder) => new(
+        new P.NonVisualShapeProperties(
+            new P.NonVisualDrawingProperties { Id = id, Name = name },
+            new P.NonVisualShapeDrawingProperties(new A.ShapeLocks { NoGrouping = true }),
+            new P.ApplicationNonVisualDrawingProperties(placeholder)),
+        new P.ShapeProperties());
 
     private static P.Picture PictureShape(uint id, P.PlaceholderShape placeholder, SlidePart slidePart, SlidePicture picture, SlotBounds bounds, bool isBackdrop)
     {
