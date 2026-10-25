@@ -88,4 +88,34 @@ public sealed class PluginFilePathTests
             Assert.That(PluginFilePath.TryResolveInside(string.Empty, this.pluginDirectory, out _, out _), Is.False, "An empty path names no file.");
         });
     }
+
+    [Test]
+    public void AFolderOfThePluginIsFoundByItsRelativePath()
+    {
+        var absolutePath = Path.Combine(Path.GetTempPath(), "somewhere", "Pictures");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(PluginFilePath.TryResolveDirectory("templates", this.pluginDirectory, out var inPlugin, out var issue), Is.True, issue);
+            Assert.That(inPlugin, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates")));
+            Assert.That(PluginFilePath.TryResolveDirectory(string.Empty, this.pluginDirectory, out var empty, out _), Is.True, "An organization may decide on no folder at all.");
+            Assert.That(empty, Is.Empty);
+            Assert.That(PluginFilePath.TryResolveDirectory(absolutePath, this.pluginDirectory, out var absolute, out _), Is.True, "A folder on a network share is the organization's business.");
+            Assert.That(absolute, Is.EqualTo(absolutePath));
+        });
+    }
+
+    [Test]
+    public void AFolderFollowsTheRulesOfAFile()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(PluginFilePath.TryResolveDirectory("templates/../..", this.pluginDirectory, out var resolved, out var issue), Is.False);
+            Assert.That(issue, Does.Contain(".."));
+            Assert.That(resolved, Is.Empty);
+            Assert.That(PluginFilePath.TryResolveDirectory("Corporate.pptx", this.pluginDirectory, out _, out issue), Is.False, "A file is no folder.");
+            Assert.That(issue, Does.Contain("does not exist"));
+            Assert.That(PluginFilePath.TryResolve("templates", this.pluginDirectory, out _, out _), Is.False, "A folder is no file.");
+        });
+    }
 }

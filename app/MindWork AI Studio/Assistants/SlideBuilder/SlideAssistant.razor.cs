@@ -225,7 +225,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.footerText = string.Empty;
             this.keepEmptyPicturePlaceholders = false;
             this.pictureLibraryPath = string.Empty;
-            this.pictureLibraryOverview = PictureLibraryContent.NONE;
+            this.StartCountingPictureLibrary();
             this.templatePath = string.Empty;
             this.LoadTemplate();
         }
@@ -240,6 +240,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.ApplyPreselectedTemplateSlideUses();
             this.footerText = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText;
             this.keepEmptyPicturePlaceholders = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedKeepEmptyPicturePlaceholders;
+            this.pictureLibraryPath = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedPictureLibraryPath;
+            this.StartCountingPictureLibrary();
             this.layoutNames.Clear();
             foreach (var (purpose, layoutName) in this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedLayouts)
                 this.layoutNames[purpose] = layoutName;
@@ -368,7 +370,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         // Neither the template nor the slides are kept themselves, only what they were read from:
         this.LoadTemplate();
         this.RestoreSlideDeck();
-        this.ReadPictureLibraryOverviewAsync().Observe($"{nameof(SlideAssistant)}: counting the pictures of the library");
+        this.StartCountingPictureLibrary();
     }
 
     #region Overrides of ComponentBase

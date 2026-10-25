@@ -1,3 +1,5 @@
+using AIStudio.Tools.PowerPoint;
+
 namespace AIStudio.Assistants.SlideBuilder;
 
 /// <summary>
@@ -21,6 +23,16 @@ public static class SlideAssistantTexts
     /// What keeping the empty picture placeholders does.
     /// </summary>
     public static string WhatKeepingEmptyPicturePlaceholdersDoes => TB("When a new slide has no picture for a picture placeholder of its layout, it leaves the placeholder out, as every other placeholder without content. Keep these placeholders to insert pictures of your own later: PowerPoint shows them while you edit and hides them in the slide show.");
+
+    /// <summary>
+    /// What a picture library is, which of its files count, and how the LLM uses them.
+    /// </summary>
+    public static string WhatAPictureLibraryOffers => string.Format(TB("Choose a folder with pictures and icons, e.g., the picture library of your organization. The LLM reads only their names, never the pictures themselves, and uses a picture where its name fits a slide; it does not have to use any. So clear names such as “rocket-launch.jpg” help. Only PNG and JPEG pictures count: many icons come as SVG, which the assistant leaves out. A picture whose name, or the name of one of its folders, starts with “icon” is an icon. An icon may appear on several slides and goes into picture placeholders of any size, except those which cover half the slide or more, as a background picture does. From a folder with more than {0} pictures, the LLM gets a random {0} of them for each planning."), MaxLibraryPictures);
+
+    /// <summary>
+    /// The most pictures of a library the LLM reads about, as the user reads the number.
+    /// </summary>
+    public static string MaxLibraryPictures => PictureLibrary.MAX_LIBRARY_PICTURES.ToString("N0", Tools.PluginSystem.I18N.I.Culture);
 
     /// <summary>
     /// What the presentation does with the slides a template carries besides its layouts.

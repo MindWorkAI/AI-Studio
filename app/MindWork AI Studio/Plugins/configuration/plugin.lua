@@ -677,8 +677,8 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
 -- Configure defaults for the Slide Assistant.
--- Preselection must be enabled for the template, the footer text, and the layouts to take
--- effect. It is enabled by default; lock it as well to make sure users cannot do without your
+-- Preselection must be enabled for the template, the picture library, and the other defaults
+-- below to take effect. It is enabled by default; lock it as well to make sure users cannot do without your
 -- template.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
 --
@@ -707,6 +707,17 @@ CONFIG["SETTINGS"] = {}
 -- picture for. PowerPoint shows them while editing, so users can insert pictures of their own,
 -- and hides them in the slide show. By default, the slides leave them out.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders"] = false
+--
+-- Configure the picture library of the Slide Assistant: a folder with pictures and icons, e.g.,
+-- the picture library of your organization. The LLM reads only the names of its PNG and JPEG
+-- pictures and may place a picture where its name fits a slide. A picture whose name, or the
+-- name of one of its folders, starts with "icon" counts as an icon. Leave it empty for no
+-- picture library.
+--
+-- Ship the folder with this plugin and give its path relative to this plugin.lua, under the
+-- same rules as the template above, or give an absolute path, e.g., on a network share. When a
+-- locked folder cannot be reached, the assistant plans the slides without it.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath"] = "Pictures"
 --
 -- Configure the layout of your template for kinds of slides, e.g., which layout opens each
 -- chapter. Give the name of the layout as the slide master of your template shows it. A kind
@@ -765,6 +776,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses.AllowUserOverride"] = true
 

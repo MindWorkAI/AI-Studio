@@ -86,6 +86,12 @@
                 }
             }
 
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Visual elements")</MudText>
+            <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+                @SlideAssistantTexts.WhatAPictureLibraryOffers
+            </MudJustifiedText>
+            <ConfigurationDirectory OptionDescription="@T("Preselect a picture library")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" Icon="@Icons.Material.Filled.PhotoLibrary" Text="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedPictureLibraryPath)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedPictureLibraryPath = updatedText)" DirectoryDialogTitle="@T("Select a picture library")" OptionHelp="@T("The LLM may choose pictures and icons for the slides from this folder. Leave it empty for no picture library.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedPictureLibraryPath, out var meta) && meta.IsLocked"/>
+
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("AI selection")</MudText>
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
                 @T("Preselect which LLM plans the slides and which profile it gets. A profile can, e.g., name your organization, which the LLM may use for the imprint.")

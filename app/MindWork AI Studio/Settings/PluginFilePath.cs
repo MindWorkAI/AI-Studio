@@ -1,14 +1,14 @@
 namespace AIStudio.Settings;
 
 /// <summary>
-/// Resolves a file a configuration plugin names in a setting, such as the PowerPoint template of the
-/// Slide Assistant or the icon of a provider.
+/// Resolves a file or folder a configuration plugin names in a setting, such as the PowerPoint
+/// template or the picture library of the Slide Assistant, or the icon of a provider.
 /// </summary>
 /// <remarks>
-/// A plugin may ship the file itself, next to its plugin.lua, and name it by a path relative to its
-/// directory. Such a path has to stay inside that directory, so a plugin cannot reach an arbitrary
-/// file elsewhere on the system through it. An absolute path, e.g., on a network share, stays as
-/// the organization wrote it, where the setting allows one.
+/// A plugin may ship the file or folder itself, next to its plugin.lua, and name it by a path
+/// relative to its directory. Such a path has to stay inside that directory, so a plugin cannot reach
+/// an arbitrary file elsewhere on the system through it. An absolute path, e.g., on a network share,
+/// stays as the organization wrote it, where the setting allows one.
 /// </remarks>
 internal static class PluginFilePath
 {
@@ -38,19 +38,56 @@ internal static class PluginFilePath
     }
 
     /// <summary>
+    /// Resolves the path of a folder against the directory of the plugin which states it.
+    /// </summary>
+    /// <param name="path">The path as the plugin states it: empty, absolute, or relative to the plugin directory.</param>
+    /// <param name="pluginPath">The directory of the plugin.</param>
+    /// <param name="resolvedPath">The full path; empty for an empty path, which means no folder.</param>
+    /// <param name="issue">Why the path cannot be used; empty on success.</param>
+    /// <returns>Whether the path can be used.</returns>
+    public static bool TryResolveDirectory(string path, string pluginPath, out string resolvedPath, out string issue)
+    {
+        resolvedPath = string.Empty;
+        issue = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(path))
+            return true;
+
+        if (Path.IsPathFullyQualified(path))
+        {
+            resolvedPath = path;
+            return true;
+        }
+
+        return TryResolveInside(path, pluginPath, true, out resolvedPath, out issue);
+    }
+
+    /// <summary>
     /// Resolves a path relative to the directory of a plugin, which has to name an existing file
     /// inside that directory.
     /// </summary>
-    /// <remarks>
-    /// Every file a plugin ships itself is checked here, so that all of them follow the same rules:
-    /// no '..' segments, and no link along the path which leads out of the plugin directory.
-    /// </remarks>
     /// <param name="relativePath">The path relative to the plugin directory; both kinds of slashes work.</param>
     /// <param name="pluginPath">The directory of the plugin.</param>
     /// <param name="fullPath">The full path of the file; empty when the path cannot be used.</param>
     /// <param name="issue">Why the path cannot be used; empty on success.</param>
     /// <returns>Whether the path names a file inside the plugin directory.</returns>
-    public static bool TryResolveInside(string relativePath, string pluginPath, out string fullPath, out string issue)
+    public static bool TryResolveInside(string relativePath, string pluginPath, out string fullPath, out string issue) => TryResolveInside(relativePath, pluginPath, false, out fullPath, out issue);
+
+    /// <summary>
+    /// Resolves a path relative to the directory of a plugin, which has to name an existing file or
+    /// folder inside that directory.
+    /// </summary>
+    /// <remarks>
+    /// Every file and folder a plugin ships itself is checked here, so that all of them follow the
+    /// same rules: no '..' segments, and no link along the path which leads out of the plugin directory.
+    /// </remarks>
+    /// <param name="relativePath">The path relative to the plugin directory; both kinds of slashes work.</param>
+    /// <param name="pluginPath">The directory of the plugin.</param>
+    /// <param name="isDirectory">Whether the path has to name a folder rather than a file.</param>
+    /// <param name="fullPath">The full path; empty when the path cannot be used.</param>
+    /// <param name="issue">Why the path cannot be used; empty on success.</param>
+    /// <returns>Whether the path names a file or folder inside the plugin directory.</returns>
+    private static bool TryResolveInside(string relativePath, string pluginPath, bool isDirectory, out string fullPath, out string issue)
     {
         fullPath = string.Empty;
         issue = string.Empty;
@@ -90,9 +127,9 @@ internal static class PluginFilePath
             return false;
         }
 
-        if (!File.Exists(candidatePath))
+        if (isDirectory ? !Directory.Exists(candidatePath) : !File.Exists(candidatePath))
         {
-            issue = "The file does not exist in the plugin directory.";
+            issue = isDirectory ? "The folder does not exist in the plugin directory." : "The file does not exist in the plugin directory.";
             return false;
         }
 
@@ -117,9 +154,9 @@ internal static class PluginFilePath
     /// <summary>
     /// Whether no link along the path leads out of the root directory.
     /// </summary>
-    private static bool LinksStayInsideDirectory(string rootDirectory, string filePath)
+    private static bool LinksStayInsideDirectory(string rootDirectory, string path)
     {
-        var relativePath = Path.GetRelativePath(rootDirectory, filePath);
+        var relativePath = Path.GetRelativePath(rootDirectory, path);
         var currentPath = Path.GetFullPath(rootDirectory);
         foreach (var segment in relativePath.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
         {

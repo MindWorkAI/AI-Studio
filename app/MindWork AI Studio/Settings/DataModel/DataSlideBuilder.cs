@@ -44,6 +44,15 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     public bool PreselectedKeepEmptyPicturePlaceholders { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedKeepEmptyPicturePlaceholders, false);
 
     /// <summary>
+    /// Preselect the folder of pictures and icons which the LLM may choose from by their names?
+    /// </summary>
+    /// <remarks>
+    /// Empty for no picture library. Like the template, the folder applies only while preselection
+    /// is enabled, and a configuration plugin may ship it and name it relative to its directory.
+    /// </remarks>
+    public string PreselectedPictureLibraryPath { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedPictureLibraryPath, string.Empty);
+
+    /// <summary>
     /// Preselect the layouts for kinds of slides, i.e., the name of a layout of the template by kind of slide?
     /// </summary>
     /// <remarks>

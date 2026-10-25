@@ -1304,6 +1304,37 @@ option, and passes it over. These choices belong to the template you preselect: 
 another template, they do not apply. Like the layouts, they apply only while preselection is
 enabled, and the table applies as a whole.
 
+## Shipping the picture library of the Slide Assistant
+
+The Slide Assistant can choose pictures and icons for the slides from a folder, e.g., the picture
+library of your organization. The LLM reads only the names of the pictures, never the pictures
+themselves, so clear names such as `rocket-launch.jpg` help. Only PNG and JPEG pictures count; the
+assistant leaves out every other file, SVG icons included. A picture whose name, or the name of one of
+its folders, starts with `icon` counts as an icon, which may appear on several slides. From a folder
+with more than 5,000 pictures, the LLM gets a random 5,000 of them for each planning.
+
+Like the template, you can ship the folder with your configuration plugin and give its path relative
+to your `plugin.lua`, under the same rules: no `..` segments and no links pointing out of the plugin
+directory. An absolute path, e.g., on a network share, works as well, as long as every computer can
+read it:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath"] = "Pictures"
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath.AllowUserOverride"] = true
+```
+
+With `AllowUserOverride`, your folder is preselected, and users may choose another one or none;
+without it, the folder is locked. Like the template, the folder is a preselection, so it applies only
+while preselection is enabled. A missing folder in the plugin, or a rejected path, is never fatal: AI
+Studio logs a warning and treats the folder as if your plugin did not configure it. A locked folder
+which a computer cannot read at the moment, e.g., because the network share cannot be reached, does
+not block the Slide Assistant either. It tells users that the picture library of their organization
+is not available right now and plans the slides without it.
+
+Keep in mind that every client downloads the whole configuration plugin, pictures included, whenever
+AI Studio starts and whenever your configuration changes. For a large picture library, a network
+share is the better place.
+
 ## Labeling AI-generated content
 
 Rules on transparency, such as the EU AI Act, may require that a text says when AI generated it, for

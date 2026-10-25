@@ -1,3 +1,4 @@
+using AIStudio.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PowerPoint;
 using AIStudio.Tools.Security;
@@ -32,9 +33,36 @@ public partial class SlideAssistant
     private CancellationTokenSource? pictureLibraryReading;
 
     /// <summary>
+    /// Whether the chosen library folder exists, as its last count found.
+    /// </summary>
+    /// <remarks>
+    /// The form asks this with every rendering, and an unreachable network drive takes seconds to
+    /// answer, so the folder is checked only when it changes, and away from the rendering.
+    /// </remarks>
+    private bool isPictureLibraryAvailable;
+
+    /// <summary>
     /// What the library offers to the planning under way, while the system prompt is written for it.
     /// </summary>
     private PictureLibraryContent planningLibrary = PictureLibraryContent.NONE;
+
+    /// <summary>
+    /// Whether the organization dictates the picture library.
+    /// </summary>
+    /// <remarks>
+    /// Like the template, the library is a preselection, so a lock binds only while preselection is enabled.
+    /// </remarks>
+    private bool IsPictureLibraryLocked => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions && ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedPictureLibraryPath, out var meta) && meta.IsLocked;
+
+    /// <summary>
+    /// Whether the picture library of the organization is locked, but cannot be read right now, e.g.,
+    /// because its network drive cannot be reached.
+    /// </summary>
+    /// <remarks>
+    /// The user cannot choose another folder then, so it must not block the form. The assistant plans
+    /// without a library instead, and the form says why.
+    /// </remarks>
+    private bool IsLockedPictureLibraryUnavailable => this.IsPictureLibraryLocked && this.pictureLibraryPath.Length > 0 && !this.isReadingPictureLibrary && !this.isPictureLibraryAvailable;
 
     private async Task OnPictureLibraryChanged(string path)
     {
@@ -48,11 +76,18 @@ public partial class SlideAssistant
 
     private string? ValidatePictureLibrary(string path)
     {
-        if (string.IsNullOrWhiteSpace(path))
+        // The warning below the field explains a locked folder, since the user cannot change it, and
+        // while the folder is still counted, it is too early to tell:
+        if (string.IsNullOrWhiteSpace(path) || this.IsPictureLibraryLocked || this.isReadingPictureLibrary)
             return null;
 
-        return Directory.Exists(path) ? null : T("The folder does not exist.");
+        return this.isPictureLibraryAvailable ? null : T("The folder does not exist.");
     }
+
+    /// <summary>
+    /// Counts the pictures of the chosen library without waiting for it, e.g., after the library was preselected or restored.
+    /// </summary>
+    private void StartCountingPictureLibrary() => this.ReadPictureLibraryOverviewAsync().Observe($"{nameof(SlideAssistant)}: counting the pictures of the library");
 
     /// <summary>
     /// Counts the pictures of the chosen library for the hint, and cancels a count still running for another folder.
@@ -66,8 +101,9 @@ public partial class SlideAssistant
         }
 
         this.pictureLibraryOverview = PictureLibraryContent.NONE;
+        this.isPictureLibraryAvailable = false;
         var path = this.pictureLibraryPath;
-        if (path.Length == 0 || !Directory.Exists(path))
+        if (path.Length == 0)
         {
             this.pictureLibraryReading = null;
             return;
@@ -79,9 +115,13 @@ public partial class SlideAssistant
         this.StateHasChanged();
         try
         {
-            var overview = await PictureLibrary.ReadAsync(path, this.RandomSource, 0, this.ReportInaccessibleLibraryFolder, reading.Token);
+            var isAvailable = await FolderExistsAsync(path, reading.Token);
+            var overview = isAvailable ? await PictureLibrary.ReadAsync(path, this.RandomSource, 0, this.ReportInaccessibleLibraryFolder, reading.Token) : PictureLibraryContent.NONE;
             if (!reading.IsCancellationRequested)
+            {
+                this.isPictureLibraryAvailable = isAvailable;
                 this.pictureLibraryOverview = overview;
+            }
         }
         catch (OperationCanceledException)
         {
@@ -93,8 +133,13 @@ public partial class SlideAssistant
         }
         finally
         {
+            // A count which started without a user's action, e.g., for a preselected folder, ends
+            // without a rendering of its own:
             if (ReferenceEquals(this.pictureLibraryReading, reading))
+            {
                 this.isReadingPictureLibrary = false;
+                this.StateHasChanged();
+            }
         }
     }
 
@@ -105,12 +150,19 @@ public partial class SlideAssistant
     private async Task<PictureLibraryContent> ReadPictureLibraryForPlanningAsync()
     {
         var path = this.pictureLibraryPath;
-        if (path.Length == 0 || !Directory.Exists(path))
+        if (path.Length == 0)
             return PictureLibraryContent.NONE;
 
+        var token = this.CancellationTokenSource?.Token ?? CancellationToken.None;
         try
         {
-            return await PictureLibrary.ReadAsync(path, this.RandomSource, PictureLibrary.MAX_LIBRARY_PICTURES, this.ReportInaccessibleLibraryFolder, this.CancellationTokenSource?.Token ?? CancellationToken.None);
+            if (!await FolderExistsAsync(path, token))
+            {
+                this.Logger.LogWarning("The picture library '{FolderPath}' is not available, so the slides are planned without it.", path);
+                return PictureLibraryContent.NONE;
+            }
+
+            return await PictureLibrary.ReadAsync(path, this.RandomSource, PictureLibrary.MAX_LIBRARY_PICTURES, this.ReportInaccessibleLibraryFolder, token);
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
@@ -118,6 +170,11 @@ public partial class SlideAssistant
             return PictureLibraryContent.NONE;
         }
     }
+
+    /// <summary>
+    /// Whether a folder exists, asked on a thread of its own, since an unreachable network drive takes seconds to answer.
+    /// </summary>
+    private static Task<bool> FolderExistsAsync(string path, CancellationToken token) => Task.Run(() => Directory.Exists(path), token);
 
     private void ReportInaccessibleLibraryFolder(string folderPath, Exception e) => this.Logger.LogWarning(e, "The folder '{FolderPath}' of the picture library cannot be read.", folderPath);
 
@@ -131,7 +188,7 @@ public partial class SlideAssistant
             if (this.isReadingPictureLibrary)
                 return T("Counting the pictures of the folder...");
 
-            if (this.pictureLibraryPath.Length == 0 || !Directory.Exists(this.pictureLibraryPath))
+            if (!this.isPictureLibraryAvailable)
                 return string.Empty;
 
             var library = this.pictureLibraryOverview;
@@ -146,16 +203,11 @@ public partial class SlideAssistant
                 hints.Add(string.Format(T("{0} other files are left out, because they are neither PNG nor JPEG."), library.SkippedFileCount.CompactCount()));
 
             if (library.PictureCount > PictureLibrary.MAX_LIBRARY_PICTURES)
-                hints.Add(string.Format(T("For each planning, the LLM gets a random {0} of them."), MaxLibraryPictures));
+                hints.Add(string.Format(T("For each planning, the LLM gets a random {0} of them."), SlideAssistantTexts.MaxLibraryPictures));
 
             return string.Join(" ", hints);
         }
     }
-
-    /// <summary>
-    /// The most pictures of a library the LLM reads about, as the user reads the number.
-    /// </summary>
-    private static string MaxLibraryPictures => PictureLibrary.MAX_LIBRARY_PICTURES.ToString("N0", Tools.PluginSystem.I18N.I.Culture);
 
     /// <summary>
     /// The pictures of the library by their numbers, which follow those of the pictures for the slides, for the user's request.

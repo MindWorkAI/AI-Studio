@@ -45,13 +45,14 @@ public sealed class ManagedSettingsCoverageTests
     /// The values configured for the settings holding a string which accept no GUID, by the name of the setting.
     /// </summary>
     /// <remarks>
-    /// A path relative to the plugin has to name a file the plugin ships, and the plugin of this test
-    /// ships none. An absolute path is taken as the organization wrote it, so it suits these settings.
-    /// Forward slashes keep the path free of escapes in Lua and work on every system.
+    /// A path relative to the plugin has to name a file or folder the plugin ships, and the plugin of
+    /// this test ships none. An absolute path is taken as the organization wrote it, so it suits these
+    /// settings. Forward slashes keep the path free of escapes in Lua and work on every system.
     /// </remarks>
     private static readonly IReadOnlyDictionary<string, string> SAMPLE_TEXTS_BY_SETTING = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["DataSlideBuilder.TemplatePath"] = Path.Combine(Path.GetTempPath(), "Corporate.potx").Replace('\\', '/'),
+        ["DataSlideBuilder.PreselectedPictureLibraryPath"] = Path.Combine(Path.GetTempPath(), "Pictures").Replace('\\', '/'),
     };
 
     /// <summary>

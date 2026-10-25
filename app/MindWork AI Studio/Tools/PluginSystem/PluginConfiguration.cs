@@ -441,6 +441,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedFooterText, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedKeepEmptyPicturePlaceholders, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedPictureLibraryPath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginDirectory);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedLayouts, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedTemplateSlideUses, this.Id, settingsTable, dryRun);
 
@@ -516,6 +517,20 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             return resolvedPath;
 
         LOG.LogWarning($"The configuration plugin '{this.Name}' names the file '{path}', which cannot be used: {issue}");
+        return null;
+    }
+
+    /// <summary>
+    /// Resolves a folder this plugin names in a setting: a relative path against the plugin directory,
+    /// so the plugin can ship the folder itself.
+    /// </summary>
+    /// <returns>The full path, or null when the folder cannot be used, which leaves the setting untouched.</returns>
+    private string? ResolvePluginDirectory(string path)
+    {
+        if (PluginFilePath.TryResolveDirectory(path, this.PluginPath, out var resolvedPath, out var issue))
+            return resolvedPath;
+
+        LOG.LogWarning($"The configuration plugin '{this.Name}' names the folder '{path}', which cannot be used: {issue}");
         return null;
     }
 
