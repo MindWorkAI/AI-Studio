@@ -1180,6 +1180,172 @@ ignored and logged as a warning.
   run that version, you can in addition use the `CUSTOM` confidence scheme, set the provider to
   `UNTRUSTED` there, and enforce a global minimum confidence level of at least `VERY_LOW`.
 
+## Shipping the PowerPoint template of the Slide Assistant
+
+The Slide Assistant plans slides for the layouts of a PowerPoint template (.pptx or .potx), and it
+creates PowerPoint files (.pptx) in that template's design. OpenDocument presentations (.odp, .otp)
+cannot serve as a template yet. Instead of placing your corporate template on a network share, you
+can ship it with your configuration plugin. Put the file next to your `plugin.lua`, or into a folder
+below it, and give its path relative to your `plugin.lua`:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "Corporate.potx"
+CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
+```
+
+AI Studio stores the full path of the file inside the plugin directory. With `AllowUserOverride`,
+your template is preselected, and users may still choose another one; without it, the template is
+locked.
+
+Like the footer text, the template is one of the preselections of the Slide Assistant, so it applies
+only while preselection is enabled, which it is by default. Users who switch preselection off start
+without your template. To make sure they cannot do without it, lock the preselection as well:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
+```
+
+The relative path must stay inside the plugin directory. AI Studio rejects `..` segments and links
+pointing out of that directory. A missing or rejected file is never fatal: AI Studio logs a warning
+and treats the template as if your plugin did not configure it. Users then keep the template they
+chose themselves, or have none, and the Slide Assistant plans an outline only. An absolute path, e.g.,
+on a network share, works as well, as long as every computer can read it.
+
+A locked template which a computer cannot read at the moment, e.g., because the network share cannot
+be reached, does not block the Slide Assistant either. It tells users that the template of their
+organization is not available right now and plans an outline only. Once the template can be read
+again, the Slide Assistant uses it the next time users open it.
+
+Keep in mind that every client downloads the whole configuration plugin, template included, whenever
+AI Studio starts and whenever your configuration changes.
+
+By default, a new slide leaves out every placeholder of its layout which it has no content for, so
+that no prompt text such as "Click to add text" remains. When your users rather insert pictures of
+their own, let new slides keep the picture placeholders they have no picture for. PowerPoint shows
+them while editing and hides them in the slide show:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders"] = true
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
+```
+
+A slide shows only as much text as its layout has room for. Set the maximum number of bullet points
+per slide, all text slots of a slide together, from 1 to 7, so that it fits the layouts of your
+template. 0 sets no maximum, and the LLM decides by the room of each layout. AI Studio logs a warning
+for any other value and ignores it:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide"] = 5
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide.AllowUserOverride"] = true
+```
+
+You can also tell the Slide Assistant which layout of your template to use for certain kinds of slides,
+e.g., which layout opens each chapter. Give each layout by its name in the slide master of your
+template:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts"] = {
+    ["TITLE"] = "Title Slide",
+    ["CHAPTER"] = "Section Header",
+    ["CONTENT"] = "Title and Content",
+}
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
+```
+
+The kinds of slides come in seven areas:
+
+- **Structure and framing:** `TITLE`, `TABLE_OF_CONTENTS`, `AGENDA`, `SPEAKER`, `SPEAKERS`, `CHAPTER`,
+  `CHAPTER_SUMMARY`, `Q_AND_A`, `ACKNOWLEDGEMENTS`, `REFERENCES`, `CLOSING`, `APPENDIX`, `IMPRINT`
+- **General content:** `CONTENT`, `LITTLE_CONTENT`, `MUCH_CONTENT`, `KEY_MESSAGE`, `EXECUTIVE_SUMMARY`,
+  `CONTEXT`, `RETROSPECTIVE`, `PICTURE`, `PICTURES`, `TABLE`, `COMPARISON`, `PROS_AND_CONS`, `TIMELINE`,
+  `PROCESS`, `QUOTE`, `QUOTES`, `CODE`, `FORMULA`, `FORMULAS`, `CHECKLIST`, `NOTE`, `NOTES`,
+  `AUDIENCE_QUESTION`, `FEEDBACK`, `DISCLAIMER`, `SUMMARY`, `OUTLOOK`
+- **Teaching and workshops:** `INTRODUCTION_ROUND`, `EXPECTATIONS`, `GROUND_RULES`,
+  `ORGANIZATIONAL_NOTES`, `LEARNING_OBJECTIVE`, `LEARNING_OBJECTIVES`, `EXAMPLE`, `EXAMPLES`,
+  `STEP_BY_STEP`, `EXERCISE`, `EXERCISE_SOLUTION`, `GROUP_WORK`, `POLL`, `DISCUSSION_PROMPT`,
+  `REFLECTION`, `BREAK`, `DAY_CHANGE`
+- **Business and projects:** `VISION`, `GOAL`, `GOALS`, `NARRATIVE`, `STORY`, `PROBLEM`, `PROBLEMS`,
+  `OPPORTUNITY`, `OPPORTUNITIES`, `SWOT`, `USE_CASE`, `USE_CASES`, `USER_STORY`, `USER_STORIES`,
+  `ACCEPTANCE_CRITERIA`, `KPI`, `KPIS`, `FORECAST`, `SCENARIO`, `SCENARIOS`, `RISK`, `RISKS`,
+  `DEPENDENCY`, `DEPENDENCIES`, `RESOURCES`, `TEAM`, `PARTNERS`, `ROADMAP`, `MILESTONE`, `MILESTONES`,
+  `WORK_PACKAGE`, `WORK_PACKAGES`, `PROJECT_STATUS`, `LESSONS_LEARNED`, `REASON`, `REASONS`,
+  `RECOMMENDATION`, `RECOMMENDATIONS`, `DECISION_REQUEST`, `NEXT_STEPS`, `ACTION_ITEMS`, `CALL_TO_ACTION`
+- **Science and research:** `STATE_OF_RESEARCH`, `RESEARCH_GAP`, `RESEARCH_QUESTION`,
+  `RESEARCH_QUESTIONS`, `DEFINITION`, `DEFINITIONS`, `THEOREM`, `PROOF`, `ASSUMPTION`, `ASSUMPTIONS`,
+  `DELIMITATION`, `DELIMITATIONS`, `THESIS`, `THESES`, `HYPOTHESIS`, `HYPOTHESES`, `ARGUMENT_CHAIN`,
+  `COUNTERARGUMENT`, `COUNTERARGUMENTS`, `METHODOLOGY`, `STUDY_DESIGN`, `EXPERIMENTAL_SETUP`, `DATA`,
+  `RESULT`, `RESULTS`, `INTERPRETATION`, `LIMITATIONS`, `CONTRIBUTION`, `FUNDING`
+- **Medicine:** `PATIENT_CASE`, `MEDICAL_HISTORY`, `CLINICAL_FINDINGS`, `IMAGING`, `LAB_VALUES`,
+  `DIAGNOSIS`, `DIFFERENTIAL_DIAGNOSES`, `THERAPY`, `MEDICATION`, `COURSE_OF_DISEASE`, `PROGNOSIS`,
+  `ADVERSE_EVENTS`, `GUIDELINE_RECOMMENDATION`, `STUDY_POPULATION`, `ENDPOINTS`, `ETHICS_APPROVAL`
+- **Law:** `FACTS_OF_THE_CASE`, `LEGAL_QUESTION`, `LEGAL_QUESTIONS`, `LEGAL_PROVISION`,
+  `LEGAL_PROVISIONS`, `EXAMINATION_SCHEME`, `DISPUTE_OF_OPINIONS`, `POSITIONS_OF_THE_PARTIES`,
+  `PIECE_OF_EVIDENCE`, `PIECES_OF_EVIDENCE`, `RULING`, `RULINGS`, `LEGAL_COMMENTARY`, `LEGAL_COMMENTARIES`,
+  `CONTRACT_CLAUSE`, `CONTRACT_CLAUSES`, `LEGAL_CONSEQUENCES`, `DEADLINES`
+
+A kind in the singular, e.g., `RISK`, shows one item prominently; its plural, e.g., `RISKS`, shows
+several items together. For a kind you leave out, the LLM chooses the layout
+itself, and so it does for a name your template lacks. A layout says how such a slide looks, not
+whether the presentation has one; that follows from the content. Only for `TABLE_OF_CONTENTS`,
+`Q_AND_A`, `ACKNOWLEDGEMENTS`, `REFERENCES`, `CLOSING`, and `IMPRINT` does a layout also add such a
+slide to every presentation. The LLM fills an imprint only with what the content, the important
+aspects, or the profile of the user state, and the current date.
+
+The layouts are preselections as well, so they apply only while preselection is enabled, and the
+table applies as a whole: users either keep it or, with `AllowUserOverride`, change it as they like.
+
+When your template carries slides of its own, e.g., a title slide with your logo or a closing slide
+with your contact details, you can also preselect what the presentation does with them. By default,
+it leaves them out. Number the slides as they come in the file, starting with 1 and counting hidden
+slides:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses"] = {
+    [1] = "KEEP",
+    [4] = "EDIT",
+}
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses.AllowUserOverride"] = true
+```
+
+`OMIT` leaves a slide out, `KEEP` keeps it as it is, and `EDIT` lets the LLM write new content into
+it. A slide without room for content stays unchanged instead, and a slide you do not name is left
+out. AI Studio logs a warning for an entry it cannot read, e.g., a number below 1 or an unknown
+option, and passes it over. These choices belong to the template you preselect: when users choose
+another template, they do not apply. Like the layouts, they apply only while preselection is
+enabled, and the table applies as a whole.
+
+## Shipping the picture library of the Slide Assistant
+
+The Slide Assistant can choose pictures and icons for the slides from a folder, e.g., the picture
+library of your organization. The LLM reads only the names of the pictures, never the pictures
+themselves, so clear names such as `rocket-launch.jpg` help. Only PNG and JPEG pictures count; the
+assistant leaves out every other file, SVG icons included. A picture whose name, or the name of one of
+its folders, starts with `icon` counts as an icon, which may appear on several slides. This includes
+the folder you configure, so a folder `Icons` holds icons only. From a folder with more than 5,000
+pictures, the LLM gets a random 5,000 of them for each planning.
+
+Like the template, you can ship the folder with your configuration plugin and give its path relative
+to your `plugin.lua`, under the same rules: no `..` segments and no links pointing out of the plugin
+directory. An absolute path, e.g., on a network share, works as well, as long as every computer can
+read it:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath"] = "Pictures"
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath.AllowUserOverride"] = true
+```
+
+With `AllowUserOverride`, your folder is preselected, and users may choose another one or none;
+without it, the folder is locked. Like the template, the folder is a preselection, so it applies only
+while preselection is enabled. A missing folder in the plugin, or a rejected path, is never fatal: AI
+Studio logs a warning and treats the folder as if your plugin did not configure it. A locked folder
+which a computer cannot read at the moment, e.g., because the network share cannot be reached, does
+not block the Slide Assistant either. It tells users that the picture library of their organization
+is not available right now and plans the slides without it.
+
+Keep in mind that every client downloads the whole configuration plugin, pictures included, whenever
+AI Studio starts and whenever your configuration changes. For a large picture library, a network
+share is the better place.
+
 ## Labeling AI-generated content
 
 Rules on transparency, such as the EU AI Act, may require that a text says when AI generated it, for

@@ -305,9 +305,9 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
 
                     //
                     // We know how bad LLM may be in generating JSON without surrounding text.
-                    // Thus, we expect the worst and try to extract the JSON list from the text:
+                    // Thus, we expect the worst and try to extract the JSON object from the text:
                     //
-                    var json = ExtractJson(validationJson);
+                    var json = ModelAnswerJson.ExtractObject(validationJson);
 
                     try
                     {
@@ -339,69 +339,5 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             // Release the semaphore slot:
             semaphore?.Release();
         }
-    }
-    
-    private static ReadOnlySpan<char> ExtractJson(ReadOnlySpan<char> input)
-    {
-        //
-        // 1. Expect the best case ;-)
-        //
-        if (CheckJsonObjectStart(input))
-            return ExtractJsonPart(input);
-
-        //
-        // 2. Okay, we have some garbage before the
-        // JSON object. We expected that...
-        //
-        for (var index = 0; index < input.Length; index++)
-        {
-            if (input[index] is '{' && CheckJsonObjectStart(input[index..]))
-                return ExtractJsonPart(input[index..]);
-        }
-
-        return [];
-    }
-    
-    private static bool CheckJsonObjectStart(ReadOnlySpan<char> area)
-    {
-        char[] expectedSymbols = ['{', '"', 'd'];
-        var symbolIndex = 0;
-
-        foreach (var c in area)
-        {
-            if (symbolIndex >= expectedSymbols.Length)
-                return true;
-
-            if (char.IsWhiteSpace(c))
-                continue;
-
-            if (c == expectedSymbols[symbolIndex++])
-                continue;
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private static ReadOnlySpan<char> ExtractJsonPart(ReadOnlySpan<char> input)
-    {
-        var insideString = false;
-        for (var index = 0; index < input.Length; index++)
-        {
-            if (input[index] is '"')
-            {
-                insideString = !insideString;
-                continue;
-            }
-
-            if (insideString)
-                continue;
-
-            if (input[index] is '}')
-                return input[..++index];
-        }
-
-        return [];
     }
 }

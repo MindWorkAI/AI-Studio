@@ -9,6 +9,7 @@ using AIStudio.Tools.RAG.AugmentationProcesses;
 using AIStudio.Tools.RAG.DataSourceSelectionProcesses;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 
 namespace AIStudio.Tools.RAG.RAGProcesses;
 
@@ -65,11 +66,14 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
 
             //
             // When the model searches the data sources itself, AI Studio does not search them as
-            // well. The reset above already dropped whatever an earlier message retrieved:
+            // well. The reset above already dropped whatever an earlier message retrieved. Only
+            // the data sources whose server could not be reached may still need a word here:
             //
             if (await IsSearchedByTheModelAsync(Program.SERVICE_PROVIDER.GetService<ToolRegistry>(), settings, provider, chatModel, chatThread))
             {
                 LOGGER.LogInformation("The model searches the data sources of this chat itself, aka Semantic Search. Skipping the RAG process.");
+                var offered = await SemanticSearchTool.GetOfferedDataSourcesAsync(settings, dataSourceService, provider, chatThread);
+                chatThread.AugmentedData = NoteWithoutSearchableDataSources(offered);
                 return chatThread;
             }
 
@@ -324,6 +328,22 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
         UnreachableDataSources.AppendTo(builder, unreachableDataSources);
         return builder.ToString();
     }
+
+    /// <summary>
+    /// What the model reads in the system prompt about the data sources of the chat while it searches them itself.
+    /// </summary>
+    /// <remarks>
+    /// Next to a data source the model may search, Semantic Search names those whose server could
+    /// not be reached in the description of its tool. Without one, the tool stays out of the
+    /// request, and the note goes into the system prompt instead, the same way as with the classic
+    /// process. Both ask the same place, SemanticSearchTool.GetOfferedDataSourcesAsync, but a few
+    /// moments apart: when the answer of an ERI server expires in between, the model may read that
+    /// a data source is out of reach which it may search after all, or hear nothing about it. That
+    /// is rare and lasts a single message, since the next one checks anew.
+    /// </remarks>
+    /// <param name="offered">The data sources Semantic Search offers in this request.</param>
+    /// <returns>The note on the data sources whose server could not be reached when the tool stays out, otherwise nothing.</returns>
+    internal static string NoteWithoutSearchableDataSources(OfferedDataSources offered) => offered.IsSearchable ? string.Empty : WithUnreachableDataSources(string.Empty, offered.Unreachable);
 
     /// <summary>
     /// Whether the model searches the data sources of this chat itself, through the tool semantic_search.

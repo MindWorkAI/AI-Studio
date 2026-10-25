@@ -48,6 +48,9 @@ public partial class ConfigurationFile : ConfigurationBaseCore
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    [Inject]
+    private ILogger<ConfigurationFile> Logger { get; init; } = null!;
+
     private string internalText = string.Empty;
     private bool isFileDialogOpen;
     private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
@@ -109,6 +112,26 @@ public partial class ConfigurationFile : ConfigurationBaseCore
         {
             this.isFileDialogOpen = false;
         }
+    }
+
+    /// <summary>
+    /// Takes the first dropped path which leads to a usable file.
+    /// </summary>
+    /// <param name="paths">The dropped paths.</param>
+    private async Task PathsDropped(List<string> paths)
+    {
+        var path = DroppedFile.FirstUsable(paths, this.Filter);
+        if (path is null)
+        {
+            this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a file.", paths.Count);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, DroppedFile.WarningFor(paths)));
+            return;
+        }
+
+        this.Logger.LogInformation("The user dropped the file '{DroppedFilePath}'.", path);
+        this.timer.Stop();
+        this.internalText = path;
+        await this.OptionChanged(path);
     }
 
     private async Task OptionChanged(string updatedText)

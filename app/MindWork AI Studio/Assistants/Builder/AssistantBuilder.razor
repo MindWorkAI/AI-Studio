@@ -43,44 +43,32 @@
         </MudPaper>
     }
 
-    <MudExpansionPanels Dense="@true" Elevation="0" Class="mb-3 rounded">
-        <MudExpansionPanel Dense="@true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
-            <TitleContent>
-                <div class="d-flex align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Tune" Class="mr-3"/>
-                    <MudText Typo="Typo.button">
-                        @T("Advanced Options")
-                    </MudText>
-                </div>
-            </TitleContent>
-            <ChildContent>
-                @* A launcher shows this field inside its own frame above, next to the chat settings
-                   it belongs with. *@
-                @if (!this.createChatLauncher)
+    <CompactExpansionPanel HeaderText="@T("Advanced Options")" HeaderIcon="@Icons.Material.Filled.Tune" Class="mb-3 rounded">
+        @* A launcher shows this field inside its own frame above, next to the chat settings
+           it belongs with. *@
+        @if (!this.createChatLauncher)
+        {
+            <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Display Name (Optional)")" Placeholder="@T("Meeting Task Extractor")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        }
+        <EnumSelection T="AssistantCategory" NameFunc="@(category => category.NameSelecting())" @bind-Value="@this.selectedCategory" ValidateSelection="@this.ValidatingCategory" Icon="@Icons.Material.Filled.Category" IconSize="Size.Small" Label="@T("Category (Optional)")" AllowOther="@true" OtherValue="AssistantCategory.OTHER" @bind-OtherInput="@this.customCategory" ValidateOther="@this.ValidateCustomCategory" LabelOther="@T("Custom assistant category")" />
+        @if (!this.createChatLauncher)
+        {
+            <MudTextField T="string" @bind-Text="@this.typicalInput" AdornmentIcon="@Icons.Material.Filled.Login" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Typical input (Optional)")" Placeholder="@T("What users provide, e.g. text, notes, files, or a URL")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudTextField T="string" @bind-Text="@this.expectedOutput" AdornmentIcon="@Icons.Material.Filled.Logout" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Expected output (Optional)")" Placeholder="@T("What users should get, e.g. a summary or checklist")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudSelect T="AssistantComponentType" Label="@T("Input and UI components (Optional)")" MultiSelection="@true" @bind-SelectedValues="@this.selectedAssistantComponents" MultiSelectionTextFunc="@this.GetSelectedAssistantComponentText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewDay" IconSize="Size.Small">
+                @foreach (var component in ASSISTANT_COMPONENT_OPTIONS)
                 {
-                    <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Display Name (Optional)")" Placeholder="@T("Meeting Task Extractor")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                    <MudSelectItem T="AssistantComponentType" Value="@component">
+                        @component.GetDisplayName()
+                    </MudSelectItem>
                 }
-                <EnumSelection T="AssistantCategory" NameFunc="@(category => category.NameSelecting())" @bind-Value="@this.selectedCategory" ValidateSelection="@this.ValidatingCategory" Icon="@Icons.Material.Filled.Category" IconSize="Size.Small" Label="@T("Category (Optional)")" AllowOther="@true" OtherValue="AssistantCategory.OTHER" @bind-OtherInput="@this.customCategory" ValidateOther="@this.ValidateCustomCategory" LabelOther="@T("Custom assistant category")" />
-                @if (!this.createChatLauncher)
-                {
-                    <MudTextField T="string" @bind-Text="@this.typicalInput" AdornmentIcon="@Icons.Material.Filled.Login" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Typical input (Optional)")" Placeholder="@T("What users provide, e.g. text, notes, files, or a URL")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-                    <MudTextField T="string" @bind-Text="@this.expectedOutput" AdornmentIcon="@Icons.Material.Filled.Logout" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Expected output (Optional)")" Placeholder="@T("What users should get, e.g. a summary or checklist")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-                    <MudSelect T="AssistantComponentType" Label="@T("Input and UI components (Optional)")" MultiSelection="@true" @bind-SelectedValues="@this.selectedAssistantComponents" MultiSelectionTextFunc="@this.GetSelectedAssistantComponentText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewDay" IconSize="Size.Small">
-                        @foreach (var component in ASSISTANT_COMPONENT_OPTIONS)
-                        {
-                            <MudSelectItem T="AssistantComponentType" Value="@component">
-                                @component.GetDisplayName()
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                    <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedOutputLanguage" Icon="@Icons.Material.Filled.Translate" IconSize="Size.Small" Label="@T("(Optional) Output language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customOutputLanguage" ValidateOther="@this.ValidateCustomOutputLanguage" LabelOther="@T("Custom output language")" />
-                    <MudSwitch T="bool" @bind-Value="@this.allowGeneratedAssistantProfiles" Label="@T("Allow AI Studio profiles")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
-                    <MudTextField T="string" @bind-Text="@this.extraRules" AdornmentIcon="@Icons.Material.Filled.Rule" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Additional rules (Optional)")" Placeholder="@T("What to avoid or consider, e.g. do not invent missing facts")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-                    <MudTextField T="string" @bind-Text="@this.exampleRequest" AdornmentIcon="@Icons.Material.Filled.Lightbulb" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Example prompt (Optional)")" Placeholder="@T("An expected user prompt, e.g. summarize this document")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-                }
-            </ChildContent>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
+            </MudSelect>
+            <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedOutputLanguage" Icon="@Icons.Material.Filled.Translate" IconSize="Size.Small" Label="@T("(Optional) Output language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customOutputLanguage" ValidateOther="@this.ValidateCustomOutputLanguage" LabelOther="@T("Custom output language")" />
+            <MudSwitch T="bool" @bind-Value="@this.allowGeneratedAssistantProfiles" Label="@T("Allow AI Studio profiles")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
+            <MudTextField T="string" @bind-Text="@this.extraRules" AdornmentIcon="@Icons.Material.Filled.Rule" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Additional rules (Optional)")" Placeholder="@T("What to avoid or consider, e.g. do not invent missing facts")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudTextField T="string" @bind-Text="@this.exampleRequest" AdornmentIcon="@Icons.Material.Filled.Lightbulb" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Example prompt (Optional)")" Placeholder="@T("An expected user prompt, e.g. summarize this document")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        }
+    </CompactExpansionPanel>
 
     <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
     <MudAlert Severity="Severity.Info" Square="true" Class="mb-2 mt-n1" Style="width: max-content">@this.HighPerformanceLLMInfo</MudAlert>
@@ -122,21 +110,9 @@ else
 @code {
     private protected override RenderFragment? BelowSubmitContent => this.step is BuilderStep.DONE && !string.IsNullOrWhiteSpace(this.generatedLuaAssistant)
         ? @<MudStack Spacing="3" Class="mb-3">
-              <MudExpansionPanels Dense="@true" Elevation="0" Class="rounded">
-                  <MudExpansionPanel Dense="@true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
-                      <TitleContent>
-                          <div class="d-flex align-center">
-                              <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-3" Color="Color.Primary"/>
-                              <MudText Typo="Typo.button">
-                                  @T("Generated Lua plugin")
-                              </MudText>
-                          </div>
-                      </TitleContent>
-                      <ChildContent>
-                          <MudTextField T="string" Text="@this.generatedLuaAssistant" ReadOnly="true" Variant="Variant.Outlined" Lines="18" Class="mt-2" Style="font-family: monospace"/>
-                      </ChildContent>
-                  </MudExpansionPanel>
-              </MudExpansionPanels>
+              <CompactExpansionPanel HeaderText="@T("Generated Lua plugin")" HeaderIcon="@Icons.Material.Filled.Code" IconColor="Color.Primary" Class="rounded">
+                  <MudTextField T="string" Text="@this.generatedLuaAssistant" ReadOnly="true" Variant="Variant.Outlined" Lines="18" Class="mt-2" Style="font-family: monospace"/>
+              </CompactExpansionPanel>
 
               <MudStepperWithoutActions @bind-ActiveIndex="@this.stepperIndex" Class="mb-3">
                   <ChildContent>

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
@@ -17,10 +16,6 @@ namespace AIStudio.Assistants.PromptOptimizer;
 
 public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialogPromptOptimizer>
 {
-    private static readonly Regex JSON_CODE_FENCE_REGEX = new(
-        pattern: """```(?:json)?\s*(?<json>\{[\s\S]*\})\s*```""",
-        options: RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -384,34 +379,8 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     {
         parsedResult = new();
 
-        if (TryDeserialize(rawResponse, out parsedResult))
-            return true;
-
-        var codeFenceMatch = JSON_CODE_FENCE_REGEX.Match(rawResponse);
-        if (codeFenceMatch.Success)
-        {
-            var codeFenceJson = codeFenceMatch.Groups["json"].Value;
-            if (TryDeserialize(codeFenceJson, out parsedResult))
-                return true;
-        }
-
-        var firstBrace = rawResponse.IndexOf('{');
-        var lastBrace = rawResponse.LastIndexOf('}');
-        if (firstBrace >= 0 && lastBrace > firstBrace)
-        {
-            var objectText = rawResponse[firstBrace..(lastBrace + 1)];
-            if (TryDeserialize(objectText, out parsedResult))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool TryDeserialize(string json, out PromptOptimizationResult parsedResult)
-    {
-        parsedResult = new();
-
-        if (string.IsNullOrWhiteSpace(json))
+        var json = ModelAnswerJson.ExtractObject(rawResponse);
+        if (json.IsWhiteSpace())
             return false;
 
         try

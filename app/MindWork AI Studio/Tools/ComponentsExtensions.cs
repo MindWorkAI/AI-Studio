@@ -100,7 +100,7 @@ public static class ComponentsExtensions
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         Components.BATCH_PROCESSING_ASSISTANT => TB("Batch Processing Assistant"),
-        Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
+        Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Assistant"),
         Components.VISUAL_BRIEFING_ASSISTANT => TB("Visual Briefing Assistant"),
         Components.META_ASSISTANT => TB("Assistant Builder"),
         Components.LOG_VIEWER_ASSISTANT => TB("Log Viewer Assistant"),

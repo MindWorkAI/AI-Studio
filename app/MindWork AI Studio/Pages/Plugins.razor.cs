@@ -371,9 +371,12 @@ public partial class Plugins : MSGComponentBase
 
         try
         {
+            // Shows that an export runs, and nothing when the share sheet takes the archive:
+            await using var exportFeedback = new FileExportFeedback();
+
             // A failed share sheet switches to the export, so we remember what this click does:
             var isExport = this.PluginShareService.UsesExport;
-            var shareResult = await this.PluginShareService.ShareAsync(plugin, CancellationToken.None);
+            var shareResult = await this.PluginShareService.ShareAsync(plugin, exportFeedback, CancellationToken.None);
             if (shareResult.Outcome is PluginShareOutcome.SHARE_SHEET_UNAVAILABLE)
             {
                 // The runtime and NativeShareService already logged why the share sheet did not open:
@@ -381,14 +384,18 @@ public partial class Plugins : MSGComponentBase
                     return;
 
                 isExport = true;
-                shareResult = await this.PluginShareService.ExportAsync(plugin, CancellationToken.None);
+                shareResult = await this.PluginShareService.ExportAsync(plugin, exportFeedback, CancellationToken.None);
             }
 
             switch (shareResult.Outcome)
             {
-                // On export, the user chose the target location, so we confirm where the archive was stored:
+                //
+                // On export, the user chose the target location, so we confirm where the archive was
+                // stored and offer the way there. Opening it with the default program is left out:
+                // that would only unpack the archive, at least on macOS.
+                //
                 case PluginShareOutcome.EXPORTED:
-                    await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath)));
+                    await exportFeedback.SucceededAsync(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath), shareResult.ArchivePath, false);
                     break;
 
                 case PluginShareOutcome.FAILED:
