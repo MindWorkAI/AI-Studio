@@ -18,8 +18,8 @@ internal sealed partial class LuaResponse
         error = LuaResponseParseError.NONE;
         technicalDetails = string.Empty;
 
-        var json = ExtractJson(modelResponse);
-        if (string.IsNullOrWhiteSpace(json))
+        var json = ModelAnswerJson.ExtractObject(modelResponse);
+        if (json.IsWhiteSpace())
         {
             error = LuaResponseParseError.MISSING_JSON_OBJECT;
             return false;
@@ -158,53 +158,4 @@ internal sealed partial class LuaResponse
 
     private static bool IsOptionalGuid(string? value, bool allowEmpty) => value is null ||
         Guid.TryParse(value, out var parsed) && (allowEmpty || parsed != Guid.Empty);
-
-    /// <summary>
-    /// Reads the first complete JSON object out of a model answer that may carry text around it.
-    /// </summary>
-    /// <remarks>
-    /// Shared with the launcher texts response and the slide deck of the Slide Assistant, which are
-    /// different shapes but arrive the same way, wrapped in whatever prose the model felt like adding.
-    /// </remarks>
-    internal static string ExtractJson(string input)
-    {
-        var start = input.IndexOf('{');
-        if (start < 0)
-            return string.Empty;
-
-        var depth = 0;
-        var insideString = false;
-        for (var index = start; index < input.Length; index++)
-        {
-            if (input[index] == '"' && !IsEscaped(input, index))
-                insideString = !insideString;
-
-            if (insideString)
-                continue;
-
-            switch (input[index])
-            {
-                case '{':
-                    depth++;
-                    break;
-                case '}':
-                    depth--;
-                    break;
-            }
-
-            if (depth == 0)
-                return input[start..(index + 1)];
-        }
-
-        return string.Empty;
-    }
-
-    private static bool IsEscaped(string input, int index)
-    {
-        var backslashCount = 0;
-        for (var i = index - 1; i >= 0 && input[i] == '\\'; i--)
-            backslashCount++;
-
-        return backslashCount % 2 == 1;
-    }
 }

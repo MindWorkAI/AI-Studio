@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using AIStudio.Assistants.Builder;
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 
 namespace AIStudio.Tools.PowerPoint;
@@ -45,8 +44,8 @@ internal sealed partial record SlideDeckSpec
         spec = new SlideDeckSpec(string.Empty, []);
         issue = string.Empty;
 
-        var json = LuaResponse.ExtractJson(modelResponse);
-        if (string.IsNullOrWhiteSpace(json))
+        var json = ModelAnswerJson.ExtractObject(modelResponse);
+        if (json.IsWhiteSpace())
         {
             issue = "The answer contains no complete JSON object.";
             return false;

@@ -50,7 +50,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
               "severity": "critical | medium | low",
               "category": "brief category",
               "location": "system prompt | BuildPrompt | component name | plugin.lua",
-              "description": "what is risky",
+              "description": "what is risky"
             }
           ]
         }
@@ -259,7 +259,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             };
         }
 
-        var json = ExtractJson(content.Text);
+        var json = ModelAnswerJson.ExtractObject(content.Text);
         try
         {
             var result = JsonSerializer.Deserialize<AssistantAuditResult>(json, JSON_SERIALIZER_OPTIONS);
@@ -300,44 +300,6 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             Confidence = result.Confidence,
             Findings = normalizedFindings,
         };
-    }
-
-    /// <summary>
-    /// Extracts the first complete JSON object from a model response that may contain surrounding text.
-    /// </summary>
-    /// <param name="input">The raw model response.</param>
-    /// <returns>The first complete JSON object, or an empty span when none can be found.</returns>
-    private static ReadOnlySpan<char> ExtractJson(ReadOnlySpan<char> input)
-    {
-        var start = input.IndexOf('{');
-        if (start < 0)
-            return [];
-
-        var depth = 0;
-        var insideString = false;
-        for (var index = start; index < input.Length; index++)
-        {
-            if (input[index] == '"' && (index == 0 || input[index - 1] != '\\'))
-                insideString = !insideString;
-
-            if (insideString)
-                continue;
-
-            switch (input[index])
-            {
-                case '{':
-                    depth++;
-                    break;
-                case '}':
-                    depth--;
-                    break;
-            }
-
-            if (depth == 0)
-                return input[start..(index + 1)];
-        }
-
-        return [];
     }
 
     /// <summary>
