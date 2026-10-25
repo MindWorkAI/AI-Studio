@@ -41,11 +41,13 @@ internal static class SlideDeckSpecValidator
     /// <param name="templateSlideUses">What the user chose for each slide of the template, by its number; null or empty when the deck uses no template slides.</param>
     /// <param name="chosenLayouts">The layouts the user chose for kinds of slides; null when the model decides every layout.</param>
     /// <param name="maxMainPointsPerSlide">How many main points a slide may have at most, all its texts together, or 0 when the model may choose.</param>
+    /// <param name="libraryPictures">The pictures of a picture library the slides may use, numbered after the pictures for the slides; null for no library.</param>
     /// <returns>The issues, written for the model; empty when the deck fits.</returns>
-    public static IReadOnlyList<string> Validate(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, int expectedSlideCount, IReadOnlyList<TemplateSlideUse>? templateSlideUses = null, ChosenLayouts? chosenLayouts = null, int maxMainPointsPerSlide = 0)
+    public static IReadOnlyList<string> Validate(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, int expectedSlideCount, IReadOnlyList<TemplateSlideUse>? templateSlideUses = null, ChosenLayouts? chosenLayouts = null, int maxMainPointsPerSlide = 0, LibraryPictures? libraryPictures = null)
     {
         var uses = templateSlideUses ?? [];
         var chosen = chosenLayouts ?? ChosenLayouts.NONE;
+        var library = libraryPictures ?? LibraryPictures.NONE;
         var issues = new List<string>();
         if (spec.Title.Length == 0)
             issues.Add("The presentation has no title.");
@@ -61,14 +63,58 @@ internal static class SlideDeckSpecValidator
 
         for (var index = 0; index < spec.Slides.Count; index++)
         {
-            ValidateSlide(spec.Slides[index], index + 1, template, uses, chosen, pictureCount, issues);
+            ValidateSlide(spec.Slides[index], index + 1, template, uses, chosen, pictureCount + library.Count, issues);
             ValidateMainPoints(spec.Slides[index], index + 1, maxMainPointsPerSlide, issues);
         }
 
         ValidateTemplateSlides(spec, template, uses, issues);
         ValidateAddedSlides(spec, template, chosen, issues);
         ValidateRequiredPictures(spec, template, pictureCount, issues);
+        ValidateLibraryPictures(spec, template, pictureCount, library, issues);
         return issues;
+    }
+
+    /// <summary>
+    /// Checks that a picture of the library is used at most once, except for icons, and that no icon fills a backdrop.
+    /// </summary>
+    /// <remarks>
+    /// The same photo twice looks like an oversight, while the same icon may well mark, e.g., every
+    /// risk. An icon in a backdrop would cover the slide as a giant, so it belongs into a smaller
+    /// picture slot; a large one is fine, e.g., for a central icon next to a research question.
+    /// </remarks>
+    private static void ValidateLibraryPictures(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, LibraryPictures library, List<string> issues)
+    {
+        if (library.Count == 0)
+            return;
+
+        var placed = new Dictionary<int, List<int>>();
+        for (var index = 0; index < spec.Slides.Count; index++)
+        {
+            var slide = spec.Slides[index];
+            var number = index + 1;
+            var pictureSlots = template.FamilyOf(slide)?.Slots.Where(slot => slot.Role is PlaceholderRole.PICTURE).ToList() ?? [];
+            var templateSlide = slide.TemplateSlide is { } templateSlideNumber ? template.FindSlide(templateSlideNumber) : null;
+            for (var position = 0; position < slide.Pictures.Count; position++)
+            {
+                var picture = slide.Pictures[position];
+                if (!placed.TryGetValue(picture, out var slides))
+                    placed[picture] = slides = [];
+
+                slides.Add(number);
+                if (!library.IconNumbers.Contains(picture) || pictureSlots.FirstOrDefault(candidate => candidate.Ordinal == position + 1) is not { } slot)
+                    continue;
+
+                var bounds = templateSlide?.OnSlide(slot).Bounds ?? slot.Bounds;
+                if (template.IsBackdrop(bounds))
+                    issues.Add($"Slide {number} puts icon {picture} into picture {slot.Ordinal}, which is a backdrop. Put icons only into picture slots which are no backdrop, or choose another picture.");
+            }
+        }
+
+        foreach (var (picture, slides) in placed)
+        {
+            if (slides.Count > 1 && picture > pictureCount && picture <= pictureCount + library.Count && !library.IconNumbers.Contains(picture))
+                issues.Add($"Picture {picture} of PICTURE_LIBRARY is on slides {string.Join(", ", slides)}. Use a picture of the library at most once; only icons may repeat.");
+        }
     }
 
     /// <summary>

@@ -139,7 +139,7 @@ internal static partial class PresentationWriter
                 var bounds = templateSlide.OnSlide(slot).Bounds;
                 replacement = slot.Role switch
                 {
-                    PlaceholderRole.PICTURE when index < slide.Pictures.Count && content.Pictures.TryGetValue(slide.Pictures[index], out var picture) => PictureShape(NextShapeIdOf(shapeTree), placeholder, slidePart, picture, bounds, bounds.Area >= content.SlideArea * BACKDROP_AREA_SHARE),
+                    PlaceholderRole.PICTURE when index < slide.Pictures.Count && content.Pictures.TryGetValue(slide.Pictures[index], out var picture) => PictureShape(NextShapeIdOf(shapeTree), placeholder, slidePart, picture, bounds, bounds.Area >= content.SlideArea * PresentationTemplate.BACKDROP_AREA_SHARE),
                     PlaceholderRole.TABLE when index == 0 && slide.Table is { Headers.Count: > 0 } table => TableShape(NextShapeIdOf(shapeTree), placeholder, table, bounds, content.TableStyleId),
 
                     _ => null,

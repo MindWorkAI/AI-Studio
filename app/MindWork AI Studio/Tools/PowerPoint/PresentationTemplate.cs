@@ -11,6 +11,17 @@ namespace AIStudio.Tools.PowerPoint;
 /// </remarks>
 internal sealed partial class PresentationTemplate
 {
+    /// <summary>
+    /// A picture slot covering at least this share of the slide is a backdrop, which a picture fills.
+    /// </summary>
+    /// <remarks>
+    /// A backdrop, such as the picture of a chapter slide, looks broken with a margin, so a picture is
+    /// cropped to fill it. A smaller slot often gets a diagram or a screenshot, which must not lose its
+    /// edges, so a picture is scaled to fit inside and keeps all of its content. An icon is never
+    /// cropped and never goes into a backdrop: it would fill the slide as a giant.
+    /// </remarks>
+    public const double BACKDROP_AREA_SHARE = 0.5;
+
     private PresentationTemplate(long slideWidth, long slideHeight, IReadOnlyList<LayoutFamily> families, IReadOnlyList<string> variantLabels, IReadOnlyList<TemplateSlide> slides)
     {
         this.SlideWidth = slideWidth;
@@ -69,6 +80,11 @@ internal sealed partial class PresentationTemplate
     /// The names of the families, each one once, in the order of the template, e.g., for the user to choose a layout by.
     /// </summary>
     public IEnumerable<string> FamilyNames => this.Families.Select(family => family.Name).Distinct(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Whether a picture slot in these bounds is a backdrop, see BACKDROP_AREA_SHARE.
+    /// </summary>
+    public bool IsBackdrop(SlotBounds bounds) => bounds.Area >= (double)this.SlideWidth * this.SlideHeight * BACKDROP_AREA_SHARE;
 
     /// <summary>
     /// Finds a slide of the template by its number.

@@ -12,16 +12,6 @@ namespace AIStudio.Tools.PowerPoint;
 internal static partial class PresentationWriter
 {
     /// <summary>
-    /// A picture slot covering at least this share of the slide is a backdrop, which the picture fills.
-    /// </summary>
-    /// <remarks>
-    /// A backdrop, such as the picture of a chapter slide, looks broken with a margin, so the picture
-    /// is cropped to fill it. A smaller slot often gets a diagram or a screenshot, which must not lose
-    /// its edges, so the picture is scaled to fit inside and keeps all of its content.
-    /// </remarks>
-    private const double BACKDROP_AREA_SHARE = 0.5;
-
-    /// <summary>
     /// A crop of the whole picture, in the thousandths of a percent the file format uses.
     /// </summary>
     private const double WHOLE_PICTURE = 100_000;
@@ -54,7 +44,7 @@ internal static partial class PresentationWriter
                 PlaceholderRole.SUBTITLE when slide.Subtitle.Length > 0 => TextShape(nextId, $"Subtitle {nextId}", placeholder, ParagraphsOf(slide.Subtitle), false),
                 PlaceholderRole.TEXT when index < slide.Texts.Count && slide.Texts[index].Paragraphs.Count > 0 => TextShape(nextId, $"Text {nextId}", placeholder, slide.Texts[index].Paragraphs.Select(ParagraphOf), true),
                 PlaceholderRole.LABEL when index < slide.Labels.Count && slide.Labels[index].Length > 0 => TextShape(nextId, $"Label {nextId}", placeholder, ParagraphsOf(slide.Labels[index]), false),
-                PlaceholderRole.PICTURE when index < slide.Pictures.Count && content.Pictures.TryGetValue(slide.Pictures[index], out var picture) => PictureShape(nextId, placeholder, slidePart, picture, slot.Bounds, slot.Bounds.Area >= content.SlideArea * BACKDROP_AREA_SHARE),
+                PlaceholderRole.PICTURE when index < slide.Pictures.Count && content.Pictures.TryGetValue(slide.Pictures[index], out var picture) => PictureShape(nextId, placeholder, slidePart, picture, slot.Bounds, slot.Bounds.Area >= content.SlideArea * PresentationTemplate.BACKDROP_AREA_SHARE),
                 PlaceholderRole.PICTURE when content.KeepEmptyPicturePlaceholders => EmptyPlaceholderShape(nextId, $"Picture Placeholder {nextId}", placeholder),
                 PlaceholderRole.TABLE when index == 0 && slide.Table is { Headers.Count: > 0 } table => TableShape(nextId, placeholder, table, slot.Bounds, content.TableStyleId),
 
@@ -147,7 +137,8 @@ internal static partial class PresentationWriter
 
         var blipFill = new P.BlipFill(new A.Blip { Embed = slidePart.GetIdOfPart(imagePart) });
         var shapeProperties = new P.ShapeProperties();
-        if (isBackdrop)
+        // An icon keeps its edges even in a backdrop, which the validator keeps it out of:
+        if (isBackdrop && !picture.IsIcon)
         {
             // The picture is cropped for these bounds, which a slide of the template may have moved away from the layout's:
             blipFill.Append(CropToFill(picture, bounds));

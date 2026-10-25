@@ -142,6 +142,23 @@ public sealed class PresentationWriterTests
     }
 
     [Test]
+    public async Task AnIconIsNeverCropped()
+    {
+        var (file, _) = await WriteAsync(DECK, OPTIONS, pictures: new FakePictureSource(WIDE_PICTURE, WIDE_PICTURE with { IsIcon = true }));
+        using var document = PresentationDocument.Open(file, false);
+
+        // The icon lands in the backdrop, which the validator advises against, and keeps its edges anyway:
+        var icon = SlidesOf(document)[3].Slide!.Descendants<P.Picture>().Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(icon.BlipFill!.GetFirstChild<A.SourceRectangle>(), Is.Null);
+            Assert.That(icon.ShapeProperties!.Transform2D!.Extents!.Cx!.Value, Is.EqualTo(WHOLE_SLIDE.Width));
+            Assert.That(icon.ShapeProperties.Transform2D.Extents.Cy!.Value, Is.EqualTo(WHOLE_SLIDE.Width / 4));
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+        });
+    }
+
+    [Test]
     public async Task APictureInAFormatPowerPointDoesNotShowIsSkipped()
     {
         var (file, result) = await WriteAsync(DECK, OPTIONS, pictures: new FakePictureSource(WIDE_PICTURE with { ContentType = "image/webp" }, WIDE_PICTURE));

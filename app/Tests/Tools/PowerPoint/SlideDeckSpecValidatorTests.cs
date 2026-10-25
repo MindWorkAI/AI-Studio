@@ -382,6 +382,56 @@ public sealed class SlideDeckSpecValidatorTests
     }
 
     [Test]
+    public void APictureOfTheLibraryIsUsedOnceButAnIconMayRepeat()
+    {
+        // Picture 1 is for the slides; pictures 2 to 4 come from the library, and 3 and 4 are icons:
+        var library = new LibraryPictures(3, new HashSet<int> { 3, 4 });
+        var deck = new SlideDeckSpec("Mars",
+        [
+            Slide("L5", "One", texts: [Text("Start")], pictures: [1]),
+            Slide("L5", "Two", texts: [Text("Rocket")], pictures: [2]),
+            Slide("L5", "Three", texts: [Text("Rocket again")], pictures: [2]),
+            Slide("L5", "Four", texts: [Text("Risk")], pictures: [3]),
+            Slide("L5", "Five", texts: [Text("Another risk")], pictures: [3]),
+            Slide("L5", "Six", texts: [Text("Goal")], pictures: [4]),
+        ]);
+
+        var issues = SlideDeckSpecValidator.Validate(deck, TEMPLATE, 1, 0, libraryPictures: library);
+        Assert.Multiple(() =>
+        {
+            Assert.That(issues, Has.Some.Contains("Picture 2 of PICTURE_LIBRARY is on slides 2, 3. Use a picture of the library at most once; only icons may repeat."));
+            Assert.That(issues, Has.None.Contains("Picture 3 of PICTURE_LIBRARY"), "An icon may mark several slides.");
+            Assert.That(issues, Has.None.Contains("refers to picture"), "The numbers of the library follow those of the pictures for the slides.");
+            Assert.That(issues, Has.None.Contains("is on no slide"), "Only the pictures for the slides have to be used.");
+        });
+    }
+
+    [Test]
+    public void AnIconNeverFillsABackdrop()
+    {
+        var template = TestTemplate.Read(
+            new TestLayout("Backdrop", TestPlaceholder.Picture(11, new SlotBounds(0, 0, TestTemplate.SLIDE_WIDTH, TestTemplate.SLIDE_HEIGHT)), TestPlaceholder.Title()),
+            new TestLayout("Picture with text", TestPlaceholder.Title(), TestPlaceholder.Text(1, new SlotBounds(838_200, 1_825_625, 5_150_000, 4_351_338)), TestPlaceholder.Picture(20, new SlotBounds(6_200_000, 1_825_625, 5_150_000, 3_500_000))));
+
+        // Both pictures come from the library, and the first one is an icon:
+        var library = new LibraryPictures(2, new HashSet<int> { 1 });
+        var deck = new SlideDeckSpec("Mars",
+        [
+            Slide("L1", "Chapter", pictures: [1]),
+            Slide("L2", "Goal", texts: [Text("Reach Mars")], pictures: [1]),
+            Slide("L1", "Landscape", pictures: [2]),
+        ]);
+
+        var issues = SlideDeckSpecValidator.Validate(deck, template, 0, 0, libraryPictures: library);
+        Assert.Multiple(() =>
+        {
+            Assert.That(issues, Has.Some.Contains("Slide 1 puts icon 1 into picture 1, which is a backdrop."));
+            Assert.That(issues, Has.None.Contains("Slide 2 puts icon"), "A smaller picture slot is the place for an icon.");
+            Assert.That(issues, Has.None.Contains("Slide 3 puts icon"), "A photo fills a backdrop well.");
+        });
+    }
+
+    [Test]
     public void ADeckStillFitsATemplateWhichChangedBesideIt()
     {
         var deck = new SlideDeckSpec("Weekly", [Keep(1), Slide("L2", texts: [Text("Close to Earth")]), Edit(4, texts: [Text("Thema:\tWeekly")])]);

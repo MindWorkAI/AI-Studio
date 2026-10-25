@@ -257,7 +257,11 @@ internal sealed partial class PresentationTemplate
         }
 
         if (slot.Role is PlaceholderRole.PICTURE)
+        {
             details.Add(OrientationOf(slot.Bounds));
+            if (this.IsBackdrop(slot.Bounds))
+                details.Add("backdrop");
+        }
 
         if (slot.Capacity is { } capacity)
             details.Add(slot.Role is PlaceholderRole.TABLE

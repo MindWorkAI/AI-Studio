@@ -164,6 +164,21 @@ public sealed class PresentationTemplateTests
     }
 
     [Test]
+    public void APictureSlotOfAtLeastHalfTheSlideIsABackdrop()
+    {
+        var template = TestTemplate.Read(
+            new TestLayout("Backdrop", TestPlaceholder.Picture(11, new SlotBounds(0, 0, TestTemplate.SLIDE_WIDTH, TestTemplate.SLIDE_HEIGHT)), TestPlaceholder.Title()),
+            new TestLayout("Picture with text", TestPlaceholder.Title(), TestPlaceholder.Text(1, LEFT_TEXT, 2000), TestPlaceholder.Picture(20, RIGHT_PICTURE)));
+
+        var catalog = template.ToCatalogPrompt();
+        Assert.Multiple(() =>
+        {
+            Assert.That(catalog, Does.Contain("landscape, backdrop)"), "The model learns where an icon must not go.");
+            Assert.That(catalog, Does.Contain("picture 1 (right, middle, landscape)"));
+        });
+    }
+
+    [Test]
     public void WithoutATemplateTheCommonLayoutsAreOffered()
     {
         var template = PresentationTemplate.CreateDefault();
