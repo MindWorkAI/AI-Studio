@@ -242,7 +242,7 @@ public partial class SlideAssistant
     private string PromptPictureLibraryRules() => this.planningLibrary.Pictures.Count == 0
         ? string.Empty
         : """
-              - PICTURE_LIBRARY lists further pictures by their numbers and names; you know only their names. Where a name fits the content of a slide with a picture slot, you may place that picture there by its number. You need not use any of them, and you use each one at most once.
+              - PICTURE_LIBRARY lists further pictures by their numbers and names; you know only their names. Fill the picture slots of your new slides from it: wherever a name fits the content of a slide, place that picture there by its number. Leave a picture slot empty only when no name fits. A picture which is not an icon appears at most once.
               - Pictures marked "(icon)" are icons. An icon may appear on several slides, e.g., to mark each risk the same way, and suits picture slots of any size, except those marked as backdrop.
           """;
 

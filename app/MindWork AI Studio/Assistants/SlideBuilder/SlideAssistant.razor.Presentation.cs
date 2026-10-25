@@ -582,6 +582,8 @@ public partial class SlideAssistant
             }
 
             File.Move(temporaryPath, targetPath, true);
+            var placements = deck.Slides.SelectMany(slide => slide.Pictures).ToList();
+            this.Logger.LogInformation("The slide assistant saved {SlideCount} slides to '{FilePath}', with {PlacedPictureCount} of {PictureCount} pictures placed and empty picture placeholders {EmptyPicturePlaceholders}.", deck.Slides.Count, targetPath, placements.Count(number => !result.SkippedPictures.Contains(number)), placements.Count, this.keepEmptyPicturePlaceholders ? "kept" : "left out");
             if (result.SkippedPictures.Count > 0)
             {
                 var names = result.SkippedPictures.Select(number => this.slideDeckPicturePaths.TryGetValue(number, out var picturePath) ? Path.GetFileName(picturePath) : number.ToString(CultureInfo.InvariantCulture));

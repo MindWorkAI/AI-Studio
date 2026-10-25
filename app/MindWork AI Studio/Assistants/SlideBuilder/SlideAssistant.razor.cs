@@ -708,7 +708,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             }
         }
 
-        this.Logger.LogInformation("The slide assistant asked with {RequestCharacters} characters, {PictureCount} pictures for the slides, and {LibraryPictureCount} pictures of the library, and got {SlideCount} slides, {RepairRound}.", request.Length, imageAttachments.Count, library.Pictures.Count, deck?.Slides.Count ?? 0, neededRepairRound ? "after a repair round" : "without a repair round");
+        bool IsLibraryNumber(int number) => number >= firstLibraryNumber && number < firstLibraryNumber + library.Pictures.Count;
+        var libraryPlacements = deck?.Slides.SelectMany(slide => slide.Pictures).Where(IsLibraryNumber).ToList() ?? [];
+        this.Logger.LogInformation("The slide assistant asked with {RequestCharacters} characters, {PictureCount} pictures for the slides, and {LibraryPictureCount} pictures of the library, {LibraryIconCount} of them icons, and got {SlideCount} slides, {RepairRound}. The slides place {LibraryPlacementCount} pictures of the library, {LibraryIconPlacementCount} of them icons.", request.Length, imageAttachments.Count, library.Pictures.Count, library.Pictures.Count(picture => picture.IsIcon), deck?.Slides.Count ?? 0, neededRepairRound ? "after a repair round" : "without a repair round", libraryPlacements.Count, libraryPlacements.Count(number => library.Pictures[number - firstLibraryNumber].IsIcon));
 
         //
         // Slides on layouts the template does not have, or on template slides the user did not
@@ -744,7 +746,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             pictureNames[index + 1] = imageAttachments[index].FileName;
         }
 
-        foreach (var number in deck.Slides.SelectMany(slide => slide.Pictures).Where(number => number >= firstLibraryNumber && number < firstLibraryNumber + library.Pictures.Count).Distinct())
+        foreach (var number in libraryPlacements.Distinct())
         {
             var picture = library.Pictures[number - firstLibraryNumber];
             this.slideDeckPicturePaths[number] = picture.FilePath;
