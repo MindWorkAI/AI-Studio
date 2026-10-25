@@ -224,6 +224,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.customTargetLanguage = string.Empty;
             this.footerText = string.Empty;
             this.keepEmptyPicturePlaceholders = false;
+            this.numberOfBulletPoints = 0;
             this.pictureLibraryPath = string.Empty;
             this.StartCountingPictureLibrary();
             this.templatePath = string.Empty;
@@ -240,6 +241,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.ApplyPreselectedTemplateSlideUses();
             this.footerText = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText;
             this.keepEmptyPicturePlaceholders = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedKeepEmptyPicturePlaceholders;
+            this.numberOfBulletPoints = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedMaxBulletPointsPerSlide;
             this.pictureLibraryPath = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedPictureLibraryPath;
             this.StartCountingPictureLibrary();
             this.layoutNames.Clear();
@@ -273,6 +275,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private string customOccasion = string.Empty;
     private int numberOfSheets;
     private int numberOfBulletPoints;
+
+    /// <summary>
+    /// Whether the organization dictates the maximum number of bullet points per slide, e.g., to fit its template.
+    /// </summary>
+    /// <remarks>
+    /// Like the template, the maximum is a preselection, so a lock binds only while preselection is enabled.
+    /// </remarks>
+    private bool IsBulletPointMaximumLocked => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions && ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedMaxBulletPointsPerSlide, out var meta) && meta.IsLocked;
     private int timeSpecification;
     private string importantAspects = string.Empty;
     private HashSet<FileAttachment> loadedDocumentPaths = [];

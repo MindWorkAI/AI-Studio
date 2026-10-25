@@ -35,6 +35,26 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     public string PreselectedFooterText { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedFooterText, string.Empty);
 
     /// <summary>
+    /// The most bullet points per slide the user can ask for.
+    /// </summary>
+    public const int MAX_BULLET_POINTS_PER_SLIDE = 7;
+
+    /// <summary>
+    /// Preselect the maximum number of bullet points per slide, all text slots of a slide together?
+    /// </summary>
+    /// <remarks>
+    /// 0 sets no maximum, as in the assistant, where the LLM decides by the room of each layout. The
+    /// number should fit the room for text in the layouts of the template, which is why organizations
+    /// may dictate it.
+    /// </remarks>
+    public int PreselectedMaxBulletPointsPerSlide { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedMaxBulletPointsPerSlide, 0);
+
+    /// <summary>
+    /// Whether a number of bullet points per slide can be preselected: 0 for no maximum, or up to MAX_BULLET_POINTS_PER_SLIDE.
+    /// </summary>
+    public static bool IsValidMaxBulletPointsPerSlide(int value) => value is >= 0 and <= MAX_BULLET_POINTS_PER_SLIDE;
+
+    /// <summary>
     /// Preselect keeping the picture placeholders which a new slide has no picture for?
     /// </summary>
     /// <remarks>

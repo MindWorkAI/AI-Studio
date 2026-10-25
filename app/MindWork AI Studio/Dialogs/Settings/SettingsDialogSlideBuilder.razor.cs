@@ -1,5 +1,8 @@
-﻿using AIStudio.Assistants.SlideBuilder;
+﻿using System.Globalization;
+
+using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PowerPoint;
 
 using Microsoft.AspNetCore.Components;
@@ -29,6 +32,11 @@ public partial class SettingsDialogSlideBuilder : SettingsDialogBase
     /// The path the template and the layout options were read from; null before the first reading.
     /// </summary>
     private string? templatePathRead;
+
+    /// <summary>
+    /// What the preselection of the maximum number of bullet points offers: no maximum, then 1 up to the most a slide may hold.
+    /// </summary>
+    private IEnumerable<ConfigurationSelectData<int>> BulletPointMaximumOptions => [new(T("No maximum"), 0), ..Enumerable.Range(1, DataSlideBuilder.MAX_BULLET_POINTS_PER_SLIDE).Select(count => new ConfigurationSelectData<int>(count.ToString(CultureInfo.InvariantCulture), count))];
 
     #region Overrides of SettingsDialogBase
 

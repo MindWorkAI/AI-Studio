@@ -440,6 +440,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedFooterText, this.Id, settingsTable, dryRun);
+
+        var maxBulletPointsIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedMaxBulletPointsPerSlide, this.Id, settingsTable, dryRun, validator: DataSlideBuilder.IsValidMaxBulletPointsPerSlide);
+        if (!maxBulletPointsIsValid && settingsTable.TryGetValue("DataSlideBuilder.PreselectedMaxBulletPointsPerSlide", out _))
+            LOG.LogWarning("The maximum number of bullet points per slide configured by plugin {ConfigPluginId} must be between 0 and {MaxBulletPoints}.", this.Id, DataSlideBuilder.MAX_BULLET_POINTS_PER_SLIDE);
+
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedKeepEmptyPicturePlaceholders, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedPictureLibraryPath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginDirectory);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedLayouts, this.Id, settingsTable, dryRun);

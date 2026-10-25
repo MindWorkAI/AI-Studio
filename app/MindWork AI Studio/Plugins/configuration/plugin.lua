@@ -703,6 +703,12 @@ CONFIG["SETTINGS"] = {}
 -- the organization. Leave it empty for no footer.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
 --
+-- Configure the maximum number of bullet points per slide, all text slots of a slide together,
+-- from 1 to 7. Match it to the room for text in the layouts of your template. 0 sets no maximum,
+-- and the LLM decides by the room of each layout. AI Studio logs a warning for any other value
+-- and ignores it.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide"] = 0
+--
 -- Configure whether new slides keep the picture placeholders of their layout which they have no
 -- picture for. PowerPoint shows them while editing, so users can insert pictures of their own,
 -- and hides them in the slide show. By default, the slides leave them out.
@@ -775,6 +781,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true

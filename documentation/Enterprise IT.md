@@ -1229,6 +1229,16 @@ CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders"] =
 CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
 ```
 
+A slide shows only as much text as its layout has room for. Set the maximum number of bullet points
+per slide, all text slots of a slide together, from 1 to 7, so that it fits the layouts of your
+template. 0 sets no maximum, and the LLM decides by the room of each layout. AI Studio logs a warning
+for any other value and ignores it:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide"] = 5
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide.AllowUserOverride"] = true
+```
+
 You can also tell the Slide Assistant which layout of your template to use for certain kinds of slides,
 e.g., which layout opens each chapter. Give each layout by its name in the slide master of your
 template:

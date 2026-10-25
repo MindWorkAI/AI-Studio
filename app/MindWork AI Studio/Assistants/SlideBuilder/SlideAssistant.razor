@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_SLIDE_BUILDER)]
+@using AIStudio.Settings.DataModel
 @using AIStudio.Tools.PowerPoint
 @using AIStudio.Tools.Rust
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogSlideBuilder>
@@ -79,7 +80,8 @@
                          Label="@T("Maximum number of bullet points per slide")"
                          Variant="Variant.Outlined"
                          Min="0"
-                         Max="7"
+                         Max="@DataSlideBuilder.MAX_BULLET_POINTS_PER_SLIDE"
+                         Disabled="@this.IsBulletPointMaximumLocked"
                          Class="mb-3" />
     </MudItem>
 
