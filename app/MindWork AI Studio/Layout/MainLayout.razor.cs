@@ -338,7 +338,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                 case Event.SHOW_FILE_EXPORT_SUCCESS:
                     if (data is DataFileExportSuccessMessage exportSuccess)
-                        this.FileExportNotifications.ShowSuccess(exportSuccess);
+                        this.FileExportNotifications.ShowSuccess(exportSuccess, this.SettingsManager.ConfigurationData.App.CloseExportMessagesAutomatically);
 
                     break;
 

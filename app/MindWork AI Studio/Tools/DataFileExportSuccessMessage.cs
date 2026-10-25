@@ -6,8 +6,10 @@ namespace AIStudio.Tools;
 /// The notification that a file was exported, with the ways to reach it.
 /// </summary>
 /// <remarks>
-/// It stays until the user closes it, also after they took one of its ways: whoever exports a file
-/// wants to get to it, often in both ways, and that may well happen later than a timeout would allow.
+/// By default, it stays until the user closes it, also after they took one of its ways: whoever exports
+/// a file wants to get to it, often in both ways, and that may well happen later than a timeout would
+/// allow. Users who prefer it otherwise let it close like other messages, see
+/// DataApp.CloseExportMessagesAutomatically.
 /// </remarks>
 /// <param name="Key">The key of the export. The notification that the export runs has the same one and gets replaced.</param>
 /// <param name="Icon">The icon of the notification.</param>
@@ -17,7 +19,9 @@ namespace AIStudio.Tools;
 /// archive, which that program would only unpack, at least on macOS.</param>
 public readonly record struct DataFileExportSuccessMessage(string Key, string Icon, string Message, string FilePath, bool OffersOpening)
 {
-    public void Show(ISnackbar snackbar)
+    /// <param name="snackbar">The notifications of the window.</param>
+    /// <param name="closesAutomatically">Whether the notification closes after a few seconds, like other success messages.</param>
+    public void Show(ISnackbar snackbar, bool closesAutomatically)
     {
         var parameters = new Dictionary<string, object>
         {
@@ -32,7 +36,8 @@ public readonly record struct DataFileExportSuccessMessage(string Key, string Ic
         {
             config.Icon = icon;
             config.IconSize = Size.Large;
-            config.RequireInteraction = true;
+            config.RequireInteraction = !closesAutomatically;
+            config.VisibleStateDuration = 10_000;
             config.HideTransitionDuration = 600;
         }, this.Key);
     }

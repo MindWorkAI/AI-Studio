@@ -30,7 +30,7 @@ public sealed class FileExportNotificationsTests
         var notifications = new FileExportNotifications(snackbar);
 
         notifications.ShowRunning(RUNNING);
-        notifications.ShowSuccess(SUCCESS);
+        notifications.ShowSuccess(SUCCESS, false);
 
         Assert.That(snackbar.Calls, Is.EqualTo(new[] { $"add FileExportRunningMessage {KEY}", $"remove {KEY}", $"add FileExportSuccessMessage {KEY}" }));
     }
@@ -41,7 +41,7 @@ public sealed class FileExportNotificationsTests
         var snackbar = new RecordingSnackbar();
         var notifications = new FileExportNotifications(snackbar);
 
-        notifications.ShowSuccess(SUCCESS);
+        notifications.ShowSuccess(SUCCESS, false);
         notifications.ShowRunning(RUNNING);
 
         Assert.That(snackbar.Calls, Is.EqualTo(new[] { $"remove {KEY}", $"add FileExportSuccessMessage {KEY}" }));
@@ -65,18 +65,31 @@ public sealed class FileExportNotificationsTests
         var snackbar = new RecordingSnackbar();
         var notifications = new FileExportNotifications(snackbar);
 
-        notifications.ShowSuccess(SUCCESS);
+        notifications.ShowSuccess(SUCCESS, false);
         notifications.ShowRunning(RUNNING with { Key = "another export" });
 
         Assert.That(snackbar.Calls, Does.Contain("add FileExportRunningMessage another export"));
     }
 
+    [TestCase(false, ExpectedResult = true)]
+    [TestCase(true, ExpectedResult = false)]
+    public bool TheSuccessWaitsForTheUserUnlessTheyChoseOtherwise(bool closesAutomatically)
+    {
+        var snackbar = new RecordingSnackbar();
+        new FileExportNotifications(snackbar).ShowSuccess(SUCCESS, closesAutomatically);
+
+        return snackbar.RequiresInteraction.Single();
+    }
+
     /// <summary>
-    /// Records which notifications are added and removed, by their key.
+    /// Records which notifications are added and removed, by their key, and whether a component
+    /// notification waits for the user.
     /// </summary>
     private sealed class RecordingSnackbar : ISnackbar
     {
         public List<string> Calls { get; } = [];
+
+        public List<bool> RequiresInteraction { get; } = [];
 
         public SnackbarConfiguration Configuration { get; } = new();
 
@@ -94,7 +107,14 @@ public sealed class FileExportNotificationsTests
 
         public Snackbar? Add(RenderFragment message, Severity severity = Severity.Normal, Action<SnackbarOptions>? configure = null, string? key = null) => this.Record(nameof(RenderFragment), key);
 
-        public Snackbar? Add<T>(Dictionary<string, object>? componentParameters = null, Severity severity = Severity.Normal, Action<SnackbarOptions>? configure = null, string? key = null) where T : IComponent => this.Record(typeof(T).Name, key);
+        public Snackbar? Add<T>(Dictionary<string, object>? componentParameters = null, Severity severity = Severity.Normal, Action<SnackbarOptions>? configure = null, string? key = null) where T : IComponent
+        {
+            var options = new SnackbarOptions(severity, this.Configuration);
+            configure?.Invoke(options);
+            this.RequiresInteraction.Add(options.RequireInteraction);
+
+            return this.Record(typeof(T).Name, key);
+        }
 
         public void Clear() => this.Calls.Add("clear");
 

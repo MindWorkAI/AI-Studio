@@ -27,10 +27,12 @@ public sealed class FileExportNotifications(ISnackbar snackbar)
         message.Show(snackbar);
     }
 
-    public void ShowSuccess(DataFileExportSuccessMessage message)
+    /// <param name="message">The notification of the success.</param>
+    /// <param name="closesAutomatically">Whether the notification closes after a few seconds, as the user chose.</param>
+    public void ShowSuccess(DataFileExportSuccessMessage message, bool closesAutomatically)
     {
         this.finishedExports.Add(message.Key);
-        message.Show(snackbar);
+        message.Show(snackbar, closesAutomatically);
     }
 
     public void HideRunning(DataFileExportRunningMessage message)
