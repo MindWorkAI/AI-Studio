@@ -68,10 +68,13 @@ public sealed class ClassicRagOutboundDataRestrictionTests : ToolRegistryTestBas
     {
         //
         // Semantic Search offers the data sources in a fixed order, while the selection agent of the
-        // classic process may return them in any order. Both have to name the same data source:
+        // classic process may return them in any order. Both have to name the same data source.
+        //
+        // AsEnumerable() keeps Reverse() a reversed copy: from C# 14 on, Reverse() on an array
+        // reverses the array in place and returns nothing.
         //
         var classicChat = new ChatThread();
-        AISrcSelWithRetCtxVal.RequireOutboundDataRestriction(classicChat, dataSources.Reverse().ToArray(), passageCounts.Reverse().ToArray(), organizationMinimum);
+        AISrcSelWithRetCtxVal.RequireOutboundDataRestriction(classicChat, [..dataSources.AsEnumerable().Reverse()], [..passageCounts.AsEnumerable().Reverse()], organizationMinimum);
 
         var semanticSearchChat = new ChatThread();
         semanticSearchChat.RequireOutboundDataRestriction(SemanticSearchTool.GetRequirements(dataSources, passageCounts, organizationMinimum).OutboundData);
