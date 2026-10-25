@@ -12,6 +12,10 @@ namespace AIStudio.Components;
 /// The choice itself comes from the caller: the Slide Assistant uses a plain select, and its
 /// settings dialog a configuration select. The header of an area tells how many of its kinds have a
 /// layout, so that no choice hides in a collapsed panel.
+///
+/// The choices of an area render only while its panel is open. A collapsed panel still keeps its
+/// content in the page, and all areas together hold more than a hundred selects, which the Slide
+/// Assistant would otherwise render again with every update while the LLM plans.
 /// </remarks>
 public partial class LayoutChoicePanels : ComponentBase
 {
