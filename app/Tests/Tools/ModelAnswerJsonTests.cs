@@ -5,11 +5,22 @@ namespace AIStudio.Tests.Tools;
 /// <summary>
 /// Checks how the JSON part is read out of a model answer, for the kinds of answers models write and
 /// the callers rely on: the Assistant Builder, the launcher texts, the Slide Assistant, the assistant
-/// audit, the retrieval context validation, and the data source selection.
+/// audit, the retrieval context validation, the data source selection, and the Prompt Optimizer.
 /// </summary>
 [TestFixture]
 public sealed class ModelAnswerJsonTests
 {
+    /// <summary>
+    /// An optimized prompt as the Prompt Optimizer asks for it. The prompt itself holds a code fence,
+    /// a placeholder, and quotes, as prompts often do.
+    /// </summary>
+    private const string OPTIMIZATION = """
+        {
+          "optimized_prompt": "You are a reviewer.\n```python\nprint({name})\n```\nAnswer with \"yes\" or \"no\".",
+          "recommendations": { "clarity_and_directness": "Name the goal first.", "language_choice": "Keep it in English." }
+        }
+        """;
+
     /// <summary>
     /// A data source selection as the agent is asked to write it.
     /// </summary>
@@ -276,5 +287,27 @@ public sealed class ModelAnswerJsonTests
     public void AnAnswerWithoutAListHasNoList()
     {
         Assert.That(ModelAnswerJson.ExtractObjectList("No data source fits your question.").ToString(), Is.Empty);
+    }
+
+    [Test]
+    public void AnOptimizationAloneIsRead()
+    {
+        Assert.That(ModelAnswerJson.ExtractObject($"\n  {OPTIMIZATION}  \n").ToString(), Is.EqualTo(OPTIMIZATION));
+    }
+
+    [Test]
+    public void AnOptimizedPromptMayHoldFencesPlaceholdersAndQuotes()
+    {
+        const string ANSWER = $"```json\n{OPTIMIZATION}\n```";
+
+        Assert.That(ModelAnswerJson.ExtractObject(ANSWER).ToString(), Is.EqualTo(OPTIMIZATION));
+    }
+
+    [Test]
+    public void AnOptimizationInACodeFenceAfterProseWithBracesIsRead()
+    {
+        const string ANSWER = $"I kept your placeholders {{topic}} and {{ audience }} as they were:\n```json\n{OPTIMIZATION}\n```\nGood luck with {{topic}}!";
+
+        Assert.That(ModelAnswerJson.ExtractObject(ANSWER).ToString(), Is.EqualTo(OPTIMIZATION));
     }
 }
