@@ -548,6 +548,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         //
         var lastRendering = DateTimeOffset.MinValue;
         var lastCheckpoint = DateTimeOffset.MinValue;
+        string? lastProgressText = null;
         aiText.StreamingEvent = async () =>
         {
             var now = DateTimeOffset.Now;
@@ -557,11 +558,29 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 await this.CheckpointAssistantSession();
             }
 
-            if (now - lastRendering >= STREAMING_RENDER_MIN_TIME)
+            if (now - lastRendering < STREAMING_RENDER_MIN_TIME)
+                return;
+
+            lastRendering = now;
+            if (!hideContentFromUser)
             {
-                lastRendering = now;
                 await this.RefreshAssistantUIAsync();
+                return;
             }
+
+            //
+            // A hidden answer shows nothing but the progress text, so the whole form renders only
+            // when that text changed. Thinking models stream for minutes before they write a word:
+            //
+            await this.RefreshAssistantUIAsync(() =>
+            {
+                var progressText = this.ProgressText;
+                if (progressText == lastProgressText)
+                    return false;
+
+                lastProgressText = progressText;
+                return true;
+            });
         };
 
         aiText.StreamingDone = async () =>
@@ -1026,15 +1045,20 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <summary>
     /// Refreshes the component when it is still mounted.
     /// </summary>
+    /// <param name="hasChanged">Decides whether anything visible changed, asked on the thread of the renderer, so it may read what the rendering reads; null to render in any case.</param>
     /// <returns>A task that completes after the renderer was notified.</returns>
-    protected async Task RefreshAssistantUIAsync()
+    protected async Task RefreshAssistantUIAsync(Func<bool>? hasChanged = null)
     {
         if (this.isDisposed)
             return;
 
         try
         {
-            await this.InvokeAsync(this.StateHasChanged);
+            await this.InvokeAsync(() =>
+            {
+                if (hasChanged is null || hasChanged())
+                    this.StateHasChanged();
+            });
         }
         catch (InvalidOperationException)
         {
