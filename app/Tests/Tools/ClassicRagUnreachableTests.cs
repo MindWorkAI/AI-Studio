@@ -2,6 +2,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.RAG.RAGProcesses;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 
 namespace AIStudio.Tests.Tools;
 
@@ -12,11 +13,13 @@ namespace AIStudio.Tests.Tools;
 /// Such a data source is never searched. Without a word about it, the model would take its silence
 /// for finding nothing and answer from its own knowledge. Semantic Search names it in the
 /// description of its tool, the classic process next to the passages it found, and both name the
-/// same data sources of the chat.
+/// same data sources of the chat. When Semantic Search has nothing to search, its tool stays out,
+/// and the classic process writes the note into the system prompt while it steps back.
 /// </remarks>
 [TestFixture]
 public sealed class ClassicRagUnreachableTests
 {
+    private static readonly IDataSource HANDBOOK = new DataSourceLocalDirectory { Num = 1, Id = "11111111-1111-1111-1111-111111111111", Name = "Handbook", MaxMatches = 10 };
     private static readonly IDataSource INTRANET = new DataSourceERI_V1 { Num = 3, Id = "33333333-3333-3333-3333-333333333333", Name = "Intranet", MaxMatches = 10 };
     private static readonly IDataSource WIKI = new DataSourceERI_V1 { Num = 4, Id = "44444444-4444-4444-4444-444444444444", Name = "Wiki", MaxMatches = 10 };
 
@@ -75,6 +78,28 @@ public sealed class ClassicRagUnreachableTests
         var silent = new DataSourceERI_V1 { Num = 5, Id = "55555555-5555-5555-5555-555555555555", Name = "Archive", MaxMatches = 0 };
 
         Assert.That(Checked([silent]).GetUnreachableOfTheChat(new DataSourceOptions { AutomaticDataSourceSelection = true }), Is.Empty, "It would add nothing even when its server answers.");
+    }
+
+    [Test]
+    public void WithoutSearchableDataSourcesTheSystemPromptNamesTheUnreachableOnes()
+    {
+        var note = AISrcSelWithRetCtxVal.NoteWithoutSearchableDataSources(new OfferedDataSources([], [INTRANET]));
+
+        Assert.That(note, Does.Contain("- name='Intranet'"), "Semantic Search stays out of the request, so nothing else tells the model what is missing.");
+    }
+
+    [Test]
+    public void WhileTheModelCanSearchTheSystemPromptStaysAsItWas()
+    {
+        var note = AISrcSelWithRetCtxVal.NoteWithoutSearchableDataSources(new OfferedDataSources([HANDBOOK], [INTRANET]));
+
+        Assert.That(note, Is.Empty, "The description of the tool names the unreachable data sources already.");
+    }
+
+    [Test]
+    public void WithoutAnyDataSourceTheSystemPromptStaysAsItWas()
+    {
+        Assert.That(AISrcSelWithRetCtxVal.NoteWithoutSearchableDataSources(OfferedDataSources.NONE), Is.Empty);
     }
 
     private static AllowedSelectedDataSources Checked(IReadOnlyList<IDataSource> unreachable) => new([], [], [], [], unreachable);
