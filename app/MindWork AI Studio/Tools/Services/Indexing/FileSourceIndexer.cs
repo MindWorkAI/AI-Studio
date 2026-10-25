@@ -254,7 +254,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 // its transcript instead, and its row knows which transcript that is:
                 //
                 if (PersistentMediaTranscript.IsMediaPath(file.FullName))
-                    document = this.CreateFileDocument(context, dataSource, file, fingerprint, await this.ReadOrCreateTranscriptAsync(dataSource, file.FullName, token), contentHash);
+                    document = this.CreateFileDocument(context, dataSource, file, fingerprint, await this.ReadOrCreateTranscriptAsync(dataSource, file.FullName, contentHash, fingerprint, token), contentHash);
 
                 var indexed = await context.IndexDocumentAsync(document, reportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
@@ -655,12 +655,17 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// </remarks>
     /// <param name="dataSource">The data source.</param>
     /// <param name="mediaPath">The audio or video file.</param>
+    /// <param name="contentHash">The hash of its content, cf. FileContentHash.</param>
+    /// <param name="fingerprint">Its fingerprint, taken before its content was hashed.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>Where the transcript is.</returns>
-    private async Task<MediaTranscriptSlot> ReadOrCreateTranscriptAsync(IDataSource dataSource, string mediaPath, CancellationToken token)
+    private async Task<MediaTranscriptSlot> ReadOrCreateTranscriptAsync(IDataSource dataSource, string mediaPath, string contentHash, string fingerprint, CancellationToken token)
     {
         var provider = this.GetMediaTranscriptionAvailability(dataSource).Provider;
-        var transcript = await PersistentMediaTranscript.ReadOrCreateAsync(DataSourceTranscriptStore.ForDataSource(dataSource.Id), mediaPath, provider, mediaTranscriptionService.TranscribeAsync, logger, token);
+
+        // The content was hashed under the fingerprint taken before, so the store need not read the whole recording again:
+        var location = DataSourceTranscriptStore.ForDataSource(dataSource.Id).WithKnownContentHash(contentHash, path => string.Equals(BuildFileMetadataHash(new FileInfo(path)), fingerprint, StringComparison.Ordinal));
+        var transcript = await PersistentMediaTranscript.ReadOrCreateAsync(location, mediaPath, provider, mediaTranscriptionService.TranscribeAsync, logger, token);
         return GetTranscriptOrThrow(transcript, token);
     }
 
