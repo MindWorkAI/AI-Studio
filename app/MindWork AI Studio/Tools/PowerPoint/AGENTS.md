@@ -16,8 +16,8 @@ to `app/AGENTS.md`, which apply here as well.
 4. `SlideDeckSpecValidator` checks the deck against the template. Its issues are written for the model,
    which gets one repair round.
 5. `SlideDeckSpec.ToMarkdownOutline` shows the result as an outline, and `PresentationWriter.WriteAsync`
-   writes the file: a copy of the template, with its slides replaced. The Slide Assistant makes that copy
-   next to the target and moves it there once it is complete.
+   writes the file: a copy of the template, with its slides replaced. `PresentationFile.CreateAsync` makes
+   that copy in the temporary folder and streams it into the target once it is complete.
 
 ## Rules which are easy to break
 
@@ -66,6 +66,9 @@ to `app/AGENTS.md`, which apply here as well.
   a hundred megabytes, and AI Studio also runs on small devices. Read templates from their file, and
   let the writer edit a copy on disk. The Open XML SDK holds the compressed parts of the file in memory
   while it saves, which is all it costs; a `MemoryStream` with the whole file multiplies that.
+- **Write only into the file the user chose.** Inside the Flatpak, the save dialog grants access to
+  exactly that file, so nothing may be created, renamed, or moved next to it. Temporary files go into
+  the temporary folder, and the finished presentation is written over the chosen file, never moved there.
 - **Removing a shape removes what only it used:** its image, chart, or diagram parts, and the animations
   of its slide, see `PresentationWriter.RemoveShape`. Otherwise PowerPoint offers to repair the file.
 

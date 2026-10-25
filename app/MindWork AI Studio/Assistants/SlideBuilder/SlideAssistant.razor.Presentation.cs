@@ -546,42 +546,21 @@ public partial class SlideAssistant
         if (response.UserCancelled)
             return;
 
-        //
-        // The presentation comes about in a copy of the template next to the target, which takes its
-        // place once it is complete. A failure therefore leaves no half-written file behind, and
-        // neither the template nor the presentation has to be held in memory:
-        //
         var targetPath = response.SaveFilePath;
-        var temporaryPath = Path.Join(Path.GetDirectoryName(targetPath), $".{Path.GetFileName(targetPath)}-{Guid.NewGuid():N}.tmp");
         this.isWritingPresentation = true;
         this.StateHasChanged();
         try
         {
-            await using (var templateFile = new FileStream(this.slideDeckTemplatePath, FileMode.Open, FileAccess.Read, PresentationTemplate.FILE_SHARE))
-            await using (var copy = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                await templateFile.CopyToAsync(copy);
-
-            PresentationWriteResult result;
-            await using (var presentationFile = new FileStream(temporaryPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim(), this.keepEmptyPicturePlaceholders);
+            var pictures = new RustPictureSource(this.RustService, this.slideDeckPicturePaths, this.slideDeckIconNumbers);
+            var result = await PresentationFile.CreateAsync(this.slideDeckTemplatePath, targetPath, deck, this.slideDeckBasis, options, pictures, this.Logger, CancellationToken.None);
+            if (!result.IsWritten)
             {
-                //
-                // Read once more rather than reused: the template may have changed since the slides
-                // were planned, and the writer has to see the layouts of the very file it edits.
-                //
-                var currentTemplate = PresentationTemplate.Read(presentationFile);
-                presentationFile.Position = 0;
-                if (!SlideDeckSpecValidator.StillFits(deck, currentTemplate, this.slideDeckBasis))
-                {
-                    this.Logger.LogWarning("The PowerPoint template '{TemplatePath}' changed since the slides were planned, and they no longer fit it.", this.slideDeckTemplatePath);
-                    await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The template has changed since the slides were planned. Please create the slides again.")));
-                    return;
-                }
-
-                var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim(), this.keepEmptyPicturePlaceholders);
-                result = await PresentationWriter.WriteAsync(presentationFile, currentTemplate, deck, options, new RustPictureSource(this.RustService, this.slideDeckPicturePaths, this.slideDeckIconNumbers), CancellationToken.None);
+                this.Logger.LogWarning("The PowerPoint template '{TemplatePath}' changed since the slides were planned, and they no longer fit it.", this.slideDeckTemplatePath);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The template has changed since the slides were planned. Please create the slides again.")));
+                return;
             }
 
-            File.Move(temporaryPath, targetPath, true);
             var placements = deck.Slides.SelectMany(slide => slide.Pictures).ToList();
             this.Logger.LogInformation("The slide assistant saved {SlideCount} slides to '{FilePath}', with {PlacedPictureCount} of {PictureCount} pictures placed and empty picture placeholders {EmptyPicturePlaceholders}.", deck.Slides.Count, targetPath, placements.Count(number => !result.SkippedPictures.Contains(number)), placements.Count, this.keepEmptyPicturePlaceholders ? "kept" : "left out");
             if (result.SkippedPictures.Count > 0)
@@ -601,27 +580,6 @@ public partial class SlideAssistant
         {
             this.isWritingPresentation = false;
             this.StateHasChanged();
-            this.DeleteTemporaryPresentation(temporaryPath);
-        }
-    }
-
-    /// <summary>
-    /// Removes the copy of the template which a failed attempt left next to the target.
-    /// </summary>
-    /// <remarks>
-    /// After a success, the copy has become the presentation, and there is nothing left to remove.
-    /// Left behind, it would pile up in the folder of the user with every failed attempt.
-    /// </remarks>
-    private void DeleteTemporaryPresentation(string temporaryPath)
-    {
-        try
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
-        catch (Exception e)
-        {
-            this.Logger.LogWarning(e, "The temporary file '{TemporaryPath}' cannot be deleted.", temporaryPath);
         }
     }
 

@@ -49,7 +49,7 @@ internal static partial class PresentationWriter
     /// Writes the presentation into a copy of the template, which it edits in place.
     /// </summary>
     /// <remarks>
-    /// The caller copies the template, e.g., into a temporary file next to the target, so that the
+    /// The caller copies the template, e.g., into a temporary file as PresentationFile does, so that the
     /// template stays untouched and no further copy of the file is held in memory. The Open XML SDK
     /// still holds the compressed parts of the whole file in memory while it saves: measured with a
     /// template of 150 MB, editing a copy on disk allocated about 150 MB, while copying the file into
