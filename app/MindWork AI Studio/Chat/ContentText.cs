@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -202,6 +203,23 @@ public sealed class ContentText : IContent
         // What the request carries, for telling later whether a report still describes this chat:
         var blocksSent = chatThread.Blocks.Count;
 
+        //
+        // How long the answer takes, in three parts: the wait for its first chunk, which is the
+        // model reading the request and thinking; the streaming afterward; and how much of that
+        // the UI took to show it. Only these parts tell a slow model from a slow UI:
+        //
+        var requestStartedAt = Stopwatch.GetTimestamp();
+        TimeSpan? timeToFirstChunk = null;
+        var chunkCount = 0;
+        var uiDuration = TimeSpan.Zero;
+
+        async Task NotifyStreamingAsync()
+        {
+            var notifyingStartedAt = Stopwatch.GetTimestamp();
+            await this.StreamingEvent();
+            uiDuration += Stopwatch.GetElapsedTime(notifyingStartedAt);
+        }
+
         // Start another thread by using a task to uncouple
         // the UI thread from the AI processing:
         try
@@ -219,6 +237,9 @@ public sealed class ContentText : IContent
                         // When the user cancels the request, we stop the loop:
                         if (token.IsCancellationRequested)
                             break;
+
+                        chunkCount++;
+                        timeToFirstChunk ??= Stopwatch.GetElapsedTime(requestStartedAt);
 
                         // Stop the waiting animation:
                         this.InitialRemoteWait = false;
@@ -241,7 +262,7 @@ public sealed class ContentText : IContent
                             // Energy saving mode is off. We notify the UI
                             // as fast as possible -- no matter the odds:
                             case false:
-                                await this.StreamingEvent();
+                                await NotifyStreamingAsync();
                                 break;
 
                             // Energy saving mode is on. We notify the UI
@@ -249,7 +270,7 @@ public sealed class ContentText : IContent
                             // greater than the minimum time:
                             case true when now - last > MIN_TIME:
                                 last = now;
-                                await this.StreamingEvent();
+                                await NotifyStreamingAsync();
                                 break;
                         }
                     }
@@ -265,6 +286,12 @@ public sealed class ContentText : IContent
         }
         finally
         {
+            var requestDuration = Stopwatch.GetElapsedTime(requestStartedAt);
+            if (timeToFirstChunk is { } firstChunkAfter)
+                LOGGER.LogInformation("The answer of model '{ModelId}' from '{ProviderInstanceName}' took {RequestSeconds:F1} s: {FirstChunkSeconds:F1} s until its first chunk, then {ChunkCount} chunks with {CharacterCount} characters, which the UI took {UISeconds:F1} s to show.", chatModel.Id, provider.InstanceName, requestDuration.TotalSeconds, firstChunkAfter.TotalSeconds, chunkCount, this.Text.Length, uiDuration.TotalSeconds);
+            else
+                LOGGER.LogInformation("The model '{ModelId}' from '{ProviderInstanceName}' sent no answer within {RequestSeconds:F1} s.", chatModel.Id, provider.InstanceName, requestDuration.TotalSeconds);
+
             this.Text = this.Text.RemoveThinkTags().Trim();
             this.EndToolRun();
 

@@ -63,21 +63,9 @@
 
                 @if (!string.IsNullOrWhiteSpace(this.revisedLua))
                 {
-                    <MudExpansionPanels Dense="true" Elevation="0">
-                        <MudExpansionPanel Dense="true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
-                            <TitleContent>
-                                <div class="d-flex align-center">
-                                    <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-3" Color="Color.Primary" />
-                                    <MudText Typo="Typo.button">
-                                        @T("Revised Lua plugin")
-                                    </MudText>
-                                </div>
-                            </TitleContent>
-                            <ChildContent>
-                                <MudTextField T="string" Text="@this.revisedLua" ReadOnly="true" Variant="Variant.Outlined" Lines="18" Class="mt-2" Style="font-family: monospace" />
-                            </ChildContent>
-                        </MudExpansionPanel>
-                    </MudExpansionPanels>
+                    <CompactExpansionPanel HeaderText="@T("Revised Lua plugin")" HeaderIcon="@Icons.Material.Filled.Code" IconColor="Color.Primary">
+                        <MudTextField T="string" Text="@this.revisedLua" ReadOnly="true" Variant="Variant.Outlined" Lines="18" Class="mt-2" Style="font-family: monospace" />
+                    </CompactExpansionPanel>
                 }
 
                 @if (this.isApplying || this.isAuditing)

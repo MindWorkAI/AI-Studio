@@ -235,7 +235,13 @@ public static class ConfigurationSelectDataFactory
         foreach (var expertise in Enum.GetValues<AudienceExpertise>())
             yield return new(expertise.Name(), expertise);
     }
-    
+
+    public static IEnumerable<ConfigurationSelectData<PresentationOccasion>> GetSlideBuilderOccasionData()
+    {
+        foreach (var occasion in Enum.GetValues<PresentationOccasion>())
+            yield return new(occasion.Name(), occasion);
+    }
+
     public static IEnumerable<ConfigurationSelectData<string>> GetProfilesData(IEnumerable<Profile> profiles)
     {
         foreach (var profile in profiles.GetAllProfiles())

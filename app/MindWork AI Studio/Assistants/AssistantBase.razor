@@ -69,7 +69,17 @@
 
             @if (this.ShowDedicatedProgress && this.IsProcessing)
             {
-                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
+                @if (string.IsNullOrWhiteSpace(this.ProgressText))
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
+                }
+                else
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />
+                    <MudText Typo="Typo.body2" Class="mb-6">
+                        @this.ProgressText
+                    </MudText>
+                }
             }
             
             <div id="@RESULT_DIV_ID" class="mr-2 mt-3">
