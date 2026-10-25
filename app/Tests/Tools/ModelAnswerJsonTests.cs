@@ -4,7 +4,8 @@ namespace AIStudio.Tests.Tools;
 
 /// <summary>
 /// Checks how the JSON part is read out of a model answer, for the kinds of answers models write and
-/// the callers rely on: the Assistant Builder, the launcher texts, and the Slide Assistant.
+/// the callers rely on: the Assistant Builder, the launcher texts, the Slide Assistant, and the
+/// assistant audit.
 /// </summary>
 [TestFixture]
 public sealed class ModelAnswerJsonTests
@@ -136,5 +137,23 @@ public sealed class ModelAnswerJsonTests
     public void WithoutAnythingLikeJsonTheFirstBraceCounts()
     {
         Assert.That(ModelAnswerJson.ExtractObject("Here you go: {title: 'Mars'} Done.").ToString(), Is.EqualTo("{title: 'Mars'}"), "The deserializer of the caller tells what is wrong, which a model can repair.");
+    }
+
+    [Test]
+    public void AnAuditIsReadWithAllItsFindings()
+    {
+        const string JSON = """
+            {
+              "level": "CAUTION",
+              "summary": "The plugin writes below C:\\",
+              "confidence": 0.8,
+              "findings": [
+                { "severity": "medium", "category": "file access", "location": "plugin.lua", "description": "Joins paths with \"\\\\\"" },
+                { "severity": "low", "category": "prompt", "location": "system prompt", "description": "Asks for {user_input} twice" }
+              ]
+            }
+            """;
+
+        Assert.That(ModelAnswerJson.ExtractObject($"Here is my audit:\n```json\n{JSON}\n```").ToString(), Is.EqualTo(JSON), "A summary ending with an escaped backslash ends at its quote, so the findings still belong to the audit.");
     }
 }
