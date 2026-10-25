@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PowerPoint;
 using AIStudio.Tools.Security;
@@ -25,7 +26,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
 
         # Content
-            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, the layouts the slides use (LAYOUTS), and any attached documents (DOCUMENTS) or pictures (PICTURES) that may provide additional context or source material.
+            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, the layouts the slides use (LAYOUTS), any attached documents (DOCUMENTS) or images that provide source material, and the pictures for the slides (PICTURES).
             - Base the slides on the provided source material: PRESENTATION_CONTENT, DOCUMENTS, and attached images.
             - If both PRESENTATION_CONTENT and attached source material are provided, use all of them, while prioritizing direct user instructions from PRESENTATION_CONTENT when resolving ambiguity.
             - If PRESENTATION_CONTENT is empty but attached source material is available, create the slides from the attached source material.
@@ -154,7 +155,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                         Content = new ContentText
                         {
                             Text = this.T("The result of your previous Slide Assistant session."),
-                            FileAttachments = this.loadedDocumentPaths.ToList(),
+                            FileAttachments = [..this.loadedDocumentPaths, ..this.slidePictures],
                         }
                     },
                     
@@ -202,6 +203,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.inputTitle = string.Empty;
         this.inputContent = string.Empty;
         this.loadedDocumentPaths.Clear();
+        this.slidePictures.Clear();
         this.selectedAudienceProfile = AudienceProfile.UNSPECIFIED;
         this.selectedAudienceAgeGroup = AudienceAgeGroup.UNSPECIFIED;
         this.selectedAudienceOrganizationalLevel = AudienceOrganizationalLevel.UNSPECIFIED;
@@ -269,6 +271,11 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private int timeSpecification;
     private string importantAspects = string.Empty;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
+
+    /// <summary>
+    /// The pictures the presentation must show, each on exactly one slide; source material lives in loadedDocumentPaths.
+    /// </summary>
+    private HashSet<FileAttachment> slidePictures = [];
     private static readonly AssistantSessionStateKey<string> INPUT_TITLE_STATE_KEY = new(nameof(inputTitle));
     private static readonly AssistantSessionStateKey<string> INPUT_CONTENT_STATE_KEY = new(nameof(inputContent));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
@@ -284,6 +291,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private static readonly AssistantSessionStateKey<int> TIME_SPECIFICATION_STATE_KEY = new(nameof(timeSpecification));
     private static readonly AssistantSessionStateKey<string> IMPORTANT_ASPECTS_STATE_KEY = new(nameof(importantAspects));
     private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
+    private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> SLIDE_PICTURES_STATE_KEY = new(nameof(slidePictures));
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
@@ -303,6 +311,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(TIME_SPECIFICATION_STATE_KEY, this.timeSpecification);
         state.Set(IMPORTANT_ASPECTS_STATE_KEY, this.importantAspects);
         state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.SetHashSet(SLIDE_PICTURES_STATE_KEY, this.slidePictures);
         state.Set(TEMPLATE_PATH_STATE_KEY, this.templatePath);
         state.Set(FOOTER_TEXT_STATE_KEY, this.footerText);
         state.Set(KEEP_EMPTY_PICTURE_PLACEHOLDERS_STATE_KEY, this.keepEmptyPicturePlaceholders);
@@ -335,6 +344,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(TIME_SPECIFICATION_STATE_KEY, value => this.timeSpecification = value);
         state.Restore(IMPORTANT_ASPECTS_STATE_KEY, value => this.importantAspects = value);
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.RestoreHashSet(SLIDE_PICTURES_STATE_KEY, this.slidePictures);
         state.Restore(TEMPLATE_PATH_STATE_KEY, value => this.templatePath = value);
         state.Restore(FOOTER_TEXT_STATE_KEY, value => this.footerText = value);
         state.Restore(KEEP_EMPTY_PICTURE_PLACEHOLDERS_STATE_KEY, value => this.keepEmptyPicturePlaceholders = value);
@@ -381,12 +391,40 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         return null;
     }
 
-    private bool HasValidInputDocuments() => this.loadedDocumentPaths.Any(n => n is { Exists: true });
+    private bool HasValidInputDocuments() => this.loadedDocumentPaths.Any(n => n is { Exists: true }) || this.slidePictures.Any(n => n is { Exists: true });
 
     private async Task OnDocumentsChanged(HashSet<FileAttachment> _)
     {
+        await this.KeepSlidePicturesOutOfDocumentsAsync();
         if(this.Form is not null)
             await this.Form.Validate();
+    }
+
+    private async Task OnSlidePicturesChanged(HashSet<FileAttachment> _)
+    {
+        await this.KeepSlidePicturesOutOfDocumentsAsync();
+        if(this.Form is not null)
+            await this.Form.Validate();
+    }
+
+    /// <summary>
+    /// Keeps the pictures for the slides out of the source material.
+    /// </summary>
+    /// <remarks>
+    /// A picture is either source material, which the LLM only reads, or a picture for the slides,
+    /// which the presentation must show; it cannot be both. The pictures for the slides win, since
+    /// the documents take every file, while the pictures take only what a slide can show. Without
+    /// the warning, the file would vanish from the documents without a word.
+    /// </remarks>
+    private async Task KeepSlidePicturesOutOfDocumentsAsync()
+    {
+        var picturePaths = this.slidePictures.Select(picture => picture.FilePath).ToHashSet(PathTools.COMPARER);
+        var displaced = this.loadedDocumentPaths.Where(document => picturePaths.Contains(document.FilePath)).ToArray();
+        if (displaced.Length == 0)
+            return;
+
+        this.loadedDocumentPaths.ExceptWith(displaced);
+        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, string.Format(T("These files are already attached as pictures for the slides and were removed from the documents: {0}"), string.Join(", ", displaced.Select(document => document.FileName)))));
     }
     
     private string? ValidateCustomLanguage(string language)
@@ -531,9 +569,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             {
                 sb.AppendLine($"""
 
-                               There are {numImages} image file(s) attached as documents.
+                               There are {numImages} image file(s) attached as source material.
                                Please consider them as documents as well and use them to
-                               answer accordingly.
+                               answer accordingly, but never place them on a slide.
 
                                """);
             }
@@ -541,9 +579,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             {
                 sb.AppendLine($"""
 
-                               Additionally, there are {numImages} image file(s) attached.
+                               Additionally, there are {numImages} image file(s) attached as source material.
                                Please consider them as documents as well and use them to
-                               answer accordingly.
+                               answer accordingly, but never place them on a slide.
 
                                """);
             }
@@ -607,11 +645,15 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
              
              {documentContent}
              {layouts}
-             {PromptPictureList(imageAttachments)}
+             {PromptPictureList(imageAttachments, this.ProviderSettings.SupportsImageInput())}
              {templateSlides}
          """;
 
-        var time = this.AddUserRequest(request, hideContentFromUser: true, imageAttachments);
+        //
+        // The pictures for the slides come first, in the order of PICTURES, so that the LLM can tell
+        // them from the images of the source material which follow:
+        //
+        var time = this.AddUserRequest(request, hideContentFromUser: true, [..imageAttachments, ..this.SourceImagesOfRequest()]);
 
         this.planningStep = PlanningStep.PLANNING;
         var answer = await this.AddAIResponseAsync(time, hideContentFromUser: true);

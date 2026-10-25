@@ -121,6 +121,16 @@ public static class FileTypes
     /// </summary>
     public static readonly FileTypeFilter VISUAL_BRIEFING_IMAGE = FileTypeFilter.Leaf(TB("Visual briefing image"),
         "jpg", "jpeg", "png", "webp");
+
+    /// <summary>
+    /// The picture formats the Slide Assistant can put on a slide.
+    /// </summary>
+    /// <remarks>
+    /// The runtime hands the PowerPoint writer pictures in these formats only, see
+    /// prepare_image in runtime/src/image.rs, and every version of PowerPoint shows them.
+    /// </remarks>
+    public static readonly FileTypeFilter SLIDE_PICTURE = FileTypeFilter.Leaf(TB("Picture for slides"),
+        "jpg", "jpeg", "png");
     public static readonly FileTypeFilter AUDIO = FileTypeFilter.Leaf(TB("Audio"),
         "mp3", "wav", "wave", "aac", "flac", "ogg", "opus", "m4a", "m4b", "wma", "alac", "aif", "aiff", "caf");
     public static readonly FileTypeFilter VIDEO = FileTypeFilter.Leaf(TB("Video"),

@@ -357,6 +357,31 @@ public sealed class SlideDeckSpecValidatorTests
     }
 
     [Test]
+    public void EveryPictureForTheSlidesIsOnExactlyOneSlide()
+    {
+        var deck = new SlideDeckSpec("Mars",
+        [
+            Slide("L5", "The rocket", texts: [Text("Reusable")], pictures: [1]),
+            Slide("L5", "The landing", texts: [Text("Soft")], pictures: [1]),
+        ]);
+
+        var issues = SlideDeckSpecValidator.Validate(deck, TEMPLATE, 2, 0);
+        Assert.Multiple(() =>
+        {
+            Assert.That(issues, Has.Some.Contains("Picture 1 is on slides 1, 2. Place it on exactly one of them."));
+            Assert.That(issues, Has.Some.Contains("Picture 2 is on no slide. Place every picture of PICTURES on exactly one slide with a picture slot."));
+        });
+    }
+
+    [Test]
+    public void PicturesNeedNoPlaceInATemplateWithoutPictureSlots()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Slide("L2", texts: [Text("Close to Earth")])]);
+
+        Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 2, 0), Is.Empty, "No repair round can find a place the template does not have.");
+    }
+
+    [Test]
     public void ADeckStillFitsATemplateWhichChangedBesideIt()
     {
         var deck = new SlideDeckSpec("Weekly", [Keep(1), Slide("L2", texts: [Text("Close to Earth")]), Edit(4, texts: [Text("Thema:\tWeekly")])]);

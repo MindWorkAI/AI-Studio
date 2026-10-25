@@ -36,7 +36,7 @@ internal static class SlideDeckSpecValidator
     /// </summary>
     /// <param name="spec">The slide deck.</param>
     /// <param name="template">The template whose layout families the deck uses.</param>
-    /// <param name="pictureCount">How many pictures are attached, which the slides may refer to by number.</param>
+    /// <param name="pictureCount">How many pictures the user attached for the slides, which the slides refer to by number; each goes on exactly one slide.</param>
     /// <param name="expectedSlideCount">How many slides the user asked for, or 0 when the model may choose.</param>
     /// <param name="templateSlideUses">What the user chose for each slide of the template, by its number; null or empty when the deck uses no template slides.</param>
     /// <param name="chosenLayouts">The layouts the user chose for kinds of slides; null when the model decides every layout.</param>
@@ -67,7 +67,35 @@ internal static class SlideDeckSpecValidator
 
         ValidateTemplateSlides(spec, template, uses, issues);
         ValidateAddedSlides(spec, template, chosen, issues);
+        ValidateRequiredPictures(spec, template, pictureCount, issues);
         return issues;
+    }
+
+    /// <summary>
+    /// Checks that every picture the user attached for the slides is on exactly one slide.
+    /// </summary>
+    /// <remarks>
+    /// The user attached these pictures for the presentation to show them, once each. A template
+    /// without a single picture slot leaves no place for them, which no repair round can change.
+    /// </remarks>
+    private static void ValidateRequiredPictures(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, List<string> issues)
+    {
+        if (pictureCount == 0 || !template.Families.Any(family => family.Slots.Any(slot => slot.Role is PlaceholderRole.PICTURE)))
+            return;
+
+        for (var picture = 1; picture <= pictureCount; picture++)
+        {
+            var slides = spec.Slides
+                .Select((slide, index) => (Slide: slide, Number: index + 1))
+                .Where(candidate => candidate.Slide.Pictures.Contains(picture))
+                .Select(candidate => candidate.Number)
+                .ToList();
+
+            if (slides.Count == 0)
+                issues.Add($"Picture {picture} is on no slide. Place every picture of PICTURES on exactly one slide with a picture slot.");
+            else if (slides.Count > 1)
+                issues.Add($"Picture {picture} is on slides {string.Join(", ", slides)}. Place it on exactly one of them.");
+        }
     }
 
     /// <summary>

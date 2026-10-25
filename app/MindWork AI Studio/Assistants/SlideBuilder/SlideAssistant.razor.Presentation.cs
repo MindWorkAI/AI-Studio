@@ -313,32 +313,54 @@ public partial class SlideAssistant
     }
 
     /// <summary>
-    /// The pictures of the request, in the order the model numbers them.
+    /// The pictures for the slides, in the order the model numbers them.
     /// </summary>
-    private List<FileAttachment> PicturesOfRequest() => this.loadedDocumentPaths.Where(n => n is { Exists: true, IsImage: true }).ToList();
-
-    private string PromptPictures() => this.PicturesOfRequest().Count == 0
-        ? "    - No pictures are attached. Leave out \"pictures\" on every slide."
-        : "    - PICTURES lists the attached pictures by their numbers. Where a picture supports the content, place it by its number on a slide with a picture slot, each picture at most once.";
+    private List<FileAttachment> PicturesOfRequest() => this.slidePictures.Where(n => n is { Exists: true, IsImage: true }).ToList();
 
     /// <summary>
-    /// The attached pictures by their numbers, for the user's request.
+    /// The images of the source material, which the model reads but never places.
+    /// </summary>
+    private List<FileAttachment> SourceImagesOfRequest() => this.loadedDocumentPaths.Where(n => n is { Exists: true, IsImage: true }).ToList();
+
+    private string PromptPictures()
+    {
+        var rules = this.PicturesOfRequest().Count == 0
+            ? "    - No pictures for the slides are attached. Leave out \"pictures\" on every slide."
+            : "    - PICTURES lists the pictures the presentation must show, by their numbers. Place each of them exactly once, by its number, on a slide with a picture slot whose content it fits.";
+
+        return this.SourceImagesOfRequest().Count == 0
+            ? rules
+            : $"""
+               {rules}
+                   - Images attached as source material are for reading only. Never place them on a slide.
+               """;
+    }
+
+    /// <summary>
+    /// The pictures for the slides by their numbers, for the user's request.
     /// </summary>
     /// <remarks>
     /// The names are those of the user's files, so they go with the request, like the paths of the
-    /// attached documents, rather than into the system prompt.
+    /// attached documents, rather than into the system prompt. A model which reads images gets the
+    /// pictures as well; any other model has only their names to go by.
     /// </remarks>
     /// <param name="pictures">The pictures taken at the start of the request, in the order the model numbers them.</param>
+    /// <param name="modelSeesPictures">Whether the pictures go to the model as images.</param>
     /// <returns>The section of the request; empty without pictures.</returns>
-    private static string PromptPictureList(IReadOnlyList<FileAttachment> pictures)
+    private static string PromptPictureList(IReadOnlyList<FileAttachment> pictures, bool modelSeesPictures)
     {
         if (pictures.Count == 0)
             return string.Empty;
 
         var list = string.Join(Environment.NewLine, pictures.Select((picture, index) => $"- Picture {index + 1}: {picture.FileName}"));
+        var seeing = modelSeesPictures
+            ? "The images attached to this request start with these pictures, in this order."
+            : "You cannot see these pictures. Place them by what their names say.";
+
         return $"""
 
                 # PICTURES
+                {seeing}
                 {list}
                 """;
     }

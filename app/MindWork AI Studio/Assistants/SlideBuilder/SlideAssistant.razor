@@ -10,7 +10,16 @@
 <MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-1"> @T("Attach documents")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("Documents and images attached here are source material: the LLM reads them, but puts none of them on a slide.")
+</MudJustifiedText>
 <AttachDocuments Name="Documents for input" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+
+<MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Pictures for the slides")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("Attach the pictures which the presentation must show, e.g., photos, diagrams, or screenshots. Each of them goes on exactly one slide with room for a picture. Only PNG and JPEG pictures are possible. An LLM which can read images sees them; any other LLM knows only their file names, so clear names help.")
+</MudJustifiedText>
+<AttachDocuments Name="Pictures for the slides" @bind-DocumentPaths="@this.slidePictures" OnChange="@this.OnSlidePicturesChanged" CatchAllDocuments="false" UseSmallForm="false" AllowedFileTypes="@([FileTypes.SLIDE_PICTURE])" Provider="@this.ProviderSettings"/>
 
 <MudText Typo="Typo.h5"  Class="mb-3 mt-6"> @T("Details about the desired presentation")</MudText>
 
