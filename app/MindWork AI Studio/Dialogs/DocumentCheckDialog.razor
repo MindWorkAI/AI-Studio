@@ -2,8 +2,9 @@
 
 <MudDialog ContentClass="dialog-content-fit">
     <TitleContent>
-        @* Named after the document once there is one, and after what the caller opened us for until then: *@
-        <FileDialogTitle Title="@(this.document?.FileName ?? this.MudDialog.Title ?? string.Empty)" Path="@(this.document?.FilePath ?? string.Empty)"/>
+        @* Named after the document once there is one, and after what the caller opened us for until then.
+           A file which is no longer at its place is told about below, together with what is shown instead: *@
+        <FileDialogTitle Title="@(this.document?.FileName ?? this.MudDialog.Title ?? string.Empty)" Path="@(this.document?.FilePath ?? string.Empty)" WarnIfMissing="@false"/>
     </TitleContent>
     <DialogContent>
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
@@ -81,7 +82,7 @@
                     </MudText>
 
                     @* At its beginning: the preview shows how we read the file, not a place in it. *@
-                    <FileActions Path="@(this.document?.FilePath ?? string.Empty)" ShowCopy="@false" ShowFileManager="@false" OpenTooltip="@T("Opens the file in the program your system uses for it")"/>
+                    <FileActions Path="@(this.document?.FilePath ?? string.Empty)" ShowCopy="@false" ShowFileManager="@false" WarnIfMissing="@false"/>
                 </Toolbar>
             </ContentViewer>
         }

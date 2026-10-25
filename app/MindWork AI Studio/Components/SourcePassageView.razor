@@ -33,12 +33,13 @@ else
 
     <ContentViewer Text="@this.text" MaxHeight="@this.MaxHeight">
         <Toolbar>
-            @* The heading takes the free width, so the button stands right, next to the views. *@
+            @* The heading takes the free width, so the button stands right, next to the views. The
+               title of the dialog warns about a file which is no longer at its place. *@
             <MudText Typo="Typo.subtitle2" Class="flex-grow-1">
                 @this.heading
             </MudText>
 
-            <FileActions Path="@this.openPath" PageNumber="@this.openPage" ShowCopy="@false" ShowFileManager="@false" OpenTooltip="@this.openTooltip"/>
+            <FileActions Path="@this.openPath" PageNumber="@this.openPage" ShowCopy="@false" ShowFileManager="@false" WarnIfMissing="@false"/>
         </Toolbar>
     </ContentViewer>
 }

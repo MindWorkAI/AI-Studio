@@ -45,7 +45,7 @@ public partial class SourcePassageView : MSGComponentBase
     /// How high the text may grow before it scrolls, as a CSS length.
     /// </summary>
     [Parameter]
-    public string MaxHeight { get; set; } = "40vh";
+    public string MaxHeight { get; set; } = ContentViewer.DEFAULT_MAX_HEIGHT;
 
     [Inject]
     private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
@@ -66,11 +66,6 @@ public partial class SourcePassageView : MSGComponentBase
     /// The page of the passage, which a document opens at, or null.
     /// </summary>
     private int? openPage;
-
-    /// <summary>
-    /// The tooltip of opening a document, or null for a web page, whose tooltip FileActions knows.
-    /// </summary>
-    private string? openTooltip;
 
     /// <summary>
     /// The passage whose texts are shown or being read, so that a render with the same passage does not read them again.
@@ -110,7 +105,6 @@ public partial class SourcePassageView : MSGComponentBase
         var page = this.Passage.PageNumber is > 0 ? this.Passage.PageNumber : null;
         this.openPath = this.Document?.Path ?? this.Passage.Path;
         this.openPage = this.Document is null ? null : page;
-        this.openTooltip = this.Document is null ? null : page is null ? T("Opens the document") : string.Format(T("Opens the document at page {0}"), page);
 
         if (!ReferenceEquals(this.shownPassage, this.Passage))
         {

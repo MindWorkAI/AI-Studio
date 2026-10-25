@@ -12,16 +12,7 @@
     <MudPaper Outlined="@true" Class="content-viewer-frame">
         <div class="content-viewer-toolbar">
             <div class="content-viewer-toolbar-start">
-                @if (this.Toolbar is not null)
-                {
-                    @this.Toolbar
-                }
-                else
-                {
-                    <MudText Typo="Typo.subtitle2">
-                        @this.Label
-                    </MudText>
-                }
+                @this.Toolbar
             </div>
 
             @if (this.views.Count > 1)
@@ -40,16 +31,8 @@
         <div class="content-viewer-body mathjax_ignore" style="@($"max-height: {this.MaxHeight};")">
             @switch (this.view)
             {
-                case ContentView.MEDIA when this.Kind is ContentViewerKind.IMAGE:
-                    <MudImage ObjectFit="ObjectFit.ScaleDown" Style="width: 100%;" Src="@this.MediaUrl"/>
-                    break;
-
-                case ContentView.MEDIA when this.Kind is ContentViewerKind.AUDIO:
-                    <audio controls preload="metadata" src="@this.MediaUrl" style="width: 100%;"></audio>
-                    break;
-
                 case ContentView.MEDIA:
-                    <video controls preload="metadata" src="@this.MediaUrl" style="width: 100%;"></video>
+                    <MudImage ObjectFit="ObjectFit.ScaleDown" Style="width: 100%;" Src="@this.MediaUrl"/>
                     break;
 
                 case ContentView.FORMATTED:

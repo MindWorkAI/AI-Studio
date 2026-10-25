@@ -41,7 +41,7 @@
                                     </MudText>
                                 }
 
-                                <MudTooltip Text="@string.Format(T("Opens this document at page {0}"), pageRange.First)" Placement="Placement.Top">
+                                <MudTooltip Text="@FileActions.GetOpenTooltip(pageRange.First)" Placement="Placement.Top">
                                     <MudLink Typo="Typo.body1" OnClick="@(() => this.OpenDocument(pagedDocument with { PageNumber = pageRange.First }))">
                                         @pageRange
                                     </MudLink>
@@ -55,7 +55,7 @@
                         {
                             @* Inline rather than the usual inline block: a long title, e.g., one naming many
                                parts, then wraps like text right after its number instead of moving below it. *@
-                            <MudTooltip Text="@T("Opens this document in the program your system uses for it")" Placement="Placement.Top" RootClass="d-inline">
+                            <MudTooltip Text="@FileActions.GetOpenTooltip(null)" Placement="Placement.Top" RootClass="d-inline">
                                 <MudLink Typo="Typo.body1" OnClick="@(() => this.OpenDocument(document))">
                                     @entry.Title
                                 </MudLink>
@@ -89,7 +89,7 @@
                         @if (entry.Passages.Count > 0)
                         {
                             <MudTooltip Text="@this.PassagesTooltip(entry)" Placement="Placement.Left" ShowOnFocus="@false">
-                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="@(() => this.ShowPassages(entry))"/>
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Class="icon-button-compact" OnClick="@(() => this.ShowPassages(entry))"/>
                             </MudTooltip>
                         }
                     </div>

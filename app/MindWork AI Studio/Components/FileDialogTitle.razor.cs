@@ -27,7 +27,13 @@ public partial class FileDialogTitle : MSGComponentBase
     public string Path { get; set; } = string.Empty;
 
     /// <summary>
+    /// Whether a file which is no longer at its place gets a warning, see FileActions.WarnIfMissing.
+    /// </summary>
+    [Parameter]
+    public bool WarnIfMissing { get; set; } = true;
+
+    /// <summary>
     /// Whether the path is the address of a web page, which this title then opens in the browser.
     /// </summary>
-    private bool OpensWebPages => Uri.TryCreate(this.Path, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https";
+    private bool OpensWebPages => FileActions.DetermineKind(this.Path) is FileActions.FileActionsKind.WEB_PAGE;
 }

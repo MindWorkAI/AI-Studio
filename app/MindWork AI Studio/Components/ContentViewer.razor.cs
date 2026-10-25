@@ -3,21 +3,18 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Components;
 
 /// <summary>
-/// Shows a piece of content for the user to check: text formatted and as plain text, and an image,
-/// a recording, or a video as itself.
+/// Shows a piece of content for the user to check: text formatted and as plain text, and an image
+/// as itself.
 /// </summary>
 /// <remarks>
 /// Every place which lets the user see what AI Studio reads or hands to the AI shows it the same
 /// way, which is why this lives here instead of in each of them. A slim bar above the content says
-/// what it is, and switches between the ways to see it; the caller fills its start, or names the
-/// content there.<br/><br/>
+/// what it is, and switches between the ways to see it; the caller fills its start.<br/><br/>
 /// The content scrolls inside its frame, so a dialog around it does not have to scroll as well. In a
 /// dialog which fits the window, the frame gives way down to the room left over.<br/><br/>
 /// The text is shown in full unless the caller sets a limit. Whether the beginning of a text is
 /// enough depends on what the user wants to check: how a whole document was read, or exactly what
-/// the AI received. Only the caller knows which, and how to explain a cut.<br/><br/>
-/// Media and text may come together, e.g., a recording and its transcript: the media then comes
-/// first, followed by the text.
+/// the AI received. Only the caller knows which, and how to explain a cut.
 /// </remarks>
 public partial class ContentViewer : MSGComponentBase
 {
@@ -41,26 +38,20 @@ public partial class ContentViewer : MSGComponentBase
     public ContentViewerKind Kind { get; set; } = ContentViewerKind.TEXT;
 
     /// <summary>
-    /// The text to show. For media, the text which belongs to it, e.g., a transcript, or nothing.
+    /// The text to show. For an image, the text which belongs to it, or nothing.
     /// </summary>
     [Parameter]
     public string Text { get; set; } = string.Empty;
 
     /// <summary>
-    /// The address an image, a recording, or a video is loaded from. Not used for text.
+    /// The address an image is loaded from. Not used for text.
     /// </summary>
     [Parameter]
     public string MediaUrl { get; set; } = string.Empty;
 
     /// <summary>
-    /// What the content is called, shown in the bar above it unless the caller fills the bar itself.
-    /// </summary>
-    [Parameter]
-    public string Label { get; set; } = string.Empty;
-
-    /// <summary>
-    /// What the bar above the content shows at its start in place of the label, e.g., where the
-    /// content comes from and a button to open it there.
+    /// What the bar above the content shows at its start, e.g., what the content is, where it comes
+    /// from, and a button to open it there.
     /// </summary>
     [Parameter]
     public RenderFragment? Toolbar { get; set; }
@@ -90,10 +81,15 @@ public partial class ContentViewer : MSGComponentBase
     public const string NO_HEIGHT_LIMIT = "none";
 
     /// <summary>
+    /// How high the content may grow before it scrolls, unless its place says otherwise.
+    /// </summary>
+    public const string DEFAULT_MAX_HEIGHT = "40vh";
+
+    /// <summary>
     /// How high the content may grow before it scrolls, as a CSS length.
     /// </summary>
     [Parameter]
-    public string MaxHeight { get; set; } = "40vh";
+    public string MaxHeight { get; set; } = DEFAULT_MAX_HEIGHT;
 
     /// <summary>
     /// The ways to see this content, in the order they are offered; the first one is shown first.
@@ -134,8 +130,8 @@ public partial class ContentViewer : MSGComponentBase
         }
 
         //
-        // Media is seen as itself first. Text is seen formatted and as plain text, for text and for
-        // media which brings some along. The way the user chose stays as long as it is offered:
+        // An image is seen as itself first. Text is seen formatted and as plain text, for text and
+        // for an image which brings some along. The way the user chose stays as long as it is offered:
         //
         this.views.Clear();
         if (this.Kind is not ContentViewerKind.TEXT)
@@ -154,9 +150,7 @@ public partial class ContentViewer : MSGComponentBase
 
     private string GetViewName(ContentView contentView) => contentView switch
     {
-        ContentView.MEDIA when this.Kind is ContentViewerKind.IMAGE => T("Image"),
-        ContentView.MEDIA when this.Kind is ContentViewerKind.AUDIO => T("Audio"),
-        ContentView.MEDIA => T("Video"),
+        ContentView.MEDIA => T("Image"),
         ContentView.FORMATTED => T("Formatted"),
         _ => T("Plain text"),
     };

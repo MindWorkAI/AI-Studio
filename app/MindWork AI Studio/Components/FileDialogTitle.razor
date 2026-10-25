@@ -7,5 +7,5 @@
     </MudText>
 
     @* Opening a file belongs to the bar above its content; a web page has no such bar, so it opens from here: *@
-    <FileActions Path="@this.Path" ShowOpen="@this.OpensWebPages" TooltipPlacement="Placement.Bottom"/>
+    <FileActions Path="@this.Path" ShowOpen="@this.OpensWebPages" WarnIfMissing="@this.WarnIfMissing" TooltipPlacement="Placement.Bottom"/>
 </div>

@@ -14,14 +14,4 @@ public enum ContentViewerKind
     /// An image, shown from its address.
     /// </summary>
     IMAGE,
-
-    /// <summary>
-    /// A recording, played from its address.
-    /// </summary>
-    AUDIO,
-
-    /// <summary>
-    /// A video, played from its address.
-    /// </summary>
-    VIDEO,
 }

@@ -1,3 +1,4 @@
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -19,10 +20,15 @@ namespace AIStudio.Components;
 /// the timeout of the share, and a list of sources renders anew with every streamed chunk.<br/><br/>
 ///
 /// A web page is copied and opened in the browser. Anything else, such as a mail, which only
-/// AI Studio can find by its address, or a relative path, gets no buttons at all.
+/// AI Studio can find by its address, or a relative path, gets no buttons at all.<br/><br/>
+///
+/// Every place which opens a file names it the same way, see GetOpenTooltip, also where a title
+/// opens it instead of a button.
 /// </remarks>
 public partial class FileActions : MSGComponentBase
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileActions).Namespace, nameof(FileActions));
+
     /// <summary>
     /// What a path names.
     /// </summary>
@@ -55,10 +61,11 @@ public partial class FileActions : MSGComponentBase
     public bool ShowOpen { get; set; } = true;
 
     /// <summary>
-    /// The tooltip of the button which opens a file, or null for the one which fits the page.
+    /// Whether a file which is no longer at its place gets a warning. False where the caller says so
+    /// itself, or where another place on the screen warns already.
     /// </summary>
     [Parameter]
-    public string? OpenTooltip { get; set; }
+    public bool WarnIfMissing { get; set; } = true;
 
     [Parameter]
     public Placement TooltipPlacement { get; set; } = Placement.Top;
@@ -85,9 +92,14 @@ public partial class FileActions : MSGComponentBase
     /// </summary>
     private bool isMissing;
 
-    private string OpenTooltipText => this.OpenTooltip ?? (this.PageNumber is { } page
-        ? string.Format(T("Opens the file at page {0}"), page)
-        : T("Opens the file in the program your system uses for it"));
+    /// <summary>
+    /// The tooltip of opening a file, at its page where there is one.
+    /// </summary>
+    /// <param name="pageNumber">The page the file opens at, or null when it opens at its beginning.</param>
+    /// <returns>The tooltip.</returns>
+    internal static string GetOpenTooltip(int? pageNumber) => pageNumber is { } page
+        ? string.Format(TB("Opens the file at page {0}"), page)
+        : TB("Opens the file in the program your system uses for it");
 
     #region Overrides of ComponentBase
 

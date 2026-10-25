@@ -34,7 +34,7 @@
         @if (this.isMissing)
         {
             @* Instead of buttons which would only fail, and only where there would have been one: *@
-            @if (this.ShowFileManager || this.ShowOpen)
+            @if (this.WarnIfMissing && (this.ShowFileManager || this.ShowOpen))
             {
                 @* Not necessarily gone: the server of an ERI data source may name a file of its own, which was never on this computer. *@
                 <MudTooltip Text="@string.Format(T("AI Studio cannot find this file on your computer: {0}. It was moved, renamed, or deleted, or it lies on another computer, such as the server of a data source."), this.Path)" Placement="@this.TooltipPlacement">
@@ -53,7 +53,7 @@
 
             @if (this.ShowOpen)
             {
-                <MudTooltip Text="@this.OpenTooltipText" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
+                <MudTooltip Text="@GetOpenTooltip(this.PageNumber)" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
                     <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" OnClick="@this.Open"/>
                 </MudTooltip>
             }
