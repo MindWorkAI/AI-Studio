@@ -1,7 +1,7 @@
 @inherits ConfigurationBaseCore
 
 <PathDropZone Frameless="@true" Disabled="@(() => this.IsDisabled)" OnPathsDropped="@this.PathsDropped" Context="isDropTarget">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Style="@(isDropTarget ? DROP_TARGET_STYLE : string.Empty)">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Style="@(isDropTarget ? PathDropZone.FIELD_HIGHLIGHT_STYLE : string.Empty)">
         <MudTextField
             T="string"
             Text="@this.Text()"
