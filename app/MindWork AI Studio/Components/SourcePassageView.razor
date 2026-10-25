@@ -9,7 +9,18 @@
 }
 else
 {
-    @if (this.isTextMissing)
+    @if (this.isStoreUnavailable)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                <MudText>@T("AI Studio cannot read the text the AI received from this passage at the moment, e.g., while AI Studio is still starting.")</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReadTextAgainAsync">
+                    @T("Try again")
+                </MudButton>
+            </MudStack>
+        </MudAlert>
+    }
+    else if (this.isTextMissing)
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-2">
             @T("AI Studio no longer has the text the AI received from this passage. Only where it was found is still known.")

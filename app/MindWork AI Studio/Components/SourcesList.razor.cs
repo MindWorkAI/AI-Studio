@@ -106,7 +106,7 @@ public partial class SourcesList : MSGComponentBase
 
     private string PassagesTooltip(SourceEntry entry) => entry.Passages.Count is 1
         ? T("Show the passage the AI received from this source")
-        : string.Format(T("Show the {0} passages the AI received from this source"), entry.Passages.Count);
+        : string.Format(T("Show the {0} passages the AI received from this source"), entry.Passages.Count.CompactCount());
 
     private async Task ShowPassages(SourceEntry entry) => await SourcePassagesDialog.OpenDialogAsync(this.DialogService, entry.Passages, entry.Document);
 

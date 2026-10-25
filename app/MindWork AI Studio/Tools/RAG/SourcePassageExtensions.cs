@@ -255,7 +255,7 @@ public static class SourcePassageExtensions
 
             var location = passagesOfSource.GetLocationLabel();
             if (location.Length is 0 && passagesOfSource.Count > 1)
-                location = string.Format(TB("{0} passages"), passagesOfSource.Count);
+                location = string.Format(TB("{0} passages"), passagesOfSource.Count.CompactCount());
 
             if (location.Length is 0)
                 continue;

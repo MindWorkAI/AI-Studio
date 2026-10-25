@@ -132,6 +132,28 @@ public sealed class ClassicRagPassagesTests
         });
     }
 
+    [Test]
+    public void AddingSourcesLeavesTheListsAReaderHoldsAsTheyWere()
+    {
+        var handbook = new SourcePassage { SourceUrl = "file:///C:/docs/handbook.pdf#page=3", Text = "The mixing console is described here.", PageNumber = 3 };
+        var notes = new SourcePassage { SourceUrl = "file:///C:/docs/notes.txt", Text = "The microphones are in the cupboard." };
+        var answer = new ContentText();
+        answer.AddSources([new Source("handbook.pdf (Page 3)", handbook.SourceUrl, SourceOrigin.RAG)], [handbook]);
+
+        // The user interface reads the lists while the answer streams:
+        var sourcesBeingRead = answer.Sources;
+        var passagesBeingRead = answer.SourcePassages;
+        answer.AddSources([new Source("notes.txt", notes.SourceUrl, SourceOrigin.RAG)], [notes]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sourcesBeingRead, Has.Count.EqualTo(1), "A list being read changed under its reader.");
+            Assert.That(passagesBeingRead, Has.Count.EqualTo(1), "A list being read changed under its reader.");
+            Assert.That(answer.Sources, Has.Count.EqualTo(2));
+            Assert.That(answer.SourcePassages, Is.EqualTo(new[] { handbook, notes }));
+        });
+    }
+
     private static RetrievalTextContext TextContext(string fileName, string matchedText) => new()
     {
         DataSourceName = fileName,

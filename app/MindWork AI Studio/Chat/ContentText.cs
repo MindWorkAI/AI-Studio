@@ -74,15 +74,23 @@ public sealed class ContentText : IContent
     /// <remarks>
     /// Both at once, because the title of a source names where its passages are, see
     /// SourcePassageExtensions.NamePassagesInTitles. A passage added on its own would leave a title
-    /// behind which names only the pages known before it.
+    /// behind which names only the pages known before it. Both lists are replaced as a whole rather
+    /// than changed, as in StoreReceivedContentAsync: the user interface may read them meanwhile.
     /// </remarks>
     /// <param name="sources">The sources to add.</param>
     /// <param name="passages">The passages to add.</param>
     public void AddSources(IEnumerable<ISource> sources, IEnumerable<SourcePassage> passages)
     {
-        this.Sources.MergeSources(sources);
-        this.SourcePassages.MergePassages(passages);
-        this.Sources.NamePassagesInTitles(this.SourcePassages);
+        var mergedSources = new List<Source>(this.Sources);
+        mergedSources.MergeSources(sources);
+
+        var mergedPassages = new List<SourcePassage>(this.SourcePassages);
+        mergedPassages.MergePassages(passages);
+        mergedSources.NamePassagesInTitles(mergedPassages);
+
+        // The passages first, so that every source the user interface finds has its passages:
+        this.SourcePassages = mergedPassages;
+        this.Sources = mergedSources;
     }
 
     /// <summary>

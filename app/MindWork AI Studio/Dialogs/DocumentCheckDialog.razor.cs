@@ -388,7 +388,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
     /// read the file, so it may leave out the rest; the AI does not.
     /// </summary>
     /// <param name="cutOffCharacters">How many characters the preview leaves out.</param>
-    private string CutOffNotice(int cutOffCharacters) => string.Format(T("Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document."), cutOffCharacters);
+    private string CutOffNotice(int cutOffCharacters) => string.Format(T("Your document is large, so we show you only its beginning. We hide the remaining {0} characters here. Rest assured: the AI still receives your entire document."), cutOffCharacters.CompactCount());
 
     /// <summary>
     /// Ends a running extraction. Without this, reading a large document would continue after the

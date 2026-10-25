@@ -18,6 +18,8 @@ namespace AIStudio.Components;
 ///
 /// The texts of a passage lie in the provenance store once its answer is complete, and are read
 /// from there. Should the store no longer hold them, the view says so instead of showing nothing.
+/// A store which cannot be read, e.g., while it is still starting, is no proof of that: the view
+/// then offers to read the texts again.
 /// </remarks>
 public partial class SourcePassageView : MSGComponentBase
 {
@@ -87,6 +89,11 @@ public partial class SourcePassageView : MSGComponentBase
     /// </summary>
     private bool isTextMissing;
 
+    /// <summary>
+    /// Whether the provenance store could not be read, so that it is unknown whether it holds the texts of the passage.
+    /// </summary>
+    private bool isStoreUnavailable;
+
     #region Overrides of ComponentBase
 
     protected override async Task OnParametersSetAsync()
@@ -124,6 +131,7 @@ public partial class SourcePassageView : MSGComponentBase
     {
         var currentRead = ++this.readNumber;
         this.isTextMissing = false;
+        this.isStoreUnavailable = false;
         if (passage.ProvenanceId is not { } provenanceId)
         {
             this.isReadingText = false;
@@ -135,15 +143,19 @@ public partial class SourcePassageView : MSGComponentBase
         this.text = string.Empty;
 
         ProvenanceEntry? entry = null;
+        var isStoreUnavailable = false;
         try
         {
+            // A store which is not available answers every read with nothing, which would read as a deleted text:
             var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
-            var entries = await store.GetEntriesAsync([provenanceId], CancellationToken.None);
-            entry = entries.GetValueOrDefault(provenanceId);
+            isStoreUnavailable = !store.IsAvailable;
+            if (!isStoreUnavailable)
+                entry = (await store.GetEntriesAsync([provenanceId], CancellationToken.None)).GetValueOrDefault(provenanceId);
         }
         catch (Exception exception)
         {
             this.Logger.LogError(exception, "Failed to read the passage '{ProvenanceId}' from the provenance store.", provenanceId);
+            isStoreUnavailable = true;
         }
 
         // The user went on to another passage meanwhile, which shows its own texts:
@@ -151,9 +163,15 @@ public partial class SourcePassageView : MSGComponentBase
             return;
 
         this.isReadingText = false;
-        this.isTextMissing = entry is null;
+        this.isStoreUnavailable = isStoreUnavailable;
+        this.isTextMissing = !isStoreUnavailable && entry is null;
         this.text = entry is null ? string.Empty : this.ComposeText(entry.Content, entry.SurroundingContent);
     }
+
+    /// <summary>
+    /// Reads the texts of the shown passage once more, after the provenance store could not be read.
+    /// </summary>
+    private Task ReadTextAgainAsync() => this.ReadTextAsync(this.Passage);
 
     /// <summary>
     /// Writes the texts of a passage as one text.
