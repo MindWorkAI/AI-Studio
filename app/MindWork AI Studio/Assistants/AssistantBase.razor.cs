@@ -852,8 +852,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                     var convertedChatThread = this.ConvertToChatThread;
                     convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
 
-                    // Some assistants start the chat under an id of its own, so what their answers received goes along:
-                    if (this.ChatThread is { } assistantChat && assistantChat.ChatId != convertedChatThread.ChatId)
+                    // Some assistants start the chat under an id of its own, so what their answers received goes along. A chat without an id received nothing:
+                    if (this.ChatThread is { } assistantChat && convertedChatThread.ChatId != Guid.Empty && assistantChat.ChatId != convertedChatThread.ChatId)
                         await ChatProvenance.CopyChatAsync(assistantChat.ChatId, convertedChatThread.ChatId);
 
                     MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, new ChatStartRequest(convertedChatThread));
