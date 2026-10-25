@@ -436,7 +436,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesRetrievalMode, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.SendToChatDataSourceBehavior, this.Id, settingsTable, dryRun);
 
-        // Config: Slide Planner Assistant template and defaults?
+        // Config: Slide Assistant template and defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedFooterText, this.Id, settingsTable, dryRun);

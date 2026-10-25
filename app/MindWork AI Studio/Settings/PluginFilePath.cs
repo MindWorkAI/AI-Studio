@@ -2,7 +2,7 @@ namespace AIStudio.Settings;
 
 /// <summary>
 /// Resolves a file a configuration plugin names in a setting, such as the PowerPoint template of the
-/// Slide Planner or the icon of a provider.
+/// Slide Assistant or the icon of a provider.
 /// </summary>
 /// <remarks>
 /// A plugin may ship the file itself, next to its plugin.lua, and name it by a path relative to its

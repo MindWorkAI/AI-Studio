@@ -7,13 +7,13 @@ using AIStudio.Tools.PowerPoint;
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
-/// Stores the settings of the Slide Planner Assistant.
+/// Stores the settings of the Slide Assistant.
 /// </summary>
 /// <param name="configSelection">The managed-configuration selector.</param>
 public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSelection = null)
 {
     /// <summary>
-    /// Initializes an unmanaged Slide Planner settings instance.
+    /// Initializes an unmanaged Slide Assistant settings instance.
     /// </summary>
     public DataSlideBuilder() : this(null)
     {

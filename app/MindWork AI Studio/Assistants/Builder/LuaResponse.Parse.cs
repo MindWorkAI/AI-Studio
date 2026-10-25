@@ -163,7 +163,7 @@ internal sealed partial class LuaResponse
     /// Reads the first complete JSON object out of a model answer that may carry text around it.
     /// </summary>
     /// <remarks>
-    /// Shared with the launcher texts response and the slide deck of the slide planner, which are
+    /// Shared with the launcher texts response and the slide deck of the Slide Assistant, which are
     /// different shapes but arrive the same way, wrapped in whatever prose the model felt like adding.
     /// </remarks>
     internal static string ExtractJson(string input)

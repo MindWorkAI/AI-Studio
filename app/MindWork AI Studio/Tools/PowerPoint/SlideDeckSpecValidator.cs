@@ -4,7 +4,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// Checks a slide deck the model wrote against the template it was written for.
 /// </summary>
 /// <remarks>
-/// Every issue is written for the model: the slide planner sends the issues back in a repair
+/// Every issue is written for the model: the Slide Assistant sends the issues back in a repair
 /// round, so each one names the slide and the slot, and says what to do instead. What fits the
 /// template is checked here and nowhere else, so that the writer of the file can rely on it.
 /// </remarks>

@@ -3,10 +3,10 @@ namespace AIStudio.Tools.PowerPoint;
 internal sealed partial class PresentationTemplate
 {
     /// <summary>
-    /// Creates the catalog the slide planner works with when no template was chosen.
+    /// Creates the catalog the Slide Assistant works with when no template was chosen.
     /// </summary>
     /// <remarks>
-    /// Without a template, the slide planner writes an outline only. It still asks the model for the
+    /// Without a template, the Slide Assistant writes an outline only. It still asks the model for the
     /// same JSON, against these few layouts of a plain 16:9 presentation, so that one prompt and one
     /// check serve both cases. Places and font sizes are those of a new presentation in PowerPoint.
     /// </remarks>

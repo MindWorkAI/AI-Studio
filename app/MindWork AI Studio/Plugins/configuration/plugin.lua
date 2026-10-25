@@ -676,13 +676,13 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
--- Configure defaults for the Slide Planner Assistant.
+-- Configure defaults for the Slide Assistant.
 -- Preselection must be enabled for the template, the footer text, and the layouts to take
 -- effect. It is enabled by default; lock it as well to make sure users cannot do without your
 -- template.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
 --
--- Configure the PowerPoint template of the Slide Planner Assistant.
+-- Configure the PowerPoint template of the Slide Assistant.
 -- The slides then use the layouts of this presentation or template (.pptx, .potx), and users
 -- can create a PowerPoint file from the result. Without a template, the assistant plans an
 -- outline only.

@@ -91,7 +91,7 @@ public static class FileTypes
     // what we write when exporting, whereas the family above is what we accept when reading.
     public static readonly FileTypeFilter TEX         = FileTypeFilter.Leaf("LaTeX", "tex");
 
-    // What the slide planner takes its layouts from, and what it writes:
+    // What the Slide Assistant takes its layouts from, and what it writes:
     public static readonly FileTypeFilter POWER_POINT_TEMPLATE     = FileTypeFilter.Leaf(TB("PowerPoint template"), "pptx", "potx");
     public static readonly FileTypeFilter POWER_POINT_PRESENTATION = FileTypeFilter.Leaf("PowerPoint", "pptx");
 

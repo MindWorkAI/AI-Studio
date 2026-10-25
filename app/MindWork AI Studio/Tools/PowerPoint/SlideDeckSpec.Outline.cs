@@ -12,7 +12,7 @@ internal sealed partial record SlideDeckSpec
     /// Writes the slide deck as a Markdown outline, which the user reads before creating the file.
     /// </summary>
     /// <remarks>
-    /// The outline is what the slide planner always produced, and it keeps working wherever Markdown
+    /// The outline is what the Slide Assistant always produced, and it keeps working wherever Markdown
     /// does: copying it, exporting it to Word, or taking it into a chat. Slides starting a chapter
     /// get a larger heading. Within a slide, the content follows the reading order of its layout, so
     /// a heading above a text comes before that text, and the source of a picture after the picture.

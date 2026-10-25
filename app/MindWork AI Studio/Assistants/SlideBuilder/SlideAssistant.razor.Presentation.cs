@@ -10,7 +10,7 @@ using AIStudio.Tools.Security;
 namespace AIStudio.Assistants.SlideBuilder;
 
 /// <summary>
-/// The part of the Slide Planner which works with PowerPoint: the template, the slides the model
+/// The part of the Slide Assistant which works with PowerPoint: the template, the slides the model
 /// plans for its layouts, and the file written from them.
 /// </summary>
 public partial class SlideAssistant

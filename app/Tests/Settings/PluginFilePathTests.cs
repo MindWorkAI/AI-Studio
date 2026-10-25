@@ -4,7 +4,7 @@ namespace AIStudio.Tests.Settings;
 
 /// <summary>
 /// Checks how a file a configuration plugin names in a setting is found, e.g., the PowerPoint
-/// template it ships for the Slide Planner.
+/// template it ships for the Slide Assistant.
 /// </summary>
 [TestFixture]
 public sealed class PluginFilePathTests

@@ -1,11 +1,11 @@
 namespace AIStudio.Assistants.SlideBuilder;
 
 /// <summary>
-/// The explanations which the Slide Planner Assistant and its settings dialog share, so that both say the same.
+/// The explanations which the Slide Assistant and its settings dialog share, so that both say the same.
 /// </summary>
-public static class SlidePlannerTexts
+public static class SlideAssistantTexts
 {
-    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(SlidePlannerTexts).Namespace, nameof(SlidePlannerTexts));
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(SlideAssistantTexts).Namespace, nameof(SlideAssistantTexts));
 
     /// <summary>
     /// What the LLM knows about the layouts of a template, and why their names matter.

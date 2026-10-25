@@ -80,7 +80,7 @@
     @T("Choose a PowerPoint presentation or template (.pptx, .potx) whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export.")
 </MudJustifiedText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @SlidePlannerTexts.WhatTheLLMKnowsOfLayouts
+    @SlideAssistantTexts.WhatTheLLMKnowsOfLayouts
 </MudJustifiedText>
 <SelectFile File="@this.templatePath" FileChanged="@this.OnTemplateChanged" Label="@T("PowerPoint template")" FileDialogTitle="@T("Select a PowerPoint template")" Filter="@([FileTypes.POWER_POINT_TEMPLATE])" Validation="@this.ValidateTemplate" Disabled="@this.IsTemplateLocked" EnableDragDrop="true"/>
 @if (this.IsLockedTemplateUnavailable)
@@ -112,7 +112,7 @@
 
         <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Layouts for kinds of slides")</MudText>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @SlidePlannerTexts.WhatALayoutChoiceDoes
+            @SlideAssistantTexts.WhatALayoutChoiceDoes
         </MudJustifiedText>
         <LayoutChoicePanels IsChosen="@(purpose => this.LayoutNameOf(purpose).Length > 0)">
             <ChoiceContent Context="purpose">
@@ -130,7 +130,7 @@
         {
             <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Slides of the template")</MudText>
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @SlidePlannerTexts.WhatHappensToTemplateSlides
+                @SlideAssistantTexts.WhatHappensToTemplateSlides
             </MudJustifiedText>
             @foreach (var templateSlide in loadedTemplate.Slides)
             {

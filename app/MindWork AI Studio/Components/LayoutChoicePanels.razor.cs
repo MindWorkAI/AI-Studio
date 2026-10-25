@@ -9,7 +9,7 @@ namespace AIStudio.Components;
 /// or science, since more than a hundred choices in one list help nobody.
 /// </summary>
 /// <remarks>
-/// The choice itself comes from the caller: the Slide Planner Assistant uses a plain select, and its
+/// The choice itself comes from the caller: the Slide Assistant uses a plain select, and its
 /// settings dialog a configuration select. The header of an area tells how many of its kinds have a
 /// layout, so that no choice hides in a collapsed panel.
 /// </remarks>

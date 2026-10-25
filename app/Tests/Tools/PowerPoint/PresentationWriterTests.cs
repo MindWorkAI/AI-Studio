@@ -638,7 +638,7 @@ public sealed class PresentationWriterTests
         var template = PresentationTemplate.Read(templateFile);
         templateFile.Position = 0;
 
-        // The writer edits a copy of the template, as the slide planner does with one on disk:
+        // The writer edits a copy of the template, as the Slide Assistant does with one on disk:
         var output = new MemoryStream();
         await templateFile.CopyToAsync(output);
         output.Position = 0;

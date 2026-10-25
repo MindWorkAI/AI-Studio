@@ -1180,9 +1180,9 @@ ignored and logged as a warning.
   run that version, you can in addition use the `CUSTOM` confidence scheme, set the provider to
   `UNTRUSTED` there, and enforce a global minimum confidence level of at least `VERY_LOW`.
 
-## Shipping the PowerPoint template of the Slide Planner
+## Shipping the PowerPoint template of the Slide Assistant
 
-The Slide Planner plans slides for the layouts of a PowerPoint template (.pptx or .potx), and it
+The Slide Assistant plans slides for the layouts of a PowerPoint template (.pptx or .potx), and it
 creates PowerPoint files (.pptx) in that template's design. OpenDocument presentations (.odp, .otp)
 cannot serve as a template yet. Instead of placing your corporate template on a network share, you
 can ship it with your configuration plugin. Put the file next to your `plugin.lua`, or into a folder
@@ -1197,7 +1197,7 @@ AI Studio stores the full path of the file inside the plugin directory. With `Al
 your template is preselected, and users may still choose another one; without it, the template is
 locked.
 
-Like the footer text, the template is one of the preselections of the Slide Planner, so it applies
+Like the footer text, the template is one of the preselections of the Slide Assistant, so it applies
 only while preselection is enabled, which it is by default. Users who switch preselection off start
 without your template. To make sure they cannot do without it, lock the preselection as well:
 
@@ -1208,18 +1208,18 @@ CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
 The relative path must stay inside the plugin directory. AI Studio rejects `..` segments and links
 pointing out of that directory. A missing or rejected file is never fatal: AI Studio logs a warning
 and treats the template as if your plugin did not configure it. Users then keep the template they
-chose themselves, or have none, and the Slide Planner plans an outline only. An absolute path, e.g.,
+chose themselves, or have none, and the Slide Assistant plans an outline only. An absolute path, e.g.,
 on a network share, works as well, as long as every computer can read it.
 
 A locked template which a computer cannot read at the moment, e.g., because the network share cannot
-be reached, does not block the Slide Planner either. It tells users that the template of their
+be reached, does not block the Slide Assistant either. It tells users that the template of their
 organization is not available right now and plans an outline only. Once the template can be read
-again, the Slide Planner uses it the next time users open it.
+again, the Slide Assistant uses it the next time users open it.
 
 Keep in mind that every client downloads the whole configuration plugin, template included, whenever
 AI Studio starts and whenever your configuration changes.
 
-You can also tell the Slide Planner which layout of your template to use for certain kinds of slides,
+You can also tell the Slide Assistant which layout of your template to use for certain kinds of slides,
 e.g., which layout opens each chapter. Give each layout by its name in the slide master of your
 template:
 

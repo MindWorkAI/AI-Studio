@@ -1,7 +1,7 @@
 # AGENTS.md
 
 These instructions cover the PowerPoint tools in `app/MindWork AI Studio/Tools/PowerPoint/`, with which
-the Slide Planner Assistant (`app/MindWork AI Studio/Assistants/SlideBuilder/`) plans slides for the
+the Slide Assistant (`app/MindWork AI Studio/Assistants/SlideBuilder/`) plans slides for the
 layouts of a template and writes PowerPoint files. They add to the `AGENTS.md` in the repository root and
 to `app/AGENTS.md`, which apply here as well.
 
@@ -16,7 +16,7 @@ to `app/AGENTS.md`, which apply here as well.
 4. `SlideDeckSpecValidator` checks the deck against the template. Its issues are written for the model,
    which gets one repair round.
 5. `SlideDeckSpec.ToMarkdownOutline` shows the result as an outline, and `PresentationWriter.WriteAsync`
-   writes the file: a copy of the template, with its slides replaced. The slide planner makes that copy
+   writes the file: a copy of the template, with its slides replaced. The Slide Assistant makes that copy
    next to the target and moves it there once it is complete.
 
 ## Rules which are easy to break
