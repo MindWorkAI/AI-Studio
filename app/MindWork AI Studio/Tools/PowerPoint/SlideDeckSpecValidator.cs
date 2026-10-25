@@ -124,6 +124,23 @@ internal static class SlideDeckSpecValidator
         ? templateSlideUses.UseOf(number) is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null && (!slide.HasContent || template.FamilyOf(slide) is not null)
         : template.FindFamily(slide.Layout) is not null;
 
+    /// <summary>
+    /// Says whether a template still offers what a deck was planned on.
+    /// </summary>
+    /// <remarks>
+    /// The template is read once more for writing, and the user may have changed it since the deck
+    /// was planned. A deck whose layouts or template slides changed would land on other ones, or
+    /// could not be written at all, so it has to be planned anew.
+    /// </remarks>
+    /// <param name="deck">The slide deck.</param>
+    /// <param name="template">The template as it is now.</param>
+    /// <param name="basis">What the deck was planned on, as PresentationTemplate.DescribeBasisOf told it then.</param>
+    public static bool StillFits(SlideDeckSpec deck, PresentationTemplate template, IReadOnlyDictionary<string, string> basis)
+    {
+        var current = template.DescribeBasisOf(deck);
+        return current.Count == basis.Count && current.All(entry => basis.TryGetValue(entry.Key, out var planned) && planned == entry.Value);
+    }
+
     private static void ValidateSlide(SlideSpec slide, int number, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, ChosenLayouts chosen, int pictureCount, List<string> issues)
     {
         if (slide.TemplateSlide is { } templateSlideNumber)

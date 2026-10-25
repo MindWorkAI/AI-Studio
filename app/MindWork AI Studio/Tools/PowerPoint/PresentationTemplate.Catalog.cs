@@ -46,20 +46,21 @@ internal sealed partial class PresentationTemplate
     /// <returns>The catalog, e.g., <c>- L3 "Inhalt/Content 1": title (up to 2 lines of about 48 characters); text 1 (full width, middle, up to 15 lines of about 85 characters)</c>.</returns>
     public string ToCatalogPrompt()
     {
-        var catalog = new StringBuilder();
-        foreach (var family in this.Families)
-        {
-            if (catalog.Length > 0)
-                catalog.Append('\n');
+        return string.Join('\n', this.Families.Select(family => $"- {this.DescribeFamily(family)}"));
+    }
 
-            catalog.Append("- ").Append(family.Id).Append(" \"").Append(family.Name).Append('"');
-            if (PurposeOf(family.Variants[0].Layout.LayoutType) is { } purpose)
-                catalog.Append(" (").Append(purpose).Append(')');
+    /// <summary>
+    /// Describes one layout family for the model: its ID, its name, and its slots.
+    /// </summary>
+    private string DescribeFamily(LayoutFamily family)
+    {
+        var description = new StringBuilder();
+        description.Append(family.Id).Append(" \"").Append(family.Name).Append('"');
+        if (PurposeOf(family.Variants[0].Layout.LayoutType) is { } purpose)
+            description.Append(" (").Append(purpose).Append(')');
 
-            catalog.Append(": ").AppendJoin("; ", family.Slots.Select(slot => this.DescribeSlot(slot, family.Slots)));
-        }
-
-        return catalog.ToString();
+        description.Append(": ").AppendJoin("; ", family.Slots.Select(slot => this.DescribeSlot(slot, family.Slots)));
+        return description.ToString();
     }
 
     /// <summary>
@@ -80,35 +81,64 @@ internal sealed partial class PresentationTemplate
     /// <returns>The list, e.g., <c>- Template slide 3, to edit, with the slots of layout L3: title "News"; text 1 (left, middle, up to 6 lines of about 40 characters, on this slide) "AI Studio: / EINSTEIN:"; element 1 (picture, right, middle)</c>; empty when the user chose no slide.</returns>
     public string ToTemplateSlidesPrompt(IReadOnlyList<TemplateSlideUse> uses)
     {
-        var list = new StringBuilder();
-        foreach (var slide in this.Slides)
+        return string.Join('\n', this.Slides
+            .Select(slide => (Slide: slide, Use: uses.UseOf(slide.Number)))
+            .Where(choice => choice.Use is not TemplateSlideUse.OMIT)
+            .Select(choice => $"- {this.DescribeTemplateSlide(choice.Slide, choice.Use)}"));
+    }
+
+    /// <summary>
+    /// Describes one template slide for the model, as one to keep or one to edit.
+    /// </summary>
+    private string DescribeTemplateSlide(TemplateSlide slide, TemplateSlideUse use)
+    {
+        var description = new StringBuilder();
+        description.Append("Template slide ").Append(slide.Number).Append(use is TemplateSlideUse.KEEP ? ", to keep unchanged" : ", to edit");
+
+        var family = this.FindFamily(slide.FamilyId ?? string.Empty);
+        if (use is TemplateSlideUse.EDIT && family is not null)
+            description.Append(", with the slots of layout ").Append(family.Id);
+
+        var slots = family is not null ? slide.Slots : slide.Contents.Select(content => content.Slot).ToList();
+        var entries = use is TemplateSlideUse.EDIT && family is not null
+            ? this.DescribeSlideToEdit(slide)
+            : slide.Contents.Select(content => $"{NameOf(content.Slot, slots)} {DescribeContent(content)}").ToList();
+
+        description.Append(": ");
+        if (entries.Count == 0)
+            description.Append("no content");
+        else
+            description.AppendJoin("; ", entries);
+
+        return description.ToString();
+    }
+
+    /// <summary>
+    /// Describes what a deck was planned on: each layout and template slide it uses, as the model read it.
+    /// </summary>
+    /// <remarks>
+    /// A deck names layouts and template slides by their place in the template, e.g., L3 or template
+    /// slide 2. When the template changes after planning, e.g., by a new layout in its slide master or
+    /// by a deleted slide, the same place may hold another layout or slide. Comparing these
+    /// descriptions tells such a change apart from one which leaves the deck as it was planned, e.g.,
+    /// other colors or another logo.
+    /// </remarks>
+    /// <param name="deck">The slide deck.</param>
+    /// <returns>The descriptions, by the ID of a layout or by "template slide" and its number; a layout or slide the template lacks is missing.</returns>
+    public Dictionary<string, string> DescribeBasisOf(SlideDeckSpec deck)
+    {
+        var basis = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var slide in deck.Slides)
         {
-            var use = uses.UseOf(slide.Number);
-            if (use is TemplateSlideUse.OMIT)
-                continue;
+            if (slide.TemplateSlide is { } number && this.FindSlide(number) is { } templateSlide)
+                basis[$"template slide {number}"] = this.DescribeTemplateSlide(templateSlide, slide.HasContent ? TemplateSlideUse.EDIT : TemplateSlideUse.KEEP);
 
-            if (list.Length > 0)
-                list.Append('\n');
-
-            list.Append("- Template slide ").Append(slide.Number).Append(use is TemplateSlideUse.KEEP ? ", to keep unchanged" : ", to edit");
-
-            var family = this.FindFamily(slide.FamilyId ?? string.Empty);
-            if (use is TemplateSlideUse.EDIT && family is not null)
-                list.Append(", with the slots of layout ").Append(family.Id);
-
-            var slots = family is not null ? slide.Slots : slide.Contents.Select(content => content.Slot).ToList();
-            var entries = use is TemplateSlideUse.EDIT && family is not null
-                ? this.DescribeSlideToEdit(slide)
-                : slide.Contents.Select(content => $"{NameOf(content.Slot, slots)} {DescribeContent(content)}").ToList();
-
-            list.Append(": ");
-            if (entries.Count == 0)
-                list.Append("no content");
-            else
-                list.AppendJoin("; ", entries);
+            // A kept template slide takes nothing from its layout; any other slide fills the slots of one:
+            if ((slide.TemplateSlide is null || slide.HasContent) && this.FamilyOf(slide) is { } family)
+                basis[family.Id] = this.DescribeFamily(family);
         }
 
-        return list.ToString();
+        return basis;
     }
 
     /// <summary>

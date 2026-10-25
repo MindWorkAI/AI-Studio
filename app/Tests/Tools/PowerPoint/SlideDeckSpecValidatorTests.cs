@@ -356,6 +356,34 @@ public sealed class SlideDeckSpecValidatorTests
         Assert.That(SlideDeckSpecValidator.Validate(deck, template, 0, 0, USES, chosen), Is.Empty);
     }
 
+    [Test]
+    public void ADeckStillFitsATemplateWhichChangedBesideIt()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Keep(1), Slide("L2", texts: [Text("Close to Earth")]), Edit(4, texts: [Text("Thema:\tWeekly")])]);
+        var basis = TemplateWithSlides().DescribeBasisOf(deck);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(basis.Keys, Is.EquivalentTo(new[] { "template slide 1", "L2", "template slide 4" }), "An edited template slide fills the slots of its layout, a kept one does not.");
+            Assert.That(SlideDeckSpecValidator.StillFits(deck, TemplateWithSlides(), basis), Is.True, "The same file, read once more.");
+            Assert.That(SlideDeckSpecValidator.StillFits(deck, ChangedTemplateWithSlides(newLayoutAt: 3), basis), Is.True, "A new layout at the end of the slide master leaves the IDs of the others alone.");
+        });
+    }
+
+    [Test]
+    public void ADeckNoLongerFitsWhenItsLayoutsOrTemplateSlidesMove()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Keep(1), Slide("L2", texts: [Text("Close to Earth")]), Keep(3)]);
+        var basis = TemplateWithSlides().DescribeBasisOf(deck);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(SlideDeckSpecValidator.StillFits(deck, ChangedTemplateWithSlides(newLayoutAt: 1), basis), Is.False, "L2 is another layout now.");
+            Assert.That(SlideDeckSpecValidator.StillFits(deck, ChangedTemplateWithSlides(deletedSlide: 3), basis), Is.False, "Template slide 3 is the imprint now.");
+            Assert.That(SlideDeckSpecValidator.StillFits(deck, ChangedTemplateWithSlides(deletedSlide: 3), new Dictionary<string, string>()), Is.False, "Without a basis, nothing is known to fit.");
+        });
+    }
+
     /// <summary>
     /// What the user chose for the slides of TemplateWithSlides: the second slide and
     /// the imprint are edited, and the closing slide is left out.
@@ -366,21 +394,41 @@ public sealed class SlideDeckSpecValidatorTests
     /// A template with a title slide, two content slides, an imprint, and a closing slide on a
     /// layout without room for content. Its families are L1 for the title and L2 for the content.
     /// </summary>
-    private static PresentationTemplate TemplateWithSlides()
-    {
-        using var file = TestTemplate.Create(
-            new TestTemplateOptions(Slides:
-            [
-                new TestSlide(0, (TestPlaceholder.Title(), "Consultation hour")),
-                new TestSlide(1, (TestPlaceholder.Title(), "News"), (new TestPlaceholder(null, 1), "AI Studio:\nEINSTEIN:")),
-                new TestSlide(1, (TestPlaceholder.Title(), "Questions")),
-                new TestSlide(1, (TestPlaceholder.Title(), "Impressum"), (new TestPlaceholder(null, 1), "Thema:\tConsultation hour")),
-                new TestSlide(2, (TestPlaceholder.Title(), "Thank you")),
-            ]),
-            new TestLayout("Title", TestPlaceholder.Title(), TestPlaceholder.Subtitle(new SlotBounds(838_200, 3_602_038, 10_515_600, 1_655_762))),
-            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, TestTemplate.MASTER_BODY_BOUNDS)),
-            new TestLayout("Title Only", TestPlaceholder.Title()));
+    private static PresentationTemplate TemplateWithSlides() => ChangedTemplateWithSlides();
 
+    /// <summary>
+    /// The template of TemplateWithSlides after its author changed it.
+    /// </summary>
+    /// <param name="newLayoutAt">Where the slide master gets a new layout with room for content, starting at 0; null for no new layout.</param>
+    /// <param name="deletedSlide">The number of the slide the author deleted; 0 for none.</param>
+    private static PresentationTemplate ChangedTemplateWithSlides(int? newLayoutAt = null, int deletedSlide = 0)
+    {
+        List<TestLayout> layouts =
+        [
+            new("Title", TestPlaceholder.Title(), TestPlaceholder.Subtitle(new SlotBounds(838_200, 3_602_038, 10_515_600, 1_655_762))),
+            new("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, TestTemplate.MASTER_BODY_BOUNDS)),
+            new("Title Only", TestPlaceholder.Title()),
+        ];
+
+        List<TestSlide> slides =
+        [
+            new(0, (TestPlaceholder.Title(), "Consultation hour")),
+            new(1, (TestPlaceholder.Title(), "News"), (new TestPlaceholder(null, 1), "AI Studio:\nEINSTEIN:")),
+            new(1, (TestPlaceholder.Title(), "Questions")),
+            new(1, (TestPlaceholder.Title(), "Impressum"), (new TestPlaceholder(null, 1), "Thema:\tConsultation hour")),
+            new(2, (TestPlaceholder.Title(), "Thank you")),
+        ];
+
+        if (newLayoutAt is { } position)
+        {
+            layouts.Insert(position, new TestLayout("Imprint", TestPlaceholder.Title(), TestPlaceholder.Text(1, TestTemplate.MASTER_BODY_BOUNDS)));
+            slides = [..slides.Select(slide => slide.Layout >= position ? slide with { Layout = slide.Layout + 1 } : slide)];
+        }
+
+        if (deletedSlide > 0)
+            slides.RemoveAt(deletedSlide - 1);
+
+        using var file = TestTemplate.Create(new TestTemplateOptions(Slides: slides), [..layouts]);
         return PresentationTemplate.Read(file);
     }
 

@@ -71,6 +71,14 @@ public partial class SlideAssistant
     /// </summary>
     private List<string> slideDeckPicturePaths = [];
 
+    /// <summary>
+    /// What the slide deck was planned on: the layouts and template slides it uses, as the model read them.
+    /// </summary>
+    /// <remarks>
+    /// The template may change before the user saves the presentation, see SlideDeckSpecValidator.StillFits.
+    /// </remarks>
+    private readonly Dictionary<string, string> slideDeckBasis = new(StringComparer.Ordinal);
+
     private static readonly AssistantSessionStateKey<string> TEMPLATE_PATH_STATE_KEY = new(nameof(templatePath));
     private static readonly AssistantSessionStateKey<string> FOOTER_TEXT_STATE_KEY = new(nameof(footerText));
     private static readonly AssistantSessionStateKey<bool> KEEP_EMPTY_PICTURE_PLACEHOLDERS_STATE_KEY = new(nameof(keepEmptyPicturePlaceholders));
@@ -81,6 +89,7 @@ public partial class SlideAssistant
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_ANSWER_STATE_KEY = new(nameof(slideDeckAnswer));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_TEMPLATE_PATH_STATE_KEY = new(nameof(slideDeckTemplatePath));
     private static readonly AssistantSessionStateKey<List<string>> SLIDE_DECK_PICTURE_PATHS_STATE_KEY = new(nameof(slideDeckPicturePaths));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> SLIDE_DECK_BASIS_STATE_KEY = new(nameof(slideDeckBasis));
 
     /// <summary>
     /// The layouts the model plans with: those of the chosen template, or those of a plain presentation.
@@ -528,6 +537,12 @@ public partial class SlideAssistant
                 //
                 var currentTemplate = PresentationTemplate.Read(presentationFile);
                 presentationFile.Position = 0;
+                if (!SlideDeckSpecValidator.StillFits(deck, currentTemplate, this.slideDeckBasis))
+                {
+                    this.Logger.LogWarning("The PowerPoint template '{TemplatePath}' changed since the slides were planned, and they no longer fit it.", this.slideDeckTemplatePath);
+                    await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The template has changed since the slides were planned. Please create the slides again.")));
+                    return;
+                }
 
                 var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim(), this.keepEmptyPicturePlaceholders);
                 result = await PresentationWriter.WriteAsync(presentationFile, currentTemplate, deck, options, new RustPictureSource(this.RustService, this.slideDeckPicturePaths), CancellationToken.None);

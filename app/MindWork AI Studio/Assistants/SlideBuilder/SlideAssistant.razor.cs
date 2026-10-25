@@ -212,6 +212,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeckAnswer = string.Empty;
         this.slideDeckTemplatePath = string.Empty;
         this.slideDeckPicturePaths = [];
+        this.slideDeckBasis.Clear();
         this.templateSlideUses = [];
         this.layoutNames.Clear();
         if (!this.MightPreselectValues())
@@ -312,6 +313,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(SLIDE_DECK_ANSWER_STATE_KEY, this.slideDeckAnswer);
         state.Set(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, this.slideDeckTemplatePath);
         state.SetList(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
+        state.SetDictionary(SLIDE_DECK_BASIS_STATE_KEY, this.slideDeckBasis);
         state.Set(PLANNING_STEP_STATE_KEY, this.planningStep);
     }
 
@@ -343,6 +345,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(SLIDE_DECK_ANSWER_STATE_KEY, value => this.slideDeckAnswer = value);
         state.Restore(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, value => this.slideDeckTemplatePath = value);
         state.Restore(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, value => this.slideDeckPicturePaths = value);
+        state.RestoreDictionary(SLIDE_DECK_BASIS_STATE_KEY, this.slideDeckBasis);
         state.Restore(PLANNING_STEP_STATE_KEY, value => this.planningStep = value);
 
         // Neither the template nor the slides are kept themselves, only what they were read from:
@@ -563,6 +566,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         //
         this.slideDeck = null;
         this.slideDeckAnswer = string.Empty;
+        this.slideDeckBasis.Clear();
         this.planningStep = PlanningStep.NONE;
         var catalog = this.Catalog;
         var plannedTemplatePath = this.template is null ? string.Empty : this.templatePath;
@@ -661,6 +665,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeckAnswer = answer;
         this.slideDeckTemplatePath = plannedTemplatePath;
         this.slideDeckPicturePaths = imageAttachments.Select(picture => picture.FilePath).ToList();
+        foreach (var (id, description) in catalog.DescribeBasisOf(deck))
+            this.slideDeckBasis[id] = description;
+
         this.ShowOutline(deck, catalog, imageAttachments.Select(picture => picture.FileName).ToList());
     }
 }
