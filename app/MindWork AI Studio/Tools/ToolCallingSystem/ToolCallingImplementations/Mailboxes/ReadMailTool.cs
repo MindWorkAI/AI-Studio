@@ -235,7 +235,7 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
     /// Builds the result of a reading, with every text of the mail filtered for prompt injections in
     /// one request, and what the user reads of it under the source of the mail.
     /// </summary>
-    private async Task<(JsonObject Json, Source Source, SourcePassage Passage)> DescribeAsync(MailReading reading, ReadMailRequest request, string pageText, MailPartRecord? part, int lastPage, TimeZoneInfo timeZone)
+    private async Task<MailReadingResult> DescribeAsync(MailReading reading, ReadMailRequest request, string pageText, MailPartRecord? part, int lastPage, TimeZoneInfo timeZone)
     {
         var mailbox = reading.Mailbox;
         var summary = reading.Summary;
@@ -329,7 +329,7 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
             readAttachment < 0 ? null : texts[attachmentNames[readAttachment]],
             texts[text]));
 
-        return (json, source, passage);
+        return new(json, source, passage);
 
         // The addresses of one role, as far as the model got them:
         IEnumerable<string> AddressesOf(MailAddressRole role) => addressLists.Where(list => list.Role == role).SelectMany(list => list.Indices).Select(index => texts[index]);

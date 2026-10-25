@@ -232,17 +232,17 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
 
             if (batch.Count >= embeddingBatchSize)
             {
-                var (stored, reused) = await this.FlushBatchAsync(document, batch, reusableVectors, attempt, token);
-                storedChunkCount += stored;
-                reusedChunkCount += reused;
+                var storedBatch = await this.FlushBatchAsync(document, batch, reusableVectors, attempt, token);
+                storedChunkCount += storedBatch.StoredCount;
+                reusedChunkCount += storedBatch.ReusedCount;
             }
         }
 
         if (batch.Count > 0)
         {
-            var (stored, reused) = await this.FlushBatchAsync(document, batch, reusableVectors, attempt, token);
-            storedChunkCount += stored;
-            reusedChunkCount += reused;
+            var storedBatch = await this.FlushBatchAsync(document, batch, reusableVectors, attempt, token);
+            storedChunkCount += storedBatch.StoredCount;
+            reusedChunkCount += storedBatch.ReusedCount;
         }
 
         //
@@ -565,7 +565,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// <param name="attempt">The attempt the chunks belong to, which remembers whether the embedding provider failed.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>How many of the chunks were stored, and how many of those kept a stored vector instead of being embedded.</returns>
-    private async Task<(int StoredCount, int ReusedCount)> FlushBatchAsync(EmbeddingDocument document, List<EmbeddingChunkDraft> batch, ReusableVectors reusableVectors, IndexingAttempt attempt, CancellationToken token)
+    private async Task<StoredBatch> FlushBatchAsync(EmbeddingDocument document, List<EmbeddingChunkDraft> batch, ReusableVectors reusableVectors, IndexingAttempt attempt, CancellationToken token)
     {
         //
         // A chunk whose text the document had stored before takes that vector over. Only the other
@@ -695,7 +695,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         }
 
         batch.Clear();
-        return (chunksToStore.Count, reusedChunkCount);
+        return new(chunksToStore.Count, reusedChunkCount);
     }
 
     /// <summary>

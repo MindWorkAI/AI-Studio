@@ -155,9 +155,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             if(retrievalResponse is { Successful: true, Data: not null })
             {
                 //
-                // Next, we have to transform the ERI context back to our generic retrieval context:
-                //
-                //
+                // Next, we have to transform the ERI context back to our generic retrieval context.
                 // The server writes the JSON, and a field it leaves out arrives as null, whatever the
                 // contract says. Everything after this point counts on texts and lists:
                 //

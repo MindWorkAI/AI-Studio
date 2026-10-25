@@ -17,11 +17,6 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         BM25,
     }
 
-    /// <summary>
-    /// The rows or lines of a passage which names none.
-    /// </summary>
-    private static readonly (int? Start, int? End) NO_RANGE = (null, null);
-
     //
     // A hit keeps the complete shape both retrieval channels deliver, even where nothing reads a
     // value yet. Merging is deterministic on purpose for now, so Channel, Score and Rank have no
@@ -209,11 +204,11 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
     {
         var pageNumber = location.PageNumber is > 0 ? location.PageNumber : null;
         var rows = RangeOf(location.StartRow, location.EndRow);
-        var lines = type is RetrievalContentType.TEXT_TRANSCRIPT ? NO_RANGE : RangeOf(location.StartLine, location.EndLine);
+        var lines = type is RetrievalContentType.TEXT_TRANSCRIPT ? PassageRange.NONE : RangeOf(location.StartLine, location.EndLine);
         if (type is RetrievalContentType.TEXT_SPREADSHEET && rows.Start is null)
         {
             rows = lines;
-            lines = NO_RANGE;
+            lines = PassageRange.NONE;
         }
 
         return new SourcePassage
@@ -230,7 +225,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         };
     }
 
-    private static (int? Start, int? End) RangeOf(int? start, int? end) => start is > 0 ? (start, end > start ? end : null) : NO_RANGE;
+    private static PassageRange RangeOf(int? start, int? end) => start is > 0 ? new(start, end > start ? end : null) : PassageRange.NONE;
 
     //
     // Worded like the location of every passage, so that the title reads the same before and after

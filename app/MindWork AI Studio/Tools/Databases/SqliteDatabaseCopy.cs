@@ -23,10 +23,12 @@ internal static class SqliteDatabaseCopy
     /// <summary>
     /// Copies a database into a file and checks the copy.
     /// </summary>
+    /// <remarks>
+    /// A copy which fails its check is removed, and an InvalidOperationException says so.
+    /// </remarks>
     /// <param name="databasePath">The database to copy.</param>
     /// <param name="targetPath">The file of the copy. A file there is replaced.</param>
     /// <param name="token">The cancellation token.</param>
-    /// <exception cref="InvalidOperationException">The copy failed its check. It is removed then.</exception>
     public static async Task CopyAndCheckAsync(string databasePath, string targetPath, CancellationToken token)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);

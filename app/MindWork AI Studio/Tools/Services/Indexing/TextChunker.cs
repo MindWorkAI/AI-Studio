@@ -201,8 +201,8 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
             if (tokenCount <= options.MaxChunkTokenLength)
             {
                 // The whole text is one chunk, so it spans all of its segments:
-                var (start, end) = Locate(sourceSegments.Select(segment => segment.Location).ToList(), currentLocation);
-                yield return new(textWithOverlap, start, end);
+                var span = Locate(sourceSegments.Select(segment => segment.Location).ToList(), currentLocation);
+                yield return new(textWithOverlap, span.Start, span.End);
                 yield break;
             }
         }
@@ -276,8 +276,8 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
                 //
                 if (!string.IsNullOrWhiteSpace(chunk))
                 {
-                    var (start, end) = Locate(Enumerable.Range(index, unitCount).Select(LocationOfUnit).ToList(), currentLocation);
-                    yield return new(chunk, start, end);
+                    var span = Locate(Enumerable.Range(index, unitCount).Select(LocationOfUnit).ToList(), currentLocation);
+                    yield return new(chunk, span.Start, span.End);
                 }
 
                 var nextIndex = index + unitCount;
@@ -517,10 +517,10 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
     /// <param name="locations">The locations of the units the chunk covers.</param>
     /// <param name="current">The location of the text being cut, for what none of the units states.</param>
     /// <returns>Where the chunk starts and where it ends.</returns>
-    private static (SourceLocation Start, SourceLocation End) Locate(IReadOnlyList<SourceLocation> locations, SourceLocation current)
+    private static ChunkSpan Locate(IReadOnlyList<SourceLocation> locations, SourceLocation current)
     {
         if (locations.Count is 0)
-            return (current, current);
+            return new(current, current);
 
         var sheetName = locations.FirstOrDefault(location => location.SheetName is not null).SheetName ?? current.SheetName;
         var start = new SourceLocation(
@@ -535,7 +535,7 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
             locations.LastOrDefault(location => location.RowNumber is not null).RowNumber ?? current.RowNumber,
             locations.LastOrDefault(location => location.LineNumber is not null).LineNumber ?? current.LineNumber);
 
-        return (start, end);
+        return new(start, end);
     }
 
     /// <remarks>

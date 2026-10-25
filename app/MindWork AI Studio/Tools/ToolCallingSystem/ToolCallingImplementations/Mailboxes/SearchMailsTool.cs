@@ -486,7 +486,8 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
             if (this.Passage is { } passage)
             {
                 description["passage"] = texts[passage];
-                if (this.LocatePassageInAttachment(texts) is { } attachment)
+                var attachment = this.LocatePassageInAttachment(texts);
+                if (attachment != MailPassageAttachment.NONE)
                     description["passage_location"] = attachment.Where is null ? $"attachment \"{attachment.Name}\"" : $"attachment \"{attachment.Name}\", {attachment.Where}";
             }
 
@@ -509,18 +510,22 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
                 texts[this.Subject],
                 MailToolResults.FormatTime(this.Summary.ReceivedAtUtc, timeZone),
                 [..this.Attachments.Select(name => texts[name])],
-                attachment is null ? null : attachment.Value.Where is null ? attachment.Value.Name : $"{attachment.Value.Name}, {attachment.Value.Where}",
+                attachment == MailPassageAttachment.NONE ? null : attachment.Label,
                 this.Passage is { } passage ? texts[passage] : null));
         }
 
-        public Source ToSource(MailTexts texts, TimeZoneInfo timeZone) => MailToolResults.CreateSource(
-            this.Mailbox,
-            this.Summary.MailId,
-            texts[this.Subject],
-            texts[this.Sender],
-            this.Summary.ReceivedAtUtc,
-            timeZone,
-            this.LocatePassageInAttachment(texts) is { } attachment ? attachment.Where is null ? attachment.Name : $"{attachment.Name}, {attachment.Where}" : null);
+        public Source ToSource(MailTexts texts, TimeZoneInfo timeZone)
+        {
+            var attachment = this.LocatePassageInAttachment(texts);
+            return MailToolResults.CreateSource(
+                this.Mailbox,
+                this.Summary.MailId,
+                texts[this.Subject],
+                texts[this.Sender],
+                this.Summary.ReceivedAtUtc,
+                timeZone,
+                attachment == MailPassageAttachment.NONE ? null : attachment.Label);
+        }
 
         /// <summary>
         /// The attachment the passage is from, and where in it.
@@ -532,15 +537,15 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         /// no attachment, and neither does one of a mail indexed before attachments were told apart.
         /// </remarks>
         /// <param name="texts">The filtered texts of the result.</param>
-        /// <returns>The filtered name of the attachment, and where in it the passage is, if known; null when the passage is from no attachment.</returns>
-        private (string Name, string? Where)? LocatePassageInAttachment(MailTexts texts)
+        /// <returns>The filtered name of the attachment, and where in it the passage is, if known; MailPassageAttachment.NONE when the passage is from no attachment.</returns>
+        private MailPassageAttachment LocatePassageInAttachment(MailTexts texts)
         {
             if (this.Passage is null || this.PassageLocation is not { AttachmentPosition: { } position } location || position < 0 || position >= this.Attachments.Count || position >= this.Summary.AttachmentNames.Count)
-                return null;
+                return MailPassageAttachment.NONE;
 
             var type = DataSourceLocalRetrievalService.GetRetrievalContentType(Path.GetExtension(this.Summary.AttachmentNames[position]));
             var located = DataSourceLocalRetrievalService.LocatePassage(location, type, chunkNumber: 1);
-            return (texts[this.Attachments[position]], IRetrievalContextExtensions.DescribeLocation(located.PageNumber, located.EndPageNumber, located.SheetName, located.StartRow, located.EndRow, located.StartLine, located.EndLine));
+            return new(texts[this.Attachments[position]], IRetrievalContextExtensions.DescribeLocation(located.PageNumber, located.EndPageNumber, located.SheetName, located.StartRow, located.EndRow, located.StartLine, located.EndLine));
         }
     }
 }

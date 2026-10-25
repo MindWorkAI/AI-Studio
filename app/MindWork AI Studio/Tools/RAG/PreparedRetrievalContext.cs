@@ -20,15 +20,15 @@ public sealed record PreparedRetrievalContext(IRetrievalContext Context, string 
     /// <summary>
     /// Writes what the AI is told about the context, headed by its number.
     /// </summary>
-    /// <param name="index">The number of the context among all of them, or -1 when it stands alone.</param>
-    /// <param name="numTotalRetrievalContexts">How many contexts there are, or -1 when that is unknown.</param>
+    /// <param name="index">The number of the context among all of them, or null when it stands alone.</param>
+    /// <param name="numTotalRetrievalContexts">How many contexts there are, or null when that is unknown.</param>
     /// <returns>The context as Markdown, ending with an empty line to set it apart from the next one.</returns>
-    public string ToMarkdown(int index = -1, int numTotalRetrievalContexts = -1)
+    public string ToMarkdown(int? index = null, int? numTotalRetrievalContexts = null)
     {
         var sb = new StringBuilder();
         switch (index)
         {
-            case > 0 when numTotalRetrievalContexts is -1:
+            case > 0 when numTotalRetrievalContexts is null:
                 sb.AppendLine($"# Retrieval context {index}");
                 break;
 
