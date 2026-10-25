@@ -11,6 +11,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AIStudio.Tools.Databases.ProvenanceStore;
 
+/// <summary>
+/// The provenance store in SQLite, see ProvenanceStoreClient.
+/// </summary>
+/// <remarks>
+/// Every reading and writing of entries runs on a thread of its own. SQLite works synchronously
+/// behind its async methods, cf. the Databases AGENTS.md, and nearly everything this store holds is
+/// a whole document, a web page, or a mail. Many callers sit in the user interface, e.g., a preview
+/// which keeps its text, or a click which deletes a chat, and would freeze the window meanwhile.
+/// </remarks>
 public sealed class SqliteProvenanceStoreClientImplementation(string name, string databasePath, string basePath, string version) : ProvenanceStoreClient(name, basePath)
 {
     private const string DATABASE_NAME = "SQLite";
@@ -116,7 +125,7 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         _ => kind.ToString(),
     };
 
-    public override async Task<Guid?> StoreAsync(Guid chatId, ProvenanceKind kind, string content, IReadOnlyList<string>? surroundingContent, CancellationToken token)
+    public override Task<Guid?> StoreAsync(Guid chatId, ProvenanceKind kind, string content, IReadOnlyList<string>? surroundingContent, CancellationToken token) => Task.Run<Guid?>(async () =>
     {
         var id = Guid.NewGuid();
         await using var context = this.CreateContext();
@@ -132,9 +141,9 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
 
         await context.SaveChangesAsync(token);
         return id;
-    }
+    }, token);
 
-    public override async Task<IReadOnlyDictionary<Guid, ProvenanceEntry>> GetEntriesAsync(IReadOnlyCollection<Guid> ids, CancellationToken token)
+    public override Task<IReadOnlyDictionary<Guid, ProvenanceEntry>> GetEntriesAsync(IReadOnlyCollection<Guid> ids, CancellationToken token) => Task.Run<IReadOnlyDictionary<Guid, ProvenanceEntry>>(async () =>
     {
         var entries = new Dictionary<Guid, ProvenanceEntry>();
         if (ids.Count is 0)
@@ -163,9 +172,9 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         }
 
         return entries;
-    }
+    }, token);
 
-    public override async Task CopyChatAsync(Guid sourceChatId, Guid targetChatId, CancellationToken token)
+    public override Task CopyChatAsync(Guid sourceChatId, Guid targetChatId, CancellationToken token) => Task.Run(async () =>
     {
         var sourceKey = ToKey(sourceChatId);
         var targetKey = ToKey(targetChatId);
@@ -183,9 +192,9 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
              WHERE chat_id = {sourceKey}
              """,
             token);
-    }
+    }, token);
 
-    public override async Task<int> DeleteChatsAsync(IReadOnlyCollection<Guid> chatIds, CancellationToken token, DateTimeOffset? createdBefore = null)
+    public override Task<int> DeleteChatsAsync(IReadOnlyCollection<Guid> chatIds, CancellationToken token, DateTimeOffset? createdBefore = null) => Task.Run(async () =>
     {
         if (chatIds.Count is 0)
             return 0;
@@ -193,17 +202,17 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         var chatKeys = chatIds.Select(ToKey).Distinct().ToList();
         await using var context = this.CreateContext();
         return await CreatedBefore(context.Entries.Where(entry => chatKeys.Contains(entry.ChatId)), createdBefore).ExecuteDeleteAsync(token);
-    }
+    }, token);
 
-    public override async Task<int> DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token, DateTimeOffset? createdBefore = null)
+    public override Task<int> DeleteChatEntriesExceptAsync(Guid chatId, IReadOnlyCollection<Guid> keptIds, CancellationToken token, DateTimeOffset? createdBefore = null) => Task.Run(async () =>
     {
         var chatKey = ToKey(chatId);
         var keptKeys = keptIds.Select(ToKey).Distinct().ToList();
         await using var context = this.CreateContext();
         return await CreatedBefore(context.Entries.Where(entry => entry.ChatId == chatKey && !keptKeys.Contains(entry.Id)), createdBefore).ExecuteDeleteAsync(token);
-    }
+    }, token);
 
-    public override async Task<int> DeleteEntriesAsync(Guid chatId, IReadOnlyCollection<Guid> ids, CancellationToken token)
+    public override Task<int> DeleteEntriesAsync(Guid chatId, IReadOnlyCollection<Guid> ids, CancellationToken token) => Task.Run(async () =>
     {
         if (ids.Count is 0)
             return 0;
@@ -212,7 +221,7 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         var keys = ids.Select(ToKey).Distinct().ToList();
         await using var context = this.CreateContext();
         return await context.Entries.Where(entry => entry.ChatId == chatKey && keys.Contains(entry.Id)).ExecuteDeleteAsync(token);
-    }
+    }, token);
 
     /// <summary>
     /// Narrows entries down to those stored before a moment.
@@ -225,7 +234,7 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
         ? entries.Where(entry => entry.CreatedAtUtc < moment)
         : entries;
 
-    public override async Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token)
+    public override Task<IReadOnlyList<Guid>> GetChatIdsAsync(CancellationToken token) => Task.Run<IReadOnlyList<Guid>>(async () =>
     {
         await using var context = this.CreateContext();
         var chatKeys = await context.Entries.Select(entry => entry.ChatId).Distinct().ToListAsync(token);
@@ -235,7 +244,7 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
             .Select(chatKey => Guid.TryParse(chatKey, out var chatId) ? chatId : (Guid?)null)
             .OfType<Guid>()
             .ToList();
-    }
+    }, token);
 
     /// <inheritdoc />
     /// <remarks>
