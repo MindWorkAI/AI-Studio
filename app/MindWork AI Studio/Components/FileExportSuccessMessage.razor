@@ -1,0 +1,8 @@
+@inherits MSGComponentBase
+
+<MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+    <div>
+        @this.Message
+    </div>
+    <FileExportActions FilePath="@this.FilePath" OffersOpening="@this.OffersOpening" ActionTaken="@this.Close"/>
+</MudStack>

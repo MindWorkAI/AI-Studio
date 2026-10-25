@@ -68,7 +68,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private IJSRuntime JsRuntime { get; init; } = null!;
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
-    
+
+    private FileExportNotifications FileExportNotifications => this.fileExportNotifications ??= new(this.Snackbar);
+
     private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
     
     private const int NAVBAR_COLLAPSED_WIDTH_INT = 4;
@@ -83,6 +85,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool useDarkMode;
     private bool startupCompleted;
     private bool settingsWriteProtectionWarningShown;
+    private FileExportNotifications? fileExportNotifications;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim dataRestorePendingDialogSemaphore = new(1, 1);
@@ -133,6 +136,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.SHOW_FILE_EXPORT_RUNNING, Event.SHOW_FILE_EXPORT_SUCCESS, Event.HIDE_FILE_EXPORT_RUNNING,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
             Event.CHAT_GENERATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED,Event.ASSISTANT_SESSION_CHANGED, 
             Event.ASSISTANT_SESSION_FINISHED,
@@ -323,6 +327,24 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.SHOW_INFO:
                     if (data is DataInfoMessage info)
                         info.Show(this.Snackbar);
+
+                    break;
+
+                case Event.SHOW_FILE_EXPORT_RUNNING:
+                    if (data is DataFileExportRunningMessage exportRunning)
+                        this.FileExportNotifications.ShowRunning(exportRunning);
+
+                    break;
+
+                case Event.SHOW_FILE_EXPORT_SUCCESS:
+                    if (data is DataFileExportSuccessMessage exportSuccess)
+                        this.FileExportNotifications.ShowSuccess(exportSuccess);
+
+                    break;
+
+                case Event.HIDE_FILE_EXPORT_RUNNING:
+                    if (data is DataFileExportRunningMessage exportFinished)
+                        this.FileExportNotifications.HideRunning(exportFinished);
 
                     break;
 

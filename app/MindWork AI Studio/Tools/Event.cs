@@ -79,6 +79,22 @@ public enum Event
     SHOW_INFO,
 
     /// <summary>
+    /// Requests display of the notification that a file is being exported.
+    /// </summary>
+    SHOW_FILE_EXPORT_RUNNING,
+
+    /// <summary>
+    /// Requests display of the notification that a file was exported, with the ways to reach it.
+    /// It replaces the notification that the export runs.
+    /// </summary>
+    SHOW_FILE_EXPORT_SUCCESS,
+
+    /// <summary>
+    /// Requests removal of the notification that a file is being exported.
+    /// </summary>
+    HIDE_FILE_EXPORT_RUNNING,
+
+    /// <summary>
     /// Requests display of a prompt-injection alert dialog.
     /// </summary>
     SHOW_PROMPT_INJECTION_ALERT,
