@@ -284,7 +284,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         await this.RefreshProviderSelectionFromConfigurationAsync();
         if (this.ProviderSettings == Settings.Provider.NONE)
+        {
+            await this.ReportMissingProviderAsync();
             return;
+        }
 
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
@@ -350,6 +353,25 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             sessionCancellationTokenSource?.Dispose();
             await this.RefreshAssistantUIAsync();
         }
+    }
+
+    /// <summary>
+    /// Tells the user that the assistant cannot start without a provider, together with whatever else is missing.
+    /// </summary>
+    /// <remarks>
+    /// Most assistants validate their form only in their submit action, which never runs without a
+    /// provider. Validating here marks the provider selection and lists the other issues as well.
+    /// The form does not report the missing provider when it holds no provider selection, as with an
+    /// assistant plugin without one, or when its selection still shows the provider which the refresh
+    /// at the start has just dropped. Then the issue is added on its own.
+    /// </remarks>
+    private async Task ReportMissingProviderAsync()
+    {
+        if (this.Form is not null)
+            await this.Form.Validate();
+
+        if (this.ValidatingProvider(this.ProviderSettings) is { } issue && !this.InputIssues.Contains(issue))
+            this.AddInputIssue(issue);
     }
 
     private void TriggerFormChange(FormFieldChangedEventArgs _)
