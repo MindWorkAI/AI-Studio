@@ -40,7 +40,7 @@ public sealed record DataBackupEntry(DataBackupLocation Location, string Relativ
     /// <remarks>
     /// The chats write to the store at any time, so a file-by-file copy could catch it halfway
     /// through a write. Unlike the indexes, it is copied for every backup, since it belongs to the
-    /// chats, which every backup holds. Cf. DataBackupSources.ProvenanceCopyDirectory.
+    /// chats, which every backup holds. Cf. DataBackupSources.CopyProvenanceStoreAsync.
     /// </remarks>
     public bool ComesFromProvenanceCopy => this.Kind is DataBackupEntryKind.CHAT_PROVENANCE;
 

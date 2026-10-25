@@ -294,44 +294,46 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
     /// <remarks>
     /// The copy is read on a connection of its own, read-only and without a pool, so nothing keeps it
     /// open afterward and the caller can delete it. Only the columns this version knows are read: a
-    /// copy made by a newer version may hold more.
+    /// copy made by a newer version may hold more.<br/><br/>
+    ///
+    /// The entries pass one at a time, since each one may be a whole document and a chat may hold
+    /// many of them. All of them go in one transaction, so a chat arrives with all of its entries
+    /// or with none. The time of each entry stays, as in CopyChatAsync.
     /// </remarks>
-    public override async Task<int> ImportChatAsync(string sourceDatabasePath, Guid sourceChatId, Guid targetChatId, CancellationToken token)
+    public override Task<int> ImportChatAsync(string sourceDatabasePath, Guid sourceChatId, Guid targetChatId, CancellationToken token) => Task.Run(async () =>
     {
         var targetKey = ToKey(targetChatId);
-        var rows = new List<ProvenanceEntity>();
-        await using (var connection = new SqliteConnection(SqliteDatabaseCopy.BuildConnectionString(sourceDatabasePath, SqliteOpenMode.ReadOnly)))
-        {
-            await connection.OpenAsync(token);
-            await using var command = connection.CreateCommand();
-            command.CommandText = "SELECT id, kind, content, surrounding_content, created_at_utc FROM provenance WHERE chat_id = $chatId;";
-            command.Parameters.AddWithValue("$chatId", ToKey(sourceChatId));
-
-            await using var reader = await command.ExecuteReaderAsync(token);
-            while (await reader.ReadAsync(token))
-            {
-                rows.Add(new ProvenanceEntity
-                {
-                    ChatId = targetKey,
-                    Id = reader.GetString(0),
-                    Kind = reader.GetString(1),
-                    Content = reader.GetString(2),
-                    SurroundingContent = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    CreatedAtUtc = IndexStoreDateTimeOffset.ParseUtc(reader.GetString(4)),
-                });
-            }
-        }
-
-        if (rows.Count is 0)
-            return 0;
+        await using var source = new SqliteConnection(SqliteDatabaseCopy.BuildConnectionString(sourceDatabasePath, SqliteOpenMode.ReadOnly));
+        await source.OpenAsync(token);
+        await using var command = source.CreateCommand();
+        command.CommandText = "SELECT id, kind, content, surrounding_content, created_at_utc FROM provenance WHERE chat_id = $chatId;";
+        command.Parameters.AddWithValue("$chatId", ToKey(sourceChatId));
 
         await using var context = this.CreateContext();
-        var knownIds = (await context.Entries.Where(entry => entry.ChatId == targetKey).Select(entry => entry.Id).ToListAsync(token)).ToHashSet(StringComparer.Ordinal);
-        var newRows = rows.Where(row => knownIds.Add(row.Id)).ToList();
-        context.Entries.AddRange(newRows);
-        await context.SaveChangesAsync(token);
-        return newRows.Count;
-    }
+        await using var transaction = await context.Database.BeginTransactionAsync(token);
+        await using var reader = await command.ExecuteReaderAsync(token);
+
+        var added = 0;
+        while (await reader.ReadAsync(token))
+        {
+            var id = reader.GetString(0);
+            var kind = reader.GetString(1);
+            var content = reader.GetString(2);
+            var surroundingContent = reader.IsDBNull(3) ? null : reader.GetString(3);
+            var createdAtUtc = reader.GetString(4);
+
+            // Entries the chat holds already stay as they are:
+            added += await context.Database.ExecuteSqlAsync(
+                $"""
+                 INSERT OR IGNORE INTO provenance (chat_id, id, kind, content, surrounding_content, created_at_utc)
+                 VALUES ({targetKey}, {id}, {kind}, {content}, {surroundingContent}, {createdAtUtc})
+                 """,
+                token);
+        }
+
+        await transaction.CommitAsync(token);
+        return added;
+    }, token);
 
     public override void Dispose()
     {

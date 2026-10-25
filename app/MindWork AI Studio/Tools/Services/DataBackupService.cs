@@ -173,14 +173,13 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
             var organizationPluginFolders = DataBackupContents.FindOrganizationPluginsAmongUserPlugins(PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>(), dataDirectory);
 
             //
-            // The texts the chats received are copied last, right before the chats themselves are
-            // read: copying the indexes may take minutes, and an answer completed meanwhile then
-            // still finds its texts in the backup.
+            // The texts the chats received are copied once the chats themselves are written, cf.
+            // DataBackupSources.CopyProvenanceStoreAsync: an answer completed meanwhile then still
+            // finds its texts in the backup.
             //
             indexCopiesDirectory = await this.CopyIndexesAsync(dataDirectory, token);
-            provenanceCopyDirectory = await this.CopyProvenanceStoreAsync(dataDirectory, token);
 
-            var sources = new DataBackupSources(dataDirectory, configDirectory, settingsJson, indexCopiesDirectory, organizationPluginFolders, provenanceCopyDirectory);
+            var sources = new DataBackupSources(dataDirectory, configDirectory, settingsJson, indexCopiesDirectory, organizationPluginFolders, async copyToken => provenanceCopyDirectory = await this.CopyProvenanceStoreAsync(dataDirectory, copyToken));
             var manifest = new DataBackupManifest(
                 DataBackupFormat.FORMAT_VERSION,
                 Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? "unknown",

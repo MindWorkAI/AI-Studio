@@ -231,17 +231,21 @@ public sealed class BackupChatImportTests
         // a backup copies the store:
         //
         Guid? provenanceId = null;
-        var provenanceCopyDirectory = string.Empty;
+        Func<CancellationToken, Task<string>>? copyProvenanceStoreAsync = null;
         if (sourceProvenance is not null)
         {
             provenanceId = await sourceProvenance.Client.StoreAsync(chatId, ProvenanceKind.ATTACHMENT, "Hello and welcome.", null, CancellationToken.None);
             await sourceProvenance.Client.StoreAsync(Guid.NewGuid(), ProvenanceKind.WEB_PAGE, "A page of another chat.", null, CancellationToken.None);
 
-            provenanceCopyDirectory = Path.Combine(this.testDirectory, "provenance-copy");
-            await sourceProvenance.Client.BackupToDirectoryAsync(Path.Combine(provenanceCopyDirectory, "databases", "provenance"), CancellationToken.None);
+            var provenanceCopyDirectory = Path.Combine(this.testDirectory, "provenance-copy");
+            copyProvenanceStoreAsync = async token =>
+            {
+                await sourceProvenance.Client.BackupToDirectoryAsync(Path.Combine(provenanceCopyDirectory, "databases", "provenance"), token);
+                return provenanceCopyDirectory;
+            };
         }
 
-        var sources = new DataBackupSources(this.SourceDataDirectory, Path.Combine(this.testDirectory, "config"), "{}", string.Empty, [], provenanceCopyDirectory);
+        var sources = new DataBackupSources(this.SourceDataDirectory, Path.Combine(this.testDirectory, "config"), "{}", string.Empty, [], copyProvenanceStoreAsync);
         var manifest = new DataBackupManifest(DataBackupFormat.FORMAT_VERSION, "26.10.1", "V6", DateTimeOffset.UtcNow, this.SourceDataDirectory, string.Empty, false, []);
         await using (var archiveStream = File.Create(this.ArchivePath))
             await DataBackupWriter.WriteAsync(archiveStream, sources, manifest, null, CancellationToken.None);

@@ -360,6 +360,7 @@ public sealed class ProvenanceStoreTests
             var importedAgain = await store.Client.ImportChatAsync(copyPath, chatInBackup, importedChat, TOKEN);
             var entries = await store.Client.GetEntriesAsync([passage!.Value, page!.Value, otherChatsMail!.Value], TOKEN);
             var chatIds = await store.Client.GetChatIdsAsync(TOKEN);
+            var original = await backup.Client.GetEntriesAsync([passage.Value], TOKEN);
 
             Assert.Multiple(() =>
             {
@@ -368,6 +369,7 @@ public sealed class ProvenanceStoreTests
                 Assert.That(entries.Keys, Is.EquivalentTo(new[] { passage.Value, page.Value }), "The chat refers to its entries by their ids, also under its new id. Another chat's entries stay behind.");
                 Assert.That(entries[passage.Value].Kind, Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
                 Assert.That(entries[passage.Value].SurroundingContent, Is.EqualTo(new[] { "around it" }));
+                Assert.That(entries[passage.Value].CreatedAtUtc, Is.EqualTo(original[passage.Value].CreatedAtUtc), "The time says when the AI received the content, not when the chat came back.");
                 Assert.That(chatIds, Is.EquivalentTo(new[] { importedChat }));
             });
         }
