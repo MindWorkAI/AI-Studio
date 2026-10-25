@@ -153,3 +153,40 @@ opt-level = 3
 
 [profile.dev.package.memchr]
 opt-level = 3
+
+# Preparing images is CPU-heavy as well: AI Studio decodes a picture, scales it down to 2560 pixels,
+# and encodes it again, both for the AI and for the slides of the Slide Assistant. A photo of
+# 2912 × 1632 pixels saved as PNG takes about 0.12 seconds in a release build, 6.6 seconds in a
+# development build without this, and about 0.5 seconds with it; almost all of that is scaling and
+# encoding. `image` does the scaling; `png`, `fdeflate`, `flate2`, `miniz_oxide`, `crc32fast`,
+# and `simd-adler32` read and write PNG files; `zune-jpeg` and `zune-core` read JPEG files; and
+# `image-webp` reads and writes WebP files.
+[profile.dev.package.image]
+opt-level = 3
+
+[profile.dev.package.png]
+opt-level = 3
+
+[profile.dev.package.fdeflate]
+opt-level = 3
+
+[profile.dev.package.flate2]
+opt-level = 3
+
+[profile.dev.package.miniz_oxide]
+opt-level = 3
+
+[profile.dev.package.crc32fast]
+opt-level = 3
+
+[profile.dev.package.simd-adler32]
+opt-level = 3
+
+[profile.dev.package.zune-jpeg]
+opt-level = 3
+
+[profile.dev.package.zune-core]
+opt-level = 3
+
+[profile.dev.package.image-webp]
+opt-level = 3

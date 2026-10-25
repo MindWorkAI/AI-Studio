@@ -157,13 +157,19 @@ public static class PandocExport
         if (!pandocState.IsAvailable)
             return false;
 
+        //
+        // The export runs from here on. Before, the user may still be looking at the dialog which
+        // offers to install Pandoc, and a notification that we save would be wrong there:
+        //
+        await using var feedback = new FileExportFeedback();
+        feedback.ShowRunning(response.SaveFilePath);
         if (!await ConvertAsync(rustService, markdownText, response.SaveFilePath, format))
         {
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
             return false;
         }
 
-        await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("The export succeeded.")));
+        await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, TB("The export succeeded."), response.SaveFilePath, true);
         return true;
     }
 }

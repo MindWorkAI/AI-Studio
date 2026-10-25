@@ -209,10 +209,12 @@ public static class PlainFileExport
 
         LOGGER.LogInformation("The user chose the path '{SaveFilePath}' for the {ExportFormat} export.", response.SaveFilePath, format);
 
+        await using var feedback = new FileExportFeedback();
+        feedback.ShowRunning(response.SaveFilePath);
         try
         {
             await File.WriteAllTextAsync(response.SaveFilePath, fileContent, format.ToFileEncoding());
-            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("The export succeeded.")));
+            await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, TB("The export succeeded."), response.SaveFilePath, true);
 
             return true;
         }

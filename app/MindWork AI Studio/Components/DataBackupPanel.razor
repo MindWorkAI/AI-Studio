@@ -32,9 +32,13 @@
                 @if (backupResult.Success)
                 {
                     <MudAlert Severity="@(backupResult.IncludesDataSourceIndexes ? Severity.Success : Severity.Warning)" Dense="@true" Class="mt-3">
-                        <MudText Typo="Typo.body2">
-                            @string.Format(T("Backed up {0} files into: {1}"), backupResult.FileCount, backupResult.ArchivePath)
-                        </MudText>
+                        @* Opening a backup with the default program would only unpack it, so the file manager is the one way offered. *@
+                        <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+                            <MudText Typo="Typo.body2">
+                                @string.Format(T("Backed up {0} files into: {1}"), backupResult.FileCount, backupResult.ArchivePath)
+                            </MudText>
+                            <FileExportActions FilePath="@backupResult.ArchivePath" OffersOpening="@false"/>
+                        </MudStack>
                         @if (!backupResult.IncludesDataSourceIndexes)
                         {
                             <MudText Typo="Typo.body2">

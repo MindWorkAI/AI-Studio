@@ -41,6 +41,12 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool EnableSpellchecking { get; set; }
 
     /// <summary>
+    /// Should the message about an exported file close after a few seconds? When false, it stays until
+    /// the user closes it, so that its buttons to the file remain at hand.
+    /// </summary>
+    public bool CloseExportMessagesAutomatically { get; set; }
+
+    /// <summary>
     /// If and when we should look for updates.
     /// </summary>
     public UpdateInterval UpdateInterval { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UpdateInterval, UpdateInterval.HOURLY);

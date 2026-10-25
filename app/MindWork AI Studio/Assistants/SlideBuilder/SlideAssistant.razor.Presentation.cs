@@ -562,6 +562,10 @@ public partial class SlideAssistant
         var targetPath = response.SaveFilePath;
         this.isWritingPresentation = true;
         this.StateHasChanged();
+
+        // Pictures make this take seconds, since each of them is prepared anew:
+        await using var feedback = new FileExportFeedback();
+        feedback.ShowRunning(targetPath);
         try
         {
             var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim(), this.keepEmptyPicturePlaceholders);
@@ -582,7 +586,7 @@ public partial class SlideAssistant
                 await this.MessageBus.SendWarning(new(Icons.Material.Filled.HideImage, string.Format(T("These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"), string.Join(", ", names))));
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Slideshow, T("The PowerPoint file was created.")));
+            await feedback.SucceededAsync(Icons.Material.Filled.Slideshow, T("The PowerPoint file was created."), targetPath, true);
         }
         catch (Exception e)
         {
