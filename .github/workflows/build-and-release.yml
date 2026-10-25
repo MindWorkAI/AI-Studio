@@ -803,6 +803,18 @@ jobs:
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
 
+      - name: Pin the .NET SDK from the metadata
+        shell: bash
+        run: |
+          # The runner images bring several .NET SDKs along, newer ones among them. Without a
+          # global.json, the newest of them builds instead of the one installed above from the
+          # metadata, and with it comes a newer C# version than the one we build with locally.
+          # The file exists in the pipeline only, so metadata.txt stays the one place which names
+          # the SDK. Bash runs on Windows as well, so that a failing command fails the step:
+          dotnet new globaljson --sdk-version "${DOTNET_SDK_VERSION}" --roll-forward disable --force
+          used_dotnet_sdk_version=$(dotnet --version)
+          echo ".NET SDK in use: '${used_dotnet_sdk_version}'"
+
       - name: Cache Rust
         uses: actions/cache@v4
         with:
@@ -1054,6 +1066,18 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
+
+      - name: Pin the .NET SDK from the metadata
+        shell: bash
+        run: |
+          # The runner images bring several .NET SDKs along, newer ones among them. Without a
+          # global.json, the newest of them builds instead of the one installed above from the
+          # metadata, and with it comes a newer C# version than the one we build with locally.
+          # The file exists in the pipeline only, so metadata.txt stays the one place which names
+          # the SDK. Bash runs on Windows as well, so that a failing command fails the step:
+          dotnet new globaljson --sdk-version "${DOTNET_SDK_VERSION}" --roll-forward disable --force
+          used_dotnet_sdk_version=$(dotnet --version)
+          echo ".NET SDK in use: '${used_dotnet_sdk_version}'"
 
       - name: Deploy PDFium (Unix)
         if: matrix.platform != 'windows-latest'
