@@ -3,7 +3,6 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.Databases.IndexStore;
-using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Services.Indexing;

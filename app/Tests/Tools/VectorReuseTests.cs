@@ -82,7 +82,7 @@ public sealed class VectorReuseTests
         {
             Assert.That(run.Provider.EmbeddedTexts, Is.Empty);
             Assert.That(points.Select(point => point.Vector), Is.EqualTo(new[] { CountingProvider.VectorOf("Attachment: offer.pdf"), CountingProvider.VectorOf("The body of the mail.") }), "Each text keeps its own vector.");
-            Assert.That(points.Select(point => point.PointId), Has.None.AnyOf(oldPointIds.ToArray()), "The new chunks have ids of their own, and the old points are gone.");
+            Assert.That(points.Select(point => point.PointId).Intersect(oldPointIds), Is.Empty, "The new chunks have ids of their own, and the old points are gone.");
         });
     }
 
@@ -413,6 +413,8 @@ public sealed class VectorReuseTests
         var unknownPoints = new List<string>();
         run.Vectors.BeforeInsert = async points =>
         {
+            // Called while the run indexes, long before it is disposed:
+            // ReSharper disable once AccessToDisposedClosure
             var knownChunks = (await run.StoredChunksAsync()).Select(chunk => chunk.ChunkId).ToHashSet(StringComparer.Ordinal);
             unknownPoints.AddRange(points.Select(point => point.PointId).Where(pointId => !knownChunks.Contains(pointId)));
         };

@@ -137,19 +137,19 @@ public partial class SourcePassageView : MSGComponentBase
         this.text = string.Empty;
 
         ProvenanceEntry? entry = null;
-        var isStoreUnavailable = false;
+        bool storeCannotBeRead;
         try
         {
             // A store which is not available answers every read with nothing, which would read as a deleted text:
             var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
-            isStoreUnavailable = !store.IsAvailable;
-            if (!isStoreUnavailable)
+            storeCannotBeRead = !store.IsAvailable;
+            if (!storeCannotBeRead)
                 entry = (await store.GetEntriesAsync([provenanceId], CancellationToken.None)).GetValueOrDefault(provenanceId);
         }
         catch (Exception exception)
         {
             this.Logger.LogError(exception, "Failed to read the passage '{ProvenanceId}' from the provenance store.", provenanceId);
-            isStoreUnavailable = true;
+            storeCannotBeRead = true;
         }
 
         // The user went on to another passage meanwhile, which shows its own texts:
@@ -157,8 +157,8 @@ public partial class SourcePassageView : MSGComponentBase
             return;
 
         this.isReadingText = false;
-        this.isStoreUnavailable = isStoreUnavailable;
-        this.isTextMissing = !isStoreUnavailable && entry is null;
+        this.isStoreUnavailable = storeCannotBeRead;
+        this.isTextMissing = !storeCannotBeRead && entry is null;
         this.text = entry is null ? string.Empty : this.ComposeText(entry.Content, entry.SurroundingContent);
     }
 

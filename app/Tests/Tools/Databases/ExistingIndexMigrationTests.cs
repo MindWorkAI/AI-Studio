@@ -95,7 +95,7 @@ public sealed class ExistingIndexMigrationTests
             Assert.That(storedChunks, Is.EqualTo(new[] { new StoredChunk(oldChunkId, ChunkTextHash.Of(OLD_TEXT), 0) }), "A chunk stored before is hashed from its text, and it is generation 0.");
             Assert.That(oldLocations, Is.EquivalentTo(new Dictionary<string, ChunkLocation> { [oldChunkId] = new(PageNumber: 4) }), "A chunk stored before names its start page and nothing else.");
             Assert.That(foundNewChunk.Select(result => (result.ChunkText, result.StartLine, result.EndLine)), Is.EqualTo(new (string, int?, int?)[] { (NEW_TEXT, 12, 14) }), "A chunk stored after the migration reaches the full-text index, with where it is.");
-            Assert.That(storedColumns, Is.EqualTo(new (string?, int)[] { (null, 0), (ChunkTextHash.Of(NEW_TEXT), 0) }), "The old chunk is left as it was, and a new one keeps its hash.");
+            Assert.That(storedColumns, Is.EqualTo(new[] { (null, 0), (ChunkTextHash.Of(NEW_TEXT), 0) }), "The old chunk is left as it was, and a new one keeps its hash.");
             Assert.That(foundAfterDeleting, Is.Empty, "Deleting the document removes its chunks from the full-text index.");
         });
     }

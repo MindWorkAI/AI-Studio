@@ -36,11 +36,8 @@ public sealed partial class SqliteIndexStoreClientImplementation
         await using var context = this.CreateContext();
         var mailIds = FilterMails(context, dataSourceId, filter).Select(mail => mail.ParentFileId);
 
-        // Only the chunks a search may find, cf. GetHiddenChunksAsync:
-        return await context.EmbeddingChunks
-            .AsNoTracking()
+        return await SearchableChunks(context)
             .Where(chunk => mailIds.Contains(chunk.ParentFileId))
-            .Where(chunk => context.EmbeddedFiles.Any(file => file.ParentFileId == chunk.ParentFileId && file.ChunkCount > 0 && file.Generation == chunk.Generation))
             .Select(chunk => chunk.ChunkId)
             .ToListAsync(token);
     }
@@ -179,6 +176,13 @@ public sealed partial class SqliteIndexStoreClientImplementation
             .Select(mail => mail.ParentFileId)
             .FirstOrDefaultAsync(token);
     }
+
+    /// <summary>
+    /// The chunks a search may find: those of the generation their document is searched by, cf. GetHiddenChunksAsync.
+    /// </summary>
+    private static IQueryable<EmbeddingStateChunkEntity> SearchableChunks(IndexStoreDbContext context) => context.EmbeddingChunks
+        .AsNoTracking()
+        .Where(chunk => context.EmbeddedFiles.Any(file => file.ParentFileId == chunk.ParentFileId && file.ChunkCount > 0 && file.Generation == chunk.Generation));
 
     /// <summary>
     /// The mails of a mailbox which meet the conditions, as a query to build on.

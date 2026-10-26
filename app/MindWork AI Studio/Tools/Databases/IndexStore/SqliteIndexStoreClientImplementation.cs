@@ -418,23 +418,28 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
     public override Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(string dataSourceId, CancellationToken token) => Task.Run<IReadOnlyList<HiddenChunks>>(async () =>
     {
         await using var context = this.CreateContext();
-
-        //
-        // Asked before every vector search. For a document without hidden chunks, which is nearly
-        // every document, this costs two lookups in the index over parent, generation and position:
-        // one below the generation of its row and one above it.
-        //
-        var documents = await context.EmbeddedFiles
-            .AsNoTracking()
-            .Where(file => file.DataSourceId == dataSourceId)
-            .Where(file => file.ChunkCount <= 0
-                || context.EmbeddingChunks.Any(chunk => chunk.ParentFileId == file.ParentFileId && chunk.Generation < file.Generation)
-                || context.EmbeddingChunks.Any(chunk => chunk.ParentFileId == file.ParentFileId && chunk.Generation > file.Generation))
+        var documents = await DocumentsWithHiddenChunks(context, dataSourceId)
             .Select(file => new { file.ParentFileId, file.ChunkCount, file.Generation })
             .ToListAsync(token);
 
         return documents.Select(document => new HiddenChunks(document.ParentFileId, document.ChunkCount > 0 ? document.Generation : null)).ToList();
     }, token);
+
+    /// <summary>
+    /// The documents of a data source with chunks a search must not find: those whose row names no
+    /// generation yet, and those with chunks of another generation than the one their row names.
+    /// </summary>
+    /// <remarks>
+    /// Asked before every vector search. For a document without hidden chunks, which is nearly
+    /// every document, this costs two lookups in the index over parent, generation and position:
+    /// one below the generation of its row and one above it.
+    /// </remarks>
+    private static IQueryable<EmbeddingStateFileEntity> DocumentsWithHiddenChunks(IndexStoreDbContext context, string dataSourceId) => context.EmbeddedFiles
+        .AsNoTracking()
+        .Where(file => file.DataSourceId == dataSourceId)
+        .Where(file => file.ChunkCount <= 0
+            || context.EmbeddingChunks.Any(chunk => chunk.ParentFileId == file.ParentFileId && chunk.Generation < file.Generation)
+            || context.EmbeddingChunks.Any(chunk => chunk.ParentFileId == file.ParentFileId && chunk.Generation > file.Generation));
 
     public override async Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token)
     {

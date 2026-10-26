@@ -18,9 +18,9 @@
             @if (this.views.Count > 1)
             {
                 <MudToggleGroup T="ContentView" @bind-Value="@this.view" SelectionMode="SelectionMode.SingleSelection" Size="Size.Small" Color="Color.Primary">
-                    @foreach (var view in this.views)
+                    @foreach (var offeredView in this.views)
                     {
-                        <MudToggleItem Value="@view" Text="@this.GetViewName(view)"/>
+                        <MudToggleItem Value="@offeredView" Text="@this.GetViewName(offeredView)"/>
                     }
                 </MudToggleGroup>
             }

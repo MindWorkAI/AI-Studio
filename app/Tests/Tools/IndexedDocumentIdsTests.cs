@@ -53,7 +53,7 @@ public sealed class IndexedDocumentIdsTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(IndexedDocumentIds.CreateChunkIdSource(DATA_SOURCE_ID, KEY, parentId, "3F9A0C", 0), Is.EqualTo("3F9A0C"), "The first generation gives the ids documents got before generations existed.");
+            Assert.That(IndexedDocumentIds.CreateChunkIdSource(DATA_SOURCE_ID, KEY, parentId, "3F9A0C"), Is.EqualTo("3F9A0C"), "The first generation gives the ids documents got before generations existed.");
             Assert.That(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, IndexedDocumentIds.CreateChunkIdSource(DATA_SOURCE_ID, KEY, parentId, "3F9A0C", 1), 0), Is.EqualTo("10e9f029-bc45-a048-9db1-e5ac74777ddb"));
         });
     }
