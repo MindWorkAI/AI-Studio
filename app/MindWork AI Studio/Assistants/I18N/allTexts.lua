@@ -5686,6 +5686,57 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T80509
 -- Example text to embed
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T816748904"] = "Example text to embed"
 
+-- Add Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1076773091"] = "Add Format Template"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1469573738"] = "Delete"
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1582017048"] = "View"
+
+-- The template file cannot be found.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1941431282"] = "The template file cannot be found."
+
+-- No format templates configured yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1955378082"] = "No format templates configured yet."
+
+-- Import Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T2773597251"] = "Import Format Template"
+
+-- Edit Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T2823861742"] = "Edit Format Template"
+
+-- Format Template Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3093558555"] = "Format Template Name"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3267849393"] = "Edit"
+
+-- Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3535588207"] = "Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them."
+
+-- Configure Format Templates
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3602749709"] = "Configure Format Templates"
+
+-- Are you sure you want to delete the format template '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3671173081"] = "Are you sure you want to delete the format template '{0}'?"
+
+-- This format template is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3691770332"] = "This format template is managed by your organization."
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3865031940"] = "Actions"
+
+-- Delete Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T4087833621"] = "Delete Format Template"
+
+-- View Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T4157017975"] = "View Format Template"
+
+-- File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T723007075"] = "File"
+
 -- Cannot export the encrypted API key: No enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T1832230847"] = "Cannot export the encrypted API key: No enterprise encryption secret is configured."
 
@@ -6769,6 +6820,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T1238255445
 -- No
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T1642511898"] = "No"
 
+-- {0} format templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T1678803903"] = "{0} format templates"
+
 -- {0} introductions on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2107991661"] = "{0} introductions on the welcome page"
 
@@ -6807,6 +6861,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T330559934"
 
 -- {0} LLM provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3410030691"] = "{0} LLM provider"
+
+-- {0} format template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3429007574"] = "{0} format template"
 
 -- Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3616855807"] = "Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files."
@@ -8083,6 +8140,51 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T1173984541"] = "Embe
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T3448155331"] = "Close"
 
+-- The name of the format template is mandatory, and each format template must have a unique name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1062147464"] = "The name of the format template is mandatory, and each format template must have a unique name."
+
+-- Please select a template file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T11274556"] = "Please select a template file."
+
+-- The selected file is not a supported format template. Supported file types are: {0}.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1231150347"] = "The selected file is not a supported format template. Supported file types are: {0}."
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1847791252"] = "Update"
+
+-- Store a template for the documents you export, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2350018173"] = "Store a template for the documents you export, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2646845972"] = "Add"
+
+-- The name of the format template must not exceed 40 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2793461942"] = "The name of the format template must not exceed 40 characters."
+
+-- Format Template Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3093558555"] = "Format Template Name"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3448155331"] = "Close"
+
+-- Template file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3609077655"] = "Template file"
+
+-- The template file does not exist.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3882045083"] = "The template file does not exist."
+
+-- The name of the format template must be unique; the chosen name is already in use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4239698038"] = "The name of the format template must be unique; the chosen name is already in use."
+
+-- Select a format template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4261636653"] = "Select a format template"
+
+-- Please enter a name for the format template.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T454079616"] = "Please enter a name for the format template."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T900713019"] = "Cancel"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::INFORMATIONDIALOG::T3448155331"] = "Close"
 
@@ -8188,6 +8290,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1573770551"] = "Version
 -- Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1642243064"] = "Source"
 
+-- {0} format templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1678803903"] = "{0} format templates"
+
 -- You are about to install a language plugin from a file.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1974491324"] = "You are about to install a language plugin from a file."
 
@@ -8244,6 +8349,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3415610475"] = "This re
 
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3424652889"] = "Unknown"
+
+-- {0} format template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3429007574"] = "{0} format template"
 
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3512062061"] = "Type"
@@ -13939,6 +14047,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXT
 -- Transcription Provider
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T4094182084"] = "Transcription Provider"
 
+-- Format Template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T675897640"] = "Format Template"
+
 -- Data Source
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T858938618"] = "Data Source"
 
@@ -15162,6 +15273,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
+
+-- Format template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T779618568"] = "Format template"
 
 -- Image for AI models
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T791951937"] = "Image for AI models"

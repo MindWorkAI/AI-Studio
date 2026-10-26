@@ -1,5 +1,6 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -60,9 +61,31 @@ public partial class SettingsPanelFormatTemplates : SettingsPanelBase
             { x => x.IsEditing, false },
         };
 
+        await this.AddFormatTemplate(dialogParameters, isImport: false);
+    }
+
+    private async Task ImportFormatTemplate()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.FORMAT_TEMPLATE, T("Import Format Template"));
+        if (import?.ConfigurationObject is not FormatTemplate formatTemplate)
+            return;
+
+        await this.AddFormatTemplate(CreateDialogParameters(formatTemplate, isEditing: false), isImport: true);
+    }
+
+    private async Task AddFormatTemplate(DialogParameters<FormatTemplateDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<FormatTemplateDialog>(T("Add Format Template"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported format template is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.FORMAT_TEMPLATE))
             return;
 
         var addedFormatTemplate = (FormatTemplate)dialogResult.Data!;
@@ -105,6 +128,19 @@ public partial class SettingsPanelFormatTemplates : SettingsPanelBase
         { x => x.IsEditing, isEditing },
         { x => x.IsReadOnly, isReadOnly },
     };
+
+    private async Task ExportFormatTemplate(FormatTemplate formatTemplate)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        if (formatTemplate.IsEnterpriseConfiguration)
+            return;
+
+        var luaCode = formatTemplate.ExportAsConfigurationSection();
+        if (!string.IsNullOrWhiteSpace(luaCode))
+            await this.RustService.CopyText2Clipboard(luaCode);
+    }
 
     private async Task DeleteFormatTemplate(FormatTemplate formatTemplate)
     {

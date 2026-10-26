@@ -1,3 +1,4 @@
+@using AIStudio.Tools.PluginSystem
 @inherits SettingsPanelBase
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Description" HeaderText="@T("Configure Format Templates")">
@@ -47,6 +48,7 @@
                         <MudTooltip Text="@T("Edit")">
                             <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditFormatTemplate(context))"/>
                         </MudTooltip>
+                        <AdminExportButton OnClick="@(() => this.ExportFormatTemplate(context))" />
                         <MudTooltip Text="@T("Delete")">
                             <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteFormatTemplate(context))"/>
                         </MudTooltip>
@@ -67,5 +69,6 @@
         <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddFormatTemplate">
             @T("Add Format Template")
         </MudButton>
+        <LockableButton Text="@T("Import Format Template")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.FORMAT_TEMPLATE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportFormatTemplate" ButtonVariant="Variant.Outlined" Class="flex-grow-0" NoMargin="true" />
     </MudStack>
 </ExpansionPanel>

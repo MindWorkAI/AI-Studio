@@ -611,6 +611,7 @@ Enable **Show administration settings** in the app settings once. It reveals the
 | Chat templates | the chat template dialog in the app settings | templates you created yourself |
 | ERI data sources | the data source list in the app settings | ERI sources only, and not the ones using Kerberos |
 | Document analysis policies | the Document Analysis assistant itself | the policy you have selected |
+| Format templates | the format template list in the app settings | templates you created yourself |
 | Tools | **Tool Settings** in the app settings | every tool |
 
 Anything your organization already manages has no export button: it came from a plugin to begin with. Local files and local directories have none either — such a data source exists on one machine only, so there is nothing to hand to your colleagues.
@@ -631,7 +632,7 @@ Not everything worth sharing calls for a configuration plugin. Say somebody buil
 
 - **Data only.** AI Studio reads the fragment with the same rules as a configuration plugin, but it never runs it. A fragment which contains anything other than values, such as a function call, a variable, or an expression, is refused.
 - **An item of the user's own.** The imported item gets an ID of its own and belongs to no configuration plugin, even when the fragment came from one. Importing the same fragment twice gives two items.
-- **Reviewed before it is saved.** Providers, profiles, chat templates, and data sources open in their usual form, filled in, so the user checks everything before saving. A document analysis policy is added right away and selected, and the user edits it in the assistant like any other.
+- **Reviewed before it is saved.** Providers, profiles, chat templates, data sources, and format templates open in their usual form, filled in, so the user checks everything before saving. A document analysis policy is added right away and selected, and the user edits it in the assistant like any other.
 - **Hints first.** Before that, the dialog lists what the user should know: a preselected provider, profile, data source, or tool which does not exist on this computer, a tokenizer which is not on this computer and is therefore left out, an API key which cannot be decrypted, and every local file which a chat template would attach to each of its chats. Attachments which are not on this computer are relinked or removed in the form. An exported provider names the copy of its tokenizer on the computer it came from, so the tokenizer comes along only when the fragment is imported there.
 - **Secrets.** An API key, token, or password which the export included in encrypted form is decrypted only where the encryption secret of your organization is configured, see [Encrypted API Keys](#encrypted-api-keys). Without it, a provider is imported without its key, and an ERI data source with a token or password cannot be imported at all. Data sources which sign in with Kerberos cannot be imported either.
 - **No connection on its own.** Importing contacts no server. The user loads the models of a provider, or tests the connection of a data source, in the form.
@@ -652,6 +653,7 @@ Each of these settings is `true` by default:
 | `DataApp.AllowUserToImportChatTemplate` | chat templates |
 | `DataApp.AllowUserToImportERIDataSource` | ERI data sources |
 | `DataApp.AllowUserToImportDocumentAnalysisPolicy` | document analysis policies |
+| `DataApp.AllowUserToImportFormatTemplate` | format templates |
 
 An import needs both the first setting and the one of its type. A provider also needs what adding one by hand needs: `DataApp.AllowUserToAddProvider` and the setting of its kind, such as `DataApp.AllowUserToAddLLMProvider`. A locked **Import** button stays visible with a lock. The permission is checked once more when the user saves, so locking imports while somebody fills in a form still holds. Importing plugin archives has a setting of its own, `DataApp.AllowUserToImportPlugins`.
 
@@ -906,7 +908,7 @@ What stays out:
 
 ### Settings and objects of your configurations
 
-Before the settings go into a backup, AI Studio leaves out every object which a configuration plugin manages: LLM, embedding, and transcription providers, profiles, chat templates, data sources, and document analysis policies. On a computer which receives your configurations, these objects come back from there, along with their API keys, and nothing appears twice. The same holds for configuration plugins the user installed themselves: they go into the backup as plugins and bring their objects back after a restore.
+Before the settings go into a backup, AI Studio leaves out every object which a configuration plugin manages: LLM, embedding, and transcription providers, profiles, chat templates, data sources, document analysis policies, and format templates. On a computer which receives your configurations, these objects come back from there, along with their API keys, and nothing appears twice. The same holds for configuration plugins the user installed themselves: they go into the backup as plugins and bring their objects back after a restore.
 
 A setting which your configuration locks stays in the backup, together with the configuration which locked it. After a restore, AI Studio treats it like the setting of a withdrawn configuration until your configuration locks it again, see [Withdrawing a configuration](#withdrawing-a-configuration). On a device which receives your configurations, the setting therefore ends up as you configured it. On one without them, the user gets back the value they had chosen before your configuration took the setting over.
 

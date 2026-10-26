@@ -42,6 +42,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         PluginConfigurationObjectType.CHAT_TEMPLATE,
         PluginConfigurationObjectType.DATA_SOURCE,
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY,
+        PluginConfigurationObjectType.FORMAT_TEMPLATE,
     ];
 
     private string temporaryDirectory = string.Empty;
@@ -93,6 +94,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     [TestCase(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER)]
     [TestCase(PluginConfigurationObjectType.PROFILE)]
     [TestCase(PluginConfigurationObjectType.DATA_SOURCE)]
+    [TestCase(PluginConfigurationObjectType.FORMAT_TEMPLATE)]
     public void AnImportKeepsEveryValueButTheIdentity(PluginConfigurationObjectType type)
     {
         var (original, snippet) = Export(type);
@@ -672,6 +674,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             case PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY:
                 var policy = PolicyWith(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), ["web_search", "read_web_page"]);
                 return (policy, policy.ExportAsConfigurationSection());
+
+            // The file does not exist, which an import must not look up:
+            case PluginConfigurationObjectType.FORMAT_TEMPLATE:
+                var formatTemplate = new FormatTemplate(1, Guid.NewGuid().ToString(), "Annual report", Path.Combine(Path.GetTempPath(), "templates", "Annual report.dotx"));
+                return (formatTemplate, formatTemplate.ExportAsConfigurationSection());
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, "This test knows no export for this type.");
