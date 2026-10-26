@@ -856,6 +856,38 @@ public static partial class WorkspaceBehaviour
     public static bool IsWorkspaceExisting(Guid workspaceId) => workspaceId == Guid.Empty || Directory.Exists(Path.Join(WorkspaceRootDirectory, workspaceId.ToString()));
 
     /// <summary>
+    /// Reads where every chat on the disk lies: in which workspace, or among the temporary chats.
+    /// </summary>
+    /// <remarks>
+    /// Only the directories are read, no thread, so this stays fast with many chats.
+    /// </remarks>
+    /// <returns>The workspace of every chat by its ID, Guid.Empty for a temporary chat.</returns>
+    public static IReadOnlyDictionary<Guid, Guid> ReadAllChatLocations()
+    {
+        var chatLocations = new Dictionary<Guid, Guid>();
+        if (Directory.Exists(WorkspaceRootDirectory))
+        {
+            foreach (var workspacePath in Directory.EnumerateDirectories(WorkspaceRootDirectory))
+            {
+                if (!Guid.TryParse(Path.GetFileName(workspacePath), out var workspaceId))
+                    continue;
+
+                foreach (var chatId in ReadChatIdsOfWorkspace(workspaceId))
+                    chatLocations[chatId] = workspaceId;
+            }
+        }
+
+        if (Directory.Exists(TemporaryChatsRootDirectory))
+        {
+            foreach (var chatPath in Directory.EnumerateDirectories(TemporaryChatsRootDirectory))
+                if (Guid.TryParse(Path.GetFileName(chatPath), out var chatId))
+                    chatLocations[chatId] = Guid.Empty;
+        }
+
+        return chatLocations;
+    }
+
+    /// <summary>
     /// Reads the IDs of the chats the given workspace holds on the disk.
     /// </summary>
     /// <param name="workspaceId">The workspace to read.</param>
@@ -986,6 +1018,8 @@ public static partial class WorkspaceBehaviour
             if (!await StoreChatAsync(copiedChat))
                 throw new IOException($"The copied chat could not be stored: '{targetDirectory}'.");
 
+            // The copy refers to the same entries as its original, and gets entries of its own, so that deleting either chat leaves the other whole:
+            await ChatProvenance.CopyChatAsync(sourceChat.ChatId, copiedChat.ChatId);
             return copiedChat;
         }
         catch
@@ -1038,12 +1072,16 @@ public static partial class WorkspaceBehaviour
         if (File.Exists(sourcePath))
             File.Copy(sourcePath, targetPath);
 
+        // The copy of the file holds the same transcript, so it keeps the entry of the text it was sent with:
         var copiedAttachment = new ManagedTranscriptAttachment(
             Path.GetFileName(targetPath),
             targetPath,
             File.Exists(targetPath) ? new FileInfo(targetPath).Length : source.FileSizeBytes,
             source.OriginalFileName,
-            false);
+            false)
+        {
+            ProvenanceId = source.ProvenanceId,
+        };
         copiedPaths[sourcePath] = copiedAttachment;
         return copiedAttachment;
     }
@@ -1291,6 +1329,16 @@ public static partial class WorkspaceBehaviour
         ? Path.Join(SettingsManager.DataDirectory, "tempChats", chatId.ToString())
         : Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString(), chatId.ToString());
 
+    /// <summary>
+    /// Reads when a chat was last written to the disk.
+    /// </summary>
+    /// <returns>The moment, or null when the chat has no file.</returns>
+    public static DateTimeOffset? GetChatWrittenAt(Guid workspaceId, Guid chatId)
+    {
+        var chatPath = Path.Join(GetChatDirectory(workspaceId, chatId), "thread.json");
+        return File.Exists(chatPath) ? new DateTimeOffset(File.GetLastWriteTimeUtc(chatPath)) : null;
+    }
+
     public static async Task<ChatThread?> LoadChatAsync(LoadChat loadChat)
     {
         var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(loadChat.WorkspaceId, loadChat.ChatId, nameof(LoadChatAsync));
@@ -1411,12 +1459,27 @@ public static partial class WorkspaceBehaviour
                 return false;
         }
 
-        var chatDirectory = chat.WorkspaceId == Guid.Empty
-            ? Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString())
-            : Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
+        return await DeleteChatWithoutAskingAsync(workspaceId, chatId);
+    }
 
-        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(workspaceId, chatId, nameof(DeleteChatAsync));
-        
+    /// <summary>
+    /// Deletes the given chat without asking, together with what it received.
+    /// </summary>
+    /// <param name="workspaceId">Workspace that owns the chat; an empty id means a temporary chat.</param>
+    /// <param name="chatId">Chat to delete.</param>
+    /// <returns>True when the chat is gone, which includes it never having been there. False when another operation holds it.</returns>
+    /// <remarks>
+    /// The way every chat leaves the disk: the one the user deletes, see DeleteChatAsync, and the
+    /// temporary one which the maintenance deletes, see TemporaryChatService. What a chat received,
+    /// e.g., the documents and web pages in the provenance store, goes along right away, so that it
+    /// does not outlive the chat until the next start. A chat which is still open and gets stored
+    /// again afterward comes back without it.
+    /// </remarks>
+    internal static async Task<bool> DeleteChatWithoutAskingAsync(Guid workspaceId, Guid chatId)
+    {
+        var chatDirectory = GetChatDirectory(workspaceId, chatId);
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(workspaceId, chatId, nameof(DeleteChatWithoutAskingAsync));
+
         // Another operation holds the chat, so it stays where it is:
         if (!acquired)
             return false;
@@ -1434,6 +1497,8 @@ public static partial class WorkspaceBehaviour
             ForgetChatSemaphore(workspaceId, chatId);
         }
 
+        // What the chat received goes with it:
+        await ChatProvenance.ForgetChatsAsync([chatId]);
         return true;
     }
 
@@ -1466,6 +1531,8 @@ public static partial class WorkspaceBehaviour
         foreach (var chatId in chatIds)
             ForgetChatSemaphore(workspaceId, chatId);
 
+        // What its chats received goes with them:
+        await ChatProvenance.ForgetChatsAsync(chatIds);
         return true;
     }
 

@@ -173,11 +173,14 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// Describes the data sources this provider may search in this chat, and offers exactly those.
     /// </summary>
     /// <remarks>
-    /// Without a data source to offer, the tool stays out of the request: the model should not
-    /// learn about a search which can only come back empty. A data source whose ERI server could
-    /// not be reached is the exception. The model learns about it even when nothing else can be
-    /// searched, so that it tells the user what is missing instead of answering as though the chat
-    /// had no data sources at all.<br/><br/>
+    /// Without a data source to search, the tool stays out of the request: the model should not
+    /// learn about a search which can only come back empty. It would search all the same, since
+    /// the instructions ask it to search before it answers, and every such call costs a round of
+    /// the answer for nothing.<br/><br/>
+    /// The model still learns about the data sources of the chat whose ERI server could not be
+    /// reached, so that it tells the user what is missing instead of answering as though the chat
+    /// had no data sources at all: next to the data sources it may search, in the description of
+    /// this tool, and without any, in the system prompt, see AISrcSelWithRetCtxVal.<br/><br/>
     /// The descriptions of ERI data sources are asked from their servers and kept for a few
     /// minutes, so that asking for every request costs no more than the check of the data sources
     /// the classic RAG process makes with every message, too.
@@ -185,7 +188,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     public async ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default)
     {
         var offered = await this.GetOfferedDataSourcesAsync(context.Provider, context.ChatThread);
-        if (offered.IsEmpty)
+        if (!offered.IsSearchable)
             return null;
 
         var descriptions = await Task.WhenAll(offered.Searchable.Select(dataSource => descriptionService.GetDescriptionAsync(dataSource, token)));
@@ -201,15 +204,24 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// user selected, as far as the provider may use them. Only the chat provider counts, since no
     /// agent takes part, see DataSourceService.GetParticipatingAgents.<br/><br/>
     /// Preparing a request knows the provider by its settings, running a call by the provider
-    /// itself. Both ask the same question, so both come here.
+    /// itself. Both ask the same question, so both come here. The classic RAG process asks here as
+    /// well while it steps back for this tool, so that it names the unreachable data sources in the
+    /// system prompt exactly when the tool stays out.
     /// </remarks>
     private Task<OfferedDataSources> GetOfferedDataSourcesAsync(AIStudio.Settings.Provider provider, ChatThread thread) =>
-        this.GetOfferedDataSourcesAsync(thread, (options, preselectedDataSources) => dataSourceService.GetDataSources(provider, options, DataSourceRetrievalMode.SEMANTIC_SEARCH, preselectedDataSources));
+        GetOfferedDataSourcesAsync(settingsManager, thread, (options, preselectedDataSources) => dataSourceService.GetDataSources(provider, options, DataSourceRetrievalMode.SEMANTIC_SEARCH, preselectedDataSources));
 
     private Task<OfferedDataSources> GetOfferedDataSourcesAsync(IProvider provider, ChatThread thread) =>
-        this.GetOfferedDataSourcesAsync(thread, (options, preselectedDataSources) => dataSourceService.GetDataSources(provider, options, DataSourceRetrievalMode.SEMANTIC_SEARCH, preselectedDataSources));
+        GetOfferedDataSourcesAsync(settingsManager, dataSourceService, provider, thread);
 
-    private async Task<OfferedDataSources> GetOfferedDataSourcesAsync(ChatThread thread, Func<DataSourceOptions, IReadOnlyCollection<IDataSource>, Task<AllowedSelectedDataSources>> checkDataSources)
+    /// <param name="settingsManager">The settings.</param>
+    /// <param name="dataSourceService">The data source service, which checks the data sources.</param>
+    /// <param name="provider">The LLM provider which answers.</param>
+    /// <param name="thread">The chat thread.</param>
+    internal static Task<OfferedDataSources> GetOfferedDataSourcesAsync(SettingsManager settingsManager, DataSourceService dataSourceService, IProvider provider, ChatThread thread) =>
+        GetOfferedDataSourcesAsync(settingsManager, thread, (options, preselectedDataSources) => dataSourceService.GetDataSources(provider, options, DataSourceRetrievalMode.SEMANTIC_SEARCH, preselectedDataSources));
+
+    private static async Task<OfferedDataSources> GetOfferedDataSourcesAsync(SettingsManager settingsManager, ChatThread thread, Func<DataSourceOptions, IReadOnlyCollection<IDataSource>, Task<AllowedSelectedDataSources>> checkDataSources)
     {
         // When the user wants AI Studio to search with every message, the model does not search itself:
         var options = thread.DataSourceOptions;
@@ -272,11 +284,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         var description = new StringBuilder(DESCRIPTION);
         description.AppendLine();
         description.AppendLine();
-        if (dataSources.Count == 0)
-            description.AppendLine("None of the data sources of this chat can be searched right now.");
-        else
-            description.AppendLine($"The data sources you may search, by the ID to pass in {DATA_SOURCE_IDS_ARGUMENT}:");
-
+        description.AppendLine($"The data sources you may search, by the ID to pass in {DATA_SOURCE_IDS_ARGUMENT}:");
         foreach (var (dataSource, dataSourceDescription) in dataSources)
         {
             description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}, results per page={dataSource.MaxMatches}, last page={dataSource.GetLastPage()}");
@@ -363,14 +371,15 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
         var textContent = new StringBuilder();
         var sources = new List<Source>();
+        var passages = new List<SourcePassage>();
         var resultCounts = new int[pages.Length];
         var leftOutCounts = new int[pages.Length];
         var passageCount = 0;
 
         //
         // Every passage goes through the same filter for prompt injections and into the same shape
-        // as with the classic RAG process. The user hears about what was filtered once for the
-        // whole search, not once per passage.
+        // as with the classic RAG process. All of them are filtered in one request, so the user
+        // hears about what was filtered once for the whole search, not once per passage.
         //
         // The data sources take turns: first the best passage of each, then the second best of
         // each, and so on. Otherwise, the data source offered first would take the budget, and the
@@ -378,6 +387,13 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         //
         await using (var reportingScope = guardService.BeginAction())
         {
+            var preparedContexts = await pages.SelectMany(page => page.Contexts).ToList().PrepareForModelAsync(guardService, reportingScope, token);
+
+            // Where the prepared contexts of each data source begin, since they are prepared all together:
+            var firstOfPage = new int[pages.Length];
+            for (var index = 1; index < pages.Length; index++)
+                firstOfPage[index] = firstOfPage[index - 1] + pages[index - 1].Contexts.Count;
+
             var mostPassages = pages.Select(page => page.Contexts.Count).DefaultIfEmpty(0).Max();
             for (var rank = 0; rank < mostPassages; rank++)
             {
@@ -386,11 +402,11 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                     if (rank >= pages[index].Contexts.Count)
                         continue;
 
-                    var retrievalContext = pages[index].Contexts[rank];
-                    var passage = await retrievalContext.AsMarkdown(index: passageCount + 1, reportingScope: reportingScope, token: token);
+                    var preparedContext = preparedContexts[firstOfPage[index] + rank];
+                    var markdown = preparedContext.ToMarkdown(passageCount + 1);
 
                     // A passage too long for what is left makes room for shorter ones after it:
-                    if (textContent.Length + passage.Length > MAX_RESULT_CHARACTERS)
+                    if (textContent.Length + markdown.Length > MAX_RESULT_CHARACTERS)
                     {
                         leftOutCounts[index]++;
                         continue;
@@ -398,8 +414,12 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
                     passageCount++;
                     resultCounts[index]++;
-                    textContent.Append(passage);
-                    sources.AddRange(retrievalContext.ToSources());
+                    textContent.Append(markdown);
+
+                    // The user is shown what the model received, so only the passages which fit:
+                    sources.AddRange(preparedContext.Sources);
+                    if (preparedContext.Passage is not null)
+                        passages.Add(preparedContext.Passage);
                 }
             }
         }
@@ -426,6 +446,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                 ["text_content"] = textContent.ToString(),
             },
             Sources = sources,
+            Passages = passages,
             RequiredProviderConfidence = requirements.Confidence,
             RequiredDataSecurity = requirements.Security,
             RequiredOutboundDataRestriction = requirements.OutboundData,

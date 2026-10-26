@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
 
@@ -260,6 +261,11 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             WebPageModelContent.From(retrievedPage.ExtractedPage, markdown),
             PromptInjectionSource.WebContent(page.FinalUrl.ToString()));
 
+        //
+        // The search page is what AI Studio actually read. Pages found on it become sources once
+        // read_web_page loads them. What the model read of it can be read under its source:
+        //
+        var source = new Source(string.Format(TB("Confluence search for “{0}”"), query), page.FinalUrl.ToString(), SourceOrigin.TOOL);
         return new ToolExecutionResult
         {
             JsonContent = new JsonObject
@@ -269,9 +275,8 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
                 ["text_content"] = modelContent.Markdown,
             },
 
-            // The search page is what AI Studio actually read. Pages found on it become sources
-            // once read_web_page loads them:
-            Sources = [new Source(string.Format(TB("Confluence search for “{0}”"), query), page.FinalUrl.ToString(), SourceOrigin.TOOL)],
+            Sources = [source],
+            Passages = [source.ToWebPagePassage(modelContent.Markdown)],
             RequiredProviderConfidence = ConfidenceLevel.HIGH,
 
             // Set here only, on a search which returned content: a refused or failed one brought

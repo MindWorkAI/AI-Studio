@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
 
@@ -579,6 +580,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
         var resultArray = new JsonArray();
         var sources = new List<Source>();
+        var passages = new List<SourcePassage>();
         for (var resultIndex = 0; resultIndex < retrievalResult.Results.Count; resultIndex++)
         {
             var result = retrievalResult.Results[resultIndex];
@@ -595,7 +597,11 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
             var finalUrl = result.CitationUrl.ToString();
             var title = SearchCandidate.FirstNonEmpty(sanitizedContent.Title, finalUrl);
-            sources.Add(new Source(title, finalUrl, SourceOrigin.TOOL));
+            var source = new Source(title, finalUrl, SourceOrigin.TOOL);
+            sources.Add(source);
+
+            // What the model read of the page, so the user can read it under its source:
+            passages.Add(source.ToWebPagePassage(sanitizedContent.Markdown));
         }
 
         var retrievedPageCount = retrievalResult.Results.Count(result => result.HasPageContent);
@@ -665,6 +671,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         {
             JsonContent = resultObject,
             Sources = sources,
+            Passages = passages,
         };
     }
 

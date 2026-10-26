@@ -9,6 +9,7 @@ using AIStudio.Tools.RAG.AugmentationProcesses;
 using AIStudio.Tools.RAG.DataSourceSelectionProcesses;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 
 namespace AIStudio.Tools.RAG.RAGProcesses;
 
@@ -65,11 +66,14 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
 
             //
             // When the model searches the data sources itself, AI Studio does not search them as
-            // well. The reset above already dropped whatever an earlier message retrieved:
+            // well. The reset above already dropped whatever an earlier message retrieved. Only
+            // the data sources whose server could not be reached may still need a word here:
             //
             if (await IsSearchedByTheModelAsync(Program.SERVICE_PROVIDER.GetService<ToolRegistry>(), settings, provider, chatModel, chatThread))
             {
                 LOGGER.LogInformation("The model searches the data sources of this chat itself, aka Semantic Search. Skipping the RAG process.");
+                var offered = await SemanticSearchTool.GetOfferedDataSourcesAsync(settings, dataSourceService, provider, chatThread);
+                chatThread.AugmentedData = NoteWithoutSearchableDataSources(offered);
                 return chatThread;
             }
 
@@ -221,10 +225,13 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             //
             // Perform the augmentation of the R(A)G process:
             //
+            IReadOnlyList<PreparedRetrievalContext> usedContexts = [];
             if (proceedWithRAG)
             {
                 var augmentationProcess = new AugmentationOne();
-                chatThread = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
+                var augmentation = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
+                chatThread = augmentation.ChatThread;
+                usedContexts = augmentation.UsedContexts;
             }
 
             //
@@ -236,30 +243,45 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             chatThread.AugmentedData = WithUnreachableDataSources(chatThread.AugmentedData, dataSources.GetUnreachableOfTheChat(chatThread.DataSourceOptions));
 
             //
-            // Add sources from the selected data
+            // Add the sources and passages of what the AI received:
             //
             
             // We know that the last block is the AI answer block (cf. check above):
             var aiAnswerBlock = chatThread.Blocks.Last();
-            var aiAnswerSources = aiAnswerBlock.Content?.Sources;
+            var aiAnswerContent = aiAnswerBlock.Content;
             
             // It should never happen that the AI answer block does not contain a content part.
             // Just in case, we check this:
-            if(aiAnswerSources is null)
+            if(aiAnswerContent is null)
                 return chatThread;
-            
-            var ragSources = new List<ISource>();
-            foreach (var retrievalContext in dataContexts)
-                ragSources.AddRange(retrievalContext.ToSources());
 
-            // Merge the sources, avoiding duplicates:
-            aiAnswerSources.MergeSources(ragSources);
+            AddWhatTheAIReceived(aiAnswerContent, usedContexts);
         }
         
         return chatThread;
     }
 
     #endregion
+
+    /// <summary>
+    /// Lists below the answer what the AI received: the sources and the passages of the retrieval
+    /// contexts handed to it.
+    /// </summary>
+    /// <remarks>
+    /// Only those: a passage which the check of which passages fit left out never reached the AI,
+    /// and the answer does not rest on it. Only a text answer keeps passages; every answer keeps
+    /// its sources.
+    /// </remarks>
+    /// <param name="aiAnswerContent">The content of the answer.</param>
+    /// <param name="usedContexts">The retrieval contexts handed to the AI.</param>
+    internal static void AddWhatTheAIReceived(IContent aiAnswerContent, IReadOnlyList<PreparedRetrievalContext> usedContexts)
+    {
+        var sources = usedContexts.SelectMany(context => context.Sources);
+        if (aiAnswerContent is ContentText aiAnswerText)
+            aiAnswerText.AddSources(sources, usedContexts.Select(context => context.Passage).OfType<SourcePassage>());
+        else
+            aiAnswerContent.Sources.MergeSources(sources);
+    }
 
     /// <summary>
     /// Restricts where the chat may still send data, because of the passages the retrieval brought in.
@@ -306,6 +328,22 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
         UnreachableDataSources.AppendTo(builder, unreachableDataSources);
         return builder.ToString();
     }
+
+    /// <summary>
+    /// What the model reads in the system prompt about the data sources of the chat while it searches them itself.
+    /// </summary>
+    /// <remarks>
+    /// Next to a data source the model may search, Semantic Search names those whose server could
+    /// not be reached in the description of its tool. Without one, the tool stays out of the
+    /// request, and the note goes into the system prompt instead, the same way as with the classic
+    /// process. Both ask the same place, SemanticSearchTool.GetOfferedDataSourcesAsync, but a few
+    /// moments apart: when the answer of an ERI server expires in between, the model may read that
+    /// a data source is out of reach which it may search after all, or hear nothing about it. That
+    /// is rare and lasts a single message, since the next one checks anew.
+    /// </remarks>
+    /// <param name="offered">The data sources Semantic Search offers in this request.</param>
+    /// <returns>The note on the data sources whose server could not be reached when the tool stays out, otherwise nothing.</returns>
+    internal static string NoteWithoutSearchableDataSources(OfferedDataSources offered) => offered.IsSearchable ? string.Empty : WithUnreachableDataSources(string.Empty, offered.Unreachable);
 
     /// <summary>
     /// Whether the model searches the data sources of this chat itself, through the tool semantic_search.

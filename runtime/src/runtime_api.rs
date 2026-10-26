@@ -41,6 +41,7 @@ fn create_router() -> Router {
         .route("/system/qdrant-edge/exists", post(crate::qdrant_edge_database::check_qdrant_edge_store))
         .route("/system/qdrant-edge/insert", post(crate::qdrant_edge_database::insert_qdrant_edge_embedding))
         .route("/system/qdrant-edge/search", post(crate::qdrant_edge_database::search_qdrant_edge_embeddings))
+        .route("/system/qdrant-edge/retrieve", post(crate::qdrant_edge_database::retrieve_qdrant_edge_vectors))
         .route("/system/qdrant-edge/delete-file", post(crate::qdrant_edge_database::delete_qdrant_edge_embedding_by_file))
         .route("/system/qdrant-edge/relocate-file", post(crate::qdrant_edge_database::relocate_qdrant_edge_embedding_file))
         .route("/system/qdrant-edge/optimize", post(crate::qdrant_edge_database::optimize_qdrant_edge_store))

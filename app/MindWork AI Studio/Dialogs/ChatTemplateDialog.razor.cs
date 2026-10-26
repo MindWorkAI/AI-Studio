@@ -183,7 +183,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         if (this.CreateFromExistingChatThread && this.ExistingChatThread is not null)
         {
             this.DataSystemPrompt = this.ExistingChatThread.SystemPrompt;
-            this.dataExampleConversation = this.ExistingChatThread.Blocks.Select(n => n.DeepClone(true)).ToList();
+            this.dataExampleConversation = this.ExistingChatThread.Blocks.Select(n => n.CloneApartFromChat(true)).ToList();
             this.DataName = this.ExistingChatThread.Name;
         }
 
@@ -211,7 +211,8 @@ public partial class ChatTemplateDialog : MSGComponentBase
         SystemPrompt = this.DataSystemPrompt,
         PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
-        FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize()).ToList(),
+        // Without the entries of their texts: every chat started from the template reads its files anew, cf. FileAttachment.ProvenanceId.
+        FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize().WithoutStoredText()).ToList(),
         AllowProfileUsage = this.AllowProfileUsage,
         ToolIds = this.preselectTools ? new HashSet<string>(this.selectedToolIds, StringComparer.Ordinal) : null,
         DataSourceOptions = this.preselectDataSources ? this.templateDataSourceOptions.CreateCopy() : null,

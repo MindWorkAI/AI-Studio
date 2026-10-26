@@ -215,22 +215,21 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// </summary>
     /// <remarks>
     /// Called once the kind of data source is sure the document did not change while it was read.
-    /// Until then, its index row says it has no chunks.
+    /// Until then, the document keeps the version it had, or its index row says it has no chunks
+    /// when it is new.<br/><br/>
+    /// The row names the new generation first, which every search goes by from then on, and only
+    /// then do the other generations go. A crash in between leaves chunks which no search finds,
+    /// and which the next indexing of the document removes.
     /// </remarks>
     /// <param name="document">The document.</param>
-    /// <param name="chunkCount">How many chunks were stored for it.</param>
+    /// <param name="indexed">What indexing the document stored.</param>
     /// <param name="isNew">Whether the index knew nothing about it before.</param>
     /// <param name="token">The cancellation token.</param>
-    public async Task RecordDocumentIndexedAsync(EmbeddingDocument document, int chunkCount, bool isNew, CancellationToken token)
+    public async Task RecordDocumentIndexedAsync(EmbeddingDocument document, IndexedDocument indexed, bool isNew, CancellationToken token)
     {
-        var embeddedAtUtc = DateTimeOffset.UtcNow;
-        var state = document.State with { ChunkCount = chunkCount, EmbeddedAtUtc = embeddedAtUtc };
-        await context.IndexStore.UpsertFileAsync(context.DataSource.Id, state, token);
-        context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount, state.TranscriptKey, state.RelativePath, state.ParentFileId);
-        await context.ForgetPermanentFailureAsync(document.Key, token);
-        context.Pass.Forget(document.Key);
+        await this.StoreDocumentStateAsync(document.Key, document.State with { ChunkCount = indexed.ChunkCount, Generation = indexed.Generation, EmbeddedAtUtc = DateTimeOffset.UtcNow }, token);
+        await context.CompleteDocumentAsync(document.Key, indexed, token);
 
-        this.readDocuments++;
         this.IndexedDocuments++;
         if (isNew)
             this.NewDocuments++;
@@ -239,9 +238,53 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     }
 
     /// <summary>
+    /// Records a document whose fingerprint changed while its content did not, e.g., a file saved again without edits.
+    /// </summary>
+    /// <remarks>
+    /// Its chunks and vectors stay as they are, under the ids they have. Only the new fingerprint
+    /// is written, into the vector store as well as into the index store, the way a relocation
+    /// writes it, so the next run finds the document unchanged. Nothing is read through the
+    /// runtime, and nothing goes to the embedding provider. An attempt which failed in between and
+    /// stays for its vectors is of no use any longer, and goes.
+    /// </remarks>
+    /// <param name="document">The document, as it would be indexed now.</param>
+    /// <param name="storedRecord">What the manifest knows about the document from its last indexing.</param>
+    /// <param name="token">The cancellation token.</param>
+    public async Task RecordContentUnchangedAsync(EmbeddingDocument document, EmbeddedFileRecord storedRecord, CancellationToken token)
+    {
+        var state = document.State with { ChunkCount = storedRecord.ChunkCount, EmbeddedAtUtc = storedRecord.EmbeddedAtUtc, TranscriptKey = storedRecord.TranscriptKey, Generation = storedRecord.Generation };
+        await context.VectorStore.RelocateEmbeddingFileAsync(context.CollectionName, state.ParentFileId, state.AbsolutePath, state.RelativePath, state.Fingerprint, token);
+        token.ThrowIfCancellationRequested();
+        await this.StoreDocumentStateAsync(document.Key, state, token);
+        await context.KeepOnlyGenerationAsync(document.Key, storedRecord.Generation, token);
+
+        this.UnchangedDocuments++;
+    }
+
+    /// <summary>
+    /// Writes the row of a document which is in the index from now on, and what the manifest knows about it.
+    /// </summary>
+    /// <param name="documentKey">The key of the document.</param>
+    /// <param name="state">The row.</param>
+    /// <param name="token">The cancellation token.</param>
+    private async Task StoreDocumentStateAsync(string documentKey, EmbeddingStateFile state, CancellationToken token)
+    {
+        await context.IndexStore.UpsertFileAsync(context.DataSource.Id, state, token);
+        context.Manifest.Files[documentKey] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, state.EmbeddedAtUtc, state.ChunkCount, state.TranscriptKey, state.RelativePath, state.ParentFileId, state.ContentHash, state.Generation);
+        context.Manifest.UnfinishedFiles.Remove(documentKey);
+        await context.ForgetPermanentFailureAsync(documentKey, token);
+        context.Pass.Forget(documentKey);
+
+        this.readDocuments++;
+    }
+
+    /// <summary>
     /// Records why a document could not be indexed, and removes what the attempt left behind.
     /// </summary>
     /// <remarks>
+    /// A document indexed before keeps the version it had, whatever the failure, cf.
+    /// IndexedRunContext.CleanupFailedDocumentAsync. So it stays in the manifest, with the
+    /// fingerprint of that version, and the next run tries it again once the pass allows.<br/><br/>
     /// Never called for a cancelled run, nor for a vector store which cannot be read at all: those
     /// are not about one document, and whoever indexes has to let them through.
     /// </remarks>
@@ -269,7 +312,6 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 var failure = new DataSourceEmbeddingFailure(document.Key, providerFailure.UserMessage, DateTimeOffset.UtcNow, providerFailure.FailureReason, providerFailure.StatusCode, context.EmbeddingProvider.Name, DisplayName: document.DisplayName);
                 this.failures.Add(failure);
                 context.Pass.RecordFailure(document.Key, document.State.Fingerprint, failure);
-                context.Manifest.Files.Remove(document.Key);
                 await context.ForgetPermanentFailureAsync(document.Key, token);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
 
@@ -297,12 +339,12 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 // the document does. The reason is written into the index, and the fingerprint next
                 // to it decides when to come back: an OCR run over a scanned PDF changes both size
                 // and write time, which is exactly the moment the file deserves another attempt.
+                // Meanwhile, a file indexed before can still be found by its last good version.
                 //
                 this.PermanentlySkippedDocuments++;
                 var occurredAtUtc = DateTimeOffset.UtcNow;
                 var indexingMessage = this.GetFailureMessage(extractionFailure.Code, document, extractionFailure.Message);
                 this.failures.Add(new DataSourceEmbeddingFailure(document.Key, indexingMessage, occurredAtUtc, ExtractionCode: extractionFailure.Code, IsPermanent: true, DisplayName: document.DisplayName));
-                context.Manifest.Files.Remove(document.Key);
                 context.Pass.Forget(document.Key);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
 
@@ -346,7 +388,6 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 var failure = new DataSourceEmbeddingFailure(document.Key, failureMessage, DateTimeOffset.UtcNow, EmbeddingProviderName: context.EmbeddingProvider.Name, ExtractionCode: extractionCode, DisplayName: document.DisplayName);
                 this.failures.Add(failure);
                 context.Pass.RecordFailure(document.Key, document.State.Fingerprint, failure);
-                context.Manifest.Files.Remove(document.Key);
                 await context.ForgetPermanentFailureAsync(document.Key, token);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
 

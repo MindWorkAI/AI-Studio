@@ -69,7 +69,26 @@
 
             @if (this.ShowDedicatedProgress && this.IsProcessing)
             {
-                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
+                @if (this.processingStartedAt is null && string.IsNullOrWhiteSpace(this.ProgressText))
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
+                }
+                else
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />
+                    <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="3" Class="mb-6">
+                        @if (this.processingStartedAt is { } startedAt)
+                        {
+                            <ElapsedTime Start="@startedAt"/>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(this.ProgressText))
+                        {
+                            <MudText Typo="Typo.body2">
+                                @this.ProgressText
+                            </MudText>
+                        }
+                    </MudStack>
+                }
             }
             
             <div id="@RESULT_DIV_ID" class="mr-2 mt-3">

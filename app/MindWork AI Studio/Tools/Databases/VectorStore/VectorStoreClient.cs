@@ -14,7 +14,16 @@ public abstract class VectorStoreClient(string name, string path): DatabaseClien
 
     public abstract Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token);
 
-    public abstract Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token);
+    /// <summary>
+    /// Searches the points of a store.
+    /// </summary>
+    /// <param name="storeName">The name of the store.</param>
+    /// <param name="vector">The vector to search for.</param>
+    /// <param name="maxMatches">How many matches to return at most.</param>
+    /// <param name="hiddenChunks">The chunks of documents the search must not find, as the index store names them.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The matches, best first.</returns>
+    public abstract Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token);
 
     /// <summary>
     /// Searches only those points of a store which pass the filter.
@@ -23,11 +32,29 @@ public abstract class VectorStoreClient(string name, string path): DatabaseClien
     /// <param name="vector">The vector to search for.</param>
     /// <param name="maxMatches">How many matches to return at most.</param>
     /// <param name="filter">The points the search may return. Without any point, it finds nothing.</param>
+    /// <param name="hiddenChunks">The chunks of documents the search must not find, as the index store names them.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The matches, best first, all of them inside the filter.</returns>
-    public abstract Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token);
+    public abstract Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token);
 
-    public abstract Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, CancellationToken token);
+    /// <summary>
+    /// Reads the vectors of the given points.
+    /// </summary>
+    /// <param name="storeName">The name of the store.</param>
+    /// <param name="pointIds">The points.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The vectors of the points which exist, in no particular order. None when the store does not exist.</returns>
+    public abstract Task<IReadOnlyList<StoredVector>> RetrieveVectorsAsync(string storeName, IReadOnlyList<string> pointIds, CancellationToken token);
+
+    /// <summary>
+    /// Removes the points of one document, found by its path and by its parent id.
+    /// </summary>
+    /// <param name="storeName">The name of the store.</param>
+    /// <param name="filePath">The key of the document.</param>
+    /// <param name="parentFileId">The parent id of the document, or empty when it has none yet.</param>
+    /// <param name="keepPointIds">The points of the document which stay, e.g., the ones an indexing run just wrote.</param>
+    /// <param name="token">The cancellation token.</param>
+    public abstract Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, IReadOnlyCollection<string> keepPointIds, CancellationToken token);
 
     /// <summary>
     /// Updates the location of a document's points without changing their ids or vectors.

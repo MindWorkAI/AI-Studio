@@ -181,7 +181,7 @@ public static class FileExportFormatExtensions
     /// set below is what no common file system accepts, plus the length limit which keeps the name
     /// readable in a dialog.
     /// </remarks>
-    private static string ToFileNameFragment(string? name)
+    internal static string ToFileNameFragment(string? name)
     {
         const int MAX_LENGTH = 60;
         const string FORBIDDEN_CHARACTERS = @"\/:*?""<>|";

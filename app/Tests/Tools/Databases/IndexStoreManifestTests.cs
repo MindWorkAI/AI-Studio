@@ -61,6 +61,31 @@ public sealed class IndexStoreManifestTests
         });
     }
 
+    /// <remarks>
+    /// When the fingerprint of a file changes, the stored hash of its content tells whether the
+    /// file has to be read again at all.
+    /// </remarks>
+    [Test]
+    public async Task TheManifestKnowsTheContentHashOfAFile()
+    {
+        await using var store = await TemporaryIndexStore.CreateAsync();
+        await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "LOCAL_DIRECTORY", "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "signature", string.Empty, 3, TOKEN);
+
+        var hashedFile = Path.Combine(Path.GetTempPath(), "test-data", "report.pdf");
+        var olderFile = Path.Combine(Path.GetTempPath(), "test-data", "notes.md");
+        var contentHash = new string('a', 64);
+        await store.Client.UpsertFileAsync(DATA_SOURCE_ID, Row(hashedFile, 4) with { ContentHash = contentHash }, TOKEN);
+        await store.Client.UpsertFileAsync(DATA_SOURCE_ID, Row(olderFile, 2), TOKEN);
+
+        var manifest = await store.Client.GetManifestAsync(DATA_SOURCE_ID, TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(manifest.Files[hashedFile].ContentHash, Is.EqualTo(contentHash));
+            Assert.That(manifest.Files[olderFile].ContentHash, Is.Null, "A file indexed before the hash was kept is read again the next time it looks changed.");
+        });
+    }
+
     private static EmbeddingStateFile Row(string filePath, int chunkCount)
     {
         var now = DateTimeOffset.UtcNow;

@@ -1,4 +1,5 @@
 using AIStudio.Tools.Databases.IndexStore;
+using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Services;
 
@@ -69,6 +70,18 @@ public sealed class DatabaseClientProvider(RustService rustService, ILoggerFacto
             client.Status);
     }
 
+    public async Task<ProvenanceStoreClient> GetProvenanceStoreAsync(CancellationToken cancellationToken = default)
+    {
+        var client = await this.GetClientAsync(DatabaseRole.PROVENANCE_STORE, cancellationToken);
+        if (client is ProvenanceStoreClient provenanceStore)
+            return provenanceStore;
+
+        return new NoProvenanceStoreClient(
+            client.Name,
+            "The configured database client does not support provenance operations.",
+            client.Status);
+    }
+
     /// <summary>
     /// Builds the client which stands in for a database role that cannot serve right now.
     /// </summary>
@@ -85,6 +98,7 @@ public sealed class DatabaseClientProvider(RustService rustService, ILoggerFacto
     {
         DatabaseRole.VECTOR_STORE => new NoVectorStoreClient(name, reason, status),
         DatabaseRole.INDEX_STORE => new NoIndexStoreClient(name, reason, status),
+        DatabaseRole.PROVENANCE_STORE => new NoProvenanceStoreClient(name, reason, status),
         _ => new NoDatabaseClient(name, reason, status)
     };
 
@@ -125,6 +139,7 @@ public sealed class DatabaseClientProvider(RustService rustService, ILoggerFacto
     {
         DatabaseRole.VECTOR_STORE => await QdrantEdgeClientImplementation.CreateAsync(rustService, this.GetIndexStoreAsync, this.logger, this.databaseClientLogger, cancellationToken),
         DatabaseRole.INDEX_STORE => await SqliteIndexStoreClientImplementation.CreateAsync(this.logger, this.databaseClientLogger, cancellationToken),
+        DatabaseRole.PROVENANCE_STORE => await SqliteProvenanceStoreClientImplementation.CreateAsync(this.logger, this.databaseClientLogger, cancellationToken),
         _ => new NoDatabaseClient(databaseRole.ToString(), "The requested database role is not supported.")
     };
 

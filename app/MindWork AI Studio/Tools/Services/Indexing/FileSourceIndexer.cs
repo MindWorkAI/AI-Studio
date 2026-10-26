@@ -129,6 +129,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(context, inputFiles, token);
         token.ThrowIfCancellationRequested();
 
+        // Before the data source may be skipped as unchanged, since nothing else removes what is left of an unchanged file:
+        await context.RemoveLeftoverGenerationsAsync(key => manifest.Files.TryGetValue(key, out var record) && metadataSnapshot.FileHashes.TryGetValue(key, out var fingerprint) && string.Equals(record.Fingerprint, fingerprint, StringComparison.Ordinal), token);
+
         logger.LogInformation(
             "Compared data source hash for '{DataSourceName}' ({DataSourceId}). StoredSourceHashPrefix={StoredSourceHashPrefix}, CurrentSourceHashPrefix={CurrentSourceHashPrefix}, StoredFileRecords={StoredFileRecords}, CurrentFiles={CurrentFiles}, RemovedMissingFiles={RemovedMissingFiles}.",
             dataSource.Name,
@@ -213,6 +216,29 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
             try
             {
+                //
+                // The fingerprint changed, but perhaps not the content: a file saved again without
+                // edits, synchronized or copied keeps its chunks and vectors, and only its new
+                // fingerprint is stored. Reading the bytes once costs far less than extracting and
+                // embedding them again. The transcript of an audio or video file is filed under the
+                // same hash, so a recording indexed before this hash was kept is recognized as well.
+                //
+                var contentHash = await FileContentHash.ComputeAsync(file.FullName, token);
+                document = this.CreateFileDocument(context, dataSource, file, fingerprint, null, contentHash);
+                if (existingRecord is { ParentFileId: not null } && string.Equals(existingRecord.ContentHash ?? existingRecord.TranscriptKey, contentHash, StringComparison.Ordinal))
+                {
+                    await progress.RecordContentUnchangedAsync(document, existingRecord, token);
+                    logger.LogInformation(
+                        "Kept the stored chunks of file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) without reading it, because its content did not change, although {EmbeddingReason}. Progress={CompletedFiles}/{TotalFiles}.",
+                        file.FullName,
+                        dataSource.Name,
+                        dataSource.Id,
+                        GetFileEmbeddingReason(file, fingerprint, existingRecord),
+                        progress.DoneDocuments,
+                        totalFiles);
+                    continue;
+                }
+
                 logger.LogInformation(
                     "Embedding file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because {EmbeddingReason}. CurrentMetadataHashPrefix={CurrentMetadataHashPrefix}. Progress={CompletedFiles}/{TotalFiles}.",
                     file.FullName,
@@ -228,15 +254,15 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 // its transcript instead, and its row knows which transcript that is:
                 //
                 if (PersistentMediaTranscript.IsMediaPath(file.FullName))
-                    document = this.CreateFileDocument(context, dataSource, file, fingerprint, await this.ReadOrCreateTranscriptAsync(dataSource, file.FullName, token));
+                    document = this.CreateFileDocument(context, dataSource, file, fingerprint, await this.ReadOrCreateTranscriptAsync(dataSource, file.FullName, contentHash, fingerprint, token), contentHash);
 
-                var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
+                var indexed = await context.IndexDocumentAsync(document, reportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
                 if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
                     throw new IOException(string.Format(TB("The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."), file.FullName));
 
-                await progress.RecordDocumentIndexedAsync(document, chunkCount, existingRecord is null, token);
+                await progress.RecordDocumentIndexedAsync(document, indexed, existingRecord is null, token);
 
                 // The recording changed, so its old transcript is no longer what it says:
                 if (existingRecord?.TranscriptKey is { } previousTranscriptKey && !string.Equals(previousTranscriptKey, document.State.TranscriptKey, StringComparison.Ordinal))
@@ -247,7 +273,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                     file.FullName,
                     dataSource.Name,
                     dataSource.Id,
-                    chunkCount,
+                    indexed.ChunkCount,
                     (DateTimeOffset.UtcNow - startedAtUtc).TotalMilliseconds);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -552,14 +578,16 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// <remarks>
     /// A file counts as settled when it was indexed or when it was skipped for good, both with a
     /// matching fingerprint. Counting only the indexed ones would let a single unreadable document
-    /// send the whole folder through the slow path on every run.
+    /// send the whole folder through the slow path on every run. A file which was indexed before
+    /// and then failed for good keeps its stored version, so it is in both lists: it counts once,
+    /// as settled by its failure.
     /// </remarks>
     private static bool CanSkipDataSourceByHash(DataSourceEmbeddingManifest manifest, DataSourceMetadataSnapshot metadataSnapshot, IReadOnlyCollection<FileInfo> indexedFiles)
     {
         if (!string.Equals(manifest.SourceHash, metadataSnapshot.SourceHash, StringComparison.Ordinal))
             return false;
 
-        if (manifest.Files.Count + manifest.PermanentFailures.Count != indexedFiles.Count)
+        if (manifest.Files.Keys.Union(manifest.PermanentFailures.Keys, DataSourceEmbeddingManifest.PATH_COMPARER).Count() != indexedFiles.Count)
             return false;
 
         foreach (var file in indexedFiles)
@@ -567,18 +595,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             if (!metadataSnapshot.FileHashes.TryGetValue(file.FullName, out var currentHash))
                 return false;
 
-            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord))
-            {
-                if (!string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal))
-                    return false;
-
-                continue;
-            }
-
-            if (!manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure))
-                return false;
-
-            if (!string.Equals(permanentFailure.Fingerprint, currentHash, StringComparison.Ordinal))
+            var isIndexed = manifest.Files.TryGetValue(file.FullName, out var existingRecord) && string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal);
+            var isUnreadable = manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) && string.Equals(permanentFailure.Fingerprint, currentHash, StringComparison.Ordinal);
+            if (!isIndexed && !isUnreadable)
                 return false;
         }
 
@@ -636,12 +655,17 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// </remarks>
     /// <param name="dataSource">The data source.</param>
     /// <param name="mediaPath">The audio or video file.</param>
+    /// <param name="contentHash">The hash of its content, cf. FileContentHash.</param>
+    /// <param name="fingerprint">Its fingerprint, taken before its content was hashed.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>Where the transcript is.</returns>
-    private async Task<MediaTranscriptSlot> ReadOrCreateTranscriptAsync(IDataSource dataSource, string mediaPath, CancellationToken token)
+    private async Task<MediaTranscriptSlot> ReadOrCreateTranscriptAsync(IDataSource dataSource, string mediaPath, string contentHash, string fingerprint, CancellationToken token)
     {
         var provider = this.GetMediaTranscriptionAvailability(dataSource).Provider;
-        var transcript = await PersistentMediaTranscript.ReadOrCreateAsync(DataSourceTranscriptStore.ForDataSource(dataSource.Id), mediaPath, provider, mediaTranscriptionService.TranscribeAsync, logger, token);
+
+        // The content was hashed under the fingerprint taken before, so the store need not read the whole recording again:
+        var location = DataSourceTranscriptStore.ForDataSource(dataSource.Id).WithKnownContentHash(contentHash, path => string.Equals(BuildFileMetadataHash(new FileInfo(path)), fingerprint, StringComparison.Ordinal));
+        var transcript = await PersistentMediaTranscript.ReadOrCreateAsync(location, mediaPath, provider, mediaTranscriptionService.TranscribeAsync, logger, token);
         return GetTranscriptOrThrow(transcript, token);
     }
 
@@ -1060,10 +1084,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// <param name="file">The file.</param>
     /// <param name="fingerprint">The fingerprint of the file as it is about to be read.</param>
     /// <param name="transcript">The transcript an audio or video file is read through, or null for every other file.</param>
+    /// <param name="contentHash">The hash of the content of the file, cf. FileContentHash, or null while it is not computed yet.</param>
     /// <returns>The document.</returns>
-    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, MediaTranscriptSlot? transcript) => new(
+    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, MediaTranscriptSlot? transcript, string? contentHash = null) => new(
         file.FullName,
-        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { ParentFileId = context.GetFileParentId(file.FullName), TranscriptKey = transcript?.Key },
+        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { ParentFileId = context.GetFileParentId(file.FullName), TranscriptKey = transcript?.Key, ContentHash = contentHash },
         file.Name,
         token => this.StreamEmbeddingChunksAsync(file.FullName, transcript, dataSource, context.EmbeddingProvider, context.PromptInjectionScope, token));
 

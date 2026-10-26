@@ -680,6 +680,14 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: NO_DATA_SOURCES, APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior"] = "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS"
 --
+-- Configure whether a chat reads an attached file again when the file changed since it was sent.
+-- By default, every later message of a chat sends the AI the content a file had when it was first
+-- sent, also when the file changed or is gone by now, and users can look up what the AI received.
+-- When enabled, the AI receives the new content of a changed file with the next message. A file
+-- which is gone keeps the content it was sent with either way.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataChat.ReadChangedAttachmentsAgain"] = true
+--
 -- Allow users to change any configured chat default locally.
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
@@ -692,6 +700,118 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.ReadChangedAttachmentsAgain.AllowUserOverride"] = true
+
+-- Configure defaults for the Slide Assistant.
+-- Preselection must be enabled for the template, the picture library, and the other defaults
+-- below to take effect. It is enabled by default; lock it as well to make sure users cannot do without your
+-- template.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
+--
+-- Configure the PowerPoint template of the Slide Assistant.
+-- The slides then use the layouts of this presentation or template (.pptx, .potx), and users
+-- can create a PowerPoint file from the result. Without a template, the assistant plans an
+-- outline only.
+--
+-- The simplest way is to ship the template with this plugin: put the file next to this
+-- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The
+-- path must stay inside the plugin directory, i.e., no '..' segments and no links pointing
+-- out of it. When the file is missing or the path is rejected, AI Studio logs a warning, and
+-- this plugin does not manage the template: users keep the one they chose, or have none.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "Corporate.potx"
+--
+-- An absolute path works as well. It must be readable on every machine, e.g., on a network
+-- share or in a folder your software distribution fills; for Flatpak installations, it must
+-- be readable inside the sandbox.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "C:\\Templates\\Corporate.potx"
+--
+-- Configure the footer text for every slide whose layout has a footer, e.g., the name of
+-- the organization. Leave it empty for no footer.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
+--
+-- Configure the maximum number of bullet points per slide, all text slots of a slide together,
+-- from 1 to 7. Match it to the room for text in the layouts of your template. 0 sets no maximum,
+-- and the LLM decides by the room of each layout. AI Studio logs a warning for any other value
+-- and ignores it.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide"] = 0
+--
+-- Configure whether new slides keep the picture placeholders of their layout which they have no
+-- picture for. PowerPoint shows them while editing, so users can insert pictures of their own,
+-- and hides them in the slide show. By default, the slides leave them out.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders"] = false
+--
+-- Configure the picture library of the Slide Assistant: a folder with pictures and icons, e.g.,
+-- the picture library of your organization. The LLM reads only the names of its PNG and JPEG
+-- pictures and may place a picture where its name fits a slide. A picture whose name, or the
+-- name of one of its folders, starts with "icon" counts as an icon. This includes the folder
+-- you name here, so a folder "Icons" holds icons only. Leave it empty for no picture library.
+--
+-- Ship the folder with this plugin and give its path relative to this plugin.lua, under the
+-- same rules as the template above, or give an absolute path, e.g., on a network share. When a
+-- locked folder cannot be reached, the assistant plans the slides without it.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath"] = "Pictures"
+--
+-- Configure the layout of your template for kinds of slides, e.g., which layout opens each
+-- chapter. Give the name of the layout as the slide master of your template shows it. A kind
+-- of slide you leave out has no preference, and the LLM decides; a name the template lacks
+-- counts as no preference as well.
+-- Allowed kinds of slides are, by area:
+--   Structure and framing: TITLE, TABLE_OF_CONTENTS, AGENDA, SPEAKER, SPEAKERS, CHAPTER,
+--     CHAPTER_SUMMARY, Q_AND_A, ACKNOWLEDGEMENTS, REFERENCES, CLOSING, APPENDIX, IMPRINT
+--   General content: CONTENT, LITTLE_CONTENT, MUCH_CONTENT, KEY_MESSAGE, EXECUTIVE_SUMMARY, CONTEXT,
+--     RETROSPECTIVE, PICTURE, PICTURES, TABLE, COMPARISON, PROS_AND_CONS, TIMELINE, PROCESS, QUOTE,
+--     QUOTES, CODE, FORMULA, FORMULAS, CHECKLIST, NOTE, NOTES, AUDIENCE_QUESTION, FEEDBACK,
+--     DISCLAIMER, SUMMARY, OUTLOOK
+--   Teaching and workshops: INTRODUCTION_ROUND, EXPECTATIONS, GROUND_RULES, ORGANIZATIONAL_NOTES,
+--     LEARNING_OBJECTIVE, LEARNING_OBJECTIVES, EXAMPLE, EXAMPLES, STEP_BY_STEP, EXERCISE,
+--     EXERCISE_SOLUTION, GROUP_WORK, POLL, DISCUSSION_PROMPT, REFLECTION, BREAK, DAY_CHANGE
+--   Business and projects: VISION, GOAL, GOALS, NARRATIVE, STORY, PROBLEM, PROBLEMS, OPPORTUNITY,
+--     OPPORTUNITIES, SWOT, USE_CASE, USE_CASES, USER_STORY, USER_STORIES, ACCEPTANCE_CRITERIA, KPI,
+--     KPIS, FORECAST, SCENARIO, SCENARIOS, RISK, RISKS, DEPENDENCY, DEPENDENCIES, RESOURCES, TEAM,
+--     PARTNERS, ROADMAP, MILESTONE, MILESTONES, WORK_PACKAGE, WORK_PACKAGES, PROJECT_STATUS,
+--     LESSONS_LEARNED, REASON, REASONS, RECOMMENDATION, RECOMMENDATIONS, DECISION_REQUEST, NEXT_STEPS,
+--     ACTION_ITEMS, CALL_TO_ACTION
+--   Science and research: STATE_OF_RESEARCH, RESEARCH_GAP, RESEARCH_QUESTION, RESEARCH_QUESTIONS,
+--     DEFINITION, DEFINITIONS, THEOREM, PROOF, ASSUMPTION, ASSUMPTIONS, DELIMITATION, DELIMITATIONS,
+--     THESIS, THESES, HYPOTHESIS, HYPOTHESES, ARGUMENT_CHAIN, COUNTERARGUMENT, COUNTERARGUMENTS,
+--     METHODOLOGY, STUDY_DESIGN, EXPERIMENTAL_SETUP, DATA, RESULT, RESULTS, INTERPRETATION,
+--     LIMITATIONS, CONTRIBUTION, FUNDING
+--   Medicine: PATIENT_CASE, MEDICAL_HISTORY, CLINICAL_FINDINGS, IMAGING, LAB_VALUES, DIAGNOSIS,
+--     DIFFERENTIAL_DIAGNOSES, THERAPY, MEDICATION, COURSE_OF_DISEASE, PROGNOSIS, ADVERSE_EVENTS,
+--     GUIDELINE_RECOMMENDATION, STUDY_POPULATION, ENDPOINTS, ETHICS_APPROVAL
+--   Law: FACTS_OF_THE_CASE, LEGAL_QUESTION, LEGAL_QUESTIONS, LEGAL_PROVISION, LEGAL_PROVISIONS,
+--     EXAMINATION_SCHEME, DISPUTE_OF_OPINIONS, POSITIONS_OF_THE_PARTIES, PIECE_OF_EVIDENCE,
+--     PIECES_OF_EVIDENCE, RULING, RULINGS, LEGAL_COMMENTARY, LEGAL_COMMENTARIES, CONTRACT_CLAUSE,
+--     CONTRACT_CLAUSES, LEGAL_CONSEQUENCES, DEADLINES
+-- A kind in the singular, e.g., RISK, shows one item prominently; its plural, e.g., RISKS, shows
+-- several items together.
+--
+-- Replaces, does not merge: the table applies as a whole, also with AllowUserOverride.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts"] = {
+--     ["TITLE"] = "Title Slide",
+--     ["CHAPTER"] = "Section Header",
+--     ["CONTENT"] = "Title and Content",
+-- }
+--
+-- Preselect what the presentation does with the slides your template carries, by their number in the
+-- file, starting with 1 and counting hidden slides. OMIT leaves a slide out, KEEP keeps it as it is,
+-- and EDIT lets the LLM write new content into it; a slide without room for content stays unchanged
+-- instead. A slide you do not name is left out. This applies only to the template above.
+-- Replaces, does not merge: the table applies as a whole, also with AllowUserOverride.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses"] = {
+--     [1] = "KEEP",
+--     [4] = "EDIT",
+-- }
+--
+-- Allow users to choose another template or change the defaults locally.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses.AllowUserOverride"] = true
 
 -- Configure defaults for the Batch Processing Assistant.
 -- Preselection must be enabled for the remaining batch settings to take effect.

@@ -70,6 +70,26 @@ public sealed class DataSourceTranscriptStoreTests
     }
 
     [Test]
+    public async Task AKnownHashSparesReadingTheRecordingAgain()
+    {
+        var mediaPath = await this.CreateMediaAsync("recording.mp3", [1, 2, 3]);
+        var store = this.Store();
+        var knownHash = (await store.ResolveAsync(mediaPath, CancellationToken.None)).Key;
+
+        // A hash the content does not have shows whether the store hashed the file once more:
+        var unrelatedHash = new string('a', knownHash.Length);
+        var slotWhileUnchanged = await store.WithKnownContentHash(unrelatedHash, _ => true).ResolveAsync(mediaPath, CancellationToken.None);
+        var slotOnceChanged = await store.WithKnownContentHash(unrelatedHash, _ => false).ResolveAsync(mediaPath, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(slotWhileUnchanged.Key, Is.EqualTo(unrelatedHash), "Hashing a video reads all of it, which the indexer did already.");
+            Assert.That(slotWhileUnchanged.Path, Is.EqualTo(store.GetPath(unrelatedHash)));
+            Assert.That(slotOnceChanged.Key, Is.EqualTo(knownHash), "A file which changed since it was hashed must not get the transcript of its content before.");
+        });
+    }
+
+    [Test]
     public async Task ARenamedRecordingIsPaidForOnlyOnce()
     {
         var mediaPath = await this.CreateMediaAsync("recording.mp3", [1, 2, 3]);

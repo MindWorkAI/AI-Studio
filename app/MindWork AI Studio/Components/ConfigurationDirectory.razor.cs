@@ -41,6 +41,9 @@ public partial class ConfigurationDirectory : ConfigurationBaseCore
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    [Inject]
+    private ILogger<ConfigurationDirectory> Logger { get; init; } = null!;
+
     private string internalText = string.Empty;
     private bool isDirectoryDialogOpen;
 
@@ -103,6 +106,26 @@ public partial class ConfigurationDirectory : ConfigurationBaseCore
         {
             this.isDirectoryDialogOpen = false;
         }
+    }
+
+    /// <summary>
+    /// Takes the first dropped path which leads to a folder.
+    /// </summary>
+    /// <param name="paths">The dropped paths.</param>
+    private async Task PathsDropped(List<string> paths)
+    {
+        var path = DroppedFolder.FirstUsable(paths);
+        if (path is null)
+        {
+            this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a directory.", paths.Count);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, DroppedFolder.WarningFor(paths)));
+            return;
+        }
+
+        this.Logger.LogInformation("The user dropped the directory '{DroppedDirectory}'.", path);
+        this.timer.Stop();
+        this.internalText = path;
+        await this.OptionChanged(path);
     }
 
     private async Task OptionChanged(string updatedText)

@@ -248,20 +248,20 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
         var vectorChunks = vectorTask.Result;
         var keywordChunks = keywordTask.Result;
         var (passages, hasMore) = RetrievalPaging.Merge(
-            BestPassagePerMail(vectorChunks.Select(chunk => new MailPassage(chunk.ParentFileId, chunk.Text))),
-            BestPassagePerMail(keywordChunks.Select(chunk => new MailPassage(chunk.ParentFileId, chunk.ChunkText))),
+            BestPassagePerMail(vectorChunks.Select(chunk => new MailPassage(chunk.ParentFileId, chunk.Text, chunk.Location))),
+            BestPassagePerMail(keywordChunks.Select(chunk => new MailPassage(chunk.ParentFileId, chunk.ChunkText, chunk.Location))),
             passage => passage.MailId,
             page,
             pageSize);
 
         hasMore = hasMore || MayHoldMoreMails(page, pageSize, chunkWindow, vectorChunks.Count, keywordChunks.Count);
 
-        var passageTexts = passages
+        var bestPassages = passages
             .DistinctBy(passage => passage.MailId, StringComparer.Ordinal)
-            .ToDictionary(passage => passage.MailId, passage => passage.Text, StringComparer.Ordinal);
+            .ToDictionary(passage => passage.MailId, StringComparer.Ordinal);
 
         var summaries = await indexStore.GetMailSummariesAsync(mailbox.Id, passages.Select(passage => passage.MailId).ToList(), token);
-        return new(summaries.Select(summary => new MailSearchHit(summary, passageTexts[summary.MailId])).ToList(), hasMore, []);
+        return new(summaries.Select(summary => new MailSearchHit(summary, bestPassages[summary.MailId].Text, bestPassages[summary.MailId].Location)).ToList(), hasMore, []);
     }
 
     /// <summary>

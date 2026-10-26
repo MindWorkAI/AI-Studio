@@ -65,4 +65,23 @@ public sealed record AssistantSessionSnapshot
     /// Gets whether the session is still running or canceling.
     /// </summary>
     public bool IsActive => this.Status is AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING;
+
+    /// <summary>
+    /// Gets the state fields which are new or hold another value than in an earlier snapshot of the same run.
+    /// </summary>
+    /// <remarks>
+    /// A component which shows a run it did not start takes over only these, so that whatever the
+    /// running assistant left alone stays as the user has it in that component.
+    /// </remarks>
+    /// <param name="previous">The snapshot taken over last, or null for none.</param>
+    /// <returns>The whole state when there is no earlier snapshot of the same run; otherwise, the new and changed fields.</returns>
+    public IReadOnlyDictionary<string, IAssistantSessionSnapshotField> StateChangedSince(AssistantSessionSnapshot? previous)
+    {
+        if (previous is null || previous.SessionId != this.SessionId)
+            return this.State;
+
+        return this.State
+            .Where(field => !previous.State.TryGetValue(field.Key, out var previousField) || !previousField.HasSameValueAs(field.Value))
+            .ToDictionary(field => field.Key, field => field.Value, StringComparer.Ordinal);
+    }
 }

@@ -91,6 +91,10 @@ public static class FileTypes
     // what we write when exporting, whereas the family above is what we accept when reading.
     public static readonly FileTypeFilter TEX         = FileTypeFilter.Leaf("LaTeX", "tex");
 
+    // What the Slide Assistant takes its layouts from, and what it writes:
+    public static readonly FileTypeFilter POWER_POINT_TEMPLATE     = FileTypeFilter.Leaf(TB("PowerPoint template"), "pptx", "potx");
+    public static readonly FileTypeFilter POWER_POINT_PRESENTATION = FileTypeFilter.Leaf("PowerPoint", "pptx");
+
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
         WORD, SPREADSHEET, POWER_POINT, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),
@@ -117,6 +121,16 @@ public static class FileTypes
     /// </summary>
     public static readonly FileTypeFilter VISUAL_BRIEFING_IMAGE = FileTypeFilter.Leaf(TB("Visual briefing image"),
         "jpg", "jpeg", "png", "webp");
+
+    /// <summary>
+    /// The picture formats the Slide Assistant can put on a slide.
+    /// </summary>
+    /// <remarks>
+    /// The runtime hands the PowerPoint writer pictures in these formats only, see
+    /// prepare_image in runtime/src/image.rs, and every version of PowerPoint shows them.
+    /// </remarks>
+    public static readonly FileTypeFilter SLIDE_PICTURE = FileTypeFilter.Leaf(TB("Picture for slides"),
+        "jpg", "jpeg", "png");
     public static readonly FileTypeFilter AUDIO = FileTypeFilter.Leaf(TB("Audio"),
         "mp3", "wav", "wave", "aac", "flac", "ogg", "opus", "m4a", "m4b", "wma", "alac", "aif", "aiff", "caf");
     public static readonly FileTypeFilter VIDEO = FileTypeFilter.Leaf(TB("Video"),

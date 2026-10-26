@@ -12,6 +12,7 @@ internal static class IndexStoreSchemaMigrator
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.DropDataSourceName))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.MailboxIndex))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.MediaTranscriptKey))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.ChunkMetadata))]
     public static async Task MigrateAsync(IndexStoreDbContext context, CancellationToken token)
     {
         await context.Database.MigrateAsync(token);

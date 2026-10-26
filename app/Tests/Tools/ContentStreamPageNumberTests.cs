@@ -3,7 +3,7 @@ using AIStudio.Tools;
 namespace AIStudio.Tests.Tools;
 
 /// <summary>
-/// Checks that the page a passage came from is handed on as a number.
+/// Checks that where a passage came from is handed on as numbers: its page, its sheet and row, or its line.
 /// </summary>
 /// <remarks>
 /// The runtime states the page of every page it reads. That number used to be written into the
@@ -22,7 +22,7 @@ public sealed class ContentStreamPageNumberTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(processed.PageNumber, Is.EqualTo(7), "The page comes from the metadata of the event.");
+            Assert.That(processed.Location.PageNumber, Is.EqualTo(7), "The page comes from the metadata of the event.");
             Assert.That(processed.Content, Does.Contain("# Page 7"), "The heading stays, because it is what tells the AI which page it reads.");
         });
     }
@@ -32,7 +32,7 @@ public sealed class ContentStreamPageNumberTests
     {
         var processed = ContentStreamSseHandler.ProcessEvent(PdfEvent(null, "A page the runtime could not number."));
 
-        Assert.That(processed.PageNumber, Is.Null, "Without a number in the metadata there is no page to state.");
+        Assert.That(processed.Location.PageNumber, Is.Null, "Without a number in the metadata there is no page to state.");
     }
 
     /// <remarks>
@@ -51,7 +51,7 @@ public sealed class ContentStreamPageNumberTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(processed.PageNumber, Is.Null, "Nothing is read out of the text, so a line which looks like a marker stays text.");
+            Assert.That(processed.Location.PageNumber, Is.Null, "Nothing is read out of the text, so a line which looks like a marker stays text.");
             Assert.That(processed.Content, Is.EqualTo("# Page 42\nStill nothing but the text of the document."), "The text itself is passed on untouched.");
         });
     }
@@ -74,7 +74,7 @@ public sealed class ContentStreamPageNumberTests
             Assert.Multiple(() =>
             {
                 Assert.That(first.Content, Is.Null, "The first page is still being buffered, so nothing is released yet.");
-                Assert.That(second.PageNumber, Is.EqualTo(1), "What is released here is the first page, so it carries page one.");
+                Assert.That(second.Location.PageNumber, Is.EqualTo(1), "What is released here is the first page, so it carries page one.");
                 Assert.That(second.Content, Does.Contain("What the first page says."), "The content released belongs to the page whose number is stated.");
             });
         }
@@ -117,22 +117,56 @@ public sealed class ContentStreamPageNumberTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(processed.PageNumber, Is.Null, "A slide number is not a page number.");
+            Assert.That(processed.Location, Is.EqualTo(default(SourceLocation)), "A slide number is not a page number, and slides are left out while their order may be wrong.");
             Assert.That(processed.Content, Does.Contain("# Slide 3"), "The heading stays, so the AI still knows which slide it reads.");
         });
     }
 
     [Test]
-    public void ASpreadsheetRowStatesNoPage()
+    public void ASpreadsheetRowStatesItsSheetAndRow()
     {
         var processed = ContentStreamSseHandler.ProcessEvent(new()
         {
-            Content = "| Console | Channels |",
+            Content = "Console,Channels",
+            StreamId = NewStreamId(),
+            Metadata = new ContentStreamSpreadsheetMetadata { Spreadsheet = new() { SheetName = "Inventory", RowNumber = 3 } },
+        });
+
+        Assert.That(processed.Location, Is.EqualTo(new SourceLocation(SheetName: "Inventory", RowNumber: 3)), "A sheet has rows, not pages.");
+    }
+
+    /// <remarks>
+    /// Row 0 is where the runtime starts the table of a sheet, before its first row. The app writes
+    /// the heading of the sheet there, which is no row of the sheet.
+    /// </remarks>
+    [Test]
+    public void TheHeadingOfASheetStatesTheSheetButNoRow()
+    {
+        var processed = ContentStreamSseHandler.ProcessEvent(new()
+        {
+            Content = "```csv",
             StreamId = NewStreamId(),
             Metadata = new ContentStreamSpreadsheetMetadata { Spreadsheet = new() { SheetName = "Inventory", RowNumber = 0 } },
         });
 
-        Assert.That(processed.PageNumber, Is.Null, "A sheet has rows, not pages.");
+        Assert.Multiple(() =>
+        {
+            Assert.That(processed.Location, Is.EqualTo(new SourceLocation(SheetName: "Inventory")));
+            Assert.That(processed.Content, Does.Contain("# Inventory"), "The heading still tells the AI which sheet it reads.");
+        });
+    }
+
+    [Test]
+    public void ALineOfTextStatesItsLine()
+    {
+        var processed = ContentStreamSseHandler.ProcessEvent(new()
+        {
+            Content = "var total = 0;",
+            StreamId = NewStreamId(),
+            Metadata = new ContentStreamTextMetadata { Text = new() { LineNumber = 12 } },
+        });
+
+        Assert.That(processed.Location, Is.EqualTo(new SourceLocation(LineNumber: 12)));
     }
 
     private static ContentStreamSseEvent PdfEvent(int? pageNumber, string content) => new()

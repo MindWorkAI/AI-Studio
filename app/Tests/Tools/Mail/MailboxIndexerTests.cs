@@ -1,8 +1,14 @@
+using AIStudio.Provider;
+using AIStudio.Settings;
+using AIStudio.Tools;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Mail;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.Services.Indexing;
 
 using MailKit;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 using MimeKit;
 
@@ -101,6 +107,40 @@ public sealed class MailboxIndexerTests
             Assert.That(record.Parts.Select(part => part.Kind), Is.EqualTo(new[] { MailPartKind.HEADERS, MailPartKind.BODY, MailPartKind.ATTACHMENT, MailPartKind.ATTACHMENT }));
             Assert.That(record.Parts[2], Is.EqualTo(new MailPartRecord(MailPartKind.ATTACHMENT, "board-report.pdf", "application/pdf", 4096, "Revenue rose by four percent.", MailPartTextState.EXTRACTED)));
             Assert.That(record.Parts[3], Is.EqualTo(new MailPartRecord(MailPartKind.ATTACHMENT, "keynote.mp4", "video/mp4", 80_000_000, null, MailPartTextState.UNSUPPORTED_TYPE)), "An attachment without text is still an attachment, and a search for mails with attachments has to find it.");
+        });
+    }
+
+    /// <remarks>
+    /// A chunk of an attachment names the attachment by the position the index gives it among all
+    /// attachments of the mail, those without text included, and keeps its pages. So a passage can
+    /// say "page 2 of board-report.pdf", even when two attachments have the same name.
+    /// </remarks>
+    [Test]
+    public async Task EveryChunkOfAnAttachmentKnowsItsAttachmentAndItsPages()
+    {
+        using var tokenizer = new WordCountingTokenizer();
+        using var rustService = new RustService(tokenizer);
+        var chunker = new TextChunker(rustService, NullLogger.Instance);
+        var embeddingProvider = new EmbeddingProvider(1, "embedding-provider", "Embeddings", LLMProviders.SELF_HOSTED, new Model("embeddings", "embeddings"));
+
+        const string MAIL_TEXT = "Please review the attached report.";
+        var mailText = new SegmentedText(MAIL_TEXT, [new TextSegment(MAIL_TEXT, null, default)]);
+        var report = new SegmentedText("Revenue rose.\nCosts fell.", [new TextSegment("Revenue rose.", 2, SourceLocation.OnPage(1)), new TextSegment("Costs fell.", 2, SourceLocation.OnPage(2))]);
+        IReadOnlyList<MailAttachmentText> attachments =
+        [
+            MailAttachmentText.WithoutText(Attachment("video", "mp4", 80_000_000), "keynote.mp4", MailPartTextState.UNSUPPORTED_TYPE),
+            new MailAttachmentText(Attachment("application", "pdf", 4096), "board-report.pdf", MailPartTextState.EXTRACTED, report, TextChunker.DOCUMENT_STRATEGY),
+        ];
+
+        var chunks = new List<EmbeddingChunk>();
+        await foreach (var chunk in MailboxIndexer.StreamMailChunksAsync(chunker, mailText, attachments, new ChunkingOptions(100, 0), embeddingProvider, CancellationToken.None))
+            chunks.Add(chunk);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(chunks.Select(chunk => chunk.AttachmentPosition), Is.EqualTo(new int?[] { null, 1 }), "The text of the mail is no attachment, and the report is the second attachment, after the video without text.");
+            Assert.That(chunks[1].Text, Does.StartWith("Attachment: board-report.pdf"));
+            Assert.That((chunks[1].PageNumber, chunks[1].EndPageNumber), Is.EqualTo(((int?)1, (int?)2)), "The chunk keeps the pages of the report it spans.");
         });
     }
 

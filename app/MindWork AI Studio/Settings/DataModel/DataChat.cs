@@ -106,6 +106,16 @@ public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection =
     public bool ShowLatestMessageAfterLoading { get; set; } = true;
 
     /// <summary>
+    /// Whether a chat reads an attached file again when the file changed since it was sent.
+    /// </summary>
+    /// <remarks>
+    /// Off by default: every later message of a chat sends the text a file had when it was first
+    /// sent, so that what the AI received stays the same and can be shown as it was, see
+    /// FileAttachment.ProvenanceId. A file which is gone keeps its text either way.
+    /// </remarks>
+    public bool ReadChangedAttachmentsAgain { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ReadChangedAttachmentsAgain, false);
+
+    /// <summary>
     /// Should the chat ask for feedback after an answer?
     /// </summary>
     public bool FeedbackEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.FeedbackEnabled, false);

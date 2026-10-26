@@ -101,19 +101,6 @@ public sealed class SemanticSearchToolDescriptionTests
     }
 
     [Test]
-    public void OnlyUnreachableDataSourcesStillMakeAFunction()
-    {
-        var function = DescribeWithUnreachable([], [INTRANET]);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(function.DescriptionForLLM, Does.Contain("None of the data sources of this chat can be searched right now."));
-            Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet'"));
-            Assert.That(function.DescriptionForLLM, Does.Not.Contain("The data sources you may search"));
-        });
-    }
-
-    [Test]
     public void WithoutUnreachableDataSourcesTheDescriptionStaysAsBefore()
     {
         var withoutList = Describe((HANDBOOK, "Our processes."));
