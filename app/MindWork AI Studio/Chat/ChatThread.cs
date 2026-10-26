@@ -5,6 +5,7 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.Web;
@@ -102,6 +103,15 @@ public sealed record ChatThread
     /// <summary>
     /// The augmented data for this chat thread. Will be inserted into the system prompt.
     /// </summary>
+    /// <remarks>
+    /// Not stored: it belongs to one request. The classic RAG process empties and writes it anew for
+    /// every message, a regenerated answer included, and a rollback empties it, so nothing reads it
+    /// once the answer is there. What the AI read of it is kept with the answer instead, as the
+    /// passages of its sources, see ContentText.StoreReceivedContentAsync. Stored, it was often the
+    /// largest part of a chat file. Older chat files still hold it; it is ignored on loading and
+    /// left out on their next save.
+    /// </remarks>
+    [JsonIgnore]
     public string AugmentedData { get; set; } = string.Empty;
 
     /// <summary>
@@ -513,6 +523,42 @@ public sealed record ChatThread
             this.Draft.RestoreFromMessage(textContent);
 
         this.Blocks.Remove(block);
+    }
+
+    /// <summary>
+    /// Stores the documents attached to the messages of this chat which were never sent, so that each
+    /// one is read from the disk once.
+    /// </summary>
+    /// <remarks>
+    /// Called before every request of the chat, see AIJobService. The request then sends the stored
+    /// texts, see ContentText.PrepareTextContentForAI, and so does every later one. Assistants do not
+    /// call this: their messages are made anew with every run, so every run would store its documents
+    /// once more.<br/><br/>
+    ///
+    /// Nothing here may stop the request. A document which is not stored, e.g., since the store is not
+    /// available, is read when the message is built, as every request did before.
+    /// </remarks>
+    /// <param name="readChangedAgain">Whether documents whose files changed since they were stored are read again, see DataChat.ReadChangedAttachmentsAgain.</param>
+    public async Task StoreAttachedDocumentsAsync(bool readChangedAgain)
+    {
+        var messages = this.Blocks.Select(block => block.Content).OfType<ContentText>().Where(text => text.HasDocumentsToStore(readChangedAgain)).ToList();
+        if (messages.Count is 0)
+            return;
+
+        try
+        {
+            if (await ChatProvenance.GetStoreAsync() is not { } store)
+                return;
+
+            // One report for everything filtered out of the documents, as for the request itself:
+            await using var reportingScope = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>().BeginAction();
+            foreach (var message in messages)
+                await message.StoreAttachedDocumentsAsync(store, this.ChatId, Program.RUST_SERVICE, reportingScope, readChangedAgain);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogError(exception, "Failed to store the attached documents of the chat '{ChatId}'. They are read from the disk with every request.", this.ChatId);
+        }
     }
 
     /// <summary>

@@ -1,3 +1,5 @@
+using AIStudio.Tools.Databases;
+
 namespace AIStudio.Tools.Services;
 
 /// <summary>
@@ -5,4 +7,5 @@ namespace AIStudio.Tools.Services;
 /// </summary>
 /// <param name="MailId">The id of the mail.</param>
 /// <param name="Text">The text of the chunk.</param>
-internal sealed record MailPassage(string MailId, string Text);
+/// <param name="Location">Where the chunk is in its mail, e.g., on which page of which attachment.</param>
+internal sealed record MailPassage(string MailId, string Text, ChunkLocation Location);

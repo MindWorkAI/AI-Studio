@@ -5,6 +5,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
+using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.Media;
@@ -153,7 +154,7 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
     }
 
     /// <summary>
-    /// Copies the settings and the indexes, and writes them into the backup together with the rest of the data.
+    /// Copies the settings, the provenance store and the indexes, and writes them into the backup together with the rest of the data.
     /// </summary>
     /// <param name="archivePath">The file of the backup.</param>
     /// <param name="progress">Receives how far writing got.</param>
@@ -162,6 +163,7 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
     private async Task<DataBackupManifest> WriteBackupAsync(string archivePath, IProgress<DataBackupProgress> progress, CancellationToken token)
     {
         var indexCopiesDirectory = string.Empty;
+        var provenanceCopyDirectory = string.Empty;
         try
         {
             var dataDirectory = SettingsManager.DataDirectory ?? throw new InvalidOperationException("The data directory is not known yet.");
@@ -170,9 +172,14 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
             var settingsJson = JsonSerializer.Serialize(settings, SettingsManager.JSON_OPTIONS);
             var organizationPluginFolders = DataBackupContents.FindOrganizationPluginsAmongUserPlugins(PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>(), dataDirectory);
 
+            //
+            // The texts the chats received are copied once the chats themselves are written, cf.
+            // DataBackupSources.CopyProvenanceStoreAsync: an answer completed meanwhile then still
+            // finds its texts in the backup.
+            //
             indexCopiesDirectory = await this.CopyIndexesAsync(dataDirectory, token);
 
-            var sources = new DataBackupSources(dataDirectory, configDirectory, settingsJson, indexCopiesDirectory, organizationPluginFolders);
+            var sources = new DataBackupSources(dataDirectory, configDirectory, settingsJson, indexCopiesDirectory, organizationPluginFolders, async copyToken => provenanceCopyDirectory = await this.CopyProvenanceStoreAsync(dataDirectory, copyToken));
             var manifest = new DataBackupManifest(
                 DataBackupFormat.FORMAT_VERSION,
                 Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? "unknown",
@@ -188,7 +195,8 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
         }
         finally
         {
-            this.TryDeleteIndexCopies(indexCopiesDirectory);
+            this.TryDeleteCopies(indexCopiesDirectory);
+            this.TryDeleteCopies(provenanceCopyDirectory);
         }
     }
 
@@ -253,8 +261,53 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
         }
         catch
         {
-            this.TryDeleteIndexCopies(preparation.StagingPath);
+            this.TryDeleteCopies(preparation.StagingPath);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Copies the provenance store, for every backup.
+    /// </summary>
+    /// <remarks>
+    /// The store belongs to the chats, which every backup holds: without it, the chats of a backup
+    /// would refer to contents it lacks. So it is copied independently of the indexes, also when the
+    /// backup leaves those out.<br/><br/>
+    ///
+    /// A store which AI Studio could not open is taken from the data folder as it lies there:
+    /// nothing writes to it then, and the backup keeps whatever there is. So is a store which could
+    /// not be copied, e.g., since it is damaged: that must not cost the backup of the chats.
+    /// </remarks>
+    /// <param name="dataDirectory">The data folder, which holds the directory of the copies.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The directory of the copy, in the layout of the data folder, or an empty string when the backup takes the store from the data folder.</returns>
+    private async Task<string> CopyProvenanceStoreAsync(string dataDirectory, CancellationToken token)
+    {
+        var provenanceStore = await databaseClientProvider.GetProvenanceStoreAsync(token);
+        if (provenanceStore is NoProvenanceStoreClient)
+        {
+            logger.LogWarning("The provenance store is not available, so the backup takes it from the data folder as it lies there.");
+            return string.Empty;
+        }
+
+        // In the same directory as the copies of the vector stores, which the next start clears in case AI Studio stops halfway:
+        var copyDirectory = Path.Join(DataRestoreFormat.DirectoryIn(dataDirectory, DataBackupFormat.STAGING_DIRECTORY), $"provenance-{Guid.NewGuid():N}");
+        try
+        {
+            var provenanceEntry = DataBackupContents.ENTRIES.First(entry => entry.Kind is DataBackupEntryKind.CHAT_PROVENANCE);
+            await provenanceStore.BackupToDirectoryAsync(Path.Join(copyDirectory, provenanceEntry.RelativePath.Replace(DataBackupContents.SEPARATOR, Path.DirectorySeparatorChar)), token);
+            return copyDirectory;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            this.TryDeleteCopies(copyDirectory);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Copying the provenance store failed, so the backup takes it from the data folder as it lies there.");
+            this.TryDeleteCopies(copyDirectory);
+            return string.Empty;
         }
     }
 
@@ -291,21 +344,21 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
     }
 
     /// <summary>
-    /// Removes the copies of the indexes. Should that fail, the next start removes them.
+    /// Removes the copies a backup made of the indexes or of the provenance store. Should that fail, the next start removes them.
     /// </summary>
-    private void TryDeleteIndexCopies(string indexCopiesDirectory)
+    private void TryDeleteCopies(string copiesDirectory)
     {
-        if (string.IsNullOrWhiteSpace(indexCopiesDirectory))
+        if (string.IsNullOrWhiteSpace(copiesDirectory))
             return;
 
         try
         {
-            if (Directory.Exists(indexCopiesDirectory))
-                Directory.Delete(indexCopiesDirectory, true);
+            if (Directory.Exists(copiesDirectory))
+                Directory.Delete(copiesDirectory, true);
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Could not remove the copies of the indexes at '{IndexCopiesDirectory}'.", indexCopiesDirectory);
+            logger.LogWarning(exception, "Could not remove the copies of the backup at '{CopiesDirectory}'.", copiesDirectory);
         }
     }
 }

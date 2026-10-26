@@ -305,6 +305,10 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
             token.ThrowIfCancellationRequested();
 
+            // Read each attached document once, before the request sends it, see ChatThread.StoreAttachedDocumentsAsync:
+            await chatThread.StoreAttachedDocumentsAsync(settingsManager.ConfigurationData.Chat.ReadChangedAttachmentsAgain);
+            token.ThrowIfCancellationRequested();
+
             var lastStreamingEvent = DateTimeOffset.MinValue;
             if (!TrySetWaitingForRemote(state, token))
                 return;
@@ -370,6 +374,13 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         aiText.EndToolRun();
 
         RemoveEmptyAIResponse(state);
+
+        //
+        // Before the last checkpoint, so that the stored chat refers to what the AI received instead
+        // of holding it. An answer which was removed for being empty keeps nothing:
+        //
+        if (request.ChatThread.Blocks.Any(block => ReferenceEquals(block.Content, aiText)))
+            await aiText.StoreReceivedContentAsync(request.ChatThread.ChatId);
 
         lock (state.SyncRoot)
         {
@@ -461,12 +472,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             if (state.IsCompletionStarted || token.IsCancellationRequested || state.ChatGenerationRequest is null)
                 return false;
 
-            var aiText = state.ChatGenerationRequest.AIText;
-            aiText.InitialRemoteWait = false;
-            aiText.IsStreaming = true;
-            aiText.Text += contentStreamChunk;
-            aiText.Sources.MergeSources(contentStreamChunk.Sources);
-            aiText.RecordReportedUsage(contentStreamChunk.Usage, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
+            state.ChatGenerationRequest.AIText.ApplyStreamChunk(contentStreamChunk, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
 
             if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {

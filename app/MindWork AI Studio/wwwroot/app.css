@@ -553,3 +553,138 @@ tr:has(> .provider-group-header) .mud-icon-button {
     overflow: hidden;
     scrollbar-gutter: stable;
 }
+
+/*
+ * One source below an answer per row. The title takes the free width and wraps, however long the
+ * name of the document is, while the buttons stay at the right edge, one column below the other.
+ * The whole row lights up under the mouse, so a button is clearly part of its row. The Markdown
+ * styles force every list item to stay one with !important, so the row names their classes to
+ * outweigh them.
+ */
+.mud-markdown-body li.source-entry {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--mud-default-borderradius);
+}
+
+.source-entry:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.source-entry-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.source-entry-actions {
+    display: flex;
+    flex: none;
+}
+
+/*
+ * A dialog which fits the window instead of scrolling as a whole. Its content is a column which
+ * gives way when the window is too small, down to the one part which scrolls by itself, e.g., the
+ * text of a ContentViewer. Every element in between is marked dialog-fit, so that it gives way as
+ * well rather than holding on to the height of its content.
+ */
+.mud-dialog .mud-dialog-content.dialog-content-fit {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dialog-fit {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/*
+ * A piece of content for the user to check, see ContentViewer: a slim bar saying what it is and
+ * how to see it, above the content, which scrolls inside its frame. Both the viewer and its frame
+ * give way like a dialog-fit, so that only the content scrolls.
+ */
+.content-viewer,
+.content-viewer-frame {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.content-viewer-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem 0.25rem 1rem;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.content-viewer-toolbar-start {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.content-viewer-body {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.75rem 1rem;
+}
+
+.content-viewer-plain {
+    margin: 0;
+    font: inherit;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/*
+ * The passages the AI received from a file, see SourcePassagesDialog: the numbers of the passages
+ * at the side, as high as the passage next to them, and the passage, which gives way like a
+ * dialog-fit.
+ */
+.source-passages {
+    display: flex;
+    gap: 1rem;
+    min-height: 0;
+}
+
+.source-passages-menu {
+    flex: none;
+    width: 3.5rem;
+    overflow-y: auto;
+}
+
+.source-passages-menu .mud-list-item-text {
+    text-align: center;
+}
+
+.source-passages-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* The title of a dialog about one file, see FileDialogTitle. */
+.file-dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    overflow-wrap: anywhere;
+}
+
+/* An icon button next to text, whose icon should not outgrow the text around it. */
+.mud-icon-button.icon-button-compact .mud-icon-root {
+    font-size: 1rem;
+}
+
+/* The warning of a file which is gone, sized and spaced like the compact buttons it stands in for. */
+.mud-icon-root.file-action-warning {
+    font-size: 1rem;
+    margin: 5px;
+    vertical-align: middle;
+}

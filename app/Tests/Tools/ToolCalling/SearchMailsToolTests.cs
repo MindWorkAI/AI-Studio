@@ -292,6 +292,25 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         Assert.That(issues.Single()!.GetValue<string>(), Does.Contain("no folder with the path given in 'folder'").And.Contain("The first 2 of its 120 folders").And.Not.Contain("special_folder"));
     }
 
+    /// <remarks>
+    /// A mail found by a passage of its attachment names that attachment, so the user knows where
+    /// in the mail the answer comes from. It stays the same source as the mail itself.
+    /// </remarks>
+    [Test]
+    public void AMailFoundByAnAttachmentNamesItInItsSource()
+    {
+        var receivedAtUtc = new DateTimeOffset(2026, 10, 23, 9, 0, 0, TimeSpan.Zero);
+        var mail = MailToolResults.CreateSource(WORK, "mail-id", "Budget", "Anna", receivedAtUtc, TimeZoneInfo.Utc);
+        var attachment = MailToolResults.CreateSource(WORK, "mail-id", "Budget", "Anna", receivedAtUtc, TimeZoneInfo.Utc, "board-report.pdf, page 3");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(mail.Title, Is.EqualTo("Mail: Budget — Anna, 2026-10-23"));
+            Assert.That(attachment.Title, Is.EqualTo("Mail: Budget — Anna, 2026-10-23 (board-report.pdf, page 3)"));
+            Assert.That(attachment.URL, Is.EqualTo(mail.URL));
+        });
+    }
+
     [Test]
     public void SemanticSearchNeverSeesAMailbox()
     {

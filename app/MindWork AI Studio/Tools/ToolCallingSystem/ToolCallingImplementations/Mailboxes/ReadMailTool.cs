@@ -6,6 +6,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Mail;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
@@ -149,6 +150,7 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
         {
             JsonContent = description.Json,
             Sources = [description.Source],
+            Passages = [description.Passage],
             RequiredProviderConfidence = requirements.Confidence,
             RequiredOutboundDataRestriction = requirements.OutboundData,
         };
@@ -230,9 +232,10 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
     };
 
     /// <summary>
-    /// Builds the result of a reading, with every text of the mail filtered for prompt injections in one request.
+    /// Builds the result of a reading, with every text of the mail filtered for prompt injections in
+    /// one request, and what the user reads of it under the source of the mail.
     /// </summary>
-    private async Task<(JsonObject Json, Source Source)> DescribeAsync(MailReading reading, ReadMailRequest request, string pageText, MailPartRecord? part, int lastPage, TimeZoneInfo timeZone)
+    private async Task<MailReadingResult> DescribeAsync(MailReading reading, ReadMailRequest request, string pageText, MailPartRecord? part, int lastPage, TimeZoneInfo timeZone)
     {
         var mailbox = reading.Mailbox;
         var summary = reading.Summary;
@@ -315,7 +318,21 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
         if (issues.Count > 0)
             json["issues"] = issues;
 
-        return (json, MailToolResults.CreateSource(mailbox, summary.MailId, texts[subject], texts[senderName], summary.ReceivedAtUtc, timeZone));
+        var source = MailToolResults.CreateSource(mailbox, summary.MailId, texts[subject], texts[senderName], summary.ReceivedAtUtc, timeZone);
+        var readAttachment = part is { Kind: MailPartKind.ATTACHMENT } ? attachments.IndexOf(part) : -1;
+        var passage = source.ToMailPassage(MailToolResults.ComposePassage(
+            string.Join(", ", AddressesOf(MailAddressRole.FROM)),
+            [..AddressesOf(MailAddressRole.TO), ..AddressesOf(MailAddressRole.CC)],
+            texts[subject],
+            MailToolResults.FormatTime(summary.ReceivedAtUtc, timeZone),
+            [..attachmentNames.Select(name => texts[name])],
+            readAttachment < 0 ? null : texts[attachmentNames[readAttachment]],
+            texts[text]));
+
+        return new(json, source, passage);
+
+        // The addresses of one role, as far as the model got them:
+        IEnumerable<string> AddressesOf(MailAddressRole role) => addressLists.Where(list => list.Role == role).SelectMany(list => list.Indices).Select(index => texts[index]);
     }
 
     private static JsonArray DescribeAttachments(IReadOnlyList<MailPartRecord> attachments, IReadOnlyList<int> names, MailTexts texts)

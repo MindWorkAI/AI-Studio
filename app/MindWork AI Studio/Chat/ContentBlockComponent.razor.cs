@@ -360,6 +360,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 hash.Add(textValue.Length);
                 hash.Add(textValue.GetHashCode(StringComparison.Ordinal));
                 hash.Add(text.Sources.Count);
+                hash.Add(text.SourcePassages.Count);
                 hash.Add(text.ToolInvocations.Count);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
@@ -398,8 +399,6 @@ public partial class ContentBlockComponent : MSGComponentBase
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
 
     private bool HasToolTrace => this.Role is ChatRole.AI && this.GetToolInvocations().Count > 0;
-
-    private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
 
     private static Color GetTraceColor(ToolInvocationTraceStatus status) => status switch
     {
@@ -445,11 +444,6 @@ public partial class ContentBlockComponent : MSGComponentBase
     private string GetToolInvocationResult(ToolInvocationTrace invocation) => string.IsNullOrWhiteSpace(invocation.Result)
         ? this.T("No result")
         : invocation.Result;
-
-    private MudMarkdownStyling MarkdownStyling => new()
-    {
-        CodeBlock = { Theme = this.CodeColorPalette },
-    };
 
     private MarkdownRenderPlan GetMarkdownRenderPlan(string text)
     {

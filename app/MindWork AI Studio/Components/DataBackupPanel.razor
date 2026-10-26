@@ -37,7 +37,7 @@
                             <MudText Typo="Typo.body2">
                                 @string.Format(T("Backed up {0} files into: {1}"), backupResult.FileCount, backupResult.ArchivePath)
                             </MudText>
-                            <FileExportActions FilePath="@backupResult.ArchivePath" OffersOpening="@false"/>
+                            <FileActions Path="@backupResult.ArchivePath" ShowCopy="@false" ShowOpen="@false"/>
                         </MudStack>
                         @if (!backupResult.IncludesDataSourceIndexes)
                         {

@@ -2,6 +2,7 @@ using System.Globalization;
 
 using AIStudio.Dialogs;
 using AIStudio.Tools.ChatArchive;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -42,6 +43,9 @@ public partial class DataBackupPanel : MSGComponentBase
 
     [Inject]
     private DataRestoreService DataRestoreService { get; init; } = null!;
+
+    [Inject]
+    private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
 
     private ChatArchiveCollisionBehavior collisionBehavior = ChatArchiveCollisionBehavior.SKIP;
     private CancellationTokenSource? importCancellation;
@@ -253,7 +257,8 @@ public partial class DataBackupPanel : MSGComponentBase
             var archivePath = this.selectedArchivePath;
             var token = this.importCancellation.Token;
             var reporter = this.CreateImportProgressReporter();
-            this.importResult = await Task.Run(() => ChatArchiveImporter.ImportAsync(archivePath, this.collisionBehavior, reporter, token), token);
+            var provenanceStore = await this.DatabaseClientProvider.GetProvenanceStoreAsync(token);
+            this.importResult = await Task.Run(() => ChatArchiveImporter.ImportAsync(archivePath, provenanceStore, this.collisionBehavior, reporter, token), token);
 
             //
             // Drop the preview once every chat was added. Otherwise, another click on the button

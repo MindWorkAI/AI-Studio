@@ -225,10 +225,13 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             //
             // Perform the augmentation of the R(A)G process:
             //
+            IReadOnlyList<PreparedRetrievalContext> usedContexts = [];
             if (proceedWithRAG)
             {
                 var augmentationProcess = new AugmentationOne();
-                chatThread = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
+                var augmentation = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
+                chatThread = augmentation.ChatThread;
+                usedContexts = augmentation.UsedContexts;
             }
 
             //
@@ -240,30 +243,45 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             chatThread.AugmentedData = WithUnreachableDataSources(chatThread.AugmentedData, dataSources.GetUnreachableOfTheChat(chatThread.DataSourceOptions));
 
             //
-            // Add sources from the selected data
+            // Add the sources and passages of what the AI received:
             //
             
             // We know that the last block is the AI answer block (cf. check above):
             var aiAnswerBlock = chatThread.Blocks.Last();
-            var aiAnswerSources = aiAnswerBlock.Content?.Sources;
+            var aiAnswerContent = aiAnswerBlock.Content;
             
             // It should never happen that the AI answer block does not contain a content part.
             // Just in case, we check this:
-            if(aiAnswerSources is null)
+            if(aiAnswerContent is null)
                 return chatThread;
-            
-            var ragSources = new List<ISource>();
-            foreach (var retrievalContext in dataContexts)
-                ragSources.AddRange(retrievalContext.ToSources());
 
-            // Merge the sources, avoiding duplicates:
-            aiAnswerSources.MergeSources(ragSources);
+            AddWhatTheAIReceived(aiAnswerContent, usedContexts);
         }
         
         return chatThread;
     }
 
     #endregion
+
+    /// <summary>
+    /// Lists below the answer what the AI received: the sources and the passages of the retrieval
+    /// contexts handed to it.
+    /// </summary>
+    /// <remarks>
+    /// Only those: a passage which the check of which passages fit left out never reached the AI,
+    /// and the answer does not rest on it. Only a text answer keeps passages; every answer keeps
+    /// its sources.
+    /// </remarks>
+    /// <param name="aiAnswerContent">The content of the answer.</param>
+    /// <param name="usedContexts">The retrieval contexts handed to the AI.</param>
+    internal static void AddWhatTheAIReceived(IContent aiAnswerContent, IReadOnlyList<PreparedRetrievalContext> usedContexts)
+    {
+        var sources = usedContexts.SelectMany(context => context.Sources);
+        if (aiAnswerContent is ContentText aiAnswerText)
+            aiAnswerText.AddSources(sources, usedContexts.Select(context => context.Passage).OfType<SourcePassage>());
+        else
+            aiAnswerContent.Sources.MergeSources(sources);
+    }
 
     /// <summary>
     /// Restricts where the chat may still send data, because of the passages the retrieval brought in.

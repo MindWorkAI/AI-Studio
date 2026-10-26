@@ -7,7 +7,6 @@ using AIStudio.Tools.Mail;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace AIStudio.Tools.Databases.IndexStore;
@@ -151,7 +150,9 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                 file.ChunkCount,
                 file.TranscriptKey,
                 file.RelativePath,
-                file.ParentFileId);
+                file.ParentFileId,
+                file.ContentHash,
+                file.Generation);
         }
 
         var permanentFailures = await context.PermanentIndexingFailures
@@ -336,6 +337,110 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         await transaction.CommitAsync(token);
     }
 
+    public override async Task<IReadOnlyList<StoredChunk>> GetStoredChunksAsync(string dataSourceId, string filePath, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var parentFileIds = context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId && file.AbsolutePath == filePath)
+            .Select(file => file.ParentFileId);
+
+        //
+        // Only a description of the query: the rows are read in the loop below, one at a time. A
+        // chunk without a stored hash brings its whole text along, and a large document has
+        // thousands of them, so they must never be in memory together. A chunk with a hash brings
+        // no text at all.
+        //
+        var chunkQuery = context.EmbeddingChunks
+            .AsNoTracking()
+            .Where(chunk => parentFileIds.Contains(chunk.ParentFileId))
+            .Select(chunk => new { chunk.ChunkId, chunk.TextHash, chunk.Generation, ChunkText = chunk.TextHash == null ? chunk.ChunkText : null })
+            .AsAsyncEnumerable();
+
+        var storedChunks = new List<StoredChunk>();
+        await foreach (var chunk in chunkQuery.WithCancellation(token))
+            storedChunks.Add(new(chunk.ChunkId, chunk.TextHash ?? ChunkTextHash.Of(chunk.ChunkText ?? string.Empty), chunk.Generation));
+
+        return storedChunks;
+    }
+
+    public override async Task<IReadOnlyList<string>> GetChunkIdsAsync(string dataSourceId, string filePath, IReadOnlyCollection<int> generations, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var parentFileIds = context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId && file.AbsolutePath == filePath)
+            .Select(file => file.ParentFileId);
+
+        return await context.EmbeddingChunks
+            .Where(chunk => parentFileIds.Contains(chunk.ParentFileId) && generations.Contains(chunk.Generation))
+            .Select(chunk => chunk.ChunkId)
+            .ToListAsync(token);
+    }
+
+    public override async Task DeleteOtherGenerationsAsync(string dataSourceId, string filePath, IReadOnlyCollection<int> generations, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var parentFileIds = context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId && file.AbsolutePath == filePath)
+            .Select(file => file.ParentFileId);
+
+        await context.EmbeddingChunks
+            .Where(chunk => parentFileIds.Contains(chunk.ParentFileId) && !generations.Contains(chunk.Generation))
+            .ExecuteDeleteAsync(token);
+    }
+
+    public override async Task<IReadOnlyDictionary<string, ChunkLocation>> GetChunkLocationsAsync(string dataSourceId, IReadOnlyCollection<string> chunkIds, CancellationToken token)
+    {
+        if (chunkIds.Count is 0)
+            return new Dictionary<string, ChunkLocation>(StringComparer.Ordinal);
+
+        await using var context = this.CreateContext();
+        var parentFileIds = context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId)
+            .Select(file => file.ParentFileId);
+
+        // The locations only, never the texts of the chunks:
+        return await context.EmbeddingChunks
+            .AsNoTracking()
+            .Where(chunk => chunkIds.Contains(chunk.ChunkId) && parentFileIds.Contains(chunk.ParentFileId))
+            .Select(chunk => new
+            {
+                chunk.ChunkId,
+                Location = new ChunkLocation(chunk.PageNumber, chunk.EndPageNumber, chunk.SheetName, chunk.StartRow, chunk.EndRow, chunk.StartLine, chunk.EndLine, chunk.AttachmentPosition),
+            })
+            .ToDictionaryAsync(chunk => chunk.ChunkId, chunk => chunk.Location, StringComparer.Ordinal, token);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// On a thread of its own, cf. the Databases AGENTS.md: it runs before every vector search,
+    /// which a message in the chat may start, and it looks at every document of the data source.
+    /// </remarks>
+    public override Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(string dataSourceId, CancellationToken token) => Task.Run<IReadOnlyList<HiddenChunks>>(async () =>
+    {
+        await using var context = this.CreateContext();
+        var documents = await DocumentsWithHiddenChunks(context, dataSourceId)
+            .Select(file => new { file.ParentFileId, file.ChunkCount, file.Generation })
+            .ToListAsync(token);
+
+        return documents.Select(document => new HiddenChunks(document.ParentFileId, document.ChunkCount > 0 ? document.Generation : null)).ToList();
+    }, token);
+
+    /// <summary>
+    /// The documents of a data source with chunks a search must not find: those whose row names no
+    /// generation yet, and those with chunks of another generation than the one their row names.
+    /// </summary>
+    /// <remarks>
+    /// Asked before every vector search. For a document without hidden chunks, which is nearly
+    /// every document, this costs two lookups in the index over parent, generation and position:
+    /// one below the generation of its row and one above it.
+    /// </remarks>
+    private static IQueryable<EmbeddingStateFileEntity> DocumentsWithHiddenChunks(IndexStoreDbContext context, string dataSourceId) => context.EmbeddedFiles
+        .AsNoTracking()
+        .Where(file => file.DataSourceId == dataSourceId)
+        .Where(file => file.ChunkCount <= 0
+            || context.EmbeddingChunks.Any(chunk => chunk.ParentFileId == file.ParentFileId && chunk.Generation < file.Generation)
+            || context.EmbeddingChunks.Any(chunk => chunk.ParentFileId == file.ParentFileId && chunk.Generation > file.Generation));
+
     public override async Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token)
     {
         if (maxMatches <= 0)
@@ -358,7 +463,9 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
     /// </summary>
     /// <remarks>
     /// Kept free of ORDER BY and LIMIT, so EF Core can wrap it and filter it further before either
-    /// of them applies, cf. InSearchOrder.
+    /// of them applies, cf. InSearchOrder.<br/><br/>
+    /// Only the generation the row of a document names can be found, and only once the row says it
+    /// is complete. These are the same chunks the vector search finds, cf. GetHiddenChunksAsync.
     /// </remarks>
     private static IQueryable<IndexStoreSearchResultEntity> MatchChunks(IndexStoreDbContext context, string dataSourceId, string ftsQuery) => context.SearchResults
         .FromSqlInterpolated($"""
@@ -372,6 +479,13 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                                   f.relative_path AS RelativePath,
                                   f.file_type AS FileType,
                                   c.page_number AS PageNumber,
+                                  c.end_page_number AS EndPageNumber,
+                                  c.sheet_name AS SheetName,
+                                  c.start_row AS StartRow,
+                                  c.end_row AS EndRow,
+                                  c.start_line AS StartLine,
+                                  c.end_line AS EndLine,
+                                  c.attachment_position AS AttachmentPosition,
                                   c.chunk_index AS ChunkIndex,
                                   c.chunk_text AS ChunkText,
                                   bm25(embedding_chunks_fts) AS Score,
@@ -386,6 +500,8 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                               JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
                               JOIN data_sources ds ON ds.data_source_id = f.data_source_id
                               WHERE ds.data_source_id = {dataSourceId}
+                                AND f.chunk_count > 0
+                                AND c.generation = f.generation
                                 AND embedding_chunks_fts MATCH {ftsQuery}
                               """)
         .AsNoTracking();
@@ -609,70 +725,14 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
 
     /// <inheritdoc />
     /// <remarks>
-    /// VACUUM INTO writes a consistent snapshot of the database, including what the write-ahead log
-    /// still holds, and in WAL mode, reading it holds back no writer.<br/><br/>
-    ///
-    /// It runs on connections of their own, although the databases guide has raw SQL go through
-    /// GetDbConnection. The connections of the context share one cache, and a shared cache locks
-    /// whole tables: reading the whole database for the copy would hold back every writer until the
-    /// copy is done. Without pooling, nothing keeps the copy open afterward, so the backup can
-    /// delete it on every OS.<br/><br/>
-    ///
-    /// SQLite runs its async methods synchronously, and copying and checking a large index takes a
-    /// while. The copy therefore runs on a thread of its own, so that it never holds up its caller.
+    /// A consistent snapshot which holds back no writer, made on a thread of its own, cf. SqliteDatabaseCopy.
     /// </remarks>
-    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) => Task.Run(() => this.CopyAndCheckAsync(targetDirectory, token), token);
-
-    private async Task<string> CopyAndCheckAsync(string targetDirectory, CancellationToken token)
+    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) => Task.Run(async () =>
     {
-        Directory.CreateDirectory(targetDirectory);
         var targetPath = Path.Join(targetDirectory, DATABASE_FILENAME);
-
-        // VACUUM INTO refuses to write into a file which holds anything:
-        if (File.Exists(targetPath))
-            File.Delete(targetPath);
-
-        try
-        {
-            await using (var connection = new SqliteConnection(BuildBackupConnectionString(this.databasePath, SqliteOpenMode.ReadWrite)))
-            {
-                await connection.OpenAsync(token);
-                await using var command = connection.CreateCommand();
-                command.CommandText = "VACUUM INTO $targetPath;";
-                command.Parameters.AddWithValue("$targetPath", targetPath);
-                await command.ExecuteNonQueryAsync(token);
-            }
-
-            await using (var connection = new SqliteConnection(BuildBackupConnectionString(targetPath, SqliteOpenMode.ReadOnly)))
-            {
-                await connection.OpenAsync(token);
-                await using var command = connection.CreateCommand();
-                command.CommandText = "PRAGMA quick_check;";
-
-                var checkResult = (await command.ExecuteScalarAsync(token))?.ToString();
-                if (checkResult is not "ok")
-                    throw new InvalidOperationException($"The copy of the index at '{targetPath}' failed its check: '{checkResult}'.");
-            }
-
-            return targetPath;
-        }
-        catch
-        {
-            if (File.Exists(targetPath))
-                File.Delete(targetPath);
-
-            throw;
-        }
-    }
-
-    private static string BuildBackupConnectionString(string path, SqliteOpenMode mode) => new SqliteConnectionStringBuilder
-    {
-        DataSource = path,
-        Mode = mode,
-        Cache = SqliteCacheMode.Private,
-        Pooling = false,
-        DefaultTimeout = 30,
-    }.ToString();
+        await SqliteDatabaseCopy.CopyAndCheckAsync(this.databasePath, targetPath, token);
+        return targetPath;
+    }, token);
 
     private IndexStoreDbContext CreateContext() => new(this.dbContextOptions);
 
@@ -706,6 +766,8 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         fileEntity.EmbeddedAtUtc = file.EmbeddedAtUtc;
         fileEntity.ChunkCount = file.ChunkCount;
         fileEntity.TranscriptKey = file.TranscriptKey;
+        fileEntity.ContentHash = file.ContentHash;
+        fileEntity.Generation = file.Generation;
     }
 
     private static void ApplyPermanentFailure(IndexingFailureEntity failureEntity, string dataSourceId, PermanentIndexingFailure failure)
@@ -731,8 +793,17 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         chunkEntity.ChunkId = chunk.ChunkId;
         chunkEntity.ParentFileId = chunk.ParentFileId;
         chunkEntity.PageNumber = chunk.PageNumber;
+        chunkEntity.EndPageNumber = chunk.EndPageNumber;
         chunkEntity.ChunkIndex = chunk.ChunkIndex;
         chunkEntity.ChunkText = chunk.ChunkText;
+        chunkEntity.TextHash = chunk.TextHash;
+        chunkEntity.Generation = chunk.Generation;
+        chunkEntity.SheetName = chunk.SheetName;
+        chunkEntity.StartRow = chunk.StartRow;
+        chunkEntity.EndRow = chunk.EndRow;
+        chunkEntity.StartLine = chunk.StartLine;
+        chunkEntity.EndLine = chunk.EndLine;
+        chunkEntity.AttachmentPosition = chunk.AttachmentPosition;
         chunkEntity.EmbeddedAtUtc = chunk.EmbeddedAtUtc;
     }
 
@@ -746,6 +817,7 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         result.RelativePath,
         result.FileType,
         result.PageNumber,
+        result.EndPageNumber,
         result.ChunkIndex,
         result.ChunkText,
         result.Score,
@@ -754,7 +826,13 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         result.CreationUtc,
         result.LastWriteUtc,
         result.EmbeddedAtUtc,
-        result.ChunkCount);
+        result.ChunkCount,
+        result.SheetName,
+        result.StartRow,
+        result.EndRow,
+        result.StartLine,
+        result.EndLine,
+        result.AttachmentPosition);
 
     private static string BuildFtsQuery(string query)
     {

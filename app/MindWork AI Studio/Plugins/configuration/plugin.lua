@@ -663,6 +663,14 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: NO_DATA_SOURCES, APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior"] = "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS"
 --
+-- Configure whether a chat reads an attached file again when the file changed since it was sent.
+-- By default, every later message of a chat sends the AI the content a file had when it was first
+-- sent, also when the file changed or is gone by now, and users can look up what the AI received.
+-- When enabled, the AI receives the new content of a changed file with the next message. A file
+-- which is gone keeps the content it was sent with either way.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataChat.ReadChangedAttachmentsAgain"] = true
+--
 -- Allow users to change any configured chat default locally.
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
@@ -675,6 +683,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.ReadChangedAttachmentsAgain.AllowUserOverride"] = true
 
 -- Configure defaults for the Slide Assistant.
 -- Preselection must be enabled for the template, the picture library, and the other defaults

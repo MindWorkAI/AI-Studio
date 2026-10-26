@@ -293,7 +293,7 @@ public sealed partial class RustService
         {
             if (segment.TokenCount is { } tokenCount)
             {
-                yield return new(segment.Content, tokenCount, segment.PageNumber);
+                yield return new(segment.Content, tokenCount, segment.Location);
                 continue;
             }
 
@@ -306,7 +306,7 @@ public sealed partial class RustService
             var countedSegment = await this.GetTokenCount(embeddingProvider, segment.Content, token);
             if (countedSegment is { Success: true } counted)
             {
-                yield return new(segment.Content, counted.TokenCount, segment.PageNumber);
+                yield return new(segment.Content, counted.TokenCount, segment.Location);
                 continue;
             }
 
@@ -318,7 +318,7 @@ public sealed partial class RustService
         }
     }
 
-    private async IAsyncEnumerable<(string Content, int? TokenCount, int? PageNumber)> StreamArbitraryFileDataCore(
+    private async IAsyncEnumerable<(string Content, int? TokenCount, SourceLocation Location)> StreamArbitraryFileDataCore(
         string path,
         string tokenizerPath,
         PromptInjectionSource? reportAs,
@@ -427,13 +427,13 @@ public sealed partial class RustService
                 }
 
                 //
-                // The count and the page come from the processed event, not from the event which
-                // was just read: a reader may hold content back across several events, and the
-                // count and page of the content it releases describe that content, not the event
-                // that released it.
+                // The count and the location come from the processed event, not from the event
+                // which was just read: a reader may hold content back across several events, and
+                // the count and location of the content it releases describe that content, not the
+                // event that released it.
                 //
                 if (!string.IsNullOrWhiteSpace(processedEvent.Content))
-                    yield return (processedEvent.Content, processedEvent.TokenCount, processedEvent.PageNumber);
+                    yield return (processedEvent.Content, processedEvent.TokenCount, processedEvent.Location);
             }
         }
         finally
@@ -442,7 +442,7 @@ public sealed partial class RustService
         }
 
         if (finalContentChunk is { } pendingContent && !string.IsNullOrWhiteSpace(pendingContent.Content))
-            yield return (pendingContent.Content, pendingContent.TokenCount, pendingContent.PageNumber);
+            yield return (pendingContent.Content, pendingContent.TokenCount, SourceLocation.OnPage(pendingContent.PageNumber));
 
         if (promptInjectionRedactedCount is 0)
             yield break;

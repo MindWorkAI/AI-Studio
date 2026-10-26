@@ -75,6 +75,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("INTEGER")
                 .HasColumnName("chunk_count");
 
+            entity.Property<string>("ContentHash")
+                .HasColumnType("TEXT")
+                .HasColumnName("content_hash");
+
             entity.Property<DateTimeOffset>("CreationUtc")
                 .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
@@ -108,6 +112,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT")
                 .HasColumnName("fingerprint");
+
+            entity.Property<int>("Generation")
+                .HasColumnType("INTEGER")
+                .HasColumnName("generation");
 
             entity.Property<DateTimeOffset>("LastWriteUtc")
                 .HasConversion(utcDateTimeOffsetConverter)
@@ -149,6 +157,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnName("id")
                 .HasAnnotation("Sqlite:Autoincrement", true);
 
+            entity.Property<int?>("AttachmentPosition")
+                .HasColumnType("INTEGER")
+                .HasColumnName("attachment_position");
+
             entity.Property<string>("ChunkId")
                 .IsRequired()
                 .HasColumnType("TEXT")
@@ -168,6 +180,22 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("embedded_at_utc");
 
+            entity.Property<int?>("EndLine")
+                .HasColumnType("INTEGER")
+                .HasColumnName("end_line");
+
+            entity.Property<int?>("EndPageNumber")
+                .HasColumnType("INTEGER")
+                .HasColumnName("end_page_number");
+
+            entity.Property<int?>("EndRow")
+                .HasColumnType("INTEGER")
+                .HasColumnName("end_row");
+
+            entity.Property<int>("Generation")
+                .HasColumnType("INTEGER")
+                .HasColumnName("generation");
+
             entity.Property<int?>("PageNumber")
                 .HasColumnType("INTEGER")
                 .HasColumnName("page_number");
@@ -176,6 +204,22 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT")
                 .HasColumnName("parent_file_id");
+
+            entity.Property<string>("SheetName")
+                .HasColumnType("TEXT")
+                .HasColumnName("sheet_name");
+
+            entity.Property<int?>("StartLine")
+                .HasColumnType("INTEGER")
+                .HasColumnName("start_line");
+
+            entity.Property<int?>("StartRow")
+                .HasColumnType("INTEGER")
+                .HasColumnName("start_row");
+
+            entity.Property<string>("TextHash")
+                .HasColumnType("TEXT")
+                .HasColumnName("text_hash");
 
             entity.HasKey("Id");
 
@@ -189,9 +233,9 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.HasIndex("ParentFileId")
                 .HasDatabaseName("idx_embedding_chunks_parent_file");
 
-            entity.HasIndex("ParentFileId", "ChunkIndex")
+            entity.HasIndex("ParentFileId", "Generation", "ChunkIndex")
                 .IsUnique()
-                .HasDatabaseName("idx_embedding_chunks_parent_file_chunk_index");
+                .HasDatabaseName("idx_embedding_chunks_parent_file_generation_chunk_index");
 
             entity.ToTable("embedding_chunks");
         });
@@ -251,6 +295,9 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT");
 
+            entity.Property<int?>("AttachmentPosition")
+                .HasColumnType("INTEGER");
+
             entity.Property<int>("ChunkCount")
                 .HasColumnType("INTEGER");
 
@@ -280,6 +327,15 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.Property<DateTimeOffset>("EmbeddedAtUtc")
                 .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT");
+
+            entity.Property<int?>("EndLine")
+                .HasColumnType("INTEGER");
+
+            entity.Property<int?>("EndPageNumber")
+                .HasColumnType("INTEGER");
+
+            entity.Property<int?>("EndRow")
+                .HasColumnType("INTEGER");
 
             entity.Property<string>("FileName")
                 .IsRequired()
@@ -313,6 +369,15 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
 
             entity.Property<double>("Score")
                 .HasColumnType("REAL");
+
+            entity.Property<string>("SheetName")
+                .HasColumnType("TEXT");
+
+            entity.Property<int?>("StartLine")
+                .HasColumnType("INTEGER");
+
+            entity.Property<int?>("StartRow")
+                .HasColumnType("INTEGER");
 
             entity.HasNoKey();
 

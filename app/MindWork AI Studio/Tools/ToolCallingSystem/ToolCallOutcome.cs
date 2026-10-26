@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.RAG;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -34,6 +35,11 @@ public sealed record ToolCallOutcome(string Content, ToolInvocationTrace Trace)
     /// The sources the result contributes to the answer.
     /// </summary>
     public IReadOnlyList<Source> Sources { get; init; } = [];
+
+    /// <summary>
+    /// The passages of the sources, as the model received them in the result.
+    /// </summary>
+    public IReadOnlyList<SourcePassage> Passages { get; init; } = [];
 
     /// <summary>
     /// The web addresses in the result, as request keys, except those the model wrote into the call.

@@ -13,9 +13,11 @@ public sealed record VectorStoragePoint(
     string RelativePath,
     string FileType,
     int? PageNumber,
+    int? EndPageNumber,
     int ChunkIndex,
     string Text,
     string Fingerprint,
     DateTimeOffset CreationUtc,
     DateTimeOffset LastWriteUtc,
-    DateTimeOffset EmbeddedAtUtc);
+    DateTimeOffset EmbeddedAtUtc,
+    int Generation);

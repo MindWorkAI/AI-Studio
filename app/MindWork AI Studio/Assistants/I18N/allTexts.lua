@@ -3658,6 +3658,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3378120620"] = "We could load mod
 -- Your data sources could not be used. This answer was created without them.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T373499115"] = "Your data sources could not be used. This answer was created without them."
 
+-- AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T713722424"] = "AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it."
+
 -- The local image file does not exist. Skipping the image.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T255679918"] = "The local image file does not exist. Skipping the image."
 
@@ -4060,6 +4063,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T4081853237"] = "C
 -- Configure Keyboard Shortcut
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T636303786"] = "Configure Keyboard Shortcut"
 
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONTENTVIEWER::T1494001562"] = "Image"
+
+-- Plain text
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONTENTVIEWER::T3086748382"] = "Plain text"
+
+-- Formatted
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONTENTVIEWER::T3618541955"] = "Formatted"
+
 -- Keep the existing chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1274903302"] = "Keep the existing chat"
 
@@ -4266,6 +4278,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3655837348"] = "Back up the
 
 -- Files which AI Studio needs only for a moment and deletes again.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T366353671"] = "Files which AI Studio needs only for a moment and deletes again."
+
+-- What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It is part of your chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3806894665"] = "What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It is part of your chats."
 
 -- Plugins which come with AI Studio, such as the language packs. AI Studio brings them back by itself.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3877928356"] = "Plugins which come with AI Studio, such as the language packs. AI Studio brings them back by itself."
@@ -4708,26 +4723,26 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Change what this tile opens"
 
--- Could not open the file location.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T1118835751"] = "Could not open the file location."
+-- Copy the path: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1140628382"] = "Copy the path: {0}"
 
--- Could not open the file: {0}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T1290686840"] = "Could not open the file: {0}"
+-- Show this file in the file manager of your system
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1587653504"] = "Show this file in the file manager of your system"
 
--- Open with the default program
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T1332010305"] = "Open with the default program"
+-- Copy the address: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1663694701"] = "Copy the address: {0}"
 
--- Could not open the file location: {0}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T1455637941"] = "Could not open the file location: {0}"
+-- AI Studio cannot find the file {0} on this computer. It may have been moved, renamed, or deleted, or it is on another computer, such as the server of a data source.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T21766676"] = "AI Studio cannot find the file {0} on this computer. It may have been moved, renamed, or deleted, or it is on another computer, such as the server of a data source."
 
--- Show in the file manager
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T3007835369"] = "Show in the file manager"
+-- Open the file at page {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3524349202"] = "Open the file at page {0}"
 
--- Unknown error
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T3461425987"] = "Unknown error"
+-- Open this web page in your browser
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3596972550"] = "Open this web page in your browser"
 
--- Could not open the file.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTACTIONS::T362546438"] = "Could not open the file."
+-- Open the file in the program your system uses for it
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268"] = "Open the file in the program your system uses for it"
 
 -- Saving '{0}'...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] = "Saving '{0}'..."
@@ -5851,26 +5866,38 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 -- Are you sure you want to delete the transcription provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T789660305"] = "Are you sure you want to delete the transcription provider '{0}'?"
 
--- Could not open the file location.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1118835751"] = "Could not open the file location."
+-- Transcript of an audio file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T1797766177"] = "Transcript of an audio file"
 
--- Could not open the file location: {0}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1455637941"] = "Could not open the file location: {0}"
+-- Transcript of a video file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T3408352114"] = "Transcript of a video file"
 
--- Show this file in the file manager of your system
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1587653504"] = "Show this file in the file manager of your system"
+-- At the moment, AI Studio cannot read the text of this passage that the AI received, e.g., while AI Studio is still starting.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T3678367303"] = "At the moment, AI Studio cannot read the text of this passage that the AI received, e.g., while AI Studio is still starting."
 
--- Opens this document in the program your system uses for it
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3169582185"] = "Opens this document in the program your system uses for it"
+-- AI Studio no longer has the text of this passage that the AI received. Only where it was found is still known.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T3950319181"] = "AI Studio no longer has the text of this passage that the AI received. Only where it was found is still known."
 
--- Unknown error
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3461425987"] = "Unknown error"
+-- Text the AI received
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T46215024"] = "Text the AI received"
 
--- Could not open the document.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3570758363"] = "Could not open the document."
+-- Try again
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T557748474"] = "Try again"
 
--- Could not open the document: {0}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T945417289"] = "Could not open the document: {0}"
+-- Surrounding content
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T884772048"] = "Surrounding content"
+
+-- Transcript
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T92473707"] = "Transcript"
+
+-- An image matched here. The AI was told about it and where to find it, but it did not receive the image itself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T989893925"] = "An image matched here. The AI was told about it and where to find it, but it did not receive the image itself."
+
+-- Show the {0} passages the AI received from this source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T2556408625"] = "Show the {0} passages the AI received from this source"
+
+-- Show the passage the AI received from this source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3350418006"] = "Show the passage the AI received from this source"
 
 -- Copy {0} to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TEXTINFOLINE::T2206391442"] = "Copy {0} to the clipboard"
@@ -7831,20 +7858,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T900713019
 -- Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1205126512"] = "Please wait while we load the content of your file. Depending on the file type and size, this may take a moment."
 
--- Markdown View
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1373123357"] = "Markdown View"
+-- This is the text the AI received from your file when you first sent it. Later changes to the file do not reach the AI in this chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T160563952"] = "This is the text the AI received from your file when you first sent it. Later changes to the file do not reach the AI in this chat."
 
 -- Load file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2129302565"] = "Load file"
 
--- Image View
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2199753423"] = "Image View"
-
--- Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2468296835"] = "Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document."
-
 -- You can drag another file into this window. We attach it right away and show it here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2822249202"] = "You can drag another file into this window. We attach it right away and show it here."
+
+-- Your document is large, so we show you only its beginning. We hide the remaining {0} characters here. Rest assured: the AI still receives your entire document.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2853647837"] = "Your document is large, so we show you only its beginning. We hide the remaining {0} characters here. Rest assured: the AI still receives your entire document."
+
+-- The file is no longer in its original location. Below is the text the AI received from it when you sent it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3044324335"] = "The file is no longer in its original location. Below is the text the AI received from it when you sent it."
 
 -- See how we load your file. Review the content before we process it further.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3271853346"] = "See how we load your file. Review the content before we process it further."
@@ -7855,17 +7882,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3448155331"] = "Close"
 -- Loaded Content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3529911749"] = "Loaded Content"
 
--- Simple View
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T428485200"] = "Simple View"
+-- The file could not be found. It may have been moved, renamed, or deleted, or it is otherwise inaccessible.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T430625309"] = "The file could not be found. It may have been moved, renamed, or deleted, or it is otherwise inaccessible."
+
+-- Text the AI received
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T46215024"] = "Text the AI received"
 
 -- This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T652739927"] = "This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected."
-
--- File Path
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T729508546"] = "File Path"
-
--- The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T973777830"] = "The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible."
 
 -- Embedding Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T1427271797"] = "Embedding Name"
@@ -8815,6 +8839,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3160778981"] = "Pr
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3448155331"] = "Close"
 
+-- Show the text the AI received from this file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3884104588"] = "Show the text the AI received from this file."
+
 -- Your attached files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3909191077"] = "Your attached files"
 
@@ -9205,6 +9232,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T82
 -- Restore default
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T913168756"] = "Restore default"
 
+-- Files are sent as they were first read
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1320692831"] = "Files are sent as they were first read"
+
 -- Preselect one of your chat templates?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1402022556"] = "Preselect one of your chat templates?"
 
@@ -9232,6 +9262,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] 
 -- Control how the LLM provider for added chats is selected.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] = "Control how the LLM provider for added chats is selected."
 
+-- Changed files are read again for the next message
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T264953820"] = "Changed files are read again for the next message"
+
 -- Provider selection when loading a chat and sending assistant results to chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
 
@@ -9240,6 +9273,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2913693228"] 
 
 -- Do you want to use any shortcut to send your input?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Do you want to use any shortcut to send your input?"
+
+-- Read changed attachments again?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3079510748"] = "Read changed attachments again?"
 
 -- Would you like to set one of your chat templates as the default for chats?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3234927721"] = "Would you like to set one of your chat templates as the default for chats?"
@@ -9264,6 +9300,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] 
 
 -- Do you want to apply the default data source options when sending assistant results to chat?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Do you want to apply the default data source options when sending assistant results to chat?"
+
+-- When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4060508809"] = "When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone."
 
 -- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
@@ -10336,6 +10375,15 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T4030229154"] = "Your Inp
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T900713019"] = "Cancel"
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T3448155331"] = "Close"
+
+-- This is exactly what the AI received from this source for its answer, after AI Studio removed any suspicious instructions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T406940705"] = "This is exactly what the AI received from this source for its answer, after AI Studio removed any suspicious instructions."
+
+-- Passages
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T4291613392"] = "Passages"
+
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
 
@@ -11067,6 +11115,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "This library is 
 
 -- Trademarks & Brand Assets
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421823619"] = "Trademarks & Brand Assets"
+
+-- Provenance database
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1496928875"] = "Provenance database"
 
 -- Copies the allowed host pattern to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1513592659"] = "Copies the allowed host pattern to the clipboard"
@@ -12720,6 +12771,69 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T3662391977"] = "
 
 -- Status
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T6222351"] = "Status"
+
+-- Reason
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T1093747001"] = "Reason"
+
+-- Starting
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T1233211769"] = "Starting"
+
+-- unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T2608177081"] = "unknown"
+
+-- Unavailable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T3662391977"] = "Unavailable"
+
+-- Process architecture
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T563161633"] = "Process architecture"
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T6222351"] = "Status"
+
+-- Native library
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T634426545"] = "Native library"
+
+-- no migration applied
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T1014567907"] = "no migration applied"
+
+-- Storage size
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T1230141403"] = "Storage size"
+
+-- Stored items across all chats
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T1569215203"] = "Stored items across all chats"
+
+-- {0} ({1} applied)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T2286846332"] = "{0} ({1} applied)"
+
+-- Journal mode
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T2411639995"] = "Journal mode"
+
+-- Attached files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T246258678"] = "Attached files"
+
+-- Mails
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T2534642695"] = "Mails"
+
+-- unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T2608177081"] = "unknown"
+
+-- Reported version
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T3556099842"] = "Reported version"
+
+-- Schema version
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T424290830"] = "Schema version"
+
+-- Passages of data sources
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T686479917"] = "Passages of data sources"
+
+-- Web pages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T748543057"] = "Web pages"
+
+-- Chats with stored items
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T826028599"] = "Chats with stored items"
+
+-- {0} ({1} applied, {2} pending)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T983802795"] = "{0} ({1} applied, {2} pending)"
 
 -- Reason
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T1093747001"] = "Reason"
@@ -14944,6 +15058,39 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T304
 -- AI source selection with AI retrieval context validation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "AI source selection with AI retrieval context validation"
 
+-- Pages {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T1095604049"] = "Pages {0}"
+
+-- {0}: rows {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T1424805945"] = "{0}: rows {1}"
+
+-- {0}: row {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T1620414946"] = "{0}: row {1}"
+
+-- Rows {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T2222697074"] = "Rows {0}"
+
+-- Line {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T278321977"] = "Line {0}"
+
+-- {0} passages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T344316214"] = "{0} passages"
+
+-- Lines {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T3536135902"] = "Lines {0}"
+
+-- Part {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T3742022998"] = "Part {0}"
+
+-- Row {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T4122835077"] = "Row {0}"
+
+-- Page {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T4127287940"] = "Page {0}"
+
+-- Parts {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T826267883"] = "Parts {0}"
+
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
 
@@ -15324,12 +15471,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSTATUS::T26552229
 
 -- Completed
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSTATUS::T3968379570"] = "Completed"
-
--- Chunk {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T2544251224"] = "Chunk {0}"
-
--- Page {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T4127287940"] = "Page {0}"
 
 -- The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T103791004"] = "The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}"
@@ -15760,6 +15901,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1064148123"] = "Fail
 -- Failed to install update automatically. Please try again manually.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T3709709946"] = "Failed to install update automatically. Please try again manually."
 
+-- Could not open the file location.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1118835751"] = "Could not open the file location."
+
+-- Could not open the file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1455637941"] = "Could not open the file location: {0}"
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3461425987"] = "Unknown error"
+
+-- Could not open the document.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3570758363"] = "Could not open the document."
+
+-- Could not open the document: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T945417289"] = "Could not open the document: {0}"
+
 -- Sources
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T2730980305"] = "Sources"
 
@@ -15855,6 +16011,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- To use this tool, add a mailbox to your data sources first.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLCONFIGURATION::T1547505353"] = "To use this tool, add a mailbox to your data sources first."
+
+-- To
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T1106613828"] = "To"
+
+-- Text from the attachment
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T1262266390"] = "Text from the attachment"
+
+-- Received
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T1559762898"] = "Received"
+
+-- Subject
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T2692293871"] = "Subject"
+
+-- From
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T410269077"] = "From"
+
+-- Attachments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T498946337"] = "Attachments"
 
 -- Read Mail
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::READMAILTOOL::T2299936968"] = "Read Mail"

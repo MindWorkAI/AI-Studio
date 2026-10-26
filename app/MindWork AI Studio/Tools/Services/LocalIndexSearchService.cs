@@ -103,11 +103,13 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
             }
 
             var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
+            var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
+            var hiddenChunks = await this.GetHiddenChunksAsync(dataSource, indexStore, token);
             var results = filter is null
-                ? await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, token)
-                : await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, filter, token);
+                ? await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, hiddenChunks, token)
+                : await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, filter, hiddenChunks, token);
 
-            return this.LimitSearchResults(dataSource, "vector", results, maxMatches);
+            return await this.CompleteLocationsAsync(dataSource, indexStore, this.LimitSearchResults(dataSource, "vector", results, maxMatches), token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -279,6 +281,67 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// The chunks of a data source which its vector search must not find, cf. IndexStoreClient.GetHiddenChunksAsync.
+    /// </summary>
+    /// <remarks>
+    /// Without the index store, nothing is hidden. Its keyword search fails then as well, which the
+    /// retrieval reports, and a hidden chunk is still text of its document, only perhaps not the
+    /// version the document is searched by.
+    /// </remarks>
+    /// <param name="dataSource">The data source to search.</param>
+    /// <param name="indexStore">The index store.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The hidden chunks, document by document.</returns>
+    private async Task<IReadOnlyList<HiddenChunks>> GetHiddenChunksAsync(IIndexedDataSource dataSource, IndexStoreClient indexStore, CancellationToken token)
+    {
+        if (indexStore.IsAvailable)
+            return await indexStore.GetHiddenChunksAsync(dataSource.Id, token);
+
+        logger.LogWarning(
+            "Searching the vectors of data source '{DataSourceName}' ({DataSourceId}) without hiding incomplete generations, because local RAG index '{DatabaseName}' is unavailable.",
+            dataSource.Name,
+            dataSource.Id,
+            indexStore.Name);
+
+        return [];
+    }
+
+    /// <summary>
+    /// Completes the hits of the vector search with where their chunks are, as the index store keeps it.
+    /// </summary>
+    /// <remarks>
+    /// The vector store keeps only the pages of a chunk; its sheet and rows, its lines and the
+    /// attachment of a mail it is from are kept in the index store alone. One query for all hits.
+    /// Without the index store, the hits keep their pages, which is what they said before: a hit
+    /// which cannot say where it is still belongs into the answer.
+    /// </remarks>
+    /// <param name="dataSource">The data source searched.</param>
+    /// <param name="indexStore">The index store.</param>
+    /// <param name="results">The hits.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The hits, in their order.</returns>
+    private async Task<IReadOnlyList<VectorSearchResult>> CompleteLocationsAsync(IIndexedDataSource dataSource, IndexStoreClient indexStore, IReadOnlyList<VectorSearchResult> results, CancellationToken token)
+    {
+        if (results.Count is 0 || !indexStore.IsAvailable)
+            return results;
+
+        try
+        {
+            var locations = await indexStore.GetChunkLocationsAsync(dataSource.Id, results.Select(result => result.ChunkId).ToList(), token);
+            return results.Select(result => locations.TryGetValue(result.ChunkId, out var location) ? result with { StoredLocation = location } : result).ToList();
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not read where the chunks found by the vector search of data source '{DataSourceName}' ({DataSourceId}) are. They name their pages only.", dataSource.Name, dataSource.Id);
+            return results;
+        }
     }
 
     private IReadOnlyList<T> LimitSearchResults<T>(IIndexedDataSource dataSource, string searchName, IReadOnlyList<T> results, int maxMatches)
