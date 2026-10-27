@@ -3592,7 +3592,7 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Möchte
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Entfernt diesen Block"
 
 -- Export without template
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2233581051"] = "Exportieren ohne Vorlage"
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2233581051"] = "Ohne Vorlage exportieren"
 
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Nachricht neu erstellen"
@@ -3610,7 +3610,7 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2822776450"] = "KI-Antw
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Anzahl der Anhänge"
 
 -- Manage your templates
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3058934130"] = "Verwalte deine Vorlagen"
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3058934130"] = "Verwalten Sie Ihre Vorlagen"
 
 -- Roll back to this response
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3132525321"] = "Zu dieser Antwort zurücksetzen"
@@ -4759,13 +4759,13 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] =
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEADDBUTTONS::T1076773091"] = "Formatvorlage hinzufügen"
 
 -- Import Format Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEADDBUTTONS::T2773597251"] = "Vorlagen-Importformat"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEADDBUTTONS::T2773597251"] = "Formatvorlage importieren"
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1469573738"] = "Löschen"
 
 -- View
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1582017048"] = "Ansicht"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1582017048"] = "Anzeigen"
 
 -- The template file cannot be found.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1941431282"] = "Die Vorlagendatei wurde nicht gefunden."
@@ -4777,19 +4777,19 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1955378082"] =
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2752175671"] = "Speichern Sie hier Ihre Vorlagen, z. B. die Word- und PowerPoint-Vorlagen Ihrer Organisation. Wenn Sie ein Ergebnis nach Word exportieren, können Sie eine Ihrer Word-Vorlagen auswählen."
 
 -- Edit Format Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2823861742"] = "Vorlagenformat bearbeiten"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2823861742"] = "Formatvorlage bearbeiten"
 
 -- Format Template Name
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3093558555"] = "Vorlagenname formatieren"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3093558555"] = "Name der Formatvorlage"
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3267849393"] = "Bearbeiten"
 
 -- Are you sure you want to delete the format template '{0}'?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3671173081"] = "Möchtest du die Formatvorlage '{0}' wirklich löschen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3671173081"] = "Sind Sie sicher, dass Sie die Formatvorlage „{0}“ löschen möchten?"
 
 -- This format template is managed by your organization.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3691770332"] = "Dieses Formatvorlage wird von Ihrer Organisation verwaltet."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3691770332"] = "Diese Formatvorlage wird von Ihrer Organisation verwaltet."
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3865031940"] = "Aktionen"
@@ -8149,16 +8149,16 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T1173984541"] = "Einb
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T3448155331"] = "Schließen"
 
 -- The name of the format template is mandatory, and each format template must have a unique name.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1062147464"] = "Der Name der Formatvorlage ist Pflicht, und jede Formatvorlage muss einen eindeutigen Namen haben."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1062147464"] = "Der Name der Formatvorlage ist erforderlich, und jede Formatvorlage muss einen eindeutigen Namen haben."
 
 -- Please select a template file.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T11274556"] = "Bitte wählen Sie eine Vorlagendatei aus."
 
 -- The selected file is not a supported format template. Supported file types are: {0}.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1231150347"] = "Die ausgewählte Datei ist kein unterstütztes Format. Unterstützte Dateitypen sind: {0}."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1231150347"] = "Die ausgewählte Datei ist keine unterstützte Formatvorlage. Unterstützte Dateitypen sind: {0}."
 
 -- Update
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1847791252"] = "Aktualisierung"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1847791252"] = "Aktualisieren"
 
 -- Store a template, for example a Word or PowerPoint template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2059843578"] = "Speichern Sie eine Vorlage, z. B. eine Word- oder PowerPoint-Vorlage Ihrer Organisation. AI Studio merkt sich den Speicherort der Datei, sodass eine neue Version der Vorlage sofort wirksam wird."
@@ -8170,7 +8170,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2646845972"] = "Hinzu
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2793461942"] = "Der Name der Formatvorlage darf nicht länger als 40 Zeichen sein."
 
 -- Format Template Name
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3093558555"] = "Formatvorlagenname"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3093558555"] = "Name der Formatvorlage"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3448155331"] = "Schließen"
@@ -8185,7 +8185,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3882045083"] = "Die V
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4239698038"] = "Der Name der Formatvorlage muss eindeutig sein; der gewählte Name wird bereits verwendet."
 
 -- Select a format template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4261636653"] = "Wähle ein Formatvorlage"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4261636653"] = "Formatvorlage auswählen"
 
 -- Please enter a name for the format template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T454079616"] = "Bitte geben Sie einen Namen für die Formatvorlage ein."
@@ -13048,7 +13048,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Datenquelle
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "Der Index der Datenquelle „{0}“ kann nicht mehr gelesen werden. Bei einer Reparatur wird der Index vollständig neu erstellt: Alle bisher indexierten Daten werden verworfen und jedes Dokument dieser Datenquelle erneut an Ihren Einbettungsanbieter gesendet. Bei einem Cloud-Anbieter entstehen dadurch Kosten, und bei einer großen Datenquelle kann dies einige Zeit dauern. Möchten Sie diese Datenquelle jetzt reparieren?"
 
 -- The export into the format template '{0}' failed. Please check that the template can be read and that the target file is not open in another program.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1214642787"] = "Der Export in das Formatvorlagen-Template '{0}' ist fehlgeschlagen. Bitte überprüfen Sie, ob die Vorlage lesbar ist und ob die Zieldatei nicht in einem anderen Programm geöffnet ist."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1214642787"] = "Der Export in die Formatvorlage „{0}“ ist fehlgeschlagen. Bitte überprüfen Sie, ob die Vorlage lesbar ist und die Zieldatei nicht in einem anderen Programm geöffnet ist."
 
 -- The export succeeded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1713926719"] = "Der Export war erfolgreich."
@@ -13057,7 +13057,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1713926719"] = "Der Export wa
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1895034475"] = "Der Export ist fehlgeschlagen."
 
 -- The file of the format template '{0}' cannot be found. Please check the template in the settings.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T2859252913"] = "Die Datei des Formatvorlagen-Templates '{0}' kann nicht gefunden werden. Bitte überprüfen Sie die Vorlage in den Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T2859252913"] = "Die Datei der Formatvorlage „{0}“ kann nicht gefunden werden. Bitte überprüfen Sie die Vorlage in den Einstellungen."
 
 -- Only text messages can be exported.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T3576815370"] = "Nur Textnachrichten können exportiert werden."
@@ -14068,7 +14068,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXT
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T4094182084"] = "Transkriptionsanbieter"
 
 -- Format Template
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T675897640"] = "Hier ist eine Vorlage für das Format, das ich für die Übersetzungen verwenden werde:  --- **Originaltext (Englisch):** [Hier steht der englische Originaltext]  **Übersetzung (Deutsch):** [Hier steht die deutsche Übersetzung]  ---  Falls du spezifische Texte zur Übersetzung hast, gib sie mir bitte in diesem Format oder als reine Textzeile, und ich werde sie entsprechend übersetzen."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T675897640"] = "Formatvorlage"
 
 -- Data Source
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T858938618"] = "Datenquelle"
@@ -15295,7 +15295,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code �
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
 
 -- Format template
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T779618568"] = "Hier ist ein Formatvorlage für die Übersetzung:  **Original (Englisch):** [Hier steht der englische Originaltext]  **Übersetzung (Deutsch):** [Hier steht die deutsche Übersetzung]  Falls gewünscht, können auch zusätzliche Hinweise oder Anmerkungen hinzugefügt werden, z. B. zu spezifischen Begriffen oder Kontexten. Beispiel:  --- **Original (Englisch):** \"Start the AI assistant to begin.\"  **Übersetzung (Deutsch):** \"Starte den KI-Assistenten, um zu beginnen.\"  *Hinweis: \"KI-Assistent\" wurde gewählt, um den Begriff für die Zielgruppe verständlich zu halten.*  --- Bitte gib mir den ersten Text, der übersetzt werden soll, und ich werde ihn entsprechend bearbeiten."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T779618568"] = "Formatvorlage"
 
 -- Image for AI models
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T791951937"] = "Bild für KI-Modelle"
