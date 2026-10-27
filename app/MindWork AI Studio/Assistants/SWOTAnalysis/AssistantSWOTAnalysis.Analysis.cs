@@ -123,7 +123,7 @@ public partial class AssistantSWOTAnalysis
             if (read.Result is null)
             {
                 this.Logger.LogWarning("The answer for the SWOT category '{SwotCategory}' could not be read: {Issue}", category, read.Issue);
-                return new(SwotCategoryAnalysisStatus.FAILED, Message: T("The model response for this category did not have the expected structure."));
+                return new(SwotCategoryAnalysisStatus.FAILED, Message: T("The answer for this category did not have the expected form, even after asking the model once more."));
             }
 
             return new(SwotCategoryAnalysisStatus.COMPLETED, read.Result);
@@ -184,7 +184,7 @@ public partial class AssistantSWOTAnalysis
             if (read.Result is null)
             {
                 this.Logger.LogWarning("The answer of the SWOT analysis moderator could not be read: {Issue}", read.Issue);
-                this.AddInputIssue(T("The four SWOT categories could not be reconciled because the model response did not have the expected structure. The preliminary results of the categories remain visible below."));
+                this.AddInputIssue(T("The four SWOT categories could not be reconciled because the answer did not have the expected form, even after asking the model once more. The preliminary results of the categories remain visible below."));
                 return;
             }
 
@@ -259,7 +259,7 @@ public partial class AssistantSWOTAnalysis
 
         await this.MessageBus.SendWarning(new(
             Icons.Material.Filled.CloudOff,
-            T("The shared research could not be created. The SWOT analysis will continue without it.")));
+            T("The research with the selected tools failed. The SWOT analysis continues without it.")));
         return string.Empty;
     }
 

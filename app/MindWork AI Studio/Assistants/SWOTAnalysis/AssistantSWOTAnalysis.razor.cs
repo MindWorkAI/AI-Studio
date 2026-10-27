@@ -20,7 +20,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
 
     protected override string Title => T("SWOT Analysis");
 
-    protected override string Description => T("This assistant serves as a strategic planning tool that systematically captures strengths, weaknesses, opportunities, and risks. It can assist in positioning and strategy development for companies, organizations, or individuals. Additionally, it formulates concrete next steps to facilitate strategic decisions.");
+    protected override string Description => T("This assistant serves as a strategic planning tool that systematically captures strengths, weaknesses, opportunities, and threats. It can assist in positioning and strategy development for companies, organizations, or individuals. The AI analyzes the four categories at the same time, then reconciles them and writes an overall assessment with prioritized actions.");
 
     protected override string SystemPrompt =>
         SwotAnalysisModeration.BuildSystemPrompt(this.OutputLanguageInstruction);

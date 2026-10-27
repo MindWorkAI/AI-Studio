@@ -16,7 +16,7 @@ public partial class AssistantSWOTAnalysis
     protected override bool ShowDedicatedProgress => true;
 
     protected override string ProgressText =>
-        this.isGatheringSharedResearch ? T("Gathering shared research...") :
+        this.isGatheringSharedResearch ? T("Researching with the selected tools...") :
         this.isRepairingModeration ? T("The overall assessment did not have the expected form. Asking the model once more...") :
         this.isModeratingAnalysis ? T("Reconciling the four SWOT categories and writing the overall assessment...") :
         this.categoryAnalysisProgress.Values.Any(progress => progress.Status is SwotCategoryAnalysisStatus.RUNNING or SwotCategoryAnalysisStatus.REPAIRING) ? T("Analyzing the four SWOT categories...") :
