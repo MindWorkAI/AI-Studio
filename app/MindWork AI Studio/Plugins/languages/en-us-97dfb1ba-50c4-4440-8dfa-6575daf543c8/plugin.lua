@@ -4803,8 +4803,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] =
 -- AI Studio could not read the entries of this glossary.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1173179019"] = "AI Studio could not read the entries of this glossary."
 
+-- Import Glossary Configuration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1249864150"] = "Import Glossary Configuration"
+
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1469573738"] = "Delete"
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1582017048"] = "View"
 
 -- Delete Glossary
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1913598146"] = "Delete Glossary"
@@ -4814,6 +4820,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T207826488"] = "Langu
 
 -- Add Glossary
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T2091244660"] = "Add Glossary"
+
+-- For experts: paste the configuration of a glossary which somebody exported from AI Studio, e.g. a colleague or your IT department.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T2581434064"] = "For experts: paste the configuration of a glossary which somebody exported from AI Studio, e.g. a colleague or your IT department."
 
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T266367750"] = "Name"
@@ -4845,14 +4854,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3702301331"] = "Entr
 -- Glossaries hold terms together with a fixed translation or an explanation. A translation glossary makes the AI always translate its terms the same way, for example the names of your departments. A reference glossary explains terms the AI cannot know, such as the technical terms of your organization or invented words.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3725628047"] = "Glossaries hold terms together with a fixed translation or an explanation. A translation glossary makes the AI always translate its terms the same way, for example the names of your departments. A reference glossary explains terms the AI cannot know, such as the technical terms of your organization or invented words."
 
+-- View Glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3743333320"] = "View Glossary"
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3865031940"] = "Actions"
 
 -- Are you sure you want to delete the glossary '{0}' with all of its entries?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3941975424"] = "Are you sure you want to delete the glossary '{0}' with all of its entries?"
 
+-- This glossary is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T4236124819"] = "This glossary is managed by your organization."
+
 -- Translation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T613888204"] = "Translation"
+
+-- Import Glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T99577620"] = "Import Glossary"
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
@@ -6933,6 +6951,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2156367745
 -- {0} profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2342765572"] = "{0} profile"
 
+-- {0} glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2396010207"] = "{0} glossary"
+
 -- {0} introduction on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2426110502"] = "{0} introduction on the welcome page"
 
@@ -6941,6 +6962,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2438407498
 
 -- Yes, delete it
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2466176832"] = "Yes, delete it"
+
+-- {0} glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2509714007"] = "{0} glossaries"
 
 -- This also removes everything the configuration plugin had set up:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T264970454"] = "This also removes everything the configuration plugin had set up:"
@@ -8262,6 +8286,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1933960658"] = "Reference g
 -- {0} terms appear more than once. The AI gets all of their entries, which may contradict each other.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1963102348"] = "{0} terms appear more than once. The AI gets all of their entries, which may contradict each other."
 
+-- Your organization provides this glossary, so you can view its entries but not change them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2040342261"] = "Your organization provides this glossary, so you can view its entries but not change them."
+
 -- e.g. plural; other spelling
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2521431984"] = "e.g. plural; other spelling"
 
@@ -8297,6 +8324,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3324647716"] = "Enter a ter
 
 -- Note
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T339788125"] = "Note"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3448155331"] = "Close"
 
 -- Source term
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3510283274"] = "Source term"
@@ -8580,11 +8610,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2163853103"] = "You are
 -- {0} profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2342765572"] = "{0} profile"
 
+-- {0} glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2396010207"] = "{0} glossary"
+
 -- {0} introduction on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2426110502"] = "{0} introduction on the welcome page"
 
 -- Support contact
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2434966596"] = "Support contact"
+
+-- {0} glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2509714007"] = "{0} glossaries"
 
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T266367750"] = "Name"
@@ -14034,6 +14070,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 -- The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T995107927"] = "The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used."
 
+-- This glossary takes its entries from a file of a configuration plugin, which is not on this computer. Only glossaries which list their entries can be imported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T1027423715"] = "This glossary takes its entries from a file of a configuration plugin, which is not on this computer. Only glossaries which list their entries can be imported."
+
+-- The glossary contains no entries.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T1791473798"] = "The glossary contains no entries."
+
 -- The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T186946778"] = "The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured."
 
@@ -14294,6 +14336,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T1148682011
 
 -- The CONFIG table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3331620576"] = "The CONFIG table does not exist or is not a valid table."
+
+-- Glossary
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T1350120821"] = "Glossary"
 
 -- Document Analysis Policy
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T16338172"] = "Document Analysis Policy"
