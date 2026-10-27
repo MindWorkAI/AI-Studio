@@ -10,6 +10,7 @@ The provider only sees local tools that are
 
 - present in this installation, which a tool of a preview feature only is while the preview is switched on, and
 - available for the current component and
+- switched off neither by the organization nor by the user and
 - selected by the user or defaults, or offering themselves from the context of the chat, and
 - supported by the model and
 - configured correctly and
@@ -84,7 +85,7 @@ A result in `JsonContent` reaches the model the way `ToolExecutionResult.ToModel
 
 ## Tools Which Offer Themselves
 
-Most tools are selected: by the user, by the defaults of a component, by a chat template, or by the rules of an assistant. A tool whose use follows from the chat instead sets `Activation = ToolActivation.CONTEXT`. Nobody can select such a tool, so it appears in no selection. `ToolRegistry.GetCatalogAsync` leaves it out of every list built for a component, and `ToolRegistry.NormalizeSelection` drops it from a selection which names it anyway, such as the one of a chat template. The tool list of the app settings still shows it, so that an organization can switch it off or raise the confidence it requires. `semantic_search` is the only such tool so far.
+Most tools are selected: by the user, by the defaults of a component, by a chat template, or by the rules of an assistant. A tool whose use follows from the chat instead sets `Activation = ToolActivation.CONTEXT`. Nobody can select such a tool, so it appears in no selection. `ToolRegistry.GetCatalogAsync` leaves it out of every list built for a component, and `ToolRegistry.NormalizeSelection` drops it from a selection which names it anyway, such as the one of a chat template. The tool list of the app settings still shows it, so that the user or an organization can switch it off or raise the confidence it requires. `semantic_search` is the only such tool so far.
 
 The registry takes every context tool of the component as a candidate and runs it through the same checks as a selected one. A tool which passes them is then asked what it offers in this request, through `IToolImplementation.ResolveFunctionAsync`. Most tools leave that method alone and offer the function they registered. A tool which has to know the chat first returns a function tailored to it, or null when it has nothing to offer, and is then left out of the request. Only the description and the parameters of the answer count; the name and the strict mode stay as registered, because the calls of the model find their tool by its name. A resolution which throws costs that one tool and no other.
 
@@ -103,7 +104,7 @@ Paging stays stateless: every call brings its query and its page again. It has t
 
 ## Tool Collections
 
-Some tools only make sense together. Searching mails without being able to read the ones found gets in the way, and reading them with less trust than the search asks for would protect nothing. Such tools form a collection: people select it as one entry, it needs one minimum provider confidence, and an organization switches it off as one. The model still sees each of its tools on its own and calls each by its name.
+Some tools only make sense together. Searching mails without being able to read the ones found gets in the way, and reading them with less trust than the search asks for would protect nothing. Such tools form a collection: people select it as one entry, it needs one minimum provider confidence, and the user or an organization switches it off as one. The model still sees each of its tools on its own and calls each by its name.
 
 A collection is an `IToolCollection` class next to its tools, registered in `Program.cs`. It states its `ToolCollectionDefinition`: its ID, the IDs of its tools in the order they are listed, its minimum provider confidence, and a description for a model which picks the tools of an assistant. Its name, description, and icon come from its own members, so they can be translated. Whether it exists right now follows from its tools: it disappears with the last of them, e.g., while their preview is switched off. `ToolRegistry` registers collections after the tools and leaves out what it cannot accept: a collection taking the ID of a tool, a tool which is not registered or which offers itself from the context of a chat, and a tool another collection claimed first.
 
@@ -116,6 +117,16 @@ Three methods of the registry translate between both views:
 - `ToolRegistry.GetCollectionId` names the collection of a tool.
 
 The settings of a tool stay with the tool, also inside a collection. An organization addresses them by `"<toolId>.<fieldName>"`, and the settings dialog of a collection shows one section per tool. `mailboxes` is the only declared collection so far, with `search_mails`, `read_mail`, and `count_mails`.
+
+## Switched-Off Tools
+
+A collection can be switched off twice: by an organization in `DataTools.DisabledToolIds`, and by the user in `DataTools.UserDisabledToolIds`, through the switch of its row in the tool settings. Somebody without a Confluence wiki never needs its search, and a tool which stays in every selection with a warning about its missing settings only gets in the way. The list of the user is not managed: it only takes tools away, and what the organization switched off stays off whatever it holds. Both lists name collections, like every other setting about tools.
+
+`ToolRegistry.IsToolActive` is the one gate for both lists. Every list, the preparation of a request, the token count, and `ToolRegistry.GetOfferBlockReasonAsync` ask it, so a switched-off tool is neither offered to the model nor run, without a check of its own; `ToolExecutor` runs only what the request offered. When both lists name a collection, the organization is the reason which counts, because switching the tool on again would not help the user: `TOOL_SWITCHED_OFF` comes before `TOOL_SWITCHED_OFF_BY_USER`. `ToolCatalogItem.SwitchOffReason` carries the reason, so the user interface can tell both apart.
+
+What the user switched off disappears; what the organization switched off stays visible, locked, because the user has to learn why the tool does not work. `ToolRegistry.GetCatalogAsync` for a component therefore leaves out the collections the user switched off, and every selection is built from it. The catalog of all definitions, which the tool settings and the settings dialog of a tool use, keeps them, or nobody could switch them on again.
+
+Switching a collection off only hides it. A chat, a chat template, a document analysis policy, the defaults of a component, or an assistant plugin which names it keeps naming it, and switching it on again brings it back there. A selection field therefore shows a selection through `ToolRegistry.LeaveOutSwitchedOffByUser` and stores a change through `ToolRegistry.KeepSwitchedOffByUser`, which puts the switched-off collections back. Where the rules of an assistant name a switched-off tool, `ManagedToolsWarning` says that the run goes without it. Switching off `semantic_search` has the data sources searched with every message, as when an organization does it.
 
 ## Security
 
