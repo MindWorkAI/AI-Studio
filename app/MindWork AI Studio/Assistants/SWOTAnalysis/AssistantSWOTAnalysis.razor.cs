@@ -23,7 +23,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     protected override string Description => T("This assistant serves as a strategic planning tool that systematically captures strengths, weaknesses, opportunities, and risks. It can assist in positioning and strategy development for companies, organizations, or individuals. Additionally, it formulates concrete next steps to facilitate strategic decisions.");
 
     protected override string SystemPrompt =>
-        SwotAnalysisFinalization.BuildSystemPrompt(this.OutputLanguageInstruction);
+        SwotAnalysisModeration.BuildSystemPrompt(this.OutputLanguageInstruction);
 
     protected override bool AllowProfiles => false;
 
@@ -42,7 +42,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
         this.analysisResult = null;
         this.categoryAnalysisProgress.Clear();
         this.isGatheringSharedResearch = false;
-        this.isFinalizingAnalysis = false;
+        this.isModeratingAnalysis = false;
         this.sharedResearchContext = string.Empty;
         this.inputText = string.Empty;
         this.webContentURL = string.Empty;
@@ -86,7 +86,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private SwotAnalysisResult? analysisResult;
     private Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress> categoryAnalysisProgress = [];
     private bool isGatheringSharedResearch;
-    private bool isFinalizingAnalysis;
+    private bool isModeratingAnalysis;
     private string sharedResearchContext = string.Empty;
 
     /// <summary>
@@ -112,7 +112,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private static readonly AssistantSessionStateKey<SwotAnalysisResult?> ANALYSIS_RESULT_STATE_KEY = new(nameof(analysisResult));
     private static readonly AssistantSessionStateKey<Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress>> CATEGORY_ANALYSIS_PROGRESS_STATE_KEY = new(nameof(categoryAnalysisProgress));
     private static readonly AssistantSessionStateKey<bool> IS_GATHERING_SHARED_RESEARCH_STATE_KEY = new(nameof(isGatheringSharedResearch));
-    private static readonly AssistantSessionStateKey<bool> IS_FINALIZING_ANALYSIS_STATE_KEY = new(nameof(isFinalizingAnalysis));
+    private static readonly AssistantSessionStateKey<bool> IS_MODERATING_ANALYSIS_STATE_KEY = new(nameof(isModeratingAnalysis));
     private static readonly AssistantSessionStateKey<string> SHARED_RESEARCH_CONTEXT_STATE_KEY = new(nameof(sharedResearchContext));
 
     /// <inheritdoc />
@@ -131,7 +131,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
         state.Set(ANALYSIS_RESULT_STATE_KEY, this.analysisResult);
         state.SetDictionary(CATEGORY_ANALYSIS_PROGRESS_STATE_KEY, this.categoryAnalysisProgress);
         state.Set(IS_GATHERING_SHARED_RESEARCH_STATE_KEY, this.isGatheringSharedResearch);
-        state.Set(IS_FINALIZING_ANALYSIS_STATE_KEY, this.isFinalizingAnalysis);
+        state.Set(IS_MODERATING_ANALYSIS_STATE_KEY, this.isModeratingAnalysis);
         state.Set(SHARED_RESEARCH_CONTEXT_STATE_KEY, this.sharedResearchContext);
     }
 
@@ -151,7 +151,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
         state.Restore(ANALYSIS_RESULT_STATE_KEY, value => this.analysisResult = value);
         state.RestoreDictionary(CATEGORY_ANALYSIS_PROGRESS_STATE_KEY, this.categoryAnalysisProgress);
         state.Restore(IS_GATHERING_SHARED_RESEARCH_STATE_KEY, value => this.isGatheringSharedResearch = value);
-        state.Restore(IS_FINALIZING_ANALYSIS_STATE_KEY, value => this.isFinalizingAnalysis = value);
+        state.Restore(IS_MODERATING_ANALYSIS_STATE_KEY, value => this.isModeratingAnalysis = value);
         state.Restore(SHARED_RESEARCH_CONTEXT_STATE_KEY, value => this.sharedResearchContext = value);
     }
 

@@ -7,37 +7,42 @@ internal static class SwotAnalysisPromptInput
         string analysisGoal,
         string analysisFocus,
         SwotContextualKnowledge contextualKnowledge,
-        string sharedResearch = "")
-    {
-        var effectiveAnalysisFocus = string.IsNullOrWhiteSpace(analysisFocus)
-            ? "No additional analysis focus was provided."
-            : analysisFocus;
-        var sharedResearchSection = string.IsNullOrWhiteSpace(sharedResearch)
-            ? string.Empty
-            : $"""
+        string sharedResearch = "") =>
+        $"""
+         <analysis-subject>
+         {analysisSubject}
+         </analysis-subject>
 
-               <shared-research>
-               {sharedResearch.Trim()}
-               </shared-research>
-               """;
+         <analysis-goal>
+         {analysisGoal}
+         </analysis-goal>
 
-        return $"""
-                <analysis-subject>
-                {analysisSubject}
-                </analysis-subject>
+         <analysis-focus>
+         {FocusOrDefault(analysisFocus)}
+         </analysis-focus>
 
-                <analysis-goal>
-                {analysisGoal}
-                </analysis-goal>
+         <contextual-knowledge>
+         {contextualKnowledge.Describe()}
+         </contextual-knowledge>
+         {SharedResearchSection(sharedResearch)}
+         """;
 
-                <analysis-focus>
-                {effectiveAnalysisFocus}
-                </analysis-focus>
+    /// <summary>
+    /// The analysis focus, or what stands in for a focus nobody gave.
+    /// </summary>
+    public static string FocusOrDefault(string analysisFocus) => string.IsNullOrWhiteSpace(analysisFocus)
+        ? "No additional analysis focus was provided."
+        : analysisFocus;
 
-                <contextual-knowledge>
-                {contextualKnowledge.Describe()}
-                </contextual-knowledge>
-                {sharedResearchSection}
-                """;
-    }
+    /// <summary>
+    /// The shared-research section, which follows the other sections; empty without research.
+    /// </summary>
+    public static string SharedResearchSection(string sharedResearch) => string.IsNullOrWhiteSpace(sharedResearch)
+        ? string.Empty
+        : $"""
+
+           <shared-research>
+           {sharedResearch.Trim()}
+           </shared-research>
+           """;
 }

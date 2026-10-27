@@ -39,8 +39,14 @@ public sealed class SwotAnalysisResult
     [JsonPropertyName("threats")]
     public SwotCategory Threats { get; set; } = new();
 
+    [JsonPropertyName("overall_assessment")]
+    public SwotOverallAssessment OverallAssessment { get; set; } = new();
+
     [JsonPropertyName("prioritized_actions")]
     public SwotPrioritizedActions PrioritizedActions { get; set; } = new();
+
+    [JsonPropertyName("moderation_notes")]
+    public SwotModerationNotes ModerationNotes { get; set; } = new();
 
     [JsonIgnore]
     public IReadOnlyList<SwotCategory> Categories =>

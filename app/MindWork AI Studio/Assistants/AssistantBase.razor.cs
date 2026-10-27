@@ -562,6 +562,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         return time;
     }
 
+    /// <summary>
+    /// Asks the model for an answer to the conversation so far, and adds it as the result of this assistant.
+    /// </summary>
+    /// <param name="time">When the answer was asked for.</param>
+    /// <param name="hideContentFromUser">Whether the answer is hidden from the user, e.g., because it is JSON; while
+    /// it streams, only a changed progress text renders the form anew.</param>
+    /// <param name="useSelectedTools">Whether the model may use the tools the user selected. False for a request
+    /// which must rely on what the conversation holds already, e.g., one which reconciles results the tools
+    /// gathered before.</param>
+    /// <returns>The answer, or an empty string when the provider failed.</returns>
     protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false, bool useSelectedTools = true)
     {
         var manageCancellationLocally = this.CancellationTokenSource is null;

@@ -30,7 +30,7 @@ public partial class AssistantSWOTAnalysis
         this.sharedResearchContext = string.Empty;
         this.sharedResearchAnswer = null;
         this.isGatheringSharedResearch = false;
-        this.isFinalizingAnalysis = false;
+        this.isModeratingAnalysis = false;
         this.categoryAnalysisProgress.Clear();
         this.CreateChatThread();
 
@@ -91,7 +91,7 @@ public partial class AssistantSWOTAnalysis
             item => item.Key,
             item => item.Value.Result!);
 
-        await this.FinalizeAnalysisAsync(categoryResults, token);
+        await this.ModerateAnalysisAsync(categoryResults, token);
     }
 
     private async Task<SwotCategoryAnalysisProgress> AnalyzeCategoryAsync(SwotAnalysisCategory category, SwotContextualKnowledge contextualKnowledge, CancellationToken token)
@@ -135,30 +135,38 @@ public partial class AssistantSWOTAnalysis
         }
     }
 
-    private async Task FinalizeAnalysisAsync(
+    /// <summary>
+    /// Lets the moderator reconcile the four categories, and makes its answer the result.
+    /// </summary>
+    /// <remarks>
+    /// The moderator runs in the assistant's own thread, so its answer becomes the result card and goes
+    /// along to a chat. It runs without tools, see SwotAnalysisModeration. Its answer is JSON and stays
+    /// hidden while it streams; the result shows the analysis assembled from it.
+    /// </remarks>
+    private async Task ModerateAnalysisAsync(
         IReadOnlyDictionary<SwotAnalysisCategory, SwotCategoryAnalysisResult> categoryResults,
         CancellationToken token)
     {
-        this.isFinalizingAnalysis = true;
+        this.isModeratingAnalysis = true;
         await this.PublishAnalysisProgressAsync();
 
         try
         {
             var time = this.AddUserRequest(
-                SwotAnalysisFinalization.BuildUserRequest(categoryResults),
+                SwotAnalysisModeration.BuildUserRequest(categoryResults, this.analysisGoal, this.importantAspects, this.sharedResearchContext),
                 hideContentFromUser: true);
-            var rawResponse = await this.AddAIResponseAsync(time, useSelectedTools: false);
+            var rawResponse = await this.AddAIResponseAsync(time, hideContentFromUser: true, useSelectedTools: false);
             if (token.IsCancellationRequested || string.IsNullOrWhiteSpace(rawResponse))
                 return;
 
-            if (!SwotAnalysisFinalizationResponseParser.TryParse(rawResponse, categoryResults, out var finalization, out var issue))
+            if (!SwotAnalysisModerationResponseParser.TryParse(rawResponse, out var moderation, out var issue))
             {
-                this.Logger.LogWarning("The final answer of the SWOT analysis could not be read: {Issue}", issue);
+                this.Logger.LogWarning("The answer of the SWOT analysis moderator could not be read: {Issue}", issue);
                 this.AddInputIssue(T("The prioritized actions could not be displayed because the model response did not have the expected structure."));
                 return;
             }
 
-            this.analysisResult = SwotAnalysisFinalization.Assemble(categoryResults, finalization);
+            this.analysisResult = SwotAnalysisModeration.Assemble(moderation);
             if (this.ResultingContentBlock?.Content is ContentText resultingText)
             {
                 resultingText.Text = SwotAnalysisMarkdownFormatter.Format(this.analysisResult);
@@ -168,7 +176,7 @@ public partial class AssistantSWOTAnalysis
         }
         finally
         {
-            this.isFinalizingAnalysis = false;
+            this.isModeratingAnalysis = false;
             await this.PublishAnalysisProgressAsync();
         }
     }

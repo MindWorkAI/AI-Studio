@@ -58,7 +58,10 @@ internal static class SwotAnalysisContentPresentation
         !string.IsNullOrWhiteSpace(result.PositiveLabel) &&
         !string.IsNullOrWhiteSpace(result.NegativeLabel) &&
         result.Categories.All(IsComplete) &&
-        IsComplete(result.PrioritizedActions);
+        !string.IsNullOrWhiteSpace(result.OverallAssessment.Label) &&
+        !string.IsNullOrWhiteSpace(result.OverallAssessment.Text) &&
+        IsComplete(result.PrioritizedActions) &&
+        IsComplete(result.ModerationNotes);
 
     private static bool IsComplete(SwotCategory category) =>
         !string.IsNullOrWhiteSpace(category.Label) &&
@@ -69,6 +72,11 @@ internal static class SwotAnalysisContentPresentation
         !string.IsNullOrWhiteSpace(actions.Label) &&
         (actions.Items.Count > 0 || !string.IsNullOrWhiteSpace(actions.EmptyMessage)) &&
         actions.Items.All(IsComplete);
+
+    private static bool IsComplete(SwotModerationNotes notes) =>
+        !string.IsNullOrWhiteSpace(notes.Label) &&
+        (notes.Items.Count > 0 || !string.IsNullOrWhiteSpace(notes.EmptyMessage)) &&
+        notes.Items.All(IsComplete);
 
     // A list item may be null, since the nullable annotations of list items do not count when reading:
     private static bool IsComplete(SwotFinding? finding) =>
@@ -81,4 +89,9 @@ internal static class SwotAnalysisContentPresentation
         !string.IsNullOrWhiteSpace(action.Action) &&
         !string.IsNullOrWhiteSpace(action.Rationale) &&
         action.AddressedFactors.Count > 0;
+
+    private static bool IsComplete(SwotModerationNote? note) =>
+        note is not null &&
+        !string.IsNullOrWhiteSpace(note.Change) &&
+        !string.IsNullOrWhiteSpace(note.Reason);
 }

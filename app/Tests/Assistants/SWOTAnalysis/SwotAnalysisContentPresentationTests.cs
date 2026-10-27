@@ -136,6 +136,11 @@ public sealed class SwotAnalysisContentPresentationTests
         Weaknesses = Category("Weaknesses", "Legacy system", "The documents name an unsupported application."),
         Opportunities = Category("Opportunities", "Growing market", "The supplied forecast shows increasing demand."),
         Threats = Category("Threats", "New competitor", "The material announces a funded market entrant."),
+        OverallAssessment = new()
+        {
+            Label = "Overall Assessment",
+            Text = "The position is solid.",
+        },
         PrioritizedActions = new()
         {
             Label = "Prioritized Actions",
@@ -148,6 +153,11 @@ public sealed class SwotAnalysisContentPresentationTests
                     AddressedFactors = ["Experienced team", "Growing market"],
                 },
             ],
+        },
+        ModerationNotes = new()
+        {
+            Label = "Reconciliation of the Quadrants",
+            EmptyMessage = "The four categories needed no changes.",
         },
     };
 

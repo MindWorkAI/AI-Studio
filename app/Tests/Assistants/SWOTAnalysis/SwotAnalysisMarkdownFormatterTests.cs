@@ -30,6 +30,31 @@ public sealed class SwotAnalysisMarkdownFormatterTests
     }
 
     [Test]
+    public void TheSectionsFollowTheOrderOfTheResultView()
+    {
+        var result = CreateResult();
+        result.OverallAssessment.Text = "The position is solid.\n\nThe competitor is the main risk.";
+        result.ModerationNotes = new()
+        {
+            Label = "Reconciliation of the Quadrants",
+            Items = [new() { Change = "Moved the new competitor to the threats.", Reason = "It is external and negative." }],
+        };
+
+        var markdown = SwotAnalysisMarkdownFormatter.Format(result).ReplaceLineEndings("\n");
+        var positions = new[] { "## SWOT Matrix", "## Overall Assessment", "## Prioritized Actions", "## Strengths", "## Threats", "## Reconciliation of the Quadrants" }
+            .Select(heading => markdown.IndexOf(heading, StringComparison.Ordinal))
+            .ToList();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(positions, Is.All.GreaterThanOrEqualTo(0));
+            Assert.That(positions, Is.Ordered);
+            Assert.That(markdown, Does.Contain("The position is solid\\.\n\nThe competitor is the main risk\\."));
+            Assert.That(markdown, Does.EndWith("- **Moved the new competitor to the threats\\.** — It is external and negative\\."));
+        });
+    }
+
+    [Test]
     public void MatrixCellsEscapePipesFromModelText()
     {
         var result = CreateResult();
@@ -53,6 +78,11 @@ public sealed class SwotAnalysisMarkdownFormatterTests
         Weaknesses = Category("Weaknesses", "Legacy system", "The documents name an unsupported application."),
         Opportunities = Category("Opportunities", "Growing market", "The supplied forecast shows increasing demand."),
         Threats = Category("Threats", "New competitor", "The material announces a funded market entrant."),
+        OverallAssessment = new()
+        {
+            Label = "Overall Assessment",
+            Text = "The position is solid.",
+        },
         PrioritizedActions = new()
         {
             Label = "Prioritized Actions",
@@ -66,6 +96,11 @@ public sealed class SwotAnalysisMarkdownFormatterTests
                     AddressedFactors = ["Experienced team", "Growing market"],
                 },
             ],
+        },
+        ModerationNotes = new()
+        {
+            Label = "Reconciliation of the Quadrants",
+            EmptyMessage = "The four categories needed no changes.",
         },
     };
 
