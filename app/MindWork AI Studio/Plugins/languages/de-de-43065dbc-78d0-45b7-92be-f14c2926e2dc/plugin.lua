@@ -4792,10 +4792,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MAILFOLDERPICKER::T421974311"] = "Neuer O
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MAILFOLDERPICKER::T913937956"] = "Gesamtes Postfach"
 
 -- Some tools selected for this run are not fully configured and stay unused: {0}. Please complete their settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T1319635088"] = "Einige der für diesen Durchlauf ausgewählten Werkzeuge sind nicht vollständig eingerichtet und bleiben daher ungenutzt: \"{0}\". Bitte vervollständigen Sie deren Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T1319635088"] = "Einige der für diesen Durchlauf ausgewählten Werkzeuge sind nicht vollständig eingerichtet und bleiben daher ungenutzt: {0}. Bitte vervollständigen Sie deren Einstellungen."
 
 -- Not all tools selected for this run can be used with the chosen AI provider: {0}. Please choose a provider with a higher confidence level to use all of them.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T2430645786"] = "Nicht alle für diesen Durchlauf ausgewählten Werkzeuge können mit dem gewählten KI-Anbieter „{0}“ verwendet werden. Bitte wählen Sie einen Anbieter mit einem höheren Vertrauensniveau, um alle Werkzeuge zu nutzen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T2430645786"] = "Nicht alle für diesen Durchlauf ausgewählten Werkzeuge können mit dem gewählten KI-Anbieter verwendet werden: {0}. Bitte wählen Sie einen Anbieter mit einem höheren Vertrauensniveau, um alle Werkzeuge zu nutzen."
 
 -- Tools were selected for this run, but the chosen model cannot use tools. It runs without them. Please choose a model which supports tools.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3008114108"] = "Für diesen Durchlauf wurden Werkzeuge ausgewählt, aber das ausgewählte Modell kann keine Werkzeuge verwenden. Es wird ohne sie ausgeführt. Bitte wählen Sie ein Modell, das Werkzeuge unterstützt."
@@ -5824,7 +5824,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3035030488
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3461070436"] = "Minimales Vertrauensniveau für Anbieter"
 
 -- Configure global settings for each tool.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3728248397"] = "Konfiguriere globale Einstellungen für jedes Werkzeug."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3728248397"] = "Konfigurieren Sie globale Einstellungen für jedes Werkzeug."
 
 -- Tool Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3730473128"] = "Werkzeugeinstellungen"
