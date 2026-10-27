@@ -113,6 +113,45 @@ public sealed class GlossaryStoreTests
         });
     }
 
+    [Test]
+    public async Task TheEntriesOfAPluginGlossaryComeFromMemoryAndCannotBeChanged()
+    {
+        var store = this.CreateStore();
+        var glossaryId = Guid.NewGuid().ToString();
+        store.SetProvidedEntries(glossaryId, [new GlossaryEntry("Arbeitszeit", "working time")]);
+
+        var loaded = await store.LoadEntriesAsync(glossaryId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(loaded.Select(entry => entry.Term), Is.EqualTo(new[] { "Arbeitszeit" }));
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await store.SaveEntriesAsync(glossaryId, []), "The plugin is the source of these entries.");
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await store.DeleteEntriesAsync(glossaryId));
+            Assert.That(Directory.Exists(this.GlossaryFolder), Is.False, "A glossary of a plugin leaves no file behind.");
+        });
+    }
+
+    [Test]
+    public async Task TheEntriesOfAGlossaryWhosePluginIsGoneAreForgotten()
+    {
+        var store = this.CreateStore();
+        var keptId = Guid.NewGuid().ToString();
+        var goneId = Guid.NewGuid().ToString();
+        store.SetProvidedEntries(keptId, [new GlossaryEntry("Arbeitszeit", "working time")]);
+        store.SetProvidedEntries(goneId, [new GlossaryEntry("Urlaub", "vacation")]);
+
+        store.RetainProvidedEntries([keptId]);
+
+        var kept = await store.LoadEntriesAsync(keptId);
+        var gone = await store.LoadEntriesAsync(goneId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(kept, Has.Count.EqualTo(1));
+            Assert.That(gone, Is.Empty);
+        });
+    }
+
     [TestCase("../settings")]
     [TestCase("..\\..\\settings")]
     [TestCase("")]
