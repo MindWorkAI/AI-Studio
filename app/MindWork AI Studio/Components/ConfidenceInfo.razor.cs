@@ -7,9 +7,6 @@ namespace AIStudio.Components;
 public partial class ConfidenceInfo : MSGComponentBase
 {
     [Parameter]
-    public PopoverTriggerMode Mode { get; set; } = PopoverTriggerMode.BUTTON;
-    
-    [Parameter]
     public LLMProviders LLMProvider { get; set; }
 
     private Confidence currentConfidence;
