@@ -2,6 +2,14 @@ using System.Text.Json.Serialization;
 
 namespace AIStudio.Assistants.SWOTAnalysis;
 
+/// <summary>
+/// The complete SWOT analysis, as the result view shows it and the chat stores it.
+/// </summary>
+/// <remarks>
+/// The assistant keeps its result in its session state, which compares objects by reference since
+/// the mirror instance takes over only what changed. Therefore, replace a result as a whole and never
+/// change it in place: a change in place would not reach an instance the user returns to.
+/// </remarks>
 public sealed class SwotAnalysisResult
 {
     [JsonPropertyName("matrix_heading")]
@@ -42,49 +50,4 @@ public sealed class SwotAnalysisResult
         this.Opportunities,
         this.Threats,
     ];
-}
-
-public sealed class SwotCategory
-{
-    [JsonPropertyName("label")]
-    public string Label { get; set; } = string.Empty;
-
-    [JsonPropertyName("empty_message")]
-    public string EmptyMessage { get; set; } = string.Empty;
-
-    [JsonPropertyName("findings")]
-    public List<SwotFinding> Findings { get; set; } = [];
-}
-
-public sealed class SwotFinding
-{
-    [JsonPropertyName("summary")]
-    public string Summary { get; set; } = string.Empty;
-
-    [JsonPropertyName("explanation")]
-    public string Explanation { get; set; } = string.Empty;
-}
-
-public sealed class SwotPrioritizedActions
-{
-    [JsonPropertyName("label")]
-    public string Label { get; set; } = string.Empty;
-
-    [JsonPropertyName("empty_message")]
-    public string EmptyMessage { get; set; } = string.Empty;
-
-    [JsonPropertyName("items")]
-    public List<SwotAction> Items { get; set; } = [];
-}
-
-public sealed class SwotAction
-{
-    [JsonPropertyName("action")]
-    public string Action { get; set; } = string.Empty;
-
-    [JsonPropertyName("rationale")]
-    public string Rationale { get; set; } = string.Empty;
-
-    [JsonPropertyName("addressed_factors")]
-    public List<string> AddressedFactors { get; set; } = [];
 }
