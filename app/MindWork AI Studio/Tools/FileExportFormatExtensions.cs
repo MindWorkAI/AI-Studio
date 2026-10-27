@@ -166,10 +166,22 @@ public static class FileExportFormatExtensions
     /// <param name="name">What the file is about, for example the heading above a table. Anything
     /// a file name cannot hold is removed. Null or blank falls back to a generic name.</param>
     /// <returns>The suggested file name, including its extension.</returns>
-    public static string ToSuggestedFileName(this FileExportFormat format, string? name = null)
+    public static string ToSuggestedFileName(this FileExportFormat format, string? name = null) => SuggestFileName(name, format.ToFileExtension());
+
+    /// <summary>
+    /// Returns the file name the save dialog starts with, for a file with the given extension.
+    /// </summary>
+    /// <remarks>
+    /// The same rules as for a format apply, see ToSuggestedFileName. Code blocks need this, since
+    /// their extension comes from the language of the block, not from a format.
+    /// </remarks>
+    /// <param name="name">What the file is about. Null or blank falls back to a generic name.</param>
+    /// <param name="fileExtension">The file extension, including the leading dot.</param>
+    /// <returns>The suggested file name, including its extension.</returns>
+    internal static string SuggestFileName(string? name, string fileExtension)
     {
         var fileName = ToFileNameFragment(name);
-        return $"{(fileName.Length is 0 ? "export" : fileName)}{format.ToFileExtension()}";
+        return $"{(fileName.Length is 0 ? "export" : fileName)}{fileExtension}";
     }
 
     /// <summary>
