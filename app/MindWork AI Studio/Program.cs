@@ -218,6 +218,7 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
         builder.Services.AddSingleton<MailboxRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();
+        builder.Services.AddSingleton<FeedbackService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         
         // Stateless: every method works on its arguments alone, so one instance serves everyone.

@@ -3990,6 +3990,72 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Ihre Arbei
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T857715435"] = "ca. {0} Token"
 
+-- Thanks for your feedback.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1040689113"] = "Danke für Ihr Feedback."
+
+-- Send the answers so far and close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1664533887"] = "Bisherige Antworten absenden und schließen"
+
+-- Lost
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1692084315"] = "Verloren"
+
+-- No answer
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1789279160"] = "Keine Antwort"
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1849229205"] = "Sonstiges"
+
+-- Good
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2056027640"] = "Gut"
+
+-- Bad answer quality
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2121619971"] = "Schlechte Antwortqualität"
+
+-- Saved
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2322168292"] = "Gespart"
+
+-- Slow answer
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2514702658"] = "Langsame Antwort"
+
+-- Is there anything else you would like to tell us?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2877068992"] = "Gibt es sonst noch etwas, das Sie uns mitteilen möchten?"
+
+-- Skip this week's feedback
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3034680039"] = "Das Feedback dieser Woche überspringen"
+
+-- How much time did AI Studio save you this week?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3064398553"] = "Wie viel Zeit hat Ihnen AI Studio diese Woche gespart?"
+
+-- What went wrong?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3188934223"] = "Was ist schiefgelaufen?"
+
+-- Skip
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3247949794"] = "Überspringen"
+
+-- Bad
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3317455640"] = "Schlecht"
+
+-- Next
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3705854472"] = "Weiter"
+
+-- How did AI Studio perform for you this week?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3868462774"] = "Wie hat AI Studio diese Woche für Sie funktioniert?"
+
+-- Neutral
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3912435576"] = "Neutral"
+
+-- Send
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T4069397711"] = "Senden"
+
+-- Your feedback could not be sent. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T4237541491"] = "Ihr Feedback konnte nicht gesendet werden. Bitte versuchen Sie es später erneut."
+
+-- Optional
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T4258353177"] = "Optional"
+
+-- hours
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T50267956"] = "Stunden"
+
 -- Create template from current chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1112722156"] = "Vorlage aus aktuellem Chat erstellen"
 
@@ -9387,6 +9453,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T82
 -- Restore default
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T913168756"] = "Standard wiederherstellen"
 
+-- Ask for feedback in chats?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1306631809"] = "In Chats um Feedback bitten?"
+
 -- Files are sent as they were first read
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1320692831"] = "Dateien werden so gesendet, wie sie zuerst eingelesen wurden"
 
@@ -9420,6 +9489,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] =
 -- Changed files are read again for the next message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T264953820"] = "Geänderte Dateien werden für die nächste Nachricht erneut eingelesen"
 
+-- The chat does not ask for feedback
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2650654559"] = "Der Chat fragt nicht nach Feedback"
+
 -- Provider selection when loading a chat and sending assistant results to chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] = "Anbieterauswahl beim Laden eines Chats und beim Senden von Assistentenergebnissen in den Chat"
 
@@ -9444,6 +9516,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3448155331"] 
 -- First (oldest) message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3507181366"] = "Die erste (älteste) Nachricht wird nach dem Laden eines Chats angezeigt."
 
+-- The chat asks for feedback once a week
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3686366724"] = "Der Chat fragt einmal pro Woche nach Feedback"
+
 -- Preselect chat options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3728624759"] = "Chat-Optionen vorauswählen?"
 
@@ -9452,6 +9527,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3730599555"] 
 
 -- Latest message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] = "Die neueste Nachricht wird nach dem Laden eines Chats angezeigt."
+
+-- When enabled, you will be asked for feedback once a week.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3874748224"] = "Wenn aktiviert, werden Sie einmal pro Woche um Feedback gebeten."
 
 -- Do you want to apply the default data source options when sending assistant results to chat?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Möchten Sie die Standardoptionen für Datenquellen verwenden, wenn die Ergebnisse des Assistenten an den Chat gesendet werden?"

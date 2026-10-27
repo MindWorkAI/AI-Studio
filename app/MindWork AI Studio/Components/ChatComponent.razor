@@ -33,6 +33,11 @@
                         EditLastUserBlockFunc="@this.EditLastUserBlock"/>
                 }
             }
+
+            @if (!this.IsCurrentChatStreaming)
+            {
+                <ChatFeedbackPrompt @key="@this.ChatThread.ChatId" ChatId="@this.ChatThread.ChatId" Provider="@this.Provider"/>
+            }
         }
     </ChildContent>
     <FooterContent>

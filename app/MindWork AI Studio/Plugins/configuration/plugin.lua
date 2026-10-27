@@ -622,6 +622,23 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") or "00000000-0000-0000-0000-000000000000" means chats will use no chat template.
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate"] = "00000000-0000-0000-0000-000000000000"
 --
+-- Configure whether the chat asks for weekly feedback: every Friday, or the next time the user
+-- works with the chat when they missed a Friday. Users rate AI Studio, state the time saved or lost
+-- that week, and may leave a comment.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataChat.FeedbackEnabled"] = true
+--
+-- Configure the feedback server which receives the answers as JSON via HTTP POST.
+-- Users cannot enter this address themselves: without this setting, the chat never asks for
+-- feedback, and the switch "Ask for feedback in chats?" stays hidden in the chat settings.
+-- It must be an absolute http or https address. The body holds "weekOf" (the date of the Friday,
+-- e.g., "2026-10-09"), "performance" ("good", "neutral", or "bad"), "savedTimeMinutes" (negative
+-- when time was lost, null when skipped), "reason" (after a bad rating: "no_answer", "slow_answer",
+-- "bad_quality", "other", or empty), "comment", "provider" and "model" (the AI of the chat the
+-- feedback was given in), and "appVersion".
+-- The content of the chat is never sent.
+-- CONFIG["SETTINGS"]["DataChat.FeedbackEndpoint"] = "https://feedback.example.org/feedback"
+--
 --
 -- Configure default data source options for new chats.
 --

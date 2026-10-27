@@ -1,5 +1,6 @@
 @using AIStudio.Settings
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.Services
 @inherits SettingsDialogBase
 
 <MudDialog>
@@ -13,6 +14,23 @@
         <ConfigurationSelect OptionDescription="@T("Shortcut to send input")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior = selectedValue)" OptionHelp="@T("Do you want to use any shortcut to send your input?")"/>
         <ConfigurationOption OptionDescription="@T("Show the latest message after loading?")" LabelOn="@T("Latest message is shown, after loading a chat")" LabelOff="@T("First (oldest) message is shown, after loading a chat")" State="@(() => this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading = updatedState)" OptionHelp="@T("When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.")"/>
         <ConfigurationOption OptionDescription="@T("Read changed attachments again?")" LabelOn="@T("Changed files are read again for the next message")" LabelOff="@T("Files are sent as they were first read")" State="@(() => this.SettingsManager.ConfigurationData.Chat.ReadChangedAttachmentsAgain)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Chat.ReadChangedAttachmentsAgain = updatedState)" OptionHelp="@T("When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.Chat, x => x.ReadChangedAttachmentsAgain, out var meta) && meta.IsLocked"/>
+        @* The feedback server comes from the configuration of an organization; without one, the switch would do nothing: *@
+        @if (FeedbackService.HAS_DEVELOPER_TOOLS || this.FeedbackService.HasEndpoint)
+        {
+            <ConfigurationOption OptionDescription="@T("Ask for feedback in chats?")" LabelOn="@T("The chat asks for feedback once a week")" LabelOff="@T("The chat does not ask for feedback")" State="@(() => this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled = updatedState)" OptionHelp="@T("When enabled, you will be asked for feedback once a week.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.Chat, x => x.FeedbackEnabled, out var meta) && meta.IsLocked"/>
+        }
+        @if (FeedbackService.HAS_DEVELOPER_TOOLS)
+        {
+            @* Debug builds only, so the texts stay out of the localization: *@
+            <ConfigurationText OptionDescription="Debug: feedback server address" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)" Icon="@Icons.Material.Filled.Feedback" Text="@(() => this.SettingsManager.ConfigurationData.Chat.FeedbackEndpoint)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Chat.FeedbackEndpoint = updatedText)" IsLocked="() => ManagedConfiguration.TryGet(x => x.Chat, x => x.FeedbackEndpoint, out var meta) && meta.IsLocked"/>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap" Class="mb-6">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Debug:</MudText>
+                <MudSwitch T="bool" Value="@this.FeedbackService.UsesDebugInterval" ValueChanged="@this.SetFeedbackDebugInterval" Size="Size.Small" Color="Color.Warning" Label="ask every 20 minutes" Class="mud-typography-caption" Disabled="@(!this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)"/>
+                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Warning" StartIcon="@Icons.Material.Filled.RestartAlt" Disabled="@(!this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)" OnClick="@this.ResetFeedbackWeek">
+                    ask again now
+                </MudButton>
+            </MudStack>
+        }
         <ConfigurationSelect OptionDescription="@T("Provider selection when creating new chats")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior)" Data="@ConfigurationSelectDataFactory.GetAddChatProviderBehavior()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior = selectedValue)" OptionHelp="@T("Control how the LLM provider for added chats is selected.")"/>
         <ConfigurationSelect OptionDescription="@T("Provider selection when loading a chat and sending assistant results to chat")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)" Data="@ConfigurationSelectDataFactory.GetLoadingChatProviderBehavior()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior = selectedValue)" OptionHelp="@T("Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.")"/>
         <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">

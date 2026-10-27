@@ -1,0 +1,76 @@
+@using AIStudio.Tools.Feedback
+@using AIStudio.Tools.Services
+@inherits MSGComponentBase
+
+@switch (this.FeedbackService.GetState(this.ChatId))
+{
+    case FeedbackPromptState.ASK:
+        <MudPaper Outlined="@true" Elevation="0" Class="px-3 py-2 mb-3 rounded-lg">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                <MudText Typo="Typo.body2">
+                    @this.QuestionText
+                </MudText>
+                <MudSpacer/>
+
+                @if (this.step is Question.RATING)
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.Rate(FeedbackRating.BAD))">@T("Bad")</MudButton>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.Rate(FeedbackRating.NEUTRAL))">@T("Neutral")</MudButton>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.Rate(FeedbackRating.GOOD))">@T("Good")</MudButton>
+                }
+
+                <MudText Typo="Typo.caption" Class="mud-text-secondary ml-2">
+                    @($"{this.QuestionNumber}/{this.QuestionCount}")
+                </MudText>
+                <MudTooltip Text="@this.CloseTooltip" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="mud-text-secondary" Disabled="@this.isSending" OnClick="@this.Close"/>
+                </MudTooltip>
+            </MudStack>
+
+            @switch (this.step)
+            {
+                case Question.TIME:
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap" Class="mt-1">
+                        <MudButton Variant="@(this.timeLost ? Variant.Text : Variant.Outlined)" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.timeLost = false)">@T("Saved")</MudButton>
+                        <MudButton Variant="@(this.timeLost ? Variant.Outlined : Variant.Text)" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.timeLost = true)">@T("Lost")</MudButton>
+                        <MudNumericField T="double" @bind-Value="@this.hours" Min="0" Max="@MAX_HOURS" Step="0.5" Adornment="Adornment.End" AdornmentText="@T("hours")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width: 9em;" Class="ml-2"/>
+                        <MudSpacer/>
+                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="@this.SkipTime">@T("Skip")</MudButton>
+                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" OnClick="@this.ConfirmTime">@T("Next")</MudButton>
+                    </MudStack>
+                    break;
+
+                case Question.REASON:
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap" Class="mt-1">
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ChooseReason(FeedbackReason.NO_ANSWER))">@T("No answer")</MudButton>
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ChooseReason(FeedbackReason.SLOW_ANSWER))">@T("Slow answer")</MudButton>
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ChooseReason(FeedbackReason.BAD_QUALITY))">@T("Bad answer quality")</MudButton>
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ChooseReason(FeedbackReason.OTHER))">@T("Other")</MudButton>
+                        <MudSpacer/>
+                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ChooseReason(FeedbackReason.NONE))">@T("Skip")</MudButton>
+                    </MudStack>
+                    break;
+
+                case Question.COMMENT:
+                    <MudStack Row="true" AlignItems="AlignItems.End" Spacing="1" Class="mt-1">
+                        <MudTextField T="string" @bind-Value="@this.comment" Placeholder="@T("Optional")" AutoGrow="@true" Lines="1" MaxLines="4" MaxLength="@FeedbackService.MAX_COMMENT_LENGTH" Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1"/>
+                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" Disabled="@this.isSending" OnClick="@this.Send">@T("Send")</MudButton>
+                    </MudStack>
+
+                    @if (this.sendFailed)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Class="mt-1">
+                            @T("Your feedback could not be sent. Please try again later.")
+                        </MudText>
+                    }
+                    break;
+            }
+        </MudPaper>
+        break;
+
+    case FeedbackPromptState.THANKED:
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-3 px-3">
+            @T("Thanks for your feedback.")
+        </MudText>
+        break;
+}
