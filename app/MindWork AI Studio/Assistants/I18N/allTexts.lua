@@ -6208,9 +6208,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T156144855"] = "Rename Chat"
 -- Add workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1586005241"] = "Add workspace"
 
--- Search chats
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1615077202"] = "Search chats"
-
 -- Start a new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1840064668"] = "Start a new chat in workspace '{0}'"
 
@@ -6232,6 +6229,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2151341762"] = "Are you sure
 -- Please enter a chat name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2301651387"] = "Please enter a chat name."
 
+-- Search chat names
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2411226637"] = "Search chat names"
+
 -- Workspace Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2446263209"] = "Workspace Name"
 
@@ -6240,6 +6240,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2509305748"] = "Move to work
 
 -- Move Chat to Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Move Chat to Workspace"
+
+-- Search chat names and contents
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3093910498"] = "Search chat names and contents"
 
 -- Please enter a new or edit the name for your workspace '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Please enter a new or edit the name for your workspace '{0}':"

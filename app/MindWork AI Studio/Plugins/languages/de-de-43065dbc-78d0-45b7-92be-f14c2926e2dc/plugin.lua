@@ -6210,9 +6210,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T156144855"] = "Chat umbenenn
 -- Add workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1586005241"] = "Arbeitsbereich hinzufügen"
 
--- Search chats
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1615077202"] = "Chats durchsuchen"
-
 -- Start a new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1840064668"] = "Neuen Chat im Arbeitsbereich „{0}“ starten"
 
@@ -6234,6 +6231,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2151341762"] = "Möchten Sie
 -- Please enter a chat name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2301651387"] = "Bitte geben Sie einen Namen für diesen Chat ein."
 
+-- Search chat names
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2411226637"] = "Chatnamen durchsuchen"
+
 -- Workspace Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2446263209"] = "Name des Arbeitsbereichs"
 
@@ -6242,6 +6242,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2509305748"] = "In einen Arb
 
 -- Move Chat to Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Chat in den Arbeitsbereich verschieben"
+
+-- Search chat names and contents
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3093910498"] = "Chatnamen und Inhalte durchsuchen"
 
 -- Please enter a new or edit the name for your workspace '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Bitte geben Sie einen neuen Namen für Ihren Arbeitsbereich „{0}“ ein oder bearbeiten Sie ihn:"
