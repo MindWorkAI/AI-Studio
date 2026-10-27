@@ -19,19 +19,19 @@ internal static class SwotAnalysisContentPresentation
         ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, result);
 
     /// <summary>
-    /// Reads the SWOT analysis stored with a text, so it can be shown as a matrix.
+    /// Reads the SWOT analysis stored as the presentation of a text, so it can be shown as a matrix.
     /// </summary>
     /// <remarks>
     /// The data comes from a checked result, but a chat file may also be old or changed by hand.
     /// Whatever is not a complete analysis returns false, and the text is shown instead.
     /// </remarks>
-    /// <param name="content">The text which may carry the analysis.</param>
+    /// <param name="presentation">The presentation which may carry the analysis.</param>
     /// <param name="result">The analysis, or an empty one when there is none.</param>
-    /// <returns>Whether the text carries a complete analysis.</returns>
-    public static bool TryRead(ContentText content, out SwotAnalysisResult result)
+    /// <returns>Whether the presentation carries a complete analysis.</returns>
+    public static bool TryRead(ContentPresentation? presentation, out SwotAnalysisResult result)
     {
         result = new();
-        if (content.Presentation is not { Kind: ContentPresentationKind.SWOT_ANALYSIS, Data: { ValueKind: JsonValueKind.Object } data })
+        if (presentation is not { Kind: ContentPresentationKind.SWOT_ANALYSIS, Data: { ValueKind: JsonValueKind.Object } data })
             return false;
 
         SwotAnalysisResult? candidate;

@@ -1,7 +1,6 @@
 @using AIStudio.Tools
 @using MudBlazor
 @using AIStudio.Components
-@using AIStudio.Assistants.SWOTAnalysis
 @inherits AIStudio.Components.MSGComponentBase
 
 <MudCard Class="@this.CardClasses" Outlined="@true">
@@ -228,17 +227,8 @@
                         else
                         {
                             <div @ref="this.mathContentContainer" class="chat-math-container">
-                                @if (this.CustomTextContent is not null)
-                                {
-                                    @this.CustomTextContent
-                                }
-                                else if (SwotAnalysisContentPresentation.TryRead(textContent, out var swotAnalysisResult))
-                                {
-                                    <SwotAnalysisResultView Result="@swotAnalysisResult"/>
-                                }
-                                else
-                                {
-                                    var renderPlan = this.GetMarkdownRenderPlan(textContent.Text);
+                                <ContentPresentationView Presentation="@textContent.Presentation">
+                                    @{ var renderPlan = this.GetMarkdownRenderPlan(textContent.Text); }
                                     @foreach (var segment in renderPlan.Segments)
                                     {
                                         var segmentContent = segment.GetContent(renderPlan.Source);
@@ -257,7 +247,7 @@
                                             <MathJaxBlock @key="@segment.RenderKey" Value="@segmentContent" Class="mb-5" />
                                         }
                                     }
-                                }
+                                </ContentPresentationView>
                                 @if (textContent.Sources.Count > 0)
                                 {
                                     <SourcesList @ref="this.sourcesList" Sources="@textContent.Sources" Passages="@textContent.SourcePassages"/>

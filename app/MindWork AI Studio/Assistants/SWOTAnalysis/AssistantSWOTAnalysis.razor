@@ -77,10 +77,6 @@
               </div>
             : null;
 
-    private protected override RenderFragment? CustomResultTextContent => this.analysisResult is null
-        ? null
-        : @<SwotAnalysisResultView Result="@this.analysisResult"/>;
-
     private RenderFragment RenderCategoryProgress(SwotAnalysisCategory category, string label) => @<text>
         <MudText Typo="Typo.h5" Class="mb-2">@label</MudText>
         @if (!this.categoryAnalysisProgress.TryGetValue(category, out var progress) || progress.Status is SwotCategoryAnalysisStatus.RUNNING)

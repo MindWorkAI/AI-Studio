@@ -131,13 +131,6 @@ public partial class ContentBlockComponent : MSGComponentBase
     public string? ExportFileName { get; set; }
 
     /// <summary>
-    /// Optional visual replacement for a completed text block. The original text remains the
-    /// source for copying and exporting.
-    /// </summary>
-    [Parameter]
-    public RenderFragment? CustomTextContent { get; set; }
-
-    /// <summary>
     /// Whether copying or exporting an AI answer of this block ends it with the notice that AI
     /// generated it, when that is switched on.
     /// </summary>
@@ -427,7 +420,6 @@ public partial class ContentBlockComponent : MSGComponentBase
         hash.Add(this.Content.IsStreaming);
         hash.Add(this.Content.FileAttachments.Count);
         hash.Add(this.Content.Sources.Count);
-        hash.Add(this.CustomTextContent is not null);
 
         switch (this.Content)
         {

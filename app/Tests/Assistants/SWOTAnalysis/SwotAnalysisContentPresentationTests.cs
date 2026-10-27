@@ -34,7 +34,7 @@ public sealed class SwotAnalysisContentPresentationTests
         var json = JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS);
         var restoredThread = JsonSerializer.Deserialize<ChatThread>(json, WorkspaceBehaviour.JSON_OPTIONS);
         var restoredContent = (ContentText)restoredThread!.Blocks.Single().Content!;
-        var presentationWasRead = SwotAnalysisContentPresentation.TryRead(restoredContent, out var restoredResult);
+        var presentationWasRead = SwotAnalysisContentPresentation.TryRead(restoredContent.Presentation, out var restoredResult);
 
         Assert.Multiple(() =>
         {
@@ -57,7 +57,7 @@ public sealed class SwotAnalysisContentPresentationTests
             Presentation = ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, "not a SWOT result"),
         };
 
-        var presentationWasRead = SwotAnalysisContentPresentation.TryRead(content, out _);
+        var presentationWasRead = SwotAnalysisContentPresentation.TryRead(content.Presentation, out _);
 
         Assert.Multiple(() =>
         {
@@ -71,7 +71,7 @@ public sealed class SwotAnalysisContentPresentationTests
     {
         var content = new ContentText { Text = "Ordinary Markdown" };
 
-        Assert.That(SwotAnalysisContentPresentation.TryRead(content, out _), Is.False);
+        Assert.That(SwotAnalysisContentPresentation.TryRead(content.Presentation, out _), Is.False);
     }
 
     [Test]
@@ -88,7 +88,7 @@ public sealed class SwotAnalysisContentPresentationTests
         result.PrioritizedActions.EmptyMessage = "No supported actions.";
         var content = new ContentText { Presentation = SwotAnalysisContentPresentation.Create(result) };
 
-        var presentationWasRead = SwotAnalysisContentPresentation.TryRead(content, out var readResult);
+        var presentationWasRead = SwotAnalysisContentPresentation.TryRead(content.Presentation, out var readResult);
 
         Assert.Multiple(() =>
         {
@@ -105,7 +105,7 @@ public sealed class SwotAnalysisContentPresentationTests
         result.Strengths.Findings[0].Explanation = string.Empty;
         var content = new ContentText { Presentation = SwotAnalysisContentPresentation.Create(result) };
 
-        Assert.That(SwotAnalysisContentPresentation.TryRead(content, out _), Is.False);
+        Assert.That(SwotAnalysisContentPresentation.TryRead(content.Presentation, out _), Is.False);
     }
 
     [Test]
@@ -122,7 +122,7 @@ public sealed class SwotAnalysisContentPresentationTests
             },
         };
 
-        Assert.That(SwotAnalysisContentPresentation.TryRead(content, out _), Is.False);
+        Assert.That(SwotAnalysisContentPresentation.TryRead(content.Presentation, out _), Is.False);
     }
 
     private static SwotAnalysisResult CreateResult() => new()
