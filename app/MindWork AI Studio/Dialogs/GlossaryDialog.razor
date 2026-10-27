@@ -81,22 +81,22 @@
                 <Columns>
                     <PropertyColumn Property="x => x.Term" Title="@this.TermTitle">
                         <EditTemplate>
-                            <MudTextField T="string" @bind-Value="@context.Item.Term" Placeholder="@T("Enter a term")" Underline="@false" Margin="Margin.Dense" AutoGrow="@true" MaxLines="6" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                            <MudTextField T="string" @bind-Value="@context.Item.Term" Placeholder="@T("Enter a term")" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                         </EditTemplate>
                     </PropertyColumn>
                     <PropertyColumn Property="x => x.Value" Title="@this.ValueTitle">
                         <EditTemplate>
-                            <MudTextField T="string" @bind-Value="@context.Item.Value" Placeholder="@this.ValuePlaceholder" Underline="@false" Margin="Margin.Dense" AutoGrow="@true" MaxLines="6" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                            <MudTextField T="string" @bind-Value="@context.Item.Value" Placeholder="@this.ValuePlaceholder" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                         </EditTemplate>
                     </PropertyColumn>
                     <PropertyColumn Property="x => x.Aliases" Title="@T("Other forms")" Hidden="@(!this.showDetails)">
                         <EditTemplate>
-                            <MudTextField T="string" @bind-Value="@context.Item.Aliases" Placeholder="@T("e.g. plural; other spelling")" Underline="@false" Margin="Margin.Dense" AutoGrow="@true" MaxLines="6" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                            <MudTextField T="string" @bind-Value="@context.Item.Aliases" Placeholder="@T("e.g. plural; other spelling")" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                         </EditTemplate>
                     </PropertyColumn>
                     <PropertyColumn Property="x => x.Note" Title="@T("Note")" Hidden="@(!this.showDetails)">
                         <EditTemplate>
-                            <MudTextField T="string" @bind-Value="@context.Item.Note" Placeholder="@T("Optional remark")" Underline="@false" Margin="Margin.Dense" AutoGrow="@true" MaxLines="6" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                            <MudTextField T="string" @bind-Value="@context.Item.Note" Placeholder="@T("Optional remark")" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                         </EditTemplate>
                     </PropertyColumn>
                     <TemplateColumn T="GlossaryDialog.EntryRow" Editable="@false" Sortable="@false" Filterable="@false">
