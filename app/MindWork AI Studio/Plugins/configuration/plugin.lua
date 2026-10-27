@@ -1099,11 +1099,13 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the minimum provider confidence level required for individual tools or tool
 -- collections.
--- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
+-- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search, glossary_lookup
 -- Collection IDs include: mailboxes
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
--- semantic_search = NONE, mailboxes = VERY_LOW
+-- semantic_search = NONE, glossary_lookup = NONE, mailboxes = VERY_LOW
+-- glossary_lookup returns entries of the user's glossaries. Raise its minimum when your
+-- glossaries hold terms which only trusted providers may see.
 -- search_confluence always searches with a HIGH-confidence provider only, whatever value is
 -- set here.
 -- semantic_search offers a provider only the data sources whose own confidence level it meets,

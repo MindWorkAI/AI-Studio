@@ -14,6 +14,7 @@ public static class ToolSelectionRules
     public const string SEARCH_MAILS_TOOL_ID = "search_mails";
     public const string READ_MAIL_TOOL_ID = "read_mail";
     public const string COUNT_MAILS_TOOL_ID = "count_mails";
+    public const string GLOSSARY_LOOKUP_TOOL_ID = "glossary_lookup";
     public const string MAILBOXES_COLLECTION_ID = "mailboxes";
 
     public static string GetMaxToolCallsFinalResponseInstruction() => $"The maximum of {MAX_TOOL_CALLS} tool calls has been reached. No more tools are available. Provide the best possible final answer to the user based on the tool results already available.";

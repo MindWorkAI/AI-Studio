@@ -1,0 +1,18 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.MenuBook" Class="mr-2" />
+            @T("Your Glossaries")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <GlossaryManagement/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

@@ -1,0 +1,148 @@
+@using AIStudio.Settings
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataName"
+                Label="@T("Glossary Name")"
+                Class="mb-3"
+                Immediate="@true"
+                MaxLength="@MAX_NAME_LENGTH"
+                Counter="@MAX_NAME_LENGTH"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Badge"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidateName"
+                Variant="Variant.Outlined"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            <MudRadioGroup T="GlossaryType" @bind-Value="@this.dataType" Class="mb-3">
+                <MudRadio Value="@GlossaryType.TRANSLATION" Color="Color.Primary">
+                    <div>
+                        <MudText Typo="Typo.body1">@T("Translation glossary")</MudText>
+                        <MudText Typo="Typo.caption">@T("Terms with their fixed translation. The AI always translates these terms the same way.")</MudText>
+                    </div>
+                </MudRadio>
+                <MudRadio Value="@GlossaryType.REFERENCE" Color="Color.Primary">
+                    <div>
+                        <MudText Typo="Typo.body1">@T("Reference glossary")</MudText>
+                        <MudText Typo="Typo.caption">@T("Terms with an explanation, such as technical terms of your organization. The AI uses them to understand your texts.")</MudText>
+                    </div>
+                </MudRadio>
+            </MudRadioGroup>
+
+            @if (this.dataType is GlossaryType.TRANSLATION)
+            {
+                <EnumSelection T="CommonLanguages" NameFunc="@this.LanguageName" @bind-Value="@this.dataSourceLanguage" ValidateSelection="@this.ValidateLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language of the terms")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.dataCustomSourceLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language of the terms")" />
+                <EnumSelection T="CommonLanguages" NameFunc="@this.LanguageName" @bind-Value="@this.dataTargetLanguage" ValidateSelection="@this.ValidateLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language of the translations")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.dataCustomTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language of the translations")" />
+            }
+
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataDescription"
+                Label="@T("Description (optional)")"
+                HelperText="@T("What the glossary is about and when it applies. The AI reads it, too.")"
+                Class="mb-3"
+                Lines="2"
+                AutoGrow="@true"
+                MaxLines="6"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Notes"
+                AdornmentColor="Color.Info"
+                Variant="Variant.Outlined"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            <MudCheckBox T="bool" @bind-Value="@this.dataPreselectInTranslation" Color="Color.Primary" Dense="@true" Size="Size.Small" Label="@this.PreselectLabel"/>
+        </MudForm>
+
+        <MudText Typo="Typo.h6" Class="mt-3">@T("Entries")</MudText>
+        <MudText Typo="Typo.caption" Class="mb-2 d-block">@T("Click into a cell to change it. Add entries one by one or import them from a spreadsheet or a CSV file.")</MudText>
+
+        <div class="d-flex flex-wrap align-center gap-2 mb-2">
+            <div style="flex: 4 1 16rem; min-width: 0;">
+                <MudTextField T="string" @bind-Value="@this.searchText" Placeholder="@T("Search entries")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="@true" Clearable="@true" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Style="flex: 3 1 12rem;" OnClick="@this.AddRow">
+                @T("Add Entry")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" Style="flex: 3 1 12rem;" OnClick="@this.ImportEntries">
+                @T("Import from File")
+            </MudButton>
+        </div>
+        <MudSwitch T="bool" @bind-Value="@this.showDetails" Color="Color.Primary" Size="Size.Small" Label="@T("Show other forms and notes")" Class="mb-4"/>
+
+        <div class="glossary-entries">
+            <MudDataGrid T="GlossaryDialog.EntryRow" Items="@this.rows" ReadOnly="@false" EditMode="DataGridEditMode.Cell" QuickFilter="@this.MatchesSearch" Dense="@true" Hover="@true" RowsPerPage="25" Class="border-dashed border rounded-lg mb-3">
+                <Columns>
+                    <PropertyColumn Property="x => x.Term" Title="@this.TermTitle">
+                        <EditTemplate>
+                            <MudTextField T="string" @bind-Value="@context.Item.Term" Placeholder="@T("Enter a term")" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                        </EditTemplate>
+                    </PropertyColumn>
+                    <PropertyColumn Property="x => x.Value" Title="@this.ValueTitle">
+                        <EditTemplate>
+                            <MudTextField T="string" @bind-Value="@context.Item.Value" Placeholder="@this.ValuePlaceholder" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                        </EditTemplate>
+                    </PropertyColumn>
+                    <PropertyColumn Property="x => x.Aliases" Title="@T("Other forms")" Hidden="@(!this.showDetails)">
+                        <EditTemplate>
+                            <MudTextField T="string" @bind-Value="@context.Item.Aliases" Placeholder="@T("e.g. plural; other spelling")" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                        </EditTemplate>
+                    </PropertyColumn>
+                    <PropertyColumn Property="x => x.Note" Title="@T("Note")" Hidden="@(!this.showDetails)">
+                        <EditTemplate>
+                            <MudTextField T="string" @bind-Value="@context.Item.Note" Placeholder="@T("Optional remark")" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                        </EditTemplate>
+                    </PropertyColumn>
+                    <TemplateColumn T="GlossaryDialog.EntryRow" Editable="@false" Sortable="@false" Filterable="@false">
+                        <CellTemplate>
+                            <MudTooltip Text="@T("Delete")">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => this.RemoveRow(context.Item))"/>
+                            </MudTooltip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body1">@T("No entries yet.")</MudText>
+                </NoRecordsContent>
+                <PagerContent>
+                    <MudDataGridPager T="GlossaryDialog.EntryRow" RowsPerPageString="@T("Entries per page:")" InfoFormat="@this.PagerInfoFormat"/>
+                </PagerContent>
+            </MudDataGrid>
+        </div>
+
+        @if (this.showDetails)
+        {
+            <MudText Typo="Typo.caption" Class="mb-3 d-block">@T("Other forms are further spellings or forms which count as the same term, such as a plural; separate them with semicolons. A note is a remark which the AI reads along with the entry, for example, when the entry applies.")</MudText>
+        }
+
+        @if (this.CountDuplicateTerms() is var duplicates and > 0)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="@true" Class="mb-3">
+                @string.Format(T("{0} terms appear more than once. The AI gets all of their entries, which may contradict each other."), duplicates)
+            </MudAlert>
+        }
+
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+            @if(this.IsEditing)
+            {
+                @T("Update")
+            }
+            else
+            {
+                @T("Add")
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>

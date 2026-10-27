@@ -57,6 +57,11 @@ public enum DataBackupEntryKind
     MEDIA_TRANSCRIPTS,
 
     /// <summary>
+    /// The entries of the glossaries. The settings describe the glossaries; their entries live here.
+    /// </summary>
+    GLOSSARIES,
+
+    /// <summary>
     /// The copies of the settings which every version of AI Studio keeps for itself.
     /// </summary>
     SETTINGS_OF_OTHER_VERSIONS,
