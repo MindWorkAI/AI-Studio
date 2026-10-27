@@ -71,7 +71,10 @@ public sealed class GlossaryMatcherTests
     {
         IReadOnlyList<GlossaryEntry> entries = [new("Glossar", "glossary")];
 
-        Assert.That(GlossaryMatcher.For(entries), Is.SameAs(GlossaryMatcher.For(entries)), "The terms must be normalized only once per list.");
+        var first = GlossaryMatcher.For(entries);
+        var second = GlossaryMatcher.For(entries);
+
+        Assert.That(second, Is.SameAs(first), "The terms must be normalized only once per list.");
     }
 
     [Test]
