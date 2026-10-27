@@ -67,7 +67,7 @@
                 @T("Files to include")
             </MudText>
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-                @T("Select the file patterns this data source should index.")
+                @T("Select the file patterns this data source should index. Audio and video files, e.g., *.mp3 or *.mp4, are transcribed by your transcription provider.")
             </MudJustifiedText>
 
             <FilePatternSelection>
@@ -122,7 +122,7 @@
             <ManagePandocDependency IntroText="@T("MindWork AI Studio uses Pandoc to read HTML files.")"/>
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
-                @T("Provider trust")
+                @T("Data sharing")
             </MudText>
             <MudSelect @ref="@this.confidenceLevelSelect" @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" HelperText="@T("Only providers with this confidence level or higher may receive and process data from this data source.")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
                 @foreach (var level in this.ConfidenceLevels)
@@ -153,11 +153,11 @@
                         Label="@T("Include hidden files and folders?")"
                         Value="@this.dataIncludeHiddenFilesAndFolders"
                         ValueChanged="@(value => this.dataIncludeHiddenFilesAndFolders = value)"
-                        LabelOn="@T("Yes, include hidden files and folders")"
+                        LabelOn="@T("Yes, index hidden files and folders as well")"
                         LabelOff="@T("No, ignore hidden files and folders")"
                     />
                     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-                        @T("Files and folders are hidden if their names start with a dot or the operating system marks them as hidden. If you choose 'No', hidden items are skipped. To explicitly include a file such as .gitignore, enter its name under 'Files to include'. Using generic patterns such as *, :text: or :documents: still skips hidden files. Exclusion rules always take priority; you can change them in the fields below.")
+                        @T("Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.")
                     </MudJustifiedText>
                     <div class="mt-4">
                         <FileExclusionEditor @bind-Text="@this.dataExcludePatterns" Label="@T("Excluded files and folders")" ResetButtonText="@T("Restore default")"/>

@@ -84,7 +84,7 @@
             <ManagePandocDependency IntroText="@T("MindWork AI Studio uses Pandoc to read HTML files.")"/>
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
-                @T("Provider trust")
+                @T("Data sharing")
             </MudText>
             <MudSelect @ref="@this.confidenceLevelSelect" @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" HelperText="@T("Only providers with this confidence level or higher may receive and process data from this data source.")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
                 @foreach (var level in this.ConfidenceLevels)

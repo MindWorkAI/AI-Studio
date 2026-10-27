@@ -16,7 +16,7 @@
         <MudTextField T="string" InputId="@this.fileInputId" Text="@this.state.FileText" TextChanged="@this.ChangeFilesAsync" Immediate="@true" Disabled="@this.Disabled" Label="@T("Files")" Lines="1" AutoGrow="@true" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@FileExclusions.ValidateFiles" UserAttributes="@INPUT_ATTRIBUTES" Placeholder="*.min.js;*.webm;draft-*" Adornment="@(this.ShowReset ? Adornment.End : Adornment.None)" AdornmentIcon="@Icons.Material.Filled.Restore" OnAdornmentClick="@(() => this.RestoreDefaultsAsync(false))" AdornmentAriaLabel="@this.FileRestoreLabel"/>
     </MudStack>
 
-    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">@T("Separate patterns with semicolons. Folder patterns must end with /. Exclusions take priority.")</MudText>
+    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">@T("These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/.")</MudText>
     <MudCollapse Expanded="@(this.ShowHelp && this.showHelp)">
         <div class="mt-2">
             <FilePatternHelp ShowInclusionExamples="@false" ShowExclusionExamples="@true"/>

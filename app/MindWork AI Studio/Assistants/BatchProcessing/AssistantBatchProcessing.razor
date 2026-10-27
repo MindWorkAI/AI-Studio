@@ -41,9 +41,9 @@
     <MudDivider/>
     <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
         <MudText Typo="Typo.subtitle2" Class="mb-2">@T("Hidden files and folders")</MudText>
-        <MudTextSwitch Label="@T("Include hidden files and folders?")" Disabled="@this.isProcessingBatch" Value="@this.includeHiddenFilesAndFolders" ValueChanged="@(v => this.includeHiddenFilesAndFolders = v)" LabelOn="@T("Yes, include hidden files and folders")" LabelOff="@T("No, ignore hidden files and folders")"/>
+        <MudTextSwitch Label="@T("Include hidden files and folders?")" Disabled="@this.isProcessingBatch" Value="@this.includeHiddenFilesAndFolders" ValueChanged="@(v => this.includeHiddenFilesAndFolders = v)" LabelOn="@T("Yes, process hidden files and folders as well")" LabelOff="@T("No, ignore hidden files and folders")"/>
         <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-            @T("Files and folders are hidden if their names start with a dot or the operating system marks them as hidden. If you choose 'No', hidden items are skipped. To explicitly include a file such as .gitignore, enter its name under 'Files to include'. Using generic patterns such as *, :text: or :documents: still skips hidden files. Exclusion rules always take priority; you can change them in the fields below.")
+            @T("Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.")
         </MudJustifiedText>
 
         <div class="mt-4">
