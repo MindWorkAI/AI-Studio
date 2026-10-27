@@ -550,6 +550,32 @@ tr:has(> .provider-group-header) .mud-icon-button {
     padding-bottom: 0.5rem;
 }
 
+/* A field for file patterns with its help button on the right, which keeps its width while the field grows. */
+.pattern-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    column-gap: 8px;
+    align-items: center;
+}
+
+/* The field takes the first column, and so does what follows below it, such as the help, which keeps them equally wide. */
+.pattern-row-main {
+    grid-column: 1;
+    min-width: 0;
+}
+
+/*
+ * Pattern lists wrap and grow with their content, up to a limit beyond which they scroll. MudBlazor
+ * measures the height only on input, after a render with new text, and when the window changes its
+ * size. When the field gets narrower otherwise, e.g., in a dialog, more lines wrap than it is high,
+ * and MudBlazor hides the scrollbar below the limit. Allowing it always keeps every line reachable.
+ */
+.pattern-text-field textarea.mud-input-slot {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-y: auto !important;
+}
+
 /*
  * Dialogs whose footer carries buttons on the left as well, such as Add and Import next to Close.
  * MudBlazor pads the content with 24px to the left and right, but the footer with only 8px, so the

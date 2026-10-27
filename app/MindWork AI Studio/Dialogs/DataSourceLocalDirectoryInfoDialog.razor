@@ -12,8 +12,9 @@
         <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("Path")" Value="@this.DataSource.Path" ClipboardTooltipSubject="@T("this path")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.AccountTree" Label="@T("Include subfolders")" Value="@(this.DataSource.IncludeSubdirectories ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether subfolders are included")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.VisibilityOff" Label="@T("Include hidden files and folders")" Value="@(this.DataSource.IncludeHiddenFilesAndFolders ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether hidden files and folders are included")"/>
-        <TextInfoLine Icon="@Icons.Material.Filled.FilterAlt" Label="@T("File patterns")" Value="@this.DataSource.EffectiveFilePatterns" ClipboardTooltipSubject="@T("the file patterns")"/>
-        <TextInfoLines Label="@T("Excluded files and folders")" Value="@this.DataSource.EffectiveExcludePatterns" ClipboardTooltipSubject="@T("the excluded files and folders")"/>
+        <TextInfoLines Icon="@Icons.Material.Filled.FilterAlt" Label="@T("Files to include")" Value="@this.DataSource.EffectiveFilePatterns" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the file patterns")"/>
+        <TextInfoLines Icon="@Icons.Material.Filled.FolderOff" Label="@T("Excluded folders")" Value="@this.Exclusions.Folders" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the excluded folders")"/>
+        <TextInfoLines Icon="@Icons.Material.Filled.FilterAltOff" Label="@T("Excluded files")" Value="@this.Exclusions.Files" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the excluded files")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.Straighten" Label="@T("Ignore files larger than")" Value="@FolderFileSelection.MegabytesToBytes(this.DataSource.EffectiveMaxFileSizeMegabytes).FileSize()" ClipboardTooltipSubject="@T("the size limit for files")"/>
         @if (!this.IsDirectoryAvailable)
         {

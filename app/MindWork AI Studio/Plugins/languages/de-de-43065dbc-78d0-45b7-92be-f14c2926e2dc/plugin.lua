@@ -438,8 +438,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Please provide a file name without a path, e.g., my-results.csv
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T189587595"] = "Bitte geben Sie einen Dateinamen ohne Pfad an, z. B. meine-ergebnisse.csv"
 
+-- Hidden files and folders
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1902969218"] = "Versteckte Dateien und Ordner"
+
 -- Select the folder containing your documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1926838679"] = "Wählen Sie den Ordner mit den Dokumenten aus"
+
+-- Files to include
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2000156297"] = "Einbezogene Dateien"
 
 -- Include subfolders?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2086334687"] = "Unterordner einbeziehen?"
@@ -485,9 +491,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Was not able to read the existing transcript: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2397111152"] = "Das vorhandene Transkript konnte nicht gelesen werden: {0}"
-
--- File patterns
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2460883298"] = "Dateiendungen"
 
 -- Load prompt from file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2474257795"] = "Prompt aus Datei laden"
@@ -540,6 +543,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- The batch run finished, but one file could not be processed. See the progress table and log for details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3201532790"] = "Die Stapelverarbeitung ist abgeschlossen, aber eine Datei konnte nicht verarbeitet werden. Weitere Informationen finden Sie in der Fortschrittstabelle und im Protokoll."
 
+-- File size limit
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3225743883"] = "Maximale Dateigröße"
+
 -- The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T324865195"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung der {0} Bilder unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
 
@@ -569,9 +575,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Processing pace
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3428873429"] = "Verarbeitungsgeschwindigkeit"
-
--- Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3436936162"] = "Welche Dateien sollen verarbeitet werden? Trennen Sie mehrere Muster durch ein Semikolon, z. B. *.pdf;*.docx. Verwenden Sie :documents: für alle Dokumente und lesbaren Textdateien, :text: nur für lesbare Textdateien oder * für alle Dateien."
 
 -- The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3439247329"] = "Der Dateiname der CSV-Ergebnistabelle. Die Endung .csv wird ergänzt, falls sie fehlt. Wenn Sie das Feld leer lassen, wird 'batch-results.csv' verwendet."
@@ -608,9 +611,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3899869356"] = "'{0}' konnte nicht geschrieben werden. Bitte stellen Sie sicher, dass die Datei nicht in einem anderen Programm geöffnet ist. Die Ergebnisse dieses Laufs sind auf der Festplatte unvollständig. Die Meldung lautet: '{1}'"
-
--- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3934601817"] = "Diese Dateien und Ordner werden auch dann ausgeschlossen, wenn ein Dateimuster auf sie zutrifft. Trennen Sie die Einträge durch ein Semikolon oder einen Zeilenumbruch. Ein Eintrag mit einem Schrägstrich am Ende schließt alle Ordner mit diesem Namen aus, z. B. node_modules/. Alle anderen Einträge beziehen sich auf Dateien, z. B. *.min.js."
 
 -- Select the file with your instructions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3943995624"] = "Datei mit Ihren Anweisungen auswählen"
@@ -4354,7 +4354,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T381231449"] = "Dat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3859543867"] = "Postfach (IMAP)"
 
 -- Add ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T590005498"] = "ERI v1 Datenquelle hinzufügen"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T590005498"] = "ERI-v1-Datenquelle hinzufügen"
 
 -- External Data (ERI-Server v1)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T774473996"] = "Externe Daten (ERI-Server v1)"
@@ -4459,7 +4459,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2352821039"] = "AI
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2511157475"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern, Postfächer alle 16 Minuten."
 
 -- ERI v1 Data Source Information
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T26243729"] = "ERI v1 Datenquellen-Informationen"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T26243729"] = "Informationen zur ERI-v1-Datenquelle"
 
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T266367750"] = "Name"
@@ -4773,8 +4773,56 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3596972550"] = "Diese Webse
 -- Open the file in the program your system uses for it
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268"] = "Datei in dem Programm öffnen, das Ihr System dafür verwendet"
 
+-- Exclusion help and examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T1309128010"] = "Hilfe und Beispiele zu Ausschlussregeln"
+
+-- Folders
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T1412427146"] = "Ordner"
+
+-- Excluded files and folders
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T286958948"] = "Ausgeschlossene Dateien und Ordner"
+
+-- Files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T3877444400"] = "Dateien"
+
+-- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T499835724"] = "Diese Dateien und Ordner werden auch dann ausgeschlossen, wenn ein Dateimuster auf sie zutrifft. Trennen Sie die Einträge durch ein Semikolon oder einen Zeilenumbruch. Ein Eintrag mit einem Schrägstrich am Ende schließt alle Ordner mit diesem Namen aus, z. B. node_modules/."
+
+-- Restore default
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T913168756"] = "Standard wiederherstellen"
+
 -- Saving '{0}'...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] = "„{0}“ wird gespeichert …"
+
+-- Exclude folders ending in build, such as build or app-build
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1241240542"] = "Ordner ausschließen, die auf „build“ enden, z. B. „build“ oder „app-build“"
+
+-- Include readable text files, even those without an extension
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1482113736"] = "Lesbare Textdateien einbeziehen, auch solche ohne Dateiendung"
+
+-- File names starting with draft-
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1676890987"] = "Dateinamen, die mit „draft-“ beginnen"
+
+-- Pattern examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2430822600"] = "Beispiele für Dateimuster"
+
+-- Include all files, even audio and video
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2681459563"] = "Alle Dateien einbeziehen, auch Audio- und Videodateien"
+
+-- Separate patterns with semicolons. Exclusions take priority over included files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2728429336"] = "Trennen Sie Muster durch Semikolons. Ausschlüsse haben Vorrang vor einbezogenen Dateien."
+
+-- PDF and Word files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3467839719"] = "PDF- und Word-Dateien"
+
+-- Patterns match file names regardless of letter case. Folder paths are not supported.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3691425703"] = "Muster gelten für Dateinamen, unabhängig von Groß- und Kleinschreibung. Ordnerpfade werden nicht unterstützt."
+
+-- Include all documents and readable text files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T967949655"] = "Alle Dokumente und lesbaren Textdateien einbeziehen"
+
+-- Pattern help and examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1369669520"] = "Hilfe und Beispiele zu Dateimustern"
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs können Fehler machen. Überprüfen Sie wichtige Informationen."
@@ -4812,12 +4860,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3008114108"] = "Fü
 -- Some tools selected for this run are switched off in your tool settings and stay unused: {0}. Switch them on again in the app settings to use them.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3803950041"] = "Einige der für diesen Durchlauf ausgewählten Werkzeuge sind in Ihren Werkzeugeinstellungen deaktiviert und bleiben daher ungenutzt: {0}. Aktivieren Sie sie in den App-Einstellungen wieder, um sie zu nutzen."
 
--- Your Pandoc installation meets the requirements.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1167365374"] = "Ihre Pandoc-Installation erfüllt die Anforderungen."
-
--- Please wait while we check the availability of Pandoc.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1336364299"] = "Bitte warten Sie, während wir die Verfügbarkeit von Pandoc überprüfen."
-
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T185447014"] = "Pandoc-Installation"
 
@@ -4829,9 +4871,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T3147551473"] = "
 
 -- Update Pandoc
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T3249965383"] = "Pandoc aktualisieren"
-
--- Check your Pandoc installation
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T527187983"] = "Überprüfen Sie Ihre Pandoc-Installation"
 
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T986578435"] = "Pandoc installieren"
@@ -7233,6 +7272,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG:
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T900713019"] = "Abbrechen"
 
+-- Folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T104168189"] = "Ordner"
+
 -- Hide Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1108876344"] = "Experten-Einstellungen ausblenden"
 
@@ -7250,6 +7292,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1311820297"
 
 -- Selected base directory for this data source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1312296210"] = "Ausgewähltes Stammverzeichnis für diese Datenquelle"
+
+-- MindWork AI Studio uses Pandoc to read HTML files.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T133018120"] = "MindWork AI Studio verwendet Pandoc zum Lesen von HTML-Dateien."
 
 -- No embedding selected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1359179968"] = "Keine Einbettung ausgewählt"
@@ -7281,14 +7326,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1827669611"
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1847791252"] = "Aktualisieren"
 
+-- Hidden files and folders
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1902969218"] = "Versteckte Dateien und Ordner"
+
+-- Files to include
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2000156297"] = "Einbezogene Dateien"
+
+-- Data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2034620186"] = "Datenquelle"
+
 -- Include subfolders?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2086334687"] = "Unterordner einbeziehen?"
 
 -- The overlap must be smaller than the effective token limit.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2101951526"] = "Die Überlappung muss kleiner sein als das effektive Token-Limit."
-
--- Select the file patterns this data source should index.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2244471011"] = "Legen Sie mit Dateimustern fest, welche Dateien diese Datenquelle indexiert."
 
 -- Required provider confidence level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T236253137"] = "Erforderliches Vertrauensniveau des Anbieters"
@@ -7296,8 +7347,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T236253137"]
 -- Please enter a token limit of at least 1.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2406580478"] = "Bitte geben Sie ein Token-Limit von mindestens 1 ein."
 
--- File patterns
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2460883298"] = "Dateimuster"
+-- Search results
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2499087427"] = "Suchergebnisse"
+
+-- Data sharing
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2623330465"] = "Weitergabe der Daten"
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2646845972"] = "Hinzufügen"
@@ -7308,6 +7362,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2838542994"] = "Einbettung"
 
+-- Choose an embedding provider to make this data source searchable.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2861534545"] = "Wählen Sie einen Einbettungsanbieter aus, um diese Datenquelle durchsuchbar zu machen."
+
 -- Excluded files and folders
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T286958948"] = "Ausgeschlossene Dateien und Ordner"
 
@@ -7317,17 +7374,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2961294165"
 -- Audio and video files which this data source selects are skipped, because your transcription provider does not meet the confidence level this data source requires.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3017942214"] = "Audio- und Videodateien, die diese Datenquelle auswählt, werden übersprungen, weil Ihr Transkriptionsanbieter das Vertrauensniveau nicht erfüllt, das diese Datenquelle erfordert."
 
+-- Text chunking
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3105524153"] = "Aufteilung in Blöcke"
+
 -- Audio and video files which this data source selects are skipped until you choose a transcription provider in the settings.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3119708878"] = "Audio- und Videodateien, die diese Datenquelle auswählt, werden übersprungen, bis Sie in den Einstellungen einen Transkriptionsanbieter auswählen."
+
+-- File size limit
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3225743883"] = "Maximale Dateigröße"
 
 -- Please enter 0 or a positive overlap length.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3242265813"] = "Bitte geben Sie 0 oder eine positive Überlappungslänge ein."
 
 -- Ignore files larger than
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3353866230"] = "Dateien ignorieren, die größer sind als"
-
--- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3359366900"] = "Für einige Dateitypen, wie zum Beispiel Office-Dateien, benötigt MindWork AI Studio die Open-Source-Anwendung Pandoc."
 
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3361153305"] = "Experten-Einstellungen anzeigen"
@@ -7341,20 +7401,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3584816527"
 -- This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3738459730"] = "Mit dieser Einstellung legen Sie fest, wohin ein Chat noch Daten senden darf, nachdem die KI etwas in dieser Datenquelle gefunden hat, damit deren Inhalte zum Beispiel nicht in einer Websuche landen. Wählen Sie „Keine Einschränkung“ nur für Inhalte, die ohnehin jeder lesen darf."
 
--- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3934601817"] = "Diese Dateien und Ordner werden auch dann ausgeschlossen, wenn ein Dateimuster auf sie zutrifft. Trennen Sie die Einträge durch ein Semikolon oder einen Zeilenumbruch. Ein Eintrag mit einem Schrägstrich am Ende schließt alle Ordner mit diesem Namen aus, z. B. node_modules/. Alle anderen Einträge beziehen sich auf Dateien, z. B. *.min.js."
+-- Only providers with this confidence level or higher may receive and process data from this data source.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3755939304"] = "Nur Anbieter mit mindestens diesem Vertrauensniveau dürfen Daten dieser Datenquelle empfangen und verarbeiten."
 
--- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T529871858"] = "Damit die KI jederzeit die passenden Daten ermitteln kann, müssen Sie einen Einbettungsanbieter auswählen."
+-- Select the file patterns this data source should index. Audio and video files, e.g., *.mp3 or *.mp4, are transcribed by your transcription provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T4289641992"] = "Wählen Sie die Dateimuster aus, die diese Datenquelle indexieren soll. Audio- und Videodateien, z. B. *.mp3 oder *.mp4, werden von Ihrem Transkriptionsanbieter transkribiert."
 
 -- Select the base directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T562479068"] = "Wählen Sie das Stammverzeichnis aus"
 
--- Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file. Audio and video files, e.g., *.mp3 or *.mp4, are transcribed by your transcription provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T599406584"] = "Welche Dateien sollen indexiert werden? Trennen Sie mehrere Muster durch ein Semikolon, z. B. *.txt;*.pdf;*.docx;.gitignore. Verwenden Sie :documents: für alle Dokumente und lesbaren Textdateien, :text: nur für lesbare Textdateien oder * für alle Dateien. Audio- und Videodateien, z. B. *.mp3 oder *.mp4, werden von Ihrem Transkriptionsanbieter transkribiert."
-
 -- Yes, index hidden files and folders as well
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T607153623"] = "Ja, auch versteckte Dateien und Ordner indexieren"
+
+-- Restore default patterns
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T7425959"] = "Standardmuster wiederherstellen"
 
 -- The data source token limit must not be larger than the embedding provider token limit ({0}).
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T787118522"] = "Das Token-Limit der Datenquelle darf nicht größer sein als das Token-Limit des Einbettungsanbieters ({0})."
@@ -7395,6 +7455,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1447415
 -- No
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1642511898"] = "Nein"
 
+-- the excluded folders
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1647237555"] = "die ausgeschlossenen Ordner"
+
 -- Include subfolders
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1710166842"] = "Unterordner einbeziehen"
 
@@ -7406,6 +7469,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1725856
 
 -- The embedding runs locally or in your organization. Your data is not sent to the cloud.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1950544032"] = "Die Einbettung läuft lokal oder in ihrer Organisation. Ihre Daten werden nicht in die Cloud gesendet."
+
+-- Files to include
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2000156297"] = "Einbezogene Dateien"
 
 -- the file patterns
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2013714981"] = "die Dateimuster"
@@ -7419,23 +7485,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2333573
 -- Required provider confidence level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T236253137"] = "Erforderliches Vertrauensniveau des Anbieters"
 
--- File patterns
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2460883298"] = "Dateimuster"
-
 -- the maximum number of matches per query
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2479753122"] = "die maximale Anzahl an Treffern pro Abfrage"
 
 -- the total size of matching files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2515807708"] = "die Gesamtgröße der passenden Dateien"
 
+-- Excluded files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2590452128"] = "Ausgeschlossene Dateien"
+
 -- the description
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2658359966"] = "Die Beschreibung"
 
 -- the data source name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2717738728"] = "den Namen der Datenquelle"
-
--- Excluded files and folders
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T286958948"] = "Ausgeschlossene Dateien und Ordner"
 
 -- The directory chosen for the data source does not exist anymore. Please edit the data source and correct the path.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2875614207"] = "Das für die Datenquelle gewählte Verzeichnis existiert nicht mehr. Bitte bearbeiten Sie die Datenquelle und korrigieren Sie den Pfad."
@@ -7461,6 +7524,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3127438
 -- Embedding name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3153201045"] = "Name der Einbettung"
 
+-- Excluded folders
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3345276250"] = "Ausgeschlossene Ordner"
+
 -- Ignore files larger than
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3353866230"] = "Dateien ignorieren, die größer sind als"
 
@@ -7482,8 +7548,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3818527
 -- Path
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3949388886"] = "Pfad"
 
--- the excluded files and folders
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T4001527349"] = "die ausgeschlossenen Dateien und Ordner"
+-- the excluded files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T4083345389"] = "die ausgeschlossenen Dateien"
 
 -- The directory chosen for the data source exists.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T445858624"] = "Das ausgewählte Verzeichnis für die Datenquelle ist vorhanden."
@@ -7499,6 +7565,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1133561850"] = "
 
 -- Default tokenizer
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1220918127"] = "Standard-Tokenizer"
+
+-- MindWork AI Studio uses Pandoc to read HTML files.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T133018120"] = "MindWork AI Studio verwendet Pandoc zum Lesen von HTML-Dateien."
 
 -- No embedding selected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1359179968"] = "Keine Einbettung ausgewählt"
@@ -7521,6 +7590,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1827669611"] = "
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1847791252"] = "Aktualisieren"
 
+-- Data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2034620186"] = "Datenquelle"
+
 -- The overlap must be smaller than the effective token limit.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2101951526"] = "Die Überlappung muss kleiner sein als das effektive Token-Limit."
 
@@ -7532,6 +7604,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2406580478"] = "
 
 -- This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2468760910"] = "Diese Audio- oder Videodatei wird übersprungen, weil Ihr Transkriptionsanbieter das Vertrauensniveau nicht erfüllt, das diese Datenquelle erfordert."
+
+-- Search results
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2499087427"] = "Suchergebnisse"
+
+-- Data sharing
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2623330465"] = "Weitergabe der Daten"
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2646845972"] = "Hinzufügen"
@@ -7545,14 +7623,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2838542994"] = "
 -- Describe what data this file contains to help the AI select it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2859265837"] = "Beschreiben Sie, welche Daten diese Datei enthält, um der KI bei der Auswahl zu helfen."
 
+-- Choose an embedding provider to make this data source searchable.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2861534545"] = "Wählen Sie einen Einbettungsanbieter aus, um diese Datenquelle durchsuchbar zu machen."
+
 -- Token limit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2961294165"] = "Token-Limit"
 
+-- Text chunking
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3105524153"] = "Aufteilung in Blöcke"
+
 -- Please enter 0 or a positive overlap length.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3242265813"] = "Bitte geben Sie 0 oder eine positive Überlappungslänge ein."
-
--- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3359366900"] = "Für einige Dateitypen, wie zum Beispiel Office-Dateien, benötigt MindWork AI Studio die Open-Source-Anwendung Pandoc."
 
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3361153305"] = "Experten-Einstellungen anzeigen"
@@ -7566,11 +7647,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3738459730"] = "
 -- Select the file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Datei auswählen"
 
+-- Only providers with this confidence level or higher may receive and process data from this data source.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3755939304"] = "Nur Anbieter mit mindestens diesem Vertrauensniveau dürfen Daten dieser Datenquelle empfangen und verarbeiten."
+
 -- This audio or video file is skipped until you choose a transcription provider in the settings.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4026150982"] = "Diese Audio- oder Videodatei wird übersprungen, bis Sie in den Einstellungen einen Transkriptionsanbieter auswählen."
 
--- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T529871858"] = "Damit die KI jederzeit die passenden Daten ermitteln kann, müssen Sie einen Einbettungsanbieter auswählen."
+-- File
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T723007075"] = "Datei"
 
 -- The data source token limit must not be larger than the embedding provider token limit ({0}).
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T787118522"] = "Das Token-Limit der Datenquelle darf nicht größer sein als das Token-Limit des Einbettungsanbieters ({0})."
@@ -9153,8 +9237,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T17
 -- Batch processing options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1893713430"] = "Optionen für die Stapelverarbeitung sind vorausgewählt"
 
+-- Hidden files and folders
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1902969218"] = "Versteckte Dateien und Ordner"
+
 -- Default custom column separator
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T19367494"] = "Standardmäßiges benutzerdefiniertes Trennzeichen für Spalten"
+
+-- Files to include
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2000156297"] = "Einbezogene Dateien"
 
 -- Default document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2015391667"] = "Standardregelwerk für die Dokumentenanalyse"
@@ -9204,9 +9294,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T28
 -- Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2908365499"] = "Bitte geben Sie genau ein Satz- oder Sonderzeichen ein. Buchstaben, Zahlen, Leerzeichen, Anführungszeichen und Zeilenumbrüche können nicht als CSV-Trennzeichen verwendet werden."
 
--- Default file patterns
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2909693903"] = "Standard-Dateimuster"
-
 -- Only the selected folder is processed
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2958253681"] = "Nur der ausgewählte Ordner wird verarbeitet."
 
@@ -9221,6 +9308,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T31
 
 -- These instructions are applied to every document of a new batch run.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3195548336"] = "Diese Anweisungen werden auf jedes Dokument eines neuen Stapelverarbeitungsdurchlaufs angewendet."
+
+-- File size limit
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3225743883"] = "Maximale Dateigröße"
 
 -- Ignore files larger than
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3353866230"] = "Dateien ignorieren, die größer sind als"
@@ -9251,9 +9341,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T37
 
 -- Default results table name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3816237687"] = "Standardname der Ergebnistabelle"
-
--- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3934601817"] = "Diese Dateien und Ordner werden auch dann ausgeschlossen, wenn ein Dateimuster auf sie zutrifft. Trennen Sie die Einträge durch ein Semikolon oder einen Zeilenumbruch. Ein Eintrag mit einem Schrägstrich am Ende schließt alle Ordner mit diesem Namen aus, z. B. node_modules/. Alle anderen Einträge beziehen sich auf Dateien, z. B. *.min.js."
 
 -- Default Markdown instructions file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3967465682"] = "Standarddatei für Markdown-Anweisungen"
@@ -12952,7 +13039,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEM
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T1215599168"] = "Datenquelle bearbeiten: Lokaler Ordner"
 
 -- Edit ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T221059217"] = "ERI v1 Datenquelle bearbeiten"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T221059217"] = "ERI-v1-Datenquelle bearbeiten"
 
 -- Edit Local File Data Source
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T2453292893"] = "Datenquelle bearbeiten: Lokale Datei"
@@ -13157,6 +13244,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T599774443"] = "Das
 
 -- policy files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T632340680"] = "Richtliniendateien"
+
+-- Enter folder patterns ending with / in 'Folders'. File patterns must not end with /.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXCLUSIONS::T2019378403"] = "Geben Sie Ordnermuster, die mit / enden, im Feld „Ordner“ ein. Dateimuster dürfen nicht mit / enden."
+
+-- Folder patterns must end with /, e.g., build/. Enter file patterns such as *.pdf in 'Files'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXCLUSIONS::T2695719308"] = "Ordnermuster müssen mit / enden, z. B. build/. Geben Sie Dateimuster wie *.pdf im Feld „Dateien“ ein."
 
 -- Selectors such as :text: cannot be excluded. Please use file name patterns such as *.min.js or folder names such as bin/.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXCLUSIONS::T405437626"] = "Selektoren wie :text: können nicht ausgeschlossen werden. Bitte verwenden Sie Dateinamensmuster wie *.min.js oder Ordnernamen wie bin/."
@@ -13385,9 +13478,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T2207479763"] = "Eines der D
 
 -- Please provide at least one file pattern, e.g., :documents: or *.txt. Separate multiple patterns with a semicolon.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T3371062811"] = "Bitte geben Sie mindestens ein Dateimuster an, z. B. :documents: oder *.txt. Trennen Sie mehrere Muster durch ein Semikolon."
-
--- Please remove empty file patterns. Separate valid patterns with a single semicolon.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T368919579"] = "Bitte entfernen Sie leere Dateimuster. Trennen Sie gültige Muster durch ein einzelnes Semikolon."
 
 -- Please use only single asterisks as wildcards, e.g., *.txt or report-*.md.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949"] = "Bitte verwenden Sie als Platzhalter nur einzelne Sternchen, z. B. *.txt oder report-*.md."
