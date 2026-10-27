@@ -7,26 +7,67 @@ namespace AIStudio.Tests.Assistants.SWOTAnalysis;
 [TestFixture]
 public sealed class SwotCategoryAnalysisResponseTests
 {
-    [TestCase(ResponseEnvelope.BARE_JSON)]
-    [TestCase(ResponseEnvelope.JSON_CODE_FENCE)]
-    [TestCase(ResponseEnvelope.SURROUNDING_TEXT)]
-    public void TheStructuredCategoryResponseIsFoundInCommonModelEnvelopes(ResponseEnvelope envelope)
+    [Test]
+    public void TheFindingsOfACategoryAreReadAndTrimmed()
     {
-        var json = JsonSerializer.Serialize(CreateResult());
-        var response = envelope switch
-        {
-            ResponseEnvelope.BARE_JSON => json,
-            ResponseEnvelope.JSON_CODE_FENCE => $"```json\n{json}\n```",
-            ResponseEnvelope.SURROUNDING_TEXT => $"Here is the result:\n{json}\nDone.",
-            _ => throw new ArgumentOutOfRangeException(nameof(envelope), envelope, null),
-        };
+        var result = CreateResult();
+        result.Findings[0].Summary = "  Experienced team  ";
 
-        var parsed = SwotCategoryAnalysisResponseParser.TryParse(response, out var result);
+        var parsed = SwotCategoryAnalysisResponseParser.TryParse(JsonSerializer.Serialize(result), out var parsedResult, out var issue);
 
         Assert.Multiple(() =>
         {
             Assert.That(parsed, Is.True);
-            Assert.That(result.EmptyMessage, Is.Empty);
+            Assert.That(issue, Is.Empty);
+            Assert.That(parsedResult.EmptyMessage, Is.Empty);
+            Assert.That(parsedResult.Findings.Single().Summary, Is.EqualTo("Experienced team"));
+        });
+    }
+
+    [Test]
+    public void AnAnswerWithoutJsonNamesTheProblemForTheModel()
+    {
+        var parsed = SwotCategoryAnalysisResponseParser.TryParse("I cannot analyze this category.", out _, out var issue);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.False);
+            Assert.That(issue, Does.Contain("no complete JSON object"));
+        });
+    }
+
+    [Test]
+    public void BrokenJsonNamesTheProblemForTheModel()
+    {
+        var parsed = SwotCategoryAnalysisResponseParser.TryParse("""{"findings": [{"summary": "Experienced team",}""", out _, out var issue);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.False);
+            Assert.That(issue, Is.Not.Empty);
+        });
+    }
+
+    [Test]
+    public void ANullFieldIsRejectedRatherThanReadAsEmpty()
+    {
+        var parsed = SwotCategoryAnalysisResponseParser.TryParse("""{"empty_message": null, "findings": []}""", out _, out var issue);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.False);
+            Assert.That(issue, Does.StartWith("The JSON object cannot be read:"));
+        });
+    }
+
+    [Test]
+    public void ANullFindingIsLeftOut()
+    {
+        var parsed = SwotCategoryAnalysisResponseParser.TryParse("""{"empty_message": "", "findings": [null, {"summary": "Experienced team", "explanation": "Long tenure."}]}""", out var result, out _);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.True);
             Assert.That(result.Findings.Single().Summary, Is.EqualTo("Experienced team"));
         });
     }
@@ -42,9 +83,10 @@ public sealed class SwotCategoryAnalysisResponseTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(SwotCategoryAnalysisResponseParser.TryParse(validEmptyResponse, out var result), Is.True);
+            Assert.That(SwotCategoryAnalysisResponseParser.TryParse(validEmptyResponse, out var result, out _), Is.True);
             Assert.That(result.Findings, Is.Empty);
-            Assert.That(SwotCategoryAnalysisResponseParser.TryParse(invalidEmptyResponse, out _), Is.False);
+            Assert.That(SwotCategoryAnalysisResponseParser.TryParse(invalidEmptyResponse, out _, out var issue), Is.False);
+            Assert.That(issue, Does.Contain("empty_message"));
         });
     }
 
@@ -61,8 +103,10 @@ public sealed class SwotCategoryAnalysisResponseTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(SwotCategoryAnalysisResponseParser.TryParse(responseWithContradictoryEmptyMessage, out _), Is.False);
-            Assert.That(SwotCategoryAnalysisResponseParser.TryParse(responseWithoutExplanation, out _), Is.False);
+            Assert.That(SwotCategoryAnalysisResponseParser.TryParse(responseWithContradictoryEmptyMessage, out _, out var contradictionIssue), Is.False);
+            Assert.That(contradictionIssue, Does.Contain("Leave empty_message empty"));
+            Assert.That(SwotCategoryAnalysisResponseParser.TryParse(responseWithoutExplanation, out _, out var explanationIssue), Is.False);
+            Assert.That(explanationIssue, Is.EqualTo("Finding 1 has no explanation."));
         });
     }
 
@@ -134,11 +178,4 @@ public sealed class SwotCategoryAnalysisResponseTests
             },
         ],
     };
-
-    public enum ResponseEnvelope
-    {
-        BARE_JSON,
-        JSON_CODE_FENCE,
-        SURROUNDING_TEXT,
-    }
 }

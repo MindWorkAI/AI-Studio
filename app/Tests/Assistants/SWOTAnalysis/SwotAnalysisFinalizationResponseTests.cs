@@ -1,7 +1,6 @@
 using System.Text.Json;
 
 using AIStudio.Assistants.SWOTAnalysis;
-using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Tests.Assistants.SWOTAnalysis;
 
@@ -16,7 +15,7 @@ public sealed class SwotAnalysisFinalizationResponseTests
         finalization.PrioritizedActions.Items.Single().AddressedFactorIds = ["s1", "o1"];
         var response = JsonSerializer.Serialize(finalization);
 
-        var parsed = SwotAnalysisFinalizationResponseParser.TryParse(response, categories, out var result);
+        var parsed = SwotAnalysisFinalizationResponseParser.TryParse(response, categories, out var result, out _);
         var assembled = SwotAnalysisFinalization.Assemble(categories, result);
 
         Assert.Multiple(() =>
@@ -37,9 +36,14 @@ public sealed class SwotAnalysisFinalizationResponseTests
         var parsed = SwotAnalysisFinalizationResponseParser.TryParse(
             JsonSerializer.Serialize(finalization),
             categories,
-            out _);
+            out _,
+            out var issue);
 
-        Assert.That(parsed, Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.False);
+            Assert.That(issue, Does.Contain("\"X1\""));
+        });
     }
 
     [Test]
@@ -52,9 +56,14 @@ public sealed class SwotAnalysisFinalizationResponseTests
         var parsed = SwotAnalysisFinalizationResponseParser.TryParse(
             JsonSerializer.Serialize(finalization),
             categories,
-            out _);
+            out _,
+            out var issue);
 
-        Assert.That(parsed, Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.False);
+            Assert.That(issue, Is.EqualTo("Action 1 names no addressed_factor_ids."));
+        });
     }
 
     [Test]
@@ -85,36 +94,13 @@ public sealed class SwotAnalysisFinalizationResponseTests
         categories[SwotAnalysisCategory.STRENGTHS].Findings.Single().Summary = longSummary;
         var response = JsonSerializer.Serialize(CreateFinalization());
 
-        var parsed = SwotAnalysisFinalizationResponseParser.TryParse(response, categories, out var finalization);
+        var parsed = SwotAnalysisFinalizationResponseParser.TryParse(response, categories, out var finalization, out _);
         var result = SwotAnalysisFinalization.Assemble(categories, finalization);
 
         Assert.Multiple(() =>
         {
             Assert.That(parsed, Is.True);
             Assert.That(result.PrioritizedActions.Items.Single().AddressedFactors, Does.Contain(longSummary));
-        });
-    }
-
-    [Test]
-    public void CategoryProgressSurvivesAnAssistantSessionSnapshot()
-    {
-        var key = new AssistantSessionStateKey<Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress>>("categoryAnalysisProgress");
-        var writer = new AssistantSessionStateWriter();
-        writer.SetDictionary(key, new Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress>
-        {
-            [SwotAnalysisCategory.STRENGTHS] = new(SwotCategoryAnalysisStatus.COMPLETED, CreateCategories()[SwotAnalysisCategory.STRENGTHS]),
-            [SwotAnalysisCategory.WEAKNESSES] = new(SwotCategoryAnalysisStatus.RUNNING),
-        });
-        Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress> restored = [];
-
-        var reader = new AssistantSessionStateReader(writer.ToDictionary(), "SWOT Analysis");
-        reader.RestoreDictionary(key, restored);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(restored[SwotAnalysisCategory.STRENGTHS].Status, Is.EqualTo(SwotCategoryAnalysisStatus.COMPLETED));
-            Assert.That(restored[SwotAnalysisCategory.STRENGTHS].Result!.Findings.Single().Summary, Is.EqualTo("Experienced team"));
-            Assert.That(restored[SwotAnalysisCategory.WEAKNESSES].Status, Is.EqualTo(SwotCategoryAnalysisStatus.RUNNING));
         });
     }
 

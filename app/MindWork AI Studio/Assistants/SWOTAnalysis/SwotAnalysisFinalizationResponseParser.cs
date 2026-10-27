@@ -1,122 +1,105 @@
-using System.Text.Json;
-using System.Text.RegularExpressions;
-
 namespace AIStudio.Assistants.SWOTAnalysis;
 
 internal static class SwotAnalysisFinalizationResponseParser
 {
-    private static readonly Regex JSON_CODE_FENCE_REGEX = new(
-        pattern: """```(?:json)?\s*(?<json>\{[\s\S]*\})\s*```""",
-        options: RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
-    {
-        PropertyNameCaseInsensitive = true,
-    };
-
+    /// <summary>
+    /// Reads the labels and the prioritized actions out of the answer of the final model.
+    /// </summary>
+    /// <param name="rawResponse">The answer of the model.</param>
+    /// <param name="categories">The findings of the four categories, whose factor IDs the actions may name.</param>
+    /// <param name="result">The labels and actions, or an empty result when reading failed.</param>
+    /// <param name="issue">Why reading failed, written for the model; empty on success.</param>
+    /// <returns>Whether the answer could be read.</returns>
     public static bool TryParse(
         string rawResponse,
         IReadOnlyDictionary<SwotAnalysisCategory, SwotCategoryAnalysisResult> categories,
-        out SwotAnalysisFinalizationResult result)
-    {
-        var factorSummaryById = SwotAnalysisFinalization.CreateFactorSummaryById(categories);
-
-        result = new();
-        if (TryDeserialize(rawResponse, factorSummaryById, out result))
-            return true;
-
-        var codeFenceMatch = JSON_CODE_FENCE_REGEX.Match(rawResponse);
-        if (codeFenceMatch.Success && TryDeserialize(codeFenceMatch.Groups["json"].Value, factorSummaryById, out result))
-            return true;
-
-        var firstBrace = rawResponse.IndexOf('{');
-        var lastBrace = rawResponse.LastIndexOf('}');
-        return firstBrace >= 0 && lastBrace > firstBrace &&
-               TryDeserialize(rawResponse[firstBrace..(lastBrace + 1)], factorSummaryById, out result);
-    }
-
-    private static bool TryDeserialize(
-        string json,
-        IReadOnlyDictionary<string, string> factorSummaryById,
-        out SwotAnalysisFinalizationResult result)
+        out SwotAnalysisFinalizationResult result,
+        out string issue)
     {
         result = new();
-        if (string.IsNullOrWhiteSpace(json))
+        if (!SwotModelAnswer.TryDeserialize<SwotAnalysisFinalizationResult>(rawResponse, out var candidate, out issue))
             return false;
 
-        try
-        {
-            var candidate = JsonSerializer.Deserialize<SwotAnalysisFinalizationResult>(json, JSON_OPTIONS);
-            if (candidate is null)
-                return false;
-
-            Normalize(candidate);
-            if (!IsValid(candidate, factorSummaryById))
-                return false;
-
-            result = candidate;
-            return true;
-        }
-        catch (JsonException)
-        {
+        Normalize(candidate);
+        issue = FindIssue(candidate, SwotAnalysisFinalization.CreateFactorSummaryById(categories));
+        if (issue.Length > 0)
             return false;
-        }
+
+        result = candidate;
+        return true;
     }
 
     private static void Normalize(SwotAnalysisFinalizationResult result)
     {
-        result.MatrixHeading = result.MatrixHeading?.Trim() ?? string.Empty;
-        result.InternalLabel = result.InternalLabel?.Trim() ?? string.Empty;
-        result.ExternalLabel = result.ExternalLabel?.Trim() ?? string.Empty;
-        result.PositiveLabel = result.PositiveLabel?.Trim() ?? string.Empty;
-        result.NegativeLabel = result.NegativeLabel?.Trim() ?? string.Empty;
-        result.StrengthsLabel = result.StrengthsLabel?.Trim() ?? string.Empty;
-        result.WeaknessesLabel = result.WeaknessesLabel?.Trim() ?? string.Empty;
-        result.OpportunitiesLabel = result.OpportunitiesLabel?.Trim() ?? string.Empty;
-        result.ThreatsLabel = result.ThreatsLabel?.Trim() ?? string.Empty;
-        result.PrioritizedActions ??= new();
-        result.PrioritizedActions.Label = result.PrioritizedActions.Label?.Trim() ?? string.Empty;
-        result.PrioritizedActions.EmptyMessage = result.PrioritizedActions.EmptyMessage?.Trim() ?? string.Empty;
-        result.PrioritizedActions.Items = result.PrioritizedActions.Items?
-            .Where(action => action is not null)
-            .ToList() ?? [];
-
+        result.MatrixHeading = result.MatrixHeading.Trim();
+        result.InternalLabel = result.InternalLabel.Trim();
+        result.ExternalLabel = result.ExternalLabel.Trim();
+        result.PositiveLabel = result.PositiveLabel.Trim();
+        result.NegativeLabel = result.NegativeLabel.Trim();
+        result.StrengthsLabel = result.StrengthsLabel.Trim();
+        result.WeaknessesLabel = result.WeaknessesLabel.Trim();
+        result.OpportunitiesLabel = result.OpportunitiesLabel.Trim();
+        result.ThreatsLabel = result.ThreatsLabel.Trim();
+        result.PrioritizedActions.Label = result.PrioritizedActions.Label.Trim();
+        result.PrioritizedActions.EmptyMessage = result.PrioritizedActions.EmptyMessage.Trim();
+        result.PrioritizedActions.Items.RemoveAll(SwotModelAnswer.IsNull);
         foreach (var action in result.PrioritizedActions.Items)
         {
-            action.Action = action.Action?.Trim() ?? string.Empty;
-            action.Rationale = action.Rationale?.Trim() ?? string.Empty;
-            action.AddressedFactorIds = action.AddressedFactorIds?
+            action.Action = action.Action.Trim();
+            action.Rationale = action.Rationale.Trim();
+            action.AddressedFactorIds = action.AddressedFactorIds
                 .Where(factorId => !string.IsNullOrWhiteSpace(factorId))
                 .Select(factorId => factorId.Trim())
-                .ToList() ?? [];
+                .ToList();
         }
     }
 
-    private static bool IsValid(
+    private static string FindIssue(
         SwotAnalysisFinalizationResult result,
         IReadOnlyDictionary<string, string> factorSummaryById)
     {
-        if (new[]
-            {
-                result.MatrixHeading,
-                result.InternalLabel,
-                result.ExternalLabel,
-                result.PositiveLabel,
-                result.NegativeLabel,
-                result.StrengthsLabel,
-                result.WeaknessesLabel,
-                result.OpportunitiesLabel,
-                result.ThreatsLabel,
-                result.PrioritizedActions.Label,
-            }.Any(string.IsNullOrWhiteSpace))
-            return false;
+        var labels = new Dictionary<string, string>
+        {
+            ["matrix_heading"] = result.MatrixHeading,
+            ["internal_label"] = result.InternalLabel,
+            ["external_label"] = result.ExternalLabel,
+            ["positive_label"] = result.PositiveLabel,
+            ["negative_label"] = result.NegativeLabel,
+            ["strengths_label"] = result.StrengthsLabel,
+            ["weaknesses_label"] = result.WeaknessesLabel,
+            ["opportunities_label"] = result.OpportunitiesLabel,
+            ["threats_label"] = result.ThreatsLabel,
+            ["prioritized_actions.label"] = result.PrioritizedActions.Label,
+        };
 
-        return (result.PrioritizedActions.Items.Count == 0 && !string.IsNullOrWhiteSpace(result.PrioritizedActions.EmptyMessage) ||
-                result.PrioritizedActions.Items.Count > 0 && string.IsNullOrWhiteSpace(result.PrioritizedActions.EmptyMessage)) &&
-               result.PrioritizedActions.Items.All(action =>
-                   !string.IsNullOrWhiteSpace(action.Action) &&
-                   !string.IsNullOrWhiteSpace(action.Rationale) &&
-                   action.AddressedFactorIds.Count > 0 &&
-                   action.AddressedFactorIds.All(factorSummaryById.ContainsKey));
+        var emptyLabel = labels.FirstOrDefault(label => label.Value.Length == 0).Key;
+        if (emptyLabel is not null)
+            return $"The field {emptyLabel} is empty.";
+
+        var actions = result.PrioritizedActions;
+        if (actions.Items.Count == 0 && actions.EmptyMessage.Length == 0)
+            return "prioritized_actions has neither items nor an empty_message which explains why there are none.";
+
+        if (actions.Items.Count > 0 && actions.EmptyMessage.Length > 0)
+            return "prioritized_actions has items and an empty_message at once. Leave empty_message empty when you return items.";
+
+        for (var index = 0; index < actions.Items.Count; index++)
+        {
+            var action = actions.Items[index];
+            if (action.Action.Length == 0)
+                return $"Action {index + 1} has no action.";
+
+            if (action.Rationale.Length == 0)
+                return $"Action {index + 1} has no rationale.";
+
+            if (action.AddressedFactorIds.Count == 0)
+                return $"Action {index + 1} names no addressed_factor_ids.";
+
+            var unknownFactorId = action.AddressedFactorIds.FirstOrDefault(factorId => !factorSummaryById.ContainsKey(factorId));
+            if (unknownFactorId is not null)
+                return $"Action {index + 1} names the factor ID \"{unknownFactorId}\", which no finding has. Use only the factor_id values of the findings.";
+        }
+
+        return string.Empty;
     }
 }

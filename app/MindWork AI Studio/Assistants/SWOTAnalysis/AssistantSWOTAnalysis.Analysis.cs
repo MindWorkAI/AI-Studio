@@ -122,8 +122,11 @@ public partial class AssistantSWOTAnalysis
             if (token.IsCancellationRequested)
                 return new(SwotCategoryAnalysisStatus.CANCELED, Message: T("The category analysis was canceled."));
 
-            if (!SwotCategoryAnalysisResponseParser.TryParse(aiText.Text, out var result))
+            if (!SwotCategoryAnalysisResponseParser.TryParse(aiText.Text, out var result, out var issue))
+            {
+                this.Logger.LogWarning("The answer for the SWOT category '{SwotCategory}' could not be read: {Issue}", category, issue);
                 return new(SwotCategoryAnalysisStatus.FAILED, Message: T("The model response for this category did not have the expected structure."));
+            }
 
             return new(SwotCategoryAnalysisStatus.COMPLETED, result);
         }
@@ -165,8 +168,9 @@ public partial class AssistantSWOTAnalysis
             if (token.IsCancellationRequested || string.IsNullOrWhiteSpace(rawResponse))
                 return;
 
-            if (!SwotAnalysisFinalizationResponseParser.TryParse(rawResponse, categoryResults, out var finalization))
+            if (!SwotAnalysisFinalizationResponseParser.TryParse(rawResponse, categoryResults, out var finalization, out var issue))
             {
+                this.Logger.LogWarning("The final answer of the SWOT analysis could not be read: {Issue}", issue);
                 this.AddInputIssue(T("The prioritized actions could not be displayed because the model response did not have the expected structure."));
                 return;
             }

@@ -74,6 +74,57 @@ public sealed class SwotAnalysisContentPresentationTests
         Assert.That(SwotAnalysisContentPresentation.TryRead(content, out _), Is.False);
     }
 
+    [Test]
+    public void AnAnalysisWithoutFindingsAndActionsIsStillComplete()
+    {
+        var result = CreateResult();
+        foreach (var category in result.Categories)
+        {
+            category.Findings.Clear();
+            category.EmptyMessage = $"No evidence for {category.Label}.";
+        }
+
+        result.PrioritizedActions.Items.Clear();
+        result.PrioritizedActions.EmptyMessage = "No supported actions.";
+        var content = new ContentText { Presentation = SwotAnalysisContentPresentation.Create(result) };
+
+        var presentationWasRead = SwotAnalysisContentPresentation.TryRead(content, out var readResult);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(presentationWasRead, Is.True);
+            Assert.That(readResult.Categories.All(category => category.Findings.Count == 0), Is.True);
+            Assert.That(readResult.PrioritizedActions.Items, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void AStoredFindingWithoutAnExplanationFallsBackToMarkdown()
+    {
+        var result = CreateResult();
+        result.Strengths.Findings[0].Explanation = string.Empty;
+        var content = new ContentText { Presentation = SwotAnalysisContentPresentation.Create(result) };
+
+        Assert.That(SwotAnalysisContentPresentation.TryRead(content, out _), Is.False);
+    }
+
+    [Test]
+    public void StoredDataWithANullFallsBackToMarkdown()
+    {
+        var data = JsonSerializer.SerializeToNode(CreateResult())!;
+        data["strengths"]!["findings"] = null;
+        var content = new ContentText
+        {
+            Presentation = new ContentPresentation
+            {
+                Kind = ContentPresentationKind.SWOT_ANALYSIS,
+                Data = JsonSerializer.SerializeToElement(data),
+            },
+        };
+
+        Assert.That(SwotAnalysisContentPresentation.TryRead(content, out _), Is.False);
+    }
+
     private static SwotAnalysisResult CreateResult() => new()
     {
         MatrixHeading = "SWOT Matrix",
