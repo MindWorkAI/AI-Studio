@@ -6,8 +6,6 @@ namespace AIStudio.Components;
 /// </summary>
 internal sealed class FileExclusionEditorState
 {
-    private const string PATTERN_SEPARATOR = "; ";
-
     private string? receivedText;
     private readonly HashSet<string> pendingValues = new(StringComparer.Ordinal);
 
@@ -19,6 +17,14 @@ internal sealed class FileExclusionEditorState
 
     public bool IsValid => FileExclusions.IsValidFolders(this.FolderText) && FileExclusions.IsValidFiles(this.FileText);
 
+    /// <summary>
+    /// Takes over the text of the parent, which renders again after every published edit and passes
+    /// that edit back, possibly only after the user typed on. Such an echo must not replace the newer
+    /// draft; any other text does, e.g., a change by a configuration plugin.
+    /// </summary>
+    /// <param name="text">The text the parent passes in.</param>
+    /// <param name="discardDraft">Whether to take over the text in any case, e.g., while the editor is disabled.</param>
+    /// <returns>Whether the text replaced the draft.</returns>
     public bool Receive(string? text, bool discardDraft = false)
     {
         text ??= string.Empty;
@@ -30,16 +36,20 @@ internal sealed class FileExclusionEditorState
             return changed;
         }
 
+        // The parent passes the same text with every render; only a different one counts:
         if (string.Equals(text, this.receivedText, StringComparison.Ordinal))
             return false;
 
         this.receivedText = text;
+
+        // The parent caught up with the draft. Its renders arrive in order, so no older echo follows:
         if (string.Equals(text, this.Text, StringComparison.Ordinal))
         {
             this.pendingValues.Clear();
             return false;
         }
 
+        // The echo of an earlier edit, which a later one replaced already:
         if (this.pendingValues.Remove(text))
             return false;
 
@@ -66,22 +76,20 @@ internal sealed class FileExclusionEditorState
         this.UpdateText();
     }
 
-    public void RestoreFolders(string defaults) => this.EditFolders(string.Join(PATTERN_SEPARATOR, FileExclusions.Parse(defaults).Where(IsFolder)));
+    public void RestoreFolders(string defaults) => this.EditFolders(FileExclusions.Group(defaults).Folders);
 
-    public void RestoreFiles(string defaults) => this.EditFiles(string.Join(PATTERN_SEPARATOR, FileExclusions.Parse(defaults).Where(pattern => !IsFolder(pattern))));
+    public void RestoreFiles(string defaults) => this.EditFiles(FileExclusions.Group(defaults).Files);
 
     private void Regroup()
     {
-        var patterns = FileExclusions.Parse(this.Text);
-        this.FolderText = string.Join(PATTERN_SEPARATOR, patterns.Where(IsFolder));
-        this.FileText = string.Join(PATTERN_SEPARATOR, patterns.Where(pattern => !IsFolder(pattern)));
+        var groups = FileExclusions.Group(this.Text);
+        this.FolderText = groups.Folders;
+        this.FileText = groups.Files;
     }
-
-    private static bool IsFolder(string pattern) => pattern.EndsWith(FileExclusions.FOLDER_SUFFIX);
 
     private void UpdateText()
     {
-        this.Text = string.Join(PATTERN_SEPARATOR, FileExclusions.Parse(this.FolderText)
+        this.Text = string.Join(FileExclusions.ENTRY_SEPARATOR, FileExclusions.Parse(this.FolderText)
             .Concat(FileExclusions.Parse(this.FileText))
             .Distinct(StringComparer.OrdinalIgnoreCase));
         this.pendingValues.Add(this.Text);

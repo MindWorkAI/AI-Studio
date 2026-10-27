@@ -107,6 +107,18 @@ public sealed class FileExclusionsTests
     }
 
     [Test]
+    public void GroupingSplitsFoldersFromFilesAndDropsDuplicates()
+    {
+        var groups = FileExclusions.Group(" bin/ ;*.min.js\r\nobj/;BIN/;;\n*.MIN.js");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(groups.Folders, Is.EqualTo("bin/; obj/"));
+            Assert.That(groups.Files, Is.EqualTo("*.min.js"));
+        });
+    }
+
+    [Test]
     public void SettingsFromBeforeTheListGetTheDefault()
     {
         var dataSource = JsonSerializer.Deserialize<DataSourceLocalDirectory>("{}", SettingsManager.JSON_OPTIONS);

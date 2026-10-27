@@ -25,6 +25,11 @@ internal static class FileExclusions
     /// </summary>
     public const char FOLDER_SUFFIX = '/';
 
+    /// <summary>
+    /// What AI Studio joins entries with when it writes a list, e.g., after an edit in the exclusion editor.
+    /// </summary>
+    public const string ENTRY_SEPARATOR = "; ";
+
     //
     // Folders of dependencies and build outputs which are not hidden. Hidden ones, such as .git,
     // .venv, or .gradle, are left out by the rule for hidden files and folders anyway. Names which
@@ -116,6 +121,18 @@ internal static class FileExclusions
         .Split(SEPARATORS, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToArray();
+
+    /// <summary>
+    /// Splits a list into the entries for folders and those for files, as the exclusion editor and the
+    /// information about a data source show them.
+    /// </summary>
+    public static FileExclusionGroups Group(string? patterns)
+    {
+        var entries = Parse(patterns);
+        return new(
+            string.Join(ENTRY_SEPARATOR, entries.Where(IsFolderEntry)),
+            string.Join(ENTRY_SEPARATOR, entries.Where(entry => !IsFolderEntry(entry))));
+    }
 
     public static bool IsValid(string? patterns) => GetValidationIssue(patterns) is ValidationIssue.NONE;
 

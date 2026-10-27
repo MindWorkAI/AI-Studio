@@ -63,7 +63,7 @@ public sealed class FileExclusionEditorTests
         var editor = Create(published);
         var resets = new List<string>();
         if (explicitReset)
-            editor.ResetRequested = EventCallback.Factory.Create<string>(new object(), (string value) => resets.Add(value));
+            editor.SetParameters(new() { [nameof(FileExclusionEditor.ResetRequested)] = Collect(resets) });
 
         await editor.EditAsync(folders ? "*.keep;wrong/" : "*.wrong", folders: !folders);
         await editor.ResetAsync(folders);
@@ -85,7 +85,7 @@ public sealed class FileExclusionEditorTests
         var published = new List<string>();
         var editor = Create(published);
         var resets = new List<string>();
-        editor.ResetRequested = EventCallback.Factory.Create<string>(new object(), (string value) => resets.Add(value));
+        editor.SetParameters(new() { [nameof(FileExclusionEditor.ResetRequested)] = Collect(resets) });
 
         await editor.EditAsync(folders ? "*.wrong" : "wrong/", folders);
         await editor.ResetAsync(folders);
@@ -98,29 +98,16 @@ public sealed class FileExclusionEditorTests
     }
 
     [Test]
-    public async Task DisabledEditorRejectsEditsAndResets()
-    {
-        var published = new List<string>();
-        var editor = Create(published);
-        editor.Disabled = true;
-
-        await editor.EditAsync("changed/", folders: true);
-        await editor.EditAsync("*.changed", folders: false);
-        await editor.ResetAsync(folders: true);
-        await editor.ResetAsync(folders: false);
-
-        Assert.That(published, Is.Empty);
-    }
-
-    [Test]
-    public async Task ReadOnlyEditorRejectsEditsAndBothResetCallbacks()
+    public async Task DisabledEditorRejectsEditsAndBothResetCallbacks()
     {
         var published = new List<string>();
         var resets = new List<string>();
         var editor = Create(published);
-        editor.ReadOnly = true;
-        editor.ResetRequested = EventCallback.Factory.Create<string>(new object(), (string value) => resets.Add(value));
-        editor.LoadParameters();
+        editor.SetParameters(new()
+        {
+            [nameof(FileExclusionEditor.Disabled)] = true,
+            [nameof(FileExclusionEditor.ResetRequested)] = Collect(resets),
+        });
 
         await editor.EditAsync("changed/", folders: true);
         await editor.EditAsync("*.changed", folders: false);
@@ -133,14 +120,13 @@ public sealed class FileExclusionEditorTests
             Assert.That(resets, Is.Empty);
         });
 
-        editor.ResetRequested = default;
+        editor.SetParameters(new() { [nameof(FileExclusionEditor.ResetRequested)] = default(EventCallback<string>) });
         await editor.ResetAsync(folders: true);
         await editor.ResetAsync(folders: false);
         Assert.That(published, Is.Empty);
 
-        // Returning to editing must reveal the unchanged source, not either attempted edit.
-        editor.ReadOnly = false;
-        editor.LoadParameters();
+        // Returning to editing must reveal the unchanged source, not either attempted edit:
+        editor.SetParameters(new() { [nameof(FileExclusionEditor.Disabled)] = false });
         await editor.EditAsync("*.other", folders: false);
         Assert.That(published, Is.EqualTo(new[] { "custom/; *.other" }));
     }
@@ -177,7 +163,7 @@ public sealed class FileExclusionEditorTests
     {
         var published = new List<string>();
         var editor = Create(published);
-        editor.ShowReset = false;
+        editor.SetParameters(new() { [nameof(FileExclusionEditor.ShowReset)] = false });
 
         await editor.ResetAsync(folders: true);
         await editor.ResetAsync(folders: false);
@@ -187,19 +173,29 @@ public sealed class FileExclusionEditorTests
 
     private static TestableFileExclusionEditor Create(List<string> published, string initial = "custom/;*.custom")
     {
-        var editor = new TestableFileExclusionEditor
+        var editor = new TestableFileExclusionEditor();
+        editor.SetParameters(new()
         {
-            Text = initial,
-            ResetValue = "bin/;*.tmp",
-            TextChanged = EventCallback.Factory.Create<string>(new object(), (string value) => published.Add(value)),
-        };
-        editor.LoadParameters();
+            [nameof(FileExclusionEditor.Text)] = initial,
+            [nameof(FileExclusionEditor.ResetValue)] = "bin/;*.tmp",
+            [nameof(FileExclusionEditor.TextChanged)] = Collect(published),
+        });
         return editor;
     }
 
+    private static EventCallback<string> Collect(List<string> values) => EventCallback.Factory.Create<string>(new object(), values.Add);
+
     private sealed class TestableFileExclusionEditor : FileExclusionEditor
     {
-        public void LoadParameters() => this.OnParametersSet();
+        //
+        // Sets the parameters the way a renderer would, which this test has none of, and then runs
+        // the step of the lifecycle which reacts to them:
+        //
+        public void SetParameters(Dictionary<string, object?> parameters)
+        {
+            ParameterView.FromDictionary(parameters).SetParameterProperties(this);
+            this.OnParametersSet();
+        }
 
         public Task EditAsync(string patterns, bool folders) => folders ? this.ChangeFoldersAsync(patterns) : this.ChangeFilesAsync(patterns);
 

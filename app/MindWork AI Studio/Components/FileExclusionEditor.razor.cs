@@ -26,20 +26,11 @@ public partial class FileExclusionEditor : MSGComponentBase
     [Parameter]
     public bool Disabled { get; set; }
 
-    /// <summary>
-    /// Displays both groups with copy buttons instead of editing and reset controls.
-    /// </summary>
-    [Parameter]
-    public bool ReadOnly { get; set; }
-
     [Parameter]
     public bool ShowReset { get; set; } = true;
 
     [Parameter]
     public bool ShowHelp { get; set; } = true;
-
-    [Parameter]
-    public bool ShowHeader { get; set; } = true;
 
     [Parameter]
     public string ResetValue { get; set; } = FileExclusions.DEFAULT_PATTERNS;
@@ -75,7 +66,7 @@ public partial class FileExclusionEditor : MSGComponentBase
 
     protected override void OnParametersSet()
     {
-        this.state.Receive(this.Text, discardDraft: this.Disabled || this.ReadOnly);
+        this.state.Receive(this.Text, discardDraft: this.Disabled);
         base.OnParametersSet();
     }
 
@@ -85,7 +76,7 @@ public partial class FileExclusionEditor : MSGComponentBase
 
     private async Task ChangePatternsAsync(string text, bool folders)
     {
-        if (this.Disabled || this.ReadOnly)
+        if (this.Disabled)
             return;
 
         var previousText = this.state.Text;
@@ -103,7 +94,7 @@ public partial class FileExclusionEditor : MSGComponentBase
 
     protected async Task RestoreDefaultsAsync(bool folders)
     {
-        if (this.Disabled || this.ReadOnly || !this.ShowReset)
+        if (this.Disabled || !this.ShowReset)
             return;
 
         if (folders)
