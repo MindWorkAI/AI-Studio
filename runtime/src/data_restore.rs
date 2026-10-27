@@ -52,7 +52,7 @@ const SETTINGS_FILE_NAME: &str = "settings.json";
 /// (`DataBackupContents`) includes. The runtime refuses a plan which names anything else, so that
 /// whatever goes wrong in the app, a restore never replaces the logs, the downloaded tools, or the
 /// data folder as a whole.
-const REPLACEABLE_ELEMENTS: [(Location, &str); 10] = [
+const REPLACEABLE_ELEMENTS: [(Location, &str); 11] = [
     (Location::ConfigDirectory, SETTINGS_FILE_NAME),
     (Location::DataDirectory, "workspaces/"),
     (Location::DataDirectory, "tempChats/"),
