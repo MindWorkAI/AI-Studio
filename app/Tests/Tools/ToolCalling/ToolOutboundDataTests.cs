@@ -23,6 +23,7 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 public sealed class ToolOutboundDataTests : ToolRegistryTestBase
 {
     private const string MAILBOX_ID = "6e3a9d2f-1b7c-4f8e-a5d4-9c2b7e1f3a6d";
+    private const string DATA_SOURCE_ID = "1c7e4a9f-3b6d-4e2a-8f5c-9d2b6e1a4c38";
 
     [TestCase(OutboundDataRestriction.UNRESTRICTED, ToolOutboundData.NONE, true)]
     [TestCase(OutboundDataRestriction.UNRESTRICTED, ToolOutboundData.CONFIGURED_SERVICE, true)]
@@ -182,6 +183,34 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
             Assert.That(message, Does.Contain("intranet.example.org"), "The user learns which page stands in the way.");
             Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
             Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()));
+        });
+    }
+
+    [Test]
+    public void ADataSourceIsNamedByItsName()
+    {
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID);
+        var message = requirement.GetToolBlockedMessage(new Data { DataSources = [new DataSourceLocalDirectory { Id = DATA_SOURCE_ID, Name = "Project files" }] });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(message, Does.Contain("Project files"), "The user learns which data source stands in the way.");
+            Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName()));
+        });
+    }
+
+    [Test]
+    public void ADataSourceRemovedSinceIsNotNamed()
+    {
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID);
+        var message = requirement.GetToolBlockedMessage(new Data { DataSources = [new DataSourceLocalFile { Id = "another-data-source", Name = "Minutes" }] });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(message, Does.Contain("removed since"));
+            Assert.That(message, Does.Not.Contain("Minutes"), "Another data source did not restrict the chat.");
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()), "The restriction stays, so the user still learns why.");
         });
     }
 

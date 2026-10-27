@@ -42,6 +42,7 @@ public static class DataBackupContents
         new(DataBackupLocation.CONFIG_DIRECTORY, "settings.json", DataBackupEntryKind.SETTINGS),
         new(DataBackupLocation.DATA_DIRECTORY, "workspaces/", DataBackupEntryKind.WORKSPACES),
         new(DataBackupLocation.DATA_DIRECTORY, "tempChats/", DataBackupEntryKind.TEMPORARY_CHATS),
+        new(DataBackupLocation.DATA_DIRECTORY, "databases/provenance/", DataBackupEntryKind.CHAT_PROVENANCE),
         new(DataBackupLocation.DATA_DIRECTORY, PLUGINS_FOLDER, DataBackupEntryKind.PLUGINS),
         new(DataBackupLocation.DATA_DIRECTORY, "tokenizers/", DataBackupEntryKind.TOKENIZERS),
         new(DataBackupLocation.DATA_DIRECTORY, "visualBriefings/", DataBackupEntryKind.VISUAL_BRIEFINGS),

@@ -35,6 +35,8 @@ public sealed class DataBackupWriterTests
 
     private string IndexCopiesDirectory => Path.Combine(this.testDirectory, "index-copies");
 
+    private string ProvenanceCopyDirectory => Path.Combine(this.testDirectory, "provenance-copy");
+
     [SetUp]
     public void CreateFolders()
     {
@@ -54,6 +56,8 @@ public sealed class DataBackupWriterTests
         this.WriteDataFile("visualBriefings/briefing/manifest.json", "{}");
         this.WriteDataFile("media-staging/operation/transcript.md", "temporary");
         this.WriteDataFile("databases/sqlite/rag-index.sqlite3", "the index while AI Studio writes to it");
+        this.WriteDataFile("databases/provenance/provenance.sqlite3", "the provenance store while AI Studio writes to it");
+        this.WriteDataFile("databases/provenance/provenance.sqlite3-wal", "the write-ahead log of the provenance store");
         this.WriteDataFile("databases/vector_database/stores/store_1/segments/segment", "the store while AI Studio writes to it");
         this.WriteDataFile(MEDIA_TRANSCRIPT, "the transcript while AI Studio writes it");
 
@@ -61,6 +65,7 @@ public sealed class DataBackupWriterTests
         WriteFile(Path.Combine(this.IndexCopiesDirectory, "databases", "sqlite", "rag-index.sqlite3"), "the copy of the index");
         WriteFile(Path.Combine(this.IndexCopiesDirectory, "databases", "vector_database", "stores", "store_1", "segments", "segment"), "the copy of the store");
         WriteFile(Path.Combine(this.IndexCopiesDirectory, MEDIA_TRANSCRIPT), "the copy of the transcript");
+        WriteFile(Path.Combine(this.ProvenanceCopyDirectory, "databases", "provenance", "provenance.sqlite3"), "the copy of the provenance store");
     }
 
     [TearDown]
@@ -86,6 +91,7 @@ public sealed class DataBackupWriterTests
             "data/plugins/my-assistant/.hidden.lua",
             "data/tokenizers/openai-gpt-6/tokenizer.json",
             "data/visualBriefings/briefing/manifest.json",
+            "data/databases/provenance/provenance.sqlite3",
             "data/databases/sqlite/rag-index.sqlite3",
             "data/databases/vector_database/stores/store_1/segments/segment",
             $"data/{MEDIA_TRANSCRIPT}",
@@ -95,6 +101,7 @@ public sealed class DataBackupWriterTests
         Assert.Multiple(() =>
         {
             Assert.That(archive["config/settings.json"], Is.EqualTo(SETTINGS_JSON), "The settings come from memory, without the objects of configuration plugins.");
+            Assert.That(archive["data/databases/provenance/provenance.sqlite3"], Is.EqualTo("the copy of the provenance store"), "The chats write to the store at any time, so it comes from its copy, without the write-ahead log of the live one.");
             Assert.That(archive["data/databases/sqlite/rag-index.sqlite3"], Is.EqualTo("the copy of the index"));
             Assert.That(archive["data/databases/vector_database/stores/store_1/segments/segment"], Is.EqualTo("the copy of the store"));
             Assert.That(archive[$"data/{MEDIA_TRANSCRIPT}"], Is.EqualTo("the copy of the transcript"), "The transcripts are copied together with the index they belong to.");
@@ -106,8 +113,43 @@ public sealed class DataBackupWriterTests
     {
         var archive = await this.WriteBackupAsync(string.Empty);
 
-        Assert.That(archive.Keys.Where(name => name.StartsWith("data/databases/", StringComparison.Ordinal)), Is.Empty, "The indexes in the data folder change while AI Studio runs.");
+        Assert.That(archive.Keys.Where(name => name.StartsWith("data/databases/", StringComparison.Ordinal) && !name.StartsWith("data/databases/provenance/", StringComparison.Ordinal)), Is.Empty, "The indexes in the data folder change while AI Studio runs.");
         Assert.That(archive.Keys.Where(name => name.StartsWith("data/mediaTranscripts/", StringComparison.Ordinal)), Is.Empty, "The transcripts belong to the indexes and come only together with them.");
+    }
+
+    [Test]
+    public async Task TheProvenanceStoreComesAlongAlsoWithoutTheIndexes()
+    {
+        var archive = await this.WriteBackupAsync(string.Empty);
+
+        Assert.That(archive["data/databases/provenance/provenance.sqlite3"], Is.EqualTo("the copy of the provenance store"), "The store belongs to the chats, which every backup holds, not to the indexes.");
+    }
+
+    [Test]
+    public async Task WithoutItsCopyTheProvenanceStoreComesFromTheDataFolder()
+    {
+        var archive = await this.WriteBackupAsync(this.IndexCopiesDirectory, _ => Task.FromResult(string.Empty));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(archive["data/databases/provenance/provenance.sqlite3"], Is.EqualTo("the provenance store while AI Studio writes to it"), "A store AI Studio could not open is written by nothing, and the backup keeps whatever there is.");
+            Assert.That(archive["data/databases/provenance/provenance.sqlite3-wal"], Is.EqualTo("the write-ahead log of the provenance store"), "Its write-ahead log may hold what the store itself lacks yet.");
+        });
+    }
+
+    [Test]
+    public async Task TheProvenanceStoreIsCopiedOnceTheChatsAreWritten()
+    {
+        var chatFile = Path.Combine(this.DataDirectory, "workspaces", WORKSPACE_ID.ToString(), CHAT_ID.ToString(), "thread.json");
+
+        // A chat deleted while the store is copied was written into the backup before:
+        var archive = await this.WriteBackupAsync(this.IndexCopiesDirectory, _ =>
+        {
+            File.Delete(chatFile);
+            return Task.FromResult(this.ProvenanceCopyDirectory);
+        });
+
+        Assert.That(archive.Keys, Does.Contain($"data/workspaces/{WORKSPACE_ID}/{CHAT_ID}/thread.json"), "Copied after the chats, the store holds everything they refer to, also what an answer completed meanwhile received.");
     }
 
     [Test]
@@ -182,10 +224,10 @@ public sealed class DataBackupWriterTests
         });
     }
 
-    private async Task<Dictionary<string, string>> WriteBackupAsync(string indexCopiesDirectory)
+    private async Task<Dictionary<string, string>> WriteBackupAsync(string indexCopiesDirectory, Func<CancellationToken, Task<string>>? copyProvenanceStoreAsync = null)
     {
         await using var target = new MemoryStream();
-        await DataBackupWriter.WriteAsync(target, this.CreateSources(indexCopiesDirectory), CreateManifest(), null, CancellationToken.None);
+        await DataBackupWriter.WriteAsync(target, this.CreateSources(indexCopiesDirectory, copyProvenanceStoreAsync), CreateManifest(), null, CancellationToken.None);
         target.Position = 0;
 
         using var zip = new ZipArchive(target, ZipArchiveMode.Read);
@@ -199,7 +241,7 @@ public sealed class DataBackupWriterTests
         return contents;
     }
 
-    private DataBackupSources CreateSources(string indexCopiesDirectory) => new(this.DataDirectory, this.ConfigDirectory, SETTINGS_JSON, indexCopiesDirectory, ["plugins/company-assistant/"]);
+    private DataBackupSources CreateSources(string indexCopiesDirectory, Func<CancellationToken, Task<string>>? copyProvenanceStoreAsync = null) => new(this.DataDirectory, this.ConfigDirectory, SETTINGS_JSON, indexCopiesDirectory, ["plugins/company-assistant/"], copyProvenanceStoreAsync ?? (_ => Task.FromResult(this.ProvenanceCopyDirectory)));
 
     private static DataBackupManifest CreateManifest() => new(DataBackupFormat.FORMAT_VERSION, "26.10.1", "V6", DateTimeOffset.UtcNow, "/data", "/config", true, []);
 

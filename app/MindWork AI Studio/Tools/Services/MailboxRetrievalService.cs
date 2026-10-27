@@ -47,7 +47,7 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
     /// <remarks>
     /// The same mailboxes always come in the same order, by their number and then by their id: the
     /// providers cache a request from its beginning, and the tools describing the mailboxes are part
-    /// of it, cf. SemanticSearchTool.InOfferOrder. A mailbox on a server the organization does not
+    /// of it, cf. DataSourceOrderExtensions.InFixedOrder. A mailbox on a server the organization does not
     /// allow is left out, although its index is still there, cf. MailServerPolicy.
     /// </remarks>
     /// <param name="chatProviderConfidence">How much the provider of the chat is trusted.</param>
@@ -248,20 +248,20 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
         var vectorChunks = vectorTask.Result;
         var keywordChunks = keywordTask.Result;
         var (passages, hasMore) = RetrievalPaging.Merge(
-            BestPassagePerMail(vectorChunks.Select(chunk => new MailPassage(chunk.ParentFileId, chunk.Text))),
-            BestPassagePerMail(keywordChunks.Select(chunk => new MailPassage(chunk.ParentFileId, chunk.ChunkText))),
+            BestPassagePerMail(vectorChunks.Select(chunk => new MailPassage(chunk.ParentFileId, chunk.Text, chunk.Location))),
+            BestPassagePerMail(keywordChunks.Select(chunk => new MailPassage(chunk.ParentFileId, chunk.ChunkText, chunk.Location))),
             passage => passage.MailId,
             page,
             pageSize);
 
         hasMore = hasMore || MayHoldMoreMails(page, pageSize, chunkWindow, vectorChunks.Count, keywordChunks.Count);
 
-        var passageTexts = passages
+        var bestPassages = passages
             .DistinctBy(passage => passage.MailId, StringComparer.Ordinal)
-            .ToDictionary(passage => passage.MailId, passage => passage.Text, StringComparer.Ordinal);
+            .ToDictionary(passage => passage.MailId, StringComparer.Ordinal);
 
         var summaries = await indexStore.GetMailSummariesAsync(mailbox.Id, passages.Select(passage => passage.MailId).ToList(), token);
-        return new(summaries.Select(summary => new MailSearchHit(summary, passageTexts[summary.MailId])).ToList(), hasMore, []);
+        return new(summaries.Select(summary => new MailSearchHit(summary, bestPassages[summary.MailId].Text, bestPassages[summary.MailId].Location)).ToList(), hasMore, []);
     }
 
     /// <summary>

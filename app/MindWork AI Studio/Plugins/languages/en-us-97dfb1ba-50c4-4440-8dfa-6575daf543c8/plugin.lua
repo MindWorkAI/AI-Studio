@@ -426,6 +426,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- The selected folder does not exist.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T17705912"] = "The selected folder does not exist."
 
+-- The image was no longer available while the model was asked about it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1805791865"] = "The image was no longer available while the model was asked about it."
+
 -- Minimum pause between files
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1829787634"] = "Minimum pause between files"
 
@@ -531,8 +534,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Was not able to write the result file: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2991295581"] = "Was not able to write the result file: {0}"
 
+-- Images in JPG, PNG, WebP, GIF, BMP, or TIFF format are given to the model as images, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3011193639"] = "Images in JPG, PNG, WebP, GIF, BMP, or TIFF format are given to the model as images, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start."
+
 -- The batch run finished, but one file could not be processed. See the progress table and log for details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3201532790"] = "The batch run finished, but one file could not be processed. See the progress table and log for details."
+
+-- The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T324865195"] = "The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."
 
 -- Maximum pause between files
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3250003796"] = "Maximum pause between files"
@@ -552,6 +561,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3361153305"] = "Show Expert Settings"
 
+-- All selected files are images, but the selected model cannot read images. Select a model with image support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3365102967"] = "All selected files are images, but the selected model cannot read images. Select a model with image support."
+
 -- Header of the result column (optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T340994102"] = "Header of the result column (optional)"
 
@@ -563,6 +575,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3439247329"] = "The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'."
+
+-- The selected model cannot read images. Select a model with image support to process this image.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T346986514"] = "The selected model cannot read images. Select a model with image support to process this image."
 
 -- Document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3510564924"] = "Document analysis policy"
@@ -677,6 +692,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T967206794"] = "The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here."
+
+-- The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T9738678"] = "The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual."
 
 -- Comma (,)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T1676507543"] = "Comma (,)"
@@ -2499,14 +2517,95 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::
 -- Software developers
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T831424531"] = "Software developers"
 
+-- Kick-off
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T1289358099"] = "Kick-off"
+
+-- Pitch
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2019197265"] = "Pitch"
+
+-- Unspecified occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T227451887"] = "Unspecified occasion"
+
+-- Training
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2287937623"] = "Training"
+
+-- Conference talk
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2421639635"] = "Conference talk"
+
+-- Other occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2509856260"] = "Other occasion"
+
+-- Talk
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2530449775"] = "Talk"
+
+-- Lecture
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2695461681"] = "Lecture"
+
+-- Presentation of research results
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T2950712069"] = "Presentation of research results"
+
+-- Workshop of several days
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3144398028"] = "Workshop of several days"
+
+-- Workshop of one day
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3310080195"] = "Workshop of one day"
+
+-- Team meeting
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3390299757"] = "Team meeting"
+
+-- Product presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3522562796"] = "Product presentation"
+
+-- Defense of a thesis or dissertation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T3767586701"] = "Defense of a thesis or dissertation"
+
+-- Project or status report
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T4260502387"] = "Project or status report"
+
+-- Report to management
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T4288525803"] = "Report to management"
+
+-- Keynote
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::PRESENTATIONOCCASIONEXTENSIONS::T657131160"] = "Keynote"
+
+-- Documents and images attached here are source material: the LLM reads them, but puts none of them on a slide.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T101042708"] = "Documents and images attached here are source material: the LLM reads them, but puts none of them on a slide."
+
+-- Attach the pictures which the presentation must show, e.g., photos, diagrams, or screenshots. Each of them goes on exactly one slide with room for a picture. Only PNG and JPEG pictures are possible. An LLM which can read images sees them; any other LLM knows only their file names, so clear names help.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1011018167"] = "Attach the pictures which the presentation must show, e.g., photos, diagrams, or screenshots. Each of them goes on exactly one slide with room for a picture. Only PNG and JPEG pictures are possible. An LLM which can read images sees them; any other LLM knows only their file names, so clear names help."
+
+-- The LLM is planning the structure of the presentation...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1047730248"] = "The LLM is planning the structure of the presentation..."
+
+-- Slides of the template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1178900119"] = "Slides of the template"
+
 -- Important Aspects
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1379883528"] = "Important Aspects"
 
 -- Extent of the planned presentation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1408740929"] = "Extent of the planned presentation"
 
+-- Save the presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T144139589"] = "Save the presentation"
+
+-- The template has no layouts with room for content.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1443064107"] = "The template has no layouts with room for content."
+
+-- The PowerPoint template of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans an outline only.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1473992941"] = "The PowerPoint template of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans an outline only."
+
+-- Occasion of the presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1500915876"] = "Occasion of the presentation"
+
+-- Shown on every slide whose layout has a footer, e.g., your name, organization, and date.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1541134619"] = "Shown on every slide whose layout has a footer, e.g., your name, organization, and date."
+
 -- You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1672597841"] = "You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted."
+
+-- Occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1774567962"] = "Occasion"
 
 -- Details about the desired presentation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1793579367"] = "Details about the desired presentation"
@@ -2514,20 +2613,50 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1793579367
 -- Text content
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1820253043"] = "Text content"
 
+-- Maximum number of bullet points per slide
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1849301398"] = "Maximum number of bullet points per slide"
+
+-- Slide Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1883918574"] = "Slide Assistant"
+
+-- These files are already attached as pictures for the slides and were removed from the documents: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1915311879"] = "These files are already attached as pictures for the slides and were removed from the documents: {0}"
+
 -- Please provide a text or at least one valid document or image.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2013746884"] = "Please provide a text or at least one valid document or image."
 
 -- Content to derive slide from
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2086228265"] = "Content to derive slide from"
 
+-- Please describe the occasion.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2152067908"] = "Please describe the occasion."
+
+-- The occasion helps the LLM to structure the presentation. A lecture, for example, may close its chapters with an interim summary or with room for questions, and a report to management leads with the key messages.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2174617817"] = "The occasion helps the LLM to structure the presentation. A lecture, for example, may close its chapters with an interim summary or with room for questions, and a report to management leads with the key messages."
+
+-- Counting the pictures of the folder...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2357708754"] = "Counting the pictures of the folder..."
+
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T237828418"] = "Target language"
+
+-- {0} other files are left out, because they are neither PNG nor JPEG.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2384026372"] = "{0} other files are left out, because they are neither PNG nor JPEG."
 
 -- (Optional) Important Aspects
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T24391765"] = "(Optional) Important Aspects"
 
+-- The folder holds no PNG or JPEG pictures.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2452478824"] = "The folder holds no PNG or JPEG pictures."
+
 -- Audience age group
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2496533563"] = "Audience age group"
+
+-- Other occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2509856260"] = "Other occasion"
+
+-- Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2541602129"] = "Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting."
 
 -- You can enter text, use one or more documents or images, or use both. At least one of these options is required.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2542045947"] = "You can enter text, use one or more documents or images, or use both. At least one of these options is required."
@@ -2538,17 +2667,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2591284123
 -- Audience organizational level
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2599228833"] = "Audience organizational level"
 
+-- Picture library
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2652783742"] = "Picture library"
+
+-- Please choose a PowerPoint template to create a file from the slides.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2660312931"] = "Please choose a PowerPoint template to create a file from the slides."
+
+-- Keep empty picture placeholders
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2712554607"] = "Keep empty picture placeholders"
+
+-- Your template offers its layouts in several colors. Choose one for the presentation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2751707658"] = "Your template offers its layouts in several colors. Choose one for the presentation."
+
+-- The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2799381756"] = "The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model."
+
 -- Number of slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2823798965"] = "Number of slides"
 
--- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2910177051"] = "This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience."
+-- Pictures for the slides
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2882839332"] = "Pictures for the slides"
 
--- Slide Planner Assistant
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2924755246"] = "Slide Planner Assistant"
-
--- The result of your previous slide builder session.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3000286990"] = "The result of your previous slide builder session."
+-- Use no template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2967784903"] = "Use no template"
 
 -- Please enter a title for the presentation. This will help the LLM to select more relevant content.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3013824309"] = "Please enter a title for the presentation. This will help the LLM to select more relevant content."
@@ -2559,14 +2700,38 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3049299559
 -- Create Slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3079776593"] = "Create Slides"
 
+-- The picture library of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans the slides without it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T314279150"] = "The picture library of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans the slides without it."
+
+-- Use no picture library
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3221010098"] = "Use no picture library"
+
+-- These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3302350746"] = "These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"
+
+-- Layouts for kinds of slides
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3306428265"] = "Layouts for kinds of slides"
+
+-- The folder does not exist.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3306802135"] = "The folder does not exist."
+
+-- Advanced Options
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3393521529"] = "Advanced Options"
+
+-- Choose a PowerPoint presentation or template (.pptx, .potx) whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3447420430"] = "Choose a PowerPoint presentation or template (.pptx, .potx) whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export."
+
 -- Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3465256803"] = "Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values."
 
--- (Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3476149293"] = "(Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted."
+-- PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3472250354"] = "PowerPoint template"
 
 -- Audience
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3506118019"] = "Audience"
+
+-- Please plan the slides first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3528182735"] = "Please plan the slides first."
 
 -- Time specification (minutes)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3539067305"] = "Time specification (minutes)"
@@ -2577,29 +2742,119 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3649769130
 -- Attach documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3666048746"] = "Attach documents"
 
--- Number of bullet points
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3796347042"] = "Number of bullet points"
+-- Select a PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3690748035"] = "Select a PowerPoint template"
+
+-- For each planning, the LLM gets a random {0} of them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T382757370"] = "For each planning, the LLM gets a random {0} of them."
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3848935911"] = "Custom target language"
 
+-- Create PowerPoint file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3852632268"] = "Create PowerPoint file"
+
+-- The template file does not exist.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3882045083"] = "The template file does not exist."
+
 -- Presentation title
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3893271035"] = "Presentation title"
 
--- {0} - Slide Builder Session
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3922788056"] = "{0} - Slide Builder Session"
+-- Color variant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3930823017"] = "Color variant"
 
--- Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4131419342"] = "Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values."
+-- The result of your previous Slide Assistant session.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4180398467"] = "The result of your previous Slide Assistant session."
+
+-- The template has changed since the slides were planned. Please create the slides again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4193152417"] = "The template has changed since the slides were planned. Please create the slides again."
+
+-- The LLM is writing slide {0}...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4246305612"] = "The LLM is writing slide {0}..."
 
 -- Audience expertise
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4279519256"] = "Audience expertise"
 
+-- (Optional) Footer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T531280033"] = "(Optional) Footer"
+
+-- The LLM is fitting the slides to the layouts...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T583856064"] = "The LLM is fitting the slides to the layouts..."
+
+-- The PowerPoint file was created.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T590228290"] = "The PowerPoint file was created."
+
 -- Title
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T617902505"] = "Title"
 
+-- {0} - Slide Assistant Session
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T645201099"] = "{0} - Slide Assistant Session"
+
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T656744944"] = "Please provide a custom language."
+
+-- Creates a PowerPoint file in the design of your template.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T682162982"] = "Creates a PowerPoint file in the design of your template."
+
+-- {0} pictures, {1} of them icons.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T72691638"] = "{0} pictures, {1} of them icons."
+
+-- Select a picture library
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T801027183"] = "Select a picture library"
+
+-- Please specify the extent of the planned presentation. This can be the number of slides, the maximum number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T805699788"] = "Please specify the extent of the planned presentation. This can be the number of slides, the maximum number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values."
+
+-- The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T82751648"] = "The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out."
+
+-- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also limit the number of bullet points per slide. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T854215805"] = "This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also limit the number of bullet points per slide. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result."
+
+-- The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T928047772"] = "The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx)."
+
+-- The slides were planned for another template. Please plan them again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T94807224"] = "The slides were planned for another template. Please plan them again."
+
+-- (Optional) Picture library
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T963454719"] = "(Optional) Picture library"
+
+-- The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T966839368"] = "The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program."
+
+-- Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Only for the framing slides, e.g., the table of contents or the imprint, does a choice also add such a slide; their help says so. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T2111748232"] = "Choose which layout of your template the LLM uses for certain kinds of slides. The lists offer the layouts with room for content. Where you have no preference, the LLM decides by the names and placeholders of the layouts. A choice says which layout such a slide uses, not whether the presentation has one: whether there is, e.g., an agenda, follows from your content and your important aspects. Only for the framing slides, e.g., the table of contents or the imprint, does a choice also add such a slide; their help says so. Each chapter becomes a section in PowerPoint, which the slide sorter shows as an outline."
+
+-- When a new slide has no picture for a picture placeholder of its layout, it leaves the placeholder out, as every other placeholder without content. Keep these placeholders to insert pictures of your own later: PowerPoint shows them while you edit and hides them in the slide show.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T2143216044"] = "When a new slide has no picture for a picture placeholder of its layout, it leaves the placeholder out, as every other placeholder without content. Keep these placeholders to insert pictures of your own later: PowerPoint shows them while you edit and hides them in the slide show."
+
+-- Choose a folder with pictures and icons, e.g., the picture library of your organization. The LLM reads only their names, never the pictures themselves, and uses a picture where its name fits a slide; it does not have to use any. So clear names such as “rocket-launch.jpg” help. Only PNG and JPEG pictures count: many icons come as SVG, which the assistant leaves out. A picture whose name, or the name of one of its folders, the chosen folder included, starts with “icon” is an icon. An icon may appear on several slides and goes into picture placeholders of any size, except those which cover half the slide or more, as a background picture does. From a folder with more than {0} pictures, the LLM gets a random {0} of them for each planning.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T4122949257"] = "Choose a folder with pictures and icons, e.g., the picture library of your organization. The LLM reads only their names, never the pictures themselves, and uses a picture where its name fits a slide; it does not have to use any. So clear names such as “rocket-launch.jpg” help. Only PNG and JPEG pictures count: many icons come as SVG, which the assistant leaves out. A picture whose name, or the name of one of its folders, the chosen folder included, starts with “icon” is an icon. An icon may appear on several slides and goes into picture placeholders of any size, except those which cover half the slide or more, as a background picture does. From a folder with more than {0} pictures, the LLM gets a random {0} of them for each planning."
+
+-- Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T554384175"] = "Besides its layouts, your file contains slides, e.g., samples of the template or the slides of an earlier presentation. By default, the presentation leaves them out. Choose for each slide whether the presentation keeps it unchanged or lets the LLM edit its content. The LLM uses each of these slides exactly once, keeps them in their order, and may add new slides before, between, and after them. It never copies a slide as a pattern: new slides always come from the layouts of your template."
+
+-- The LLM does not see what your layouts look like. It knows only their names from the slide master of your template, where their placeholders sit, and how much text fits into them. Clear names such as “Chapter” or “Content with picture” therefore help it choose well; in PowerPoint, you rename a layout in the slide master view. Logo, background, and footer come with the layout. Layouts which differ only in their color count as one, and the color applies to the whole presentation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANTTEXTS::T672635431"] = "The LLM does not see what your layouts look like. It knows only their names from the slide master of your template, where their placeholders sit, and how much text fits into them. Clear names such as “Chapter” or “Content with picture” therefore help it choose well; in PowerPoint, you rename a layout in the slide master view. Logo, background, and footer come with the layout. Layouts which differ only in their color count as one, and the color applies to the whole presentation."
+
+-- Slide {0}: {1}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEEXTENSIONS::T3684030069"] = "Slide {0}: {1}"
+
+-- Slide {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEEXTENSIONS::T3921179924"] = "Slide {0}"
+
+-- hidden
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEEXTENSIONS::T4128829753"] = "hidden"
+
+-- Let the LLM edit it
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS::T2549215047"] = "Let the LLM edit it"
+
+-- Leave out
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS::T2769076356"] = "Leave out"
+
+-- Keep unchanged
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS::T2931681185"] = "Keep unchanged"
 
 -- Find synonyms for the following word or phrase:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1793532807"] = "Find synonyms for the following word or phrase:"
@@ -2925,6 +3180,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Opened the visual briefing project folder.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2964042492"] = "Opened the visual briefing project folder."
 
+-- The visual briefing could not be exported. Please check that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3136382170"] = "The visual briefing could not be exported. Please check that the target file is not open in another program."
+
 -- Visual assets
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3226971402"] = "Visual assets"
 
@@ -3053,6 +3311,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 
 -- If you need help, report the problem and include the project ID.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4292361710"] = "If you need help, report the problem and include the project ID."
+
+-- The visual briefing could not be written completely.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T442972740"] = "The visual briefing could not be written completely."
 
 -- The briefing was recompiled with the current AI Studio version.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T453632597"] = "The briefing was recompiled with the current AI Studio version."
@@ -3360,6 +3621,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2544592344"] = "Failed 
 -- Arguments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2738624831"] = "Arguments"
 
+-- Save as {0}
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2814713106"] = "Save as {0}"
+
 -- Export AI response
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2822776450"] = "Export AI response"
 
@@ -3384,6 +3648,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3424652889"] = "Unknown
 -- Regenerate
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3587744975"] = "Regenerate"
 
+-- Tables ({0})
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3588342717"] = "Tables ({0})"
+
 -- Blocked
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3816336467"] = "Blocked"
 
@@ -3398,6 +3665,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3951371697"] = "Yes, ro
 
 -- Remove Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4070211974"] = "Remove Message"
+
+-- Code blocks ({0})
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T413085919"] = "Code blocks ({0})"
 
 -- No, keep it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "No, keep it"
@@ -3419,6 +3689,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3378120620"] = "We could load mod
 
 -- Your data sources could not be used. This answer was created without them.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T373499115"] = "Your data sources could not be used. This answer was created without them."
+
+-- AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T713722424"] = "AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it."
 
 -- The local image file does not exist. Skipping the image.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T255679918"] = "The local image file does not exist. Skipping the image."
@@ -3648,6 +3921,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1543974632"] = "The media
 -- {0}, of which approx. {1} from tools
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1614399447"] = "{0}, of which approx. {1} from tools"
 
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1807387355"] = "The use of this provider has been prohibited by your organization. Please select a different provider."
+
 -- Type your input here...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Type your input here..."
 
@@ -3774,8 +4050,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T847071819"] = "Shows and
 -- This feature is managed by your organization and has therefore been disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONBASE::T1416426626"] = "This feature is managed by your organization and has therefore been disabled."
 
+-- You can also drag & drop the folder here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONDIRECTORY::T350096725"] = "You can also drag & drop the folder here."
+
 -- Choose Directory
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONDIRECTORY::T4256489763"] = "Choose Directory"
+
+-- You can also drag & drop the file here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T1984243691"] = "You can also drag & drop the file here."
 
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T4285779702"] = "Choose File"
@@ -3812,6 +4094,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T4081853237"] = "C
 
 -- Configure Keyboard Shortcut
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T636303786"] = "Configure Keyboard Shortcut"
+
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONTENTVIEWER::T1494001562"] = "Image"
+
+-- Plain text
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONTENTVIEWER::T3086748382"] = "Plain text"
+
+-- Formatted
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONTENTVIEWER::T3618541955"] = "Formatted"
 
 -- Keep the existing chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1274903302"] = "Keep the existing chat"
@@ -4023,6 +4314,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3655837348"] = "Back up the
 -- Files which AI Studio needs only for a moment and deletes again.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T366353671"] = "Files which AI Studio needs only for a moment and deletes again."
 
+-- What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It is part of your chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3806894665"] = "What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It is part of your chats."
+
 -- Plugins which come with AI Studio, such as the language packs. AI Studio brings them back by itself.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3877928356"] = "Plugins which come with AI Studio, such as the language packs. AI Studio brings them back by itself."
 
@@ -4049,6 +4343,48 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T813925103"] = "The followin
 
 -- On this computer, the data folder lies inside the configuration folder. A backup of the configuration folder therefore takes the data folder along.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T91194331"] = "On this computer, the data folder lies inside the configuration folder. A backup of the configuration folder therefore takes the data folder along."
+
+-- Local File, requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1317002733"] = "Local File, requires an embedding provider"
+
+-- Add Local Directory as Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1454193397"] = "Add Local Directory as Data Source"
+
+-- Local File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1687345358"] = "Local File"
+
+-- Mailbox (IMAP), requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T2363290424"] = "Mailbox (IMAP), requires an embedding provider"
+
+-- Mailbox (IMAP), not allowed by your organization
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T308474155"] = "Mailbox (IMAP), not allowed by your organization"
+
+-- Add Mailbox
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3173750212"] = "Add Mailbox"
+
+-- Add Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3387511033"] = "Add Data Source"
+
+-- Add Local File as Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3500365052"] = "Add Local File as Data Source"
+
+-- Local Directory, requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3698039736"] = "Local Directory, requires an embedding provider"
+
+-- Import Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T381231449"] = "Import Data Source"
+
+-- Mailbox (IMAP)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3859543867"] = "Mailbox (IMAP)"
+
+-- Add ERI v1 Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T590005498"] = "Add ERI v1 Data Source"
+
+-- External Data (ERI-Server v1)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T774473996"] = "External Data (ERI-Server v1)"
+
+-- Local Directory
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T926703547"] = "Local Directory"
 
 -- Yes, please send my data to the external embedding provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1159107763"] = "Yes, please send my data to the external embedding provider"
@@ -4104,17 +4440,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1084943026"] = "Yo
 -- Automatic local data source refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1208397349"] = "Automatic local data source refresh"
 
--- Edit Local Directory Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1215599168"] = "Edit Local Directory Data Source"
-
--- Local File, requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1317002733"] = "Local File, requires an embedding provider"
+-- Shortest pause between indexing steps
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1308136668"] = "Shortest pause between indexing steps"
 
 -- Refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T135637716"] = "Refresh"
-
--- Add Local Directory as Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1454193397"] = "Add Local Directory as Data Source"
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1469573738"] = "Delete"
@@ -4131,8 +4461,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1592527757"] = "Ca
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1652430727"] = "External (ERI)"
 
--- Local File
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1687345358"] = "Local File"
+-- Longest pause between indexing steps
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1654263778"] = "Longest pause between indexing steps"
+
+-- seconds
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1723256298"] = "seconds"
 
 -- Delete Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1849107431"] = "Delete Data Source"
@@ -4143,14 +4476,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2067030738"] = "Ar
 -- Local Directory Data Source Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2146756020"] = "Local Directory Data Source Information"
 
--- Edit ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T221059217"] = "Edit ERI v1 Data Source"
-
--- Mailbox (IMAP), requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2363290424"] = "Mailbox (IMAP), requires an embedding provider"
-
--- Edit Local File Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2453292893"] = "Edit Local File Data Source"
+-- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time between the shortest and the longest pause. This spares an embedding server which many people share, for example in your organization. Leave both at 0 seconds for no pause.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2352821039"] = "AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time between the shortest and the longest pause. This spares an embedding server which many people share, for example in your organization. Leave both at 0 seconds for no pause."
 
 -- Local data sources refresh when files change, mailboxes every 16 minutes.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2511157475"] = "Local data sources refresh when files change, mailboxes every 16 minutes."
@@ -4185,12 +4512,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2940206485"] = "Yo
 -- This data source is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3031462878"] = "This data source is managed by your organization."
 
--- Mailbox (IMAP), not allowed by your organization
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T308474155"] = "Mailbox (IMAP), not allowed by your organization"
-
--- Add Mailbox
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3173750212"] = "Add Mailbox"
-
 -- Delete Mailbox
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3264675802"] = "Delete Mailbox"
 
@@ -4200,17 +4521,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3267849393"] = "Ed
 -- Are you sure you want to delete the data source '{0}' of type '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3337072977"] = "Are you sure you want to delete the data source '{0}' of type '{1}'?"
 
--- Add Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3387511033"] = "Add Data Source"
+-- The upper end of the random pause between two indexing steps. AI Studio allows up to 300 seconds (5 minutes).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3401303590"] = "The upper end of the random pause between two indexing steps. AI Studio allows up to 300 seconds (5 minutes)."
 
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3424652889"] = "Unknown"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3448155331"] = "Close"
-
--- Add Local File as Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3500365052"] = "Add Local File as Data Source"
 
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3512062061"] = "Type"
@@ -4227,20 +4545,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Ex
 -- Local data sources refresh when files change.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Local data sources refresh when files change."
 
--- Local Directory, requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3698039736"] = "Local Directory, requires an embedding provider"
-
 -- Not available
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3706935413"] = "Not available"
 
--- Import Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T381231449"] = "Import Data Source"
-
 -- Export ERI Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3831281036"] = "Export ERI Data Source"
-
--- Mailbox (IMAP)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3859543867"] = "Mailbox (IMAP)"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3865031940"] = "Actions"
@@ -4254,14 +4563,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4108252513"] = "Wa
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4256323669"] = "Information"
 
--- Add ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T590005498"] = "Add ERI v1 Data Source"
-
 -- Cannot export this ERI data source because no enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T750361472"] = "Cannot export this ERI data source because no enterprise encryption secret is configured."
-
--- External Data (ERI-Server v1)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T774473996"] = "External Data (ERI-Server v1)"
 
 -- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T782820095"] = "Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"
@@ -4274,9 +4577,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T854231603"] = "Loc
 
 -- The password of this mailbox could not be deleted from the operating system, so the mailbox was kept. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T87980240"] = "The password of this mailbox could not be deleted from the operating system, so the mailbox was kept. The issue was: {0}"
-
--- Local Directory
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T926703547"] = "Local Directory"
 
 -- Import Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T1681763001"] = "Import Embedding"
@@ -4307,6 +4607,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1087321364"] = "Yes
 
 -- Yes, let the AI validate & filter the retrieved data.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1309929755"] = "Yes, let the AI validate & filter the retrieved data."
+
+-- You switched Semantic Search off in the tool settings, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T147584079"] = "You switched Semantic Search off in the tool settings, so AI Studio uses classic RAG instead and searches your data sources with every message."
 
 -- Data Source Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T15302104"] = "Data Source Selection"
@@ -4416,8 +4719,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1797236585"] = "
 -- Workspace name (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1873204484"] = "Workspace name (Optional)"
 
+-- The chosen chat template preselects a provider of its own, and it wins over a selection made here as long as that provider can be used for chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1876510820"] = "The chosen chat template preselects a provider of its own, and it wins over a selection made here as long as that provider can be used for chats."
+
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2205839602"] = "Use no profile"
+
+-- The chosen chat template keeps its chats in the workspace '{0}', so the tile opens its chat there instead. A workspace entered here wins over the one of the template.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2344103917"] = "The chosen chat template keeps its chats in the workspace '{0}', so the tile opens its chat there instead. A workspace entered here wins over the one of the template."
 
 -- Existing workspace (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2364306588"] = "Existing workspace (Optional)"
@@ -4439,6 +4748,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2901190527"] = "
 
 -- Data sources (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3259309302"] = "Data sources (Optional)"
+
+-- The chosen chat template preselects a profile of its own, and it wins over a selection made here as long as that profile exists.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3419242912"] = "The chosen chat template preselects a profile of its own, and it wins over a selection made here as long as that profile exists."
 
 -- Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3611496116"] = "Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings."
@@ -4463,6 +4775,30 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Change what this tile opens"
+
+-- Copy the path: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1140628382"] = "Copy the path: {0}"
+
+-- Show this file in the file manager of your system
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1587653504"] = "Show this file in the file manager of your system"
+
+-- Copy the address: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1663694701"] = "Copy the address: {0}"
+
+-- AI Studio cannot find the file {0} on this computer. It may have been moved, renamed, or deleted, or it is on another computer, such as the server of a data source.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T21766676"] = "AI Studio cannot find the file {0} on this computer. It may have been moved, renamed, or deleted, or it is on another computer, such as the server of a data source."
+
+-- Open the file at page {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3524349202"] = "Open the file at page {0}"
+
+-- Open this web page in your browser
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T3596972550"] = "Open this web page in your browser"
+
+-- Open the file in the program your system uses for it
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268"] = "Open the file in the program your system uses for it"
+
+-- Saving '{0}'...
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] = "Saving '{0}'..."
 
 -- AI Studio could not read the entries of this glossary.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1173179019"] = "AI Studio could not read the entries of this glossary."
@@ -4550,6 +4886,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T2430645786"] = "Not
 
 -- Tools were selected for this run, but the chosen model cannot use tools. It runs without them. Please choose a model which supports tools.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3008114108"] = "Tools were selected for this run, but the chosen model cannot use tools. It runs without them. Please choose a model which supports tools."
+
+-- Some tools selected for this run are switched off in your tool settings and stay unused: {0}. Switch them on again in the app settings to use them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3803950041"] = "Some tools selected for this run are switched off in your tool settings and stay unused: {0}. Switch them on again in the app settings to use them."
 
 -- Your Pandoc installation meets the requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1167365374"] = "Your Pandoc installation meets the requirements."
@@ -4649,6 +4988,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T12948066"] = "Co
 
 -- Cannot copy this content type to clipboard.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T3937637647"] = "Cannot copy this content type to clipboard."
+
+-- Only self-hosted providers may use this data source. A chat which found something in it may therefore only use the services configured in AI Studio, such as the allowed private hosts of the tool 'Read Web Page'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::OUTBOUNDDATARESTRICTIONSELECTION::T1911680179"] = "Only self-hosted providers may use this data source. A chat which found something in it may therefore only use the services configured in AI Studio, such as the allowed private hosts of the tool 'Read Web Page'."
+
+-- Your organization does not allow less strict settings than the ones offered here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::OUTBOUNDDATARESTRICTIONSELECTION::T2255463475"] = "Your organization does not allow less strict settings than the ones offered here."
 
 -- The assistant cannot be deleted while background work is still running.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T1318944584"] = "The assistant cannot be deleted while background work is still running."
@@ -4770,6 +5115,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2685487365"] = "Image
 -- Speech input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3005724142"] = "Speech input possible"
 
+-- The use of all your LLM providers has been prohibited by your organization. Add a different provider in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3506708164"] = "The use of all your LLM providers has been prohibited by your organization. Add a different provider in the app settings."
+
 -- Uses reasoning (thinking) by default
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3891860124"] = "Uses reasoning (thinking) by default"
 
@@ -4890,32 +5238,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T1273315904"] = "Hide c
 -- Show content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T2891011873"] = "Show content"
 
--- The dropped folder could not be accessed. Please choose it with the folder chooser instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T1153417816"] = "The dropped folder could not be accessed. Please choose it with the folder chooser instead."
-
--- Please drop a folder, not a file.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T3289690493"] = "Please drop a folder, not a file."
-
 -- You can also drag & drop the folder here.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T350096725"] = "You can also drag & drop the folder here."
 
 -- Choose Directory
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T4256489763"] = "Choose Directory"
 
--- Please drop a file, not a folder.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T1472251601"] = "Please drop a file, not a folder."
-
 -- You can also drag & drop the file here.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T1984243691"] = "You can also drag & drop the file here."
 
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Choose File"
-
--- Please drop a file with a supported file type.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T930441004"] = "Please drop a file with a supported file type."
-
--- The dropped file could not be accessed. Please choose it with the file chooser instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T984660028"] = "The dropped file could not be accessed. Please choose it with the file chooser instead."
 
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "External Assistants rated below this audit level are treated as insufficiently reviewed."
@@ -5088,6 +5421,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1594053136"]
 -- Color theme
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1599198973"] = "Color theme"
 
+-- After you export a file, for example, an answer or a presentation, a message offers to show the file in your file manager or to open it. When enabled, this message closes after a few seconds, like other messages. When disabled, it stays until you close it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T160366478"] = "After you export a file, for example, an answer or a presentation, a message offers to show the file in your file manager or to open it. When enabled, this message closes after a few seconds, like other messages. When disabled, it stays until you close it."
+
 -- Would you like to set one of your profiles as the default for the entire app? When you configure a different profile for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1666052109"] = "Would you like to set one of your profiles as the default for the entire app? When you configure a different profile for an assistant, it will always take precedence."
 
@@ -5139,6 +5475,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T215381891"] 
 -- Enterprise Administration
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2277116008"] = "Enterprise Administration"
 
+-- Close messages about exported files automatically?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2330147290"] = "Close messages about exported files automatically?"
+
 -- Language behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"] = "Language behavior"
 
@@ -5165,6 +5504,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2700836219"]
 
 -- No preview features selected.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2809641588"] = "No preview features selected."
+
+-- The message stays until you close it
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2879147627"] = "The message stays until you close it"
 
 -- This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2918560776"] = "This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information."
@@ -5234,6 +5576,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"]
 
 -- When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4067492921"] = "When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections."
+
+-- The message closes after a few seconds
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4102409342"] = "The message closes after a few seconds"
 
 -- Show details when suspicious content was removed?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4156872850"] = "Show details when suspicious content was removed?"
@@ -5340,6 +5685,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T45885
 -- Not yet configured
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T48051324"] = "Not yet configured"
 
+-- The use of this provider has been prohibited by your organization. Therefore, it is untrusted, and you cannot change its confidence level.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T489079668"] = "The use of this provider has been prohibited by your organization. Therefore, it is untrusted, and you cannot change its confidence level."
+
 -- Do you want to always see how trustworthy your providers are? This way, you stay in control of which provider you send your data to. You can choose a common schema or configure the trust levels for each provider yourself.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T700839804"] = "Do you want to always see how trustworthy your providers are? This way, you stay in control of which provider you send your data to. You can choose a common schema or configure the trust levels for each provider yourself."
 
@@ -5357,6 +5705,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T13870
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Delete"
+
+-- The use of this embedding provider has been prohibited by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1509600117"] = "The use of this embedding provider has been prohibited by your organization."
 
 -- Embed text
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1644934561"] = "Embed text"
@@ -5511,6 +5862,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T341592
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3865031940"] = "Actions"
 
+-- The use of this provider has been prohibited by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4229691938"] = "The use of this provider has been prohibited by your organization."
+
 -- Delete LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4269256234"] = "Delete LLM Provider"
 
@@ -5522,6 +5876,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T579100
 
 -- Open Dashboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T78223861"] = "Open Dashboard"
+
+-- Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1112962504"] = "Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it."
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1258653480"] = "Settings"
@@ -5535,11 +5892,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1759955728
 -- This tool still needs to be configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1958939818"] = "This tool still needs to be configured."
 
+-- Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2160193517"] = "Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them."
+
 -- Missing required settings: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2588115579"] = "Missing required settings: {0}"
 
+-- Enabled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2626085950"] = "Enabled"
+
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T266367750"] = "Name"
+
+-- Switch this tool on to use it again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2805631051"] = "Switch this tool on to use it again."
+
+-- You switched off this tool. It appears in no tool selection, and the AI cannot use it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3035030488"] = "You switched off this tool. It appears in no tool selection, and the AI cannot use it."
 
 -- Minimum provider confidence
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3461070436"] = "Minimum provider confidence"
@@ -5573,6 +5942,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T16
 
 -- Uses the provider-configured model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1760715963"] = "Uses the provider-configured model"
+
+-- The use of this transcription provider has been prohibited by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T2059509230"] = "The use of this transcription provider has been prohibited by your organization."
 
 -- Add Transcription Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T2066315685"] = "Add Transcription Provider"
@@ -5622,26 +5994,38 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 -- Are you sure you want to delete the transcription provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T789660305"] = "Are you sure you want to delete the transcription provider '{0}'?"
 
--- Could not open the file location.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1118835751"] = "Could not open the file location."
+-- Transcript of an audio file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T1797766177"] = "Transcript of an audio file"
 
--- Could not open the file location: {0}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1455637941"] = "Could not open the file location: {0}"
+-- Transcript of a video file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T3408352114"] = "Transcript of a video file"
 
--- Show this file in the file manager of your system
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1587653504"] = "Show this file in the file manager of your system"
+-- At the moment, AI Studio cannot read the text of this passage that the AI received, e.g., while AI Studio is still starting.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T3678367303"] = "At the moment, AI Studio cannot read the text of this passage that the AI received, e.g., while AI Studio is still starting."
 
--- Opens this document in the program your system uses for it
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3169582185"] = "Opens this document in the program your system uses for it"
+-- AI Studio no longer has the text of this passage that the AI received. Only where it was found is still known.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T3950319181"] = "AI Studio no longer has the text of this passage that the AI received. Only where it was found is still known."
 
--- Unknown error
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3461425987"] = "Unknown error"
+-- Text the AI received
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T46215024"] = "Text the AI received"
 
--- Could not open the document.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3570758363"] = "Could not open the document."
+-- Try again
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T557748474"] = "Try again"
 
--- Could not open the document: {0}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T945417289"] = "Could not open the document: {0}"
+-- Surrounding content
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T884772048"] = "Surrounding content"
+
+-- Transcript
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T92473707"] = "Transcript"
+
+-- An image matched here. The AI was told about it and where to find it, but it did not receive the image itself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T989893925"] = "An image matched here. The AI was told about it and where to find it, but it did not receive the image itself."
+
+-- Show the {0} passages the AI received from this source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T2556408625"] = "Show the {0} passages the AI received from this source"
+
+-- Show the passage the AI received from this source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3350418006"] = "Show the passage the AI received from this source"
 
 -- Copy {0} to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TEXTINFOLINE::T2206391442"] = "Copy {0} to the clipboard"
@@ -5697,8 +6081,20 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T948842182"] =
 -- Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1688023907"] = "Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished."
 
+-- Show 1 unavailable tool
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1852398429"] = "Show 1 unavailable tool"
+
 -- Tools allow the LLM to perform targeted additional actions such as web searches or reading web pages.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1944689297"] = "Tools allow the LLM to perform targeted additional actions such as web searches or reading web pages."
+
+-- Show {0} unavailable tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T2227029327"] = "Show {0} unavailable tools"
+
+-- Hide unavailable tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T2707194504"] = "Hide unavailable tools"
+
+-- Show {0} unavailable tools, {1} of them selected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T30104720"] = "Show {0} unavailable tools, {1} of them selected"
 
 -- Required settings are missing. Configure this tool before enabling it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3119156561"] = "Required settings are missing. Configure this tool before enabling it."
@@ -5715,8 +6111,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3904490680"] = "No tools 
 -- This tool requires provider confidence {0}. The selected provider has {1}.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T4097602620"] = "This tool requires provider confidence {0}. The selected provider has {1}."
 
+-- Show 1 unavailable tool, which is selected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T641009275"] = "Show 1 unavailable tool, which is selected"
+
+-- You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T732483684"] = "You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here."
+
 -- Tool Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T749664565"] = "Tool Selection"
+
+-- No tool can be selected right now.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T953828816"] = "No tool can be selected right now."
 
 -- Select tools
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T998515990"] = "Select tools"
@@ -5886,9 +6291,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T156144855"] = "Rename Chat"
 -- Add workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1586005241"] = "Add workspace"
 
--- Search chats
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1615077202"] = "Search chats"
-
 -- Start a new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1840064668"] = "Start a new chat in workspace '{0}'"
 
@@ -5897,9 +6299,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1874060138"] = "Add chat"
 
 -- No chats found
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1886517101"] = "No chats found"
-
--- Create Chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1939006681"] = "Create Chat"
 
 -- Please name your workspace:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T201482774"] = "Please name your workspace:"
@@ -5910,11 +6309,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2133593288"] = "Are you sure
 -- Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2151341762"] = "Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."
 
--- Are you sure you want to create a another chat? All unsaved changes will be lost.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2237618267"] = "Are you sure you want to create a another chat? All unsaved changes will be lost."
-
 -- Please enter a chat name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2301651387"] = "Please enter a chat name."
+
+-- Search chat names
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2411226637"] = "Search chat names"
 
 -- Workspace Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2446263209"] = "Workspace Name"
@@ -5924,6 +6323,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2509305748"] = "Move to work
 
 -- Move Chat to Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Move Chat to Workspace"
+
+-- Search chat names and contents
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3093910498"] = "Search chat names and contents"
 
 -- Please enter a new or edit the name for your workspace '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Please enter a new or edit the name for your workspace '{0}':"
@@ -6267,11 +6669,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1396308587"] = "The cha
 -- The same goes for your data. A chat template may bring its own data source options, which includes leaving the choice of sources to the AI. Without them, those chats start with the data source options from your chat options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1442266827"] = "The same goes for your data. A chat template may bring its own data source options, which includes leaving the choice of sources to the AI. Without them, those chats start with the data source options from your chat options."
 
+-- Preselected provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1469984996"] = "Preselected provider"
+
 -- Please enter a name for the chat template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1548747185"] = "Please enter a name for the chat template."
 
+-- A chat template may decide which provider, and with it which model, a chat starts with. Without such a decision, those chats start with the provider they would start with anyway. The provider stays changeable in the chat, and it must meet the confidence level required for chats.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T171066641"] = "A chat template may decide which provider, and with it which model, a chat starts with. Without such a decision, those chats start with the provider they would start with anyway. The provider stays changeable in the chat, and it must meet the confidence level required for chats."
+
 -- Yes, this template decides which data a chat starts with
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T17861006"] = "Yes, this template decides which data a chat starts with"
+
+-- Preselected profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T178965494"] = "Preselected profile"
 
 -- Enter the full path of a file on this computer, or remove the attachment.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1798848159"] = "Enter the full path of a file on this computer, or remove the attachment."
@@ -6282,11 +6693,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1837026610"] = "Load pr
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1847791252"] = "Update"
 
+-- Yes, this template decides which profile a chat starts with
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1865005833"] = "Yes, this template decides which profile a chat starts with"
+
 -- The chat template name must not exceed 40 characters.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T204496403"] = "The chat template name must not exceed 40 characters."
 
 -- Profile Usage
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2147062613"] = "Profile Usage"
+
+-- Use no profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2205839602"] = "Use no profile"
+
+-- Yes, chats with this template go into a workspace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2205963533"] = "Yes, chats with this template go into a workspace"
 
 -- Relink attachment: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2234793579"] = "Relink attachment: {0}"
@@ -6296,6 +6716,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2292424657"] = "Add mes
 
 -- File Attachments
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2294745309"] = "File Attachments"
+
+-- No, chats go where they would go anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2355334446"] = "No, chats go where they would go anyway"
+
+-- Existing workspace (Optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2364306588"] = "Existing workspace (Optional)"
 
 -- Role
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2418769465"] = "Role"
@@ -6309,6 +6735,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2499909372"] = "Tools"
 -- What predefined user input do you want to use?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2501284417"] = "What predefined user input do you want to use?"
 
+-- Please enter the workspace for the chats of this template, or switch the preselection off.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2504276031"] = "Please enter the workspace for the chats of this template, or switch the preselection off."
+
+-- Does this chat template preselect a provider?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2541393632"] = "Does this chat template preselect a provider?"
+
 -- Tell the AI your system prompt.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2552381261"] = "Tell the AI your system prompt."
 
@@ -6317,6 +6749,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579080722"] = "No, pro
 
 -- You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579208700"] = "You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with."
+
+-- Does this chat template preselect a profile?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2602340928"] = "Does this chat template preselect a profile?"
 
 -- Predefined User Input
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2607897066"] = "Predefined User Input"
@@ -6333,8 +6768,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2719480499"] = "The mes
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T275026390"] = "Chat Template Name"
 
+-- Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2828180414"] = "Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on."
+
 -- Please relink the attachment '{0}' to a file on this computer or remove it before you save.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Please relink the attachment '{0}' to a file on this computer or remove it before you save."
+
+-- Workspace name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T295876489"] = "Workspace name"
 
 -- Commit Changes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2996302517"] = "Commit Changes"
@@ -6351,8 +6792,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3108503534"] = "You can
 -- Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3127437308"] = "Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats."
 
+-- A chat template may also decide which profile a chat starts with, including starting without one. Without such a decision, those chats start with the profile they would start with anyway. The profile stays changeable in the chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T313529011"] = "A chat template may also decide which profile a chat starts with, including starting without one. Without such a decision, those chats start with the profile they would start with anyway. The profile stays changeable in the chat."
+
+-- The profile this chat template preselects does not exist on this computer. Chats started with it keep their usual profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3170335831"] = "The profile this chat template preselects does not exist on this computer. Chats started with it keep their usual profile."
+
 -- Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3227981830"] = "Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here."
+
+-- Choose an existing workspace or enter a name that should be created when a chat with this template starts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3256439227"] = "Choose an existing workspace or enter a name that should be created when a chat with this template starts."
 
 -- No, chats keep the data source options from your chat options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3268470871"] = "No, chats keep the data source options from your chat options"
@@ -6360,11 +6810,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3268470871"] = "No, cha
 -- A chat template may decide which tools a chat starts with. Without such a decision, those chats start with the tools you chose as your default in the chat options. Deciding and then picking nothing is a different statement: such chats start with no tool at all, no matter what your default says.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3329415439"] = "A chat template may decide which tools a chat starts with. Without such a decision, those chats start with the tools you chose as your default in the chat options. Deciding and then picking nothing is a different statement: such chats start with no tool at all, no matter what your default says."
 
+-- A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise be a disappearing chat, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3352941260"] = "A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise be a disappearing chat, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace."
+
 -- Add a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3372872324"] = "Add a message"
 
+-- Yes, this template decides which provider a chat starts with
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3422337353"] = "Yes, this template decides which provider a chat starts with"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3448155331"] = "Close"
+
+-- No, chats keep their usual profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3465925873"] = "No, chats keep their usual profile"
+
+-- The provider this chat template preselects does not exist on this computer or does not meet the confidence level required for chats. Chats started with it keep their usual provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T349281189"] = "The provider this chat template preselects does not exist on this computer or does not meet the confidence level required for chats. Chats started with it keep their usual provider."
 
 -- Unsupported content type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3570316759"] = "Unsupported content type"
@@ -6402,11 +6864,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4051106111"] = "Use the
 -- Tell the AI your predefined user input.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4052406705"] = "Tell the AI your predefined user input."
 
+-- Does this chat template keep its chats in a workspace?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4057825866"] = "Does this chat template keep its chats in a workspace?"
+
 -- Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4194591607"] = "Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template."
 
 -- Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4199560726"] = "Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements."
+
+-- Please choose the provider this chat template preselects, or switch the preselection off.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T442309864"] = "Please choose the provider this chat template preselects, or switch the preselection off."
 
 -- Enter a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T446374405"] = "Enter a message"
@@ -6420,14 +6888,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T628396066"] = "System P
 -- A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T650711085"] = "A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself."
 
+-- Workspace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T658612054"] = "Workspace"
+
 -- Remove this attachment
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T70791272"] = "Remove this attachment"
 
 -- The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T722788866"] = "The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use."
 
+-- No, chats keep their usual provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T787085105"] = "No, chats keep their usual provider"
+
 -- Allow the use of profiles together with this chat template?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T823785464"] = "Allow the use of profiles together with this chat template?"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900237532"] = "Provider"
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900713019"] = "Cancel"
@@ -6654,6 +7131,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T299279954"] = "Plea
 -- ERI v1 Server Hostname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3494933602"] = "ERI v1 Server Hostname"
 
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3528266571"] = "Where a chat may send data after reading this data source"
+
+-- This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3738459730"] = "This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway."
+
 -- Port
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3804576966"] = "Port"
 
@@ -6765,6 +7248,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T299279954"] = "
 -- The data source does not provide any retrieval information.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T306340560"] = "The data source does not provide any retrieval information."
 
+-- where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3127438251"] = "where a chat may send data after reading this data source"
+
 -- Common data source information
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3206517471"] = "Common data source information"
 
@@ -6776,6 +7262,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3425007227"] = 
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3448155331"] = "Close"
+
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3528266571"] = "Where a chat may send data after reading this data source"
 
 -- ERI server port
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3843835535"] = "ERI server port"
@@ -6894,9 +7383,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2460883298"
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2646845972"] = "Add"
 
--- The documents of this data source are already prepared, so its folder cannot be changed. Another folder holds other documents, which makes it another data source: please add one for it. The embedding provider below can be changed.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2686150329"] = "The documents of this data source are already prepared, so its folder cannot be changed. Another folder holds other documents, which makes it another data source: please add one for it. The embedding provider below can be changed."
-
 -- The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"] = "The embedding you selected runs locally or in your organization. Your data is not sent to the cloud."
 
@@ -6927,8 +7413,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3359366900"
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3361153305"] = "Show Expert Settings"
 
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3528266571"] = "Where a chat may send data after reading this data source"
+
 -- No, ignore hidden files and folders
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3584816527"] = "No, ignore hidden files and folders"
+
+-- This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3738459730"] = "This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway."
 
 -- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3934601817"] = "These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js."
@@ -7044,6 +7536,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3013883
 -- the size limit for files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3081730094"] = "the size limit for files"
 
+-- where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3127438251"] = "where a chat may send data after reading this data source"
+
 -- Embedding name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3153201045"] = "Embedding name"
 
@@ -7052,6 +7547,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3353866
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3448155331"] = "Close"
+
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3528266571"] = "Where a chat may send data after reading this data source"
 
 -- Matching files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3650746465"] = "Matching files"
@@ -7140,6 +7638,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3359366900"] = "
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3361153305"] = "Show Expert Settings"
 
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3528266571"] = "Where a chat may send data after reading this data source"
+
+-- This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3738459730"] = "This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway."
+
 -- Select the file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Select the file"
 
@@ -7154,9 +7658,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T787118522"] = "T
 
 -- Data Source Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T813773421"] = "Data Source Name"
-
--- The documents of this data source are already prepared, so its file cannot be changed. Another file holds other content, which makes it another data source: please add one for it. The embedding provider below can be changed.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T890383764"] = "The documents of this data source are already prepared, so its file cannot be changed. Another file holds other content, which makes it another data source: please add one for it. The embedding provider below can be changed."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T900713019"] = "Cancel"
@@ -7212,11 +7713,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2937209992"]
 -- this path
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2944855252"] = "this path"
 
+-- where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3127438251"] = "where a chat may send data after reading this data source"
+
 -- Embedding name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3153201045"] = "Embedding name"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3448155331"] = "Close"
+
+-- Where a chat may send data after reading this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3528266571"] = "Where a chat may send data after reading this data source"
 
 -- File size
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3650018664"] = "File size"
@@ -7295,9 +7802,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2154020504"] = "Yo
 
 -- Test the connection to select another folder.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2226748448"] = "Test the connection to select another folder."
-
--- Your organization does not allow less strict settings than the ones offered here.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2255463475"] = "Your organization does not allow less strict settings than the ones offered here."
 
 -- Period
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2267317284"] = "Period"
@@ -7506,20 +8010,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T900713019
 -- Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1205126512"] = "Please wait while we load the content of your file. Depending on the file type and size, this may take a moment."
 
--- Markdown View
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1373123357"] = "Markdown View"
+-- This is the text the AI received from your file when you first sent it. Later changes to the file do not reach the AI in this chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T160563952"] = "This is the text the AI received from your file when you first sent it. Later changes to the file do not reach the AI in this chat."
 
 -- Load file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2129302565"] = "Load file"
 
--- Image View
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2199753423"] = "Image View"
-
--- Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2468296835"] = "Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document."
-
 -- You can drag another file into this window. We attach it right away and show it here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2822249202"] = "You can drag another file into this window. We attach it right away and show it here."
+
+-- Your document is large, so we show you only its beginning. We hide the remaining {0} characters here. Rest assured: the AI still receives your entire document.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2853647837"] = "Your document is large, so we show you only its beginning. We hide the remaining {0} characters here. Rest assured: the AI still receives your entire document."
+
+-- The file is no longer in its original location. Below is the text the AI received from it when you sent it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3044324335"] = "The file is no longer in its original location. Below is the text the AI received from it when you sent it."
 
 -- See how we load your file. Review the content before we process it further.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3271853346"] = "See how we load your file. Review the content before we process it further."
@@ -7530,17 +8034,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3448155331"] = "Close"
 -- Loaded Content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3529911749"] = "Loaded Content"
 
--- Simple View
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T428485200"] = "Simple View"
+-- The file could not be found. It may have been moved, renamed, or deleted, or it is otherwise inaccessible.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T430625309"] = "The file could not be found. It may have been moved, renamed, or deleted, or it is otherwise inaccessible."
+
+-- Text the AI received
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T46215024"] = "Text the AI received"
 
 -- This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T652739927"] = "This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected."
-
--- File Path
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T729508546"] = "File Path"
-
--- The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T973777830"] = "The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible."
 
 -- Embedding Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T1427271797"] = "Embedding Name"
@@ -7634,6 +8135,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1727440780"] = "Ho
 
 -- Load
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1756340745"] = "Load"
+
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1807387355"] = "The use of this provider has been prohibited by your organization. Please select a different provider."
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1847791252"] = "Update"
@@ -8370,6 +8874,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1727440780"] = "Hostname"
 -- Always on
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1761671861"] = "Always on"
 
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1807387355"] = "The use of this provider has been prohibited by your organization. Please select a different provider."
+
 -- Reset
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T180921696"] = "Reset"
 
@@ -8694,6 +9201,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3160778981"] = "Pr
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3448155331"] = "Close"
 
+-- Show the text the AI received from this file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3884104588"] = "Show the text the AI received from this file."
+
 -- Your attached files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3909191077"] = "Your attached files"
 
@@ -8877,6 +9387,33 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T6790
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."
 
+-- When enabled, the Assistant Builder starts with the defaults configured below. When disabled, it uses the app-wide default provider and preselects no output language.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T1496952909"] = "When enabled, the Assistant Builder starts with the defaults configured below. When disabled, it uses the app-wide default provider and preselects no output language."
+
+-- Preselect Assistant Builder options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T2127606148"] = "Preselect Assistant Builder options?"
+
+-- Default custom output language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3360584376"] = "Default custom output language"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3448155331"] = "Close"
+
+-- Default output language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3652922567"] = "Default output language"
+
+-- Assistant: Assistant Builder defaults
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3668274570"] = "Assistant: Assistant Builder defaults"
+
+-- Assistant Builder options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3962364100"] = "Assistant Builder options are preselected"
+
+-- No Assistant Builder options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T4104323209"] = "No Assistant Builder options are preselected"
+
+-- The language in which the assistants you build answer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T42126731"] = "The language in which the assistants you build answer."
+
 -- Default minimum pause between files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Default minimum pause between files"
 
@@ -8922,6 +9459,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T22
 -- Hidden files and folders are included
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2288334048"] = "Hidden files and folders are included"
 
+-- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats as well as images in JPG, PNG, WebP, GIF, BMP, and TIFF format.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T232588799"] = "Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats as well as images in JPG, PNG, WebP, GIF, BMP, and TIFF format."
+
 -- The lower end of the random pause interval. AI Studio never allows less than 6 seconds.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T237774509"] = "The lower end of the random pause interval. AI Studio never allows less than 6 seconds."
 
@@ -8933,9 +9473,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T24
 
 -- When enabled, new batch runs start with the defaults configured below.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2592677194"] = "When enabled, new batch runs start with the defaults configured below."
-
--- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2594325620"] = "Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats."
 
 -- Subfolders are included
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2607092632"] = "Subfolders are included"
@@ -9057,6 +9594,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T82
 -- Restore default
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T913168756"] = "Restore default"
 
+-- Files are sent as they were first read
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1320692831"] = "Files are sent as they were first read"
+
 -- Preselect one of your chat templates?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1402022556"] = "Preselect one of your chat templates?"
 
@@ -9084,6 +9624,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] 
 -- Control how the LLM provider for added chats is selected.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] = "Control how the LLM provider for added chats is selected."
 
+-- Changed files are read again for the next message
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T264953820"] = "Changed files are read again for the next message"
+
 -- Provider selection when loading a chat and sending assistant results to chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
 
@@ -9092,6 +9635,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2913693228"] 
 
 -- Do you want to use any shortcut to send your input?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Do you want to use any shortcut to send your input?"
+
+-- Read changed attachments again?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3079510748"] = "Read changed attachments again?"
 
 -- Would you like to set one of your chat templates as the default for chats?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3234927721"] = "Would you like to set one of your chat templates as the default for chats?"
@@ -9116,6 +9662,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] 
 
 -- Do you want to apply the default data source options when sending assistant results to chat?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Do you want to apply the default data source options when sending assistant results to chat?"
+
+-- When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4060508809"] = "When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone."
 
 -- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
@@ -9600,26 +10149,50 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T553954963"
 -- Preselect the audience expertise
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1017131030"] = "Preselect the audience expertise"
 
--- When enabled, you can preselect slide builder options. This is might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1393378753"] = "When enabled, you can preselect slide builder options. This is might be useful when you prefer a specific language or LLM model."
+-- Preselect another occasion
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1150085788"] = "Preselect another occasion"
+
+-- Slides of the template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1178900119"] = "Slides of the template"
+
+-- Preselect the occasion
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1451545352"] = "Preselect the occasion"
 
 -- Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1528169602"] = "Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize."
 
--- Slide Planner Assistant options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1549358578"] = "Slide Planner Assistant options are preselected"
-
--- No Slide Planner Assistant options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1694374279"] = "No Slide Planner Assistant options are preselected"
+-- Preselect a PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1745818752"] = "Preselect a PowerPoint template"
 
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1766361623"] = "Choose whether the assistant should use the app default profile, no profile, or a specific profile."
 
+-- Shown on every slide whose layout has a footer, e.g., your name, organization, and date. Leave it empty for no footer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1770252925"] = "Shown on every slide whose layout has a footer, e.g., your name, organization, and date. Leave it empty for no footer."
+
+-- Preselect what the assistant starts with for each presentation: the aspects to emphasize, the language, the audience, and the occasion. You can still change them in the assistant.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1883749129"] = "Preselect what the assistant starts with for each presentation: the aspects to emphasize, the language, the audience, and the occasion. You can still change them in the assistant."
+
+-- Preselect which LLM plans the slides and which profile it gets. A profile can, e.g., name your organization, which the LLM may use for the imprint.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1886202233"] = "Preselect which LLM plans the slides and which profile it gets. A profile can, e.g., name your organization, which the LLM may use for the imprint."
+
+-- Preselect the footer text
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1952334375"] = "Preselect the footer text"
+
 -- Preselect the audience organizational level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2014662371"] = "Preselect the audience organizational level"
 
+-- AI selection
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2105832301"] = "AI selection"
+
 -- Which audience organizational level should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T216511105"] = "Which audience organizational level should be preselected?"
+
+-- Preselect Slide Assistant options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T227645894"] = "Preselect Slide Assistant options?"
+
+-- The preselected template contains no slides besides its layouts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2310759788"] = "The preselected template contains no slides besides its layouts."
 
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2322771068"] = "Preselect a profile"
@@ -9630,35 +10203,95 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T23451
 -- Preselect another language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2382415529"] = "Preselect another language"
 
+-- Content and audience
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2399412443"] = "Content and audience"
+
+-- Preselect a picture library
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2462036412"] = "Preselect a picture library"
+
+-- Which occasion of the presentation should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T253212936"] = "Which occasion of the presentation should be preselected?"
+
 -- Preselect the language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2571465005"] = "Preselect the language"
 
 -- Preselect the audience age group
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2645589441"] = "Preselect the audience age group"
 
--- Assistant: Slide Planner Assistant Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3226042276"] = "Assistant: Slide Planner Assistant Options"
+-- The slides use the layouts of this PowerPoint presentation or template (.pptx, .potx), and you can create a PowerPoint file (.pptx) from the result. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Leave it empty to plan an outline only.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2931578847"] = "The slides use the layouts of this PowerPoint presentation or template (.pptx, .potx), and you can create a PowerPoint file (.pptx) from the result. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Leave it empty to plan an outline only."
+
+-- Preselect a readable template above to choose its layouts for kinds of slides.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3212897766"] = "Preselect a readable template above to choose its layouts for kinds of slides."
+
+-- Preselect the maximum number of bullet points per slide
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3214836964"] = "Preselect the maximum number of bullet points per slide"
+
+-- Assistant: Slide Assistant Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3215549988"] = "Assistant: Slide Assistant Options"
 
 -- Which audience expertise should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3228597992"] = "Which audience expertise should be preselected?"
 
--- Preselect Slide Planner Assistant options?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T339924858"] = "Preselect Slide Planner Assistant options?"
+-- Layouts for kinds of slides
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3306428265"] = "Layouts for kinds of slides"
+
+-- Preselect keeping empty picture placeholders?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3344629637"] = "Preselect keeping empty picture placeholders?"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3448155331"] = "Close"
 
+-- PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3472250354"] = "PowerPoint template"
+
+-- Empty picture placeholders are left out
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3506495573"] = "Empty picture placeholders are left out"
+
+-- Visual elements
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T366689306"] = "Visual elements"
+
+-- Select a PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3690748035"] = "Select a PowerPoint template"
+
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3705987833"] = "Preselect important aspects"
 
+-- Empty picture placeholders are kept
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3852335360"] = "Empty picture placeholders are kept"
+
+-- No maximum
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3915183720"] = "No maximum"
+
+-- No Slide Assistant options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T4214398691"] = "No Slide Assistant options are preselected"
+
+-- When enabled, you can preselect options of the Slide Assistant. This might be useful when you prefer a specific language or LLM model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T522980576"] = "When enabled, you can preselect options of the Slide Assistant. This might be useful when you prefer a specific language or LLM model."
+
+-- The LLM may choose pictures and icons for the slides from this folder. Leave it empty for no picture library.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T53668203"] = "The LLM may choose pictures and icons for the slides from this folder. Leave it empty for no picture library."
+
+-- Preselect a readable template above to choose what the presentation does with its slides.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T799025846"] = "Preselect a readable template above to choose what the presentation does with its slides."
+
+-- Select a picture library
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T801027183"] = "Select a picture library"
+
 -- Preselect the audience profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T861397972"] = "Preselect the audience profile"
+
+-- Slide Assistant options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T93124146"] = "Slide Assistant options are preselected"
 
 -- Which audience age group should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T956845877"] = "Which audience age group should be preselected?"
 
 -- Which audience profile should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T973572510"] = "Which audience profile should be preselected?"
+
+-- A slide holds at most this many bullet points, in all of its text slots together. Match it to the room for text in the layouts of your template.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T995644230"] = "A slide holds at most this many bullet points, in all of its text slots together. Match it to the room for text in the layouts of your template."
 
 -- When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T183953912"] = "When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model."
@@ -9981,6 +10614,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3907843187"] 
 -- {0} Default: {1}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T403490413"] = "{0} Default: {1}"
 
+-- You switched off this tool. It appears in no tool selection, and the AI cannot use it. You can switch it on again in the tool settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T4131368882"] = "You switched off this tool. It appears in no tool selection, and the AI cannot use it. You can switch it on again in the tool settings."
+
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T900713019"] = "Cancel"
 
@@ -10104,6 +10740,15 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T4030229154"] = "Your Inp
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T900713019"] = "Cancel"
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T3448155331"] = "Close"
+
+-- This is exactly what the AI received from this source for its answer, after AI Studio removed any suspicious instructions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T406940705"] = "This is exactly what the AI received from this source for its answer, after AI Studio removed any suspicious instructions."
+
+-- Passages
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T4291613392"] = "Passages"
+
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
 
@@ -10121,6 +10766,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1727440780"] =
 
 -- Load
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1756340745"] = "Load"
+
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1807387355"] = "The use of this provider has been prohibited by your organization. Please select a different provider."
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1847791252"] = "Update"
@@ -10332,6 +10980,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1728590051"] = "Analyze a text or
 -- Prompt Optimizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1777666968"] = "Prompt Optimizer"
 
+-- Slide Assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1883918574"] = "Slide Assistant"
+
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Text Summarizer"
 
@@ -10374,9 +11025,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI Studio Develop
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254"] = "Generate a job posting for a given job description."
 
--- Slide Planner Assistant
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2924755246"] = "Slide Planner Assistant"
-
 -- Installed Assistants
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T295232966"] = "Installed Assistants"
 
@@ -10388,9 +11036,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3026443472"] = "E-Mail"
 
 -- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311775455"] = "The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page."
-
--- Develop slide content based on a given topic and content.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311912219"] = "Develop slide content based on a given topic and content."
 
 -- Translate AI Studio text content into other languages
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3181803840"] = "Translate AI Studio text content into other languages"
@@ -10454,6 +11099,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T892147062"] = "View and filter AI
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Localization"
+
+-- Turn texts and documents into slides, also as a PowerPoint file in the design of your template.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T943132958"] = "Turn texts and documents into slides, also as a PowerPoint file in the design of your template."
 
 -- Hide search
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1281128983"] = "Hide search"
@@ -10529,6 +11177,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1485378199"] = "These files match
 
 -- Outside the selection
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1512669069"] = "Outside the selection"
+
+-- Between two steps, AI Studio pauses for {0} seconds, to spare an embedding server which many people share.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1513645664"] = "Between two steps, AI Studio pauses for {0} seconds, to spare an embedding server which many people share."
 
 -- Failed: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1531389696"] = "Failed: {0}"
@@ -10638,6 +11289,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3865031940"] = "Actions"
 -- These file types and folders were found in the folder of the data source, but its file patterns or its list of excluded files and folders leave them out. They are intentionally excluded and do not affect the indexing status. Excluded folders are not searched at all.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4007318423"] = "These file types and folders were found in the folder of the data source, but its file patterns or its list of excluded files and folders leave them out. They are intentionally excluded and do not affect the indexing status. Excluded folders are not searched at all."
 
+-- Between two steps, AI Studio pauses for {0} to {1} seconds, to spare an embedding server which many people share.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4167794090"] = "Between two steps, AI Studio pauses for {0} to {1} seconds, to spare an embedding server which many people share."
+
 -- Remove them from the index
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T419343388"] = "Remove them from the index"
 
@@ -10670,6 +11324,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T819555436"] = "Failed mails: {0}"
 
 -- Skipped
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T852993367"] = "Skipped"
+
+-- Edit this data source
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T878700886"] = "Edit this data source"
 
 -- Open the transcription settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T905182399"] = "Open the transcription settings"
@@ -10829,6 +11486,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "This library is 
 
 -- Trademarks & Brand Assets
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421823619"] = "Trademarks & Brand Assets"
+
+-- Provenance database
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1496928875"] = "Provenance database"
 
 -- Copies the allowed host pattern to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1513592659"] = "Copies the allowed host pattern to the clipboard"
@@ -11379,8 +12039,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Enable plugin"
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
+-- {0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2430906247"] = "{0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing."
+
 -- The tile '{0}' has been updated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "The tile '{0}' has been updated."
+
+-- Share dialog not available
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2445896850"] = "Share dialog not available"
 
 -- Edit Assistant Plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Edit Assistant Plugin"
@@ -11472,9 +12138,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1714878838"] = "Thank you, Peer, 
 -- Individual Contributors
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1874835680"] = "Individual Contributors"
 
--- Thank you, Sabrina, for bringing file attachments to the chat, the Slide Planner Assistant, and the protection against prompt injection.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2053817136"] = "Thank you, Sabrina, for bringing file attachments to the chat, the Slide Planner Assistant, and the protection against prompt injection."
-
 -- The first 10 supporters who make a one-time contribution:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2410456125"] = "The first 10 supporters who make a one-time contribution:"
 
@@ -11489,6 +12152,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894"] = "Become one of our
 
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Supporters"
+
+-- Thank you, Sabrina, for bringing file attachments to the chat, the Slide Assistant, and the protection against prompt injection.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2978040576"] = "Thank you, Sabrina, for bringing file attachments to the chat, the Slide Assistant, and the protection against prompt injection."
 
 -- Content Contributors
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3060804484"] = "Content Contributors"
@@ -12042,11 +12708,17 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::MAILBOXTRANSPORTSECURITYEXTENSIO
 -- Unknown encryption
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::MAILBOXTRANSPORTSECURITYEXTENSIONS::T685301366"] = "Unknown encryption"
 
+-- This chat found content in a data source which has been removed since, while its setting 'Where a chat may send data after reading this data source' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T1103975982"] = "This chat found content in a data source which has been removed since, while its setting 'Where a chat may send data after reading this data source' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."
+
 -- This chat read an internal web page on '{0}' while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T1307134700"] = "This chat read an internal web page on '{0}' while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."
 
 -- This chat searched your Confluence wiki while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T1719013859"] = "This chat searched your Confluence wiki while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."
+
+-- This chat found content in the data source '{0}' while its setting 'Where a chat may send data after reading this data source' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T2391737974"] = "This chat found content in the data source '{0}' while its setting 'Where a chat may send data after reading this data source' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."
 
 -- This chat read mails from the mailbox '{0}' while its setting 'Where a chat may send data after reading mails' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3290545516"] = "This chat read mails from the mailbox '{0}' while its setting 'Where a chat may send data after reading mails' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."
@@ -12060,11 +12732,11 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSION
 -- Unknown restriction
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T1376332431"] = "Unknown restriction"
 
+-- The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails or the documents of your data sources, can then reach third parties, e.g., inside a search query or the address of a web page.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T1824702909"] = "The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails or the documents of your data sources, can then reach third parties, e.g., inside a search query or the address of a web page."
+
 -- Configured services and addresses from the chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3527841781"] = "Configured services and addresses from the chat"
-
--- The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails, can then reach third parties, e.g., inside a search query or the address of a web page.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3881528711"] = "The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails, can then reach third parties, e.g., inside a search query or the address of a web page."
 
 -- No restriction
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3930382848"] = "No restriction"
@@ -12075,8 +12747,8 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSION
 -- The chat may also read web pages whose addresses stand in the chat, written by you or returned by a tool, exactly as they stand there. It does not search the web, and the AI cannot choose addresses of its own outside the services configured in AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T4161394355"] = "The chat may also read web pages whose addresses stand in the chat, written by you or returned by a tool, exactly as they stand there. It does not search the web, and the AI cannot choose addresses of its own outside the services configured in AI Studio."
 
--- The chat may only use services configured in AI Studio: your mailboxes, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T739697396"] = "The chat may only use services configured in AI Studio: your mailboxes, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web."
+-- The chat may only use services configured in AI Studio: your mailboxes, your data sources, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T664995897"] = "The chat may only use services configured in AI Studio: your mailboxes, your data sources, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web."
 
 -- Only services configured in AI Studio
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T750634166"] = "Only services configured in AI Studio"
@@ -12155,6 +12827,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T1578005752"] = "The sel
 
 -- The selected provider is not allowed for this chat.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T174545104"] = "The selected provider is not allowed for this chat."
+
+-- The use of this provider has been prohibited by your organization. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T1807387355"] = "The use of this provider has been prohibited by your organization. Please select a different provider."
 
 -- The AI job failed. The message is: '{0}'
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T237448388"] = "The AI job failed. The message is: '{0}'"
@@ -12282,6 +12957,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1546040625"] = "My Task
 -- Grammar & Spelling Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T166453786"] = "Grammar & Spelling Assistant"
 
+-- Slide Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1883918574"] = "Slide Assistant"
+
 -- Legal Check Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1886447798"] = "Legal Check Assistant"
 
@@ -12302,9 +12980,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T277804139"] = "Visual B
 
 -- Synonym Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2921123194"] = "Synonym Assistant"
-
--- Slide Planner Assistant
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2924755246"] = "Slide Planner Assistant"
 
 -- Assistant Builder
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T3303547904"] = "Assistant Builder"
@@ -12469,6 +13144,69 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T3662391977"] = "
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T6222351"] = "Status"
 
 -- Reason
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T1093747001"] = "Reason"
+
+-- Starting
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T1233211769"] = "Starting"
+
+-- unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T2608177081"] = "unknown"
+
+-- Unavailable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T3662391977"] = "Unavailable"
+
+-- Process architecture
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T563161633"] = "Process architecture"
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T6222351"] = "Status"
+
+-- Native library
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::NOPROVENANCESTORECLIENT::T634426545"] = "Native library"
+
+-- no migration applied
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T1014567907"] = "no migration applied"
+
+-- Storage size
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T1230141403"] = "Storage size"
+
+-- Stored items across all chats
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T1569215203"] = "Stored items across all chats"
+
+-- {0} ({1} applied)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T2286846332"] = "{0} ({1} applied)"
+
+-- Journal mode
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T2411639995"] = "Journal mode"
+
+-- Attached files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T246258678"] = "Attached files"
+
+-- Mails
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T2534642695"] = "Mails"
+
+-- unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T2608177081"] = "unknown"
+
+-- Reported version
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T3556099842"] = "Reported version"
+
+-- Schema version
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T424290830"] = "Schema version"
+
+-- Passages of data sources
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T686479917"] = "Passages of data sources"
+
+-- Web pages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T748543057"] = "Web pages"
+
+-- Chats with stored items
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T826028599"] = "Chats with stored items"
+
+-- {0} ({1} applied, {2} pending)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::PROVENANCESTORE::SQLITEPROVENANCESTORECLIENTIMPLEMENTATION::T983802795"] = "{0} ({1} applied, {2} pending)"
+
+-- Reason
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T1093747001"] = "Reason"
 
 -- Starting
@@ -12501,17 +13239,38 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEM
 -- Qdrant Edge is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T744445696"] = "Qdrant Edge is not available."
 
+-- Edit Local Directory Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T1215599168"] = "Edit Local Directory Data Source"
+
+-- Edit ERI v1 Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T221059217"] = "Edit ERI v1 Data Source"
+
+-- Edit Local File Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T2453292893"] = "Edit Local File Data Source"
+
+-- Every other file goes to your embedding provider once more, which takes a while with many files. Files missing at the new location are removed from the index, while your files on disk stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T1555760974"] = "Every other file goes to your embedding provider once more, which takes a while with many files. Files missing at the new location are removed from the index, while your files on disk stay as they are."
+
+-- AI Studio keeps what it has already prepared for every file it finds unchanged at the new location, that is, of the same type and with the same size and modification time. In a folder, such a file also has to keep its name and the subfolder it is in.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2205693550"] = "AI Studio keeps what it has already prepared for every file it finds unchanged at the new location, that is, of the same type and with the same size and modification time. In a folder, such a file also has to keep its name and the subfolder it is in."
+
 -- They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2343773457"] = "They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one."
 
 -- and {0} more.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2519847121"] = "and {0} more."
 
+-- Your embedding provider runs in the cloud, so preparing files again costs money.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2635623258"] = "Your embedding provider runs in the cloud, so preparing files again costs money."
+
 -- This change makes the prepared documents of the following data sources unusable ({0}):
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3337378891"] = "This change makes the prepared documents of the following data sources unusable ({0}):"
 
 -- Do you want to apply this change anyway?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3419411838"] = "Do you want to apply this change anyway?"
+
+-- New Location for This Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3462449568"] = "New Location for This Data Source"
 
 -- Documents Will Be Prepared Again
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T737291513"] = "Documents Will Be Prepared Again"
@@ -12536,6 +13295,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Repair Data
 
 -- The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?"
+
+-- Please drop a file, not a folder.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFILE::T1472251601"] = "Please drop a file, not a folder."
+
+-- Please drop a file with a supported file type.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFILE::T930441004"] = "Please drop a file with a supported file type."
+
+-- The dropped file could not be accessed. Please choose it with the file chooser instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFILE::T984660028"] = "The dropped file could not be accessed. Please choose it with the file chooser instead."
+
+-- The dropped folder could not be accessed. Please choose it with the folder chooser instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFOLDER::T1153417816"] = "The dropped folder could not be accessed. Please choose it with the folder chooser instead."
+
+-- Please drop a folder, not a file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFOLDER::T3289690493"] = "Please drop a folder, not a file."
 
 -- Import Embedding
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::EMBEDDINGPROVIDERSETUP::T1681763001"] = "Import Embedding"
@@ -12704,6 +13478,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T3054800422"] = "M
 
 -- Webpage (.html)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T3651679344"] = "Webpage (.html)"
+
+-- Source code
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T4137983821"] = "Source code"
 
 -- Table (.csv)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T530872684"] = "Table (.csv)"
@@ -13260,6 +14037,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 -- The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T186946778"] = "The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured."
 
+-- The chat template preselects the provider '{0}', which does not meet the confidence level required for chats. Chats started with it use your usual provider instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T190892810"] = "The chat template preselects the provider '{0}', which does not meet the confidence level required for chats. Chats started with it use your usual provider instead."
+
 -- Data sources which sign in with Kerberos cannot be imported yet. Please add them yourself.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T206419407"] = "Data sources which sign in with Kerberos cannot be imported yet. Please add them yourself."
 
@@ -13271,6 +14051,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T260
 
 -- The chat template preselects tools which are not available on this computer: {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2693686582"] = "The chat template preselects tools which are not available on this computer: {0}."
+
+-- The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2735390326"] = "The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead."
+
+-- The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3321789654"] = "The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead."
 
 -- The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3589070261"] = "The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider."
@@ -13292,6 +14078,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T600
 
 -- The pasted configuration contains an API key which is not encrypted, so it was left out. Please enter your API key before you save the provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T639320638"] = "The pasted configuration contains an API key which is not encrypted, so it was left out. Please enter your API key before you save the provider."
+
+-- The chat template preselects a profile but does not allow profiles. Chats started with it ignore that profile.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T769062029"] = "The chat template preselects a profile but does not allow profiles. Chats started with it ignore that profile."
 
 -- Expected a quoted string at character {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1235695745"] = "Expected a quoted string at character {0}."
@@ -13608,6 +14397,1020 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T237059392
 -- Configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T3353383632"] = "Configuration plugin"
 
+-- Business and projects
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T1042553620"] = "Business and projects"
+
+-- Science and research
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T1909173573"] = "Science and research"
+
+-- Structure and framing
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T2152680157"] = "Structure and framing"
+
+-- Medicine
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T2556266301"] = "Medicine"
+
+-- Law
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T2984971435"] = "Law"
+
+-- Other kinds of slides
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T574173375"] = "Other kinds of slides"
+
+-- Teaching and workshops
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T875074265"] = "Teaching and workshops"
+
+-- General content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEAREAEXTENSIONS::T897777590"] = "General content"
+
+-- Layout for partners
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1014233027"] = "Layout for partners"
+
+-- Which slide layout should a single court ruling use, e.g., with court, date, case number, and headnote?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1020148914"] = "Which slide layout should a single court ruling use, e.g., with court, date, case number, and headnote?"
+
+-- Which slide layout should a single opportunity use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T103149100"] = "Which slide layout should a single opportunity use, shown prominently?"
+
+-- Which slide layout should a decision use which the audience is asked to make?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1040281888"] = "Which slide layout should a decision use which the audience is asked to make?"
+
+-- Layout for breaks
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1064102044"] = "Layout for breaks"
+
+-- Layout for stories
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1070686897"] = "Layout for stories"
+
+-- Which slide layout should a narrative use, which frames, e.g., a project?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1077820264"] = "Which slide layout should a narrative use, which frames, e.g., a project?"
+
+-- Layout for several problems
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1094127856"] = "Layout for several problems"
+
+-- Which slide layout should a chain of arguments use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1104132271"] = "Which slide layout should a chain of arguments use?"
+
+-- Layout for timelines
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1115997848"] = "Layout for timelines"
+
+-- Which slide layout should the contribution of the work use, i.e., what is new?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1117697696"] = "Which slide layout should the contribution of the work use, i.e., what is new?"
+
+-- Layout for “Any questions?”
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1129259891"] = "Layout for “Any questions?”"
+
+-- Which slide layout should several assumptions use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1141663885"] = "Which slide layout should several assumptions use, shown together?"
+
+-- Which slide layout should several delimitations use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1152239577"] = "Which slide layout should several delimitations use, shown together?"
+
+-- Layout for the team
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T115619112"] = "Layout for the team"
+
+-- Layout for acknowledgements
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1165298089"] = "Layout for acknowledgements"
+
+-- Layout for the summary
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1217016695"] = "Layout for the summary"
+
+-- Which slide layout should slides with little content use, e.g., a short statement?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T122211757"] = "Which slide layout should slides with little content use, e.g., a short statement?"
+
+-- Layout for one use case
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1231694521"] = "Layout for one use case"
+
+-- Which slide layout should several examples use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T123810252"] = "Which slide layout should several examples use, shown together?"
+
+-- Which slide layout should open each chapter?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1240241139"] = "Which slide layout should open each chapter?"
+
+-- Layout for the state of research
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1281296692"] = "Layout for the state of research"
+
+-- Which slide layout should a look back on where we come from use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1308711435"] = "Which slide layout should a look back on where we come from use?"
+
+-- Which slide layout should a summary or a conclusion use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1335800860"] = "Which slide layout should a summary or a conclusion use?"
+
+-- Layout for the study design
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1339678504"] = "Layout for the study design"
+
+-- Which slide layout should a single result use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1353098126"] = "Which slide layout should a single result use, shown prominently?"
+
+-- Which slide layout should the definition of a single term use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1354815318"] = "Which slide layout should the definition of a single term use?"
+
+-- Layout for one contract clause
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1364307455"] = "Layout for one contract clause"
+
+-- Layout for one goal
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1366104671"] = "Layout for one goal"
+
+-- Layout for SWOT analyses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T136706369"] = "Layout for SWOT analyses"
+
+-- Layout for guideline recommendations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1403379894"] = "Layout for guideline recommendations"
+
+-- Which slide layout should the medical history of a patient use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1410100783"] = "Which slide layout should the medical history of a patient use?"
+
+-- Which slide layout should clinical findings use, e.g., of a physical examination?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T142386677"] = "Which slide layout should clinical findings use, e.g., of a physical examination?"
+
+-- Layout for one scenario
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1428654470"] = "Layout for one scenario"
+
+-- Layout for one hypothesis
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1445572710"] = "Layout for one hypothesis"
+
+-- Layout for an overview of KPIs
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1447134482"] = "Layout for an overview of KPIs"
+
+-- Layout for forecasts
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1487244874"] = "Layout for forecasts"
+
+-- Layout for one assumption
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1503180167"] = "Layout for one assumption"
+
+-- Which slide layout should conflicts of interest and disclaimers use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1507945603"] = "Which slide layout should conflicts of interest and disclaimers use?"
+
+-- Which slide layout should pros and cons use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1514618392"] = "Which slide layout should pros and cons use?"
+
+-- Which slide layout should a call to action use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1517426306"] = "Which slide layout should a call to action use?"
+
+-- Which slide layout should the status of a project use, e.g., as a traffic light?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1534894088"] = "Which slide layout should the status of a project use, e.g., as a traffic light?"
+
+-- Layout for the title slide
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1535308880"] = "Layout for the title slide"
+
+-- Which slide layout should the proof of a theorem use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1568120253"] = "Which slide layout should the proof of a theorem use?"
+
+-- Which slide layout should the context or the starting point use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T158061098"] = "Which slide layout should the context or the starting point use?"
+
+-- Layout for pros and cons
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1587972966"] = "Layout for pros and cons"
+
+-- Layout for several delimitations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1610652216"] = "Layout for several delimitations"
+
+-- Which slide layout should timelines use, e.g., the course of a project?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1625275711"] = "Which slide layout should timelines use, e.g., the course of a project?"
+
+-- Which slide layout should several court rulings use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1627282810"] = "Which slide layout should several court rulings use, shown together?"
+
+-- Which slide layout should a single quote use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1633664977"] = "Which slide layout should a single quote use, shown prominently?"
+
+-- Which slide layout should a single passage of a legal commentary use, e.g., of an annotated code, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1644569586"] = "Which slide layout should a single passage of a legal commentary use, e.g., of an annotated code, shown prominently?"
+
+-- Layout for several definitions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1645055642"] = "Layout for several definitions"
+
+-- Which slide layout should several opportunities use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1671430802"] = "Which slide layout should several opportunities use, shown together?"
+
+-- Layout for the experimental setup
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1678480418"] = "Layout for the experimental setup"
+
+-- Layout for introducing several speakers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1680921944"] = "Layout for introducing several speakers"
+
+-- Which slide layout should the presentation of a patient case use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1685663750"] = "Which slide layout should the presentation of a patient case use?"
+
+-- Which slide layout should imaging use, e.g., an X-ray, CT, or MRI with its findings?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1695270380"] = "Which slide layout should imaging use, e.g., an X-ray, CT, or MRI with its findings?"
+
+-- Which slide layout should the study population use, e.g., with inclusion and exclusion criteria?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1710911895"] = "Which slide layout should the study population use, e.g., with inclusion and exclusion criteria?"
+
+-- Which slide layout should the state of research use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1747258262"] = "Which slide layout should the state of research use?"
+
+-- Layout for one user story
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1754624674"] = "Layout for one user story"
+
+-- Layout for one piece of evidence
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1761362584"] = "Layout for one piece of evidence"
+
+-- Layout for one learning objective
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1771256293"] = "Layout for one learning objective"
+
+-- Which slide layout should the introduction of a single speaker use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1776932064"] = "Which slide layout should the introduction of a single speaker use?"
+
+-- Which slide layout should a key message use, which states the one thing to remember?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1787619917"] = "Which slide layout should a key message use, which states the one thing to remember?"
+
+-- Which slide layout should a theorem use, e.g., in mathematics?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1802886934"] = "Which slide layout should a theorem use, e.g., in mathematics?"
+
+-- Layout for the project status
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1807351352"] = "Layout for the project status"
+
+-- Layout for the table of contents
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1823365046"] = "Layout for the table of contents"
+
+-- Layout for several pictures
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1828342463"] = "Layout for several pictures"
+
+-- Which slide layout should comparisons use, e.g., before and after, or two options?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1840246589"] = "Which slide layout should comparisons use, e.g., before and after, or two options?"
+
+-- Which slide layout should the ground rules for working together use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1847072681"] = "Which slide layout should the ground rules for working together use?"
+
+-- Which slide layout should organizational notes use, e.g., on rooms or Wi-Fi?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1857170293"] = "Which slide layout should organizational notes use, e.g., on rooms or Wi-Fi?"
+
+-- Layout for lab values
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1875667171"] = "Layout for lab values"
+
+-- Layout for several research questions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1877198900"] = "Layout for several research questions"
+
+-- Layout for several learning objectives
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T191598066"] = "Layout for several learning objectives"
+
+-- Which slide layout should an exercise use, with its task, time frame, and expected result?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1929274048"] = "Which slide layout should an exercise use, with its task, time frame, and expected result?"
+
+-- Layout for an overview of work packages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1950946185"] = "Layout for an overview of work packages"
+
+-- Which slide layout should medication use, e.g., with agent, dose, and duration?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1955333344"] = "Which slide layout should medication use, e.g., with agent, dose, and duration?"
+
+-- Which slide layout should acceptance criteria use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1959540330"] = "Which slide layout should acceptance criteria use?"
+
+-- Which slide layout should a slide use which presents a team?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1979984215"] = "Which slide layout should a slide use which presents a team?"
+
+-- Which slide layout should a single scenario use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T1982380825"] = "Which slide layout should a single scenario use, shown prominently?"
+
+-- Which slide layout should several formulas use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2030308484"] = "Which slide layout should several formulas use, shown together?"
+
+-- Which slide layout should the methodology use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T203822370"] = "Which slide layout should the methodology use?"
+
+-- Which slide layout should several quotes use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2041878078"] = "Which slide layout should several quotes use, shown together?"
+
+-- Which slide layout should a note on the funding of the work use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2077700183"] = "Which slide layout should a note on the funding of the work use?"
+
+-- Which slide layout should the introduction of several speakers use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2094194578"] = "Which slide layout should the introduction of several speakers use?"
+
+-- Layout for step-by-step explanations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2111999519"] = "Layout for step-by-step explanations"
+
+-- Layout for one milestone
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2114685310"] = "Layout for one milestone"
+
+-- Which slide layout should a slide with a table use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2147948257"] = "Which slide layout should a slide with a table use?"
+
+-- Layout for to-dos
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2149537898"] = "Layout for to-dos"
+
+-- Layout for one quote
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2150775408"] = "Layout for one quote"
+
+-- Which slide layout should a prompt for a discussion use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2166518417"] = "Which slide layout should a prompt for a discussion use?"
+
+-- Which slide layout should a single goal use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2178279832"] = "Which slide layout should a single goal use, shown prominently?"
+
+-- Which slide layout should several pieces of evidence use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2198315510"] = "Which slide layout should several pieces of evidence use, shown together?"
+
+-- Default layout for content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2216550238"] = "Default layout for content"
+
+-- Layout for several goals
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2217393844"] = "Layout for several goals"
+
+-- Which slide layout should an overview of several milestones use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2251715184"] = "Which slide layout should an overview of several milestones use?"
+
+-- Layout for several pieces of evidence
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2257157973"] = "Layout for several pieces of evidence"
+
+-- Layout for the contribution
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2263473163"] = "Layout for the contribution"
+
+-- Which slide layout should several reasons use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2280792678"] = "Which slide layout should several reasons use, shown together?"
+
+-- Layout for the positions of the parties
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2297947419"] = "Layout for the positions of the parties"
+
+-- Layout for polls
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2299527458"] = "Layout for polls"
+
+-- Which slide layout should the experimental setup use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2300173724"] = "Which slide layout should the experimental setup use?"
+
+-- Layout for legal consequences
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2323155405"] = "Layout for legal consequences"
+
+-- Layout for one reason
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2324022664"] = "Layout for one reason"
+
+-- Which slide layout should a single user story use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2329609477"] = "Which slide layout should a single user story use, shown prominently?"
+
+-- Layout for the context
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T233353792"] = "Layout for the context"
+
+-- Layout for expectations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2371205947"] = "Layout for expectations"
+
+-- Which slide layout should the endpoints of a study use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2381313738"] = "Which slide layout should the endpoints of a study use?"
+
+-- Layout for one KPI
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2388056074"] = "Layout for one KPI"
+
+-- Which slide layout should several goals use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2417807229"] = "Which slide layout should several goals use, shown together?"
+
+-- Which slide layout should the therapy or the treatment plan use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2420939131"] = "Which slide layout should the therapy or the treatment plan use?"
+
+-- Layout for one opportunity
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2428145985"] = "Layout for one opportunity"
+
+-- Layout for interim summaries
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2438421040"] = "Layout for interim summaries"
+
+-- Layout for the methodology
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2451437972"] = "Layout for the methodology"
+
+-- Which slide layout should the design of a study use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2454384104"] = "Which slide layout should the design of a study use?"
+
+-- Layout for endpoints
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2457995550"] = "Layout for endpoints"
+
+-- Which slide layout should a round use in which the participants introduce themselves?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T246747363"] = "Which slide layout should a round use in which the participants introduce themselves?"
+
+-- Layout for the imprint
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2479880990"] = "Layout for the imprint"
+
+-- Layout for several results
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2488831402"] = "Layout for several results"
+
+-- Which slide layout should the solution of an exercise use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2529501126"] = "Which slide layout should the solution of an exercise use?"
+
+-- Which slide layout should several hypotheses use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2537315271"] = "Which slide layout should several hypotheses use, shown together?"
+
+-- Layout for tables
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2540038829"] = "Layout for tables"
+
+-- Which slide layout should several contract clauses use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2550841501"] = "Which slide layout should several contract clauses use, shown together?"
+
+-- Layout for chains of arguments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2559513003"] = "Layout for chains of arguments"
+
+-- Layout for introducing one speaker
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2568963247"] = "Layout for introducing one speaker"
+
+-- Which slide layout should the table of contents use, which lists the topics of the presentation?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2570153877"] = "Which slide layout should the table of contents use, which lists the topics of the presentation?"
+
+-- Which slide layout should reflecting on and recording the results use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2576096519"] = "Which slide layout should reflecting on and recording the results use?"
+
+-- Layout for theorems
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T259369873"] = "Layout for theorems"
+
+-- Which slide layout should a single piece of evidence use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2606871105"] = "Which slide layout should a single piece of evidence use, shown prominently?"
+
+-- Which slide layout should the next steps use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2607482691"] = "Which slide layout should the next steps use?"
+
+-- Layout for one dependency
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2610479757"] = "Layout for one dependency"
+
+-- Which slide layout should a SWOT analysis use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2655203380"] = "Which slide layout should a SWOT analysis use?"
+
+-- Which slide layout should a poll, a vote, or a knowledge check use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2694466351"] = "Which slide layout should a poll, a vote, or a knowledge check use?"
+
+-- Which slide layout should collecting the expectations of the participants use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2697820950"] = "Which slide layout should collecting the expectations of the participants use?"
+
+-- No preference (the LLM decides)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2736980667"] = "No preference (the LLM decides)"
+
+-- Layout for several contract clauses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2738284820"] = "Layout for several contract clauses"
+
+-- Which slide layout should a single note or remark use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2752575508"] = "Which slide layout should a single note or remark use, shown prominently?"
+
+-- Layout for one work package
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2760560305"] = "Layout for one work package"
+
+-- Which slide layout should a single reason use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2764805851"] = "Which slide layout should a single reason use, shown prominently?"
+
+-- Which slide layout should a scheme use by which a legal question is examined step by step?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2772805348"] = "Which slide layout should a scheme use by which a legal question is examined step by step?"
+
+-- Layout for one thesis
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2776067892"] = "Layout for one thesis"
+
+-- Layout for one commentary
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2787854397"] = "Layout for one commentary"
+
+-- Layout for deadlines
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2797417629"] = "Layout for deadlines"
+
+-- Which slide layout should an overview of several work packages use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2799714841"] = "Which slide layout should an overview of several work packages use?"
+
+-- Which slide layout should several risks use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2809967041"] = "Which slide layout should several risks use, shown together?"
+
+-- Layout for the therapy
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2814677978"] = "Layout for the therapy"
+
+-- Which slide layout should several legal questions use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T282499161"] = "Which slide layout should several legal questions use, shown together?"
+
+-- Layout for several theses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2832902216"] = "Layout for several theses"
+
+-- Which slide layout should an interpretation of the results use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2838598093"] = "Which slide layout should an interpretation of the results use?"
+
+-- Layout for a look back
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2854650733"] = "Layout for a look back"
+
+-- Layout for the diagnosis
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2872699274"] = "Layout for the diagnosis"
+
+-- Layout for one example
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2884053898"] = "Layout for one example"
+
+-- Layout for one delimitation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2887082539"] = "Layout for one delimitation"
+
+-- Which slide layout should a single work package use, e.g., in a project report?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2892903451"] = "Which slide layout should a single work package use, e.g., in a project report?"
+
+-- Layout for examination schemes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2897211069"] = "Layout for examination schemes"
+
+-- Layout for clinical findings
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2897905529"] = "Layout for clinical findings"
+
+-- Layout for one definition
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2901571581"] = "Layout for one definition"
+
+-- Which slide layout should a single legal question use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2905824880"] = "Which slide layout should a single legal question use, shown prominently?"
+
+-- Which slide layout should the title slide use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2927095458"] = "Which slide layout should the title slide use?"
+
+-- Which slide layout should a single research question use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2929392338"] = "Which slide layout should a single research question use, shown prominently?"
+
+-- Which slide layout should the facts of a legal case use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2937844829"] = "Which slide layout should the facts of a legal case use?"
+
+-- Layout for decision requests
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2970628172"] = "Layout for decision requests"
+
+-- Layout for several counterarguments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2975929628"] = "Layout for several counterarguments"
+
+-- Layout for questions to the audience
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2984056773"] = "Layout for questions to the audience"
+
+-- Which slide layout should the positions of the parties use, e.g., of plaintiff and defendant?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2988925171"] = "Which slide layout should the positions of the parties use, e.g., of plaintiff and defendant?"
+
+-- Layout for several rulings
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2991603466"] = "Layout for several rulings"
+
+-- Which slide layout should several counterarguments use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T2999624893"] = "Which slide layout should several counterarguments use, shown together?"
+
+-- Layout for the prognosis
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3007491939"] = "Layout for the prognosis"
+
+-- Which slide layout should a single use case use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3051456178"] = "Which slide layout should a single use case use, shown prominently?"
+
+-- Which slide layout should several research questions use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3073525085"] = "Which slide layout should several research questions use, shown together?"
+
+-- Which slide layout should to-dos use, e.g., with who does them and by when?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3075071043"] = "Which slide layout should to-dos use, e.g., with who does them and by when?"
+
+-- Which slide layout should a description of the data use, e.g., of a dataset?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3083535091"] = "Which slide layout should a description of the data use, e.g., of a dataset?"
+
+-- Which slide layout should a single thesis or central claim use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3085355069"] = "Which slide layout should a single thesis or central claim use, shown prominently?"
+
+-- Which slide layout should a dispute of legal opinions use, e.g., the prevailing and a minority opinion?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3097909957"] = "Which slide layout should a dispute of legal opinions use, e.g., the prevailing and a minority opinion?"
+
+-- Which slide layout should slides with much content use, e.g., many points or a longer explanation?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3100562182"] = "Which slide layout should slides with much content use, e.g., many points or a longer explanation?"
+
+-- Layout for roadmaps
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3108446521"] = "Layout for roadmaps"
+
+-- Layout for the study population
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3133129441"] = "Layout for the study population"
+
+-- Which slide layout should a single assumption use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3134718364"] = "Which slide layout should a single assumption use, shown prominently?"
+
+-- Which slide layout should a checklist use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3135542815"] = "Which slide layout should a checklist use?"
+
+-- Layout for one counterargument
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3176066423"] = "Layout for one counterargument"
+
+-- Layout for the appendix
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3231339388"] = "Layout for the appendix"
+
+-- Layout for comparisons
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3236321854"] = "Layout for comparisons"
+
+-- Which slide layout should a slide use which invites the questions of the audience?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3238718471"] = "Which slide layout should a slide use which invites the questions of the audience?"
+
+-- Layout for several hypotheses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3255105074"] = "Layout for several hypotheses"
+
+-- Layout for checklists
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3259851537"] = "Layout for checklists"
+
+-- Which slide layout should several scenarios use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3290319304"] = "Which slide layout should several scenarios use, shown together?"
+
+-- Layout for source code
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3293257190"] = "Layout for source code"
+
+-- Layout for several opportunities
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3296599085"] = "Layout for several opportunities"
+
+-- Layout for several assumptions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3303991020"] = "Layout for several assumptions"
+
+-- Which slide layout should the prognosis use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3337342787"] = "Which slide layout should the prognosis use?"
+
+-- Layout for organizational notes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3337686411"] = "Layout for organizational notes"
+
+-- Layout for the agenda
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3343931801"] = "Layout for the agenda"
+
+-- Layout for medication
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3344067059"] = "Layout for medication"
+
+-- Which slide layout should several notes or remarks use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3344123040"] = "Which slide layout should several notes or remarks use, shown together?"
+
+-- Which slide layout should the research gap use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3350032786"] = "Which slide layout should the research gap use?"
+
+-- Which slide layout should open an appendix with backup slides?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3360010463"] = "Which slide layout should open an appendix with backup slides?"
+
+-- Layout for differential diagnoses
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3376045644"] = "Layout for differential diagnoses"
+
+-- Which slide layout should a roadmap use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3376320251"] = "Which slide layout should a roadmap use?"
+
+-- Which slide layout should a single milestone use, e.g., with a report?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T340072348"] = "Which slide layout should a single milestone use, e.g., with a report?"
+
+-- Which slide layout should a single problem use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3408433614"] = "Which slide layout should a single problem use, shown prominently?"
+
+-- Which slide layout should resources use, e.g., costs, people, or machines?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3415463181"] = "Which slide layout should resources use, e.g., costs, people, or machines?"
+
+-- Which slide layout should several problems use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3415830569"] = "Which slide layout should several problems use, shown together?"
+
+-- Which slide layout should a single recommendation use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3429598200"] = "Which slide layout should a single recommendation use, shown prominently?"
+
+-- Layout for the narrative
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3431189329"] = "Layout for the narrative"
+
+-- Choosing a layout also adds such a slide to the presentation.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3455006548"] = "Choosing a layout also adds such a slide to the presentation."
+
+-- Layout for several use cases
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3455648654"] = "Layout for several use cases"
+
+-- Which slide layout should a single formula use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3465105335"] = "Which slide layout should a single formula use, shown prominently?"
+
+-- Layout for funding notes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3479554352"] = "Layout for funding notes"
+
+-- Layout for lessons learned
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3481358786"] = "Layout for lessons learned"
+
+-- Which slide layout should the imprint use, e.g., with authors, organization, and date?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3482700194"] = "Which slide layout should the imprint use, e.g., with authors, organization, and date?"
+
+-- Which slide layout should a slide use which presents partners, e.g., with their logos?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3497108376"] = "Which slide layout should a slide use which presents partners, e.g., with their logos?"
+
+-- Which slide layout should several legal provisions use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3497982524"] = "Which slide layout should several legal provisions use, shown together?"
+
+-- Layout for the course of a disease
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3505206048"] = "Layout for the course of a disease"
+
+-- Layout for the research gap
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3509558196"] = "Layout for the research gap"
+
+-- Layout for data
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3512688144"] = "Layout for data"
+
+-- Which slide layout should the closing slide use, e.g., with thanks and contact details?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3543885893"] = "Which slide layout should the closing slide use, e.g., with thanks and contact details?"
+
+-- Which slide layout should feedback use, e.g., of customers or users?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3550149798"] = "Which slide layout should feedback use, e.g., of customers or users?"
+
+-- Layout for proofs
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3550214783"] = "Layout for proofs"
+
+-- Which slide layout should a single risk use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3556807844"] = "Which slide layout should a single risk use, shown prominently?"
+
+-- Layout for the executive summary
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3560846545"] = "Layout for the executive summary"
+
+-- Which slide layout should an interim summary at the end of a chapter use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T356449757"] = "Which slide layout should an interim summary at the end of a chapter use?"
+
+-- Layout for one research question
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3565608351"] = "Layout for one research question"
+
+-- Which slide layout should the approval of an ethics committee use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3582048079"] = "Which slide layout should the approval of an ethics committee use?"
+
+-- Layout for one formula
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3582301086"] = "Layout for one formula"
+
+-- Which slide layout should several pictures use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T358514112"] = "Which slide layout should several pictures use, shown together?"
+
+-- Which slide layout should a step-by-step explanation use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3591485915"] = "Which slide layout should a step-by-step explanation use?"
+
+-- Layout for ground rules
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3608808260"] = "Layout for ground rules"
+
+-- Which slide layout should the end of a day or the start of the next use in a workshop of several days?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3683858868"] = "Which slide layout should the end of a day or the start of the next use in a workshop of several days?"
+
+-- Layout for several user stories
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3692846210"] = "Layout for several user stories"
+
+-- Which slide layout should the limitations of the work use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3693036613"] = "Which slide layout should the limitations of the work use?"
+
+-- Which slide layout should a break use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T370295206"] = "Which slide layout should a break use?"
+
+-- Layout for the medical history
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3716905152"] = "Layout for the medical history"
+
+-- Layout for several risks
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3766935148"] = "Layout for several risks"
+
+-- Layout for several examples
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3795085003"] = "Layout for several examples"
+
+-- Which slide layout should the definitions of several terms use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3798037761"] = "Which slide layout should the definitions of several terms use?"
+
+-- Layout for several commentaries
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3813550849"] = "Layout for several commentaries"
+
+-- Which slide layout should several dependencies and their countermeasures use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3816121265"] = "Which slide layout should several dependencies and their countermeasures use?"
+
+-- Which slide layout should the acknowledgements use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3832735898"] = "Which slide layout should the acknowledgements use?"
+
+-- Which slide layout should a single picture use, shown prominently, e.g., a screenshot, a photo, or a sketch?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3855855203"] = "Which slide layout should a single picture use, shown prominently, e.g., a screenshot, a photo, or a sketch?"
+
+-- Layout for one legal provision
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3856771638"] = "Layout for one legal provision"
+
+-- Layout for much content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T38628112"] = "Layout for much content"
+
+-- Which slide layout should a single example or case study use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3892617705"] = "Which slide layout should a single example or case study use?"
+
+-- Layout for several scenarios
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3919966111"] = "Layout for several scenarios"
+
+-- Which slide layout should deadlines use, e.g., for an appeal?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3924921260"] = "Which slide layout should deadlines use, e.g., for an appeal?"
+
+-- Which slide layout should group work use, e.g., the groups and their tasks?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3944216706"] = "Which slide layout should group work use, e.g., the groups and their tasks?"
+
+-- Which slide layout should an agenda with times and rooms use, e.g., of a workshop?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3970798363"] = "Which slide layout should an agenda with times and rooms use, e.g., of a workshop?"
+
+-- Layout for discussion prompts
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3976709671"] = "Layout for discussion prompts"
+
+-- Which slide layout should several theses or central claims use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T398665322"] = "Which slide layout should several theses or central claims use, shown together?"
+
+-- Layout for processes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T3988497225"] = "Layout for processes"
+
+-- Layout for one picture
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4004724742"] = "Layout for one picture"
+
+-- Which slide layout should differential diagnoses use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4007791050"] = "Which slide layout should differential diagnoses use?"
+
+-- Which slide layout should several user stories use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4020220483"] = "Which slide layout should several user stories use, shown together?"
+
+-- Which slide layout should a single delimitation use, i.e., what the work leaves out?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4024727480"] = "Which slide layout should a single delimitation use, i.e., what the work leaves out?"
+
+-- Which slide layout should a single learning objective use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4043291982"] = "Which slide layout should a single learning objective use, shown prominently?"
+
+-- Layout for one ruling
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4064917261"] = "Layout for one ruling"
+
+-- Which slide layout should the course of a disease use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4086697966"] = "Which slide layout should the course of a disease use?"
+
+-- Layout for one legal question
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4097508115"] = "Layout for one legal question"
+
+-- Which slide layout should a vision use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T411531801"] = "Which slide layout should a vision use?"
+
+-- Layout for patient cases
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4126193860"] = "Layout for patient cases"
+
+-- Which slide layout should several use cases use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T412705947"] = "Which slide layout should several use cases use, shown together?"
+
+-- Layout for exercises
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4139918235"] = "Layout for exercises"
+
+-- Which slide layout should a single contract clause use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4148748174"] = "Which slide layout should a single contract clause use, shown prominently?"
+
+-- Layout for one recommendation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4152682543"] = "Layout for one recommendation"
+
+-- Which slide layout should a forecast use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4157101626"] = "Which slide layout should a forecast use?"
+
+-- Layout for several dependencies
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4167135281"] = "Layout for several dependencies"
+
+-- Which slide layout should a single legal provision use, e.g., a quoted section of a law?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4240339049"] = "Which slide layout should a single legal provision use, e.g., a quoted section of a law?"
+
+-- Which slide layout should the sources and the literature use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T424325956"] = "Which slide layout should the sources and the literature use?"
+
+-- Layout for chapters
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4270765578"] = "Layout for chapters"
+
+-- Layout for sources and literature
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4288705850"] = "Layout for sources and literature"
+
+-- Layout for reflection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4291696997"] = "Layout for reflection"
+
+-- Layout for group work
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T4352908"] = "Layout for group work"
+
+-- Which slide layout should side effects and adverse events use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T436684467"] = "Which slide layout should side effects and adverse events use?"
+
+-- Which slide layout should processes use, e.g., the steps of a workflow?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T472481710"] = "Which slide layout should processes use, e.g., the steps of a workflow?"
+
+-- Which slide layout should questions to the audience during the presentation use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T481382299"] = "Which slide layout should questions to the audience during the presentation use?"
+
+-- Which slide layout should a single dependency and its countermeasures use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T483166750"] = "Which slide layout should a single dependency and its countermeasures use?"
+
+-- Layout for several recommendations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T488858884"] = "Layout for several recommendations"
+
+-- Layout for next steps
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T492677118"] = "Layout for next steps"
+
+-- Layout for disclaimers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T499992444"] = "Layout for disclaimers"
+
+-- Layout for one risk
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T520213671"] = "Layout for one risk"
+
+-- Layout for the facts of the case
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T525510334"] = "Layout for the facts of the case"
+
+-- Layout for the outlook
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T532661312"] = "Layout for the outlook"
+
+-- Which slide layout should legal consequences use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T534233457"] = "Which slide layout should legal consequences use?"
+
+-- Layout for one note
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T542913088"] = "Layout for one note"
+
+-- Layout for a key message
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T580205055"] = "Layout for a key message"
+
+-- Which slide layout should an overview of several key figures use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T591913673"] = "Which slide layout should an overview of several key figures use?"
+
+-- Which slide layout should a single key figure use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T597027606"] = "Which slide layout should a single key figure use, shown prominently?"
+
+-- Which slide layout should several passages of legal commentaries or other legal literature use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T619125822"] = "Which slide layout should several passages of legal commentaries or other legal literature use, shown together?"
+
+-- Layout for several reasons
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T642594705"] = "Layout for several reasons"
+
+-- Layout for adverse events
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T644446987"] = "Layout for adverse events"
+
+-- Layout for disputes of opinions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T654393377"] = "Layout for disputes of opinions"
+
+-- Which slide layout should an executive summary use, which sums up the presentation for decision makers?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T656187586"] = "Which slide layout should an executive summary use, which sums up the presentation for decision makers?"
+
+-- Which slide layout should several learning objectives use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T661130415"] = "Which slide layout should several learning objectives use, shown together?"
+
+-- Layout for feedback
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T696819471"] = "Layout for feedback"
+
+-- Layout for several quotes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T712009129"] = "Layout for several quotes"
+
+-- Layout for the closing slide
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T720559061"] = "Layout for the closing slide"
+
+-- Layout for several notes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T72227865"] = "Layout for several notes"
+
+-- Layout for several legal provisions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T732679023"] = "Layout for several legal provisions"
+
+-- Which slide layout should lab values use, e.g., with their reference ranges?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T775796006"] = "Which slide layout should lab values use, e.g., with their reference ranges?"
+
+-- Layout for the ethics approval
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T776275760"] = "Layout for the ethics approval"
+
+-- Which slide layout should a recommendation of a guideline use, e.g., with its level of evidence?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T779609788"] = "Which slide layout should a recommendation of a guideline use, e.g., with its level of evidence?"
+
+-- Which slide layout should ordinary slides with content use by default?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T786472161"] = "Which slide layout should ordinary slides with content use by default?"
+
+-- Layout for imaging
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T792438990"] = "Layout for imaging"
+
+-- Layout for interpretations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T805484287"] = "Layout for interpretations"
+
+-- Layout for little content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T80953305"] = "Layout for little content"
+
+-- Layout for several legal questions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T811795984"] = "Layout for several legal questions"
+
+-- Which slide layout should an outlook on what comes next use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T813908001"] = "Which slide layout should an outlook on what comes next use?"
+
+-- Layout for the change of days
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T83666001"] = "Layout for the change of days"
+
+-- Layout for solutions of exercises
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T839629486"] = "Layout for solutions of exercises"
+
+-- Layout for one result
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T839738989"] = "Layout for one result"
+
+-- Layout for calls to action
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T842816024"] = "Layout for calls to action"
+
+-- Which slide layout should lessons learned use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T843945672"] = "Which slide layout should lessons learned use?"
+
+-- Which slide layout should the diagnosis use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T847877816"] = "Which slide layout should the diagnosis use?"
+
+-- Which slide layout should several results use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T852132531"] = "Which slide layout should several results use, shown together?"
+
+-- Layout for several formulas
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T852509607"] = "Layout for several formulas"
+
+-- Which slide layout should source code use?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T875188064"] = "Which slide layout should source code use?"
+
+-- Which slide layout should several recommendations use, shown together?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T910165957"] = "Which slide layout should several recommendations use, shown together?"
+
+-- Layout for the vision
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T91142277"] = "Layout for the vision"
+
+-- Which slide layout should a single hypothesis use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T928643773"] = "Which slide layout should a single hypothesis use, shown prominently?"
+
+-- Which slide layout should a single counterargument use, shown prominently?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T932548010"] = "Which slide layout should a single counterargument use, shown prominently?"
+
+-- Which slide layout should a story use, e.g., in the storytelling of a keynote?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T935856327"] = "Which slide layout should a story use, e.g., in the storytelling of a keynote?"
+
+-- Layout for introduction rounds
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T939876765"] = "Layout for introduction rounds"
+
+-- Layout for acceptance criteria
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T959706504"] = "Layout for acceptance criteria"
+
+-- Layout for limitations
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T967847257"] = "Layout for limitations"
+
+-- Layout for an overview of milestones
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T972717018"] = "Layout for an overview of milestones"
+
+-- Layout for resources
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T976410413"] = "Layout for resources"
+
+-- Layout for one problem
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::LAYOUTPURPOSEEXTENSIONS::T980921811"] = "Layout for one problem"
+
+-- Picture: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1001457607"] = "Picture: {0}"
+
+-- Slide {0} of the template, unchanged
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1446011141"] = "Slide {0} of the template, unchanged"
+
+-- Slide {0} of the template, edited
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T2956338097"] = "Slide {0} of the template, edited"
+
+-- Picture of the template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T3520350217"] = "Picture of the template"
+
 -- Standard augmentation process
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standard augmentation process"
 
@@ -13628,6 +15431,39 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T304
 
 -- AI source selection with AI retrieval context validation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "AI-based data source selection with AI retrieval context validation"
+
+-- Pages {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T1095604049"] = "Pages {0}"
+
+-- {0}: rows {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T1424805945"] = "{0}: rows {1}"
+
+-- {0}: row {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T1620414946"] = "{0}: row {1}"
+
+-- Rows {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T2222697074"] = "Rows {0}"
+
+-- Line {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T278321977"] = "Line {0}"
+
+-- {0} passages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T344316214"] = "{0} passages"
+
+-- Lines {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T3536135902"] = "Lines {0}"
+
+-- Part {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T3742022998"] = "Part {0}"
+
+-- Row {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T4122835077"] = "Row {0}"
+
+-- Page {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T4127287940"] = "Page {0}"
+
+-- Parts {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T826267883"] = "Parts {0}"
 
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
@@ -13683,6 +15519,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2547828883"] = "Shortcut"
 -- Readable text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2618627384"] = "Readable text"
 
+-- Picture for slides
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2703341748"] = "Picture for slides"
+
+-- PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3472250354"] = "PowerPoint template"
+
 -- Media
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Media"
 
@@ -13695,8 +15537,35 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
 
+-- Image for AI models
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T791951937"] = "Image for AI models"
+
 -- Plugin archive
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T927001356"] = "Plugin archive"
+
+-- AI Studio was not able to prepare the image '{0}' for the AI, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T1345506748"] = "AI Studio was not able to prepare the image '{0}' for the AI, so it was not sent."
+
+-- The image '{0}' could not be made small enough for the selected provider, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T1463083567"] = "The image '{0}' could not be made small enough for the selected provider, so it was not sent."
+
+-- The image '{0}' could not be opened and was not sent. When the image is stored on a network drive, the drive might be unavailable.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T2022724454"] = "The image '{0}' could not be opened and was not sent. When the image is stored on a network drive, the drive might be unavailable."
+
+-- The image '{0}' does not exist anymore and was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T2330229240"] = "The image '{0}' does not exist anymore and was not sent."
+
+-- The image '{0}' is not what its file extension claims, so it was not sent. Please correct its file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T3457568536"] = "The image '{0}' is not what its file extension claims, so it was not sent. Please correct its file extension."
+
+-- The image '{0}' could not be read and was not sent. It might be damaged or transferred incompletely.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T4029166607"] = "The image '{0}' could not be read and was not sent. It might be damaged or transferred incompletely."
+
+-- The image '{0}' has too many pixels for AI Studio to prepare it, so it was not sent. Please scale the image down first.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T567941882"] = "The image '{0}' has too many pixels for AI Studio to prepare it, so it was not sent. Please scale the image down first."
+
+-- The image '{0}' uses a format which AI Studio cannot give to an AI model, so it was not sent. Please convert the image to JPG or PNG.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T568830141"] = "The image '{0}' uses a format which AI Studio cannot give to an AI model, so it was not sent. Please convert the image to JPG or PNG."
 
 -- Attempt to override instructions
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T161976090"] = "Attempt to override instructions"
@@ -13941,6 +15810,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T1738200
 -- The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T204783307"] = "The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that."
 
+-- The use of the embedding provider of this data source has been prohibited by your organization. Please select a different embedding provider in the settings of the data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2092244746"] = "The use of the embedding provider of this data source has been prohibited by your organization. Please select a different embedding provider in the settings of the data source."
+
 -- The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2186533187"] = "The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."
 
@@ -13973,12 +15845,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSTATUS::T26552229
 
 -- Completed
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSTATUS::T3968379570"] = "Completed"
-
--- Chunk {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T2544251224"] = "Chunk {0}"
-
--- Page {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T4127287940"] = "Page {0}"
 
 -- The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T103791004"] = "The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}"
@@ -14052,17 +15918,20 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::DOCUMENTRUNPROGRESS::T8042
 -- The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1214987337"] = "The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."
 
--- The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1393648320"] = "The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source."
-
 -- The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1935191670"] = "The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."
 
+-- The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. If the file was moved or renamed, edit this data source to select its new location. Once the file is back, refresh this data source. When it is gone for good, remove this data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T2268993048"] = "The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. If the file was moved or renamed, edit this data source to select its new location. Once the file is back, refresh this data source. When it is gone for good, remove this data source."
+
+-- The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. If the folder was moved or renamed, edit this data source to select its new location. Once the folder is back, refresh this data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T2692299965"] = "The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. If the folder was moved or renamed, edit this data source to select its new location. Once the folder is back, refresh this data source."
+
+-- The folder '{0}' currently appears empty. AI Studio kept the index of this data source, because the folder of a drive that is not connected can look empty. Connect the drive and refresh this data source. If you emptied the folder on purpose, remove this data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T2999277901"] = "The folder '{0}' currently appears empty. AI Studio kept the index of this data source, because the folder of a drive that is not connected can look empty. Connect the drive and refresh this data source. If you emptied the folder on purpose, remove this data source."
+
 -- The folder '{0}' could not be opened. Please check whether you are allowed to read it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3230000698"] = "The folder '{0}' could not be opened. Please check whether you are allowed to read it."
-
--- The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3722338131"] = "The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source."
 
 -- The file '{0}' could not be read. Please check whether you are allowed to read it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3924882233"] = "The file '{0}' could not be read. Please check whether you are allowed to read it."
@@ -14310,6 +16179,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2221093487"] = 
 -- Unexpected error: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2350673880"] = "Unexpected error: {0}"
 
+-- The share dialog of your operating system did not respond.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T254952756"] = "The share dialog of your operating system did not respond."
+
 -- The plugin has no local directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3284289028"] = "The plugin has no local directory."
 
@@ -14402,6 +16274,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1064148123"] = "Fail
 
 -- Failed to install update automatically. Please try again manually.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T3709709946"] = "Failed to install update automatically. Please try again manually."
+
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCECODELANGUAGES::T1041509726"] = "Text"
+
+-- Could not open the file location.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1118835751"] = "Could not open the file location."
+
+-- Could not open the file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1455637941"] = "Could not open the file location: {0}"
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3461425987"] = "Unknown error"
+
+-- Could not open the document.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3570758363"] = "Could not open the document."
+
+-- Could not open the document: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T945417289"] = "Could not open the document: {0}"
 
 -- Sources
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T2730980305"] = "Sources"
@@ -14504,6 +16394,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- To use this tool, add a mailbox to your data sources first.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLCONFIGURATION::T1547505353"] = "To use this tool, add a mailbox to your data sources first."
+
+-- To
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T1106613828"] = "To"
+
+-- Text from the attachment
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T1262266390"] = "Text from the attachment"
+
+-- Received
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T1559762898"] = "Received"
+
+-- Subject
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T2692293871"] = "Subject"
+
+-- From
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T410269077"] = "From"
+
+-- Attachments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLRESULTS::T498946337"] = "Attachments"
 
 -- Read Mail
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::READMAILTOOL::T2299936968"] = "Read Mail"
@@ -14871,6 +16779,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2222598306"
 -- Please select your security policy.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2250909198"] = "Please select your security policy."
 
+-- The use of this embedding provider has been prohibited by your organization. Please select a different embedding provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2376506873"] = "The use of this embedding provider has been prohibited by your organization. Please select a different embedding provider."
+
 -- Please acknowledge that you are aware of the cloud transcription implications.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2818048408"] = "Please acknowledge that you are aware of the cloud transcription implications."
 
@@ -14928,11 +16839,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T90753429"] 
 -- Please enter the secret necessary for authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"] = "Please enter the secret necessary for authentication."
 
--- Unsupported image format
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1398282880"] = "Unsupported image format"
-
--- File has no extension
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1555980031"] = "File has no extension"
+-- AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1578559061"] = "AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG."
 
 -- Audio files are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T2919730669"] = "Audio files are not supported yet"

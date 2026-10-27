@@ -56,6 +56,7 @@ const REPLACEABLE_ELEMENTS: [(Location, &str); 10] = [
     (Location::ConfigDirectory, SETTINGS_FILE_NAME),
     (Location::DataDirectory, "workspaces/"),
     (Location::DataDirectory, "tempChats/"),
+    (Location::DataDirectory, "databases/provenance/"),
     (Location::DataDirectory, "plugins/"),
     (Location::DataDirectory, "tokenizers/"),
     (Location::DataDirectory, "visualBriefings/"),

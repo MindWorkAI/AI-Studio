@@ -361,12 +361,13 @@ Plan for it in these settings:
 | Setting | What a partial list costs you |
 |---|---|
 | `DataApp.HiddenAssistants` | Assistants hidden by the base configuration become **visible** again |
+| `DataApp.ProhibitedProviders` | Providers prohibited by the base configuration become **usable** again |
 | `DataSourceSecuritySettings.TrustedProviderIds` | Providers trusted by the base configuration lose that status |
 | `DataApp.ExternalHttpCustomRootCertificateAllowedHosts` | Hosts of the base configuration stop trusting your root certificates |
 | `DataConfidence.CustomConfidenceScheme` | Providers left out fall back to the AI Studio default confidence |
 | `DataChat.PreselectedDataSourceIds` | Data sources preselected by the base configuration are no longer preselected |
 
-The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` in particular, because it is the only one in this list that opens something up instead of restricting it.
+The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` and `DataApp.ProhibitedProviders` in particular, because a partial list of them opens something up instead of restricting it.
 
 Two settings are the exception and add up instead of replacing:
 
@@ -424,6 +425,7 @@ Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
 - Any number of transcription providers for voice-to-text functionality
 - Any number of embedding providers for RAG
+- Providers which your organization prohibits, see [Prohibiting providers](#prohibiting-providers)
 - Any number of ERI data sources for RAG
 - Any number of profiles and chat templates, including the tools and data sources a template brings along
 - Any number of policies for the Document Analysis assistant
@@ -739,6 +741,8 @@ The export reads saved, effective settings, including organization-managed value
 
 Some tools only make sense together and form a tool collection, such as **Mailboxes** with Search Mails, Read Mail, and Count Mails. **Tool Settings** shows such a collection as one row, and its export covers all of its tools: each area names its tool, and the minimum provider confidence goes under the ID of the collection, e.g., `mailboxes`. Wherever your configuration names tools — `DataTools.DisabledToolIds`, `DataTools.MinimumProviderConfidenceByToolId`, chat templates, and document analysis policies — use the ID of the collection for them. The ID of one of its tools counts for the whole collection, so naming it switches off the whole collection or sets its confidence; of several levels set for a collection and its tools, the highest applies. Tool settings stay with each tool and keep the `"<toolId>.<fieldName>"` keys.
 
+Users can switch off tools themselves in **Tool Settings**, for example, the Confluence search when they have no Confluence. A tool they switched off appears in no tool selection, and the AI cannot use it. This choice belongs to each user and is not part of a configuration. It can only take tools away: a tool you switch off with `DataTools.DisabledToolIds` stays off, and its switch is locked.
+
 ### Complete tool export
 
 For example, save a timeout of `30`, a content limit of `12000`, an empty private-host list, and free address choice switched off for **Read Web Page**. Select its General area, **Locked settings**, and **Include minimum provider confidence**. With its default confidence requirement of `VERY_LOW`, the export is:
@@ -793,9 +797,52 @@ Writing the `DataSourceOptions` table at all is already the statement that this 
 | `SEMANTIC_SEARCH` (default) | The AI searches the data sources itself, through the tool `semantic_search`, whenever a question calls for it. No agent takes part: `AutomaticDataSourceSelection` lets the AI itself choose among all data sources it may use, and `AutomaticValidation` has no effect. |
 | `EVERY_MESSAGE` | AI Studio searches the data sources with every message, before the AI answers, with the agents for selection and validation as configured. |
 
-Semantic search only works where `semantic_search` can be offered: the model has to be able to call tools, neither `DataTools.EnableTools` nor `DataTools.DisabledToolIds` may switch it off, and the provider has to meet a minimum confidence you set for it in `DataTools.MinimumProviderConfidenceByToolId`. Otherwise, the chat searches with every message instead. A template that leaves `RetrievalMode` out gets `SEMANTIC_SEARCH`, not the chat default. That chat default is the setting `DataChat.PreselectedDataSourcesRetrievalMode`, with the same two values.
+Semantic search only works where `semantic_search` can be offered: the model has to be able to call tools, neither `DataTools.EnableTools` nor `DataTools.DisabledToolIds` may switch it off, nor may the user in **Tool Settings**, and the provider has to meet a minimum confidence you set for it in `DataTools.MinimumProviderConfidenceByToolId`. Otherwise, the chat searches with every message instead. A template that leaves `RetrievalMode` out gets `SEMANTIC_SEARCH`, not the chat default. That chat default is the setting `DataChat.PreselectedDataSourcesRetrievalMode`, with the same two values.
 
-When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools or data sources, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools, data sources, a provider, or a profile, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+
+## Chat templates with a provider, a profile, and a workspace
+
+A chat template may also decide the provider, and with it the model, and the profile a chat started with it begins with, and the workspace that keeps such chats. Use case: a template for working with mails preselects the mailbox as its data source, the provider whose confidence level the mailbox requires, a profile that suits mail work, and a workspace for these chats, so that users no longer set all of this up by hand for every chat.
+
+| What the template says | What a chat started with it does |
+|---|---|
+| no `ProviderId` at all | starts with the provider it would start with anyway |
+| `ProviderId` present | starts with that provider, if it exists and meets the confidence level required for chats |
+| no `ProfileId` at all | starts with the profile it would start with anyway |
+| `ProfileId` = `00000000-0000-0000-0000-000000000000` | starts without a profile, whatever that default says |
+| `ProfileId` present | starts with that profile, if it exists |
+| no `WorkspaceName` at all | goes where it would go anyway |
+| `WorkspaceName` present | goes into that workspace, which is created when it does not exist yet, wherever the chat would otherwise be a disappearing chat |
+
+All three are a preselection, not a lock: users change the provider and the profile in the chat as usual, and move the chat to another workspace. A provider that does not exist or is below the confidence level of chats is ignored, and the chat starts with the provider it would start with anyway. A profile that does not exist is ignored as well, and the chat starts with the default profile of the user's chat settings, which may be none. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
+
+What one template preselects does not carry over to the next one. When users switch from a template with a provider or a profile to one without, the chat starts with the default provider and the default profile of their chat settings, unless they had picked another one by hand in the meantime.
+
+The IDs may name a provider from `CONFIG["LLM_PROVIDERS"]` or a profile from `CONFIG["PROFILES"]` of the same configuration, whose IDs are the same on every computer, or one of another configuration of your organization. A chat template exported from the app carries the provider and profile IDs of the computer it was exported from, mostly the user's own, and the export starts with a comment saying so. Replace them with IDs from your configuration.
+
+The workspace goes by its name, because a workspace has an ID of its own on every computer. It fills in only where a chat would otherwise be a disappearing chat: the first chat when users open the chat page, a new chat they start outside the workspaces, and picking the template in a new chat. A chat users start in a workspace on purpose, for example, from the workspace list, stays there, and so does a chat of an assistant chat launcher that names a workspace of its own. A chat in the workspace of its template is no such choice: when users pick another template there, the new chat goes where that template sends it. While users have switched workspaces off in their workspace settings, the template names no workspace.
+
+On the chat page, the chat moves into the workspace with its first message, and only then is the workspace created when it does not exist yet. Opening the chat page or trying out a template creates no workspace, so one that users deleted stays gone until they actually start a chat with the template. An assistant chat launcher creates the workspace right away, because it opens its chat at once.
+
+## Attached files which change later
+
+A chat reads a document attached to a message once, when the message is sent for the first time, and keeps its text. Every later message of the chat sends the AI that same text, also when the file changed or is gone by now, and users can look up what the AI received. Users who want the AI to work with the current state of their files switch on reading changed files again in the chat options. The AI then receives the new content with the next message, and viewing the attachment shows what was sent last.
+
+| Setting | Effect |
+|---|---|
+| `DataChat.ReadChangedAttachmentsAgain` | `true` reads an attached file again when it changed since it was sent. A file which is gone keeps the text it was sent with. Starts as `false`. |
+
+## Where a chat may send data after searching data sources
+
+The AI searches the data sources of a chat, local files and folders as well as external data sources (ERI servers), either itself through Semantic Search or with every message. Each data source decides where a chat may still send data once the AI found something in it, with the same levels as a mailbox, see [Where a chat may send data](#where-a-chat-may-send-data). New data sources start with `ONLY_LINKS_FROM_CHAT`, and so do the ones users added before the setting existed. An external data source whose security policy is `SELF_HOSTED` always gets `ONLY_CONFIGURED_SERVICES`, since its data must not leave your infrastructure through a tool either. Your Confluence wiki and the hosts in `read_web_page.allowedPrivateHosts` stay readable on that level, so the links of such a data source into your intranet still work, while a link to a public page does not.
+
+| Setting | Effect |
+|---|---|
+| `DataSourceSecuritySettings.MinimumOutboundDataRestriction` | The least strict level a data source may have. A data source set to a less strict one gets your level whenever its passages reach a chat, and its dialog no longer offers the less strict levels. |
+| `OutboundDataRestriction` in an entry of `CONFIG["DATA_SOURCES"]` | The level of an external data source your configuration provides. Without it, the data source gets `ONLY_LINKS_FROM_CHAT`, and a value AI Studio cannot read counts as `ONLY_CONFIGURED_SERVICES`. Older versions of AI Studio ignore the field. |
+
+Only the data sources whose passages reached the AI count, so a search which found nothing leaves the chat as it was. A chat which found something before keeps the level it got then. When a chat searches its data sources with every message, the web search ends with the first message which finds something in a restricted data source.
 
 ## Mailboxes
 
@@ -1107,6 +1154,207 @@ Two things to keep in mind when you prepare the icon:
 - **Your organization holds the rights.** Whatever icon you ship -- for a provider through
   `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
   responsible for holding the rights to use it.
+
+## Prohibiting providers
+
+Some organizations must not send any data to certain providers, for example, for legal reasons. List
+such providers in your configuration, and AI Studio uses them neither for chats nor for embeddings or
+transcriptions:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "<PROVIDER_KEY>" }
+```
+
+Replace `<PROVIDER_KEY>` with the keys of the providers you prohibit, as listed for
+`DataConfidence.CustomConfidenceScheme` in the example configuration. A name AI Studio does not know is
+ignored and logged as a warning.
+
+- **A prohibition names the operator, not the models.** Prohibiting the API of a model maker keeps AI
+  Studio away from that API. The models of that maker may remain available through a hub which offers
+  the models of several makers, and on a server of your own. Prohibit these as well if you need to.
+- **Users still find the provider.** When they add a provider and select a prohibited one, the dialog
+  explains that your organization does not allow it instead of showing the form, and nothing can be
+  saved.
+- **Providers set up before stay.** They remain in the settings, marked as prohibited, and users can
+  delete them. AI Studio no longer offers them and sends nothing to them: a chat which used one
+  continues with another provider, and a data source whose embedding provider is prohibited is
+  neither indexed nor searched until somebody selects another one. Once you lift the prohibition,
+  these providers work again.
+- **A prohibited provider is untrusted.** Its confidence level is always `UNTRUSTED`, whatever the
+  confidence scheme says. A level which `DataConfidence.CustomConfidenceScheme` names for it is ignored
+  and logged as a warning, and users cannot change it in the app. Once you lift the prohibition, that
+  level applies again.
+- **The list replaces, it does not add up.** A configuration with a higher priority has to repeat the
+  providers of the base configuration, see [Settings that hold a list or a table](#settings-that-hold-a-list-or-a-table).
+- **Older versions ignore the setting.** It is available since AI Studio v26.10.1. Until all devices
+  run that version, you can in addition use the `CUSTOM` confidence scheme, set the provider to
+  `UNTRUSTED` there, and enforce a global minimum confidence level of at least `VERY_LOW`.
+
+## Shipping the PowerPoint template of the Slide Assistant
+
+The Slide Assistant plans slides for the layouts of a PowerPoint template (.pptx or .potx), and it
+creates PowerPoint files (.pptx) in that template's design. OpenDocument presentations (.odp, .otp)
+cannot serve as a template yet. Instead of placing your corporate template on a network share, you
+can ship it with your configuration plugin. Put the file next to your `plugin.lua`, or into a folder
+below it, and give its path relative to your `plugin.lua`:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "Corporate.potx"
+CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
+```
+
+AI Studio stores the full path of the file inside the plugin directory. With `AllowUserOverride`,
+your template is preselected, and users may still choose another one; without it, the template is
+locked.
+
+Like the footer text, the template is one of the preselections of the Slide Assistant, so it applies
+only while preselection is enabled, which it is by default. Users who switch preselection off start
+without your template. To make sure they cannot do without it, lock the preselection as well:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
+```
+
+The relative path must stay inside the plugin directory. AI Studio rejects `..` segments and links
+pointing out of that directory. A missing or rejected file is never fatal: AI Studio logs a warning
+and treats the template as if your plugin did not configure it. Users then keep the template they
+chose themselves, or have none, and the Slide Assistant plans an outline only. An absolute path, e.g.,
+on a network share, works as well, as long as every computer can read it.
+
+A locked template which a computer cannot read at the moment, e.g., because the network share cannot
+be reached, does not block the Slide Assistant either. It tells users that the template of their
+organization is not available right now and plans an outline only. Once the template can be read
+again, the Slide Assistant uses it the next time users open it.
+
+Keep in mind that every client downloads the whole configuration plugin, template included, whenever
+AI Studio starts and whenever your configuration changes.
+
+By default, a new slide leaves out every placeholder of its layout which it has no content for, so
+that no prompt text such as "Click to add text" remains. When your users rather insert pictures of
+their own, let new slides keep the picture placeholders they have no picture for. PowerPoint shows
+them while editing and hides them in the slide show:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders"] = true
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
+```
+
+A slide shows only as much text as its layout has room for. Set the maximum number of bullet points
+per slide, all text slots of a slide together, from 1 to 7, so that it fits the layouts of your
+template. 0 sets no maximum, and the LLM decides by the room of each layout. AI Studio logs a warning
+for any other value and ignores it:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide"] = 5
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide.AllowUserOverride"] = true
+```
+
+You can also tell the Slide Assistant which layout of your template to use for certain kinds of slides,
+e.g., which layout opens each chapter. Give each layout by its name in the slide master of your
+template:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts"] = {
+    ["TITLE"] = "Title Slide",
+    ["CHAPTER"] = "Section Header",
+    ["CONTENT"] = "Title and Content",
+}
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
+```
+
+The kinds of slides come in seven areas:
+
+- **Structure and framing:** `TITLE`, `TABLE_OF_CONTENTS`, `AGENDA`, `SPEAKER`, `SPEAKERS`, `CHAPTER`,
+  `CHAPTER_SUMMARY`, `Q_AND_A`, `ACKNOWLEDGEMENTS`, `REFERENCES`, `CLOSING`, `APPENDIX`, `IMPRINT`
+- **General content:** `CONTENT`, `LITTLE_CONTENT`, `MUCH_CONTENT`, `KEY_MESSAGE`, `EXECUTIVE_SUMMARY`,
+  `CONTEXT`, `RETROSPECTIVE`, `PICTURE`, `PICTURES`, `TABLE`, `COMPARISON`, `PROS_AND_CONS`, `TIMELINE`,
+  `PROCESS`, `QUOTE`, `QUOTES`, `CODE`, `FORMULA`, `FORMULAS`, `CHECKLIST`, `NOTE`, `NOTES`,
+  `AUDIENCE_QUESTION`, `FEEDBACK`, `DISCLAIMER`, `SUMMARY`, `OUTLOOK`
+- **Teaching and workshops:** `INTRODUCTION_ROUND`, `EXPECTATIONS`, `GROUND_RULES`,
+  `ORGANIZATIONAL_NOTES`, `LEARNING_OBJECTIVE`, `LEARNING_OBJECTIVES`, `EXAMPLE`, `EXAMPLES`,
+  `STEP_BY_STEP`, `EXERCISE`, `EXERCISE_SOLUTION`, `GROUP_WORK`, `POLL`, `DISCUSSION_PROMPT`,
+  `REFLECTION`, `BREAK`, `DAY_CHANGE`
+- **Business and projects:** `VISION`, `GOAL`, `GOALS`, `NARRATIVE`, `STORY`, `PROBLEM`, `PROBLEMS`,
+  `OPPORTUNITY`, `OPPORTUNITIES`, `SWOT`, `USE_CASE`, `USE_CASES`, `USER_STORY`, `USER_STORIES`,
+  `ACCEPTANCE_CRITERIA`, `KPI`, `KPIS`, `FORECAST`, `SCENARIO`, `SCENARIOS`, `RISK`, `RISKS`,
+  `DEPENDENCY`, `DEPENDENCIES`, `RESOURCES`, `TEAM`, `PARTNERS`, `ROADMAP`, `MILESTONE`, `MILESTONES`,
+  `WORK_PACKAGE`, `WORK_PACKAGES`, `PROJECT_STATUS`, `LESSONS_LEARNED`, `REASON`, `REASONS`,
+  `RECOMMENDATION`, `RECOMMENDATIONS`, `DECISION_REQUEST`, `NEXT_STEPS`, `ACTION_ITEMS`, `CALL_TO_ACTION`
+- **Science and research:** `STATE_OF_RESEARCH`, `RESEARCH_GAP`, `RESEARCH_QUESTION`,
+  `RESEARCH_QUESTIONS`, `DEFINITION`, `DEFINITIONS`, `THEOREM`, `PROOF`, `ASSUMPTION`, `ASSUMPTIONS`,
+  `DELIMITATION`, `DELIMITATIONS`, `THESIS`, `THESES`, `HYPOTHESIS`, `HYPOTHESES`, `ARGUMENT_CHAIN`,
+  `COUNTERARGUMENT`, `COUNTERARGUMENTS`, `METHODOLOGY`, `STUDY_DESIGN`, `EXPERIMENTAL_SETUP`, `DATA`,
+  `RESULT`, `RESULTS`, `INTERPRETATION`, `LIMITATIONS`, `CONTRIBUTION`, `FUNDING`
+- **Medicine:** `PATIENT_CASE`, `MEDICAL_HISTORY`, `CLINICAL_FINDINGS`, `IMAGING`, `LAB_VALUES`,
+  `DIAGNOSIS`, `DIFFERENTIAL_DIAGNOSES`, `THERAPY`, `MEDICATION`, `COURSE_OF_DISEASE`, `PROGNOSIS`,
+  `ADVERSE_EVENTS`, `GUIDELINE_RECOMMENDATION`, `STUDY_POPULATION`, `ENDPOINTS`, `ETHICS_APPROVAL`
+- **Law:** `FACTS_OF_THE_CASE`, `LEGAL_QUESTION`, `LEGAL_QUESTIONS`, `LEGAL_PROVISION`,
+  `LEGAL_PROVISIONS`, `EXAMINATION_SCHEME`, `DISPUTE_OF_OPINIONS`, `POSITIONS_OF_THE_PARTIES`,
+  `PIECE_OF_EVIDENCE`, `PIECES_OF_EVIDENCE`, `RULING`, `RULINGS`, `LEGAL_COMMENTARY`, `LEGAL_COMMENTARIES`,
+  `CONTRACT_CLAUSE`, `CONTRACT_CLAUSES`, `LEGAL_CONSEQUENCES`, `DEADLINES`
+
+A kind in the singular, e.g., `RISK`, shows one item prominently; its plural, e.g., `RISKS`, shows
+several items together. For a kind you leave out, the LLM chooses the layout
+itself, and so it does for a name your template lacks. A layout says how such a slide looks, not
+whether the presentation has one; that follows from the content. Only for `TABLE_OF_CONTENTS`,
+`Q_AND_A`, `ACKNOWLEDGEMENTS`, `REFERENCES`, `CLOSING`, and `IMPRINT` does a layout also add such a
+slide to every presentation. The LLM fills an imprint only with what the content, the important
+aspects, or the profile of the user state, and the current date.
+
+The layouts are preselections as well, so they apply only while preselection is enabled, and the
+table applies as a whole: users either keep it or, with `AllowUserOverride`, change it as they like.
+
+When your template carries slides of its own, e.g., a title slide with your logo or a closing slide
+with your contact details, you can also preselect what the presentation does with them. By default,
+it leaves them out. Number the slides as they come in the file, starting with 1 and counting hidden
+slides:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses"] = {
+    [1] = "KEEP",
+    [4] = "EDIT",
+}
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses.AllowUserOverride"] = true
+```
+
+`OMIT` leaves a slide out, `KEEP` keeps it as it is, and `EDIT` lets the LLM write new content into
+it. A slide without room for content stays unchanged instead, and a slide you do not name is left
+out. AI Studio logs a warning for an entry it cannot read, e.g., a number below 1 or an unknown
+option, and passes it over. These choices belong to the template you preselect: when users choose
+another template, they do not apply. Like the layouts, they apply only while preselection is
+enabled, and the table applies as a whole.
+
+## Shipping the picture library of the Slide Assistant
+
+The Slide Assistant can choose pictures and icons for the slides from a folder, e.g., the picture
+library of your organization. The LLM reads only the names of the pictures, never the pictures
+themselves, so clear names such as `rocket-launch.jpg` help. Only PNG and JPEG pictures count; the
+assistant leaves out every other file, SVG icons included. A picture whose name, or the name of one of
+its folders, starts with `icon` counts as an icon, which may appear on several slides. This includes
+the folder you configure, so a folder `Icons` holds icons only. From a folder with more than 5,000
+pictures, the LLM gets a random 5,000 of them for each planning.
+
+Like the template, you can ship the folder with your configuration plugin and give its path relative
+to your `plugin.lua`, under the same rules: no `..` segments and no links pointing out of the plugin
+directory. An absolute path, e.g., on a network share, works as well, as long as every computer can
+read it:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath"] = "Pictures"
+CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath.AllowUserOverride"] = true
+```
+
+With `AllowUserOverride`, your folder is preselected, and users may choose another one or none;
+without it, the folder is locked. Like the template, the folder is a preselection, so it applies only
+while preselection is enabled. A missing folder in the plugin, or a rejected path, is never fatal: AI
+Studio logs a warning and treats the folder as if your plugin did not configure it. A locked folder
+which a computer cannot read at the moment, e.g., because the network share cannot be reached, does
+not block the Slide Assistant either. It tells users that the picture library of their organization
+is not available right now and plans the slides without it.
+
+Keep in mind that every client downloads the whole configuration plugin, pictures included, whenever
+AI Studio starts and whenever your configuration changes. For a large picture library, a network
+share is the better place.
 
 ## Labeling AI-generated content
 

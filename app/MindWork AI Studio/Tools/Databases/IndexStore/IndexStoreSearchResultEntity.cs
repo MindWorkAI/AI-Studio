@@ -20,6 +20,20 @@ internal sealed class IndexStoreSearchResultEntity
 
     public int? PageNumber { get; set; }
 
+    public int? EndPageNumber { get; set; }
+
+    public string? SheetName { get; set; }
+
+    public int? StartRow { get; set; }
+
+    public int? EndRow { get; set; }
+
+    public int? StartLine { get; set; }
+
+    public int? EndLine { get; set; }
+
+    public int? AttachmentPosition { get; set; }
+
     public int ChunkIndex { get; set; }
 
     public string ChunkText { get; set; } = string.Empty;

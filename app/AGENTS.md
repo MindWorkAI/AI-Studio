@@ -32,8 +32,10 @@ Key structure:
 - **Prompt injection reports** - The user hears once per action about what the filter removed, as soon as that action ends. Content which belongs to an action carries its scope from `PromptInjectionGuardService.BeginAction` down to where it is read or filtered; whatever is filtered without a scope is reported right away. Pass the scope as a parameter, never through a field or an `AsyncLocal`: the service serves the whole app, and the message bus delivers to other receivers in the execution context of whoever sends.
 - **Paths in stored data** - A stored path to a file which AI Studio keeps below the data directory, such as a transcript or a tokenizer copy, is relative to that directory, so that a backup or a copy of the data directory works on another computer, under another user name, or on another OS. Mark such a property with `[JsonConverter(typeof(DataDirectoryRelativePathConverter))]`, for a positional record parameter with `[property: ...]`; in memory, the path stays absolute. Better still, derive the path from IDs and store none, as `VisualBriefingStore` does. Paths to files of the user stay absolute. Chats stored before v26.10.1 are migrated by a compatibility shim, see `documentation/compatibility-shims/2026-10-relative-data-paths.md`.
 - **New files and folders in the data or configuration directory** - Whoever adds a file or folder directly to the data or configuration directory, or below `plugins/` or `databases/` one which needs a decision of its own, lists it in `DataBackupContents.ENTRIES`: as part of a backup, or with the reason a backup leaves it out. A backup takes along only what is listed as included, and a restore replaces only that. An entry included in a backup also goes into `REPLACEABLE_ELEMENTS` in `runtime/src/data_restore.rs`; otherwise the runtime refuses to restore it. The folder panel on the information page shows the list to users who back up these folders with a tool of their own.
+- **JSON in model answers** - Read the JSON part of a model answer with `ModelAnswerJson`, never with a scanner of your own. It skips the prose and code fences around the JSON but checks nothing, so broken JSON reaches the deserializer unchanged and its message can go back to the model.
 - **Encryption** - Initialized before Rust service is marked ready
 - **Debug environment** - Reads `startup.env` file with IPC credentials
+- **Static files and the browser cache** - When the developer starts the app from Rider, the embedded browser of Tauri keeps the static files under `wwwroot/`, such as `app.css` or a script, in its cache. The app then still shows the old file, and a change seems not to work. Whenever you changed such a file, tell the developer to clear that cache through the developer tools of the embedded browser before testing. Users of a release are not affected.
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 
 ## Tests
@@ -82,7 +84,9 @@ configuration plugin provides and how to add each of them.
 
 **Documentation:** `documentation/Tools.md`
 
-Selections, `DataTools.DisabledToolIds`, and the minimum provider confidence name tool collections; a tool outside a declared collection forms one under its own ID, and the ID of a tool inside one stands for its whole collection. Normalize a selection with `ToolRegistry.NormalizeSelection`, and expand it into tools with `ToolRegistry.ExpandSelection` only where the view of the model counts.
+Selections, `DataTools.DisabledToolIds`, `DataTools.UserDisabledToolIds`, and the minimum provider confidence name tool collections; a tool outside a declared collection forms one under its own ID, and the ID of a tool inside one stands for its whole collection. Normalize a selection with `ToolRegistry.NormalizeSelection`, and expand it into tools with `ToolRegistry.ExpandSelection` only where the view of the model counts.
+
+Build a list of tools for a component with `ToolRegistry.GetCatalogAsync(Components)`, never from the definitions: it leaves out the tools the user switched off. Whether a tool may be used at all is answered by `ToolRegistry.IsToolActive`, which checks what the organization and what the user switched off. A field which lets somebody change a stored selection shows it through `ToolRegistry.LeaveOutSwitchedOffByUser` and stores the change through `ToolRegistry.KeepSwitchedOffByUser`, so a tool switched off only hides and comes back when switched on again. See "Switched-Off Tools" in `documentation/Tools.md`.
 
 Code which decides something on behalf of a request — whether the classic RAG process steps back, say — asks `ToolRegistry.GetOfferBlockReasonAsync` or `ToolRegistry.GetEffectiveRetrievalModeAsync` with the provider settings of the request (`IProvider.CreateSettingsProvider`), never a check of its own: two answers which drift apart leave a chat searching nothing or twice.
 
@@ -103,7 +107,7 @@ knowledge.
 RAG is available as a beta preview feature. Architecture:
 - **External Retrieval Interface (ERI)** - Contract for integrating external data sources
 - **Data Sources** - Local files and external data via ERI servers
-- **Two ways to search** - By default, the chat model searches the data sources itself through the tool `semantic_search`, whenever a question calls for it. The classic process (`AISrcSelWithRetCtxVal`) searches them with every message instead, when the user chose so per chat (`DataSourceOptions.RetrievalMode`) or whenever the tool cannot be offered. `ToolRegistry.GetEffectiveRetrievalModeAsync` decides between the two; pass its answer to `DataSourceService`, because the agents only count as providers that see the data when they actually run. See "Searching Data Sources" in `documentation/Tools.md`.
+- **Two ways to search** - By default, the chat model searches the data sources itself through the tool `semantic_search`, whenever a question calls for it. The classic process (`AISrcSelWithRetCtxVal`) searches them with every message instead, when the user chose so per chat (`DataSourceOptions.RetrievalMode`) or whenever the tool cannot be offered. `ToolRegistry.GetEffectiveRetrievalModeAsync` decides between the two; pass its answer to `DataSourceService`, because the agents only count as providers that see the data when they actually run. Both ways decide where a chat may still send data once their passages reached it through `DataSourceRequirements.Of`, never with a check of their own: a way which demands less leaves the other one open. See "Searching Data Sources" in `documentation/Tools.md`.
 - **Agents** - AI agents select data sources and validate retrieval quality, in the classic process only
 - **Embedding providers** - Support for various embedding models
 - **Vector database** - Qdrant Edge, embedded in the Rust runtime; see "Databases" below
@@ -135,6 +139,14 @@ active language plugin. Storage sizes are the exception: they keep using the byt
 
 **Area guide:** `app/MindWork AI Studio/Tools/Databases/AGENTS.md`, with both stores and what to keep in
 mind when working on them, EF Core migrations included.
+
+## Slide Assistant and PowerPoint
+
+The Slide Assistant plans slides for the layouts of a PowerPoint template and writes the
+presentation with the Open XML SDK (`DocumentFormat.OpenXml`), in `app/MindWork AI Studio/Tools/PowerPoint/`.
+
+**Area guide:** `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md`, with how a presentation comes about
+and the rules which are easy to break.
 
 ## Enterprise IT Support
 

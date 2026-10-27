@@ -83,7 +83,7 @@ public sealed class MailboxIndexSchemaTests
 
         await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "MAILBOX", "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "signature", "source-hash", 3, token);
         await store.Client.UpsertFileAsync(DATA_SOURCE_ID, new EmbeddingStateFile(MAIL_ID, MAIL_KEY, "Quarterly report", MAIL_KEY, "mail", "fingerprint", 2048, now, now, now, 1), token);
-        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, "fingerprint", 0), MAIL_ID, null, 0, "From: Alice. Subject: Quarterly report.", now)], token);
+        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, "fingerprint", 0), MAIL_ID, null, null, 0, "From: Alice. Subject: Quarterly report.", now)], token);
 
         await using (var context = store.CreateContext())
         {

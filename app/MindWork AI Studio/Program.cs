@@ -177,6 +177,7 @@ internal sealed class Program
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<AIGeneratedContentDisclosureService>();
         builder.Services.AddSingleton<PromptInjectionGuardService>();
+        builder.Services.AddSingleton<ModelImageService>();
         builder.Services.AddSingleton<ToolSettingsService>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
@@ -234,6 +235,7 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<TranscriptStagingCleanupService>();
+        builder.Services.AddHostedService<ProvenanceCleanupService>();
         builder.Services.AddHostedService<DataRestoreFollowUpService>();
 
         // Compatibility shim, see documentation/compatibility-shims/2026-10-relative-data-paths.md. Remove after 2027-04-14:
@@ -244,7 +246,7 @@ internal sealed class Program
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
-        builder.Services.AddScoped<NativeShareService>();
+        builder.Services.AddSingleton<NativeShareService>();
         builder.Services.AddScoped<PluginShareService>();
 
         //

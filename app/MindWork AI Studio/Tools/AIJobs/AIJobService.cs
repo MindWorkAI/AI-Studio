@@ -255,6 +255,14 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             var provider = request.ProviderSettings.CreateProvider();
             var chatThread = request.ChatThread;
 
+            // Checked on its own, so that the user learns what to change:
+            if (settingsManager.IsProviderProhibited(request.ProviderSettings.UsedLLMProvider))
+            {
+                logger.LogError("The provider of chat '{ChatId}' is prohibited by the organization. Skipping the AI process.", chatThread.ChatId);
+                await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, TB("The use of this provider has been prohibited by your organization. Please select a different provider."));
+                return;
+            }
+
             if (!chatThread.IsLLMProviderAllowed(provider))
             {
                 logger.LogError("The provider is not allowed for chat '{ChatId}' due to data security reasons. Skipping the AI process.", chatThread.ChatId);
@@ -295,6 +303,10 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
             }
 
+            token.ThrowIfCancellationRequested();
+
+            // Read each attached document once, before the request sends it, see ChatThread.StoreAttachedDocumentsAsync:
+            await chatThread.StoreAttachedDocumentsAsync(settingsManager.ConfigurationData.Chat.ReadChangedAttachmentsAgain);
             token.ThrowIfCancellationRequested();
 
             var lastStreamingEvent = DateTimeOffset.MinValue;
@@ -362,6 +374,13 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         aiText.EndToolRun();
 
         RemoveEmptyAIResponse(state);
+
+        //
+        // Before the last checkpoint, so that the stored chat refers to what the AI received instead
+        // of holding it. An answer which was removed for being empty keeps nothing:
+        //
+        if (request.ChatThread.Blocks.Any(block => ReferenceEquals(block.Content, aiText)))
+            await aiText.StoreReceivedContentAsync(request.ChatThread.ChatId);
 
         lock (state.SyncRoot)
         {
@@ -453,12 +472,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             if (state.IsCompletionStarted || token.IsCancellationRequested || state.ChatGenerationRequest is null)
                 return false;
 
-            var aiText = state.ChatGenerationRequest.AIText;
-            aiText.InitialRemoteWait = false;
-            aiText.IsStreaming = true;
-            aiText.Text += contentStreamChunk;
-            aiText.Sources.MergeSources(contentStreamChunk.Sources);
-            aiText.RecordReportedUsage(contentStreamChunk.Usage, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
+            state.ChatGenerationRequest.AIText.ApplyStreamChunk(contentStreamChunk, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
 
             if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {

@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 
+using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Settings.DataModel;
@@ -38,6 +39,12 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should we enable spellchecking for all input fields?
     /// </summary>
     public bool EnableSpellchecking { get; set; }
+
+    /// <summary>
+    /// Should the message about an exported file close after a few seconds? When false, it stays until
+    /// the user closes it, so that its buttons to the file remain at hand.
+    /// </summary>
+    public bool CloseExportMessagesAutomatically { get; set; }
 
     /// <summary>
     /// If and when we should look for updates.
@@ -193,6 +200,17 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
 
     /// <summary>
+    /// The providers an organization prohibited, for LLMs, embeddings, and transcriptions alike.
+    /// </summary>
+    /// <remarks>
+    /// A prohibition names the operator of an API, not a family of models: prohibiting the API of a
+    /// model maker leaves its models reachable through a hub or a self-hosted server. Providers the
+    /// user set up before stay in the settings, so they are back once the prohibition ends, but
+    /// AI Studio neither offers nor contacts them, see SettingsManager.IsProviderProhibited.
+    /// </remarks>
+    public HashSet<LLMProviders> ProhibitedProviders { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ProhibitedProviders, []);
+
+    /// <summary>
     /// Should the user be allowed to add mailboxes?
     /// </summary>
     /// <remarks>
@@ -337,7 +355,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// Settings for indexing local data sources.
     /// </summary>
-    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
+    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new(x => x.App.DataSourceIndexing);
 
     /// <summary>
     /// List of assistants that should be hidden from the UI.

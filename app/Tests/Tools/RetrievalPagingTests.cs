@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.RAG;
 
 namespace AIStudio.Tests.Tools;
@@ -138,8 +140,34 @@ public sealed class RetrievalPagingTests
             Assert.That(secondPage.Matches, Is.EqualTo(new[] { "c", "d" }));
             Assert.That(secondPage.HasMore, Is.True);
             Assert.That(thirdPage.Matches, Is.EqualTo(new[] { "e" }));
-            Assert.That(thirdPage.HasMore, Is.False, "An ERI server which found fewer than asked for ends the paging.");
+            Assert.That(thirdPage.HasMore, Is.False, "A channel which found fewer than asked for ends the paging.");
         });
+    }
+
+    [TestCase((ushort)1)]
+    [TestCase((ushort)10)]
+    [TestCase((ushort)500)]
+    public void AnERIDataSourceHasASinglePage(ushort maxMatches)
+    {
+        IDataSource source = new DataSourceERI_V1 { Id = "33333333-3333-3333-3333-333333333333", Name = "Intranet", MaxMatches = maxMatches };
+
+        Assert.That(source.GetLastPage(), Is.EqualTo(1), "ERI v1 knows no offset, and a server which allows only the configured number of matches would refuse every further page.");
+    }
+
+    [Test]
+    public void ALocalDataSourcePagesAsItsPageSizeAllows()
+    {
+        IDataSource source = new DataSourceLocalDirectory { Id = "11111111-1111-1111-1111-111111111111", Name = "Handbook", MaxMatches = 10 };
+
+        Assert.That(source.GetLastPage(), Is.EqualTo(RetrievalPaging.GetLastPage(10)));
+    }
+
+    [Test]
+    public void AnERIDataSourceRefusesAFurtherPage()
+    {
+        var source = new DataSourceERI_V1 { Id = "33333333-3333-3333-3333-333333333333", Name = "Intranet", MaxMatches = 10 };
+
+        Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await source.RetrieveDataAsync("query", 2, new AIStudio.Chat.ChatThread()));
     }
 
     private static (IReadOnlyList<string> Matches, bool HasMore) Merge(string[] first, string[] second, int page)

@@ -134,8 +134,10 @@ public partial class VisualBriefingAssistant
         // why it gets no notice that AI generated it: any change would make it a version nobody checked.
         //
         await using var source = verified.Value.Stream;
-        await using var destination = new FileStream(response.SaveFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 65_536, true);
-        await source.CopyToAsync(destination);
+        await using var feedback = new FileExportFeedback();
+        feedback.ShowRunning(response.SaveFilePath);
+        if (!await this.TryWriteExportAsync(source, response.SaveFilePath))
+            return;
 
         var exportedVersion = this.selectedBriefing.Versions.First(version =>
             version.RevisionId == this.selectedRevisionId);
@@ -150,7 +152,56 @@ public partial class VisualBriefingAssistant
             exportedVersion.DocumentHash,
             source.Length);
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, T("The visual briefing was exported.")));
+        await feedback.SucceededAsync(Icons.Material.Filled.FileDownload, T("The visual briefing was exported."), response.SaveFilePath, true);
+    }
+
+    /// <summary>
+    /// Writes an exported version into the file the user chose, and tells the user when that fails.
+    /// </summary>
+    /// <remarks>
+    /// The file is written over rather than removed and created anew, which the Flatpak would not allow.
+    /// A file which cannot even be opened, e.g., because another program holds it, stays as it is. Once
+    /// writing has begun, a failure removes the file: half a briefing is worse than none.
+    /// </remarks>
+    /// <param name="source">The verified version to export.</param>
+    /// <param name="targetPath">The file the user chose.</param>
+    /// <returns>True, when the file was written completely.</returns>
+    private async Task<bool> TryWriteExportAsync(Stream source, string targetPath)
+    {
+        FileStream destination;
+        try
+        {
+            destination = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None, 65_536, true);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, "The visual briefing could not be exported, because the file '{FilePath}' cannot be opened for writing.", targetPath);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.FileDownload, T("The visual briefing could not be exported. Please check that the target file is not open in another program.")));
+            return false;
+        }
+
+        try
+        {
+            await using (destination)
+                await source.CopyToAsync(destination);
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, "Writing the visual briefing into the file '{FilePath}' failed.", targetPath);
+            try
+            {
+                File.Delete(targetPath);
+            }
+            catch (Exception deleteFailure)
+            {
+                this.Logger.LogWarning(deleteFailure, "The incomplete export '{FilePath}' cannot be deleted.", targetPath);
+            }
+
+            await this.MessageBus.SendError(new(Icons.Material.Filled.FileDownload, T("The visual briefing could not be written completely.")));
+            return false;
+        }
     }
 
     /// <summary>

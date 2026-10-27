@@ -276,6 +276,13 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 -- }
 
 -- ERI v1 data sources for retrieval-augmented generation:
+--
+-- "OutboundDataRestriction" is optional and decides where a chat may still send data once the
+-- AI found something in the data source: ONLY_CONFIGURED_SERVICES, ONLY_LINKS_FROM_CHAT, or
+-- UNRESTRICTED, see DataSourceSecuritySettings.MinimumOutboundDataRestriction below. Without it,
+-- the data source gets ONLY_LINKS_FROM_CHAT, and a value AI Studio cannot read counts as
+-- ONLY_CONFIGURED_SERVICES. A data source with the security policy SELF_HOSTED always gets
+-- ONLY_CONFIGURED_SERVICES, whatever it says here.
 CONFIG["DATA_SOURCES"] = {}
 
 -- Example: ERI v1 data source with a shared access token.
@@ -288,6 +295,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["AuthMethod"] = "TOKEN",
 --     ["Token"] = "ENC:v2:<base64-encoded encrypted token>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -304,6 +312,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Username"] = "<shared username>",
 --     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -319,6 +328,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
 --     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["OutboundDataRestriction"] = "ONLY_CONFIGURED_SERVICES",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -453,6 +463,34 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddLLMProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
+
+-- Prohibit providers, e.g., when your organization must not send any data to them. The list
+-- applies to LLM providers, embedding providers, and transcription providers alike. Allowed
+-- values are the provider keys of DataConfidence.CustomConfidenceScheme, see below. A name
+-- AI Studio does not know is ignored and logged as a warning.
+--
+-- A prohibition names the operator of an API, not a family of models: prohibiting the API of
+-- a model maker keeps AI Studio away from that API, but the models of that maker may remain
+-- available through a hub which offers the models of several makers, or on a server of your
+-- own. Prohibit these as well if you need to.
+--
+-- Users can still select a prohibited provider when they add one, but the dialog then only
+-- explains that your organization does not allow it. Providers which users set up before stay
+-- in their settings, marked as prohibited, and users can delete them. AI Studio no longer
+-- offers or contacts them. Once you lift the prohibition, they work again.
+--
+-- A prohibited provider is always UNTRUSTED, whatever the confidence scheme says. A level which
+-- DataConfidence.CustomConfidenceScheme names for it is ignored and logged as a warning, and
+-- users cannot change it in the app. Once you lift the prohibition, that level applies again.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces the whole list.
+-- A configuration which prohibits one more provider has to repeat the providers of the base
+-- configuration. Otherwise, these become usable again.
+--
+-- Available since AI Studio v26.10.1. Older versions ignore this setting. Until all devices
+-- run that version, you can in addition use the CUSTOM confidence scheme, set the provider to
+-- UNTRUSTED there, and enforce a global minimum confidence level of at least VERY_LOW.
+-- CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "<PROVIDER_KEY>" }
 
 -- Configure the permission to add mailboxes. A mailbox is a data source, not a provider, so
 -- DataApp.AllowUserToAddProvider does not apply to it. When set to false, the menu entry for
@@ -625,6 +663,14 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: NO_DATA_SOURCES, APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior"] = "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS"
 --
+-- Configure whether a chat reads an attached file again when the file changed since it was sent.
+-- By default, every later message of a chat sends the AI the content a file had when it was first
+-- sent, also when the file changed or is gone by now, and users can look up what the AI received.
+-- When enabled, the AI receives the new content of a changed file with the next message. A file
+-- which is gone keeps the content it was sent with either way.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataChat.ReadChangedAttachmentsAgain"] = true
+--
 -- Allow users to change any configured chat default locally.
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
@@ -637,6 +683,118 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.ReadChangedAttachmentsAgain.AllowUserOverride"] = true
+
+-- Configure defaults for the Slide Assistant.
+-- Preselection must be enabled for the template, the picture library, and the other defaults
+-- below to take effect. It is enabled by default; lock it as well to make sure users cannot do without your
+-- template.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions"] = true
+--
+-- Configure the PowerPoint template of the Slide Assistant.
+-- The slides then use the layouts of this presentation or template (.pptx, .potx), and users
+-- can create a PowerPoint file from the result. Without a template, the assistant plans an
+-- outline only.
+--
+-- The simplest way is to ship the template with this plugin: put the file next to this
+-- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The
+-- path must stay inside the plugin directory, i.e., no '..' segments and no links pointing
+-- out of it. When the file is missing or the path is rejected, AI Studio logs a warning, and
+-- this plugin does not manage the template: users keep the one they chose, or have none.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "Corporate.potx"
+--
+-- An absolute path works as well. It must be readable on every machine, e.g., on a network
+-- share or in a folder your software distribution fills; for Flatpak installations, it must
+-- be readable inside the sandbox.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "C:\\Templates\\Corporate.potx"
+--
+-- Configure the footer text for every slide whose layout has a footer, e.g., the name of
+-- the organization. Leave it empty for no footer.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
+--
+-- Configure the maximum number of bullet points per slide, all text slots of a slide together,
+-- from 1 to 7. Match it to the room for text in the layouts of your template. 0 sets no maximum,
+-- and the LLM decides by the room of each layout. AI Studio logs a warning for any other value
+-- and ignores it.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide"] = 0
+--
+-- Configure whether new slides keep the picture placeholders of their layout which they have no
+-- picture for. PowerPoint shows them while editing, so users can insert pictures of their own,
+-- and hides them in the slide show. By default, the slides leave them out.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders"] = false
+--
+-- Configure the picture library of the Slide Assistant: a folder with pictures and icons, e.g.,
+-- the picture library of your organization. The LLM reads only the names of its PNG and JPEG
+-- pictures and may place a picture where its name fits a slide. A picture whose name, or the
+-- name of one of its folders, starts with "icon" counts as an icon. This includes the folder
+-- you name here, so a folder "Icons" holds icons only. Leave it empty for no picture library.
+--
+-- Ship the folder with this plugin and give its path relative to this plugin.lua, under the
+-- same rules as the template above, or give an absolute path, e.g., on a network share. When a
+-- locked folder cannot be reached, the assistant plans the slides without it.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath"] = "Pictures"
+--
+-- Configure the layout of your template for kinds of slides, e.g., which layout opens each
+-- chapter. Give the name of the layout as the slide master of your template shows it. A kind
+-- of slide you leave out has no preference, and the LLM decides; a name the template lacks
+-- counts as no preference as well.
+-- Allowed kinds of slides are, by area:
+--   Structure and framing: TITLE, TABLE_OF_CONTENTS, AGENDA, SPEAKER, SPEAKERS, CHAPTER,
+--     CHAPTER_SUMMARY, Q_AND_A, ACKNOWLEDGEMENTS, REFERENCES, CLOSING, APPENDIX, IMPRINT
+--   General content: CONTENT, LITTLE_CONTENT, MUCH_CONTENT, KEY_MESSAGE, EXECUTIVE_SUMMARY, CONTEXT,
+--     RETROSPECTIVE, PICTURE, PICTURES, TABLE, COMPARISON, PROS_AND_CONS, TIMELINE, PROCESS, QUOTE,
+--     QUOTES, CODE, FORMULA, FORMULAS, CHECKLIST, NOTE, NOTES, AUDIENCE_QUESTION, FEEDBACK,
+--     DISCLAIMER, SUMMARY, OUTLOOK
+--   Teaching and workshops: INTRODUCTION_ROUND, EXPECTATIONS, GROUND_RULES, ORGANIZATIONAL_NOTES,
+--     LEARNING_OBJECTIVE, LEARNING_OBJECTIVES, EXAMPLE, EXAMPLES, STEP_BY_STEP, EXERCISE,
+--     EXERCISE_SOLUTION, GROUP_WORK, POLL, DISCUSSION_PROMPT, REFLECTION, BREAK, DAY_CHANGE
+--   Business and projects: VISION, GOAL, GOALS, NARRATIVE, STORY, PROBLEM, PROBLEMS, OPPORTUNITY,
+--     OPPORTUNITIES, SWOT, USE_CASE, USE_CASES, USER_STORY, USER_STORIES, ACCEPTANCE_CRITERIA, KPI,
+--     KPIS, FORECAST, SCENARIO, SCENARIOS, RISK, RISKS, DEPENDENCY, DEPENDENCIES, RESOURCES, TEAM,
+--     PARTNERS, ROADMAP, MILESTONE, MILESTONES, WORK_PACKAGE, WORK_PACKAGES, PROJECT_STATUS,
+--     LESSONS_LEARNED, REASON, REASONS, RECOMMENDATION, RECOMMENDATIONS, DECISION_REQUEST, NEXT_STEPS,
+--     ACTION_ITEMS, CALL_TO_ACTION
+--   Science and research: STATE_OF_RESEARCH, RESEARCH_GAP, RESEARCH_QUESTION, RESEARCH_QUESTIONS,
+--     DEFINITION, DEFINITIONS, THEOREM, PROOF, ASSUMPTION, ASSUMPTIONS, DELIMITATION, DELIMITATIONS,
+--     THESIS, THESES, HYPOTHESIS, HYPOTHESES, ARGUMENT_CHAIN, COUNTERARGUMENT, COUNTERARGUMENTS,
+--     METHODOLOGY, STUDY_DESIGN, EXPERIMENTAL_SETUP, DATA, RESULT, RESULTS, INTERPRETATION,
+--     LIMITATIONS, CONTRIBUTION, FUNDING
+--   Medicine: PATIENT_CASE, MEDICAL_HISTORY, CLINICAL_FINDINGS, IMAGING, LAB_VALUES, DIAGNOSIS,
+--     DIFFERENTIAL_DIAGNOSES, THERAPY, MEDICATION, COURSE_OF_DISEASE, PROGNOSIS, ADVERSE_EVENTS,
+--     GUIDELINE_RECOMMENDATION, STUDY_POPULATION, ENDPOINTS, ETHICS_APPROVAL
+--   Law: FACTS_OF_THE_CASE, LEGAL_QUESTION, LEGAL_QUESTIONS, LEGAL_PROVISION, LEGAL_PROVISIONS,
+--     EXAMINATION_SCHEME, DISPUTE_OF_OPINIONS, POSITIONS_OF_THE_PARTIES, PIECE_OF_EVIDENCE,
+--     PIECES_OF_EVIDENCE, RULING, RULINGS, LEGAL_COMMENTARY, LEGAL_COMMENTARIES, CONTRACT_CLAUSE,
+--     CONTRACT_CLAUSES, LEGAL_CONSEQUENCES, DEADLINES
+-- A kind in the singular, e.g., RISK, shows one item prominently; its plural, e.g., RISKS, shows
+-- several items together.
+--
+-- Replaces, does not merge: the table applies as a whole, also with AllowUserOverride.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts"] = {
+--     ["TITLE"] = "Title Slide",
+--     ["CHAPTER"] = "Section Header",
+--     ["CONTENT"] = "Title and Content",
+-- }
+--
+-- Preselect what the presentation does with the slides your template carries, by their number in the
+-- file, starting with 1 and counting hidden slides. OMIT leaves a slide out, KEEP keeps it as it is,
+-- and EDIT lets the LLM write new content into it; a slide without room for content stays unchanged
+-- instead. A slide you do not name is left out. This applies only to the template above.
+-- Replaces, does not merge: the table applies as a whole, also with AllowUserOverride.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses"] = {
+--     [1] = "KEEP",
+--     [4] = "EDIT",
+-- }
+--
+-- Allow users to choose another template or change the defaults locally.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedMaxBulletPointsPerSlide.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedKeepEmptyPicturePlaceholders.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedPictureLibraryPath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedLayouts.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedTemplateSlideUses.AllowUserOverride"] = true
 
 -- Configure defaults for the Batch Processing Assistant.
 -- Preselection must be enabled for the remaining batch settings to take effect.
@@ -650,7 +808,7 @@ CONFIG["SETTINGS"] = {}
 --
 -- Configure the default file patterns and whether subfolders as well as hidden files and folders are included.
 -- Separate multiple patterns with semicolons.
--- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories"] = false
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders"] = false
 --
@@ -818,6 +976,37 @@ CONFIG["SETTINGS"] = {}
 -- documents. Providers below this level cannot be selected in the assistant.
 -- CONFIG["SETTINGS"]["DataVisualBriefing.MinimumProviderConfidence"] = "NONE"
 
+-- Configure defaults for the Assistant Builder.
+-- Preselection must be enabled for the remaining Assistant Builder settings to take effect.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectOptions"] = true
+--
+-- Configure the preselected provider for building assistants.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Without a preselected provider, the Assistant Builder uses the app-wide default provider.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the language in which the generated assistants answer.
+-- Allowed values are: AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT,
+--   JA_JP, RU_RU, OTHER
+-- AS_IS leaves the output language of the generated assistants open.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOutputLanguage"] = "AS_IS"
+--
+-- Configure a free-form language, used only when PreselectedOutputLanguage is "OTHER".
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage"] = ""
+--
+-- Configure the minimum provider confidence required to build assistants.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Providers below this level cannot be selected in the Assistant Builder. This minimum applies
+-- only while preselection is enabled; the app-wide minimum confidence applies in any case.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.MinimumProviderConfidence"] = "NONE"
+--
+-- Allow users to change individual managed Assistant Builder defaults locally.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOutputLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.MinimumProviderConfidence.AllowUserOverride"] = true
+
 -- Configure enterprise approvals for assistant plugins.
 -- Each approval is matched only by the current SHA-256 hash over all Lua files
 -- in the assistant plugin folder, in canonical sorted order.
@@ -904,6 +1093,8 @@ CONFIG["SETTINGS"] = {}
 -- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
 -- search the data sources with every message instead, the way it does for models without
 -- tool usage.
+-- Users can switch off further tools themselves in the tool settings, e.g., one they never need.
+-- They can never switch on a tool you disable here.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools or tool
@@ -1136,6 +1327,9 @@ CONFIG["SETTINGS"] = {}
 --   SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --
+-- A provider which DataApp.ProhibitedProviders names is always UNTRUSTED. Its level in this
+-- table is ignored and logged as a warning, see DataApp.ProhibitedProviders above.
+--
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
 -- table. Every configuration that sets this must therefore list all providers it wants
 -- to cover. A partial table is not completed from the configuration below it, and the
@@ -1180,6 +1374,23 @@ CONFIG["SETTINGS"] = {}
 --     "00000000-0000-0000-0000-000000000001",
 -- }
 
+-- Configure the least strict outbound data restriction a data source may have, i.e., a local
+-- file, a local folder, or an external data source (ERI server). Each data source decides where
+-- a chat may still send data once the AI found something in it:
+--   ONLY_CONFIGURED_SERVICES  Only services configured in AI Studio, such as your data sources,
+--                             your Confluence, or the allowed private hosts of the tool Read Web
+--                             Page. No other web pages, no web search.
+--   ONLY_LINKS_FROM_CHAT      Also web pages whose addresses stand in the chat, written by the
+--                             user or returned by a tool. No web search, and no addresses the AI
+--                             chooses itself outside the configured services.
+--   UNRESTRICTED              Every tool the user selected.
+-- A data source set to a less strict level gets this one whenever its passages reach a chat, and
+-- the dialog of the data source no longer offers the less strict levels. An external data source
+-- which only self-hosted providers may use always gets ONLY_CONFIGURED_SERVICES. A chat which
+-- found something before keeps the level it got then. The default is UNRESTRICTED, which leaves
+-- the choice to the user. New data sources start with ONLY_LINKS_FROM_CHAT either way.
+-- CONFIG["SETTINGS"]["DataSourceSecuritySettings.MinimumOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT"
+
 -- Configure the least strict outbound data restriction a mailbox may have. Mails come from
 -- strangers and may contain instructions meant for the AI, so each mailbox decides where a chat
 -- may still send data once it has read mails from it:
@@ -1203,6 +1414,22 @@ CONFIG["SETTINGS"] = {}
 -- so the mailbox comes back as it was, should you allow its server again. Without any mail server
 -- in CONFIG["MAILBOX_PROVIDERS"], this blocks every mailbox.
 -- CONFIG["SETTINGS"]["DataMailboxes.AllowOnlyOrganizationMailServers"] = true
+
+-- Configure a pause between two indexing steps of local data sources, i.e., files, folders, and
+-- mailboxes. AI Studio indexes large data sources in steps of a few minutes. Between two steps, it
+-- waits for a random number of seconds between the lower and the upper bound, both included. This
+-- spares an embedding server which many users share: a single user with large folders or
+-- mailboxes no longer keeps it busy for hours. The pause applies after every step which worked on
+-- documents, also when the same data source carries on. Time which passes anyway counts toward
+-- it. Both values must be between 0 and 300 seconds. The default is 0 for both, i.e., no pause.
+-- You may set one bound or both. A bound you set wins, and AI Studio adjusts the other one to it.
+-- Should the upper bound be below the lower bound, the lower bound wins.
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds"] = 30
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds"] = 90
+--
+-- Allow users to change the bounds, so that your values are only defaults:
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.
@@ -1363,6 +1590,42 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --             "00000000-0000-0000-0000-000000000000",
 --         },
 --     },
+-- }
+
+-- An example chat template which preselects a provider, a profile, and a workspace:
+-- All three are optional and independent of each other, and leaving one out keeps what a
+-- chat starts with anyway. They are a preselection, not a limit: users change the provider
+-- and the profile in the chat as usual, and move the chat to another workspace. The IDs may
+-- name a provider or profile of this configuration, which keeps its ID on every computer, or
+-- one of another configuration of your organization.
+-- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000003",
+--     ["Name"] = "Mail Assistant",
+--     ["SystemPrompt"] = "You help <Company Name>'s employees read, sort, and answer their mails.",
+--     ["AllowProfileUsage"] = true,
+--
+--     -- Optional: the provider, and with it the model, a chat with this template starts with.
+--     -- Must be an ID from CONFIG["LLM_PROVIDERS"] or of a provider of another configuration.
+--     -- The provider has to meet the confidence level required for chats. A provider which
+--     -- does not, or an ID which resolves to nothing, is ignored, and the chat starts with
+--     -- the provider it would start with anyway.
+--     ["ProviderId"] = "11111111-1111-1111-1111-111111111111",
+--
+--     -- Optional: the profile a chat with this template starts with.
+--     -- Must be an ID from CONFIG["PROFILES"] or of a profile of another configuration.
+--     -- "00000000-0000-0000-0000-000000000000" starts the chat without a profile, whatever
+--     -- the user chose as their default. An ID which resolves to nothing is ignored, and the
+--     -- chat starts with the default profile of the user. The whole field is ignored when
+--     -- AllowProfileUsage is false.
+--     ["ProfileId"] = "22222222-2222-2222-2222-222222222222",
+--
+--     -- Optional: the workspace, by its name, that keeps the chats started with this template.
+--     -- The workspace is created with the first message of such a chat, when it does not exist
+--     -- yet. It only applies where a chat would otherwise be a disappearing chat: a chat users
+--     -- start in a workspace on purpose, for example, from the workspace list, stays there, and
+--     -- so does every chat while workspaces are switched off. An assistant chat launcher which
+--     -- names a workspace keeps its own.
+--     ["WorkspaceName"] = "Mails",
 -- }
 
 -- Introduction texts shown as expansion panels on the welcome page:

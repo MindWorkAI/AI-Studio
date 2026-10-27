@@ -1,0 +1,8 @@
+@inherits MSGComponentBase
+
+<MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="1">
+    <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Small"/>
+    <MudText Typo="Typo.body2">
+        @Format(DateTimeOffset.Now - this.Start)
+    </MudText>
+</MudStack>

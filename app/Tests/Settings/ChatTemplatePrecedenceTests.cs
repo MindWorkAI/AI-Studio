@@ -24,10 +24,8 @@ public sealed class ChatTemplatePrecedenceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(toolChoice.ToolIds, Is.Null, "Nobody named any tool, so the chat has to keep using the tools of its own default.");
-            Assert.That(toolChoice.LauncherChoiceDropped, Is.False);
-            Assert.That(optionsChoice.Options, Is.Null, "Nobody named any data source, so the chat has to keep using its own default options.");
-            Assert.That(optionsChoice.LauncherChoiceDropped, Is.False);
+            Assert.That(toolChoice, Is.EqualTo(ChatTemplateToolChoice.NONE), "Nobody named any tool, so the chat has to keep using the tools of its own default.");
+            Assert.That(optionsChoice, Is.EqualTo(ChatTemplateDataSourceChoice.NONE), "Nobody named any data source, so the chat has to keep using its own default options.");
         });
     }
 

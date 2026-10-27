@@ -4,4 +4,5 @@ public enum DatabaseRole
 {
     VECTOR_STORE,
     INDEX_STORE,
+    PROVENANCE_STORE,
 }

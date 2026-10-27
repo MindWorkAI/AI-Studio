@@ -39,12 +39,24 @@ Therefore, before you plan, read, or change anything in one of these areas, read
 | anything under `app/MindWork AI Studio/Models/` or `app/Tests/Models/` | `app/MindWork AI Studio/Models/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/Services/Indexing/`, or `DataSourceEmbeddingService` | `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/Databases/` | `app/MindWork AI Studio/Tools/Databases/AGENTS.md` |
+| anything under `app/MindWork AI Studio/Tools/PowerPoint/` or `app/Tests/Tools/PowerPoint/`, or the PowerPoint part of the Slide Assistant | `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md` |
 
 This file keeps only what applies to the whole repository. `app/AGENTS.md` keeps what applies to all of the
 .NET app, such as the rules for code which calls into one of the areas below it. Add instructions about a
 single area to its guide instead. A new guide is an `AGENTS.md` plus a `CLAUDE.md` holding only
 `@AGENTS.md`, listed in the table above. Never place one below `app/MindWork AI Studio/wwwroot/` or
 `app/MindWork AI Studio/Plugins/`: both are embedded into the app and shipped to every user.
+
+## Pull requests
+
+Every pull request stays a draft while work on it continues. Marking it ready for review tells the core
+team that it is finished from its author's side, and that the maintainers may now review, change, and
+merge it. This holds for the core team and for external contributors alike.
+
+- Open pull requests as drafts, also when the developer asks you to open one.
+- Leave marking a pull request ready for review to the developer, once they have reviewed the changes.
+- When a pull request which is ready for review needs more work from its author, convert it back to a
+  draft first, with the developer's consent.
 
 ## Working for an external contributor
 

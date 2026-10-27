@@ -23,6 +23,7 @@ public static partial class ManagedConfiguration
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
     /// <param name="_">An unused parameter to help with type inference for enum types. You might ignore it when calling the method.</param>
+    /// <param name="validator">An optional validator for rejecting enum values the setting does not support, e.g., a format a feature cannot write.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
@@ -32,7 +33,8 @@ public static partial class ManagedConfiguration
         Guid configPluginId,
         LuaTable settings,
         bool dryRun,
-        TValue? _ = default)
+        TValue? _ = default,
+        Func<TValue, bool>? validator = null)
         where TValue : Enum
     {
         //
@@ -53,7 +55,8 @@ public static partial class ManagedConfiguration
             if(configuredEnumValue.TryRead<string>(out var configuredEnumText))
             {
                 // Step 3 -- try to parse the string as the enum type:
-                if (EnumNames.TryParse(typeof(TValue), configuredEnumText, out var configuredEnum))
+                if (EnumNames.TryParse(typeof(TValue), configuredEnumText, out var configuredEnum)
+                    && (validator?.Invoke((TValue)configuredEnum) ?? true))
                 {
                     configuredValue = (TValue)configuredEnum;
                     successful = true;
@@ -153,6 +156,7 @@ public static partial class ManagedConfiguration
     /// <param name="configSelection">The expression to select the configuration class.</param>
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
+    /// <param name="convert">Turns the configured text into the value to store, e.g., a path relative to the plugin into a full one; null rejects the text. Without it, the text is stored as it is.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
     public static bool TryProcessConfiguration<TClass>(
@@ -160,9 +164,10 @@ public static partial class ManagedConfiguration
         Expression<Func<TClass, string>> propertyExpression,
         Guid configPluginId,
         LuaTable settings,
-        bool dryRun)
+        bool dryRun,
+        Func<string, string?>? convert = null)
     {
-        return TryProcessConfiguration(configSelection, propertyExpression, string.Empty, configPluginId, settings, dryRun);
+        return TryProcessConfiguration(configSelection, propertyExpression, string.Empty, configPluginId, settings, dryRun, convert);
     }
 
     /// <summary>
@@ -179,6 +184,7 @@ public static partial class ManagedConfiguration
     /// <param name="configSelection">The expression to select the configuration class.</param>
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
+    /// <param name="convert">For plain strings: turns the configured text into the value to store; null rejects the text. Without it, the text is stored as it is.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TDataType">The data type of the configured value.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
@@ -188,7 +194,8 @@ public static partial class ManagedConfiguration
         TDataType configuredType,
         Guid configPluginId,
         LuaTable settings,
-        bool dryRun)
+        bool dryRun,
+        Func<string, string?>? convert = null)
     {
         //
         // Handle configured string values
@@ -217,8 +224,9 @@ public static partial class ManagedConfiguration
 
                     // Case: the read string is just a string:
                     case string:
-                        configuredValue = configuredText;
-                        successful = true;
+                        var convertedText = convert is null ? configuredText : convert(configuredText);
+                        successful = convertedText is not null;
+                        configuredValue = convertedText ?? configuredText;
                         break;
                 }
             }
@@ -581,6 +589,14 @@ public static partial class ManagedConfiguration
                     // Step 3 -- try to parse the string as the target type:
                     if (EnumNames.TryParse(typeof(TValue), configuredLuaValueText, out var configuredEnum))
                         set.Add((TValue)configuredEnum);
+
+                    //
+                    // Dropped, but not quietly: such a set may prohibit something, and a typo would
+                    // otherwise leave it allowed without anybody noticing. A dry run comes before
+                    // the actual one, so only the actual one reports it:
+                    //
+                    else if (!dryRun)
+                        Log.LogWarning($"The configuration plugin '{configPluginId}' names '{configuredLuaValueText}' in the setting '{configMeta.SettingName}', which is no valid value. Ignoring it.");
                 }
             }
 
@@ -880,6 +896,156 @@ public static partial class ManagedConfiguration
                     && EnumNames.TryParse<TKey>(keyText, out var key)
                     && EnumNames.TryParse<TValue>(valueText, out var value))
                     configuredValue[key] = value;
+            }
+
+            successful = true;
+        }
+
+        if(dryRun)
+            return successful;
+
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
+    }
+
+    /// <summary>
+    /// Attempts to process the configuration settings from a Lua table for dictionaries which map enum keys to texts.
+    /// </summary>
+    /// <remarks>
+    /// When the configuration is successfully processed, it updates the configuration metadata with the configured value.
+    /// Furthermore, it applies the configured managed state to the provided configuration plugin ID.
+    /// The setting's value is set to the configured value when locked or when the editable default should apply.
+    /// A key which names no member of the enum is passed over, as with the enum dictionaries.
+    /// </remarks>
+    /// <param name="configPluginId">The ID of the related configuration plugin.</param>
+    /// <param name="settings">The Lua table containing the settings to process.</param>
+    /// <param name="configSelection">The expression to select the configuration class.</param>
+    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
+    /// <param name="dryRun">When true, the method will not apply any changes but only check if the configuration can be read.</param>
+    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
+    /// <typeparam name="TKey">The enum type of the dictionary keys.</typeparam>
+    /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
+    public static bool TryProcessConfiguration<TClass, TKey>(
+        Expression<Func<Data, TClass>> configSelection,
+        Expression<Func<TClass, Dictionary<TKey, string>>> propertyExpression,
+        Guid configPluginId,
+        LuaTable settings,
+        bool dryRun)
+        where TKey : struct, Enum
+    {
+        //
+        // Handle configured dictionaries of enum keys and texts (Lua keys and values are strings)
+        //
+
+        // Check if that configuration was registered:
+        if(!TryGet(configSelection, propertyExpression, out var configMeta))
+            return false;
+
+        var successful = false;
+        var configuredValue = new Dictionary<TKey, string>(configMeta.Default);
+
+        // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
+        if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
+            configuredLuaList.Type is LuaValueType.Table &&
+            configuredLuaList.TryRead<LuaTable>(out var valueTable))
+        {
+            configuredValue.Clear();
+
+            // In order to iterate over all key-value pairs in the Lua table, we have to use TryGetNext.
+            // Thus, we initialize the previous key variable to Nil and keep calling TryGetNext until
+            // there are no more pairs:
+            var previousKey = LuaValue.Nil;
+            while(valueTable.TryGetNext(previousKey, out var pair))
+            {
+                // Update the previous key for the next iteration:
+                previousKey = pair.Key;
+
+                // Try to read both the key and the value as strings:
+                var hadKey = pair.Key.TryRead<string>(out var keyText);
+                var hadValue = pair.Value.TryRead<string>(out var valueText);
+
+                // If both were read successfully and the key names a member of the enum, add them to the dictionary:
+                if (hadKey && hadValue && EnumNames.TryParse<TKey>(keyText, out var key))
+                    configuredValue[key] = valueText;
+            }
+
+            successful = true;
+        }
+
+        if(dryRun)
+            return successful;
+
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
+    }
+
+    /// <summary>
+    /// Attempts to process the configuration settings from a Lua table for dictionaries which map numbers to enum values.
+    /// </summary>
+    /// <remarks>
+    /// When the configuration is successfully processed, it updates the configuration metadata with the configured value.
+    /// Furthermore, it applies the configured managed state to the provided configuration plugin ID.
+    /// The setting's value is set to the configured value when locked or when the editable default should apply.
+    /// The numbers count from 1, like the slides of a presentation. An entry whose key is no such number or
+    /// whose value names no member of the enum is passed over with a warning, since the plugin's author
+    /// would otherwise never learn why the entry has no effect.
+    /// </remarks>
+    /// <param name="configPluginId">The ID of the related configuration plugin.</param>
+    /// <param name="settings">The Lua table containing the settings to process.</param>
+    /// <param name="configSelection">The expression to select the configuration class.</param>
+    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
+    /// <param name="dryRun">When true, the method will not apply any changes but only check if the configuration can be read.</param>
+    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
+    /// <typeparam name="TValue">The enum type of the dictionary values.</typeparam>
+    /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
+    public static bool TryProcessConfiguration<TClass, TValue>(
+        Expression<Func<Data, TClass>> configSelection,
+        Expression<Func<TClass, Dictionary<int, TValue>>> propertyExpression,
+        Guid configPluginId,
+        LuaTable settings,
+        bool dryRun)
+        where TValue : struct, Enum
+    {
+        //
+        // Handle configured dictionaries of numbers and enum values (Lua keys are numbers, values are strings)
+        //
+
+        // Check if that configuration was registered:
+        if(!TryGet(configSelection, propertyExpression, out var configMeta))
+            return false;
+
+        var successful = false;
+        var configuredValue = new Dictionary<int, TValue>(configMeta.Default);
+
+        // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
+        if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
+            configuredLuaList.Type is LuaValueType.Table &&
+            configuredLuaList.TryRead<LuaTable>(out var valueTable))
+        {
+            configuredValue.Clear();
+
+            // In order to iterate over all key-value pairs in the Lua table, we have to use TryGetNext.
+            // Thus, we initialize the previous key variable to Nil and keep calling TryGetNext until
+            // there are no more pairs:
+            var previousKey = LuaValue.Nil;
+            while(valueTable.TryGetNext(previousKey, out var pair))
+            {
+                // Update the previous key for the next iteration:
+                previousKey = pair.Key;
+
+                // Try to read the key as a number and the value as a string:
+                var hadKey = pair.Key.TryRead<int>(out var key) && pair.Key.Type is LuaValueType.Number && key > 0;
+                var hadValue = pair.Value.TryRead<string>(out var valueText);
+
+                // If both were read successfully and the value names a member of the enum, add them to the dictionary:
+                if (hadKey && hadValue && EnumNames.TryParse<TValue>(valueText, out var value))
+                    configuredValue[key] = value;
+
+                // A dry run comes before the actual one, so only the actual one reports the entry:
+                else if (!dryRun)
+                    Log.LogWarning($"The configuration plugin '{configPluginId}' has the entry '{pair.Key}' = '{pair.Value}' in the setting '{configMeta.SettingName}', which is no valid entry. The keys are numbers from 1, and the values are names of options. Ignoring it.");
             }
 
             successful = true;

@@ -148,6 +148,20 @@ public static class ConfigurationSnippetImport
                 if (missingChatToolIds.Count > 0)
                     hints.Add(string.Format(TB("The chat template preselects tools which are not available on this computer: {0}."), string.Join(", ", missingChatToolIds)));
 
+                if (template.ProviderId is not null)
+                {
+                    var templateProvider = settingsManager.GetProviderById(template.ProviderId);
+                    if (templateProvider == Settings.Provider.NONE)
+                        hints.Add(string.Format(TB("The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead."), template.ProviderId));
+                    else if (settingsManager.GetChatTemplateProvider(template.ProviderId) == Settings.Provider.NONE)
+                        hints.Add(string.Format(TB("The chat template preselects the provider '{0}', which does not meet the confidence level required for chats. Chats started with it use your usual provider instead."), templateProvider.InstanceName));
+                }
+
+                if (template.ProfileId is not null && !template.AllowProfileUsage)
+                    hints.Add(TB("The chat template preselects a profile but does not allow profiles. Chats started with it ignore that profile."));
+                else if (template.ProfileId is not null && !template.StartsWithoutProfile() && settingsManager.GetProfileById(template.ProfileId) == Profile.NO_PROFILE)
+                    hints.Add(string.Format(TB("The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead."), template.ProfileId));
+
                 return result with { ConfigurationObject = template with { ToolIds = templateToolIds }, Hints = hints };
 
             case DataDocumentAnalysisPolicy policy:
@@ -174,8 +188,9 @@ public static class ConfigurationSnippetImport
         if (toolIds.Count == 0)
             return [];
 
+        // A tool the user switched off exists here all the same, and switching it on again makes the import use it:
         var availableToolIds = (await toolRegistry.GetCatalogAsync(component)).Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
-        return toolIds.Where(id => !availableToolIds.Contains(id)).Order(StringComparer.Ordinal).ToList();
+        return toolIds.Where(id => !availableToolIds.Contains(id) && !toolRegistry.IsSwitchedOffByUser(id)).Order(StringComparer.Ordinal).ToList();
     }
 
     private static T MakeLocal<T>(T configObject) where T : ConfigurationBaseObject => (T)((ConfigurationBaseObject)configObject with

@@ -45,8 +45,8 @@ internal sealed class LauncherTextsResponse
         error = LuaResponseParseError.NONE;
         technicalDetails = string.Empty;
 
-        var json = LuaResponse.ExtractJson(modelResponse);
-        if (string.IsNullOrWhiteSpace(json))
+        var json = ModelAnswerJson.ExtractObject(modelResponse);
+        if (json.IsWhiteSpace())
         {
             error = LuaResponseParseError.MISSING_JSON_OBJECT;
             return false;

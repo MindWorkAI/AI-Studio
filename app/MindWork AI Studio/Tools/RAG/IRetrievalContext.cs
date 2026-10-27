@@ -21,6 +21,15 @@ public interface IRetrievalContext
     public RetrievalContentCategory Category { get; init; }
 
     /// <summary>
+    /// What the source itself says its content is, e.g., a dictionary, a book chapter, or a paper.
+    /// </summary>
+    /// <remarks>
+    /// The server of an ERI data source names it in its own words, so it is free text; an empty
+    /// string when the source says nothing.
+    /// </remarks>
+    public string SourceCategory { get; init; }
+
+    /// <summary>
     /// What type of content is being retrieved? Like e.g., a project proposal, spreadsheet, art, etc.
     /// </summary>
     public RetrievalContentType Type { get; init; }

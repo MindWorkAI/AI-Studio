@@ -131,7 +131,7 @@
                             @if (context is IAvailablePlugin shareablePlugin && CanSharePlugin(shareablePlugin))
                             {
                                 <MudTooltip Text="@(this.AllowPluginSharing ? this.SharePluginTooltip : this.SharePluginLockText)">
-                                    <MudIconButton Icon="@SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(this.isSharingPlugin || !this.AllowPluginSharing)"/>
+                                    <MudIconButton Icon="@this.SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(this.isSharingPlugin || !this.AllowPluginSharing)"/>
                                 </MudTooltip>
                             }
 

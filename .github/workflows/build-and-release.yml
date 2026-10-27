@@ -5,12 +5,34 @@ on:
       - main
     tags:
       - "v*.*.*"
+
+    # Changes which touch only these files start neither a build nor the quality gate: none of them is
+    # compiled or shipped, so there is nothing to check. GitHub never applies path filters to tags, so
+    # a release always builds. The list names each file and folder instead of matching all Markdown
+    # files: the changelogs below wwwroot are Markdown as well, and the app embeds them.
+    paths-ignore: &documentation_only
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "CODE_OF_CONDUCT.md"
+      - "SECURITY.md"
+      - "CITATION.cff"
+      - "**/AGENTS.md"
+      - "**/CLAUDE.md"
+      - ".junie/**"
+      - "documentation/**"
+      - "media/**"
+      - "tests/**/*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/DISCUSSION_TEMPLATE/**"
+      - ".github/pull_request_template.md"
+      - ".github/FUNDING.yml"
   pull_request:
     types:
       - opened
       - labeled
       - synchronize
       - reopened
+    paths-ignore: *documentation_only
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && (github.event.action != 'labeled' || github.event.label.name == 'run-pipeline') && github.event.pull_request.number || github.run_id }}
@@ -746,7 +768,8 @@ jobs:
   # The quality gate. Deliberately without an `if` on build_enabled: a pull request only builds
   # when somebody sets the run-pipeline label, and a gate which is closed exactly while nobody is
   # looking is not a gate. It is cheap for the same reason it is unconditional -- one platform, no
-  # Tauri bundle, no signing, no artifacts.
+  # Tauri bundle, no signing, no artifacts. Only changes which touch nothing but documentation skip
+  # it, together with the whole workflow (see paths-ignore at the top): there is nothing to check.
   #
   verify:
     name: Verify
@@ -779,6 +802,18 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
+
+      - name: Pin the .NET SDK from the metadata
+        shell: bash
+        run: |
+          # The runner images bring several .NET SDKs along, newer ones among them. Without a
+          # global.json, the newest of them builds instead of the one installed above from the
+          # metadata, and with it comes a newer C# version than the one we build with locally.
+          # The file exists in the pipeline only, so metadata.txt stays the one place which names
+          # the SDK. Bash runs on Windows as well, so that a failing command fails the step:
+          dotnet new globaljson --sdk-version "${DOTNET_SDK_VERSION}" --roll-forward disable --force
+          used_dotnet_sdk_version=$(dotnet --version)
+          echo ".NET SDK in use: '${used_dotnet_sdk_version}'"
 
       - name: Cache Rust
         uses: actions/cache@v4
@@ -1031,6 +1066,18 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
+
+      - name: Pin the .NET SDK from the metadata
+        shell: bash
+        run: |
+          # The runner images bring several .NET SDKs along, newer ones among them. Without a
+          # global.json, the newest of them builds instead of the one installed above from the
+          # metadata, and with it comes a newer C# version than the one we build with locally.
+          # The file exists in the pipeline only, so metadata.txt stays the one place which names
+          # the SDK. Bash runs on Windows as well, so that a failing command fails the step:
+          dotnet new globaljson --sdk-version "${DOTNET_SDK_VERSION}" --roll-forward disable --force
+          used_dotnet_sdk_version=$(dotnet --version)
+          echo ".NET SDK in use: '${used_dotnet_sdk_version}'"
 
       - name: Deploy PDFium (Unix)
         if: matrix.platform != 'windows-latest'
