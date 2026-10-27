@@ -429,6 +429,7 @@ Currently, you can configure the following things:
 - Any number of ERI data sources for RAG
 - Any number of profiles and chat templates, including the tools and data sources a template brings along
 - Any number of policies for the Document Analysis assistant
+- Any number of format templates, e.g., the Word templates of your organization, see [Shipping format templates](#shipping-format-templates)
 - Enterprise hash approvals for assistant plugins
 - Tool settings, encrypted tool API keys, and minimum provider confidence requirements
 - The update behavior of AI Studio
@@ -1189,6 +1190,49 @@ ignored and logged as a warning.
 - **Older versions ignore the setting.** It is available since AI Studio v26.10.1. Until all devices
   run that version, you can in addition use the `CUSTOM` confidence scheme, set the provider to
   `UNTRUSTED` there, and enforce a global minimum confidence level of at least `VERY_LOW`.
+
+## Shipping format templates
+
+Format templates are the templates of your organization, which users find in the app settings under
+Configure Format Templates. When users export an answer of a chat or an assistant to Word, the export
+menu lists every Word template (.docx or .dotx), and AI Studio writes the answer into a copy of the
+chosen one. The document keeps the styles, the page layout, the headers and footers, and the logos of
+the template, while the answer replaces the text of its body, e.g., a cover page or sample text. Users
+can still export without a template; Pandoc then writes the document as before.
+
+The answer takes the styles Word knows by their built-in names: `heading 1` to `heading 6`, `List
+Paragraph`, `Quote`, `HTML Preformatted` for code, and the character styles `Hyperlink` and `HTML Code`.
+AI Studio finds them by these names, so a template saved by Word in any language works. A table takes
+the style your template sets for new tables, otherwise `Table Grid`. When your template lacks one of
+these styles, AI Studio adds a plain definition of it to the exported document, so define them in your
+template to decide how everything looks.
+
+Ship a template with your configuration plugin, or name a file on a network share:
+
+```lua
+CONFIG["FORMAT_TEMPLATES"][#CONFIG["FORMAT_TEMPLATES"]+1] = {
+    ["Id"] = "00000000-0000-0000-0000-000000000000",
+    ["Name"] = "Report",
+    ["FilePath"] = "templates/Report.dotx"
+}
+```
+
+A relative path names a file below your `plugin.lua` and must stay inside the plugin directory. AI
+Studio rejects `..` segments and links pointing out of that directory, and it leaves out a template
+whose file is missing, with a warning in its log. An absolute path, e.g., on a network share, is not
+checked when AI Studio reads your configuration. It has to be readable on every computer, for Flatpak
+installations inside the sandbox. The settings warn users who cannot reach the file, and so does the
+export, before users choose where to save the document.
+
+Users see the templates of your organization in the settings, but cannot change or delete them. To
+write the Lua code, you can also set a template up in the app and export it, see [Exporting
+configurations from the app](#exporting-configurations-from-the-app). Keep in mind that every client
+downloads the whole configuration plugin, templates included, whenever AI Studio starts and whenever
+your configuration changes.
+
+The list takes PowerPoint templates (.pptx or .potx) as well, but nothing uses them yet. To provide the
+template of the Slide Assistant, see [Shipping the PowerPoint template of the Slide
+Assistant](#shipping-the-powerpoint-template-of-the-slide-assistant).
 
 ## Shipping the PowerPoint template of the Slide Assistant
 
