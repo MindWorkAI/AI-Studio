@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using System.Text;
 
-using AIStudio.Chat;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools;
@@ -10,8 +8,6 @@ namespace AIStudio.Tools;
 public static class PandocExport
 {
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocExport));
-
-    private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PandocExport).Namespace, nameof(PandocExport));
 
     /// <summary>
     /// Converts the given Markdown text into a document at the given path.
@@ -108,68 +104,5 @@ public static class PandocExport
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Converts the given content to a document using Pandoc and lets the user save it.
-    /// </summary>
-    /// <param name="rustService">The Rust service, used for the save dialog and for Pandoc.</param>
-    /// <param name="pandocAvailability">Makes sure Pandoc is there and offers its installation.</param>
-    /// <param name="disclosureService">Ends the text with the notice that AI generated it, when that is
-    /// switched on. Null for content which never gets the notice, such as the answer of the prompt
-    /// optimizer, which is meant for another model.</param>
-    /// <param name="dialogTitle">The title of the save dialog. The caller knows what the user is
-    /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
-    /// <param name="format">The format to write. Must be a format which uses Pandoc.</param>
-    /// <param name="markdownContent">The content to export.</param>
-    /// <param name="fileName">What the document is about, used to suggest a name in the save dialog.
-    /// Null falls back to a generic name.</param>
-    /// <returns>True, when the document was written.</returns>
-    public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, AIGeneratedContentDisclosureService? disclosureService, string dialogTitle, FileExportFormat format, IContent markdownContent, string? fileName = null)
-    {
-        if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
-            throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
-
-        //
-        // We read the text before we ask for a path: when there is nothing to convert, the user
-        // should learn that right away instead of picking a file first and getting an error afterwards.
-        //
-        if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors()))
-        {
-            LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));
-            return false;
-        }
-
-        markdownText = disclosureService?.AddDisclosureToMarkdown(markdownText) ?? markdownText;
-
-        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
-        if (response.UserCancelled)
-        {
-            LOGGER.LogInformation("User cancelled the save dialog.");
-            return false;
-        }
-
-        LOGGER.LogInformation("The user chose the path '{SaveFilePath}' for the {ExportFormat} export.", response.SaveFilePath, format);
-
-        // The service reports a missing Pandoc to the user itself, so we only act on the outcome:
-        var pandocState = await pandocAvailability.EnsureAvailabilityAsync(showSuccessMessage: false, showDialog: true);
-        if (!pandocState.IsAvailable)
-            return false;
-
-        //
-        // The export runs from here on. Before, the user may still be looking at the dialog which
-        // offers to install Pandoc, and a notification that we save would be wrong there:
-        //
-        await using var feedback = new FileExportFeedback();
-        feedback.ShowRunning(response.SaveFilePath);
-        if (!await ConvertAsync(rustService, markdownText, response.SaveFilePath, format))
-        {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
-            return false;
-        }
-
-        await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, TB("The export succeeded."), response.SaveFilePath, true);
-        return true;
     }
 }

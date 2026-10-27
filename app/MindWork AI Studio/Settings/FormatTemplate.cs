@@ -14,7 +14,7 @@ namespace AIStudio.Settings;
 /// The file stays where the user keeps it, so that a new version of the template takes effect at
 /// once. Hence, FilePath is the absolute path of a file of the user, not one below the data directory.
 /// Which documents a template serves follows from the type of its file, cf. FileTypes.FORMAT_TEMPLATE:
-/// a Word template serves the export to Word, a PowerPoint template serves presentations.
+/// a Word template serves the export to Word, cf. Serves, a PowerPoint template serves presentations.
 /// </remarks>
 public record FormatTemplate(
     uint Num,
@@ -33,6 +33,13 @@ public record FormatTemplate(
     /// </summary>
     /// <returns>The name of the format template.</returns>
     public override string ToString() => this.Name;
+
+    /// <summary>
+    /// Determines whether a document in the given format can be exported into this template.
+    /// </summary>
+    /// <param name="format">The export format.</param>
+    /// <returns>True, when the file of the template is of the kind the format takes.</returns>
+    public bool Serves(FileExportFormat format) => format.ToFormatTemplateFilter() is { } filter && FileTypes.IsAllowedPath(this.FilePath, filter);
 
     /// <summary>
     /// Reads a format template the way a configuration plugin states it.

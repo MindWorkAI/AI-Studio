@@ -9,9 +9,10 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 namespace AIStudio.Components;
 
 /// <summary>
-/// Manages the stored format templates. Used by the format template settings dialog and by the
-/// format template panel in the app settings. Adding and importing a format template is up to
-/// FormatTemplateAddButtons, which each of them places on its own.
+/// Manages the stored format templates. Used by the format template settings dialog, which the
+/// export menu of an answer opens, and by the format template panel in the app settings. Adding
+/// and importing a format template is up to FormatTemplateAddButtons, which each of them places on
+/// its own.
 /// </summary>
 public partial class FormatTemplateManagement : MSGComponentBase
 {

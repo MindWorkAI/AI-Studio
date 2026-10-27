@@ -3589,6 +3589,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Do you 
 -- Removes this block
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Removes this block"
 
+-- Export without template
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2233581051"] = "Export without template"
+
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Regenerate Message"
 
@@ -3603,6 +3606,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2822776450"] = "Export 
 
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Number of attachments"
+
+-- Manage your templates
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3058934130"] = "Manage your templates"
 
 -- Roll back to this response
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3132525321"] = "Roll back to this response"
@@ -13039,6 +13045,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Repair Data
 -- The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?"
 
+-- The export into the format template '{0}' failed. Please check that the template can be read and that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1214642787"] = "The export into the format template '{0}' failed. Please check that the template can be read and that the target file is not open in another program."
+
+-- The export succeeded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1713926719"] = "The export succeeded."
+
+-- The export failed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1895034475"] = "The export failed."
+
+-- The file of the format template '{0}' cannot be found. Please check the template in the settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T2859252913"] = "The file of the format template '{0}' cannot be found. Please check the template in the settings."
+
+-- Only text messages can be exported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T3576815370"] = "Only text messages can be exported."
+
 -- Please drop a file, not a folder.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFILE::T1472251601"] = "Please drop a file, not a folder."
 
@@ -13530,15 +13551,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T695293525"] = "AI Studio couldn't fin
 
 -- AI Studio couldn't install Pandoc.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T932858631"] = "AI Studio couldn't install Pandoc."
-
--- The export succeeded.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1713926719"] = "The export succeeded."
-
--- The export failed.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1895034475"] = "The export failed."
-
--- Only text messages can be exported.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3576815370"] = "Only text messages can be exported."
 
 -- The export succeeded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1713926719"] = "The export succeeded."
