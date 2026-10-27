@@ -429,6 +429,7 @@ Currently, you can configure the following things:
 - Any number of ERI data sources for RAG
 - Any number of profiles and chat templates, including the tools and data sources a template brings along
 - Any number of policies for the Document Analysis assistant
+- Any number of glossaries, with their entries from a spreadsheet or CSV file in the plugin or listed in the plugin itself
 - Enterprise hash approvals for assistant plugins
 - Tool settings, encrypted tool API keys, and minimum provider confidence requirements
 - The update behavior of AI Studio
@@ -611,6 +612,7 @@ Enable **Show administration settings** in the app settings once. It reveals the
 | Chat templates | the chat template dialog in the app settings | templates you created yourself |
 | ERI data sources | the data source list in the app settings | ERI sources only, and not the ones using Kerberos |
 | Document analysis policies | the Document Analysis assistant itself | the policy you have selected |
+| Glossaries | the glossary list in the app settings | glossaries you created yourself, together with their entries |
 | Tools | **Tool Settings** in the app settings | every tool |
 
 Anything your organization already manages has no export button: it came from a plugin to begin with. Local files and local directories have none either — such a data source exists on one machine only, so there is nothing to hand to your colleagues.
@@ -631,7 +633,7 @@ Not everything worth sharing calls for a configuration plugin. Say somebody buil
 
 - **Data only.** AI Studio reads the fragment with the same rules as a configuration plugin, but it never runs it. A fragment which contains anything other than values, such as a function call, a variable, or an expression, is refused.
 - **An item of the user's own.** The imported item gets an ID of its own and belongs to no configuration plugin, even when the fragment came from one. Importing the same fragment twice gives two items.
-- **Reviewed before it is saved.** Providers, profiles, chat templates, and data sources open in their usual form, filled in, so the user checks everything before saving. A document analysis policy is added right away and selected, and the user edits it in the assistant like any other.
+- **Reviewed before it is saved.** Providers, profiles, chat templates, data sources, and glossaries open in their usual form, filled in, so the user checks everything before saving. A document analysis policy is added right away and selected, and the user edits it in the assistant like any other.
 - **Hints first.** Before that, the dialog lists what the user should know: a preselected provider, profile, data source, or tool which does not exist on this computer, a tokenizer which is not on this computer and is therefore left out, an API key which cannot be decrypted, and every local file which a chat template would attach to each of its chats. Attachments which are not on this computer are relinked or removed in the form. An exported provider names the copy of its tokenizer on the computer it came from, so the tokenizer comes along only when the fragment is imported there.
 - **Secrets.** An API key, token, or password which the export included in encrypted form is decrypted only where the encryption secret of your organization is configured, see [Encrypted API Keys](#encrypted-api-keys). Without it, a provider is imported without its key, and an ERI data source with a token or password cannot be imported at all. Data sources which sign in with Kerberos cannot be imported either.
 - **No connection on its own.** Importing contacts no server. The user loads the models of a provider, or tests the connection of a data source, in the form.
@@ -652,6 +654,9 @@ Each of these settings is `true` by default:
 | `DataApp.AllowUserToImportChatTemplate` | chat templates |
 | `DataApp.AllowUserToImportERIDataSource` | ERI data sources |
 | `DataApp.AllowUserToImportDocumentAnalysisPolicy` | document analysis policies |
+| `DataApp.AllowUserToImportGlossary` | glossaries |
+
+A glossary fragment which takes its entries from a file of a configuration plugin cannot be imported: that file is not on the user's computer. An export from AI Studio always lists the entries instead.
 
 An import needs both the first setting and the one of its type. A provider also needs what adding one by hand needs: `DataApp.AllowUserToAddProvider` and the setting of its kind, such as `DataApp.AllowUserToAddLLMProvider`. A locked **Import** button stays visible with a lock. The permission is checked once more when the user saves, so locking imports while somebody fills in a form still holds. Importing plugin archives has a setting of its own, `DataApp.AllowUserToImportPlugins`.
 

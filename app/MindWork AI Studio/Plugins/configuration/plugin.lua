@@ -512,6 +512,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChatTemplate"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportERIDataSource"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportDocumentAnalysisPolicy"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportGlossary"] = false
 
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
@@ -1747,4 +1748,67 @@ CONFIG["PROFILES"] = {}
 --     ["Name"] = "<user-friendly name of the profile>",
 --     ["NeedToKnow"] = "I like to cook in my free time. My favorite meal is ...",
 --     ["Actions"] = "Please always ensure the portion size is ..."
+-- }
+
+-- Glossaries for this configuration:
+CONFIG["GLOSSARIES"] = {}
+
+-- A glossary holds terms together with a fixed translation or an explanation:
+-- - Type TRANSLATION: the AI always translates the terms as the glossary says. Such a glossary
+--   needs the language of its terms (SourceLanguage) and of its translations (TargetLanguage).
+-- - Type REFERENCE: the AI uses the explanations to understand texts, e.g. technical terms of
+--   your organization or invented words. Such a glossary needs no languages.
+--
+-- Languages are AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT, JA_JP,
+-- RU_RU, or OTHER. For OTHER, name the language in CustomSourceLanguage or CustomTargetLanguage.
+-- A translation glossary into one regional variant of a language serves the others as well,
+-- e.g. one into EN_US also translations into EN_GB.
+--
+-- Only the entries whose terms occur in a text are sent to the AI: in the translation
+-- assistant, and in chats which use the tool glossary_lookup. A term also counts inside a
+-- longer word, e.g. "Arbeitszeit" in "Arbeitszeitregelung", and regardless of its case.
+--
+-- PreselectInTranslation (default: true) chooses the glossary in the translation assistant
+-- whenever it suits the target language; users can still deselect it for a translation.
+-- Users can view a glossary of your organization, but neither change nor delete it.
+--
+-- The entries come from one of two places:
+-- - "File": a spreadsheet (xlsx, xls, ods, ...) or a CSV or TSV file in the folder of this
+--   plugin. Its path is relative to that folder and must stay inside it. Name the columns by
+--   their header row; the first table (sheet) with all named columns is read. OtherFormsColumn
+--   (further spellings or forms of a term, separated by semicolons) and NoteColumn (a remark the
+--   AI reads along with the entry) are optional. AI Studio reads the file whenever this plugin
+--   loads, so a changed file reaches your users with the next version of this plugin.
+-- - "Entries": the entries themselves, each with a Term and a Value, and optionally OtherForms
+--   and a Note. This suits small glossaries; an export of a glossary from AI Studio writes it so.
+-- When a glossary names both, the entries of the file count.
+--
+-- A glossary which takes its entries from a file:
+-- CONFIG["GLOSSARIES"][#CONFIG["GLOSSARIES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name of the glossary>",
+--     ["Type"] = "TRANSLATION",
+--     ["Description"] = "Terms of our HR department, from German to English.",
+--     ["SourceLanguage"] = "DE_DE",
+--     ["TargetLanguage"] = "EN_US",
+--     ["PreselectInTranslation"] = true,
+--     ["File"] = {
+--         ["Path"] = "glossaries/hr.xlsx",
+--         ["TermColumn"] = "Deutsch",
+--         ["ValueColumn"] = "English",
+--         ["OtherFormsColumn"] = "Varianten",
+--         ["NoteColumn"] = "Notiz",
+--     },
+-- }
+--
+-- A glossary which lists its entries:
+-- CONFIG["GLOSSARIES"][#CONFIG["GLOSSARIES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name of the glossary>",
+--     ["Type"] = "REFERENCE",
+--     ["Description"] = "Invented words of our product names.",
+--     ["Entries"] = {
+--         { ["Term"] = "Muggel", ["Value"] = "A person without magical abilities.", ["OtherForms"] = { "Muggels" } },
+--         { ["Term"] = "Quidditch", ["Value"] = "A game played on broomsticks.", ["Note"] = "Only in the books." },
+--     },
 -- }
