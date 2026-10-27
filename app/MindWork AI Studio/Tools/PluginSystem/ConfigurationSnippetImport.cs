@@ -188,8 +188,9 @@ public static class ConfigurationSnippetImport
         if (toolIds.Count == 0)
             return [];
 
+        // A tool the user switched off exists here all the same, and switching it on again makes the import use it:
         var availableToolIds = (await toolRegistry.GetCatalogAsync(component)).Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
-        return toolIds.Where(id => !availableToolIds.Contains(id)).Order(StringComparer.Ordinal).ToList();
+        return toolIds.Where(id => !availableToolIds.Contains(id) && !toolRegistry.IsSwitchedOffByUser(id)).Order(StringComparer.Ordinal).ToList();
     }
 
     private static T MakeLocal<T>(T configObject) where T : ConfigurationBaseObject => (T)((ConfigurationBaseObject)configObject with

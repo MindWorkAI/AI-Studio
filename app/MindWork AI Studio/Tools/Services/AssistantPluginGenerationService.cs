@@ -290,7 +290,8 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     /// </summary>
     /// <remarks>
     /// Tools an organization switched off are left out: an assistant naming one would run without
-    /// it, and neither the model nor the user could tell from the plugin why. Whether a tool is
+    /// it, and neither the model nor the user could tell from the plugin why. Tools the user switched
+    /// off do not even reach the catalog, since the user never needs them. Whether a tool is
     /// fully configured is deliberately not part of this, because settings can be completed later
     /// and the assistant then works as written.
     /// </remarks>

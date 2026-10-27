@@ -165,10 +165,47 @@ public sealed class ToolSwitchedOffByUserTests : ToolRegistryTestBase
         });
     }
 
+    [Test]
+    public void ASelectionFieldShowsNoSwitchedOffTool()
+    {
+        var registry = this.CreateCollection();
+        registry.SetSwitchedOffByUser(COLLECTION_ID, true);
+
+        var shown = registry.LeaveOutSwitchedOffByUser([READ_TOOL_ID, TOOL_ID]);
+
+        Assert.That(shown, Is.EquivalentTo(new[] { TOOL_ID }), "The field lists no switched-off tool, so it must not count one as selected either.");
+    }
+
+    [Test]
+    public void ChangingASelectionKeepsTheToolsSwitchedOff()
+    {
+        var registry = this.CreateCollection();
+        registry.SetSwitchedOffByUser(COLLECTION_ID, true);
+
+        // The field showed only the other tool, and the user took it out:
+        var stored = registry.KeepSwitchedOffByUser([READ_TOOL_ID, TOOL_ID], []);
+
+        Assert.That(stored, Is.EquivalentTo(new[] { COLLECTION_ID }), "Switching the collection on again brings it back in the template.");
+    }
+
+    [Test]
+    public void ChangingASelectionDropsWhatTheUserDeselected()
+    {
+        var registry = this.CreateCollection();
+
+        var stored = registry.KeepSwitchedOffByUser([READ_TOOL_ID, TOOL_ID], [TOOL_ID]);
+
+        Assert.That(stored, Is.EquivalentTo(new[] { TOOL_ID }), "Nothing is switched off, so nothing comes back on its own.");
+    }
+
     private HashSet<string> StoredIds => this.SettingsManager.ConfigurationData.Tools.UserDisabledToolIds;
 
+    /// <summary>
+    /// A search and a reader in one collection, next to a tool of its own.
+    /// </summary>
     private ToolRegistry CreateCollection() => this.CreateRegistry(
         [new TestCollection(COLLECTION_ID, ConfidenceLevel.NONE, SEARCH_TOOL_ID, READ_TOOL_ID)],
         new TestTool(Definition(SEARCH_TOOL_ID)),
-        new TestTool(Definition(READ_TOOL_ID)));
+        new TestTool(Definition(READ_TOOL_ID)),
+        new TestTool(Definition()));
 }

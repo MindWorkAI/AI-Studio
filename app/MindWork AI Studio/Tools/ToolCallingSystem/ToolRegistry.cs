@@ -503,6 +503,41 @@ public sealed class ToolRegistry
         .ToHashSet(StringComparer.Ordinal);
 
     /// <summary>
+    /// The part of a selection a selection field shows: every collection but those the user switched off.
+    /// </summary>
+    /// <remarks>
+    /// A field lists no collection the user switched off, so it must not count one as selected
+    /// either. Changing the selection afterward goes through KeepSwitchedOffByUser, which puts
+    /// these collections back.
+    /// </remarks>
+    /// <param name="selectedIds">The IDs of the selected tools or collections.</param>
+    /// <returns>The IDs of the collections to show as selected, as a new set.</returns>
+    public HashSet<string> LeaveOutSwitchedOffByUser(IEnumerable<string> selectedIds)
+    {
+        var shown = this.NormalizeSelection(selectedIds);
+        shown.RemoveWhere(this.IsSwitchedOffByUser);
+        return shown;
+    }
+
+    /// <summary>
+    /// A selection as somebody changed it in a field, plus the collections of the previous selection which the user switched off.
+    /// </summary>
+    /// <remarks>
+    /// Switching a collection off only hides it. A chat template, a policy, or the defaults of an
+    /// assistant which named it keep naming it, even when somebody changes them while it is off,
+    /// so switching it on again brings it back wherever it was selected.
+    /// </remarks>
+    /// <param name="previousIds">The selection before the change, as stored.</param>
+    /// <param name="changedIds">The selection as the field reports it after the change.</param>
+    /// <returns>The IDs of the collections to store, as a new set.</returns>
+    public HashSet<string> KeepSwitchedOffByUser(IEnumerable<string> previousIds, IEnumerable<string> changedIds)
+    {
+        var kept = this.NormalizeSelection(changedIds);
+        kept.UnionWith(this.NormalizeSelection(previousIds).Where(this.IsSwitchedOffByUser));
+        return kept;
+    }
+
+    /// <summary>
     /// The collections preselected in a component, as the user chose them in the settings.
     /// </summary>
     public HashSet<string> GetDefaultToolIds(Components component) => this.settingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(component.ToString(), out var toolIds)
