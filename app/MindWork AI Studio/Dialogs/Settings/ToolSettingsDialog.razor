@@ -18,7 +18,11 @@
                 @this.item.Description
             </MudJustifiedText>
 
-            @if (!this.ToolRegistry.IsToolActive(this.item.Id))
+            @if (this.IsSwitchedOffByUser)
+            {
+                <MudAlert Severity="Severity.Info" Class="mb-4">@T("You switched off this tool. It appears in no tool selection, and the AI cannot use it. You can switch it on again in the tool settings.")</MudAlert>
+            }
+            else if (!this.ToolRegistry.IsToolActive(this.item.Id))
             {
                 <MudAlert Severity="Severity.Warning" Class="mb-4">@T("This tool has been disabled by your organization.")</MudAlert>
             }
