@@ -23,6 +23,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     private const string MATH_BLOCK_MARKER_BRACKET_CLOSE = """\]""";
     private const string HTML_CODE_FENCE_PREFIX = "```html";
 
+    /// <summary>
+    /// How many files of an answer the export menu lists one by one; beyond that, it groups them by kind.
+    /// </summary>
+    private const int MAX_FILES_WITHOUT_SUBMENUS = 5;
+
     private static readonly string[] HTML_TAG_MARKERS =
     [
         "<!doctype",
@@ -104,10 +109,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// the save dialog.
     /// </summary>
     /// <remarks>
-    /// Only AI blocks can be exported, so this always names something the AI produced. In the chat
-    /// that is its response, whereas in an assistant it is the result, and there the user sees no
-    /// chat at all. Whoever renders this block knows which of the two it is. Null falls back to
-    /// the chat wording.
+    /// Only AI blocks offer the export menu, so this always names something the AI produced. In the
+    /// chat that is its response, whereas in an assistant it is the result, and there the user sees
+    /// no chat at all. Whoever renders this block knows which of the two it is. Null falls back to
+    /// the chat wording. A code block of a message of the user is saved with the label of its
+    /// button as the title instead.
     /// </remarks>
     [Parameter]
     public string? ExportTitle { get; set; }
@@ -180,6 +186,20 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
 
     /// <summary>
+    /// Whether this block offers its answer for export through the export menu: entirely, and file by file.
+    /// </summary>
+    private bool CanExportAnswer => this.Role is ChatRole.AI && this.CanExport;
+
+    /// <summary>
+    /// Whether each code block of this block can be saved on its own, through a button at the block.
+    /// </summary>
+    /// <remarks>
+    /// Besides an answer, this holds for a message of the user: code the user sent weeks ago can be
+    /// got back that way after many changes to it, without copying it out of the chat.
+    /// </remarks>
+    private bool CanSaveCodeBlocks => this.Role is ChatRole.AI or ChatRole.USER && this.CanExport;
+
+    /// <summary>
     /// Whether this block leaves AI Studio with the notice that AI generated it, when that is switched on.
     /// </summary>
     private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
@@ -191,6 +211,10 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// Cached the same way the Markdown render plan is: reading the files means parsing the whole
     /// message, and a block re-renders for reasons which have nothing to do with its text, such as
     /// switching the theme, which would parse every message of a long chat again.
+    ///
+    /// The files are read from the text the render plan shows, not from the message as stored. A
+    /// code block the chat renders finds its file by where it stands in that text, and an answer of
+    /// raw HTML only becomes a code block there.
     /// </remarks>
     private IReadOnlyList<MessageFile> MessageFiles
     {
@@ -203,27 +227,44 @@ public partial class ContentBlockComponent : MSGComponentBase
                 return this.cachedMessageFiles;
 
             this.cachedMessageFilesInput = markdown;
-            this.cachedMessageFiles = PlainFileExport.ExtractFiles(markdown, this.csvSeparator);
+            this.cachedMessageFiles = PlainFileExport.ExtractFiles(this.GetMarkdownRenderPlan(markdown).Source, this.csvSeparator);
             return this.cachedMessageFiles;
         }
     }
+
+    /// <summary>
+    /// The files whose code blocks get a button to save them: all files of this block, as long as its
+    /// code blocks can be saved.
+    /// </summary>
+    /// <remarks>
+    /// In a long answer, the user would otherwise have to scroll from the code block up to the export
+    /// menu. The button saves the very file the menu offers for the block, under the same name.
+    /// </remarks>
+    private IReadOnlyList<MessageFile> FilesWithSaveButton => this.CanSaveCodeBlocks ? this.MessageFiles : [];
+
+    /// <summary>
+    /// Names the button which saves a file at its code block, e.g., "Save as Python (.py)".
+    /// </summary>
+    private string SaveAsLabel(MessageFile file) => string.Format(T("Save as {0}"), file.ToName());
 
     /// <summary>
     /// Names one file in the export menu.
     /// </summary>
     /// <remarks>
     /// Tables and code blocks are named apart, just as they are counted apart. With a single file of
-    /// its kind the format alone says everything. As soon as an answer holds more than one, the user
+    /// its kind its type alone says everything. As soon as an answer holds more than one, the user
     /// has to be able to tell them apart: the heading above a file does that, unless it is missing
-    /// or two files of the kind share one, and then we count them. A code block always says that it
-    /// is one, because the menu offers the entire answer as a web page or a LaTeX document right
-    /// below, and the two entries must not read alike.
+    /// or two files of the kind share one. Then the type still does, as long as no other file of
+    /// the kind shares it, such as one block of Python next to one of Rust; otherwise we count them.
+    /// A code block always says that it is one, because the menu offers the entire answer as a web
+    /// page or a LaTeX document right below, and the two entries must not read alike.
     /// </remarks>
     private string ExportLabel(MessageFile file)
     {
         var isTable = file.Format.IsTabular();
         var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular() == isTable).ToList();
-        var extension = file.Format.ToFileExtension();
+        var extensionOrName = file.ToFileExtensionOrName();
+        var typeName = file.ToName();
 
         //
         // The caption is the heading the model wrote, so it already carries the language of the
@@ -232,16 +273,43 @@ public partial class ContentBlockComponent : MSGComponentBase
         //
         string name;
         if (filesOfItsKind.Count < 2)
-            name = file.Format.ToName();
+            name = typeName;
         else if (!string.IsNullOrWhiteSpace(file.Caption) && filesOfItsKind.Count(entry => string.Equals(entry.Caption, file.Caption, StringComparison.Ordinal)) is 1)
-            name = $"{file.Caption} ({extension})";
+            name = $"{file.Caption} ({extensionOrName})";
+        else if (filesOfItsKind.Count(entry => string.Equals(entry.ToName(), typeName, StringComparison.Ordinal)) is 1)
+            name = typeName;
         else
             return isTable
-                ? string.Format(T("Table {0} ({1})"), file.Ordinal, extension)
-                : string.Format(T("Code block {0} ({1})"), file.Ordinal, extension);
+                ? string.Format(T("Table {0} ({1})"), file.Ordinal, extensionOrName)
+                : string.Format(T("Code block {0} ({1})"), file.Ordinal, extensionOrName);
 
         return isTable ? name : string.Format(T("Code block: {0}"), name);
     }
+
+    /// <summary>
+    /// The files this block holds by kind, tables first, for an answer with more files than the
+    /// export menu lists one by one.
+    /// </summary>
+    /// <remarks>
+    /// An answer with many code blocks, a tutorial for example, would otherwise push the formats
+    /// for the entire answer out of sight. Each submenu keeps the order of the answer, so "Code
+    /// block 3" is the third entry of its submenu as well.
+    /// </remarks>
+    private IEnumerable<IGrouping<bool, MessageFile>> MessageFilesByKind => this.MessageFiles.GroupBy(file => file.Format.IsTabular()).OrderByDescending(isTable => isTable.Key);
+
+    /// <summary>
+    /// Names the submenu of one kind of files in the export menu, with the number of its files.
+    /// </summary>
+    private string ExportGroupLabel(IGrouping<bool, MessageFile> filesOfAKind)
+    {
+        var count = filesOfAKind.Count().CompactCount();
+        return filesOfAKind.Key ? string.Format(T("Tables ({0})"), count) : string.Format(T("Code blocks ({0})"), count);
+    }
+
+    /// <summary>
+    /// Returns the icon of the submenu of one kind of files in the export menu.
+    /// </summary>
+    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.ToIcon() : FileExportFormat.SOURCE_CODE.ToIcon();
 
     /// <summary>
     /// What the export offers, falling back to the chat wording when nobody named it.
@@ -803,8 +871,13 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         try
         {
+            //
+            // A message of the user is no AI response, so the save dialog takes the label of the
+            // button at the code block as its title instead:
+            //
+            var dialogTitle = this.Role is ChatRole.AI ? this.EffectiveExportTitle : this.SaveAsLabel(file);
             var fileName = string.IsNullOrWhiteSpace(file.Caption) ? this.ExportFileName : file.Caption;
-            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file.Format, this.Content.ToExportContent(file), fileName);
+            await PlainFileExport.ToFile(this.RustService, dialogTitle, file, this.Content.ToExportContent(file), fileName);
         }
         catch (ArgumentOutOfRangeException e)
         {

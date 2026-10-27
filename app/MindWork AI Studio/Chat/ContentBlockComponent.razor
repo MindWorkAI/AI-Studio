@@ -83,7 +83,7 @@
                     </MudTooltip>
                 }
 
-                @if (this.Role is ChatRole.AI && this.CanExport)
+                @if (this.CanExportAnswer)
                 {
                     <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
                         <MudMenu Icon="@Icons.Material.Filled.Save">
@@ -91,12 +91,25 @@
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
                             }
-                            @if (this.MessageFiles.Count > 0)
+                            @if (this.MessageFiles.Count > MAX_FILES_WITHOUT_SUBMENUS)
+                            {
+                                <MudDivider/>
+                                @foreach (var filesOfAKind in this.MessageFilesByKind)
+                                {
+                                    <MudMenu StartIcon="@ExportGroupIcon(filesOfAKind)" Label="@this.ExportGroupLabel(filesOfAKind)">
+                                        @foreach (var messageFile in filesOfAKind)
+                                        {
+                                            <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                        }
+                                    </MudMenu>
+                                }
+                            }
+                            else if (this.MessageFiles.Count > 0)
                             {
                                 <MudDivider/>
                                 @foreach (var messageFile in this.MessageFiles)
                                 {
-                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.Format.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
                                 }
                             }
                             <MudDivider/>
@@ -220,7 +233,13 @@
                                     var segmentContent = segment.GetContent(renderPlan.Source);
                                     if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
                                     {
-                                        <MudMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" />
+                                        <ExportableMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" Files="@this.FilesWithSaveButton" ValueStart="@segment.Start">
+                                            <CodeBlockActions Context="file">
+                                                <MudTooltip Text="@this.SaveAsLabel(file)" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Primary" Variant="Variant.Filled" Class="ma-2" OnClick="@(() => this.ExportFile(file))"/>
+                                                </MudTooltip>
+                                            </CodeBlockActions>
+                                        </ExportableMarkdown>
                                     }
                                     else
                                     {
