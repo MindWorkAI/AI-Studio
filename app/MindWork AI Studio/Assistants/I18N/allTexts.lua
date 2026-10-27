@@ -4018,8 +4018,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T2730980305"] = "Sources"
 -- Confidence Card
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T2960002005"] = "Confidence Card"
 
--- Confidence
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T3243388657"] = "Confidence"
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T3448155331"] = "Close"
 
 -- Shows and hides the confidence card with information about the selected LLM provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T847071819"] = "Shows and hides the confidence card with information about the selected LLM provider."
@@ -4614,9 +4614,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2149927097"] = "Man
 
 -- When the model of a chat cannot use tools, AI Studio uses classic RAG instead and searches your data sources with every message.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2382076848"] = "When the model of a chat cannot use tools, AI Studio uses classic RAG instead and searches your data sources with every message."
-
--- Select data
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T274155039"] = "Select data"
 
 -- Whenever a question calls for it, the AI picks the fitting ones among these data sources itself.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2854302511"] = "Whenever a question calls for it, the AI picks the fitting ones among these data sources itself."
