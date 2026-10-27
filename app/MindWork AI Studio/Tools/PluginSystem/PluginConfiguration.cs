@@ -486,7 +486,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptFilePath, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedPolicyId, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.OutputMode, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultFileFormat, this.Id, settingsTable, dryRun);
+
+        var resultFileFormatIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultFileFormat, this.Id, settingsTable, dryRun, validator: DataBatchProcessing.IsValidResultFileFormat);
+        if (!resultFileFormatIsValid && settingsTable.TryGetValue("DataBatchProcessing.ResultFileFormat", out _))
+            LOG.LogWarning("The Batch Processing result file format configured by plugin {ConfigPluginId} must be one of {ResultFileFormats}.", this.Id, string.Join(", ", FileExportFormatExtensions.ANSWER_FORMATS));
+
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvFileName, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultColumnHeader, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvSeparator, this.Id, settingsTable, dryRun);
