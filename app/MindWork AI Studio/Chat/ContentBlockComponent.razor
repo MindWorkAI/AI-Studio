@@ -91,7 +91,20 @@
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
                             }
-                            @if (this.MessageFiles.Count > 0)
+                            @if (this.MessageFiles.Count > MAX_FILES_WITHOUT_SUBMENUS)
+                            {
+                                <MudDivider/>
+                                @foreach (var filesOfAKind in this.MessageFilesByKind)
+                                {
+                                    <MudMenu StartIcon="@ExportGroupIcon(filesOfAKind)" Label="@this.ExportGroupLabel(filesOfAKind)">
+                                        @foreach (var messageFile in filesOfAKind)
+                                        {
+                                            <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                        }
+                                    </MudMenu>
+                                }
+                            }
+                            else if (this.MessageFiles.Count > 0)
                             {
                                 <MudDivider/>
                                 @foreach (var messageFile in this.MessageFiles)

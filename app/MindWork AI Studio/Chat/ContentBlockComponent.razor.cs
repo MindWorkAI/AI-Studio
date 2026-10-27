@@ -23,6 +23,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     private const string MATH_BLOCK_MARKER_BRACKET_CLOSE = """\]""";
     private const string HTML_CODE_FENCE_PREFIX = "```html";
 
+    /// <summary>
+    /// How many files of an answer the export menu lists one by one; beyond that, it groups them by kind.
+    /// </summary>
+    private const int MAX_FILES_WITHOUT_SUBMENUS = 5;
+
     private static readonly string[] HTML_TAG_MARKERS =
     [
         "<!doctype",
@@ -213,17 +218,19 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// Tables and code blocks are named apart, just as they are counted apart. With a single file of
-    /// its kind the format alone says everything. As soon as an answer holds more than one, the user
+    /// its kind its type alone says everything. As soon as an answer holds more than one, the user
     /// has to be able to tell them apart: the heading above a file does that, unless it is missing
-    /// or two files of the kind share one, and then we count them. A code block always says that it
-    /// is one, because the menu offers the entire answer as a web page or a LaTeX document right
-    /// below, and the two entries must not read alike.
+    /// or two files of the kind share one. Then the type still does, as long as no other file of
+    /// the kind shares it, such as one block of Python next to one of Rust; otherwise we count them.
+    /// A code block always says that it is one, because the menu offers the entire answer as a web
+    /// page or a LaTeX document right below, and the two entries must not read alike.
     /// </remarks>
     private string ExportLabel(MessageFile file)
     {
         var isTable = file.Format.IsTabular();
         var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular() == isTable).ToList();
-        var extension = file.ToFileExtensionOrName();
+        var extensionOrName = file.ToFileExtensionOrName();
+        var typeName = file.ToName();
 
         //
         // The caption is the heading the model wrote, so it already carries the language of the
@@ -232,16 +239,43 @@ public partial class ContentBlockComponent : MSGComponentBase
         //
         string name;
         if (filesOfItsKind.Count < 2)
-            name = file.ToName();
+            name = typeName;
         else if (!string.IsNullOrWhiteSpace(file.Caption) && filesOfItsKind.Count(entry => string.Equals(entry.Caption, file.Caption, StringComparison.Ordinal)) is 1)
-            name = $"{file.Caption} ({extension})";
+            name = $"{file.Caption} ({extensionOrName})";
+        else if (filesOfItsKind.Count(entry => string.Equals(entry.ToName(), typeName, StringComparison.Ordinal)) is 1)
+            name = typeName;
         else
             return isTable
-                ? string.Format(T("Table {0} ({1})"), file.Ordinal, extension)
-                : string.Format(T("Code block {0} ({1})"), file.Ordinal, extension);
+                ? string.Format(T("Table {0} ({1})"), file.Ordinal, extensionOrName)
+                : string.Format(T("Code block {0} ({1})"), file.Ordinal, extensionOrName);
 
         return isTable ? name : string.Format(T("Code block: {0}"), name);
     }
+
+    /// <summary>
+    /// The files this block holds by kind, tables first, for an answer with more files than the
+    /// export menu lists one by one.
+    /// </summary>
+    /// <remarks>
+    /// An answer with many code blocks, a tutorial for example, would otherwise push the formats
+    /// for the entire answer out of sight. Each submenu keeps the order of the answer, so "Code
+    /// block 3" is the third entry of its submenu as well.
+    /// </remarks>
+    private IEnumerable<IGrouping<bool, MessageFile>> MessageFilesByKind => this.MessageFiles.GroupBy(file => file.Format.IsTabular()).OrderByDescending(isTable => isTable.Key);
+
+    /// <summary>
+    /// Names the submenu of one kind of files in the export menu, with the number of its files.
+    /// </summary>
+    private string ExportGroupLabel(IGrouping<bool, MessageFile> filesOfAKind)
+    {
+        var count = filesOfAKind.Count().CompactCount();
+        return filesOfAKind.Key ? string.Format(T("Tables ({0})"), count) : string.Format(T("Code blocks ({0})"), count);
+    }
+
+    /// <summary>
+    /// Returns the icon of the submenu of one kind of files in the export menu.
+    /// </summary>
+    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.ToIcon() : FileExportFormat.SOURCE_CODE.ToIcon();
 
     /// <summary>
     /// What the export offers, falling back to the chat wording when nobody named it.
