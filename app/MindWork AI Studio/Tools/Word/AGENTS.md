@@ -13,7 +13,12 @@ path does not run through here.
    template (.dotx) into a document, and replaces the body: everything but the properties of the last
    section goes, together with whatever only the body used.
 3. `MarkdownWordConverter` reads the Markdown with Markdig, through `Markdown.SAFE_MARKDOWN_PIPELINE`,
-   and turns its blocks into paragraphs. `WordStyles` finds the styles they use in the template.
+   and turns its blocks into paragraphs and tables. `WordStyles` finds the styles they use in the
+   template, and `WordNumbering` adds the numbering of the lists.
+
+Some things Markdown knows have no counterpart which a template could style: math stays in the notation
+of TeX, a picture is replaced by its description, and the footnotes follow the text as a list, with their
+numbers raised, rather than going to the foot of the page.
 
 ## Rules which are easy to break
 
@@ -23,8 +28,14 @@ path does not run through here.
   e.g., "heading 1", in every language, while the ID follows the language of the Word which saved the
   file: a German Word stores the first heading as "berschrift1". `WordStyles` looks up the name and adds
   a plain definition when the template lacks a style.
-- **New content carries no formatting of its own.** Paragraphs and texts take their look from the styles
-  of the template. Only what Markdown itself marks, such as bold text, is formatted directly.
+- **New content carries no formatting of its own.** Paragraphs, lists, and tables take their look from
+  the styles of the template; a table takes the style the template names for new tables. Only what
+  Markdown itself marks, such as bold text or the alignment of a column, is formatted directly.
+- **Every numbered list counts on its own.** Word goes on counting across all lists which share a
+  numbering instance, so `WordNumbering` gives each numbered list an instance of its own, which restarts
+  the count.
+- **A body and a table cell end with a paragraph,** and two tables never follow each other directly,
+  or Word joins them. `MarkdownWordConverter.EndWithParagraph` and the case for tables see to it.
 - **No copy of a file in memory.** Templates of organizations carry pictures and easily reach a hundred
   megabytes. Let the writer edit a copy on disk; a `MemoryStream` with the whole file multiplies what
   the Open XML SDK holds anyway.

@@ -41,12 +41,7 @@ internal static class WordDocumentWriter
         var sectionProperties = ClearBody(body);
         RemoveWhatOnlyTheBodyUsed(mainPart);
 
-        var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart)).Convert(markdown);
-
-        // Word refuses a body without any paragraph:
-        if (content.Count is 0)
-            content.Add(new W.Paragraph());
-
+        var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), new WordNumbering(mainPart)).Convert(markdown);
         foreach (var element in content)
             if (sectionProperties is null)
                 body.Append(element);
