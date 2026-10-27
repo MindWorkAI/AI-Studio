@@ -4,10 +4,10 @@
 {
     <MudStack Row="false" Class="mb-3 pa-3 border-dashed border rounded-lg">
         <MudJustifiedText Typo="Typo.body2">
-            @this.DetermineIntroText()
+            @this.PromptText
         </MudJustifiedText>
-        <MudButton Color="@this.DetermineButtonColor()" Variant="Variant.Filled" OnClick="() => this.ShowPandocDialogAsync()">
-            @this.DetermineButtonText()
+        <MudButton Color="@this.ButtonColor" Variant="Variant.Filled" OnClick="() => this.ShowPandocDialogAsync()">
+            @this.ButtonText
         </MudButton>
     </MudStack>
 }

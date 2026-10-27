@@ -1,7 +1,7 @@
 using AIStudio.Components;
 using AIStudio.Tools;
 
-namespace AIStudio.Tests.Tools;
+namespace AIStudio.Tests.Components;
 
 public sealed class ManagePandocDependencyTests
 {

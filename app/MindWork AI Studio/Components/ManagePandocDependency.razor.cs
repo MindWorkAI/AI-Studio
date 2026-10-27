@@ -7,6 +7,11 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
+/// <summary>
+/// Asks to install or update Pandoc where a feature needs it for some files only, such as the HTML files
+/// of a local data source. It stays hidden while the check runs and once Pandoc is ready, so it does not
+/// distract from the rest of the dialog.
+/// </summary>
 public partial class ManagePandocDependency : MSGComponentBase
 {
     [Parameter]
@@ -33,60 +38,20 @@ public partial class ManagePandocDependency : MSGComponentBase
 
     #endregion
 
-    private Color DetermineButtonColor()
-    {
-        if (this.pandocInstallation is null)
-            return Color.Default;
-        
-        switch (this.pandocInstallation.Value)
-        {
-            case { CheckWasSuccessful: true, IsAvailable: true }:
-                return Color.Default;
-            
-            case { CheckWasSuccessful: true, IsAvailable: false }:
-                return Color.Warning;
-            
-            case { CheckWasSuccessful: false }:
-                return Color.Error;
-        }
-    }
-    
-    private string DetermineButtonText()
-    {
-        if(this.pandocInstallation is null)
-            return T("Please wait while we check the availability of Pandoc.");
-        
-        switch (this.pandocInstallation.Value)
-        {
-            case { CheckWasSuccessful: true, IsAvailable: true }:
-                return T("Check your Pandoc installation");
-            
-            case { CheckWasSuccessful: true, IsAvailable: false }:
-                return T("Update Pandoc");
-            
-            case { CheckWasSuccessful: false }:
-                return T("Install Pandoc");
-        }
-    }
+    //
+    // The prompt shows up only for an installation which is not available, so it is either outdated,
+    // when the check found one, or missing:
+    //
+    private bool IsOutdated => this.pandocInstallation is { CheckWasSuccessful: true };
 
-    private string DetermineIntroText()
-    {
-        if (this.pandocInstallation is null)
-            return $"{this.IntroText} {T("Please wait while we check the availability of Pandoc.")}";
-        
-        switch (this.pandocInstallation.Value)
-        {
-            case { CheckWasSuccessful: true, IsAvailable: true }:
-                return $"{this.IntroText} {T("Your Pandoc installation meets the requirements.")}";
-            
-            case { CheckWasSuccessful: true, IsAvailable: false }:
-                return $"{this.IntroText} {T("Your Pandoc installation is outdated. Please update it to the latest version to ensure compatibility with all features.")}";
-            
-            case { CheckWasSuccessful: false }:
-                return $"{this.IntroText} {T("Pandoc is not installed or not available. Please install it to use the features that require Pandoc.")}";
-        }
-    }
-    
+    private Color ButtonColor => this.IsOutdated ? Color.Warning : Color.Error;
+
+    private string ButtonText => this.IsOutdated ? T("Update Pandoc") : T("Install Pandoc");
+
+    private string PromptText => this.IsOutdated
+        ? $"{this.IntroText} {T("Your Pandoc installation is outdated. Please update it to the latest version to ensure compatibility with all features.")}"
+        : $"{this.IntroText} {T("Pandoc is not installed or not available. Please install it to use the features that require Pandoc.")}";
+
     private async Task ShowPandocDialogAsync()
     {
         var dialogReference = await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), DialogOptions.FULLSCREEN);
