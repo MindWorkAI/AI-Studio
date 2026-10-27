@@ -382,6 +382,21 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: mailboxes only on the mail servers of the organization?
         ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.AllowOnlyOrganizationMailServers, this.Id, settingsTable, dryRun);
 
+        // Config: the random pause between two indexing steps of local data sources
+        var minimumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MinimumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: value => value is >= 0 and <= DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+        if (!minimumPauseIsValid && settingsTable.TryGetValue("DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds", out _))
+            LOG.LogWarning("The lower bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between 0 and {MaximumPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+
+        var maximumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MaximumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: value => value is >= 0 and <= DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+        if (!maximumPauseIsValid && settingsTable.TryGetValue("DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds", out _))
+            LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between 0 and {MaximumPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+
+        if (minimumPauseIsValid && maximumPauseIsValid
+            && settingsTable.TryGetValue("DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds", out var minimumPauseValue) && minimumPauseValue.TryRead<int>(out var minimumPauseSeconds)
+            && settingsTable.TryGetValue("DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds", out var maximumPauseValue) && maximumPauseValue.TryRead<int>(out var maximumPauseSeconds)
+            && maximumPauseSeconds < minimumPauseSeconds)
+            LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} is below its lower bound. The lower bound of {MinimumPauseSeconds} seconds wins.", this.Id, minimumPauseSeconds);
+
         // Config: data source selection agent settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
