@@ -101,10 +101,22 @@ public sealed class FileExportFormatTests
             Assert.That(FileExportFormat.MARKDOWN.IsPlainText(), Is.True);
             Assert.That(FileExportFormat.CSV.IsPlainText(), Is.True);
             Assert.That(FileExportFormat.TSV.IsPlainText(), Is.True);
+            Assert.That(FileExportFormat.SOURCE_CODE.IsPlainText(), Is.True, "Code is text, whatever its language.");
         });
     }
 
-    [TestCase("css", TestName = "A language AI Studio writes no file for")]
+    [Test]
+    public void CodeLeavesItsFileToItsLanguage()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormat.SOURCE_CODE.ToFileExtension(), Is.Empty, "Python and Rust share the format, but not the extension.");
+            Assert.That(FileExportFormat.SOURCE_CODE.ToFileTypeFilter(), Is.Null, "Without the language, the save dialog would offer the wrong files.");
+            Assert.That(FileExportFormatExtensions.ANSWER_FORMATS, Does.Not.Contain(FileExportFormat.SOURCE_CODE), "Code is one block out of an answer, never the answer itself.");
+        });
+    }
+
+    [TestCase("css", TestName = "A language without a format of its own")]
     [TestCase("docx", TestName = "A format no code block can hold")]
     [TestCase("", TestName = "A fence without a language")]
     [TestCase(null, TestName = "A fence Markdig read no language for")]

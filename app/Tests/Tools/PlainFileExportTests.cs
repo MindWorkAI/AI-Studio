@@ -70,17 +70,39 @@ public sealed class PlainFileExportTests
         Assert.That(files.Select(file => file.Format), Is.EqualTo(new[] { FileExportFormat.LATEX }));
     }
 
-    [TestCase("```css", TestName = "A language AI Studio writes no file for")]
-    [TestCase("```", TestName = "A fence without a language")]
-    public void AnyOtherCodeBlockIsNotOffered(string openingFence)
+    [TestCase("```python", "Python (.py)")]
+    [TestCase("```rust", "Rust (.rs)")]
+    [TestCase("```css", "CSS (.css)")]
+    [TestCase("~~~bash", "Shell (.sh)")]
+    [TestCase("```foo", "foo (.txt)", Description = "A language AI Studio does not know still names the block.")]
+    [TestCase("```", "Text (.txt)", Description = "A block without a language is plain text.")]
+    public void ACodeBlockInAnyOtherLanguageIsOfferedAsCode(string openingFence, string expectedName)
     {
-        var files = PlainFileExport.ExtractFiles(Lines(openingFence, "body { margin: 0; }", "```"), ',');
+        var files = PlainFileExport.ExtractFiles(Lines(openingFence, "print(42)", openingFence[..3]), ',');
 
-        Assert.That(files, Is.Empty);
+        Assert.Multiple(() =>
+        {
+            Assert.That(files, Has.Count.EqualTo(1));
+            Assert.That(files[0].Format, Is.EqualTo(FileExportFormat.SOURCE_CODE));
+            Assert.That(files[0].ToName(), Is.EqualTo(expectedName));
+            Assert.That(files[0].Content, Is.EqualTo("print(42)"), "The code leaves the answer exactly as the model wrote it, without the fence around it.");
+        });
+    }
+
+    [Test]
+    public void AFormulaIsNoCodeBlock()
+    {
+        var answer = Lines("The energy follows from", string.Empty, "$$", "E = mc^2", "$$", string.Empty, "for every body at rest.");
+
+        var files = PlainFileExport.ExtractFiles(answer, ',');
+
+        Assert.That(files, Is.Empty, "Markdig reads a formula as a fenced block, but nobody saves a formula as a text file.");
     }
 
     [TestCase("```html", "<html><body><p>The answer broke off here", TestName = "Half a web page")]
     [TestCase("```csv", "Quarter,Revenue", TestName = "Half a table")]
+    [TestCase("```python", "def main():", TestName = "Half a program")]
+    [TestCase("```", "The answer broke off here", TestName = "Half a text")]
     public void ACodeBlockTheModelNeverClosedIsNotOffered(string openingFence, string content)
     {
         var files = PlainFileExport.ExtractFiles(Lines("The answer starts normally.", string.Empty, openingFence, content), ',');
@@ -106,6 +128,12 @@ public sealed class PlainFileExportTests
             string.Empty,
             "```latex",
             @"\section{Second block}",
+            "```",
+            string.Empty,
+            "# Script",
+            string.Empty,
+            "```python",
+            "print('Third block')",
             "```");
 
         var files = PlainFileExport.ExtractFiles(answer, ',');
@@ -115,7 +143,8 @@ public sealed class PlainFileExportTests
             (1, "Revenue", FileExportFormat.CSV),
             (1, "Landing page", FileExportFormat.HTML),
             (2, "Landing page", FileExportFormat.LATEX),
-        }), "The first code block is code block 1, even though a table stands before it.");
+            (3, "Script", FileExportFormat.SOURCE_CODE),
+        }), "The first code block is code block 1, even though a table stands before it, and code counts along with the other blocks.");
     }
 
     private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);

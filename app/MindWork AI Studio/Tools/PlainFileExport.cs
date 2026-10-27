@@ -4,6 +4,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
+using Markdig.Extensions.Mathematics;
 using Markdig.Extensions.Tables;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
@@ -22,11 +23,13 @@ public static class PlainFileExport
     /// <remarks>
     /// Two kinds of files end up in an answer. Almost always it is a Markdown table written with
     /// pipes, which is what a model produces on its own; we turn its cells into a file. Besides,
-    /// a model answers with a fenced code block marked as a format we write, such as html, latex,
-    /// markdown, or csv, whenever it was asked for a web page, a document, or data. Such a block
-    /// already is the finished file: we hand it through untouched rather than taking it apart and
-    /// reassembling it. We do not judge what the block holds, either. A browser shows a fragment of
-    /// HTML just as well as an entire page, and a LaTeX fragment is still what the user asked for.
+    /// every fenced code block is a file. A model marks it as a format we write, such as html, latex,
+    /// markdown, or csv, whenever it was asked for a web page, a document, or data; any other block
+    /// is code, in whatever language the model named, or in none. Either way, the block already is
+    /// the finished file: we hand it through untouched rather than taking it apart and reassembling
+    /// it. We do not judge what the block holds, either. A browser shows a fragment of HTML just as
+    /// well as an entire page, and a LaTeX fragment or a few lines of code are still what the user
+    /// asked for.
     /// </remarks>
     /// <param name="markdown">The Markdown text of the message.</param>
     /// <param name="separator">The separator to write a Markdown table with, see CsvWriter.SeparatorFor.</param>
@@ -56,10 +59,16 @@ public static class PlainFileExport
             .ToList();
 
         var tables = document.Descendants<Table>()
-            .Select(table => (table.Line, Content: ToContent(table, separator)));
+            .Select(table => (table.Line, File: Read(table, separator)));
 
+        //
+        // Markdig reads a formula between $$ as a MathBlock, which is a fenced code block as well.
+        // Nobody saves a formula on its own, and as a block without a language, every formula of an
+        // answer would end up in the menu as a text file:
+        //
         var codeBlocks = document.Descendants<FencedCodeBlock>()
-            .Select(block => (block.Line, Content: ToContent(block)));
+            .Where(block => block is not MathBlock)
+            .Select(block => (block.Line, File: Read(block)));
 
         //
         // Tables and code blocks are counted apart. The menu falls back to that number when a
@@ -69,22 +78,32 @@ public static class PlainFileExport
         var numberOfTables = 0;
         var numberOfCodeBlocks = 0;
         return tables.Concat(codeBlocks)
-            .Where(entry => entry.Content is not null)
+            .Where(entry => entry.File is not null)
             .OrderBy(entry => entry.Line)
             .Select(entry => new MessageFile(
-                entry.Content!.Value.Format.IsTabular() ? ++numberOfTables : ++numberOfCodeBlocks,
-                Caption: HeadingAbove(entry.Line) is { Length: > 0 } heading ? heading : entry.Content!.Value.Fallback,
-                entry.Content!.Value.Format,
-                entry.Content.Value.Text))
+                entry.File!.Format.IsTabular() ? ++numberOfTables : ++numberOfCodeBlocks,
+                Caption: HeadingAbove(entry.Line) is { Length: > 0 } heading ? heading : entry.File!.Fallback,
+                entry.File!.Format,
+                entry.File!.Language,
+                entry.File!.Content))
             .ToList();
 
         string HeadingAbove(int line) => headings.LastOrDefault(heading => heading.Line < line).Text ?? string.Empty;
     }
 
     /// <summary>
+    /// A file read out of a table or a code block, before ExtractFiles knows where it stands in the message.
+    /// </summary>
+    /// <param name="Fallback">What the file is about when no heading stands above it.</param>
+    /// <param name="Format">The format the file is written as.</param>
+    /// <param name="Language">The language of the code, or NONE when the format is not SOURCE_CODE.</param>
+    /// <param name="Content">The finished file content.</param>
+    private sealed record FoundFile(string Fallback, FileExportFormat Format, SourceCodeLanguage Language, string Content);
+
+    /// <summary>
     /// Turns a Markdown table into a file.
     /// </summary>
-    private static (string Fallback, FileExportFormat Format, string Text)? ToContent(Table table, char separator)
+    private static FoundFile? Read(Table table, char separator)
     {
         var rows = table.OfType<TableRow>()
             .Select(row => row.OfType<TableCell>().Select(ToPlainText).ToArray())
@@ -98,25 +117,29 @@ public static class PlainFileExport
         foreach (var fields in rows)
             text.AppendLine(CsvWriter.ToRow(separator, fields));
 
-        return (rows[0].FirstOrDefault() ?? string.Empty, FileExportFormat.CSV, text.ToString());
+        return new(rows[0].FirstOrDefault() ?? string.Empty, FileExportFormat.CSV, SourceCodeLanguage.NONE, text.ToString());
     }
 
     /// <summary>
-    /// Turns a fenced code block into a file, when the model marked it as a format we write.
+    /// Turns a fenced code block into a file: in the format the model marked it as, when we write
+    /// that format, and as code in its language otherwise.
     /// </summary>
     /// <remarks>
     /// A block the model never closed is left out. That happens when an answer broke off, at the
     /// output limit of the model for example, and the file would end wherever the answer did: half
-    /// a web page or half a table is nothing anybody wants to save.
+    /// a web page, half a table, or half a program is nothing anybody wants to save.
     /// </remarks>
-    private static (string Fallback, FileExportFormat Format, string Text)? ToContent(FencedCodeBlock block)
+    private static FoundFile? Read(FencedCodeBlock block)
     {
-        if (block.ClosingFencedCharCount is 0 || !FileExportFormatExtensions.TryFromCodeFenceLanguage(block.Info, out var format))
+        if (block.ClosingFencedCharCount is 0)
             return null;
 
         var content = block.Lines.ToString();
+        if (!FileExportFormatExtensions.TryFromCodeFenceLanguage(block.Info, out var format))
+            return new(string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage(block.Info), content);
+
         if (!format.IsTabular())
-            return (string.Empty, format, content);
+            return new(string.Empty, format, SourceCodeLanguage.NONE, content);
 
         var blockSeparator = format is FileExportFormat.TSV ? '\t' : ',';
         var firstLine = content.AsSpan();
@@ -127,7 +150,7 @@ public static class PlainFileExport
         var separatorPosition = firstLine.IndexOf(blockSeparator);
         var fallback = (separatorPosition >= 0 ? firstLine[..separatorPosition] : firstLine).Trim().Trim('"').ToString();
 
-        return (fallback, format, content);
+        return new(fallback, format, SourceCodeLanguage.NONE, content);
     }
 
     /// <summary>
