@@ -145,7 +145,7 @@
             
             @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
             {
-                <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
+                <ConfidenceInfo LLMProvider="@this.Provider.UsedLLMProvider"/>
             }
 
             @if (this.IsCurrentChatStreaming)
