@@ -31,7 +31,8 @@ public static class PlainFileExport
     /// well as an entire page, and a LaTeX fragment or a few lines of code are still what the user
     /// asked for.
     /// </remarks>
-    /// <param name="markdown">The Markdown text of the message.</param>
+    /// <param name="markdown">The Markdown text of the message, as the chat renders it: the position
+    /// of each file refers to this text.</param>
     /// <param name="separator">The separator to write a Markdown table with, see CsvWriter.SeparatorFor.</param>
     /// <returns>The files, or an empty list when the message holds none.</returns>
     public static IReadOnlyList<MessageFile> ExtractFiles(string markdown, char separator)
@@ -59,7 +60,7 @@ public static class PlainFileExport
             .ToList();
 
         var tables = document.Descendants<Table>()
-            .Select(table => (table.Line, File: Read(table, separator)));
+            .Select(table => (table.Line, Position: table.Span.Start, File: Read(table, separator)));
 
         //
         // Markdig reads a formula between $$ as a MathBlock, which is a fenced code block as well.
@@ -68,7 +69,7 @@ public static class PlainFileExport
         //
         var codeBlocks = document.Descendants<FencedCodeBlock>()
             .Where(block => block is not MathBlock)
-            .Select(block => (block.Line, File: Read(block)));
+            .Select(block => (block.Line, Position: block.Span.Start, File: Read(block)));
 
         //
         // Tables and code blocks are counted apart. The menu falls back to that number when a
@@ -82,6 +83,7 @@ public static class PlainFileExport
             .OrderBy(entry => entry.Line)
             .Select(entry => new MessageFile(
                 entry.File!.Format.IsTabular() ? ++numberOfTables : ++numberOfCodeBlocks,
+                entry.Position,
                 Caption: HeadingAbove(entry.Line) is { Length: > 0 } heading ? heading : entry.File!.Fallback,
                 entry.File!.Format,
                 entry.File!.Language,

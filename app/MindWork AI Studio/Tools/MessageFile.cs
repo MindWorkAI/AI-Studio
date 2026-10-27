@@ -15,13 +15,16 @@ namespace AIStudio.Tools;
 /// <param name="Ordinal">Which table or which code block of the message this is, counting from one
 /// within its kind; the format tells the two kinds apart, see FileExportFormatExtensions.IsTabular.
 /// This is what tells two files of one kind apart even when they carry the same heading.</param>
+/// <param name="Position">Where the table or code block starts in the Markdown text the file was
+/// read from, as the index of its first character. A block the chat renders finds its file by it:
+/// the chat renders an answer in parts, around its formulas, and each part knows where it starts.</param>
 /// <param name="Caption">What the file is about: the heading above it, or else the first column
 /// heading of a table. Empty for a code block without a heading above it.</param>
 /// <param name="Format">The format this content is written as.</param>
 /// <param name="Language">The language of the code, when the format is SOURCE_CODE; NONE for
 /// every other file.</param>
 /// <param name="Content">The finished file content.</param>
-public sealed record MessageFile(int Ordinal, string Caption, FileExportFormat Format, SourceCodeLanguage Language, string Content)
+public sealed record MessageFile(int Ordinal, int Position, string Caption, FileExportFormat Format, SourceCodeLanguage Language, string Content)
 {
     private bool IsSourceCode => this.Format is FileExportFormat.SOURCE_CODE;
 

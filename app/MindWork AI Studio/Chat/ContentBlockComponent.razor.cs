@@ -196,6 +196,10 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// Cached the same way the Markdown render plan is: reading the files means parsing the whole
     /// message, and a block re-renders for reasons which have nothing to do with its text, such as
     /// switching the theme, which would parse every message of a long chat again.
+    ///
+    /// The files are read from the text the render plan shows, not from the message as stored. A
+    /// code block the chat renders finds its file by where it stands in that text, and an answer of
+    /// raw HTML only becomes a code block there.
     /// </remarks>
     private IReadOnlyList<MessageFile> MessageFiles
     {
@@ -208,7 +212,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 return this.cachedMessageFiles;
 
             this.cachedMessageFilesInput = markdown;
-            this.cachedMessageFiles = PlainFileExport.ExtractFiles(markdown, this.csvSeparator);
+            this.cachedMessageFiles = PlainFileExport.ExtractFiles(this.GetMarkdownRenderPlan(markdown).Source, this.csvSeparator);
             return this.cachedMessageFiles;
         }
     }

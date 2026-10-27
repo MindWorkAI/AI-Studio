@@ -246,7 +246,7 @@ public sealed class IContentExtensionsTests
     [Test]
     public void CodeWhichEndsWithALineBreakGetsNoSecondOne()
     {
-        var file = new MessageFile(1, string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage("python"), "print(42)\n");
+        var file = new MessageFile(1, Position: 0, string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage("python"), "print(42)\n");
 
         Assert.That(TextWith(string.Empty).ToExportContent(file), Is.EqualTo("print(42)\n"));
     }
