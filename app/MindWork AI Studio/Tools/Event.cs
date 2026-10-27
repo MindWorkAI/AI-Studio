@@ -285,7 +285,7 @@ public enum Event
     /// Sends content to the text summarizer assistant.
     /// </summary>
     SEND_TO_TEXT_SUMMARIZER_ASSISTANT,
-    
+
     /// <summary>
     /// Sends content to the SWOT analysis assistant.
     /// </summary>
