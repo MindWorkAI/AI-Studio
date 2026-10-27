@@ -5,6 +5,7 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Services.Indexing;
 
 using Microsoft.AspNetCore.Components;
 
@@ -38,6 +39,27 @@ public partial class DataSourceManagement : MSGComponentBase
         .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Cast<IDataSourceBase>());
 
     private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
+
+    private static bool IsMinimumPauseLocked => ManagedConfiguration.TryGet(x => x.App.DataSourceIndexing, x => x.MinimumPauseBetweenStepsSeconds, out var meta) && meta.IsLocked;
+
+    private static bool IsMaximumPauseLocked => ManagedConfiguration.TryGet(x => x.App.DataSourceIndexing, x => x.MaximumPauseBetweenStepsSeconds, out var meta) && meta.IsLocked;
+
+    /// <remarks>
+    /// A slider moves a value which falls out of its range into it. A locked slider therefore keeps
+    /// the whole range, since its value belongs to the organization. A free one ends at the locked
+    /// upper bound, and the free value adjusts to it, cf. PauseRange.GetEffective.
+    /// </remarks>
+    private int MinimumPauseSliderMax => IsMaximumPauseLocked && !IsMinimumPauseLocked
+        ? PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing).MaximumSeconds
+        : DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS;
+
+    /// <remarks>
+    /// The upper bound starts where the lower bound is, so raising the lower one above it raises the
+    /// upper one along with it. A locked slider keeps the whole range, cf. MinimumPauseSliderMax.
+    /// </remarks>
+    private int MaximumPauseSliderMin => IsMaximumPauseLocked
+        ? 0
+        : PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing).MinimumSeconds;
 
     #region Overrides of ComponentBase
 
