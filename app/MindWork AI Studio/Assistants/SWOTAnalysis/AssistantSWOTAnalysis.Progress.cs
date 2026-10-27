@@ -17,7 +17,7 @@ public partial class AssistantSWOTAnalysis
 
     protected override string ProgressText =>
         this.isGatheringSharedResearch ? T("Gathering shared research...") :
-        this.isModeratingAnalysis ? T("Creating prioritized actions...") :
+        this.isModeratingAnalysis ? T("Reconciling the four SWOT categories and writing the overall assessment...") :
         this.categoryAnalysisProgress.Values.Any(progress => progress.Status is SwotCategoryAnalysisStatus.RUNNING) ? T("Analyzing the four SWOT categories...") :
         string.Empty;
 

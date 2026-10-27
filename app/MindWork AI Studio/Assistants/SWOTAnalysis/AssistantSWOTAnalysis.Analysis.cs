@@ -162,7 +162,7 @@ public partial class AssistantSWOTAnalysis
             if (!SwotAnalysisModerationResponseParser.TryParse(rawResponse, out var moderation, out var issue))
             {
                 this.Logger.LogWarning("The answer of the SWOT analysis moderator could not be read: {Issue}", issue);
-                this.AddInputIssue(T("The prioritized actions could not be displayed because the model response did not have the expected structure."));
+                this.AddInputIssue(T("The four SWOT categories could not be reconciled because the model response did not have the expected structure. The preliminary results of the categories remain visible below."));
                 return;
             }
 

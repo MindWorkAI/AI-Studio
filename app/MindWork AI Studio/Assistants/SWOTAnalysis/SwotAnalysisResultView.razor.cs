@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Assistants.SWOTAnalysis;
 
 /// <summary>
-/// Shows a complete SWOT analysis: the matrix first, then the details and the prioritized actions.
+/// Shows a complete SWOT analysis, in the order of SwotAnalysisMarkdownFormatter: the matrix, the
+/// overall assessment, the prioritized actions, the details of each category, and what the moderator
+/// changed.
 /// </summary>
 public partial class SwotAnalysisResultView
 {

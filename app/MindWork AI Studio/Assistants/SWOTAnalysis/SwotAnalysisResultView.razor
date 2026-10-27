@@ -6,28 +6,13 @@
         </SwotQuadrantGrid>
     </section>
 
-    @foreach (var category in this.Result.Categories)
-    {
-        <section class="swot-detail-section">
-            <MudText Typo="Typo.h5" Class="mb-2">@category.Label</MudText>
-            @if (category.Findings.Count == 0)
-            {
-                <MudText Typo="Typo.body1">@category.EmptyMessage</MudText>
-            }
-            else
-            {
-                <ul class="swot-detail-list">
-                    @foreach (var finding in category.Findings)
-                    {
-                        <li>
-                            <strong>@finding.Summary</strong>
-                            <span> — @finding.Explanation</span>
-                        </li>
-                    }
-                </ul>
-            }
-        </section>
-    }
+    <section class="swot-detail-section">
+        <MudText Typo="Typo.h5" Class="mb-2">@this.Result.OverallAssessment.Label</MudText>
+        @foreach (var paragraph in this.Result.OverallAssessment.Paragraphs)
+        {
+            <MudText Typo="Typo.body1" Class="mb-2">@paragraph</MudText>
+        }
+    </section>
 
     <section class="swot-detail-section">
         <MudText Typo="Typo.h5" Class="mb-2">@this.Result.PrioritizedActions.Label</MudText>
@@ -52,6 +37,49 @@
                     </li>
                 }
             </ol>
+        }
+    </section>
+
+    @foreach (var category in this.Result.Categories)
+    {
+        <section class="swot-detail-section">
+            <MudText Typo="Typo.h5" Class="mb-2">@category.Label</MudText>
+            @if (category.Findings.Count == 0)
+            {
+                <MudText Typo="Typo.body1">@category.EmptyMessage</MudText>
+            }
+            else
+            {
+                <ul class="swot-detail-list">
+                    @foreach (var finding in category.Findings)
+                    {
+                        <li>
+                            <strong>@finding.Summary</strong>
+                            <span> — @finding.Explanation</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    }
+
+    <section class="swot-detail-section">
+        <MudText Typo="Typo.h5" Class="mb-2">@this.Result.ModerationNotes.Label</MudText>
+        @if (this.Result.ModerationNotes.Items.Count == 0)
+        {
+            <MudText Typo="Typo.body1">@this.Result.ModerationNotes.EmptyMessage</MudText>
+        }
+        else
+        {
+            <ul class="swot-detail-list">
+                @foreach (var note in this.Result.ModerationNotes.Items)
+                {
+                    <li>
+                        <strong>@note.Change</strong>
+                        <span> — @note.Reason</span>
+                    </li>
+                }
+            </ul>
         }
     </section>
 </div>
