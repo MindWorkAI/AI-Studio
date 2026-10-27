@@ -83,7 +83,9 @@ configuration plugin provides and how to add each of them.
 
 **Documentation:** `documentation/Tools.md`
 
-Selections, `DataTools.DisabledToolIds`, and the minimum provider confidence name tool collections; a tool outside a declared collection forms one under its own ID, and the ID of a tool inside one stands for its whole collection. Normalize a selection with `ToolRegistry.NormalizeSelection`, and expand it into tools with `ToolRegistry.ExpandSelection` only where the view of the model counts.
+Selections, `DataTools.DisabledToolIds`, `DataTools.UserDisabledToolIds`, and the minimum provider confidence name tool collections; a tool outside a declared collection forms one under its own ID, and the ID of a tool inside one stands for its whole collection. Normalize a selection with `ToolRegistry.NormalizeSelection`, and expand it into tools with `ToolRegistry.ExpandSelection` only where the view of the model counts.
+
+Build a list of tools for a component with `ToolRegistry.GetCatalogAsync(Components)`, never from the definitions: it leaves out the tools the user switched off. Whether a tool may be used at all is answered by `ToolRegistry.IsToolActive`, which checks what the organization and what the user switched off. A field which lets somebody change a stored selection shows it through `ToolRegistry.LeaveOutSwitchedOffByUser` and stores the change through `ToolRegistry.KeepSwitchedOffByUser`, so a tool switched off only hides and comes back when switched on again. See "Switched-Off Tools" in `documentation/Tools.md`.
 
 Code which decides something on behalf of a request — whether the classic RAG process steps back, say — asks `ToolRegistry.GetOfferBlockReasonAsync` or `ToolRegistry.GetEffectiveRetrievalModeAsync` with the provider settings of the request (`IProvider.CreateSettingsProvider`), never a check of its own: two answers which drift apart leave a chat searching nothing or twice.
 

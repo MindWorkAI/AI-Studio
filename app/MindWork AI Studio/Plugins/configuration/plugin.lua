@@ -1093,6 +1093,8 @@ CONFIG["SETTINGS"] = {}
 -- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
 -- search the data sources with every message instead, the way it does for models without
 -- tool usage.
+-- Users can switch off further tools themselves in the tool settings, e.g., one they never need.
+-- They can never switch on a tool you disable here.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools or tool
