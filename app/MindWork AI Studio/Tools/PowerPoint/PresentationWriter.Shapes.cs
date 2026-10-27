@@ -1,5 +1,4 @@
-using System.Text;
-using System.Xml;
+using AIStudio.Tools.OpenXml;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -233,7 +232,7 @@ internal static partial class PresentationWriter
         var row = new A.TableRow { Height = TABLE_ROW_HEIGHT };
         for (var column = 0; column < columns; column++)
         {
-            var text = column < cells.Count ? XmlSafe(cells[column]) : string.Empty;
+            var text = column < cells.Count ? OpenXmlText.XmlSafe(cells[column]) : string.Empty;
             var paragraph = text.Length > 0 ? new A.Paragraph(new A.Run(new A.Text(text))) : new A.Paragraph();
             row.Append(new A.TableCell(new A.TextBody(new A.BodyProperties(), new A.ListStyle(), paragraph), new A.TableCellProperties()));
         }
@@ -247,7 +246,7 @@ internal static partial class PresentationWriter
         if (paragraph.Level > 0)
             result.Append(new A.ParagraphProperties { Level = paragraph.Level });
 
-        result.Append(new A.Run(new A.Text(XmlSafe(paragraph.Text))));
+        result.Append(new A.Run(new A.Text(OpenXmlText.XmlSafe(paragraph.Text))));
         return result;
     }
 
@@ -259,27 +258,6 @@ internal static partial class PresentationWriter
         .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Select(line => ParagraphOf(new SlideParagraph(line, 0)))
         .ToList();
-
-    /// <summary>
-    /// Leaves out the characters XML cannot carry, which a model may produce now and then. The file
-    /// could not be saved with them.
-    /// </summary>
-    private static string XmlSafe(string text)
-    {
-        if (text.All(XmlConvert.IsXmlChar))
-            return text;
-
-        var result = new StringBuilder(text.Length);
-        for (var index = 0; index < text.Length; index++)
-        {
-            if (XmlConvert.IsXmlChar(text[index]))
-                result.Append(text[index]);
-            else if (index + 1 < text.Length && XmlConvert.IsXmlSurrogatePair(text[index + 1], text[index]))
-                result.Append(text[index]).Append(text[++index]);
-        }
-
-        return result.ToString();
-    }
 
     /// <summary>
     /// A copy of a layout placeholder, for a slide to refer to it.

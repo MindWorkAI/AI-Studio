@@ -1,3 +1,5 @@
+using AIStudio.Tools.OpenXml;
+
 using DocumentFormat.OpenXml.Packaging;
 
 using A = DocumentFormat.OpenXml.Drawing;
@@ -57,16 +59,6 @@ internal sealed partial class PresentationTemplate
     private const int READING_ROWS = 50;
 
     /// <summary>
-    /// How a template file is opened for reading.
-    /// </summary>
-    /// <remarks>
-    /// Other programs may go on writing or deleting the file meanwhile. PowerPoint keeps a file open
-    /// for writing as long as it shows it, and a template which is still open there has to be
-    /// readable all the same.
-    /// </remarks>
-    public const FileShare FILE_SHARE = FileShare.ReadWrite | FileShare.Delete;
-
-    /// <summary>
     /// Reads the template file at the given path, as Read does with a stream.
     /// </summary>
     /// <remarks>
@@ -77,7 +69,7 @@ internal sealed partial class PresentationTemplate
     /// <returns>The template.</returns>
     public static PresentationTemplate ReadFile(string path)
     {
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FILE_SHARE);
+        using var stream = TemplateFile.OpenRead(path);
         return Read(stream);
     }
 
