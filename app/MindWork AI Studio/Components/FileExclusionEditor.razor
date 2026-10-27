@@ -18,12 +18,8 @@
 
     <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">@T("Separate patterns with semicolons. Folder patterns must end with /. Exclusions take priority.")</MudText>
     <MudCollapse Expanded="@(this.ShowHelp && this.showHelp)">
-        <MudSimpleTable Dense="@true" Elevation="0" Class="mt-2" aria-label="@T("Exclusion examples")">
-            <tbody>
-                <tr><td><code>*.pdf</code></td><td>@T("PDF files, regardless of letter case")</td></tr>
-                <tr><td><code>draft-*</code></td><td>@T("File names starting with draft-")</td></tr>
-                <tr><td><code>*build/</code></td><td>@T("Folders ending in build, such as build or app-build")</td></tr>
-            </tbody>
-        </MudSimpleTable>
+        <div class="mt-2">
+            <FilePatternHelp ShowInclusionExamples="@false" ShowExclusionExamples="@true"/>
+        </div>
     </MudCollapse>
 </div>

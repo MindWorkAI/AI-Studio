@@ -1,0 +1,23 @@
+@inherits MSGComponentBase
+
+<MudPaper Outlined="@true" Class="pa-3" Elevation="0">
+    <MudText Typo="Typo.subtitle2">@T("Pattern examples")</MudText>
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">@T("Separate patterns with semicolons. Exclusions take priority over included files.")</MudText>
+    <MudSimpleTable Dense="@true" Elevation="0" aria-label="@T("Pattern examples")">
+        <tbody>
+            <tr><td><code>*.pdf;*.docx</code></td><td>@T("PDF and Word files")</td></tr>
+            @if (this.ShowInclusionExamples)
+            {
+                <tr><td><code>:documents:</code></td><td>@T("Include all documents and readable text files")</td></tr>
+                <tr><td><code>*</code></td><td>@T("Include all files, including audio and video")</td></tr>
+                <tr><td><code>:text:</code></td><td>@T("Include readable text files, including files without an extension")</td></tr>
+            }
+            <tr><td><code>draft-*</code></td><td>@T("File names starting with draft-")</td></tr>
+            @if (this.ShowExclusionExamples)
+            {
+                <tr><td><code>*build/</code></td><td>@T("Exclude folders ending in build, such as build or app-build")</td></tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">@T("Patterns match file names regardless of letter case. Folder paths are not supported.")</MudText>
+</MudPaper>

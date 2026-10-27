@@ -550,6 +550,20 @@ tr:has(> .provider-group-header) .mud-icon-button {
     padding-bottom: 0.5rem;
 }
 
+/* A field for file patterns with its help button on the right, which keeps its width while the field grows. */
+.pattern-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    column-gap: 8px;
+    align-items: center;
+}
+
+/* The field takes the first column, and so does what follows below it, such as the help, which keeps them equally wide. */
+.pattern-row-main {
+    grid-column: 1;
+    min-width: 0;
+}
+
 /* Pattern lists wrap and grow to their full content without an internal scrollbar. */
 .pattern-text-field textarea.mud-input-slot {
     white-space: pre-wrap;

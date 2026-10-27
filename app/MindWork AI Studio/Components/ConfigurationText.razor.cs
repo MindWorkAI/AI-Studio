@@ -34,6 +34,11 @@ public partial class ConfigurationText : ConfigurationBaseCore
     /// <summary>
     /// Wraps and grows to show the full text, including while the field is not focused.
     /// </summary>
+    /// <remarks>
+    /// Such a field shows the draft rather than the stored value. Otherwise, a reset which leaves the
+    /// stored value as it was would not reach the field, e.g., restoring the default while the field
+    /// shows a draft which the validation rejected.
+    /// </remarks>
     [Parameter]
     public bool ExpandToContent { get; set; }
 
