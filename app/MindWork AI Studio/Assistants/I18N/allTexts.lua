@@ -4747,6 +4747,54 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268"] = "Open the fi
 -- Saving '{0}'...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] = "Saving '{0}'..."
 
+-- Add Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEADDBUTTONS::T1076773091"] = "Add Format Template"
+
+-- Import Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEADDBUTTONS::T2773597251"] = "Import Format Template"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1469573738"] = "Delete"
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1582017048"] = "View"
+
+-- The template file cannot be found.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1941431282"] = "The template file cannot be found."
+
+-- No format templates configured yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1955378082"] = "No format templates configured yet."
+
+-- Edit Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2823861742"] = "Edit Format Template"
+
+-- Format Template Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3093558555"] = "Format Template Name"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3267849393"] = "Edit"
+
+-- Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3535588207"] = "Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them."
+
+-- Are you sure you want to delete the format template '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3671173081"] = "Are you sure you want to delete the format template '{0}'?"
+
+-- This format template is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3691770332"] = "This format template is managed by your organization."
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3865031940"] = "Actions"
+
+-- Delete Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T4087833621"] = "Delete Format Template"
+
+-- View Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T4157017975"] = "View Format Template"
+
+-- File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T723007075"] = "File"
+
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
 
@@ -5686,56 +5734,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T80509
 -- Example text to embed
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T816748904"] = "Example text to embed"
 
--- Add Format Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1076773091"] = "Add Format Template"
-
--- Delete
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1469573738"] = "Delete"
-
--- View
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1582017048"] = "View"
-
--- The template file cannot be found.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1941431282"] = "The template file cannot be found."
-
--- No format templates configured yet.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T1955378082"] = "No format templates configured yet."
-
--- Import Format Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T2773597251"] = "Import Format Template"
-
--- Edit Format Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T2823861742"] = "Edit Format Template"
-
--- Format Template Name
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3093558555"] = "Format Template Name"
-
--- Edit
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3267849393"] = "Edit"
-
--- Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3535588207"] = "Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them."
-
 -- Configure Format Templates
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3602749709"] = "Configure Format Templates"
-
--- Are you sure you want to delete the format template '{0}'?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3671173081"] = "Are you sure you want to delete the format template '{0}'?"
-
--- This format template is managed by your organization.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3691770332"] = "This format template is managed by your organization."
-
--- Actions
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3865031940"] = "Actions"
-
--- Delete Format Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T4087833621"] = "Delete Format Template"
-
--- View Format Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T4157017975"] = "View Format Template"
-
--- File
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T723007075"] = "File"
 
 -- Cannot export the encrypted API key: No enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T1832230847"] = "Cannot export the encrypted API key: No enterprise encryption secret is configured."
@@ -9552,6 +9552,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T36293728
 
 -- ERI server options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T488190224"] = "ERI server options are preselected"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T3448155331"] = "Close"
+
+-- Configured Format Templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T379780235"] = "Configured Format Templates"
 
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1417990312"] = "Preselect the target language"

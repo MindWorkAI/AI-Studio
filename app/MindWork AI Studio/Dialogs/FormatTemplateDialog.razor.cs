@@ -61,6 +61,23 @@ public partial class FormatTemplateDialog : MSGComponentBase
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
 
+    /// <summary>
+    /// Returns the parameters which show the given format template in this dialog.
+    /// </summary>
+    /// <param name="formatTemplate">The format template to show.</param>
+    /// <param name="isEditing">Whether the dialog changes a stored format template rather than adding one.</param>
+    /// <param name="isReadOnly">Whether the dialog only shows the format template, e.g., one managed by the organization.</param>
+    /// <returns>The parameters of the dialog.</returns>
+    public static DialogParameters<FormatTemplateDialog> ParametersOf(FormatTemplate formatTemplate, bool isEditing, bool isReadOnly = false) => new()
+    {
+        { x => x.DataNum, formatTemplate.Num },
+        { x => x.DataId, formatTemplate.Id },
+        { x => x.DataName, formatTemplate.Name },
+        { x => x.DataFilePath, formatTemplate.FilePath },
+        { x => x.IsEditing, isEditing },
+        { x => x.IsReadOnly, isReadOnly },
+    };
+
     private FormatTemplate CreateFormatTemplateSettings() => new()
     {
         Num = this.DataNum,
