@@ -56,6 +56,19 @@ public sealed class SemanticSearchToolUnreachableTests
     }
 
     [Test]
+    public void OnlyUnreachableDataSourcesKeepTheToolOut()
+    {
+        var options = new DataSourceOptions { AutomaticDataSourceSelection = false, PreselectedDataSourceIds = [INTRANET.Id] };
+        var offered = SemanticSearchTool.SelectOffered(options, Checked([HANDBOOK], [], [INTRANET]));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(offered.IsSearchable, Is.False, "The model would search all the same, and every such call costs a round of the answer for nothing.");
+            Assert.That(offered.Unreachable, Is.EqualTo(new[] { INTRANET }), "The model still has to learn what is missing, then through the system prompt.");
+        });
+    }
+
+    [Test]
     public void ASearchOfAllDataSourcesReportsTheUnreachableOnes()
     {
         var offered = new OfferedDataSources([HANDBOOK, MINUTES], [INTRANET]);
@@ -92,7 +105,7 @@ public sealed class SemanticSearchToolUnreachableTests
     }
 
     [Test]
-    public void TheResultNamesAnUnreachableDataSourceWithoutItsID()
+    public void TheResultNamesAnUnreachableDataSourceWithoutItsId()
     {
         var result = SemanticSearchTool.DescribeUnreachableResult(INTRANET);
 

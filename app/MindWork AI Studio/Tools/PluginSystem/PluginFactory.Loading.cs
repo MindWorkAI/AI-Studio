@@ -333,6 +333,10 @@ public static partial class PluginFactory
         if(ManagedConfiguration.CleanupLeftOverManagedConfigurations(AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds))
             wasConfigurationChanged = true;
 
+        // Every configuration plugin has run and the left-overs are gone, so the result no longer
+        // depends on the order in which the plugins ran:
+        LogConfidenceLevelsOutrankedByProhibitions();
+
         //
         // The enterprise approvals of all configuration plugins add up. Now that every plugin has
         // contributed and the clean-up above has dropped the removed ones, we rebuild the effective
@@ -363,6 +367,28 @@ public static partial class PluginFactory
         }
 
         FIRST_LOAD_COMPLETED.TrySetResult();
+    }
+
+    /// <summary>
+    /// Logs the confidence levels which a configuration plugin chose for prohibited providers.
+    /// </summary>
+    /// <remarks>
+    /// A prohibited provider is untrusted, whatever level the custom confidence scheme names for it, see
+    /// SettingsManager.GetConfiguredConfidenceLevel. Such a level contradicts the prohibition, so we tell
+    /// the organization that it is ignored. Levels the user chose are ignored the same way, without a log.
+    /// </remarks>
+    private static void LogConfidenceLevelsOutrankedByProhibitions()
+    {
+        if (!ManagedConfiguration.TryGet(x => x.Confidence, x => x.CustomConfidenceScheme, out var configMeta))
+            return;
+
+        var owningConfigPluginId = ManagedConfiguration.GetSettingOwner(configMeta);
+        if (owningConfigPluginId == Guid.Empty)
+            return;
+
+        var customConfidenceScheme = SettingsManagerAccess.ConfigurationData.Confidence.CustomConfidenceScheme;
+        foreach (var llmProvider in SettingsManagerAccess.GetProhibitedProvidersWithCustomConfidenceLevel())
+            LOG.LogWarning($"The configuration plugin '{owningConfigPluginId}' sets the confidence level '{customConfidenceScheme[llmProvider]}' for the provider '{llmProvider}' in the custom confidence scheme. Ignoring it: your organization prohibited this provider, so it is untrusted.");
     }
 
     /// <summary>

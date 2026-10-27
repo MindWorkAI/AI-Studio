@@ -36,6 +36,15 @@ public sealed class FileSourceIndexerWatcherTests
     }
 
     [Test]
+    public void SingleFileWatcherIgnoresAnotherCaseDistinctFileOnUnix()
+    {
+        var configuration = new FileSourceIndexer.DataSourceWatcherConfiguration(Path.GetTempPath(), false, TargetFileName: "Report.md");
+
+        Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, Path.Combine(Path.GetTempPath(), "report.md"), WatcherChangeTypes.Changed),
+            Is.EqualTo(OperatingSystem.IsWindows()));
+    }
+
+    [Test]
     public void SingleFileWatcherRecognizesARenameAwayFromTheConfiguredFile()
     {
         var rootPath = Path.GetTempPath();
@@ -286,6 +295,15 @@ public sealed class FileSourceIndexerWatcherTests
         var renamed = new RenamedEventArgs(WatcherChangeTypes.Renamed, rootPath, "draft-report.md", "report.md");
 
         Assert.That(FileSourceIndexer.IsRelevantWatcherEvent(configuration, renamed), Is.True);
+    }
+
+    [Test]
+    public void RelocatingToADirectoryWithDifferentCasingUsesTheLocalPathRules()
+    {
+        var before = DefaultConfiguration(Path.Combine(Path.GetTempPath(), "Documents"));
+        var after = before with { RootPath = Path.Combine(Path.GetTempPath(), "documents") };
+
+        Assert.That(FileSourceIndexer.IsSameWatchConfiguration(before, after), Is.EqualTo(OperatingSystem.IsWindows()), "On Unix these can be different directories; their watchers must not be treated as interchangeable.");
     }
 
     [Test]

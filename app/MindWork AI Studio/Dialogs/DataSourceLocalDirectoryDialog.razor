@@ -53,31 +53,7 @@
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
                 @T("Select a root directory for this data source.")
             </MudJustifiedText>
-            @if (!this.CanChangeSource)
-            {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
-                    @T("The documents of this data source are already prepared, so its folder cannot be changed. Another folder holds other documents, which makes it another data source: please add one for it. The embedding provider below can be changed.")
-                </MudAlert>
-            }
-            @if (this.CanChangeSource)
-            {
-                <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" CatchAllDocuments="true" />
-            }
-            else
-            {
-                <MudTextField
-                    T="string"
-                    Text="@this.dataPath"
-                    Label="@T("Selected base directory for this data source")"
-                    Class="mb-3"
-                    ReadOnly="@true"
-                    Validation="@this.dataSourceValidation.ValidatePath"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.Folder"
-                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                    Variant="Variant.Outlined"
-                />
-            }
+            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" CatchAllDocuments="true" />
 
             <MudTextSwitch
                 Label="@T("Include subfolders?")"
@@ -156,6 +132,8 @@
                     </MudSelectItem>
                 }
             </MudSelect>
+
+            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@T("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction"/>
 
             @if (this.MediaTranscriptionHint is { } mediaTranscriptionHint)
             {

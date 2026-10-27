@@ -5,6 +5,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
 
@@ -481,12 +482,19 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             ReadInternalPageOutboundDataRestriction(context.SettingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING)),
             await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService));
 
+        //
+        // A page without readable content is no source. One with content is, together with what the
+        // model read of it, so the user can read that under the source:
+        //
+        var source = string.IsNullOrWhiteSpace(modelContent.Markdown)
+            ? null
+            : new Source(string.IsNullOrWhiteSpace(modelContent.Title) ? page.FinalUrl.ToString() : modelContent.Title, page.FinalUrl.ToString(), SourceOrigin.TOOL);
+
         return new ToolExecutionResult
         {
             JsonContent = BuildModelContent(page, retrievedPage.ContentKind, modelContent, retrievedPage.RetrievedAtUtc, originalContentCharacters, contentTruncated, warnings),
-            Sources = string.IsNullOrWhiteSpace(modelContent.Markdown)
-                ? []
-                : [new Source(string.IsNullOrWhiteSpace(modelContent.Title) ? page.FinalUrl.ToString() : modelContent.Title, page.FinalUrl.ToString(), SourceOrigin.TOOL)],
+            Sources = source is null ? [] : [source],
+            Passages = source is null ? [] : [source.ToWebPagePassage(modelContent.Markdown)],
             RequiredProviderConfidence = retrievedPage.RequiredProviderConfidence,
 
             // Set here only, on a page which was read: a refused or failed call brought nothing

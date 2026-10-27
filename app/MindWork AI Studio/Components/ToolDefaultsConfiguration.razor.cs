@@ -48,7 +48,9 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
         await base.OnInitializedAsync();
     }
 
-    private HashSet<string> GetSelectedValues() => this.ToolRegistry.GetDefaultToolIds(this.Component);
+    // The list holds no tool the user switched off, so it must not count one as selected either:
+    private HashSet<string> GetSelectedValues() => this.ToolRegistry.LeaveOutSwitchedOffByUser(this.ToolRegistry.GetDefaultToolIds(this.Component));
 
-    private void UpdateSelection(HashSet<string> values) => this.SettingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent[this.Component.ToString()] = [..this.ToolRegistry.NormalizeSelection(values)];
+    // Tools the user switched off stay preselected, so switching them on again brings them back:
+    private void UpdateSelection(HashSet<string> values) => this.SettingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent[this.Component.ToString()] = this.ToolRegistry.KeepSwitchedOffByUser(this.ToolRegistry.GetDefaultToolIds(this.Component), values);
 }

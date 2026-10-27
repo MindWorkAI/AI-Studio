@@ -1,4 +1,5 @@
 using Markdig;
+using Markdig.Extensions.Mathematics;
 using Markdig.Syntax;
 using System.Text;
 
@@ -16,6 +17,24 @@ public static class Markdown
         .UseSoftlineBreakAsHardlineBreak()
         .DisableHtml()
         .Build();
+
+    /// <summary>
+    /// The pipeline for text AI Studio read from somewhere else, such as a document or a passage of
+    /// a data source: the safe pipeline without math.
+    /// </summary>
+    /// <remarks>
+    /// Such text uses the dollar sign for prices, and a PDF puts it among the characters it could
+    /// not read in a figure. Taken for math, it makes MudMarkdown typeset the whole page with
+    /// MathJax, which replaces elements Blazor renders, so that the next render of them fails.
+    /// </remarks>
+    public static readonly MarkdownPipeline CONTENT_MARKDOWN_PIPELINE = CreateContentPipeline();
+
+    private static MarkdownPipeline CreateContentPipeline()
+    {
+        var builder = new MarkdownPipelineBuilder().UseAdvancedExtensions().DisableHtml();
+        builder.Extensions.TryRemove<MathExtension>();
+        return builder.Build();
+    }
 
     public static MudMarkdownProps DefaultConfig => new()
     {

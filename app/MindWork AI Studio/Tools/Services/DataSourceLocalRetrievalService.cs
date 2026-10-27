@@ -1,9 +1,9 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Rust;
 
@@ -11,8 +11,6 @@ namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService indexSearch, ILogger<DataSourceLocalRetrievalService> logger)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceLocalRetrievalService).Namespace, nameof(DataSourceLocalRetrievalService));
-
     private enum RetrievalChannel
     {
         VECTOR,
@@ -36,7 +34,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         string FileName,
         string RelativePath,
         string FileType,
-        int? PageNumber,
+        ChunkLocation Location,
         int ChunkIndex,
         string Text,
         double Score,
@@ -136,7 +134,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
             result.FileName,
             result.RelativePath,
             result.FileType,
-            result.PageNumber,
+            result.Location,
             result.ChunkIndex,
             result.Text,
             result.Score,
@@ -153,7 +151,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
             result.FileName,
             result.RelativePath,
             result.FileType,
-            result.PageNumber,
+            result.Location,
             result.ChunkIndex,
             result.ChunkText,
             result.Score,
@@ -164,36 +162,76 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
         var path = FirstNonEmpty(hit.AbsolutePath, hit.RelativePath);
         var referenceLink = string.IsNullOrWhiteSpace(path) ? string.Empty : BuildReferenceLink(path, hit);
+        var type = GetRetrievalContentType(hit.FileType);
+        var located = LocatePassage(hit.Location, type, hit.ChunkIndex + 1);
 
         return new RetrievalTextContext
         {
             DataSourceName = sourceName,
             Category = RetrievalContentCategory.TEXT,
-            Type = GetRetrievalContentType(hit.FileType),
+            Type = type,
             Path = path,
             Links = [],
             MatchedText = hit.Text,
             SurroundingContent = [],
-            ReferenceTitle = BuildReferenceTitle(hit, dataSource),
+            ReferenceTitle = BuildReferenceTitle(sourceName, located),
             ReferenceLink = referenceLink,
-            PageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null,
+            PageNumber = located.PageNumber,
+            EndPageNumber = located.EndPageNumber,
+            SheetName = located.SheetName,
+            StartRow = located.StartRow,
+            EndRow = located.EndRow,
+            StartLine = located.StartLine,
+            EndLine = located.EndLine,
+            ChunkNumber = located.ChunkNumber,
         };
     }
 
-    private static string BuildReferenceTitle(LocalRetrievalHit hit, IInternalDataSource dataSource)
+    /// <summary>
+    /// Where a hit is in its document, as its passage names it.
+    /// </summary>
+    /// <remarks>
+    /// An end only names a range when the passage goes on beyond where it starts. A chunk indexed
+    /// before an end, a row or a line was kept has none, and names what it has. The lines of a
+    /// table, such as a CSV file, are its rows. A transcript names no lines: it is a file the user
+    /// never sees, so its lines would point nowhere.
+    /// </remarks>
+    /// <param name="location">Where the chunk of the hit is.</param>
+    /// <param name="type">What kind of content the hit is.</param>
+    /// <param name="chunkNumber">Which part of its document the hit is, counted from one.</param>
+    /// <returns>A passage holding nothing but where the hit is.</returns>
+    internal static SourcePassage LocatePassage(ChunkLocation location, RetrievalContentType type, int chunkNumber)
     {
-        var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
-        return BuildLocatedReferenceTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
+        var pageNumber = location.PageNumber is > 0 ? location.PageNumber : null;
+        var rows = RangeOf(location.StartRow, location.EndRow);
+        var lines = type is RetrievalContentType.TEXT_TRANSCRIPT ? PassageRange.NONE : RangeOf(location.StartLine, location.EndLine);
+        if (type is RetrievalContentType.TEXT_SPREADSHEET && rows.Start is null)
+        {
+            rows = lines;
+            lines = PassageRange.NONE;
+        }
+
+        return new SourcePassage
+        {
+            Type = type,
+            PageNumber = pageNumber,
+            EndPageNumber = pageNumber is not null && location.EndPageNumber > pageNumber ? location.EndPageNumber : null,
+            SheetName = rows.Start is null ? null : location.SheetName,
+            StartRow = rows.Start,
+            EndRow = rows.End,
+            StartLine = lines.Start,
+            EndLine = lines.End,
+            ChunkNumber = chunkNumber,
+        };
     }
 
-    private static string BuildLocatedReferenceTitle(string sourceName, int chunkIndex, int? pageNumber)
-    {
-        var location = pageNumber is > 0
-            ? string.Format(TB("Page {0}"), pageNumber)
-            : string.Format(TB("Chunk {0}"), chunkIndex + 1);
+    private static PassageRange RangeOf(int? start, int? end) => start is > 0 ? new(start, end > start ? end : null) : PassageRange.NONE;
 
-        return $"{sourceName} ({location})";
-    }
+    //
+    // Worded like the location of every passage, so that the title reads the same before and after
+    // the passages of an answer rename it, cf. SourcePassageExtensions.NamePassagesInTitles:
+    //
+    private static string BuildReferenceTitle(string sourceName, SourcePassage located) => $"{sourceName} ({located.GetLocationLabel()})";
 
     /// <remarks>
     /// A known page is written as the fragment `#page=N`, which is what the PDF open parameters
@@ -205,8 +243,8 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
     {
         var link = NormalizeLocalReferencePath(path);
         var separator = link.Contains('#', StringComparison.Ordinal) ? "&" : "#";
-        return hit.PageNumber is > 0
-            ? $"{link}{separator}page={hit.PageNumber}"
+        return hit.Location.PageNumber is > 0
+            ? $"{link}{separator}page={hit.Location.PageNumber}"
             : $"{link}{separator}chunk={hit.ChunkIndex}";
     }
 
@@ -224,8 +262,12 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         }
     }
 
-    private static RetrievalContentType GetRetrievalContentType(string fileType)
+    internal static RetrievalContentType GetRetrievalContentType(string fileType)
     {
+        // An audio or a video file is indexed by its transcript, so that is what its passages are:
+        if (FileTypes.IsAllowedExtension(fileType, FileTypes.AUDIO, FileTypes.VIDEO))
+            return RetrievalContentType.TEXT_TRANSCRIPT;
+
         if (FileTypes.IsAllowedExtension(fileType, FileTypes.TABULAR, FileTypes.SPREADSHEET))
             return RetrievalContentType.TEXT_SPREADSHEET;
 
@@ -266,7 +308,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 FirstNonEmpty(result.Result.AbsolutePath, result.Result.FilePath),
-                BuildLocatedReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), LocatePassage(result.Result.Location, GetRetrievalContentType(result.Result.FileType), result.Result.ChunkIndex + 1)));
         }
     }
 
@@ -290,7 +332,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 result.Result.AbsolutePath,
-                BuildLocatedReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), LocatePassage(result.Result.Location, GetRetrievalContentType(result.Result.FileType), result.Result.ChunkIndex + 1)));
         }
     }
 }

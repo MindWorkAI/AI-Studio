@@ -229,6 +229,43 @@ public sealed class IContentExtensionsTests
         });
     }
 
+    [Test]
+    public void CodeCarriesNoSources()
+    {
+        var content = TextWith(Lines(
+            "```python",
+            "import sys",
+            "print(sys.argv)",
+            "```"), TOOL_SOURCE);
+
+        var file = FilesOf(content).Single();
+
+        Assert.That(content.ToExportContent(file), Is.EqualTo("import sys\nprint(sys.argv)\n"), "A program is meant for its interpreter; the only thing we add is the line break its last line lacks.");
+    }
+
+    [Test]
+    public void CodeWhichEndsWithALineBreakGetsNoSecondOne()
+    {
+        var file = new MessageFile(1, Position: 0, string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage("python"), "print(42)\n");
+
+        Assert.That(TextWith(string.Empty).ToExportContent(file), Is.EqualTo("print(42)\n"));
+    }
+
+    [Test]
+    public void ABatchFileEndsItsLinesTheWindowsWay()
+    {
+        var content = TextWith(Lines(
+            "```bat",
+            "@echo off",
+            ":again",
+            "goto again",
+            "```"));
+
+        var file = FilesOf(content).Single();
+
+        Assert.That(content.ToExportContent(file), Is.EqualTo("@echo off\r\n:again\r\ngoto again\r\n"), "The command prompt misses jump labels in a file whose lines end with LF alone.");
+    }
+
     [TestCase("markdown")]
     [TestCase("html")]
     [TestCase("latex")]

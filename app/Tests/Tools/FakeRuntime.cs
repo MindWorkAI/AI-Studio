@@ -25,6 +25,7 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
 
     private readonly ConcurrentQueue<string> readFiles = new();
     private readonly ConcurrentQueue<string> filteredTexts = new();
+    private readonly ConcurrentQueue<IReadOnlyList<string>> filteredBatches = new();
 
     /// <summary>
     /// The paths of the files the app asked to read, in order.
@@ -32,9 +33,14 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
     public IReadOnlyList<string> ReadFiles => [..this.readFiles];
 
     /// <summary>
-    /// The texts the app asked to filter, in order.
+    /// The texts the app asked to filter, in order, alone or as part of a batch.
     /// </summary>
     public IReadOnlyList<string> FilteredTexts => [..this.filteredTexts];
+
+    /// <summary>
+    /// The batches of texts the app asked to filter in one request each, in order.
+    /// </summary>
+    public IReadOnlyList<IReadOnlyList<string>> FilteredBatches => [..this.filteredBatches];
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
@@ -56,7 +62,18 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
                     this.filteredTexts.Enqueue(text);
 
                     var filtered = this.Filter(text);
-                    return Answer(JsonSerializer.Serialize(new { sanitized_text = filtered.Text, findings = filtered.Findings, redacted_count = filtered.Findings.Length }), "application/json");
+                    return Answer(JsonSerializer.Serialize(ToResponse(filtered)), "application/json");
+                }
+
+            case "/security/prompt-injection/sanitize-batch":
+                using (var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken)))
+                {
+                    var texts = body.RootElement.GetProperty("texts").EnumerateArray().Select(text => text.GetString() ?? string.Empty).ToList();
+                    this.filteredBatches.Enqueue(texts);
+                    foreach (var text in texts)
+                        this.filteredTexts.Enqueue(text);
+
+                    return Answer(JsonSerializer.Serialize(new { results = texts.Select(text => ToResponse(this.Filter(text))) }), "application/json");
                 }
 
             default:
@@ -86,6 +103,8 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
         var findings = Enumerable.Repeat<object>(new { rule_id = "instruction_override", category = "override", snippet = suspiciousPassage }, occurrences).ToArray();
         return new(text.Replace(suspiciousPassage, REDACTION_MARKER, StringComparison.Ordinal), findings);
     }
+
+    private static object ToResponse(FilteredText filtered) => new { sanitized_text = filtered.Text, findings = filtered.Findings, redacted_count = filtered.Findings.Length };
 
     private static HttpResponseMessage Answer(string body, string mediaType) => new(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8, mediaType) };
 

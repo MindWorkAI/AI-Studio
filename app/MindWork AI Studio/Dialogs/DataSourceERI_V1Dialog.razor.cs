@@ -1,5 +1,6 @@
 using AIStudio.Assistants.ERI;
 using AIStudio.Components;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
@@ -61,6 +62,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private string dataEditingPreviousInstanceName = string.Empty;
     private List<AuthMethod> availableAuthMethods = [];
     private DataSourceSecurity dataSecurityPolicy;
+    private OutboundDataRestriction dataOutboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
     private SecurityRequirements dataSourceSecurityRequirements;
     private ushort dataMaxMatches = 10;
     private bool connectionTested;
@@ -121,6 +123,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             this.dataAuthMethod = this.DataSource.AuthMethod;
             this.dataUsername = this.DataSource.Username;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
+            this.dataOutboundDataRestriction = this.DataSource.OutboundDataRestriction;
             this.dataMaxMatches = this.DataSource.MaxMatches;
             
             // We cannot load the retrieval processes now, since we have
@@ -199,11 +202,29 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             UsernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED,
             Type = DataSourceType.ERI_V1,
             SecurityPolicy = this.dataSecurityPolicy,
+            OutboundDataRestriction = this.SelectedOutboundDataRestriction,
             SelectedRetrievalId = this.dataSelectedRetrievalProcess.Id,
             MaxMatches = this.dataMaxMatches,
         };
     }
     
+    private OutboundDataRestriction OrganizationMinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction;
+
+    /// <summary>
+    /// The level the data source gets: the one chosen, as far as the organization and the security
+    /// policy allow it.
+    /// </summary>
+    /// <remarks>
+    /// Choosing the policy for self-hosted providers rules out every level but the strictest, see
+    /// DataSourceOutboundDataExtensions.GetMinimumOutboundDataRestriction. The choice itself stays,
+    /// so the dialog shows it again when the user chooses another policy.
+    /// </remarks>
+    private OutboundDataRestriction SelectedOutboundDataRestriction
+    {
+        get => this.dataOutboundDataRestriction.StricterOf(DataSourceOutboundDataExtensions.GetMinimumOutboundDataRestriction(this.dataSecurityPolicy, this.OrganizationMinimumOutboundDataRestriction));
+        set => this.dataOutboundDataRestriction = value;
+    }
+
     private void ClearImportRetrievalIssue() => this.importRetrievalIssue = string.Empty;
 
     private bool IsConnectionEncrypted() => this.dataHostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);

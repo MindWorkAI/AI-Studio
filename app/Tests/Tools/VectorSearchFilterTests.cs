@@ -92,6 +92,7 @@ public sealed class VectorSearchFilterTests
         "notes.md",
         "md",
         null,
+        null,
         0,
         "Some text.",
         string.Empty,

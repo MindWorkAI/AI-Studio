@@ -1,0 +1,13 @@
+@inherits MSGComponentBase
+
+@if (this.availableWorkspaces.Count > 0 && !this.ReadOnly)
+{
+    <MudSelect T="string" Value="@this.WorkspaceName" ValueChanged="@this.SelectExistingWorkspace" Strict="@false" Label="@this.SelectLabel" Variant="Variant.Outlined" Margin="Margin.Dense" Class="@this.SelectClass" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Folder">
+        @foreach (var workspace in this.availableWorkspaces)
+        {
+            <MudSelectItem T="string" Value="@workspace.Name">@workspace.Name</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+<MudTextField T="string" Text="@this.WorkspaceName" TextChanged="@this.SetWorkspaceName" Label="@this.Label" HelperText="@this.HelperText" Validation="@this.Validation" Immediate="@this.Immediate" ReadOnly="@this.ReadOnly" Variant="Variant.Outlined" Margin="Margin.Dense" Class="@this.TextFieldClass" Adornment="Adornment.Start" AdornmentIcon="@this.AdornmentIcon" IconSize="@this.AdornmentIconSize" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>

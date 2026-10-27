@@ -164,6 +164,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 RequiredDataSecurity = result.RequiredDataSecurity,
                 RequiredOutboundDataRestriction = result.RequiredOutboundDataRestriction,
                 Sources = result.Sources,
+                Passages = result.Passages,
                 ReturnedWebAddresses = FindReturnedWebAddresses(result, document.RootElement),
             };
         }

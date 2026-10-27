@@ -330,6 +330,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         
         // Config: hide some assistants?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HiddenAssistants, this.Id, settingsTable, dryRun);
+
+        // Config: prohibit some providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, this.Id, settingsTable, dryRun);
         
         // Config: global voice recording shortcut
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShortcutVoiceRecording, this.Id, settingsTable, dryRun);
@@ -370,11 +373,29 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: data source security settings
         ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.TrustedProviderIds, this.Id, settingsTable, dryRun);
 
+        // Config: the least strict outbound data restriction a data source may have
+        ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.MinimumOutboundDataRestriction, this.Id, settingsTable, dryRun);
+
         // Config: the least strict outbound data restriction a mailbox may have
         ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.MinimumOutboundDataRestriction, this.Id, settingsTable, dryRun);
 
         // Config: mailboxes only on the mail servers of the organization?
         ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.AllowOnlyOrganizationMailServers, this.Id, settingsTable, dryRun);
+
+        // Config: the random pause between two indexing steps of local data sources
+        var minimumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MinimumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: value => value is >= 0 and <= DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+        if (!minimumPauseIsValid && settingsTable.TryGetValue("DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds", out _))
+            LOG.LogWarning("The lower bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between 0 and {MaximumPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+
+        var maximumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MaximumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: value => value is >= 0 and <= DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+        if (!maximumPauseIsValid && settingsTable.TryGetValue("DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds", out _))
+            LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between 0 and {MaximumPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+
+        if (minimumPauseIsValid && maximumPauseIsValid
+            && settingsTable.TryGetValue("DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds", out var minimumPauseValue) && minimumPauseValue.TryRead<int>(out var minimumPauseSeconds)
+            && settingsTable.TryGetValue("DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds", out var maximumPauseValue) && maximumPauseValue.TryRead<int>(out var maximumPauseSeconds)
+            && maximumPauseSeconds < minimumPauseSeconds)
+            LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} is below its lower bound. The lower bound of {MinimumPauseSeconds} seconds wins.", this.Id, minimumPauseSeconds);
 
         // Config: data source selection agent settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
@@ -430,6 +451,23 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesRetrievalMode, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.SendToChatDataSourceBehavior, this.Id, settingsTable, dryRun);
 
+        // Config: read changed attachments of a chat again?
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.ReadChangedAttachmentsAgain, this.Id, settingsTable, dryRun);
+
+        // Config: Slide Assistant template and defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedFooterText, this.Id, settingsTable, dryRun);
+
+        var maxBulletPointsIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedMaxBulletPointsPerSlide, this.Id, settingsTable, dryRun, validator: DataSlideBuilder.IsValidMaxBulletPointsPerSlide);
+        if (!maxBulletPointsIsValid && settingsTable.TryGetValue("DataSlideBuilder.PreselectedMaxBulletPointsPerSlide", out _))
+            LOG.LogWarning("The maximum number of bullet points per slide configured by plugin {ConfigPluginId} must be between 0 and {MaxBulletPoints}.", this.Id, DataSlideBuilder.MAX_BULLET_POINTS_PER_SLIDE);
+
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedKeepEmptyPicturePlaceholders, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedPictureLibraryPath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginDirectory);
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedLayouts, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedTemplateSlideUses, this.Id, settingsTable, dryRun);
+
         // Config: Batch Processing Assistant defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.InputDirectory, this.Id, settingsTable, dryRun);
@@ -448,7 +486,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptFilePath, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedPolicyId, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.OutputMode, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultFileFormat, this.Id, settingsTable, dryRun);
+
+        var resultFileFormatIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultFileFormat, this.Id, settingsTable, dryRun, validator: DataBatchProcessing.IsValidResultFileFormat);
+        if (!resultFileFormatIsValid && settingsTable.TryGetValue("DataBatchProcessing.ResultFileFormat", out _))
+            LOG.LogWarning("The Batch Processing result file format configured by plugin {ConfigPluginId} must be one of {ResultFileFormats}.", this.Id, string.Join(", ", FileExportFormatExtensions.ANSWER_FORMATS));
+
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvFileName, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultColumnHeader, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvSeparator, this.Id, settingsTable, dryRun);
@@ -474,6 +516,13 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.OptimizeImages, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
+        // Config: Assistant Builder defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedOutputLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedOtherOutputLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 
@@ -482,6 +531,34 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         message = string.Empty;
         return true;
+    }
+
+    /// <summary>
+    /// Resolves a file this plugin names in a setting: a relative path against the plugin directory,
+    /// so the plugin can ship the file itself.
+    /// </summary>
+    /// <returns>The full path, or null when the file cannot be used, which leaves the setting untouched.</returns>
+    private string? ResolvePluginFile(string path)
+    {
+        if (PluginFilePath.TryResolve(path, this.PluginPath, out var resolvedPath, out var issue))
+            return resolvedPath;
+
+        LOG.LogWarning($"The configuration plugin '{this.Name}' names the file '{path}', which cannot be used: {issue}");
+        return null;
+    }
+
+    /// <summary>
+    /// Resolves a folder this plugin names in a setting: a relative path against the plugin directory,
+    /// so the plugin can ship the folder itself.
+    /// </summary>
+    /// <returns>The full path, or null when the folder cannot be used, which leaves the setting untouched.</returns>
+    private string? ResolvePluginDirectory(string path)
+    {
+        if (PluginFilePath.TryResolveDirectory(path, this.PluginPath, out var resolvedPath, out var issue))
+            return resolvedPath;
+
+        LOG.LogWarning($"The configuration plugin '{this.Name}' names the folder '{path}', which cannot be used: {issue}");
+        return null;
     }
 
     private static bool TryValidateMinimumProviderConfidenceConfiguration(LuaTable settingsTable, out string message)

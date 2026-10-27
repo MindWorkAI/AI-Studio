@@ -1,12 +1,18 @@
 ﻿@inherits MSGComponentBase
 
-<MudDialog>
+<MudDialog ContentClass="dialog-content-fit">
+    <TitleContent>
+        @* Named after the document once there is one, and after what the caller opened us for until then.
+           A file which is no longer at its place is told about below, together with what is shown instead: *@
+        <FileDialogTitle Title="@(this.document?.FileName ?? this.MudDialog.Title ?? string.Empty)" Path="@(this.document?.FilePath ?? string.Empty)" WarnIfMissing="@false"/>
+    </TitleContent>
     <DialogContent>
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
         <PathDropZone IsArea="@true"
                       IdPrefix="document-check"
                       OnPathsDropped="@this.DropCallback"
                       Disabled="@this.IsZoneDisabled"
+                      Class="dialog-fit"
                       Context="isDropTarget">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("See how we load your file. Review the content before we process it further.")
@@ -21,38 +27,13 @@
 
         @if (this.document is null)
         {
-            <ReadFileContent Text="@T("Load file")" FileContent="@this.fileContent" FileContentChanged="@this.ApplyLoadedFileContent" EnableDragDrop="true" CatchAllDocuments="true"/>
+            <ReadFileContent Text="@T("Load file")" @bind-FileContent="@this.fileContent" EnableDragDrop="true" CatchAllDocuments="true"/>
         }
-        else
-        {
-            @* Keys have to be unique among siblings, no matter the component: this field and the
-               tabs below both stand for the document and would otherwise collide on its path. *@
-            <MudTextField
-                @key="@($"file-path-{this.document.FilePath}")"
-                T="string"
-                Text="@this.document.FilePath"
-                AdornmentIcon="@Icons.Material.Filled.FileOpen"
-                Adornment="Adornment.Start"
-                Immediate="@true"
-                Label="@T("File Path")"
-                Variant="Variant.Outlined"
-                Lines="1"
-                MaxLines="3"
-                Class="mt-10"
-                ReadOnly="true"
-                />
-        }
-        
+
         @* The frame shows where a dropped file would land. It is drawn only while this dialog can
            take one, and keeps its width in both states so that nothing jumps during a drag: *@
-        <div class="@this.PreviewAreaClass(isDropTarget)">
-        @if (!this.document?.Exists ?? false)
-        {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
-                @T("The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.")
-            </MudAlert>
-        }
-        else if (this.isLoadingContent)
+        <div class="dialog-fit @this.PreviewAreaClass(isDropTarget)">
+        @if (this.isLoadingContent)
         {
             <MudJustifiedText Typo="Typo.body1" Class="my-3">
                 @T("Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.")
@@ -62,6 +43,12 @@
             <MudSkeleton Width="100%"/>
             <MudSkeleton Width="90%"/>
         }
+        else if (this.IsFileMissing && !this.showsStoredText)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                @T("The file could not be found. It may have been moved, renamed, or deleted, or it is otherwise inaccessible.")
+            </MudAlert>
+        }
         else if (this.loadFailureMessage is not null)
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
@@ -70,56 +57,34 @@
         }
         else
         {
-            @if (this.previewCutOffCharacters > 0)
+            @if (this.IsFileMissing)
             {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
-                    @string.Format(T("Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document."), this.previewCutOffCharacters)
+                @* The text the AI received outlives the file, so the file being gone is worth a note, not an error: *@
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="my-2">
+                    @T("The file is no longer in its original location. Below is the text the AI received from it when you sent it.")
                 </MudAlert>
             }
-            
-            @* Keyed by the document: a switch from an image to a text file changes which panels
-               exist, and a leftover active panel would point at one that is gone. *@
-            <MudTabs @key="@($"preview-tabs-{this.document?.FilePath}")" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="true" PanelClass="pa-2" Class="mb-2">
-                @if (this.document?.IsImage ?? false)
-                {
-                    <MudTabPanel Text="@T("Image View")" Icon="@Icons.Material.Filled.Image">
-                        <MudImage ObjectFit="ObjectFit.ScaleDown" Style="width: 100%;" Src="@this.document.FilePathAsUrl"/>
-                    </MudTabPanel>
-                }
-                else
-                {
-                    <MudTabPanel Text="@T("Markdown View")" Icon="@Icons.Material.Filled.TextSnippet">
-                        <MudField
-                            Variant="Variant.Outlined"
-                            AdornmentIcon="@Icons.Material.Filled.Article"
-                            Adornment="Adornment.Start"
-                            Label="@T("Loaded Content")"
-                            FullWidth="true"
-                            Class="ma-2 pe-4"
-                            HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")">
-                            <div style="max-height: 40vh; overflow-y: auto;">
-                                <MudMarkdown Value="@this.previewContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
-                            </div>
-                        </MudField>
-                    </MudTabPanel>
-                    <MudTabPanel Text="@T("Simple View")" Icon="@Icons.Material.Filled.Terminal">
-                        <MudTextField
-                            T="string"
-                            Text="@this.previewContent"
-                            AdornmentIcon="@Icons.Material.Filled.Article"
-                            Adornment="Adornment.Start"
-                            Immediate="@true"
-                            Label="@T("Loaded Content")"
-                            Variant="Variant.Outlined"
-                            Lines="6"
-                            AutoGrow="@true"
-                            MaxLines="25"
-                            ReadOnly="true"
-                            Class="ma-2"
-                            HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"/>
-                    </MudTabPanel>
-                }
-            </MudTabs>
+
+            @* Keyed by the document: every document starts on the first panel of its own. *@
+            <ContentViewer
+                @key="@($"preview-tabs-{this.document?.FilePath}")"
+                Kind="@this.ViewerKind"
+                Text="@this.fileContent"
+                MediaUrl="@(this.document?.FilePathAsUrl ?? string.Empty)"
+                HelperText="@(this.showsStoredText ? T("This is the text the AI received from your file when you first sent it. Later changes to the file do not reach the AI in this chat.") : T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected."))"
+                CharacterLimit="@PREVIEW_CHARACTER_LIMIT"
+                CutOffNotice="@this.CutOffNotice"
+                MaxHeight="@ContentViewer.NO_HEIGHT_LIMIT">
+                <Toolbar>
+                    @* The label takes the free width, so the button stands right, next to the views. *@
+                    <MudText Typo="Typo.subtitle2" Class="flex-grow-1">
+                        @(this.showsStoredText ? T("Text the AI received") : T("Loaded Content"))
+                    </MudText>
+
+                    @* At its beginning: the preview shows how we read the file, not a place in it. *@
+                    <FileActions Path="@(this.document?.FilePath ?? string.Empty)" ShowCopy="@false" ShowFileManager="@false" WarnIfMissing="@false"/>
+                </Toolbar>
+            </ContentViewer>
         }
         </div>
         </PathDropZone>

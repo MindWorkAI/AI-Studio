@@ -98,10 +98,14 @@ internal sealed partial class MailboxIndexer
             document = this.CreateMailDocument(context, mailbox, summary, key, mailId, mailHash, displayName, foundAtUtc, text, attachments);
 
             var reportBlockProgress = progress.BeginDocument(document);
-            var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
-            await progress.RecordDocumentIndexedAsync(document, chunkCount, isNew, token);
+            var indexed = await context.IndexDocumentAsync(document, reportBlockProgress, token);
+            await progress.RecordDocumentIndexedAsync(document, indexed, isNew, token);
 
-            // Only after the last chunk: indexing the document deleted whatever the index kept of the mail.
+            //
+            // Only after the last chunk: a mail indexed for the first time gets its row with its
+            // first chunk, and the rows of the mail point at it. One indexed before keeps its rows,
+            // which are written anew here.
+            //
             await context.IndexStore.UpsertMailAsync(mailbox.Id, CreateMailRecord(mailId, summary, text, attachments, mailHash, location, foundAtUtc), token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -196,10 +200,10 @@ internal sealed partial class MailboxIndexer
         // search for a sender or a subject finds the mail. The attachments follow it.
         //
         var fullText = text?.FullText ?? string.Empty;
-        var content = new SegmentedText(fullText, fullText.Length is 0 ? [] : [new TextSegment(fullText, null, null)]);
+        var content = new SegmentedText(fullText, fullText.Length is 0 ? [] : [new TextSegment(fullText, null, default)]);
         var chunkingOptions = DataSourceEmbeddingService.GetChunkingOptions(mailbox, context.EmbeddingProvider);
 
-        return new(key, state, displayName, chunkToken => this.StreamMailChunksAsync(content, attachments, chunkingOptions, context.EmbeddingProvider, chunkToken));
+        return new(key, state, displayName, chunkToken => StreamMailChunksAsync(textChunker, content, attachments, chunkingOptions, context.EmbeddingProvider, chunkToken));
     }
 
     /// <summary>

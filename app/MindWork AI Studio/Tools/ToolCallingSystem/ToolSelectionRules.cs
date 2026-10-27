@@ -71,4 +71,38 @@ public static class ToolSelectionRules
         restriction is OutboundDataRestriction.UNRESTRICTED ||
         implementation.OutboundData is ToolOutboundData.NONE or ToolOutboundData.CONFIGURED_SERVICE ||
         implementation.EnforcesOutboundDataRestriction;
+
+    /// <summary>
+    /// Whether an entry of the catalog has a tool left which may run in a chat with this outbound data restriction.
+    /// </summary>
+    /// <remarks>
+    /// Only when the restriction keeps every tool of a collection back is there nothing left to
+    /// select. Should it keep back some of them, the others still run, and the request leaves out
+    /// the rest on its own.
+    /// </remarks>
+    /// <param name="restriction">Where the chat may still send data.</param>
+    /// <param name="item">The entry of the catalog.</param>
+    /// <returns>True when at least one tool of the entry may run.</returns>
+    public static bool IsOutboundDataAllowed(OutboundDataRestriction restriction, ToolCatalogItem item) =>
+        item.Tools.Any(tool => IsOutboundDataAllowed(restriction, tool.Implementation));
+
+    /// <summary>
+    /// Whether the user can select an entry of the catalog right now.
+    /// </summary>
+    /// <remarks>
+    /// The tool selection shows the entries this denies apart from the others, together with the
+    /// reason, so the answer has to cover everything that lies with the entry itself: it must not be
+    /// switched off, its settings must be complete, the provider must have the confidence it needs,
+    /// and the outbound data restriction of the chat must leave one of its tools. What applies to all
+    /// entries alike, such as a running response or a model without tools, stays with the caller.
+    /// </remarks>
+    /// <param name="item">The entry of the catalog.</param>
+    /// <param name="providerConfidence">The confidence of the selected provider.</param>
+    /// <param name="restriction">Where the chat may still send data.</param>
+    /// <returns>True when the entry can be selected.</returns>
+    public static bool IsSelectable(ToolCatalogItem item, ConfidenceLevel providerConfidence, OutboundDataRestriction restriction) =>
+        item.IsActive &&
+        item.ConfigurationState.IsConfigured &&
+        IsProviderConfidenceAllowed(providerConfidence, item.MinimumProviderConfidence) &&
+        IsOutboundDataAllowed(restriction, item);
 }

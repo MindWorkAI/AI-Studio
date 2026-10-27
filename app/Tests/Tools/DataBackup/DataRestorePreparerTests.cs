@@ -65,6 +65,23 @@ public sealed class DataRestorePreparerTests
     }
 
     [Test]
+    public async Task TheProvenanceStoreIsRestoredWithTheChatsAlsoWithoutTheIndexes()
+    {
+        await this.WriteBackupAsync("26.10.1", "V6", withProvenanceStore: true);
+
+        var result = await DataRestorePreparer.PrepareAsync(this.ArchivePath, this.Target, null, CancellationToken.None);
+        var dataPending = Path.Combine(this.Target.DataDirectory, ".restore-pending");
+        var plan = JsonSerializer.Deserialize<DataRestorePlan>(await File.ReadAllTextAsync(Path.Combine(dataPending, DataRestoreFormat.PLAN_FILE_NAME)), DataBackupFormat.JSON_OPTIONS)!;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Success, Is.True, result.Issue);
+            Assert.That(plan.Elements.Select(element => element.RelativePath), Does.Contain("databases/provenance/"), "The chats of the backup refer to the contents in its store, so both are replaced together, whether the backup holds the indexes or not.");
+            Assert.That(File.ReadAllText(Path.Combine(dataPending, "databases", "provenance", "provenance.sqlite3")), Is.EqualTo("the provenance store"));
+        });
+    }
+
+    [Test]
     public async Task ADamagedBackupLeavesNothingBehind()
     {
         await this.WriteBackupAsync("26.10.1", "V6", damageThread: true);
@@ -122,7 +139,8 @@ public sealed class DataRestorePreparerTests
     /// <param name="appVersion">The version of AI Studio the manifest names.</param>
     /// <param name="settingsVersion">The version of the settings the manifest names.</param>
     /// <param name="damageThread">Whether to change the chat thread after the manifest noted its hash.</param>
-    private async Task WriteBackupAsync(string appVersion, string settingsVersion, bool damageThread = false)
+    /// <param name="withProvenanceStore">Whether the data folder holds a provenance store.</param>
+    private async Task WriteBackupAsync(string appVersion, string settingsVersion, bool damageThread = false, bool withProvenanceStore = false)
     {
         var sourceDataDirectory = Path.Combine(this.testDirectory, "source-data");
         var threadPath = Path.Combine(sourceDataDirectory, "workspaces", WORKSPACE_ID.ToString(), CHAT_ID.ToString(), "thread.json");
@@ -130,6 +148,8 @@ public sealed class DataRestorePreparerTests
         WriteFile(threadPath, "{}");
         File.SetLastWriteTime(threadPath, CHAT_LAST_CHANGED);
         WriteFile(Path.Combine(sourceDataDirectory, "plugins", "my-assistant", "plugin.lua"), "-- mine");
+        if (withProvenanceStore)
+            WriteFile(Path.Combine(sourceDataDirectory, "databases", "provenance", "provenance.sqlite3"), "the provenance store");
 
         var sources = new DataBackupSources(sourceDataDirectory, Path.Combine(this.testDirectory, "source-config"), """{ "Version": "V6" }""", string.Empty, []);
         var manifest = new DataBackupManifest(DataBackupFormat.FORMAT_VERSION, appVersion, settingsVersion, DateTimeOffset.UtcNow, sourceDataDirectory, string.Empty, false, []);

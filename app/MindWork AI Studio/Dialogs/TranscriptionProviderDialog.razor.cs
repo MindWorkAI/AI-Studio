@@ -107,7 +107,16 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     /// The list of used instance names. We need this to check for uniqueness.
     /// </summary>
     private List<string> UsedInstanceNames { get; set; } = [];
-    
+
+    /// <summary>
+    /// Whether the organization prohibited the selected provider.
+    /// </summary>
+    /// <remarks>
+    /// The provider stays selectable, so that nobody wonders where it went. The dialog then shows
+    /// the reason instead of the form, and nothing can be stored.
+    /// </remarks>
+    private bool IsProviderProhibited => this.SettingsManager.IsProviderProhibited(this.DataLLMProvider);
+
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
@@ -239,6 +248,9 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     
     private async Task Store()
     {
+        if (this.IsProviderProhibited)
+            return;
+
         await this.form.Validate();
         this.dataAPIKeyStorageIssue = string.Empty;
 
@@ -328,6 +340,10 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
 
     private async Task ReloadModels()
     {
+        // Loading the models would contact the provider:
+        if (this.IsProviderProhibited)
+            return;
+
         this.dataLoadingModelsIssue = string.Empty;
         var currentTranscriptionProviderSettings = this.CreateTranscriptionProviderSettings();
         var provider = currentTranscriptionProviderSettings.CreateProvider();

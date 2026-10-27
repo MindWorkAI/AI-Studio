@@ -1,3 +1,4 @@
+using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.DataBackup;
 
 namespace AIStudio.Tools.ChatArchive;
@@ -20,6 +21,11 @@ public static class ChatArchiveFormat
     /// Where a backup keeps the temporary chats, each in a directory named after its ID.
     /// </summary>
     public static readonly string TEMPORARY_CHATS_PREFIX = DataBackupFormat.DATA_ROOT + DataBackupContents.ENTRIES.First(entry => entry.Kind is DataBackupEntryKind.TEMPORARY_CHATS).RelativePath;
+
+    /// <summary>
+    /// Where a backup keeps the provenance store, which holds what the chats received besides their messages.
+    /// </summary>
+    public static readonly string PROVENANCE_STORE_ENTRY = DataBackupFormat.DATA_ROOT + DataBackupContents.ENTRIES.First(entry => entry.Kind is DataBackupEntryKind.CHAT_PROVENANCE).RelativePath + SqliteProvenanceStoreClientImplementation.DATABASE_FILENAME;
 
     /// <summary>
     /// The file storing the workspace or chat name.

@@ -1,5 +1,6 @@
 ﻿using AIStudio.Chat;
 using AIStudio.Components;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -44,6 +45,19 @@ public partial class DocumentCheckDialog : MSGComponentBase
     public Func<bool>? IsAttachingUnavailable { get; set; }
 
     /// <summary>
+    /// Keeps what this dialog read of a document which was never sent, so that sending it does not
+    /// read the file again, see FileAttachment.ProvenanceId.
+    /// </summary>
+    /// <remarks>
+    /// Gets the document, the text read from it, and the state of its file before it was read, so
+    /// that a file which changed afterward is read again; never throws. Only the chat hands
+    /// one over, for the attachments of the message being written: a sent message has its texts
+    /// already, and elsewhere, nothing is sent later.
+    /// </remarks>
+    [Parameter]
+    public Func<FileAttachment, string, FileVersion, Task>? KeepReadText { get; set; }
+
+    /// <summary>
     /// The document we show right now. It starts out as the one we were opened with and changes
     /// whenever the user drops another file onto this dialog.
     /// </summary>
@@ -75,17 +89,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
     private string? loadFailureMessage;
 
     /// <summary>
-    /// What we show to the user: either the entire file content, or its beginning. We keep this in
-    /// its own field so that we cut the content only once, instead of on every render.
-    /// </summary>
-    private string previewContent = string.Empty;
-
-    /// <summary>
-    /// How many characters we cut off from the preview. Zero when we show the entire content.
-    /// </summary>
-    private int previewCutOffCharacters;
-
-    /// <summary>
     /// Ends the extraction when this dialog is gone, or when another document took the place of
     /// the one being read, before that file was read completely.
     /// </summary>
@@ -113,6 +116,20 @@ public partial class DocumentCheckDialog : MSGComponentBase
     /// </summary>
     private bool isLoadingContent;
 
+    /// <summary>
+    /// True when the content is the text the AI received from the document when it was sent, rather
+    /// than what the file holds now, see FileAttachment.ProvenanceId.
+    /// </summary>
+    private bool showsStoredText;
+
+    /// <summary>
+    /// Whether the document we show is no longer at its place.
+    /// </summary>
+    private bool IsFileMissing => this.document is not null && !this.document.Exists;
+
+    [Inject]
+    private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -128,7 +145,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
         this.fileContent = this.FileContent;
 
         this.isLoadingContent = this.NeedsExtraction();
-        this.UpdatePreview();
         await base.OnInitializedAsync();
     }
 
@@ -148,13 +164,14 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
     /// <summary>
     /// Whether the document we show has to be read before we can show anything of it. Images are
-    /// shown as they are, a missing file shows its own message, and content a caller already handed
-    /// us is reused instead of being extracted a second time.
+    /// shown as they are, a missing file shows its own message unless the text the AI received from
+    /// it is stored, and content a caller already handed us is reused instead of being extracted a
+    /// second time.
     /// </summary>
     private bool NeedsExtraction() =>
         this.document is not null &&
         !this.document.IsImage &&
-        this.document.Exists &&
+        (this.document.ProvenanceId is not null || this.document.Exists) &&
         string.IsNullOrWhiteSpace(this.fileContent);
 
     /// <summary>
@@ -187,8 +204,36 @@ public partial class DocumentCheckDialog : MSGComponentBase
         if (this.isDisposed || generation != this.loadGeneration)
             return;
 
+        string? textToKeep = null;
+        FileVersion? version = null;
         try
         {
+            //
+            // A document sent before shows the text the AI received from it, which the provenance
+            // store keeps, also when the file changed or is gone by now. Without it, we read the file:
+            //
+            if (documentToLoad.ProvenanceId is { } provenanceId)
+            {
+                var storedText = await this.ReadStoredTextAsync(provenanceId);
+                if (this.isDisposed || generation != this.loadGeneration)
+                    return;
+
+                if (storedText is not null)
+                {
+                    this.fileContent = storedText;
+                    this.showsStoredText = true;
+                    return;
+                }
+
+                // Nothing left to read, which the dialog says:
+                if (!documentToLoad.Exists)
+                    return;
+            }
+
+            // Taken before reading, so that a change while reading counts as a change:
+            if (this.KeepReadText is not null)
+                version = await Task.Run(() => FileVersion.Of(documentToLoad.FilePath), cancellationToken);
+
             var extraction = await UserFile.LoadFileData(documentToLoad.FilePath, this.RustService, this.PandocAvailability, cancellationToken);
             if (this.isDisposed || generation != this.loadGeneration)
                 return;
@@ -201,6 +246,8 @@ public partial class DocumentCheckDialog : MSGComponentBase
             //
             if (!extraction.HasUsableContent)
                 this.loadFailureMessage = extraction.ToUserMessage(documentToLoad.FileName);
+            else if (this.KeepReadText is not null && documentToLoad.ProvenanceId is null)
+                textToKeep = extraction.Content;
         }
         catch (OperationCanceledException)
         {
@@ -221,10 +268,17 @@ public partial class DocumentCheckDialog : MSGComponentBase
             if (!this.isDisposed && generation == this.loadGeneration)
             {
                 this.isLoadingContent = false;
-                this.UpdatePreview();
                 this.StateHasChanged();
             }
         }
+
+        //
+        // Kept once the user sees the text, since keeping may first have to create the chat. Reading
+        // the file told the user already what could not be read, so sending the kept text tells
+        // nothing of it again:
+        //
+        if (textToKeep is not null && version is not null)
+            await this.KeepReadText!(documentToLoad, textToKeep, version);
     }
 
     /// <summary>
@@ -300,44 +354,41 @@ public partial class DocumentCheckDialog : MSGComponentBase
         this.document = attachment;
         this.fileContent = string.Empty;
         this.loadFailureMessage = null;
+        this.showsStoredText = false;
         this.isLoadingContent = this.NeedsExtraction();
-        this.UpdatePreview();
     }
 
     /// <summary>
-    /// Called when the user loads a file through this dialog. We don't use a two-way binding here,
-    /// since we have to refresh the preview whenever the content changes.
+    /// Reads the text the AI received from a document when it was sent.
     /// </summary>
-    /// <param name="loadedContent">The content of the file the user has loaded.</param>
-    private void ApplyLoadedFileContent(string loadedContent)
+    /// <param name="provenanceId">The entry of the text.</param>
+    /// <returns>The text, or null when the provenance store no longer holds it, or cannot be read.</returns>
+    private async Task<string?> ReadStoredTextAsync(Guid provenanceId)
     {
-        this.fileContent = loadedContent;
-        this.UpdatePreview();
-    }
-
-    /// <summary>
-    /// Determines what part of the file content we show to the user.
-    /// </summary>
-    private void UpdatePreview()
-    {
-        if (this.fileContent.Length <= PREVIEW_CHARACTER_LIMIT)
+        try
         {
-            this.previewContent = this.fileContent;
-            this.previewCutOffCharacters = 0;
-            return;
+            var store = await this.DatabaseClientProvider.GetProvenanceStoreAsync();
+            var entries = await store.GetEntriesAsync([provenanceId], CancellationToken.None);
+            return entries.GetValueOrDefault(provenanceId)?.Content;
         }
-
-        //
-        // We cut at the last line break before our limit. Otherwise, we might tear apart a Markdown
-        // construct like a table row or a code fence in the middle of a line:
-        //
-        var cutIndex = this.fileContent.LastIndexOf('\n', PREVIEW_CHARACTER_LIMIT - 1) + 1;
-        if (cutIndex < 1)
-            cutIndex = PREVIEW_CHARACTER_LIMIT;
-
-        this.previewContent = this.fileContent[..cutIndex];
-        this.previewCutOffCharacters = this.fileContent.Length - cutIndex;
+        catch (Exception exception)
+        {
+            this.Logger.LogWarning(exception, "Failed to read the stored text of the document '{ProvenanceId}'. Its file is read instead.", provenanceId);
+            return null;
+        }
     }
+
+    /// <summary>
+    /// An image is shown as it is; everything else is shown as the text we read from it.
+    /// </summary>
+    private ContentViewerKind ViewerKind => (this.document?.IsImage ?? false) ? ContentViewerKind.IMAGE : ContentViewerKind.TEXT;
+
+    /// <summary>
+    /// Explains why we show only the beginning of a large document. The preview only answers how we
+    /// read the file, so it may leave out the rest; the AI does not.
+    /// </summary>
+    /// <param name="cutOffCharacters">How many characters the preview leaves out.</param>
+    private string CutOffNotice(int cutOffCharacters) => string.Format(T("Your document is large, so we show you only its beginning. We hide the remaining {0} characters here. Rest assured: the AI still receives your entire document."), cutOffCharacters.CompactCount());
 
     /// <summary>
     /// Ends a running extraction. Without this, reading a large document would continue after the
@@ -357,11 +408,4 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
         base.DisposeResources();
     }
-
-    private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
-
-    private MudMarkdownStyling MarkdownStyling => new()
-    {
-        CodeBlock = { Theme = this.CodeColorPalette },
-    };
 }

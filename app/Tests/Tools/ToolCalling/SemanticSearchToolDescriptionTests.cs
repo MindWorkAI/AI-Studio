@@ -48,7 +48,7 @@ public sealed class SemanticSearchToolDescriptionTests
     {
         var descriptions = new Dictionary<string, string> { [HANDBOOK.Id] = "Our processes.", [MINUTES.Id] = "Meetings.", [INTRANET.Id] = "Everything else." };
         ToolFunctionDefinition DescribeInOfferOrder(params IDataSource[] dataSources) =>
-            Describe(SemanticSearchTool.InOfferOrder(dataSources).Select(dataSource => (dataSource, descriptions[dataSource.Id])).ToArray());
+            Describe(dataSources.InFixedOrder().Select(dataSource => (dataSource, descriptions[dataSource.Id])).ToArray());
 
         var first = DescribeInOfferOrder(INTRANET, MINUTES, HANDBOOK);
         var second = DescribeInOfferOrder(MINUTES, HANDBOOK, INTRANET);
@@ -97,19 +97,6 @@ public sealed class SemanticSearchToolDescriptionTests
             Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet'"), "The model has to know what is missing, so that it can tell the user.");
             Assert.That(function.DescriptionForLLM, Does.Not.Contain(INTRANET.Id), "A data source which cannot be searched gets no ID to pass.");
             Assert.That(OfferedIds(function), Is.EqualTo(new[] { HANDBOOK.Id }), "The schema still lets the model name only what it may search.");
-        });
-    }
-
-    [Test]
-    public void OnlyUnreachableDataSourcesStillMakeAFunction()
-    {
-        var function = DescribeWithUnreachable([], [INTRANET]);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(function.DescriptionForLLM, Does.Contain("None of the data sources of this chat can be searched right now."));
-            Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet'"));
-            Assert.That(function.DescriptionForLLM, Does.Not.Contain("The data sources you may search"));
         });
     }
 

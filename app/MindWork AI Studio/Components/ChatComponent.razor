@@ -109,7 +109,7 @@
                 </MudTooltip>
             }
             
-            <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" Disabled="@(!this.CanAttachFiles)"/>
+            <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" KeepPreviewedText="@this.KeepPreviewedTextAsync" Disabled="@(!this.CanAttachFiles)"/>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
@@ -157,7 +157,7 @@
 
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
-                <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security or confidence-level requirements.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@(this.SettingsManager.IsProviderProhibited(this.Provider.UsedLLMProvider) ? T("The use of this provider has been prohibited by your organization. Please select a different provider.") : T("The selected provider is not allowed in this chat due to data security or confidence-level requirements."))" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
                 </MudTooltip>
             }

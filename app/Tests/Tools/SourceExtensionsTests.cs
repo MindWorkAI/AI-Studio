@@ -245,6 +245,21 @@ public sealed class SourceExtensionsTests
     }
 
     [Test]
+    public void WhatOnlyADataSourceKnowsIsNamedWithoutALink()
+    {
+        IList<Source> sources = [new("handbook.pdf", SourceExtensions.CreateRetrievalSourceUrl("handbook.pdf", "docs/handbook.pdf"), SourceOrigin.RAG)];
+
+        var entries = EntriesOf(sources.ToMarkdown());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sources[0].HasNoLink(), Is.True);
+            Assert.That(sources[0].IsMailSource(), Is.False);
+            Assert.That(entries[0], Is.EqualTo("- [1] handbook.pdf"), "Exported or copied, an address only AI Studio understands would be a link nobody can follow.");
+        });
+    }
+
+    [Test]
     public void AMailIsNamedWithoutALinkThatLeadsNowhere()
     {
         IList<Source> sources =

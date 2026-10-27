@@ -86,7 +86,7 @@ public sealed class IndexStoreBackupTests
 
         await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "LOCAL_DIRECTORY", "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "signature", string.Empty, 3, TOKEN);
         await store.Client.UpsertFileAsync(DATA_SOURCE_ID, new EmbeddingStateFile(parentFileId, FILE_PATH, "report.md", "report.md", "md", FILE_PATH, 64, now, now, now, 1), TOKEN);
-        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, FILE_PATH, 0), parentFileId, null, 0, "The quarterly report is due.", now)], TOKEN);
+        await store.Client.UpsertChunksAsync(DATA_SOURCE_ID, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, FILE_PATH, 0), parentFileId, null, null, 0, "The quarterly report is due.", now)], TOKEN);
     }
 
     private static string CreateTargetDirectory() => Path.Combine(Path.GetTempPath(), $"ai-studio-index-backup-{Guid.NewGuid():N}");

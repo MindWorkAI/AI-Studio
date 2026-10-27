@@ -103,10 +103,70 @@ public sealed class ChatDraftTests
         var draft = new ChatDraft();
         draft.SetText("Summarize the meeting");
         draft.AddAttachments([TRANSCRIPT]);
+        draft.NotePreviewedText(new(TRANSCRIPT.FilePath, Guid.NewGuid(), new(DateTime.UtcNow, 42)));
 
         draft.Clear();
 
-        Assert.That(draft.IsEmpty, Is.True, "The attachments belong to the sent message now, and a transcript has only one owner.");
+        Assert.Multiple(() =>
+        {
+            Assert.That(draft.IsEmpty, Is.True, "The attachments belong to the sent message now, and a transcript has only one owner.");
+            Assert.That(draft.PreviewedTexts, Is.Empty, "A text the preview read went with the message, or is of no use to the next one.");
+        });
+    }
+
+    [Test]
+    public void APreviewOfTheSameFileReplacesTheTextNotedBefore()
+    {
+        var draft = new ChatDraft();
+        var firstPreview = new PreviewedText(AGENDA.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc), 42));
+        var otherFile = new PreviewedText(MINUTES.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc), 42));
+        var secondPreview = firstPreview with { ProvenanceId = Guid.NewGuid(), Version = new(new DateTime(2026, 10, 24, 10, 0, 0, DateTimeKind.Utc), 43) };
+
+        var replacedByFirst = draft.NotePreviewedText(firstPreview);
+        draft.NotePreviewedText(otherFile);
+        var replacedBySecond = draft.NotePreviewedText(secondPreview);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(replacedByFirst, Is.Null);
+            Assert.That(replacedBySecond, Is.EqualTo(firstPreview.ProvenanceId), "Nothing refers to the text of the first preview any longer, so the caller removes it from the store.");
+            Assert.That(draft.PreviewedTexts, Is.EquivalentTo(new[] { otherFile, secondPreview }));
+            Assert.That(draft.GetPreviewedText(AGENDA.FilePath), Is.EqualTo(secondPreview));
+        });
+    }
+
+    [Test]
+    public void AFileTakenOutTakesTheTextOfItsPreviewAlong()
+    {
+        var draft = new ChatDraft();
+        var agendaPreview = new PreviewedText(AGENDA.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc), 42));
+        var minutesPreview = new PreviewedText(MINUTES.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 0, 0, DateTimeKind.Utc), 42));
+        draft.MirrorAttachments([AGENDA, MINUTES]);
+        draft.NotePreviewedText(agendaPreview);
+        draft.NotePreviewedText(minutesPreview);
+
+        draft.MirrorAttachments([MINUTES]);
+        var forgotten = draft.ForgetPreviewsOfDetachedFiles();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(forgotten, Is.EqualTo(new[] { agendaPreview.ProvenanceId }), "Nothing refers to the text any longer, so the caller removes it from the store.");
+            Assert.That(draft.PreviewedTexts, Is.EqualTo(new[] { minutesPreview }));
+            Assert.That(draft.ForgetPreviewsOfDetachedFiles(), Is.Empty);
+        });
+    }
+
+    [Test]
+    public void TheTextsAPreviewReadAreStoredWithTheChat()
+    {
+        var thread = new ChatThread { ChatId = Guid.NewGuid(), Name = "Meeting notes" };
+        var previewed = new PreviewedText(AGENDA.FilePath, Guid.NewGuid(), new(new DateTime(2026, 10, 24, 9, 30, 15, 123, DateTimeKind.Utc).AddTicks(4567), 42));
+        thread.Draft.AddAttachments([AGENDA]);
+        thread.Draft.NotePreviewedText(previewed);
+
+        var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        Assert.That(loaded.Draft.PreviewedTexts, Is.EqualTo(new[] { previewed }), "Leaving the chat and coming back must not lose the text, and sending compares the time of the file to the tick.");
     }
 
     [Test]

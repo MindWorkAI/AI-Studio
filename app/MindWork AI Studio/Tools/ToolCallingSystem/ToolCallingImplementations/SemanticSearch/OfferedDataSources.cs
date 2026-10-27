@@ -15,4 +15,9 @@ internal readonly record struct OfferedDataSources(IReadOnlyList<IDataSource> Se
     /// Whether there is nothing at all to tell the model about.
     /// </summary>
     public bool IsEmpty => this.Searchable.Count == 0 && this.Unreachable.Count == 0;
+
+    /// <summary>
+    /// Whether the model may search at least one data source, which the tool needs to be offered at all.
+    /// </summary>
+    public bool IsSearchable => this.Searchable.Count > 0;
 }

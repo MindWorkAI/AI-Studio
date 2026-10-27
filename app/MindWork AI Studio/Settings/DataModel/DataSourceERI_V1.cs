@@ -64,6 +64,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
 
     /// <inheritdoc />
+    public OutboundDataRestriction OutboundDataRestriction { get; init; } = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
+
+    /// <inheritdoc />
     public bool IsEnterpriseConfiguration { get; init; }
 
     /// <inheritdoc />
@@ -152,7 +155,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             if(retrievalResponse is { Successful: true, Data: not null })
             {
                 //
-                // Next, we have to transform the ERI context back to our generic retrieval context:
+                // Next, we have to transform the ERI context back to our generic retrieval context.
+                // The server writes the JSON, and a field it leaves out arrives as null, whatever the
+                // contract says. Everything after this point counts on texts and lists:
                 //
                 var genericRetrievalContexts = new List<IRetrievalContext>(retrievalResponse.Data.Count);
                 foreach (var eriContext in retrievalResponse.Data)
@@ -164,26 +169,26 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                             {
                                 Path = eriContext.Path ?? string.Empty,
                                 Type = eriContext.ToRetrievalContentType(),
-                                Links = eriContext.Links,
+                                Links = eriContext.Links ?? [],
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 SourceCategory = eriContext.Category ?? string.Empty,
-                                MatchedText = eriContext.MatchedContent,
-                                DataSourceName = eriContext.Name,
-                                SurroundingContent = eriContext.SurroundingContent,
+                                MatchedText = eriContext.MatchedContent ?? string.Empty,
+                                DataSourceName = eriContext.Name ?? string.Empty,
+                                SurroundingContent = eriContext.SurroundingContent ?? [],
                             });
                             break;
-                        
+
                         case ContentType.IMAGE:
                             genericRetrievalContexts.Add(new RetrievalImageContext
                             {
                                 Path = eriContext.Path ?? string.Empty,
                                 Type = eriContext.ToRetrievalContentType(),
-                                Links = eriContext.Links,
-                                Source = eriContext.MatchedContent,
+                                Links = eriContext.Links ?? [],
+                                Source = eriContext.MatchedContent ?? string.Empty,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 SourceCategory = eriContext.Category ?? string.Empty,
                                 SourceType = ContentImageSource.BASE64,
-                                DataSourceName = eriContext.Name,
+                                DataSourceName = eriContext.Name ?? string.Empty,
                             });
                             break;
                         
@@ -262,6 +267,20 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             return false;
         }
 
+        //
+        // Optional, so that configurations written before the setting existed stay valid; their data
+        // sources get the level of a new one. A value this version cannot read counts as the
+        // strictest level, as in the settings file. Only a name counts, never a number, see EnumNames.
+        // A data source for self-hosted providers only is not clamped here: the level applies when
+        // its passages reach a chat, see DataSourceOutboundDataExtensions.GetEffectiveOutboundDataRestriction.
+        //
+        var outboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
+        if (table.TryGetValue("OutboundDataRestriction", out var outboundDataRestrictionValue) && !(outboundDataRestrictionValue.TryRead<string>(out var outboundDataRestrictionText) && EnumNames.TryParse(outboundDataRestrictionText, out outboundDataRestriction)))
+        {
+            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid outbound data restriction, so the strictest one applies. (Plugin ID: {configPluginId})");
+            outboundDataRestriction = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
+        }
+
         if (!table.TryGetValue("SelectedRetrievalId", out var selectedRetrievalIdValue) || !selectedRetrievalIdValue.TryRead<string>(out var selectedRetrievalId) || string.IsNullOrWhiteSpace(selectedRetrievalId))
         {
             LOGGER.LogWarning($"The configured data source {idx} must specify a selected retrieval ID. (Plugin ID: {configPluginId})");
@@ -319,6 +338,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             Username = username,
             UsernamePasswordMode = usernamePasswordMode,
             SecurityPolicy = securityPolicy,
+            OutboundDataRestriction = outboundDataRestriction,
             Version = ERIVersion.V1,
             SelectedRetrievalId = selectedRetrievalId,
             MaxMatches = (ushort)maxMatches,
@@ -379,6 +399,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                     {{usernameLine}}
                     {{secretLine}}
                     ["SecurityPolicy"] = "{{this.SecurityPolicy}}",
+                    ["OutboundDataRestriction"] = "{{this.OutboundDataRestriction}}",
                     ["SelectedRetrievalId"] = "{{LuaTools.EscapeLuaString(this.SelectedRetrievalId)}}",
                     ["MaxMatches"] = {{this.MaxMatches}},
                 }

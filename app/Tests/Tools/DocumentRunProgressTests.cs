@@ -3,7 +3,6 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.Databases.IndexStore;
-using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Services.Indexing;
@@ -238,7 +237,7 @@ public sealed class DocumentRunProgressTests
         var (progress, _, _) = CreateProgress(totalDocuments: 10, share: new RunShare(RunShare.DEFAULT_DURATION, 3));
         progress.HasDoneItsShare(NOW);
 
-        await progress.RecordDocumentIndexedAsync(Document("/tmp/test-data/a.pdf"), 4, true, CancellationToken.None);
+        await progress.RecordDocumentIndexedAsync(Document("/tmp/test-data/a.pdf"), new IndexedDocument(4, 0, []), true, CancellationToken.None);
         await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/b.pdf"), new IOException("The file changed."), CancellationToken.None);
         var afterTwo = progress.HasDoneItsShare(NOW);
         await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/scan.pdf"), new FileExtractionException(FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text."), CancellationToken.None);
@@ -314,7 +313,7 @@ public sealed class DocumentRunProgressTests
         var pass = NewPass();
         var (firstStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
         await firstStep.RecordDocumentFailureAsync(Document("/tmp/test-data/report.pdf"), new IOException("The file changed."), CancellationToken.None);
-        await firstStep.RecordDocumentIndexedAsync(Document("/tmp/test-data/report.pdf"), 4, false, CancellationToken.None);
+        await firstStep.RecordDocumentIndexedAsync(Document("/tmp/test-data/report.pdf"), new IndexedDocument(4, 0, []), false, CancellationToken.None);
 
         var (nextStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
 
@@ -498,7 +497,7 @@ public sealed class DocumentRunProgressTests
             dataSource,
             embeddingProvider,
             embeddingProvider.CreateProvider(),
-            new NoVectorStoreClient("Test vector store", "Not available in tests."),
+            new MemoryVectorStore(),
             new NoIndexStoreClient("Test index store", "Not available in tests."),
             manifest,
             share ?? new RunShare(RunShare.DEFAULT_DURATION),

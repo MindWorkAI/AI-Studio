@@ -47,6 +47,36 @@ public partial class SettingsPanelTools : SettingsPanelBase
         await this.DialogService.ShowAsync<ToolSettingsExportDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);
     }
 
+    private static bool IsSwitchedOffByUser(ToolCatalogItem item) => item.SwitchOffReason is ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER;
+
+    /// <summary>
+    /// Whether the user cannot switch this tool on or off, because their organization switched it or all tools off.
+    /// </summary>
+    private static bool IsSwitchLocked(ToolCatalogItem item) => item.SwitchOffReason is ToolOfferBlockReason.TOOLS_SWITCHED_OFF or ToolOfferBlockReason.TOOL_SWITCHED_OFF;
+
+    private string GetSwitchTooltip(ToolCatalogItem item)
+    {
+        if (IsSwitchLocked(item))
+            return this.T("This tool has been disabled by your organization.");
+
+        return IsSwitchedOffByUser(item)
+            ? this.T("Switch this tool on to use it again.")
+            : this.T("Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it.");
+    }
+
+    private async Task SwitchToolOnOrOff(ToolCatalogItem item, bool isOn)
+    {
+        if (IsSwitchLocked(item))
+            return;
+
+        this.ToolRegistry.SetSwitchedOffByUser(item.Id, !isOn);
+        await this.SettingsManager.StoreSettings();
+        this.items = await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetAllDefinitions());
+
+        // Tool selections which are open right now load their list anew:
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
     private string GetConfigurationTooltip(ToolCatalogItem item) => item.ConfigurationState.MissingRequiredFields.Count switch
     {
         _ when !string.IsNullOrWhiteSpace(item.ConfigurationState.Message) => item.ConfigurationState.Message,

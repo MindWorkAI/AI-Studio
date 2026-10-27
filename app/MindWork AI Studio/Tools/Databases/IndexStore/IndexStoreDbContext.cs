@@ -81,6 +81,8 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.Property(file => file.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
             entity.Property(file => file.ChunkCount).HasColumnName("chunk_count");
             entity.Property(file => file.TranscriptKey).HasColumnName("transcript_key");
+            entity.Property(file => file.ContentHash).HasColumnName("content_hash");
+            entity.Property(file => file.Generation).HasColumnName("generation");
 
             entity.HasIndex(file => file.DataSourceId).HasDatabaseName("idx_embedded_files_data_source");
             entity.HasIndex(file => file.AbsolutePath).HasDatabaseName("idx_embedded_files_absolute_path");
@@ -103,14 +105,23 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.Property(chunk => chunk.ChunkId).HasColumnName("chunk_id").IsRequired();
             entity.Property(chunk => chunk.ParentFileId).HasColumnName("parent_file_id").IsRequired();
             entity.Property(chunk => chunk.PageNumber).HasColumnName("page_number");
+            entity.Property(chunk => chunk.EndPageNumber).HasColumnName("end_page_number");
             entity.Property(chunk => chunk.ChunkIndex).HasColumnName("chunk_index");
             entity.Property(chunk => chunk.ChunkText).HasColumnName("chunk_text").IsRequired();
+            entity.Property(chunk => chunk.TextHash).HasColumnName("text_hash");
+            entity.Property(chunk => chunk.Generation).HasColumnName("generation");
+            entity.Property(chunk => chunk.SheetName).HasColumnName("sheet_name");
+            entity.Property(chunk => chunk.StartRow).HasColumnName("start_row");
+            entity.Property(chunk => chunk.EndRow).HasColumnName("end_row");
+            entity.Property(chunk => chunk.StartLine).HasColumnName("start_line");
+            entity.Property(chunk => chunk.EndLine).HasColumnName("end_line");
+            entity.Property(chunk => chunk.AttachmentPosition).HasColumnName("attachment_position");
             entity.Property(chunk => chunk.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
 
             entity.HasIndex(chunk => chunk.ChunkId).HasDatabaseName("idx_embedding_chunks_chunk_id").IsUnique();
             entity.HasIndex(chunk => chunk.ParentFileId).HasDatabaseName("idx_embedding_chunks_parent_file");
             entity.HasIndex(chunk => chunk.PageNumber).HasDatabaseName("idx_embedding_chunks_page");
-            entity.HasIndex(chunk => new { chunk.ParentFileId, chunk.ChunkIndex }).HasDatabaseName("idx_embedding_chunks_parent_file_chunk_index").IsUnique();
+            entity.HasIndex(chunk => new { chunk.ParentFileId, chunk.Generation, chunk.ChunkIndex }).HasDatabaseName("idx_embedding_chunks_parent_file_generation_chunk_index").IsUnique();
         });
 
         modelBuilder.Entity<IndexingFailureEntity>(entity =>

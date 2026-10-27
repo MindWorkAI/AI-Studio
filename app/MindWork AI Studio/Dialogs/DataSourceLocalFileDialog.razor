@@ -53,31 +53,7 @@
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
                 @T("Select a file for this data source. The content of this file will be processed for the data source. An audio or video file is transcribed by your transcription provider first.")
             </MudJustifiedText>
-            @if (!this.CanChangeSource)
-            {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
-                    @T("The documents of this data source are already prepared, so its file cannot be changed. Another file holds other content, which makes it another data source: please add one for it. The embedding provider below can be changed.")
-                </MudAlert>
-            }
-            @if (this.CanChangeSource)
-            {
-                <SelectFile @bind-File="@this.dataFilePath" Label="@T("Selected file path for this data source")" FileDialogTitle="@T("Select the file")" Validation="@this.dataSourceValidation.ValidateFilePath" EnableDragDrop="true" CatchAllDocuments="true" />
-            }
-            else
-            {
-                <MudTextField
-                    T="string"
-                    Text="@this.dataFilePath"
-                    Label="@T("Selected file path for this data source")"
-                    Class="mb-3"
-                    ReadOnly="@true"
-                    Validation="@this.dataSourceValidation.ValidateFilePath"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.AttachFile"
-                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                    Variant="Variant.Outlined"
-                />
-            }
+            <SelectFile @bind-File="@this.dataFilePath" Label="@T("Selected file path for this data source")" FileDialogTitle="@T("Select the file")" Validation="@this.dataSourceValidation.ValidateFilePath" EnableDragDrop="true" CatchAllDocuments="true" />
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Embedding")
@@ -118,6 +94,8 @@
                     </MudSelectItem>
                 }
             </MudSelect>
+
+            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@T("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction"/>
 
             @if (this.MediaTranscriptionHint is { } mediaTranscriptionHint)
             {

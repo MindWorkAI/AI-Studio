@@ -31,13 +31,19 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
-    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token) =>
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) =>
         Task.FromException<IReadOnlyList<VectorSearchResult>>(this.CreateUnavailableException());
 
-    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token) =>
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) =>
         Task.FromException<IReadOnlyList<VectorSearchResult>>(this.CreateUnavailableException());
 
-    public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
+    public override Task<IReadOnlyList<StoredVector>> RetrieveVectorsAsync(string storeName, IReadOnlyList<string> pointIds, CancellationToken token) =>
+        Task.FromException<IReadOnlyList<StoredVector>>(this.CreateUnavailableException());
+
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, IReadOnlyCollection<string> keepPointIds, CancellationToken token) =>
+        Task.FromException(this.CreateUnavailableException());
+
+    public override Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
     public override Task OptimizeVectorStore(string storeName, CancellationToken token) =>

@@ -28,6 +28,28 @@ internal sealed class EmbeddingStateFileEntity
 
     public string? TranscriptKey { get; set; }
 
+    /// <summary>
+    /// The SHA-256 hash of the raw bytes of the file when it was indexed, cf. FileContentHash, or
+    /// null for a file indexed before v26.10.1 and for every mail.
+    /// </summary>
+    /// <remarks>
+    /// The fingerprint says only that path, size or write time changed. When it does, the content
+    /// hash tells whether the content changed as well, or whether the file was merely saved again,
+    /// synchronized or copied, which needs neither extraction nor embedding.
+    /// </remarks>
+    public string? ContentHash { get; set; }
+
+    /// <summary>
+    /// The generation of the chunks the document is searched by, cf. IndexedDocumentIds.CreateChunkIdSource.
+    /// </summary>
+    /// <remarks>
+    /// A document read again writes its chunks under the next generation, while the chunks of this
+    /// one stay. Only once all new chunks are stored does this switch to the new generation, and
+    /// the old chunks go. An attempt which fails leaves this as it was, and only its own chunks go,
+    /// so the document keeps the version it had.
+    /// </remarks>
+    public int Generation { get; set; }
+
     public EmbeddingStateDataSourceEntity? DataSource { get; set; }
 
     public List<EmbeddingStateChunkEntity> Chunks { get; set; } = [];

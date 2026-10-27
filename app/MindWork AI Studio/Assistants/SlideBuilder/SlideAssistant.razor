@@ -1,4 +1,7 @@
 @attribute [Route(Routes.ASSISTANT_SLIDE_BUILDER)]
+@using AIStudio.Settings.DataModel
+@using AIStudio.Tools.PowerPoint
+@using AIStudio.Tools.Rust
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogSlideBuilder>
 
 <MudText Typo="Typo.h5"  Class="mb-1 mt-3"> @T("Content to derive slide from")</MudText>
@@ -7,8 +10,43 @@
 </MudJustifiedText>
 <MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-<MudText Typo="Typo.h6"  Class="mb-1 mt-1"> @T("Attach documents")</MudText>
-<AttachDocuments Name="Documents for input" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+@* Side by side where the window is wide enough; each column ends with its zone, so both zones line up below explanations of different length: *@
+<MudGrid Class="mt-1">
+    <MudItem xs="12" lg="6" Class="d-flex flex-column">
+        <MudText Typo="Typo.h6" Class="mb-1"> @T("Attach documents")</MudText>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-2 flex-grow-1">
+            @T("Documents and images attached here are source material: the LLM reads them, but puts none of them on a slide.")
+        </MudJustifiedText>
+        <AttachDocuments Name="Documents for input" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+    </MudItem>
+    <MudItem xs="12" lg="6" Class="d-flex flex-column">
+        <MudText Typo="Typo.h6" Class="mb-1">@T("Pictures for the slides")</MudText>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-2 flex-grow-1">
+            @T("Attach the pictures which the presentation must show, e.g., photos, diagrams, or screenshots. Each of them goes on exactly one slide with room for a picture. Only PNG and JPEG pictures are possible. An LLM which can read images sees them; any other LLM knows only their file names, so clear names help.")
+        </MudJustifiedText>
+        <AttachDocuments Name="Pictures for the slides" @bind-DocumentPaths="@this.slidePictures" OnChange="@this.OnSlidePicturesChanged" CatchAllDocuments="false" UseSmallForm="false" AllowedFileTypes="@([FileTypes.SLIDE_PICTURE])" Provider="@this.ProviderSettings"/>
+    </MudItem>
+</MudGrid>
+
+<MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Picture library")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @SlideAssistantTexts.WhatAPictureLibraryOffers
+</MudJustifiedText>
+<SelectDirectory Directory="@this.pictureLibraryPath" DirectoryChanged="@this.OnPictureLibraryChanged" Label="@T("(Optional) Picture library")" DirectoryDialogTitle="@T("Select a picture library")" Validation="@this.ValidatePictureLibrary" Disabled="@this.IsPictureLibraryLocked" EnableDragDrop="true"/>
+@if (this.IsLockedPictureLibraryUnavailable)
+{
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@T("The picture library of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans the slides without it.")</MudAlert>
+}
+@if (this.PictureLibraryHint is { Length: > 0 } pictureLibraryHint)
+{
+    <MudText Typo="Typo.body2" Class="mb-3">@pictureLibraryHint</MudText>
+}
+@if (!string.IsNullOrWhiteSpace(this.pictureLibraryPath) && !this.IsPictureLibraryLocked)
+{
+    <MudButton StartIcon="@Icons.Material.Filled.FolderOff" Variant="Variant.Outlined" OnClick="@this.UseNoPictureLibrary" Class="mb-3">
+        @T("Use no picture library")
+    </MudButton>
+}
 
 <MudText Typo="Typo.h5"  Class="mb-3 mt-6"> @T("Details about the desired presentation")</MudText>
 
@@ -22,11 +60,11 @@
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.")
 </MudJustifiedText>
-<MudTextField T="string" AutoGrow="true" Lines="3" @bind-Text="@this.importantAspects" class="mb-1" Label="@T("(Optional) Important Aspects")" HelperText="@T("(Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.")"  ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" AutoGrow="true" Lines="3" @bind-Text="@this.importantAspects" class="mb-1" Label="@T("(Optional) Important Aspects")" ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Extent of the planned presentation")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @T("Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.")
+    @T("Please specify the extent of the planned presentation. This can be the number of slides, the maximum number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.")
 </MudJustifiedText>
 <MudGrid>
     <MudItem xs="4">
@@ -39,10 +77,11 @@
     
     <MudItem xs="4">
         <MudNumericField @bind-Value="@this.numberOfBulletPoints"
-                         Label="@T("Number of bullet points")"
+                         Label="@T("Maximum number of bullet points per slide")"
                          Variant="Variant.Outlined"
                          Min="0"
-                         Max="7"
+                         Max="@DataSlideBuilder.MAX_BULLET_POINTS_PER_SLIDE"
+                         Disabled="@this.IsBulletPointMaximumLocked"
                          Class="mb-3" />
     </MudItem>
 
@@ -58,6 +97,12 @@
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Language")</MudText>
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
 
+<MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Occasion")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("The occasion helps the LLM to structure the presentation. A lecture, for example, may close its chapters with an interim summary or with room for questions, and a report to management leads with the key messages.")
+</MudJustifiedText>
+<EnumSelection T="PresentationOccasion" NameFunc="@(occasion => occasion.Name())" @bind-Value="@this.selectedOccasion" Icon="@Icons.Material.Filled.Event" Label="@T("Occasion of the presentation")" AllowOther="@true" @bind-OtherInput="@this.customOccasion" OtherValue="PresentationOccasion.OTHER" LabelOther="@T("Other occasion")" ValidateOther="@this.ValidateCustomOccasion" />
+
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Audience")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.")
@@ -66,4 +111,77 @@
 <EnumSelection T="AudienceAgeGroup" NameFunc="@(ageGroup => ageGroup.Name())" @bind-Value="@this.selectedAudienceAgeGroup" Icon="@Icons.Material.Filled.Cake" Label="@T("Audience age group")" />
 <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(level => level.Name())" @bind-Value="@this.selectedAudienceOrganizationalLevel" Icon="@Icons.Material.Filled.AccountTree" Label="@T("Audience organizational level")" />
 <EnumSelection T="AudienceExpertise" NameFunc="@(expertise => expertise.Name())" @bind-Value="@this.selectedAudienceExpertise" Icon="@Icons.Material.Filled.School" Label="@T("Audience expertise")" />
+
+<MudText Typo="Typo.h5" Class="mb-1 mt-6"> @T("PowerPoint template")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("Choose a PowerPoint presentation or template (.pptx, .potx) whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export.")
+</MudJustifiedText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @SlideAssistantTexts.WhatTheLLMKnowsOfLayouts
+</MudJustifiedText>
+<SelectFile File="@this.templatePath" FileChanged="@this.OnTemplateChanged" Label="@T("PowerPoint template")" FileDialogTitle="@T("Select a PowerPoint template")" Filter="@([FileTypes.POWER_POINT_TEMPLATE])" Validation="@this.ValidateTemplate" Disabled="@this.IsTemplateLocked" EnableDragDrop="true"/>
+@if (this.IsLockedTemplateUnavailable)
+{
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@T("The PowerPoint template of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans an outline only.")</MudAlert>
+}
+@if (!string.IsNullOrWhiteSpace(this.templatePath) && !this.IsTemplateLocked)
+{
+    <MudButton StartIcon="@Icons.Material.Filled.LayersClear" Variant="Variant.Outlined" OnClick="@this.UseNoTemplate" Class="mb-3">
+        @T("Use no template")
+    </MudButton>
+}
+
+@* The select renders its items again on its own, e.g., while the form validates, when the template may be gone already: *@
+@if (this.template is { } loadedTemplate)
+{
+    <CompactExpansionPanel HeaderText="@T("Advanced Options")" HeaderIcon="@Icons.Material.Filled.Tune" Class="mb-3 rounded" @bind-Expanded="@this.advancedOptionsExpanded">
+        @if (loadedTemplate.VariantLabels.Count > 0)
+        {
+            <MudSelect T="string" @bind-Value="@this.variantLabel" Label="@T("Color variant")" HelperText="@T("Your template offers its layouts in several colors. Choose one for the presentation.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Palette" Class="mb-3">
+                @foreach (var label in loadedTemplate.VariantLabels)
+                {
+                    <MudSelectItem T="string" Value="@label">@label</MudSelectItem>
+                }
+            </MudSelect>
+        }
+
+        <MudTextField T="string" @bind-Text="@this.footerText" Label="@T("(Optional) Footer")" HelperText="@T("Shown on every slide whose layout has a footer, e.g., your name, organization, and date.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ShortText" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+        <MudSwitch T="bool" @bind-Value="@this.keepEmptyPicturePlaceholders" Color="Color.Primary" Class="mx-1">
+            @T("Keep empty picture placeholders")
+        </MudSwitch>
+        <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+            @SlideAssistantTexts.WhatKeepingEmptyPicturePlaceholdersDoes
+        </MudJustifiedText>
+
+        <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Layouts for kinds of slides")</MudText>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @SlideAssistantTexts.WhatALayoutChoiceDoes
+        </MudJustifiedText>
+        <LayoutChoicePanels IsChosen="@(purpose => this.LayoutNameOf(purpose).Length > 0)">
+            <ChoiceContent Context="purpose">
+                <MudSelect T="string" Value="@this.LayoutNameOf(purpose)" ValueChanged="@(name => this.SetLayoutName(purpose, name))" Disabled="@this.AreLayoutsLocked" Label="@purpose.Label()" HelperText="@purpose.Help()" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewQuilt" Class="mb-3">
+                    <MudSelectItem T="string" Value="@string.Empty">@LayoutPurposeExtensions.NoPreference</MudSelectItem>
+                    @foreach (var layoutName in loadedTemplate.FamilyNames)
+                    {
+                        <MudSelectItem T="string" Value="@layoutName">@layoutName</MudSelectItem>
+                    }
+                </MudSelect>
+            </ChoiceContent>
+        </LayoutChoicePanels>
+
+        @if (loadedTemplate.Slides.Count > 0)
+        {
+            <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Slides of the template")</MudText>
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @SlideAssistantTexts.WhatHappensToTemplateSlides
+            </MudJustifiedText>
+            @foreach (var templateSlide in loadedTemplate.Slides)
+            {
+                <EnumSelection T="TemplateSlideUse" NameFunc="@(use => use.Name())" Value="@this.TemplateSlideUseOf(templateSlide.Number)" ValueChanged="@(use => this.SetTemplateSlideUse(templateSlide.Number, use))" ValidateSelection="@(use => this.ValidateTemplateSlideUse(templateSlide, use))" Disabled="@this.AreTemplateSlideUsesLocked" Icon="@Icons.Material.Filled.Slideshow" Label="@templateSlide.Label()"/>
+            }
+        }
+    </CompactExpansionPanel>
+}
+
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

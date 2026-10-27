@@ -1,0 +1,55 @@
+@inherits MSGComponentBase
+
+@* One element around everything, so that a layout around the viewer can give it its place. *@
+<div class="content-viewer">
+    @if (this.cutOffCharacters > 0 && this.CutOffNotice is not null)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
+            @this.CutOffNotice(this.cutOffCharacters)
+        </MudAlert>
+    }
+
+    <MudPaper Outlined="@true" Class="content-viewer-frame">
+        <div class="content-viewer-toolbar">
+            <div class="content-viewer-toolbar-start">
+                @this.Toolbar
+            </div>
+
+            @if (this.views.Count > 1)
+            {
+                <MudToggleGroup T="ContentView" @bind-Value="@this.view" SelectionMode="SelectionMode.SingleSelection" Size="Size.Small" Color="Color.Primary">
+                    @foreach (var offeredView in this.views)
+                    {
+                        <MudToggleItem Value="@offeredView" Text="@this.GetViewName(offeredView)"/>
+                    }
+                </MudToggleGroup>
+            }
+        </div>
+
+        @* MathJax leaves this alone, even when something else on the page has it typeset everything:
+           it would replace elements Blazor renders here, and the next render of them would fail. *@
+        <div class="content-viewer-body mathjax_ignore" style="@($"max-height: {this.MaxHeight};")">
+            @switch (this.view)
+            {
+                case ContentView.MEDIA:
+                    <MudImage ObjectFit="ObjectFit.ScaleDown" Style="width: 100%;" Src="@this.MediaUrl"/>
+                    break;
+
+                case ContentView.FORMATTED:
+                    <MudMarkdown Value="@this.shownText" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CONTENT_MARKDOWN_PIPELINE"/>
+                    break;
+
+                default:
+                    <pre class="content-viewer-plain">@this.shownText</pre>
+                    break;
+            }
+        </div>
+    </MudPaper>
+
+    @if (!string.IsNullOrWhiteSpace(this.HelperText))
+    {
+        <MudText Typo="Typo.caption" Class="mt-1 px-1 mud-text-secondary">
+            @this.HelperText
+        </MudText>
+    }
+</div>
