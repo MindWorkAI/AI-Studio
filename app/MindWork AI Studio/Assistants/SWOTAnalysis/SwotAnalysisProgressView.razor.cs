@@ -19,13 +19,13 @@ public partial class SwotAnalysisProgressView : MSGComponentBase
 
     private SwotCategoryAnalysisProgress ProgressOf(SwotAnalysisCategory category) => this.Progress.GetValueOrDefault(category, RUNNING);
 
-    private string LabelOf(SwotAnalysisCategory category) => category switch
-    {
-        SwotAnalysisCategory.STRENGTHS => T("Strengths"),
-        SwotAnalysisCategory.WEAKNESSES => T("Weaknesses"),
-        SwotAnalysisCategory.OPPORTUNITIES => T("Opportunities"),
-        SwotAnalysisCategory.THREATS => T("Threats"),
-
-        _ => string.Empty,
-    };
+    private SwotQuadrantLabels Labels => new(
+        T("Strengths"),
+        T("Weaknesses"),
+        T("Opportunities"),
+        T("Threats"),
+        T("Internal"),
+        T("External"),
+        T("Positive"),
+        T("Negative"));
 }

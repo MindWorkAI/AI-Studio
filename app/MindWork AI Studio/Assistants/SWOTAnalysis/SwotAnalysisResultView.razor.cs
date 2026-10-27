@@ -12,4 +12,24 @@ public partial class SwotAnalysisResultView
     /// </summary>
     [Parameter]
     public SwotAnalysisResult Result { get; set; } = new();
+
+    private SwotQuadrantLabels Labels => new(
+        this.Result.Strengths.Label,
+        this.Result.Weaknesses.Label,
+        this.Result.Opportunities.Label,
+        this.Result.Threats.Label,
+        this.Result.InternalLabel,
+        this.Result.ExternalLabel,
+        this.Result.PositiveLabel,
+        this.Result.NegativeLabel);
+
+    private SwotCategory CategoryOf(SwotAnalysisCategory category) => category switch
+    {
+        SwotAnalysisCategory.STRENGTHS => this.Result.Strengths,
+        SwotAnalysisCategory.WEAKNESSES => this.Result.Weaknesses,
+        SwotAnalysisCategory.OPPORTUNITIES => this.Result.Opportunities,
+        SwotAnalysisCategory.THREATS => this.Result.Threats,
+
+        _ => new(),
+    };
 }

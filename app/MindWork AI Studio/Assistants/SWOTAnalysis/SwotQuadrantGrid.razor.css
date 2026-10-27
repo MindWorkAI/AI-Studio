@@ -1,14 +1,31 @@
-.swot-category-grid {
+/*
+ * At most two columns, decided by the width of the grid itself: a column is at least half of the
+ * grid wide, so a third never fits, and at least 20rem, so two columns need about 40rem. Below that,
+ * the quadrants stand below each other. min(20rem, 100%) keeps a single column from overflowing a
+ * grid narrower than 20rem.
+ */
+.swot-quadrant-grid {
+    --swot-gap: 1rem;
     display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--swot-gap);
+    grid-template-columns: repeat(auto-fit, minmax(max(min(20rem, 100%), calc((100% - var(--swot-gap)) / 2)), 1fr));
 }
 
-.swot-category-card {
+.swot-quadrant {
     border: 1px solid var(--mud-palette-lines-default);
     border-radius: var(--mud-default-borderradius);
-    min-height: 10rem;
+    min-width: 0;
     padding: 1rem;
+}
+
+.swot-quadrant-header {
+    margin-bottom: 0.65rem;
+}
+
+.swot-quadrant-axes {
+    color: var(--mud-palette-text-secondary);
+    display: block;
+    font-size: 0.8rem;
 }
 
 .swot-strengths {
@@ -29,10 +46,4 @@
 .swot-threats {
     border-top: 0.3rem solid var(--mud-palette-error);
     background: color-mix(in srgb, var(--mud-palette-error) 8%, transparent);
-}
-
-@media (max-width: 700px) {
-    .swot-category-grid {
-        grid-template-columns: 1fr;
-    }
 }

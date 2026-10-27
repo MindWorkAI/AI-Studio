@@ -1,41 +1,9 @@
 <div class="swot-result">
-    <section class="swot-matrix-section" aria-labelledby="swot-matrix-heading">
-        <MudText Typo="Typo.h5" Class="mb-3" id="swot-matrix-heading">@this.Result.MatrixHeading</MudText>
-        <div class="swot-matrix-scroll">
-            <table class="swot-matrix">
-                <thead>
-                    <tr>
-                        <th class="swot-corner"></th>
-                        <th scope="col">@this.Result.PositiveLabel</th>
-                        <th scope="col">@this.Result.NegativeLabel</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">@this.Result.InternalLabel</th>
-                        <td class="swot-strengths">
-                            <strong class="swot-cell-heading">@this.Result.Strengths.Label</strong>
-                            <SwotMatrixFindings Findings="@this.Result.Strengths.Findings" EmptyMessage="@this.Result.Strengths.EmptyMessage"/>
-                        </td>
-                        <td class="swot-weaknesses">
-                            <strong class="swot-cell-heading">@this.Result.Weaknesses.Label</strong>
-                            <SwotMatrixFindings Findings="@this.Result.Weaknesses.Findings" EmptyMessage="@this.Result.Weaknesses.EmptyMessage"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">@this.Result.ExternalLabel</th>
-                        <td class="swot-opportunities">
-                            <strong class="swot-cell-heading">@this.Result.Opportunities.Label</strong>
-                            <SwotMatrixFindings Findings="@this.Result.Opportunities.Findings" EmptyMessage="@this.Result.Opportunities.EmptyMessage"/>
-                        </td>
-                        <td class="swot-threats">
-                            <strong class="swot-cell-heading">@this.Result.Threats.Label</strong>
-                            <SwotMatrixFindings Findings="@this.Result.Threats.Findings" EmptyMessage="@this.Result.Threats.EmptyMessage"/>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <section class="swot-matrix-section">
+        <MudText Typo="Typo.h5" Class="mb-3">@this.Result.MatrixHeading</MudText>
+        <SwotQuadrantGrid Labels="@this.Labels" Context="category">
+            <SwotMatrixFindings Findings="@this.CategoryOf(category).Findings" EmptyMessage="@this.CategoryOf(category).EmptyMessage"/>
+        </SwotQuadrantGrid>
     </section>
 
     @foreach (var category in this.Result.Categories)
