@@ -140,7 +140,7 @@
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAgentSelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@T("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAgentSelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@T("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
             }
             
             @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
