@@ -8,6 +8,11 @@ namespace AIStudio.Components;
 /// </summary>
 public partial class FilePatternSelection : MSGComponentBase
 {
+    /// <summary>
+    /// How many lines a field for file patterns or exclusions grows to. A longer list scrolls.
+    /// </summary>
+    public const int MAX_FIELD_LINES = 6;
+
     [Parameter, EditorRequired]
     public RenderFragment AllowedContent { get; set; } = null!;
 

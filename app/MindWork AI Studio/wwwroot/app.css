@@ -564,11 +564,16 @@ tr:has(> .provider-group-header) .mud-icon-button {
     min-width: 0;
 }
 
-/* Pattern lists wrap and grow to their full content without an internal scrollbar. */
+/*
+ * Pattern lists wrap and grow with their content, up to a limit beyond which they scroll. MudBlazor
+ * measures the height only on input, after a render with new text, and when the window changes its
+ * size. When the field gets narrower otherwise, e.g., in a dialog, more lines wrap than it is high,
+ * and MudBlazor hides the scrollbar below the limit. Allowing it always keeps every line reachable.
+ */
 .pattern-text-field textarea.mud-input-slot {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-    overflow: hidden !important;
+    overflow-y: auto !important;
 }
 
 /*

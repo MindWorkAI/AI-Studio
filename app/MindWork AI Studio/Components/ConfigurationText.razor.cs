@@ -32,7 +32,8 @@ public partial class ConfigurationText : ConfigurationBaseCore
     public bool Compact { get; set; }
 
     /// <summary>
-    /// Wraps and grows to show the full text, including while the field is not focused.
+    /// Wraps and grows with its text, including while the field is not focused, up to the lines of a
+    /// field for file patterns.
     /// </summary>
     /// <remarks>
     /// Such a field shows the draft rather than the stored value. Otherwise, a reset which leaves the
@@ -128,7 +129,7 @@ public partial class ConfigurationText : ConfigurationBaseCore
 
     private bool AutoGrow => this.ExpandToContent || this.NumLines > 1;
     
-    private int GetMaxLines => this.ExpandToContent ? 0 : this.AutoGrow ? this.MaxLines : 1;
+    private int GetMaxLines => this.ExpandToContent ? FilePatternSelection.MAX_FIELD_LINES : this.AutoGrow ? this.MaxLines : 1;
 
     private string InputClass => this.ExpandToContent ? "pattern-text-field" : string.Empty;
 

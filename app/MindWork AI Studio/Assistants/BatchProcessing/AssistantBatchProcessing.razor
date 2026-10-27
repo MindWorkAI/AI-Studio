@@ -21,7 +21,7 @@
 <div class="mt-6">
     <FilePatternSelection>
         <AllowedContent>
-            <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Files to include")" AdornmentIcon="@Icons.Material.Filled.Restore" Adornment="Adornment.End" OnAdornmentClick="@this.RestoreDefaultFilePatterns" AdornmentAriaLabel="@T("Restore default patterns")" Lines="1" AutoGrow="@true" MaxLines="0" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Files to include")" AdornmentIcon="@Icons.Material.Filled.Restore" Adornment="Adornment.End" OnAdornmentClick="@this.RestoreDefaultFilePatterns" AdornmentAriaLabel="@T("Restore default patterns")" Lines="1" AutoGrow="@true" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
         </AllowedContent>
     </FilePatternSelection>
 </div>
