@@ -223,7 +223,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         var isTable = file.Format.IsTabular();
         var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular() == isTable).ToList();
-        var extension = file.Format.ToFileExtension();
+        var extension = file.ToFileExtensionOrName();
 
         //
         // The caption is the heading the model wrote, so it already carries the language of the
@@ -232,7 +232,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         //
         string name;
         if (filesOfItsKind.Count < 2)
-            name = file.Format.ToName();
+            name = file.ToName();
         else if (!string.IsNullOrWhiteSpace(file.Caption) && filesOfItsKind.Count(entry => string.Equals(entry.Caption, file.Caption, StringComparison.Ordinal)) is 1)
             name = $"{file.Caption} ({extension})";
         else
@@ -804,7 +804,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         try
         {
             var fileName = string.IsNullOrWhiteSpace(file.Caption) ? this.ExportFileName : file.Caption;
-            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file.Format, this.Content.ToExportContent(file), fileName);
+            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file, this.Content.ToExportContent(file), fileName);
         }
         catch (ArgumentOutOfRangeException e)
         {

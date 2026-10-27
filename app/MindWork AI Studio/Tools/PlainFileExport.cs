@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Markdig.Extensions.Tables;
@@ -200,7 +201,35 @@ public static class PlainFileExport
         if (!format.IsPlainText() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
-        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
+        return await WriteFile(rustService, dialogTitle, format, fileTypeFilter, format.ToSuggestedFileName(fileName), format.ToFileEncoding(), fileContent);
+    }
+
+    /// <summary>
+    /// Writes one file out of a message as it is and lets the user save it.
+    /// </summary>
+    /// <remarks>
+    /// Unlike an entire message, such a file knows more about itself than its format says, so the
+    /// file names its type, the name the save dialog suggests, and its encoding.
+    /// </remarks>
+    /// <param name="rustService">The Rust service, used for the save dialog.</param>
+    /// <param name="dialogTitle">The title of the save dialog.</param>
+    /// <param name="file">The file, as ExtractFiles read it out of the message. Its format must be a
+    /// plain text format, see FileExportFormatExtensions.IsPlainText.</param>
+    /// <param name="fileContent">The finished file, see IContentExtensions.ToExportContent.</param>
+    /// <param name="fileName">What the file is about, used to suggest a name in the save dialog.
+    /// Null falls back to a generic name.</param>
+    /// <returns>True, when the file was written.</returns>
+    public static async Task<bool> ToFile(RustService rustService, string dialogTitle, MessageFile file, string fileContent, string? fileName = null)
+    {
+        if (!file.Format.IsPlainText() || file.ToFileTypeFilter() is not { } fileTypeFilter)
+            throw new ArgumentOutOfRangeException(nameof(file), file.Format, "AI Studio cannot write this format itself.");
+
+        return await WriteFile(rustService, dialogTitle, file.Format, fileTypeFilter, file.ToSuggestedFileName(fileName), file.ToFileEncoding(), fileContent);
+    }
+
+    private static async Task<bool> WriteFile(RustService rustService, string dialogTitle, FileExportFormat format, FileTypeFilter fileTypeFilter, string suggestedFileName, Encoding encoding, string fileContent)
+    {
+        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], suggestedFileName);
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");
@@ -213,7 +242,7 @@ public static class PlainFileExport
         feedback.ShowRunning(response.SaveFilePath);
         try
         {
-            await File.WriteAllTextAsync(response.SaveFilePath, fileContent, format.ToFileEncoding());
+            await File.WriteAllTextAsync(response.SaveFilePath, fileContent, encoding);
             await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, TB("The export succeeded."), response.SaveFilePath, true);
 
             return true;

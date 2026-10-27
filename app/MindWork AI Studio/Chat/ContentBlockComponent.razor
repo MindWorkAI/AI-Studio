@@ -96,7 +96,7 @@
                                 <MudDivider/>
                                 @foreach (var messageFile in this.MessageFiles)
                                 {
-                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.Format.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
                                 }
                             }
                             <MudDivider/>
