@@ -89,7 +89,23 @@
                         <MudMenu Icon="@Icons.Material.Filled.Save">
                             @foreach (var documentFormat in FileExportFormatExtensions.DOCUMENT_FORMATS)
                             {
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
+                                if (documentFormat.ToFormatTemplateFilter() is null)
+                                {
+                                    <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
+                                }
+                                else
+                                {
+                                    @* A format which takes templates opens a menu of its own, which also leads to managing them: *@
+                                    <MudMenu StartIcon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()">
+                                        <MudMenuItem OnClick="@this.ManageFormatTemplates" Icon="@Icons.Material.Filled.Settings" Label="@T("Manage your templates")"/>
+                                        <MudDivider/>
+                                        <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@T("Export without template")"/>
+                                        @foreach (var formatTemplate in this.FormatTemplatesFor(documentFormat))
+                                        {
+                                            <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat, formatTemplate))" Icon="@(formatTemplate.IsEnterpriseConfiguration ? Icons.Material.Filled.Business : Icons.Material.Filled.Description)" Label="@formatTemplate.Name"/>
+                                        }
+                                    </MudMenu>
+                                }
                             }
                             @if (this.MessageFiles.Count > 0)
                             {

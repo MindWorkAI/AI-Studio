@@ -181,7 +181,7 @@ public static class PlainFileExport
     /// Writes the given text to a plain text file as it is and lets the user save it.
     /// </summary>
     /// <remarks>
-    /// Nothing is converted here, which is what sets this apart from PandocExport.ToDocument. A web
+    /// Nothing is converted here, which is what sets this apart from DocumentExport.ToDocument. A web
     /// page or a LaTeX document the model wrote is a finished file already and comes through here;
     /// an entire answer in one of these formats is Markdown and goes to Pandoc instead.
     /// </remarks>

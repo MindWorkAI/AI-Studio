@@ -72,6 +72,14 @@ public sealed class Data
     public List<ChatTemplate> ChatTemplates { get; init; } = [];
 
     /// <summary>
+    /// List of configured format templates, e.g., Word templates to export into.
+    /// </summary>
+    /// <remarks>
+    /// An older version of AI Studio skips this property, so the settings version stays the same.
+    /// </remarks>
+    public List<FormatTemplate> FormatTemplates { get; init; } = [];
+
+    /// <summary>
     /// List of enabled plugins.
     /// </summary>
     public List<Guid> EnabledPlugins { get; set; } = [];
@@ -155,6 +163,11 @@ public sealed class Data
     /// The next chat template number to use.
     /// </summary>
     public uint NextChatTemplateNum { get; set; } = 1;
+
+    /// <summary>
+    /// The next format template number to use.
+    /// </summary>
+    public uint NextFormatTemplateNum { get; set; } = 1;
     
     /// <summary>
     /// The next document analysis policy number to use.

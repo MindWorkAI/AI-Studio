@@ -95,6 +95,12 @@ public static class FileTypes
     public static readonly FileTypeFilter POWER_POINT_TEMPLATE     = FileTypeFilter.Leaf(TB("PowerPoint template"), "pptx", "potx");
     public static readonly FileTypeFilter POWER_POINT_PRESENTATION = FileTypeFilter.Leaf("PowerPoint", "pptx");
 
+    // What a format template can be: a Word template, into which a document is exported, or a
+    // PowerPoint template for presentations. Each kind of template serves the documents of its own
+    // kind, so a new kind joins FORMAT_TEMPLATE as a child:
+    public static readonly FileTypeFilter MS_WORD_TEMPLATE = FileTypeFilter.Leaf("Microsoft Word", "docx", "dotx");
+    public static readonly FileTypeFilter FORMAT_TEMPLATE  = FileTypeFilter.Parent(TB("Format template"), MS_WORD_TEMPLATE, POWER_POINT_TEMPLATE);
+
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
         WORD, SPREADSHEET, POWER_POINT, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),

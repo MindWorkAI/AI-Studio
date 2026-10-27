@@ -1,4 +1,5 @@
 using AIStudio.Tools;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tests.Tools;
 
@@ -150,6 +151,16 @@ public sealed class FileExportFormatTests
         {
             Assert.That(found, Is.True);
             Assert.That(comment.Split(Environment.NewLine), Is.EqualTo(new[] { "% # Sources", "%", "% - [1] A title with 100 % and a_b" }), "LaTeX has no end of a comment, only the end of a line.");
+        });
+    }
+
+    [Test]
+    public void OnlyWordTakesAFormatTemplate()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormat.MICROSOFT_WORD.ToFormatTemplateFilter(), Is.SameAs(FileTypes.MS_WORD_TEMPLATE));
+            Assert.That(FileExportFormatExtensions.ANSWER_FORMATS.Where(format => format is not FileExportFormat.MICROSOFT_WORD).Select(format => format.ToFormatTemplateFilter()), Is.All.Null, "A format which takes a template gets a menu of its own: say which templates it takes, then name it here.");
         });
     }
 

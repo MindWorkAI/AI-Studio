@@ -23,6 +23,7 @@ public sealed class DataAppImportPermissionTests
         PluginConfigurationObjectType.CHAT_TEMPLATE,
         PluginConfigurationObjectType.DATA_SOURCE,
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY,
+        PluginConfigurationObjectType.FORMAT_TEMPLATE,
     ];
 
     [TestCaseSource(nameof(IMPORTABLE_TYPES))]
@@ -81,6 +82,7 @@ public sealed class DataAppImportPermissionTests
             Assert.That(app.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE), Is.True);
             Assert.That(app.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE), Is.True);
             Assert.That(app.CanImportConfigurationSnippet(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY), Is.True);
+            Assert.That(app.CanImportConfigurationSnippet(PluginConfigurationObjectType.FORMAT_TEMPLATE), Is.True);
         });
     }
 
@@ -121,6 +123,10 @@ public sealed class DataAppImportPermissionTests
 
             case PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY:
                 app.AllowUserToImportDocumentAnalysisPolicy = false;
+                break;
+
+            case PluginConfigurationObjectType.FORMAT_TEMPLATE:
+                app.AllowUserToImportFormatTemplate = false;
                 break;
 
             default:

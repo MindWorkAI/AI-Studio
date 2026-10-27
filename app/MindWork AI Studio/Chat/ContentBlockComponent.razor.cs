@@ -1,8 +1,12 @@
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Dialogs.Settings;
+using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Chat;
 
@@ -352,6 +356,14 @@ public partial class ContentBlockComponent : MSGComponentBase
         hash.Add(this.Content.IsStreaming);
         hash.Add(this.Content.FileAttachments.Count);
         hash.Add(this.Content.Sources.Count);
+
+        // The export menu lists the format templates, which the user may change from that very menu:
+        foreach (var formatTemplate in this.SettingsManager.ConfigurationData.FormatTemplates)
+        {
+            hash.Add(formatTemplate.Id);
+            hash.Add(formatTemplate.Name);
+            hash.Add(formatTemplate.FilePath);
+        }
 
         switch (this.Content)
         {
@@ -768,9 +780,28 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
     
     /// <summary>
+    /// The format templates the given format can be exported into, in the order the settings list them.
+    /// </summary>
+    private IEnumerable<FormatTemplate> FormatTemplatesFor(FileExportFormat format) => this.SettingsManager.ConfigurationData.FormatTemplates.Where(formatTemplate => formatTemplate.Serves(format));
+
+    /// <summary>
+    /// Opens the management of the format templates, the same as in the app settings.
+    /// </summary>
+    private async Task ManageFormatTemplates()
+    {
+        var dialogReference = await this.DialogService.ShowAsync<SettingsDialogFormatTemplates>(null, new DialogParameters(), DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+
+        // This block hears of no change of the settings, so it looks at the templates once the dialog is closed:
+        this.StateHasChanged();
+    }
+
+    /// <summary>
     /// Exports the entire message, ending with the notice that AI generated it when that is switched on.
     /// </summary>
-    private async Task ExportDocument(FileExportFormat format)
+    /// <param name="format">The format to write.</param>
+    /// <param name="formatTemplate">The template to export into; null to write the document without one.</param>
+    private async Task ExportDocument(FileExportFormat format, FormatTemplate? formatTemplate = null)
     {
         try
         {
@@ -780,7 +811,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             //
             var disclosureService = this.GetsAIGeneratedContentDisclosure ? this.DisclosureService : null;
             if (format.UsesPandoc())
-                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, disclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
+                await DocumentExport.ToDocument(this.RustService, this.PandocAvailability, disclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName, formatTemplate);
             else if (this.Content.TryGetExportMarkdown(out var markdown))
                 await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, disclosureService?.AddDisclosureToMarkdown(markdown) ?? markdown, this.ExportFileName);
         }

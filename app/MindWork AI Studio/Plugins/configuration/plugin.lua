@@ -512,6 +512,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChatTemplate"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportERIDataSource"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportDocumentAnalysisPolicy"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportFormatTemplate"] = false
 
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
@@ -1745,4 +1746,44 @@ CONFIG["PROFILES"] = {}
 --     ["Name"] = "<user-friendly name of the profile>",
 --     ["NeedToKnow"] = "I like to cook in my free time. My favorite meal is ...",
 --     ["Actions"] = "Please always ensure the portion size is ..."
+-- }
+
+-- Format templates for this configuration, which users can choose for the documents they create.
+-- A format template is a Word document or template (.docx, .dotx), which users can choose when they
+-- export to Word, or a PowerPoint presentation or template (.pptx, .potx). Users see these templates
+-- in the settings, but cannot change or delete them.
+--
+-- When users export an answer into a Word template, AI Studio keeps the styles, the page layout,
+-- the headers and footers, and the logos of the template, and the answer replaces the text of its
+-- body, e.g., a cover page or sample text. The answer takes the styles Word knows by their built-in
+-- names, such as "heading 1", "List Paragraph", "Quote", or "Hyperlink", and tables take the style
+-- the template sets for new tables. A style the template lacks gets a plain definition.
+--
+-- Nothing uses the PowerPoint templates of this list yet. To provide the template of the Slide
+-- Assistant, set CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] instead, see above.
+--
+-- The simplest way is to ship the template with this plugin: put the file next to this
+-- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The
+-- path must stay inside the plugin directory, i.e., no '..' segments and no links pointing
+-- out of it. When the file is missing or the path is rejected, AI Studio logs a warning and
+-- leaves the format template out.
+--
+-- An absolute path works as well. It must be readable on every machine, e.g., on a network
+-- share or in a folder your software distribution fills; for Flatpak installations, it must
+-- be readable inside the sandbox. AI Studio does not check such a file when it reads this
+-- plugin; the settings show a warning to users who cannot reach it.
+CONFIG["FORMAT_TEMPLATES"] = {}
+
+-- A format template shipped with this plugin:
+-- CONFIG["FORMAT_TEMPLATES"][#CONFIG["FORMAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name of the format template>",
+--     ["FilePath"] = "templates/Report.dotx"
+-- }
+
+-- A format template at an absolute path:
+-- CONFIG["FORMAT_TEMPLATES"][#CONFIG["FORMAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name of the format template>",
+--     ["FilePath"] = "S:\\Templates\\Letter.dotx"
 -- }

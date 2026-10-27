@@ -1,0 +1,9 @@
+@using AIStudio.Tools.PluginSystem
+@inherits MSGComponentBase
+
+<MudStack Row="true" Wrap="Wrap.Wrap">
+    <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddFormatTemplate">
+        @T("Add Format Template")
+    </MudButton>
+    <LockableButton Text="@T("Import Format Template")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.FORMAT_TEMPLATE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportFormatTemplate" ButtonVariant="Variant.Outlined" Class="flex-grow-0" NoMargin="true" />
+</MudStack>

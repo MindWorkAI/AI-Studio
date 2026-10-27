@@ -1,0 +1,59 @@
+@using AIStudio.Tools.Rust
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Store a template, for example a Word or PowerPoint template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.")
+        </MudJustifiedText>
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("The name of the format template is mandatory, and each format template must have a unique name.")
+        </MudJustifiedText>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataName"
+                Label="@T("Format Template Name")"
+                Class="mb-3"
+                Immediate="@true"
+                MaxLength="40"
+                Counter="40"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Badge"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidateName"
+                Variant="Variant.Outlined"
+                ReadOnly="@this.IsReadOnly"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            <SelectFile @bind-File="@this.DataFilePath" Label="@T("Template file")" FileDialogTitle="@T("Select a format template")" Filter="@([FileTypes.FORMAT_TEMPLATE])" Validation="@this.ValidateFilePath" Disabled="@this.IsReadOnly" EnableDragDrop="true" CatchAllDocuments="true" />
+        </MudForm>
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        @if (this.IsReadOnly)
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Close")
+            </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Cancel")
+            </MudButton>
+            <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+                @if(this.IsEditing)
+                {
+                    @T("Update")
+                }
+                else
+                {
+                    @T("Add")
+                }
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>

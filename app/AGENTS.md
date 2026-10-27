@@ -147,6 +147,15 @@ presentation with the Open XML SDK (`DocumentFormat.OpenXml`), in `app/MindWork 
 **Area guide:** `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md`, with how a presentation comes about
 and the rules which are easy to break.
 
+## Word templates
+
+An answer exported into a Word template is written with the Open XML SDK as well, in
+`app/MindWork AI Studio/Tools/Word/`; without a template, Pandoc writes it. Both kinds of Office documents
+come about in a `TemplateCopy` from `app/MindWork AI Studio/Tools/OpenXml/`.
+
+**Area guide:** `app/MindWork AI Studio/Tools/Word/AGENTS.md`, with how a document comes about and the
+rules which are easy to break.
+
 ## Enterprise IT Support
 
 AI Studio supports centralized configuration for enterprise environments:
