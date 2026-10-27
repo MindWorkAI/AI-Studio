@@ -17,7 +17,7 @@ using static AIStudio.Tools.Services.Indexing.IndexingLogFormat;
 namespace AIStudio.Tools.Services;
 
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
-    PromptInjectionGuardService guardService, MediaTranscriptionService mediaTranscriptionService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService, IMessageBusReceiver
+    PromptInjectionGuardService guardService, MediaTranscriptionService mediaTranscriptionService, ThreadSafeRandom rng, ILogger<DataSourceEmbeddingService> logger) : BackgroundService, IMessageBusReceiver
 {
     /// <summary>
     /// How long the re-index check waits for the index database before it gives up.
@@ -72,6 +72,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// The pauses of the indexing, cf. PauseIndexingAsync.
     /// </summary>
     private readonly IndexingPauses pauses = new();
+
+    /// <summary>
+    /// The pause between two steps, cf. WaitForPauseBetweenStepsAsync.
+    /// </summary>
+    private readonly PauseBetweenSteps pauseBetweenSteps = new();
 
     /// <summary>
     /// An active run.
@@ -680,13 +685,31 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             // queue once the automatic refresh is switched on while the app runs. The wait counts as
             // part of the run, so deleting or repairing the data source ends the wait as well,
             // instead of waiting for the run before it to finish first. A paused indexing holds
-            // every run back in front of the gate, cf. PauseIndexingAsync:
+            // every run back in front of the gate, cf. PauseIndexingAsync. Behind the gate, the run
+            // keeps its distance to the step before, cf. WaitForPauseBetweenStepsAsync:
             //
             await this.pauses.WaitWhilePausedAsync(runTokenSource.Token);
             await this.runGate.WaitAsync(runTokenSource.Token);
             try
             {
-                await this.ProcessDataSourceAsync(dataSource, refreshMode, runControl, runTokenSource.Token);
+                await this.WaitForPauseBetweenStepsAsync(dataSource, refreshMode, runTokenSource.Token);
+
+                //
+                // Waiting may have taken minutes, while the user could change the data source. The
+                // run has resolved nothing yet, so it starts with the data source as it is now,
+                // instead of finding itself outdated once it records its signature:
+                //
+                if (!this.TryGetConfiguredIndexedSource(dataSource.Id, out var currentDataSource))
+                {
+                    logger.LogDebug(
+                        "Skipping embedding run for data source '{DataSourceName}' ({DataSourceId}) because it is no longer configured. RefreshMode={RefreshMode}.",
+                        dataSource.Name,
+                        dataSource.Id,
+                        refreshMode);
+                    return;
+                }
+
+                await this.ProcessDataSourceAsync(currentDataSource, refreshMode, runControl, runTokenSource.Token);
             }
             finally
             {
@@ -716,6 +739,37 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             runControl.Completion.TrySetResult(null);
             runTokenSource.Dispose();
         }
+    }
+
+    /// <summary>
+    /// Waits for what is left of the pause between the last step and the run which is about to start, cf. PauseBetweenSteps.
+    /// </summary>
+    /// <remarks>
+    /// The pause spares an embedding server which many people share, so it holds whichever data
+    /// source comes next, the same one included. It is waited for behind the run gate: only one run
+    /// waits, and its token ends the wait, when the app shuts down, when the data source is deleted
+    /// or repaired, or when a backup pauses the indexing. Meanwhile, the data source shows as queued,
+    /// since nothing published a status for this run yet, and every other request is queued as usual.
+    /// </remarks>
+    /// <param name="dataSource">The data source of the run, for the log.</param>
+    /// <param name="refreshMode">Why the run was asked for, for the log.</param>
+    /// <param name="token">The token of the run.</param>
+    private async Task WaitForPauseBetweenStepsAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    {
+        var range = PauseRange.FromSettings(settingsManager.ConfigurationData.App.DataSourceIndexing);
+        var pause = this.pauseBetweenSteps.GetPauseBeforeNextStep(DateTimeOffset.UtcNow, range, rng);
+        if (pause.Remaining <= TimeSpan.Zero)
+            return;
+
+        logger.LogInformation(
+            "Pausing {PauseSeconds:F0} seconds between two indexing steps. Data source '{DataSourceName}' ({DataSourceId}) starts in {RemainingSeconds:F0} seconds. RefreshMode={RefreshMode}.",
+            pause.Pause.TotalSeconds,
+            dataSource.Name,
+            dataSource.Id,
+            pause.Remaining.TotalSeconds,
+            refreshMode);
+
+        await Task.Delay(pause.Remaining, token);
     }
 
     /// <summary>
@@ -891,6 +945,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
 
         var outcome = IndexedRunOutcome.DONE;
+        IndexedRunContext? context = null;
         try
         {
             //
@@ -899,7 +954,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             // removes something in forty of them is one thing that happened to the user, not forty.
             //
             await using var promptInjectionScope = guardService.BeginAction();
-            var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, indexer.Share, runControl, promptInjectionScope, token);
+            context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, indexer.Share, runControl, promptInjectionScope, token);
             if (context is null)
                 return;
 
@@ -932,6 +987,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
         finally
         {
+            //
+            // Only a run which worked on documents put load on the embedding provider, so only such
+            // a step makes the next one wait, even when it failed or stopped halfway:
+            //
+            if (context?.ShareStartedUtc is not null)
+                this.pauseBetweenSteps.RecordStepEnded(DateTimeOffset.UtcNow);
+
             //
             // A pass lives only while the last step left more to do. Whatever else ended this run,
             // the next one begins anew, and tries every document which failed so far once more:
