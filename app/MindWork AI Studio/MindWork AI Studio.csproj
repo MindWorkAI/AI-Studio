@@ -7,7 +7,7 @@
         <Authors>Thorsten Sommer</Authors>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <WarningsAsErrors>CS8600;CS8602;CS8603</WarningsAsErrors>
+        <WarningsAsErrors>CS8600;CS8602;CS8603;CS9057</WarningsAsErrors> <!-- CS9057: fail instead of silently skipping an analyzer which needs a newer compiler than the SDK's -->
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>AIStudio</RootNamespace>
         <AssemblyName>mindworkAIStudio</AssemblyName>
