@@ -355,7 +355,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// Settings for indexing local data sources.
     /// </summary>
-    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
+    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new(x => x.App.DataSourceIndexing);
 
     /// <summary>
     /// List of assistants that should be hidden from the UI.

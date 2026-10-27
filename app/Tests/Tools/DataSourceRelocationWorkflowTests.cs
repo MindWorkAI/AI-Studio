@@ -68,7 +68,7 @@ public sealed class DataSourceRelocationWorkflowTests
         clients.Add(DatabaseRole.INDEX_STORE, this.store.Client);
         clients.Add(DatabaseRole.VECTOR_STORE, this.vectors);
         var guard = new PromptInjectionGuardService(null!, this.settings, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance);
-        this.service = new DataSourceEmbeddingService(this.settings, null!, this.databases, guard, null!, NullLogger<DataSourceEmbeddingService>.Instance);
+        this.service = new DataSourceEmbeddingService(this.settings, null!, this.databases, guard, null!, new ThreadSafeRandom(), NullLogger<DataSourceEmbeddingService>.Instance);
         this.lifetime = new CancellationTokenSource();
         this.chunkIds.Clear();
         this.runningTasks.Clear();

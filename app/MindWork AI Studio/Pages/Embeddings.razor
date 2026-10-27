@@ -16,6 +16,7 @@
         </MudText>
         <MudText Typo="Typo.body1" Class="mt-2">
             @T("AI Studio indexes large data sources in steps of a few minutes, so that your other data sources get their turn in between.")
+            @this.PauseBetweenStepsText
         </MudText>
         @if (this.AreMailboxesEnabled)
         {

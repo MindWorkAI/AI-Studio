@@ -1411,6 +1411,22 @@ CONFIG["SETTINGS"] = {}
 -- in CONFIG["MAILBOX_PROVIDERS"], this blocks every mailbox.
 -- CONFIG["SETTINGS"]["DataMailboxes.AllowOnlyOrganizationMailServers"] = true
 
+-- Configure a pause between two indexing steps of local data sources, i.e., files, folders, and
+-- mailboxes. AI Studio indexes large data sources in steps of a few minutes. Between two steps, it
+-- waits for a random number of seconds between the lower and the upper bound, both included. This
+-- spares an embedding server which many users share: a single user with large folders or
+-- mailboxes no longer keeps it busy for hours. The pause applies after every step which worked on
+-- documents, also when the same data source carries on. Time which passes anyway counts toward
+-- it. Both values must be between 0 and 300 seconds. The default is 0 for both, i.e., no pause.
+-- You may set one bound or both. A bound you set wins, and AI Studio adjusts the other one to it.
+-- Should the upper bound be below the lower bound, the lower bound wins.
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds"] = 30
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds"] = 90
+--
+-- Allow users to change the bounds, so that your values are only defaults:
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
+
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.
 -- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
