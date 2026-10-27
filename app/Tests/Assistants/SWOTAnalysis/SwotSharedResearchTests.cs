@@ -27,14 +27,14 @@ public sealed class SwotSharedResearchTests
             "A regional manufacturer",
             "Support the investment decision",
             "Pay particular attention to staffing",
-            hasContextualKnowledge: true);
+            new SwotContextualKnowledge("The annual report names 120 employees.", []));
 
         Assert.Multiple(() =>
         {
             Assert.That(request, Does.Match("(?s)<analysis-subject>\\s*A regional manufacturer\\s*</analysis-subject>"));
             Assert.That(request, Does.Match("(?s)<analysis-goal>\\s*Support the investment decision\\s*</analysis-goal>"));
             Assert.That(request, Does.Match("(?s)<analysis-focus>\\s*Pay particular attention to staffing\\s*</analysis-focus>"));
-            Assert.That(request, Does.Match("(?s)<contextual-knowledge>\\s*The files attached to this message are contextual knowledge for the analysis\\.\\s*</contextual-knowledge>"));
+            Assert.That(request, Does.Match("(?s)<contextual-knowledge>\\s*The annual report names 120 employees\\.\\s*</contextual-knowledge>"));
             Assert.That(request, Does.Not.Contain("<shared-research>"));
         });
     }

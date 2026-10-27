@@ -6,15 +6,12 @@ internal static class SwotAnalysisPromptInput
         string analysisSubject,
         string analysisGoal,
         string analysisFocus,
-        bool hasContextualKnowledge,
+        SwotContextualKnowledge contextualKnowledge,
         string sharedResearch = "")
     {
         var effectiveAnalysisFocus = string.IsNullOrWhiteSpace(analysisFocus)
             ? "No additional analysis focus was provided."
             : analysisFocus;
-        var contextualKnowledgeDescription = hasContextualKnowledge
-            ? "The files attached to this message are contextual knowledge for the analysis."
-            : "No additional contextual knowledge files were provided.";
         var sharedResearchSection = string.IsNullOrWhiteSpace(sharedResearch)
             ? string.Empty
             : $"""
@@ -38,7 +35,7 @@ internal static class SwotAnalysisPromptInput
                 </analysis-focus>
 
                 <contextual-knowledge>
-                {contextualKnowledgeDescription}
+                {contextualKnowledge.Describe()}
                 </contextual-knowledge>
                 {sharedResearchSection}
                 """;

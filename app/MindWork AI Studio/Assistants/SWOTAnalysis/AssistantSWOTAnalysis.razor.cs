@@ -1,11 +1,21 @@
 ﻿using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Security;
+using AIStudio.Tools.Services;
+
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Assistants.SWOTAnalysis;
 
 public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWOTAnalysis>
 {
+    [Inject]
+    private ModelImageService ModelImageService { get; init; } = null!;
+
+    [Inject]
+    private PromptInjectionGuardService PromptInjectionGuard { get; init; } = null!;
+
     protected override Tools.Components Component => Tools.Components.SWOT_ANALYSIS_ASSISTANT;
 
     protected override string Title => T("SWOT Analysis");
