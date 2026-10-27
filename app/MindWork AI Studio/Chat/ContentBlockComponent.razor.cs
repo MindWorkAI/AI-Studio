@@ -109,10 +109,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// the save dialog.
     /// </summary>
     /// <remarks>
-    /// Only AI blocks can be exported, so this always names something the AI produced. In the chat
-    /// that is its response, whereas in an assistant it is the result, and there the user sees no
-    /// chat at all. Whoever renders this block knows which of the two it is. Null falls back to
-    /// the chat wording.
+    /// Only AI blocks offer the export menu, so this always names something the AI produced. In the
+    /// chat that is its response, whereas in an assistant it is the result, and there the user sees
+    /// no chat at all. Whoever renders this block knows which of the two it is. Null falls back to
+    /// the chat wording. A code block of a message of the user is saved with the label of its
+    /// button as the title instead.
     /// </remarks>
     [Parameter]
     public string? ExportTitle { get; set; }
@@ -185,10 +186,18 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
 
     /// <summary>
-    /// Whether this block offers its answer for export: entirely through the export menu, and file by
-    /// file through the menu as well as at each code block.
+    /// Whether this block offers its answer for export through the export menu: entirely, and file by file.
     /// </summary>
     private bool CanExportAnswer => this.Role is ChatRole.AI && this.CanExport;
+
+    /// <summary>
+    /// Whether each code block of this block can be saved on its own, through a button at the block.
+    /// </summary>
+    /// <remarks>
+    /// Besides an answer, this holds for a message of the user: code the user sent weeks ago can be
+    /// got back that way after many changes to it, without copying it out of the chat.
+    /// </remarks>
+    private bool CanSaveCodeBlocks => this.Role is ChatRole.AI or ChatRole.USER && this.CanExport;
 
     /// <summary>
     /// Whether this block leaves AI Studio with the notice that AI generated it, when that is switched on.
@@ -224,14 +233,19 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// The files whose code blocks get a button to save them: all files of this block, whenever the
-    /// export menu offers them as well.
+    /// The files whose code blocks get a button to save them: all files of this block, as long as its
+    /// code blocks can be saved.
     /// </summary>
     /// <remarks>
     /// In a long answer, the user would otherwise have to scroll from the code block up to the export
     /// menu. The button saves the very file the menu offers for the block, under the same name.
     /// </remarks>
-    private IReadOnlyList<MessageFile> FilesWithSaveButton => this.CanExportAnswer ? this.MessageFiles : [];
+    private IReadOnlyList<MessageFile> FilesWithSaveButton => this.CanSaveCodeBlocks ? this.MessageFiles : [];
+
+    /// <summary>
+    /// Names the button which saves a file at its code block, e.g., "Save as Python (.py)".
+    /// </summary>
+    private string SaveAsLabel(MessageFile file) => string.Format(T("Save as {0}"), file.ToName());
 
     /// <summary>
     /// Names one file in the export menu.
@@ -857,8 +871,13 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         try
         {
+            //
+            // A message of the user is no AI response, so the save dialog takes the label of the
+            // button at the code block as its title instead:
+            //
+            var dialogTitle = this.Role is ChatRole.AI ? this.EffectiveExportTitle : this.SaveAsLabel(file);
             var fileName = string.IsNullOrWhiteSpace(file.Caption) ? this.ExportFileName : file.Caption;
-            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file, this.Content.ToExportContent(file), fileName);
+            await PlainFileExport.ToFile(this.RustService, dialogTitle, file, this.Content.ToExportContent(file), fileName);
         }
         catch (ArgumentOutOfRangeException e)
         {
