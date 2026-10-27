@@ -1,6 +1,6 @@
 namespace AIStudio.Assistants.SWOTAnalysis;
 
-internal enum SwotCategoryAnalysisStatus
+public enum SwotCategoryAnalysisStatus
 {
     RUNNING,
     COMPLETED,

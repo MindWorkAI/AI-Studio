@@ -19,8 +19,6 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
 
     protected override bool ShowResult => !this.IsProcessing && this.analysisResult is not null;
 
-    protected override IReadOnlyList<IButtonData> FooterButtons => [];
-
     protected override string SubmitText => T("Create SWOT analysis");
 
     protected override Func<Task> SubmitAction => this.AnalyzeText;

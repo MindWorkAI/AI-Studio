@@ -11,7 +11,7 @@ namespace AIStudio.Assistants.SWOTAnalysis;
 /// <param name="Status">Whether the analysis is running, completed, failed, or canceled.</param>
 /// <param name="Result">The findings of the category, once the analysis is completed.</param>
 /// <param name="Message">Why the analysis failed or stopped, for the user.</param>
-internal sealed record SwotCategoryAnalysisProgress(
+public sealed record SwotCategoryAnalysisProgress(
     SwotCategoryAnalysisStatus Status,
     SwotCategoryAnalysisResult? Result = null,
     string Message = "");

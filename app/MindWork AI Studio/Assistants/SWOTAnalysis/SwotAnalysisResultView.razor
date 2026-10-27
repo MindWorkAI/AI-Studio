@@ -15,22 +15,22 @@
                         <th scope="row">@this.Result.InternalLabel</th>
                         <td class="swot-strengths">
                             <strong class="swot-cell-heading">@this.Result.Strengths.Label</strong>
-                            <SwotMatrixFindings Category="@this.Result.Strengths"/>
+                            <SwotMatrixFindings Findings="@this.Result.Strengths.Findings" EmptyMessage="@this.Result.Strengths.EmptyMessage"/>
                         </td>
                         <td class="swot-weaknesses">
                             <strong class="swot-cell-heading">@this.Result.Weaknesses.Label</strong>
-                            <SwotMatrixFindings Category="@this.Result.Weaknesses"/>
+                            <SwotMatrixFindings Findings="@this.Result.Weaknesses.Findings" EmptyMessage="@this.Result.Weaknesses.EmptyMessage"/>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row">@this.Result.ExternalLabel</th>
                         <td class="swot-opportunities">
                             <strong class="swot-cell-heading">@this.Result.Opportunities.Label</strong>
-                            <SwotMatrixFindings Category="@this.Result.Opportunities"/>
+                            <SwotMatrixFindings Findings="@this.Result.Opportunities.Findings" EmptyMessage="@this.Result.Opportunities.EmptyMessage"/>
                         </td>
                         <td class="swot-threats">
                             <strong class="swot-cell-heading">@this.Result.Threats.Label</strong>
-                            <SwotMatrixFindings Category="@this.Result.Threats"/>
+                            <SwotMatrixFindings Findings="@this.Result.Threats.Findings" EmptyMessage="@this.Result.Threats.EmptyMessage"/>
                         </td>
                     </tr>
                 </tbody>
@@ -87,8 +87,3 @@
         }
     </section>
 </div>
-
-@code {
-    [Parameter]
-    public SwotAnalysisResult Result { get; set; } = new();
-}

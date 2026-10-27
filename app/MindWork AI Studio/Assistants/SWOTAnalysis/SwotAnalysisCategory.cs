@@ -1,6 +1,6 @@
 namespace AIStudio.Assistants.SWOTAnalysis;
 
-internal enum SwotAnalysisCategory
+public enum SwotAnalysisCategory
 {
     STRENGTHS,
     WEAKNESSES,

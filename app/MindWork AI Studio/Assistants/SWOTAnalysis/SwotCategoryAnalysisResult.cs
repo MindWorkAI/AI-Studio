@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace AIStudio.Assistants.SWOTAnalysis;
 
-internal sealed class SwotCategoryAnalysisResult
+public sealed class SwotCategoryAnalysisResult
 {
     [JsonPropertyName("empty_message")]
     public string EmptyMessage { get; set; } = string.Empty;

@@ -1,18 +1,13 @@
-@if (this.Category.Findings.Count == 0)
+@if (this.Findings.Count == 0)
 {
-    <p class="swot-empty">@this.Category.EmptyMessage</p>
+    <p class="swot-empty">@this.EmptyMessage</p>
 }
 else
 {
     <ul class="swot-cell-findings">
-        @foreach (var finding in this.Category.Findings)
+        @foreach (var finding in this.Findings)
         {
             <li>@finding.Summary</li>
         }
     </ul>
-}
-
-@code {
-    [Parameter]
-    public SwotCategory Category { get; set; } = new();
 }

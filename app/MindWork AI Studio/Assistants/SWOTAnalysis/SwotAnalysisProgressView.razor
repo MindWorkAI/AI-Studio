@@ -1,0 +1,26 @@
+@inherits MSGComponentBase
+
+<div class="swot-live-progress" aria-live="polite">
+    <SwotCategoryGrid Context="category">
+        <MudText Typo="Typo.h5" Class="mb-2">@this.LabelOf(category)</MudText>
+        @switch (this.ProgressOf(category))
+        {
+            case { Status: SwotCategoryAnalysisStatus.RUNNING }:
+                <div class="swot-category-status" aria-busy="true">
+                    <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                    <MudText Typo="Typo.body2">@T("Analyzing this category...")</MudText>
+                </div>
+                break;
+
+            case { Status: SwotCategoryAnalysisStatus.COMPLETED, Result: { } result }:
+                <SwotMatrixFindings Findings="@result.Findings" EmptyMessage="@result.EmptyMessage"/>
+                break;
+
+            case var progress:
+                <MudAlert Severity="@(progress.Status is SwotCategoryAnalysisStatus.FAILED ? Severity.Error : Severity.Warning)" Dense="true">
+                    @progress.Message
+                </MudAlert>
+                break;
+        }
+    </SwotCategoryGrid>
+</div>
