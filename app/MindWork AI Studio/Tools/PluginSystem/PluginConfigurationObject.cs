@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Glossaries;
 using AIStudio.Tools.Services;
 
 using Lua;
@@ -81,6 +82,16 @@ public sealed record PluginConfigurationObject
     /// plugin wants, and the copy to know what is stored already.
     /// </remarks>
     public string ConfiguredTokenizerPath { get; private init; } = string.Empty;
+
+    /// <summary>
+    /// Where the entries of a glossary come from, as the configuration plugin names them. Null for
+    /// every other configuration object.
+    /// </summary>
+    /// <remarks>
+    /// The glossary in the settings does not keep its entries: they live in memory only, cf.
+    /// GlossaryStore, and the synchronization of the glossaries hands them over from here.
+    /// </remarks>
+    public GlossaryPluginSource? GlossarySource { get; private init; }
 
     /// <summary>
     /// Reads the tokenizer path of a configuration object just parsed from a configuration plugin.
@@ -171,6 +182,7 @@ public sealed record PluginConfigurationObject
                     Name = configObject.Name,
                     Endpoint = DescribeEndpoint(configObject),
                     ConfiguredTokenizerPath = DescribeConfiguredTokenizerPath(configObject),
+                    GlossarySource = (configObject as Glossary)?.PluginSource,
                 });
 
                 if (dryRun)
@@ -214,6 +226,70 @@ public sealed record PluginConfigurationObject
         }
         
         return true;
+    }
+
+    /// <summary>
+    /// Hands the entries of the glossaries of a configuration plugin over to the GlossaryStore.
+    /// </summary>
+    /// <param name="configPluginId">The configuration plugin whose glossaries to synchronize.</param>
+    /// <param name="configObjects">The configuration objects the plugin defined while it started. They carry the entries of each glossary.</param>
+    public static async Task SyncManagedGlossariesAsync(Guid configPluginId, IList<PluginConfigurationObject> configObjects)
+    {
+        var glossaryStore = Program.SERVICE_PROVIDER.GetRequiredService<GlossaryStore>();
+        var glossaries = SettingsManagerAccess.ConfigurationData.Glossaries;
+        foreach (var configObject in configObjects)
+        {
+            if (configObject.ConfigPluginId != configPluginId || configObject.GlossarySource is not { } source)
+                continue;
+
+            //
+            // A plugin may declare the ID of a glossary which belongs to somebody else, e.g. a local
+            // configuration plugin the ID of one the organization deployed. TryParse keeps the stored
+            // glossary then, so its entries must stay as well: only the plugin which owns the stored
+            // glossary hands over entries for it.
+            //
+            var storedGlossary = glossaries.FirstOrDefault(glossary => Guid.TryParse(glossary.Id, out var id) && id == configObject.Id);
+            if (storedGlossary is not { IsEnterpriseConfiguration: true } || storedGlossary.EnterpriseConfigurationPluginId != configPluginId)
+            {
+                LOG.LogWarning("The configuration plugin '{ConfigPluginId}' declares the glossary '{GlossaryId}', which belongs to somebody else. Its entries are ignored.", configPluginId, configObject.Id);
+                continue;
+            }
+
+            var entries = source.File is { } file ? await ReadGlossaryFileAsync(configObject.Name, file) : source.Entries;
+            glossaryStore.SetProvidedEntries(configObject.Id.ToString(), entries);
+        }
+    }
+
+    /// <summary>
+    /// Reads the entries of a glossary from the file within its plugin.
+    /// </summary>
+    /// <remarks>
+    /// A file which is missing, unreadable, or lacks a named column leaves the glossary without
+    /// entries rather than stopping the plugin: everything else the plugin configures still applies.
+    /// The runtime extracts the file, so its content passes the prompt injection filter like every
+    /// other file.
+    /// </remarks>
+    private static async Task<IReadOnlyList<GlossaryEntry>> ReadGlossaryFileAsync(string glossaryName, GlossaryPluginFile file)
+    {
+        var importService = Program.SERVICE_PROVIDER.GetRequiredService<GlossaryImportService>();
+        var importFile = await importService.ReadFileAsync(file.FullPath, reportingScope: null);
+        if (!importFile.Success)
+        {
+            LOG.LogWarning("The file '{Path}' of the glossary '{GlossaryName}' could not be read: {Issue}. The glossary has no entries.", file.FullPath, glossaryName, importFile.Issue);
+            return [];
+        }
+
+        if (!GlossaryImport.TryFindColumns(importFile.Tables, file.TermColumn, file.ValueColumn, file.OtherFormsColumn, file.NoteColumn, out var table, out var mapping))
+        {
+            LOG.LogWarning("No table in the file '{Path}' of the glossary '{GlossaryName}' has all the columns the plugin names. The glossary has no entries.", file.FullPath, glossaryName);
+            return [];
+        }
+
+        var result = GlossaryImport.Apply([], table, mapping, GlossaryImportMode.REPLACE);
+        if (result.SkippedRows > 0)
+            LOG.LogInformation("The file '{Path}' of the glossary '{GlossaryName}' has {SkippedRows} rows without a term or a value, which are left out.", file.FullPath, glossaryName, result.SkippedRows);
+
+        return result.Entries;
     }
 
     /// <summary>

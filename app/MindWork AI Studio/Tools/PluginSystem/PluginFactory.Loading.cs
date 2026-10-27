@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Text;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Glossaries;
 using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
 using Lua.Platforms;
@@ -319,6 +320,12 @@ public static partial class PluginFactory
         foreach (var descriptor in PluginConfigurationObjectDescriptors.ALL)
             if(await descriptor.CleanLeftOverAsync(AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
                 wasConfigurationChanged = true;
+
+        // The entries of the glossaries of configuration plugins live in memory only. Those of a
+        // glossary the clean-up above removed go as well:
+        Program.SERVICE_PROVIDER.GetRequiredService<GlossaryStore>().RetainProvidedEntries(SettingsManagerAccess.ConfigurationData.Glossaries
+            .Where(glossary => glossary.IsEnterpriseConfiguration)
+            .Select(glossary => glossary.Id));
 
         //
         // Check left-over mandatory info acceptances. The mandatory infos come from the running

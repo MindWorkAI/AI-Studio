@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace AIStudio.Tools.Glossaries;
 
 /// <summary>
@@ -84,6 +86,51 @@ public static class GlossaryImport
 
         var removed = mode is GlossaryImportMode.REPLACE ? existingEntries.Count : 0;
         return new(entries, entries.Count - countBefore, replacedPositions.Count, removed, skippedRows);
+    }
+
+    /// <summary>
+    /// Finds the first table which holds all the named columns, and maps them by their header.
+    /// </summary>
+    /// <remarks>
+    /// The headers count regardless of case and of spaces around them, so "Deutsch " in a spreadsheet
+    /// matches "deutsch" in a configuration plugin.
+    /// </remarks>
+    /// <param name="tables">The tables of a file, e.g. one per sheet.</param>
+    /// <param name="termColumn">The header of the column with the terms.</param>
+    /// <param name="valueColumn">The header of the column with the values.</param>
+    /// <param name="otherFormsColumn">The header of the column with the other forms; null when there is none.</param>
+    /// <param name="noteColumn">The header of the column with the notes; null when there is none.</param>
+    /// <param name="table">The table which holds the columns.</param>
+    /// <param name="mapping">The positions of the columns in that table.</param>
+    /// <returns>True when a table holds all the named columns.</returns>
+    public static bool TryFindColumns(IReadOnlyList<GlossaryImportTable> tables, string termColumn, string valueColumn, string? otherFormsColumn, string? noteColumn, [NotNullWhen(true)] out GlossaryImportTable? table, [NotNullWhen(true)] out GlossaryColumnMapping? mapping)
+    {
+        foreach (var candidate in tables)
+        {
+            var termIndex = IndexOfColumn(candidate, termColumn);
+            var valueIndex = IndexOfColumn(candidate, valueColumn);
+            var otherFormsIndex = otherFormsColumn is null ? null : IndexOfColumn(candidate, otherFormsColumn);
+            var noteIndex = noteColumn is null ? null : IndexOfColumn(candidate, noteColumn);
+            if (termIndex is null || valueIndex is null || (otherFormsColumn is not null && otherFormsIndex is null) || (noteColumn is not null && noteIndex is null))
+                continue;
+
+            table = candidate;
+            mapping = new GlossaryColumnMapping(termIndex.Value, valueIndex.Value, otherFormsIndex, noteIndex);
+            return true;
+        }
+
+        table = null;
+        mapping = null;
+        return false;
+    }
+
+    private static int? IndexOfColumn(GlossaryImportTable table, string header)
+    {
+        for (var index = 0; index < table.Columns.Count; index++)
+            if (string.Equals(table.Columns[index].Trim(), header.Trim(), StringComparison.OrdinalIgnoreCase))
+                return index;
+
+        return null;
     }
 
     /// <summary>

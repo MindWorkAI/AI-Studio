@@ -12,7 +12,11 @@ namespace AIStudio.Tools.Glossaries;
 /// <remarks>
 /// The settings hold only what describes a glossary, cf. <see cref="Glossary"/>. The path of the file
 /// derives from the ID of the glossary and is never stored. The entries stay in memory once read, since
-/// every translation and every lookup of the model needs them.
+/// every translation and every lookup of the model needs them.<br/><br/>
+///
+/// The entries of a glossary which a configuration plugin provides live in memory only. The plugin is
+/// their source and brings them again whenever the plugins load, so there is no file which would have
+/// to be removed with the plugin, and a backup takes none of them along.
 /// </remarks>
 /// <param name="logger">The logger.</param>
 /// <param name="dataDirectory">The data directory to use instead of the one of the app; meant for tests.</param>
@@ -33,6 +37,8 @@ public sealed class GlossaryStore(ILogger<GlossaryStore> logger, string? dataDir
     private readonly ConcurrentDictionary<Guid, IReadOnlyList<GlossaryEntry>> cache = [];
 
     private readonly ConcurrentDictionary<Guid, SemaphoreSlim> locks = [];
+
+    private readonly ConcurrentDictionary<Guid, IReadOnlyList<GlossaryEntry>> providedEntries = [];
 
     private string RootDirectory => Path.Combine(
         dataDirectory ??
@@ -62,6 +68,9 @@ public sealed class GlossaryStore(ILogger<GlossaryStore> logger, string? dataDir
     public async Task<IReadOnlyList<GlossaryEntry>?> TryLoadEntriesAsync(string glossaryId, CancellationToken token = default)
     {
         var id = ParseId(glossaryId);
+        if (this.providedEntries.TryGetValue(id, out var provided))
+            return provided;
+
         if (this.cache.TryGetValue(id, out var cachedEntries))
             return cachedEntries;
 
@@ -109,7 +118,7 @@ public sealed class GlossaryStore(ILogger<GlossaryStore> logger, string? dataDir
     /// <param name="token">The cancellation token.</param>
     public async Task SaveEntriesAsync(string glossaryId, IReadOnlyList<GlossaryEntry> entries, CancellationToken token = default)
     {
-        var id = ParseId(glossaryId);
+        var id = this.ParseOwnId(glossaryId);
         var entriesCopy = entries.ToList();
         var idLock = this.locks.GetOrAdd(id, _ => new SemaphoreSlim(1, 1));
         await idLock.WaitAsync(token);
@@ -132,7 +141,7 @@ public sealed class GlossaryStore(ILogger<GlossaryStore> logger, string? dataDir
     /// <param name="token">The cancellation token.</param>
     public async Task DeleteEntriesAsync(string glossaryId, CancellationToken token = default)
     {
-        var id = ParseId(glossaryId);
+        var id = this.ParseOwnId(glossaryId);
         var idLock = this.locks.GetOrAdd(id, _ => new SemaphoreSlim(1, 1));
         await idLock.WaitAsync(token);
         try
@@ -151,6 +160,42 @@ public sealed class GlossaryStore(ILogger<GlossaryStore> logger, string? dataDir
         {
             idLock.Release();
         }
+    }
+
+    /// <summary>
+    /// Sets the entries of a glossary which a configuration plugin provides.
+    /// </summary>
+    /// <param name="glossaryId">The ID of the glossary.</param>
+    /// <param name="entries">All entries of the glossary.</param>
+    public void SetProvidedEntries(string glossaryId, IReadOnlyList<GlossaryEntry> entries) => this.providedEntries[ParseId(glossaryId)] = entries.ToList();
+
+    /// <summary>
+    /// Forgets the provided entries of every glossary which is not among the given ones.
+    /// </summary>
+    /// <remarks>
+    /// Called once all plugins have loaded and the glossaries of removed plugins left the settings.
+    /// Forgetting them only then, rather than before the plugins load, keeps the glossaries of the
+    /// remaining plugins usable while the plugins load again.
+    /// </remarks>
+    /// <param name="glossaryIds">The IDs of the glossaries which configuration plugins still provide.</param>
+    public void RetainProvidedEntries(IEnumerable<string> glossaryIds)
+    {
+        var keptIds = glossaryIds.Select(id => Guid.TryParse(id, out var guid) ? guid : Guid.Empty).ToHashSet();
+        foreach (var id in this.providedEntries.Keys.Where(id => !keptIds.Contains(id)))
+            this.providedEntries.TryRemove(id, out _);
+    }
+
+    //
+    // A glossary of a configuration plugin belongs to its plugin; nobody may change its entries here,
+    // and it has no file to delete:
+    //
+    private Guid ParseOwnId(string glossaryId)
+    {
+        var id = ParseId(glossaryId);
+        if (this.providedEntries.ContainsKey(id))
+            throw new InvalidOperationException($"The glossary '{glossaryId}' is provided by a configuration plugin and cannot be changed.");
+
+        return id;
     }
 
     //

@@ -92,6 +92,30 @@ public sealed class GlossaryImportTests
         Assert.Throws<ArgumentOutOfRangeException>(() => GlossaryImport.Apply([], TABLE, new GlossaryColumnMapping(0, 7), GlossaryImportMode.MERGE));
     }
 
+    [Test]
+    public void ColumnsAreFoundByTheirHeaderInTheFirstTableWhichHasThemAll()
+    {
+        var otherSheet = new GlossaryImportTable(["Deutsch", "Kommentar"], [["Gehalt", "nur intern"]]);
+        GlossaryImportTable[] tables = [otherSheet, TABLE];
+
+        var found = GlossaryImport.TryFindColumns(tables, " deutsch", "ENGLISH", null, "Notiz", out var table, out var mapping);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(found, Is.True);
+            Assert.That(table, Is.SameAs(TABLE), "The first sheet lacks the column of the values.");
+            Assert.That(mapping, Is.EqualTo(new GlossaryColumnMapping(0, 1, null, 3)));
+        });
+    }
+
+    [Test]
+    public void ATableWithoutANamedColumnIsNoMatch()
+    {
+        var found = GlossaryImport.TryFindColumns([TABLE], "Deutsch", "English", "Synonyme", null, out _, out _);
+
+        Assert.That(found, Is.False, "A named column which no table has must not be skipped silently.");
+    }
+
     [TestCase("Deutsch", CommonLanguages.DE_DE)]
     [TestCase(" English ", CommonLanguages.EN_US)]
     [TestCase("en-GB", CommonLanguages.EN_GB)]

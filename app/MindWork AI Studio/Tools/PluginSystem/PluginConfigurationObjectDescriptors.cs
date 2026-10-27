@@ -31,6 +31,8 @@ public static class PluginConfigurationObjectDescriptors
 
     public static readonly ConfigurationBaseObjectDescriptor<DataDocumentAnalysisPolicy> DOCUMENT_ANALYSIS_POLICY = new(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, "DOCUMENT_ANALYSIS_POLICIES", x => x.DocumentAnalysis.Policies, x => x.NextDocumentAnalysisPolicyNum, ParseDocumentAnalysisPolicy);
 
+    public static readonly ConfigurationBaseObjectDescriptor<Glossary> GLOSSARY = new(PluginConfigurationObjectType.GLOSSARY, "GLOSSARIES", x => x.Glossaries, x => x.NextGlossaryNum, ParseGlossary);
+
     /// <summary>
     /// Every descriptor, in the order in which configuration plugins are read.
     /// </summary>
@@ -43,6 +45,7 @@ public static class PluginConfigurationObjectDescriptors
         DATA_SOURCE,
         PROFILE,
         DOCUMENT_ANALYSIS_POLICY,
+        GLOSSARY,
     ];
 
     /// <summary>
@@ -82,4 +85,7 @@ public static class PluginConfigurationObjectDescriptors
 
     private static bool ParseDocumentAnalysisPolicy(int index, LuaTable table, Guid configPluginId, string pluginPath, bool dryRun, out ConfigurationBaseObject configObject) =>
         DataDocumentAnalysisPolicy.TryProcessConfiguration(index, table, configPluginId, out configObject) && configObject is DataDocumentAnalysisPolicy;
+
+    private static bool ParseGlossary(int index, LuaTable table, Guid configPluginId, string pluginPath, bool dryRun, out ConfigurationBaseObject configObject) =>
+        Glossary.TryParseGlossaryTable(index, table, configPluginId, pluginPath, out configObject) && configObject != Glossary.NO_GLOSSARY;
 }

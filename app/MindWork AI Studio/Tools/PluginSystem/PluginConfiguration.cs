@@ -84,6 +84,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         if (!dryRun)
         {
             await PluginConfigurationObject.SyncManagedTokenizersAsync(this.Id, this.PluginPath, this.configObjects);
+            await PluginConfigurationObject.SyncManagedGlossariesAsync(this.Id, this.configObjects);
 
             // Store any decrypted API keys from enterprise configuration in the OS keyring:
             await StoreEnterpriseApiKeysAsync();
@@ -297,6 +298,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: allow the user to import document analysis policies?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportDocumentAnalysisPolicy, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import glossaries?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportGlossary, this.Id, settingsTable, dryRun);
 
         // Config: allow the user to import plugin archives?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportPlugins, this.Id, settingsTable, dryRun);

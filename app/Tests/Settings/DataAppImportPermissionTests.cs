@@ -23,6 +23,7 @@ public sealed class DataAppImportPermissionTests
         PluginConfigurationObjectType.CHAT_TEMPLATE,
         PluginConfigurationObjectType.DATA_SOURCE,
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY,
+        PluginConfigurationObjectType.GLOSSARY,
     ];
 
     [TestCaseSource(nameof(IMPORTABLE_TYPES))]
@@ -121,6 +122,10 @@ public sealed class DataAppImportPermissionTests
 
             case PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY:
                 app.AllowUserToImportDocumentAnalysisPolicy = false;
+                break;
+
+            case PluginConfigurationObjectType.GLOSSARY:
+                app.AllowUserToImportGlossary = false;
                 break;
 
             default:
