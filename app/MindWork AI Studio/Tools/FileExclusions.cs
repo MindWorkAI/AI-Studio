@@ -65,7 +65,9 @@ internal static class FileExclusions
     private const string DISK_IMAGE_FILES = "*.vmdk; *.vdi; *.vhd; *.vhdx; *.qcow2; *.hdd; *.hds; *.iso; *.dmg; *.img";
 
     /// <summary>
-    /// The list a data source or the batch processing assistant starts with, one group per line.
+    /// The list a data source or the batch processing assistant starts with. Its line breaks only
+    /// group the entries for the reader of this code: the exclusion editor shows folders and files in
+    /// fields of their own.
     /// </summary>
     public const string DEFAULT_PATTERNS =
         DEPENDENCY_AND_BUILD_FOLDERS + "\n" +
@@ -76,17 +78,6 @@ internal static class FileExclusions
         PROGRAM_FILES + "\n" +
         DATABASE_FILES + "\n" +
         DISK_IMAGE_FILES;
-
-    /// <summary>
-    /// How many lines the default list has, so that a field shows all of it at once.
-    /// </summary>
-    public static readonly int DEFAULT_LINE_COUNT = DEFAULT_PATTERNS.Split('\n').Length;
-
-    /// <summary>
-    /// How many lines a field for the list grows to before it scrolls: the default list, with room for
-    /// a few entries of the user.
-    /// </summary>
-    public const int MAX_LINE_COUNT = 12;
 
     private const string OFFICE_LOCK_FILE_PATTERN = "~$*";
 

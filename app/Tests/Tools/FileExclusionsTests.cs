@@ -4,7 +4,6 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tests.Tools;
 
@@ -22,7 +21,7 @@ public sealed class FileExclusionsTests
     [TestCase(FileExclusions.DEFAULT_PATTERNS)]
     public void ValidExclusionListsAreAccepted(string patterns)
     {
-        Assert.That(new DataSourceValidation().ValidateExcludePatterns(patterns), Is.Null);
+        Assert.That(FileExclusions.Validate(patterns), Is.Null);
     }
 
     [TestCase("a/b/")]
@@ -33,7 +32,7 @@ public sealed class FileExclusionsTests
     [TestCase("**/bin/")]
     public void InvalidExclusionListsAreRejected(string patterns)
     {
-        Assert.That(new DataSourceValidation().ValidateExcludePatterns(patterns), Is.Not.Null);
+        Assert.That(FileExclusions.Validate(patterns), Is.Not.Null);
     }
 
     [TestCase(null, true)]

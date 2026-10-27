@@ -253,7 +253,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Path = this.dataPath,
         FilePatterns = this.NormalizeFilePatterns(),
 
-        // Kept as typed, since the line breaks group the entries for the eye:
+        // Unlike the file patterns, no normalizing, since the exclusion editor passes on valid lists only:
         ExcludePatterns = this.dataExcludePatterns,
         MaxFileSizeMegabytes = this.dataMaxFileSizeMegabytes,
         IncludeSubdirectories = this.dataIncludeSubdirectories,
