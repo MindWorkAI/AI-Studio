@@ -38,6 +38,11 @@ public enum ToolOfferBlockReason
     TOOL_SWITCHED_OFF,
 
     /// <summary>
+    /// The user switched this tool off in the tool settings, because they never need it.
+    /// </summary>
+    TOOL_SWITCHED_OFF_BY_USER,
+
+    /// <summary>
     /// A setting the tool cannot work without is missing or invalid.
     /// </summary>
     NOT_CONFIGURED,
