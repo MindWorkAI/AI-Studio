@@ -4575,6 +4575,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1087321364"] = "Ja,
 -- Yes, let the AI validate & filter the retrieved data.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1309929755"] = "Ja, die KI soll die abgerufenen Daten überprüfen und filtern."
 
+-- You switched Semantic Search off in the tool settings, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T147584079"] = "Sie haben die semantische Suche in den Werkzeugeinstellungen deaktiviert. Daher nutzt AI Studio das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
+
 -- Data Source Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T15302104"] = "Datenauswahl"
 
@@ -4796,6 +4799,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T2430645786"] = "Nic
 
 -- Tools were selected for this run, but the chosen model cannot use tools. It runs without them. Please choose a model which supports tools.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3008114108"] = "Für diesen Durchlauf wurden Werkzeuge ausgewählt, aber das ausgewählte Modell kann keine Werkzeuge verwenden. Es wird ohne sie ausgeführt. Bitte wählen Sie ein Modell, das Werkzeuge unterstützt."
+
+-- Some tools selected for this run are switched off in your tool settings and stay unused: {0}. Switch them on again in the app settings to use them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3803950041"] = "Einige der für diesen Durchlauf ausgewählten Werkzeuge sind in Ihren Werkzeugeinstellungen deaktiviert und bleiben daher ungenutzt: {0}. Aktivieren Sie sie in den App-Einstellungen wieder, um sie zu nutzen."
 
 -- Your Pandoc installation meets the requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1167365374"] = "Ihre Pandoc-Installation erfüllt die Anforderungen."
@@ -5781,6 +5787,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T579100
 -- Open Dashboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T78223861"] = "Dashboard öffnen"
 
+-- Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1112962504"] = "Deaktivieren Sie dieses Werkzeug, wenn Sie es nie benötigen. Es erscheint dann in keiner Werkzeugauswahl, und die KI kann es nicht verwenden."
+
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1258653480"] = "Einstellungen"
 
@@ -5793,11 +5802,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1759955728
 -- This tool still needs to be configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1958939818"] = "Dieses Werkzeug muss noch konfiguriert werden."
 
+-- Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2160193517"] = "Deaktivieren Sie die Werkzeuge, die Sie nie benötigen. Diese erscheinen dann in keiner Werkzeugauswahl, und die KI kann sie nicht verwenden."
+
 -- Missing required settings: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2588115579"] = "Fehlende erforderliche Einstellungen: {0}"
 
+-- Enabled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2626085950"] = "Aktiviert"
+
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T266367750"] = "Name"
+
+-- Switch this tool on to use it again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2805631051"] = "Aktivieren Sie dieses Werkzeug, um es wieder zu verwenden."
+
+-- You switched off this tool. It appears in no tool selection, and the AI cannot use it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3035030488"] = "Sie haben dieses Werkzeug deaktiviert. Es erscheint in keiner Werkzeugauswahl, und die KI kann es nicht verwenden."
 
 -- Minimum provider confidence
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3461070436"] = "Minimales Vertrauensniveau für Anbieter"
@@ -10268,6 +10289,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3907843187"] 
 
 -- {0} Default: {1}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T403490413"] = "{0} Standard: {1}"
+
+-- You switched off this tool. It appears in no tool selection, and the AI cannot use it. You can switch it on again in the tool settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T4131368882"] = "Sie haben dieses Werkzeug deaktiviert. Es erscheint in keiner Werkzeugauswahl, und die KI kann es nicht verwenden. Sie können es in den Werkzeugeinstellungen wieder aktivieren."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T900713019"] = "Abbrechen"
