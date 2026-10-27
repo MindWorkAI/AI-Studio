@@ -35,6 +35,7 @@ Key structure:
 - **JSON in model answers** - Read the JSON part of a model answer with `ModelAnswerJson`, never with a scanner of your own. It skips the prose and code fences around the JSON but checks nothing, so broken JSON reaches the deserializer unchanged and its message can go back to the model.
 - **Encryption** - Initialized before Rust service is marked ready
 - **Debug environment** - Reads `startup.env` file with IPC credentials
+- **Static files and the browser cache** - When the developer starts the app from Rider, the embedded browser of Tauri keeps the static files under `wwwroot/`, such as `app.css` or a script, in its cache. The app then still shows the old file, and a change seems not to work. Whenever you changed such a file, tell the developer to clear that cache through the developer tools of the embedded browser before testing. Users of a release are not affected.
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 
 ## Tests
