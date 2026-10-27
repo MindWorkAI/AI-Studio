@@ -4765,6 +4765,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1941431282"] =
 -- No format templates configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1955378082"] = "No format templates configured yet."
 
+-- Store your templates here, for example the Word and PowerPoint templates of your organization. When you export a result to Word, you can choose one of your Word templates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2752175671"] = "Store your templates here, for example the Word and PowerPoint templates of your organization. When you export a result to Word, you can choose one of your Word templates."
+
 -- Edit Format Template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2823861742"] = "Edit Format Template"
 
@@ -4773,9 +4776,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3093558555"] =
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3267849393"] = "Edit"
-
--- Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3535588207"] = "Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them."
 
 -- Are you sure you want to delete the format template '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3671173081"] = "Are you sure you want to delete the format template '{0}'?"
@@ -8152,8 +8152,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1231150347"] = "The s
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1847791252"] = "Update"
 
--- Store a template for the documents you export, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2350018173"] = "Store a template for the documents you export, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once."
+-- Store a template, for example a Word or PowerPoint template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2059843578"] = "Store a template, for example a Word or PowerPoint template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once."
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2646845972"] = "Add"

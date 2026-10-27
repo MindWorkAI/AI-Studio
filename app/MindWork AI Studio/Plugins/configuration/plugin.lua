@@ -1730,9 +1730,10 @@ CONFIG["PROFILES"] = {}
 --     ["Actions"] = "Please always ensure the portion size is ..."
 -- }
 
--- Format templates for this configuration, which users can choose for the documents they export.
--- A format template is a Word document or template (.docx, .dotx). Users see these templates in
--- the settings, but cannot change or delete them.
+-- Format templates for this configuration, which users can choose for the documents they create.
+-- A format template is a Word document or template (.docx, .dotx), which users can choose when they
+-- export to Word, or a PowerPoint presentation or template (.pptx, .potx). Users see these templates
+-- in the settings, but cannot change or delete them.
 --
 -- The simplest way is to ship the template with this plugin: put the file next to this
 -- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The

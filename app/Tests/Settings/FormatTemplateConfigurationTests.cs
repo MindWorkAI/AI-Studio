@@ -31,6 +31,7 @@ public sealed class FormatTemplateConfigurationTests
         this.pluginDirectory = Path.Combine(Path.GetTempPath(), $"format-template-{Guid.NewGuid():N}");
         Directory.CreateDirectory(Path.Combine(this.pluginDirectory, "templates"));
         File.WriteAllBytes(Path.Combine(this.pluginDirectory, "templates", "Report.dotx"), [1]);
+        File.WriteAllBytes(Path.Combine(this.pluginDirectory, "templates", "Slides.potx"), [1]);
         File.WriteAllBytes(Path.Combine(this.pluginDirectory, "Report.pdf"), [1]);
     }
 
@@ -54,15 +55,16 @@ public sealed class FormatTemplateConfigurationTests
         });
     }
 
-    [Test]
-    public async Task AFileOfThePluginIsFoundByItsRelativePath()
+    [TestCase("Report.dotx", Description = "A Word template, into which a document is exported.")]
+    [TestCase("Slides.potx", Description = "A PowerPoint template, for presentations.")]
+    public async Task AFileOfThePluginIsFoundByItsRelativePath(string fileName)
     {
-        var (isValid, read) = await ParseAsync(Snippet(ID, "Report", "templates/Report.dotx"), this.pluginDirectory);
+        var (isValid, read) = await ParseAsync(Snippet(ID, "Report", $"templates/{fileName}"), this.pluginDirectory);
 
         Assert.Multiple(() =>
         {
             Assert.That(isValid, Is.True);
-            Assert.That(read.FilePath, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates", "Report.dotx")));
+            Assert.That(read.FilePath, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates", fileName)));
         });
     }
 

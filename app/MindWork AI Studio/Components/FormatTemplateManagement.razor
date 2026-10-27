@@ -1,7 +1,7 @@
 @inherits MSGComponentBase
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-    @T("Store your templates for the documents you export here, for example the Word templates of your organization, so that you can export results into them.")
+    @T("Store your templates here, for example the Word and PowerPoint templates of your organization. When you export a result to Word, you can choose one of your Word templates.")
 </MudJustifiedText>
 <MudTable Items="@this.SettingsManager.ConfigurationData.FormatTemplates" Hover="@true" Class="border-dashed border rounded-lg">
     <ColGroup>
