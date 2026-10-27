@@ -43,7 +43,11 @@ public static class GlossaryImport
         if (mapping.ValueColumn < 0 || mapping.ValueColumn >= table.Columns.Count)
             throw new ArgumentOutOfRangeException(nameof(mapping), "The column of the values is not part of the table.");
 
-        List<GlossaryEntry> entries = mode is GlossaryImportMode.REPLACE ? [] : existingEntries.ToList();
+        //
+        // The parentheses are needed: without them, the compiler of the .NET 9 SDK reads
+        // "GlossaryImportMode.REPLACE? []" as a nullable type with a list pattern.
+        //
+        List<GlossaryEntry> entries = (mode is GlossaryImportMode.REPLACE) ? [] : existingEntries.ToList();
         var countBefore = entries.Count;
         var positions = new Dictionary<string, int>(StringComparer.Ordinal);
         for (var index = 0; index < entries.Count; index++)
