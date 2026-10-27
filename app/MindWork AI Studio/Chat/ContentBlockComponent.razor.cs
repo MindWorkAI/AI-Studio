@@ -185,6 +185,12 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
 
     /// <summary>
+    /// Whether this block offers its answer for export: entirely through the export menu, and file by
+    /// file through the menu as well as at each code block.
+    /// </summary>
+    private bool CanExportAnswer => this.Role is ChatRole.AI && this.CanExport;
+
+    /// <summary>
     /// Whether this block leaves AI Studio with the notice that AI generated it, when that is switched on.
     /// </summary>
     private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
@@ -216,6 +222,16 @@ public partial class ContentBlockComponent : MSGComponentBase
             return this.cachedMessageFiles;
         }
     }
+
+    /// <summary>
+    /// The files whose code blocks get a button to save them: all files of this block, whenever the
+    /// export menu offers them as well.
+    /// </summary>
+    /// <remarks>
+    /// In a long answer, the user would otherwise have to scroll from the code block up to the export
+    /// menu. The button saves the very file the menu offers for the block, under the same name.
+    /// </remarks>
+    private IReadOnlyList<MessageFile> FilesWithSaveButton => this.CanExportAnswer ? this.MessageFiles : [];
 
     /// <summary>
     /// Names one file in the export menu.
