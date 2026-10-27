@@ -29,7 +29,13 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     private const string DEFAULT_AUTHOR = "MindWork AI - Assistant Builder";
     public const string DEFAULT_SUPPORT_CONTACT = "mailto:info@mindwork.ai";
     public const string DEFAULT_SOURCE_URL = "https://github.com/MindWorkAI/AI-Studio";
-    
+
+    /// <summary>
+    /// Now as the plugin field LAST_CHANGED expects it. Every plugin this service writes or has a
+    /// model write is a change made now.
+    /// </summary>
+    private static string NowAsLastChanged => PluginBase.FormatLastChanged(DateTimeOffset.UtcNow);
+
     private static readonly AssistantContextFile[] ASSISTANT_CONTEXT_FILES =
     [
         new("Assistant plugin schema", "Plugins/assistants/README.md", IsRequired: true),
@@ -148,6 +154,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         var metadata = new DirectChatLauncherPluginMetadata(
             request.PluginId,
             DEFAULT_VERSION,
+            DateTimeOffset.UtcNow,
             [DEFAULT_AUTHOR],
             DEFAULT_SUPPORT_CONTACT,
             DEFAULT_SOURCE_URL,
@@ -283,7 +290,8 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     /// </summary>
     /// <remarks>
     /// Tools an organization switched off are left out: an assistant naming one would run without
-    /// it, and neither the model nor the user could tell from the plugin why. Whether a tool is
+    /// it, and neither the model nor the user could tell from the plugin why. Tools the user switched
+    /// off do not even reach the catalog, since the user never needs them. Whether a tool is
     /// fully configured is deliberately not part of this, because settings can be completed later
     /// and the assistant then works as written.
     /// </remarks>
@@ -296,7 +304,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         var builder = new StringBuilder();
         foreach (var tool in activeTools)
-            builder.AppendLine($"- {tool.Definition.Id}: {tool.Definition.Function.DescriptionForLLM}");
+            builder.AppendLine($"- {tool.Id}: {tool.DescriptionForLLM}");
 
         return builder.ToString().TrimEnd();
     }
@@ -426,6 +434,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
                  <fixed_metadata_defaults>
                  ID = "{{request.PluginId}}"
                  VERSION = "{{DEFAULT_VERSION}}"
+                 LAST_CHANGED = "{{NowAsLastChanged}}"
                  TYPE = "ASSISTANT"
                  AUTHORS = {"{{DEFAULT_AUTHOR}}"}
                  SUPPORT_CONTACT = "{{DEFAULT_SUPPORT_CONTACT}}"
@@ -620,6 +629,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
           - A null value in the request JSON means that detail is not available. Never write the word "null" or a field name into the plugin.
           - Keep ID = "{{plugin.Id}}" exactly. Do not create a new plugin ID.
           - Keep TYPE = "ASSISTANT".
+          - Set LAST_CHANGED = "{{NowAsLastChanged}}" right after VERSION, replacing any earlier value.
           - Keep the assistant locally managed. DEPLOYED_USING_CONFIG_SERVER must not be true.
           {{builderMetadataRule}}
           - Set assistant.kind to "CHAT_LAUNCHER" exactly when the revised ASSISTANT table uses LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME" or "OPEN_TEMPORARY_CHAT"; otherwise set it to "FORM".
@@ -658,6 +668,9 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             Name = threadName,
             SystemPrompt = systemPrompt,
             SelectedProvider = provider.Id,
+
+            // Generating and revising assistant plugins is the work of the Assistant Builder:
+            RuntimeComponent = Components.META_ASSISTANT,
             Blocks =
             [
                 new()
@@ -868,7 +881,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         var alreadyRequested = RequestedToolIds(previousVersion).ToHashSet(StringComparer.Ordinal);
         return toolIds
-            .Where(toolId => !alreadyRequested.Contains(toolId) && toolRegistry.GetDefinition(toolId) is null)
+            .Where(toolId => !alreadyRequested.Contains(toolId) && !toolRegistry.IsKnown(toolId))
             .ToList();
     }
 

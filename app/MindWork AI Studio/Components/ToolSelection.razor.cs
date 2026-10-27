@@ -1,5 +1,6 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
@@ -13,6 +14,17 @@ public partial class ToolSelection : MSGComponentBase
 
     [Parameter]
     public required AIStudio.Settings.Provider LLMProvider { get; set; }
+
+    /// <summary>
+    /// Where the chat of this selection may still send data, because of the mailboxes it read from.
+    /// </summary>
+    /// <remarks>
+    /// The selection shows a tool this keeps back as unavailable, with the reason, the same way it
+    /// does for a provider with too little confidence. Keeping the tool out of the request is the
+    /// business of the tool registry and the tool executor; this only explains it.
+    /// </remarks>
+    [Parameter]
+    public required OutboundDataRequirement RequiredOutboundDataRestriction { get; set; }
 
     [Parameter]
     public HashSet<string> SelectedToolIds { get; set; } = [];
@@ -33,11 +45,12 @@ public partial class ToolSelection : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
 
     private bool showSelection;
+    private bool showUnavailableTools;
     private IReadOnlyList<ToolCatalogItem> catalog = [];
 
     protected override void OnParametersSet()
     {
-        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(this.SelectedToolIds);
+        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(this.SelectedToolIds);
         base.OnParametersSet();
     }
 
@@ -65,21 +78,72 @@ public partial class ToolSelection : MSGComponentBase
     {
         this.showSelection = !this.showSelection;
         if (this.showSelection)
+        {
+            this.showUnavailableTools = false;
             this.catalog = await this.ToolRegistry.GetCatalogAsync(this.Component);
+        }
     }
 
     private void Hide() => this.showSelection = false;
+
+    private void ToggleUnavailableTools() => this.showUnavailableTools = !this.showUnavailableTools;
+
+    /// <summary>
+    /// Whether the selection keeps the tools which cannot be selected right now apart, behind a button.
+    /// </summary>
+    /// <remarks>
+    /// Not while a response is running: no tool can be switched then, and the list shows the current
+    /// selection as a whole, as the note above it says.
+    /// </remarks>
+    private bool KeepsUnavailableToolsApart => !this.Disabled;
+
+    /// <summary>
+    /// The tools the selection lists first: those the user can select right now, or all of them while a response is running.
+    /// </summary>
+    private List<ToolCatalogItem> GetItemsShownFirst() => this.KeepsUnavailableToolsApart
+        ? [..this.catalog.Where(this.IsSelectable)]
+        : [..this.catalog];
+
+    /// <summary>
+    /// The tools which cannot be selected right now, selected ones included, which the selection lists behind a button.
+    /// </summary>
+    private List<ToolCatalogItem> GetUnavailableItems() => this.KeepsUnavailableToolsApart
+        ? [..this.catalog.Where(item => !this.IsSelectable(item))]
+        : [];
+
+    /// <summary>
+    /// The text of the button which shows or hides the tools that cannot be selected right now.
+    /// </summary>
+    /// <remarks>
+    /// A selected tool may end up behind the button, for example, when the user switches to a provider
+    /// with less confidence. The text then says so, because the selection would otherwise seem to have
+    /// lost it.
+    /// </remarks>
+    private string GetUnavailableToolsButtonText(IReadOnlyCollection<ToolCatalogItem> unavailableItems)
+    {
+        if (this.showUnavailableTools)
+            return T("Hide unavailable tools");
+
+        var selectedCount = unavailableItems.Count(item => this.SelectedToolIds.Contains(item.Id));
+        if (unavailableItems.Count == 1)
+            return selectedCount == 0 ? T("Show 1 unavailable tool") : T("Show 1 unavailable tool, which is selected");
+
+        return selectedCount == 0
+            ? string.Format(T("Show {0} unavailable tools"), unavailableItems.Count.CompactCount())
+            : string.Format(T("Show {0} unavailable tools, {1} of them selected"), unavailableItems.Count.CompactCount(), selectedCount.CompactCount());
+    }
 
     /// <summary>
     /// Whether this tool can be switched at all right now.
     /// </summary>
     /// <remarks>
     /// The switch and the row click share this, so both agree on when a tool is out of reach: the
-    /// organization disabled it, it is not configured, the provider lacks the confidence it needs,
-    /// a response is running, or the model cannot call tools in the first place.
+    /// tool itself cannot be selected right now, see ToolSelectionRules.IsSelectable, a response is
+    /// running, or the model cannot call tools in the first place.
     /// </remarks>
-    private bool IsRowDisabled(ToolCatalogItem item) => !item.IsActive || !item.ConfigurationState.IsConfigured || this.IsBlockedByProviderConfidence(item) ||
-                                                        this.Disabled || !this.SupportsTools;
+    private bool IsRowDisabled(ToolCatalogItem item) => !this.IsSelectable(item) || this.Disabled || !this.SupportsTools;
+
+    private bool IsSelectable(ToolCatalogItem item) => ToolSelectionRules.IsSelectable(item, this.ProviderConfidence, this.RequiredOutboundDataRestriction.Restriction);
 
     /// <summary>
     /// Switches a tool when the user clicks anywhere in its row.
@@ -94,21 +158,21 @@ public partial class ToolSelection : MSGComponentBase
         if (this.IsRowDisabled(item))
             return;
 
-        await this.ChangeSelection(item.Definition.Id, !this.SelectedToolIds.Contains(item.Definition.Id));
+        await this.ChangeSelection(item.Id, !this.SelectedToolIds.Contains(item.Id));
     }
 
-    private async Task ChangeSelection(string toolId, bool isSelected)
+    private async Task ChangeSelection(string collectionId, bool isSelected)
     {
-        if (isSelected && !this.SettingsManager.IsToolActive(toolId))
+        if (isSelected && !this.ToolRegistry.IsToolActive(collectionId))
             return;
 
         var updated = new HashSet<string>(this.SelectedToolIds, StringComparer.Ordinal);
         if (isSelected)
-            updated.Add(toolId);
+            updated.Add(collectionId);
         else
-            updated.Remove(toolId);
+            updated.Remove(collectionId);
 
-        updated = ToolSelectionRules.NormalizeSelection(updated);
+        updated = this.ToolRegistry.NormalizeSelection(updated);
         this.SelectedToolIds = updated;
         await this.SelectedToolIdsChanged.InvokeAsync(updated);
     }
@@ -117,6 +181,11 @@ public partial class ToolSelection : MSGComponentBase
     private static ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => item.MinimumProviderConfidence;
 
     private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderConfidenceAllowed(this.ProviderConfidence, GetMinimumProviderConfidence(item));
+
+    /// <summary>
+    /// Whether the mailboxes the chat read from keep every tool of this entry back.
+    /// </summary>
+    private bool IsBlockedByOutboundDataRestriction(ToolCatalogItem item) => !ToolSelectionRules.IsOutboundDataAllowed(this.RequiredOutboundDataRestriction.Restriction, item);
 
     private string? GetProviderConfidenceHint(ToolCatalogItem item)
     {
@@ -138,7 +207,7 @@ public partial class ToolSelection : MSGComponentBase
     /// </remarks>
     private string GetWarningText(ToolCatalogItem item)
     {
-        var warnings = new List<string>(3);
+        var warnings = new List<string>(4);
         if (!item.ConfigurationState.IsConfigured)
             warnings.Add(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message);
 
@@ -149,14 +218,17 @@ public partial class ToolSelection : MSGComponentBase
         if (!string.IsNullOrWhiteSpace(providerConfidenceHint))
             warnings.Add(providerConfidenceHint);
 
+        if (this.IsBlockedByOutboundDataRestriction(item))
+            warnings.Add(this.RequiredOutboundDataRestriction.GetToolBlockedMessage(this.SettingsManager.ConfigurationData));
+
         return string.Join(' ', warnings);
     }
 
-    private async Task OpenSettings(string toolId)
+    private async Task OpenSettings(ToolCatalogItem item)
     {
         var parameters = new DialogParameters<ToolSettingsDialog>
         {
-            { x => x.ToolId, toolId },
+            { x => x.CollectionId, item.Id },
         };
 
         var dialog = await this.DialogService.ShowAsync<ToolSettingsDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);

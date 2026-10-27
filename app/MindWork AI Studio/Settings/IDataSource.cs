@@ -2,29 +2,45 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 
 namespace AIStudio.Settings;
 
 /// <summary>
-/// The common interface for all data sources.
+/// The common interface for the data sources in DataSources, which classic RAG, Semantic Search and the agents read.
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type_discriminator")]
 [JsonDerivedType(typeof(DataSourceLocalDirectory), nameof(DataSourceType.LOCAL_DIRECTORY))]
 [JsonDerivedType(typeof(DataSourceLocalFile), nameof(DataSourceType.LOCAL_FILE))]
 [JsonDerivedType(typeof(DataSourceERI_V1), nameof(DataSourceType.ERI_V1))]
-public interface IDataSource : IConfigurationObject
+public interface IDataSource : IDataSourceBase
 {
-    /// <summary>
-    /// Which type of data source is this?
-    /// </summary>
-    public DataSourceType Type { get; init; }
-
     /// <summary>
     /// The maximum number of matches one retrieval returns. Searched page by page, it is the size of a page.
     /// </summary>
     public ushort MaxMatches { get; init; }
+
+    /// <summary>
+    /// Where a chat may still send data, once content of this data source reached it.
+    /// </summary>
+    /// <remarks>
+    /// Read it through DataSourceOutboundDataExtensions.GetEffectiveOutboundDataRestriction, never
+    /// on its own: an organization may demand a stricter level, see
+    /// DataSourceSecuritySettings.MinimumOutboundDataRestriction, and so does a data source which only
+    /// self-hosted providers may see.
+    /// </remarks>
+    public OutboundDataRestriction OutboundDataRestriction { get; init; }
+
+    /// <summary>
+    /// The last page which can be retrieved from this data source.
+    /// </summary>
+    /// <remarks>
+    /// By default, as many pages as RetrievalPaging.GetLastPage allows for the page size. A data
+    /// source which cannot page that far says so itself. It is a method rather than a property, so
+    /// that it never ends up in the settings.
+    /// </remarks>
+    /// <returns>The number of the last page, which is at least 1.</returns>
+    public int GetLastPage() => RetrievalPaging.GetLastPage(this.MaxMatches);
 
     /// <summary>
     /// Perform the data retrieval process.
@@ -49,7 +65,7 @@ public interface IDataSource : IConfigurationObject
     /// from covering the whole data source.
     /// </remarks>
     /// <param name="query">What to search for.</param>
-    /// <param name="page">The page to retrieve, from 1 up to RetrievalPaging.GetLastPage for MaxMatches.</param>
+    /// <param name="page">The page to retrieve, from 1 up to GetLastPage.</param>
     /// <param name="thread">The chat thread.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The retrieved data contexts of this page, whether the next page is worth asking for, and what the search could not cover.</returns>

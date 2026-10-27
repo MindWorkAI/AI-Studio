@@ -37,6 +37,11 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </summary>
     private readonly ILogger logger;
 
+    /// <summary>
+    /// Whether the requests of this provider carry the User-Agent of AI Studio, see AppUserAgent.
+    /// </summary>
+    private readonly bool sharesFeatureUsage;
+
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = ProviderJsonOptions.OPTIONS;
 
     /// <summary>
@@ -52,6 +57,17 @@ public abstract class BaseProvider : IProvider, ISecretId
         this.Provider = provider;
         this.BaseUri = baseUri;
         this.HttpClient = ExternalHttpClientTimeout.CreateHttpClient(baseUri, trustPolicy);
+
+        //
+        // Decided once per provider, so that all requests of one provider agree. As the default header
+        // of the client, the User-Agent reaches every request: transcriptions, embeddings, and model
+        // lists name the app this way, while chat requests additionally name their component, see
+        // StreamOpenAICompatibleChatCompletion. The settings are read the same way the client above
+        // reads its timeout:
+        //
+        this.sharesFeatureUsage = AppUserAgent.IsAllowedFor(provider, Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>());
+        if (this.sharesFeatureUsage)
+            AppUserAgent.Apply(this.HttpClient);
     }
     
     #region Handling of IProvider, which all providers must implement
@@ -616,6 +632,30 @@ public abstract class BaseProvider : IProvider, ISecretId
         catch (JsonException)
         {
             return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Reads which parameter of the request a provider blamed in the body of a failed response.
+    /// </summary>
+    /// <remarks>
+    /// OpenAI and the APIs compatible with it name it in the field 'param' of their error object.
+    /// </remarks>
+    /// <param name="responseBody">The body of the failed response.</param>
+    /// <returns>The name of the parameter, or null when the body names none.</returns>
+    private static string? ReadProviderErrorParameter(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            return TryGetErrorElement(document.RootElement, out var errorElement) ? TryGetString(errorElement, "param") : null;
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 
@@ -1304,6 +1344,18 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters("parallel_tool_calls");
 
+        //
+        // Where the User-Agent is shared, a chat request also names the component which sent it. This
+        // covers both ways to the provider below: the single request, and every round of a tool run.
+        //
+        Action<HttpRequestHeaders>? requestHeadersAction = this.sharesFeatureUsage
+            ? headers =>
+            {
+                headersAction?.Invoke(headers);
+                AppUserAgent.ApplyComponent(headers, chatThread);
+            }
+            : headersAction;
+
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
@@ -1335,7 +1387,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
                     runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
-                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, headersAction, requestToken),
+                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
 
@@ -1381,7 +1433,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
 
             // Set provider-specific headers:
-            headersAction?.Invoke(request.Headers);
+            requestHeadersAction?.Invoke(request.Headers);
 
             // Set the content:
             request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
@@ -1393,9 +1445,22 @@ public abstract class BaseProvider : IProvider, ISecretId
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The ID and whether the provider is self-hosted come along, because the data source checks
+    /// trust a provider by them: Semantic Search decides with these settings which data sources
+    /// it offers, while the classic RAG process asks this provider itself. Without them, a
+    /// self-hosted provider, or one the organization trusts, could search a data source which asks
+    /// for such a provider in one process but not in the other.<br/><br/>
+    /// With the ID, the settings also know what the provider's own model list reported, e.g., the
+    /// context window of a self-hosted model, see ProviderExtensions.GetAutomaticModelProfile. So
+    /// the tools of a request and the way images are passed on see the model as the configured
+    /// provider does.
+    /// </remarks>
     public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
+        Id = this.ConfiguredProviderId,
         UsedLLMProvider = this.Provider,
+        IsSelfHosted = this.Provider is LLMProviders.SELF_HOSTED,
         Model = chatModel,
         InstanceName = this.InstanceName,
         CapabilityOverrides = this.CapabilityOverrides,
@@ -1445,7 +1510,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         if (!string.IsNullOrWhiteSpace(classifiedMessage))
             return classifiedMessage;
 
-        if (statusCode is HttpStatusCode.BadRequest && responseBody.Contains("not decode", StringComparison.OrdinalIgnoreCase))
+        if (IsUndecodableFormatFailure(statusCode, responseBody))
             return string.Format(TB("The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it."), this.InstanceName);
 
         var providerMessage = ReadProviderErrorMessage(responseBody);
@@ -1453,6 +1518,33 @@ public abstract class BaseProvider : IProvider, ISecretId
             return string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
 
         return string.Empty;
+    }
+
+    private static bool IsUndecodableFormatFailure(HttpStatusCode statusCode, string responseBody) => statusCode is HttpStatusCode.BadRequest && responseBody.Contains("not decode", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Whether a transcription provider refused the media file itself rather than the request.
+    /// </summary>
+    /// <remarks>
+    /// The provider gives the same answer for the same file every time, so sending it again only
+    /// repeats the upload. That holds for a file which is too large or of a type the provider does
+    /// not accept, and for a bad request which names the file as the faulty parameter, as OpenAI and
+    /// the APIs compatible with it do, e.g., for a damaged recording. A provider which cannot decode
+    /// WebM/Opus at all is the exception: it refuses every file the same way, and the user fixes
+    /// that by choosing another provider, not by changing the file. Everything else, such as rate
+    /// limits, keys, models, and outages, may pass.
+    /// </remarks>
+    /// <param name="statusCode">The status code the provider answered with.</param>
+    /// <param name="responseBody">The body the provider answered with.</param>
+    /// <returns>True, when the provider would refuse the unchanged file again.</returns>
+    internal static bool IsMediaFileRejection(HttpStatusCode statusCode, string responseBody)
+    {
+        if (statusCode is HttpStatusCode.RequestEntityTooLarge or HttpStatusCode.UnsupportedMediaType)
+            return true;
+
+        return statusCode is HttpStatusCode.BadRequest
+               && !IsUndecodableFormatFailure(statusCode, responseBody)
+               && string.Equals(ReadProviderErrorParameter(responseBody), "file", StringComparison.OrdinalIgnoreCase);
     }
 
     protected async Task<TranscriptionResult> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
@@ -1533,7 +1625,10 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Transcription request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                return TranscriptionResult.Failure(this.GetTranscriptionFailureUserMessage(response.StatusCode, responseBody));
+                var failureMessage = this.GetTranscriptionFailureUserMessage(response.StatusCode, responseBody);
+                return IsMediaFileRejection(response.StatusCode, responseBody)
+                    ? TranscriptionResult.Rejection(failureMessage)
+                    : TranscriptionResult.Failure(failureMessage);
             }
 
             var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
@@ -1554,7 +1649,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (this.IsTimeoutException(e, token))
                 await this.SendTimeoutError("transcribing audio");
 
-            this.logger.LogError("Failed to perform transcription request: '{Message}'.", e.Message);
+            this.logger.LogError(e, "Failed to perform transcription request: '{Message}'.", e.Message);
             return TranscriptionResult.Failure();
         }
     }

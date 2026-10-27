@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Globalization;
 
+using AIStudio.Settings;
+
 namespace AIStudio.Assistants.BatchProcessing;
 
 public partial class AssistantBatchProcessing
@@ -42,6 +44,7 @@ public partial class AssistantBatchProcessing
         }
 
         this.PrepareFileResults(resolvedOutputDirectory, files, previousLog, previousResults);
+        await this.WarnAboutUnreadableImagesAsync();
         await this.CheckpointAssistantSession();
         await this.RunBatchAsync(resolvedOutputDirectory);
     }
@@ -86,6 +89,27 @@ public partial class AssistantBatchProcessing
 
             this.fileResults.Add(fileResult);
         }
+    }
+
+    /// <summary>
+    /// Tells the user before the first file when the images of the run will fail, because the
+    /// selected model cannot read images.
+    /// </summary>
+    /// <remarks>
+    /// Counts only the images which this run still processes. Images done by an earlier run of a
+    /// continued batch keep their results and do not fail.
+    /// </remarks>
+    private async Task WarnAboutUnreadableImagesAsync()
+    {
+        var numImages = this.fileResults.Count(fileResult => fileResult.Status is not BatchProcessingFileStatus.DONE && IsImage(fileResult.FilePath));
+        if (numImages == 0 || this.ProviderSettings.SupportsImageInput())
+            return;
+
+        var warning = numImages == 1
+            ? T("The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.")
+            : string.Format(T("The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."), numImages);
+
+        await this.MessageBus.SendWarning(new(Icons.Material.Filled.ImageNotSupported, warning));
     }
 
     /// <summary>
@@ -188,14 +212,14 @@ public partial class AssistantBatchProcessing
     /// </remarks>
     private async Task ProcessOneFileAsync(BatchProcessingFileResult fileResult, string resolvedOutputDirectory, CancellationToken token)
     {
-        var fileContent = await this.LoadInputContentAsync(fileResult, token);
-        if (fileContent is null)
+        var input = await this.LoadInputContentAsync(fileResult, token);
+        if (input is null)
             return;
 
         string aiAnswer;
         try
         {
-            (aiAnswer, fileResult.UsedTools) = await this.CallAIAsync(fileResult.FileName, fileContent, token);
+            (aiAnswer, fileResult.UsedTools) = await this.CallAIAsync(fileResult.FileName, input.Value, token);
         }
         catch (OperationCanceledException)
         {
@@ -217,6 +241,17 @@ public partial class AssistantBatchProcessing
             return;
         }
 
+        //
+        // The request reads the image anew in every round with the model, e.g., after each tool
+        // call, and quietly leaves out an image which is gone by then. The answer would be about
+        // nothing and must not count as a result, so that continuing the run processes the image again:
+        //
+        if (input.Value.Image is { Exists: false })
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The image was no longer available while the model was asked about it."));
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(aiAnswer))
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The AI answer was empty."));
@@ -228,6 +263,12 @@ public partial class AssistantBatchProcessing
         {
             try
             {
+                //
+                // Only the file of a document ends with the notice that AI generated it, when that is
+                // switched on. The table of results and a CSV file keep the answer as it is: there,
+                // the notice would repeat in every row and get in the way of whoever processes the table.
+                //
+                var resultText = this.DisclosureService.AddDisclosureToMarkdown(aiAnswer);
                 var resultFilePath = Path.Join(resolvedOutputDirectory, this.CreateResultFileName(fileResult.FileName));
                 if (this.resultFileFormat.UsesPandoc())
                 {
@@ -235,14 +276,14 @@ public partial class AssistantBatchProcessing
                     // Pandoc reports a failure instead of throwing, because one document which
                     // cannot be converted must not end a run over hundreds of them:
                     //
-                    if (!await PandocExport.ConvertAsync(this.RustService, aiAnswer, resultFilePath, this.resultFileFormat, token))
+                    if (!await PandocExport.ConvertAsync(this.RustService, resultText, resultFilePath, this.resultFileFormat, token))
                     {
                         this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("Was not able to convert the answer into the chosen file format."));
                         return;
                     }
                 }
                 else
-                    await File.WriteAllTextAsync(resultFilePath, aiAnswer, this.resultFileFormat.ToFileEncoding(), CancellationToken.None);
+                    await File.WriteAllTextAsync(resultFilePath, resultText, this.resultFileFormat.ToFileEncoding(), CancellationToken.None);
 
                 this.FinishFileResult(fileResult, BatchProcessingFileStatus.DONE, Path.GetFileName(resultFilePath));
             }

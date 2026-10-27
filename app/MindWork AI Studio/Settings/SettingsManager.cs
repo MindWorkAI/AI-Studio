@@ -1,9 +1,10 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Text;
 using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -30,6 +31,16 @@ public sealed class SettingsManager
         WriteIndented = true,
         Converters = { new TolerantEnumConverter() },
     };
+
+    /// <summary>
+    /// From this duration on, storing the settings is reported as slow.
+    /// </summary>
+    /// <remarks>
+    /// The settings file is a few hundred kilobytes at most, so storing it usually takes some
+    /// milliseconds. Far beyond that, something is blocking: on one machine, every store took 18
+    /// seconds, and each one held up the start of AI Studio.
+    /// </remarks>
+    private static readonly TimeSpan SLOW_STORE_THRESHOLD = TimeSpan.FromSeconds(1);
 
     private readonly ILogger<SettingsManager> logger;
     private readonly RustService rustService;
@@ -175,6 +186,11 @@ public sealed class SettingsManager
 
             this.logger.LogInformation("No valid current-version settings backup was found. Migrating the settings file.");
             settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion.Version, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+
+            // Compatibility shim, remove after 2027-10-31, see KeepTheLegacyEncryptionExportFormat.
+            // Settings of an older version always come from before the export format existed:
+            settingsData.App.EnterpriseEncryptionExportFormat = EnterpriseEncryptionFormat.V1;
+
             this.PrepareLoadedSettings(settingsData);
             await this.StoreSettingsSnapshot(settingsData, settingsPath);
             await this.StoreCurrentVersionBackup(settingsData);
@@ -280,7 +296,8 @@ public sealed class SettingsManager
     {
         try
         {
-            var settingsData = JsonSerializer.Deserialize<Data>(await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            var settingsJson = await File.ReadAllTextAsync(settingsPath);
+            var settingsData = JsonSerializer.Deserialize<Data>(settingsJson, JSON_OPTIONS);
             if(settingsData is null)
             {
                 this.logger.LogError($"Failed to parse the {sourceDescription} '{settingsPath}'.");
@@ -293,6 +310,7 @@ public sealed class SettingsManager
                 return new(null, SettingsWriteBlockReason.CURRENT_VERSION_INVALID);
             }
 
+            KeepTheLegacyEncryptionExportFormat(settingsData, settingsJson);
             return new(settingsData, SettingsWriteBlockReason.NONE);
         }
         catch(Exception e)
@@ -300,6 +318,28 @@ public sealed class SettingsManager
             this.logger.LogError(e, $"Failed to parse the {sourceDescription} '{settingsPath}'.");
             return new(null, SettingsWriteBlockReason.FILE_UNREADABLE);
         }
+    }
+
+    /// <summary>
+    /// Lets an installation which existed before v26.10.1 keep exporting encrypted secrets in the
+    /// format v1, which every version of AI Studio reads.
+    /// </summary>
+    /// <remarks>
+    /// Compatibility shim, remove after 2027-10-31, see
+    /// documentation/compatibility-shims/2026-10-enterprise-encryption-export-format.md.<br/><br/>
+    /// New installations export in the authenticated format v2. An existing installation, however,
+    /// may belong to an administrator whose organization still runs an older version, which reads
+    /// v1 only. Settings written before v26.10.1 lack the export format, and nothing else tells
+    /// such an installation apart. Once the settings are stored, they hold the format, and this
+    /// changes nothing anymore.
+    /// </remarks>
+    private static void KeepTheLegacyEncryptionExportFormat(Data settingsData, string settingsJson)
+    {
+        using var settingsDocument = JsonDocument.Parse(settingsJson);
+        if(settingsDocument.RootElement.TryGetProperty(nameof(Data.App), out var appElement) && appElement.ValueKind is JsonValueKind.Object && appElement.TryGetProperty(nameof(DataApp.EnterpriseEncryptionExportFormat), out _))
+            return;
+
+        settingsData.App.EnterpriseEncryptionExportFormat = EnterpriseEncryptionFormat.V1;
     }
 
     private void BlockSettingsWrites(SettingsWriteBlockReason reason, string message)
@@ -338,10 +378,24 @@ public sealed class SettingsManager
                 return;
             }
 
+            //
+            // Serializing and writing are measured on their own, because a slow store has two
+            // different causes: a property which asks the file system or the network while it is
+            // serialized, or a file system which is slow to write, e.g., because of a virus scanner
+            // or a synchronized profile folder. Only the two durations tell them apart:
+            //
+            var serializingStartedAt = Stopwatch.GetTimestamp();
             var settingsJson = JsonSerializer.Serialize(this.ConfigurationData, JSON_OPTIONS);
+            var serializingDuration = Stopwatch.GetElapsedTime(serializingStartedAt);
+
+            var writingStartedAt = Stopwatch.GetTimestamp();
             var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
             await this.StoreSerializedSettings(settingsJson, settingsPath);
             await this.StoreSerializedVersionBackup(this.ConfigurationData.Version, settingsJson);
+            var writingDuration = Stopwatch.GetElapsedTime(writingStartedAt);
+
+            if (serializingDuration + writingDuration >= SLOW_STORE_THRESHOLD)
+                this.logger.LogWarning($"Storing the settings took {(serializingDuration + writingDuration).TotalMilliseconds:F0} ms, which is unusually long: serializing took {serializingDuration.TotalMilliseconds:F0} ms, writing took {writingDuration.TotalMilliseconds:F0} ms. The settings are {Encoding.UTF8.GetByteCount(settingsJson) / 1024} KB. A slow serialization points to a setting which reaches out to the file system or the network while it is serialized; slow writing points to the file system itself, e.g., a virus scanner or a synchronized profile folder.");
         }
         finally
         {
@@ -531,7 +585,7 @@ public sealed class SettingsManager
         var minimumLevel = this.GetMinimumConfidenceLevel(component);
         
         // When there is only one provider, and it has a confidence level that is high enough, we return it:
-        if (this.ConfigurationData.Providers.Count == 1 && this.ConfigurationData.Providers[0].UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+        if (this.ConfigurationData.Providers.Count == 1 && this.IsProviderUsable(this.ConfigurationData.Providers[0].UsedLLMProvider, minimumLevel))
             return this.ConfigurationData.Providers[0];
 
         // Is there a current provider with a sufficiently high confidence level?
@@ -539,14 +593,14 @@ public sealed class SettingsManager
         if (currentProviderId is not null && !string.IsNullOrWhiteSpace(currentProviderId))
         {
             var currentProviderProbe = this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == currentProviderId);
-            if (currentProviderProbe is not null && currentProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+            if (currentProviderProbe is not null && this.IsProviderUsable(currentProviderProbe.UsedLLMProvider, minimumLevel))
                 currentProvider = currentProviderProbe;
         }
         
         // Is there a component-preselected provider with a sufficiently high confidence level?
         var preselectedProvider = Provider.NONE;
         var preselectedProviderProbe = component.PreselectedProvider(this);
-        if(preselectedProviderProbe != Provider.NONE && preselectedProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+        if(preselectedProviderProbe != Provider.NONE && this.IsProviderUsable(preselectedProviderProbe.UsedLLMProvider, minimumLevel))
             preselectedProvider = preselectedProviderProbe;
 
         //
@@ -574,7 +628,7 @@ public sealed class SettingsManager
             return preselectedProvider;
 
         // When there is an app-wide preselected provider, and it has a confidence level that is high enough, we return it:
-        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel) ?? Provider.NONE;
+        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && this.IsProviderUsable(x.UsedLLMProvider, minimumLevel)) ?? Provider.NONE;
     }
 
     public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
@@ -611,7 +665,7 @@ public sealed class SettingsManager
         bool IsSelectableProvider(Provider provider) =>
             provider != Provider.NONE
             && provider.UsedLLMProvider != LLMProviders.NONE
-            && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel;
+            && this.IsProviderUsable(provider.UsedLLMProvider, minimumLevel);
     }
 
     /// <summary>
@@ -630,7 +684,8 @@ public sealed class SettingsManager
     /// <para>
     /// Whenever a provider is about to be used for an LLM request, do not use this method. Use
     /// GetConfidentProviders, GetPreselectedProvider, or GetChatProviderForLoadedChat instead,
-    /// since they honor the confidence levels.
+    /// since they honor the confidence levels and leave out the providers the organization
+    /// prohibited. This method returns those as well, so that the settings can mark them.
     /// </para>
     /// <para>
     /// The returned list is a sorted copy of the provider list, ordered by the used LLM provider and
@@ -652,9 +707,9 @@ public sealed class SettingsManager
     /// <remarks>
     /// This method resolves a stored provider reference by its id. It applies neither the global
     /// minimum confidence level nor any component-specific minimum, so it returns the requested
-    /// provider even when the user enforces a higher global minimum. Callers that intend to use the
-    /// returned provider for an LLM request must check it themselves through
-    /// IsProviderConfident or fall back to GetPreselectedProvider.
+    /// provider even when the user enforces a higher global minimum or the organization prohibited
+    /// it. Callers that intend to use the returned provider for an LLM request must check it
+    /// themselves through IsProviderConfident or fall back to GetPreselectedProvider.
     /// </remarks>
     /// <param name="providerId">The id of the provider to look up.</param>
     /// <returns>The provider, or <see cref="Provider.NONE"/> when no provider with that id exists.</returns>
@@ -687,6 +742,9 @@ public sealed class SettingsManager
     /// <summary>
     /// Checks whether the given provider satisfies the minimum confidence level of the given component.
     /// </summary>
+    /// <remarks>
+    /// A provider the organization prohibited never does, see IsProviderUsable.
+    /// </remarks>
     /// <param name="provider">The provider to check.</param>
     /// <param name="component">The component for which the provider gets checked.</param>
     /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
@@ -696,12 +754,51 @@ public sealed class SettingsManager
         if (provider.UsedLLMProvider is LLMProviders.NONE)
             return false;
 
-        return provider.UsedLLMProvider.GetConfidence(this).Level >= this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
+        return this.IsProviderUsable(provider.UsedLLMProvider, this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum));
     }
+
+    /// <summary>
+    /// Checks whether the organization prohibited the given provider.
+    /// </summary>
+    /// <remarks>
+    /// A prohibition is a rule of its own, next to confidence and data-source security: no confidence
+    /// level and no trust by configuration makes a prohibited provider usable. It also makes the provider
+    /// untrusted, see GetConfiguredConfidenceLevel, but not the other way around. It names the operator
+    /// of an API, so a hub or a self-hosted server which serves the same models stays allowed.
+    /// </remarks>
+    /// <param name="provider">The provider to check, for LLMs, embeddings, and transcriptions alike.</param>
+    /// <returns>True, when the organization prohibited the provider. NONE is never prohibited.</returns>
+    public bool IsProviderProhibited(LLMProviders provider) => provider is not LLMProviders.NONE && this.ConfigurationData.App.ProhibitedProviders.Contains(provider);
+
+    /// <summary>
+    /// Checks whether the given provider may be used where the given minimum confidence level applies.
+    /// </summary>
+    /// <remarks>
+    /// The one check for every place which picks a provider: the organization did not prohibit it, and
+    /// its confidence level reaches the minimum. A prohibited provider is untrusted, see
+    /// GetConfiguredConfidenceLevel, but comparing the confidence level alone would still let it through
+    /// wherever no minimum is enforced, since even untrusted reaches the minimum NONE.
+    /// </remarks>
+    /// <param name="provider">The provider to check, for LLMs, embeddings, and transcriptions alike.</param>
+    /// <param name="minimumLevel">The minimum confidence level which applies.</param>
+    /// <returns>True, when the provider may be used, false otherwise.</returns>
+    public bool IsProviderUsable(LLMProviders provider, ConfidenceLevel minimumLevel) => !this.IsProviderProhibited(provider) && provider.GetConfidence(this).Level >= minimumLevel;
+
+    /// <summary>
+    /// Returns the prohibited providers which have a level of their own in the custom confidence scheme.
+    /// </summary>
+    /// <remarks>
+    /// The prohibition outranks these levels, see GetConfiguredConfidenceLevel.
+    /// </remarks>
+    /// <returns>The prohibited providers with a custom confidence level, in no particular order.</returns>
+    public IEnumerable<LLMProviders> GetProhibitedProvidersWithCustomConfidenceLevel() => this.ConfigurationData.Confidence.CustomConfidenceScheme.Keys.Where(this.IsProviderProhibited);
 
     /// <summary>
     /// Returns all providers that satisfy the minimum confidence level of the given component.
     /// </summary>
+    /// <remarks>
+    /// The providers the organization prohibited are left out, see IsProviderUsable.
+    /// </remarks>
     /// <param name="component">The component for which the providers get filtered.</param>
     /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
     /// <returns>All providers the component may use, in the same order as GetAllProviders.</returns>
@@ -709,7 +806,7 @@ public sealed class SettingsManager
     {
         var minimumLevel = this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
         foreach (var provider in this.GetAllProviders())
-            if (provider.UsedLLMProvider is not LLMProviders.NONE && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+            if (provider.UsedLLMProvider is not LLMProviders.NONE && this.IsProviderUsable(provider.UsedLLMProvider, minimumLevel))
                 yield return provider;
     }
 
@@ -823,6 +920,149 @@ public sealed class SettingsManager
         return this.GetChatTemplateById(this.ConfigurationData.App.PreselectedChatTemplate);
     }
 
+    /// <summary>
+    /// Returns the profile a chat template preselects for the chats started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null whenever the template has nothing to say which could be used: it names no profile, it
+    /// does not allow profiles, or the profile it names is gone. The chat then keeps the profile it
+    /// would have without the template. Starting without a profile is an answer of its own, and it
+    /// comes back as Profile.NO_PROFILE.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The profile to start with, or null to keep the usual one.</returns>
+    public Profile? GetChatTemplateProfile(ChatTemplate chatTemplate)
+    {
+        if (!chatTemplate.AllowProfileUsage || chatTemplate.ProfileId is null)
+            return null;
+
+        if (chatTemplate.StartsWithoutProfile())
+            return Profile.NO_PROFILE;
+
+        var profile = this.GetProfileById(chatTemplate.ProfileId);
+        return profile == Profile.NO_PROFILE ? null : profile;
+    }
+
+    /// <summary>
+    /// Returns the profile a chat started with the given chat template begins with.
+    /// </summary>
+    /// <remarks>
+    /// Null when the template says nothing about profiles, so the chat keeps the profile it has.
+    /// A template whose profile is gone starts its chats with the default profile of the chat
+    /// settings, which may be none — not with whatever profile the previous chat happened to use,
+    /// which would be a choice nobody made for this chat.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The profile to start with, or null to keep the current one.</returns>
+    public Profile? GetChatTemplateStartProfile(ChatTemplate chatTemplate)
+    {
+        if (!chatTemplate.AllowProfileUsage || chatTemplate.ProfileId is null)
+            return null;
+
+        return this.GetChatTemplateProfile(chatTemplate) ?? this.GetPreselectedProfile(Tools.Components.CHAT);
+    }
+
+    /// <summary>
+    /// Returns the provider a chat template preselects for the chats started with it.
+    /// </summary>
+    /// <remarks>
+    /// The template is no way around the confidence levels: a provider which may not be used for
+    /// chats comes back as Provider.NONE, just like one which is gone or one the
+    /// template does not name at all. The chat then keeps the provider it would have without the
+    /// template.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The provider to start with, or Provider.NONE to keep the usual one.</returns>
+    public Provider GetChatTemplateProvider(ChatTemplate chatTemplate) => this.GetChatTemplateProvider(chatTemplate.ProviderId);
+
+    /// <summary>
+    /// Returns the provider a chat template may preselect under the given ID.
+    /// </summary>
+    /// <remarks>
+    /// The one rule for the provider of a chat template: it exists and meets the confidence level
+    /// required for chats. The chat, assistant chat launchers, the chat template dialog, and the
+    /// import of a chat template all ask here, so that none of them accepts a provider another
+    /// one would leave out.
+    /// </remarks>
+    /// <param name="providerId">The ID the chat template names, or null when it names none.</param>
+    /// <returns>The provider, or Provider.NONE when the ID names no provider a chat may use.</returns>
+    public Provider GetChatTemplateProvider(string? providerId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId))
+            return Provider.NONE;
+
+        var provider = this.GetProviderById(providerId);
+        return provider != Provider.NONE && this.IsProviderConfident(provider, Tools.Components.CHAT) ? provider : Provider.NONE;
+    }
+
+    /// <summary>
+    /// Returns the profile a chat begins with when it starts with the given chat template now.
+    /// </summary>
+    /// <remarks>
+    /// A template which names a profile decides, see GetChatTemplateStartProfile. One
+    /// which says nothing keeps the current profile, with one exception: when that profile is the one
+    /// the previous template preselected, the chat starts with the default profile of the chat
+    /// settings instead. Keeping it would carry the choice of another template over into this chat.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <param name="previousChatTemplate">The chat template the current profile was chosen with; the same one when the template does not change.</param>
+    /// <param name="currentProfile">The profile the chat has right now.</param>
+    /// <returns>The profile to start with.</returns>
+    public Profile ChooseChatTemplateProfile(ChatTemplate chatTemplate, ChatTemplate previousChatTemplate, Profile currentProfile)
+    {
+        if (this.GetChatTemplateStartProfile(chatTemplate) is { } templateProfile)
+            return templateProfile;
+
+        if (this.GetChatTemplateStartProfile(previousChatTemplate) is { } previousTemplateProfile && previousTemplateProfile.Id == currentProfile.Id)
+            return this.GetPreselectedProfile(Tools.Components.CHAT);
+
+        return currentProfile;
+    }
+
+    /// <summary>
+    /// Returns the provider a chat begins with when it starts with the given chat template now.
+    /// </summary>
+    /// <remarks>
+    /// The same as for the profile, see ChooseChatTemplateProfile: a template which
+    /// names a usable provider decides, and the provider of the previous template is not carried
+    /// over. In its place comes the default provider of the chat settings. Without such a default,
+    /// the current provider stays, so that the chat does not lose its provider altogether.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <param name="previousChatTemplate">The chat template the current provider was chosen with; the same one when the template does not change.</param>
+    /// <param name="currentProvider">The provider the chat has right now.</param>
+    /// <returns>The provider to start with.</returns>
+    public Provider ChooseChatTemplateProvider(ChatTemplate chatTemplate, ChatTemplate previousChatTemplate, Provider currentProvider)
+    {
+        var templateProvider = this.GetChatTemplateProvider(chatTemplate);
+        if (templateProvider != Provider.NONE)
+            return templateProvider;
+
+        var previousTemplateProvider = this.GetChatTemplateProvider(previousChatTemplate);
+        if (previousTemplateProvider == Provider.NONE || previousTemplateProvider.Id != currentProvider.Id)
+            return currentProvider;
+
+        var defaultProvider = this.GetPreselectedProvider(Tools.Components.CHAT);
+        return defaultProvider == Provider.NONE ? currentProvider : defaultProvider;
+    }
+
+    /// <summary>
+    /// Returns the name of the workspace a chat template keeps the chats started with it in.
+    /// </summary>
+    /// <remarks>
+    /// Null when the template names none, and also while workspaces are switched off: a chat then
+    /// belongs to no workspace, whatever its template says.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The trimmed name of the workspace, or null to keep the chat where it would go anyway.</returns>
+    public string? GetChatTemplateWorkspaceName(ChatTemplate chatTemplate)
+    {
+        if (string.IsNullOrWhiteSpace(chatTemplate.WorkspaceName) || this.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            return null;
+
+        return chatTemplate.WorkspaceName.Trim();
+    }
+
     public Profile GetProfileById(string? profileId)
     {
         if (string.IsNullOrWhiteSpace(profileId))
@@ -845,21 +1085,7 @@ public sealed class SettingsManager
         return this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(chatTemplateId, StringComparison.OrdinalIgnoreCase)) ?? ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
-    public HashSet<string> GetDefaultToolIds(AIStudio.Tools.Components component)
-    {
-        var key = component.ToString();
-        if (this.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(key, out var toolIds))
-            return ToolSelectionRules.NormalizeSelection(toolIds);
-
-        return [];
-    }
-
-
     public bool AreToolsEnabled() => this.ConfigurationData.Tools.EnableTools;
-
-    public bool IsToolActive(string toolId) =>
-        this.AreToolsEnabled() &&
-        !this.ConfigurationData.Tools.DisabledToolIds.Contains(toolId);
 
     /// <remarks>
     /// The document analysis is deliberately absent: there its policy names the tools, so the user
@@ -889,73 +1115,106 @@ public sealed class SettingsManager
     }
 
     /// <summary>
-    /// Resolves which provider confidence a tool needs, and where that value came from.
+    /// Resolves which provider confidence a tool collection needs, and where that value came from.
     /// </summary>
     /// <remarks>
-    /// The default is passed in rather than looked up here. It belongs to the tool definition,
-    /// and the definitions live in the tool registry — which already depends on this class, so
-    /// asking it back would be a circle. Every caller has the definition at hand anyway.
+    /// Which IDs stand for the collection and its default are passed in rather than looked up here.
+    /// Both belong to the definitions, and the definitions live in the tool registry — which already
+    /// depends on this class, so asking it back would be a circle.<br/><br/>
+    /// When several of the IDs carry a level, the strictest one wins: an administrator who raised
+    /// the level of one tool of a collection must not find it lowered by the entry of another one.
+    /// For the same reason, an invalid managed level anywhere among them asks for HIGH.
     /// </remarks>
-    /// <param name="toolId">The tool to resolve the confidence for.</param>
-    /// <param name="defaultLevel">The tool's own minimum, used when nothing overrides it.</param>
-    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolutionForTool(string toolId, ConfidenceLevel defaultLevel)
+    /// <param name="settingsIds">The IDs which stand for the collection: its own, then those of its tools.</param>
+    /// <param name="defaultLevel">The collection's own minimum, used when nothing overrides it.</param>
+    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolution(IReadOnlyList<string> settingsIds, ConfidenceLevel defaultLevel)
     {
         if (ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var configMeta) && configMeta.IsLocked)
         {
             var managedValues = configMeta.GetValue();
-            if (managedValues.TryGetValue(toolId, out var configuredManagedLevel) &&
-                Enum.TryParse<ConfidenceLevel>(configuredManagedLevel, true, out var managedConfidenceLevel) &&
-                Enum.IsDefined(managedConfidenceLevel) &&
-                managedConfidenceLevel is not ConfidenceLevel.UNKNOWN)
+            ConfidenceLevel? strictestManagedLevel = null;
+            foreach (var settingsId in settingsIds)
             {
-                return new(managedConfidenceLevel, "managed config");
+                if (!managedValues.TryGetValue(settingsId, out var configuredManagedLevel))
+                    continue;
+
+                if (!TryParseMinimumProviderConfidence(configuredManagedLevel, out var managedConfidenceLevel))
+                {
+                    this.logger.LogError(
+                        "Managed minimum provider confidence '{ConfiguredLevel}' for tool '{ToolId}' is invalid. Requiring HIGH as a safe fallback.",
+                        configuredManagedLevel,
+                        settingsId);
+                    return new(ConfidenceLevel.HIGH, "invalid managed config; safe fallback");
+                }
+
+                if (strictestManagedLevel is null || managedConfidenceLevel > strictestManagedLevel)
+                    strictestManagedLevel = managedConfidenceLevel;
             }
 
-            if (managedValues.ContainsKey(toolId))
-            {
-                this.logger.LogError(
-                    "Managed minimum provider confidence '{ConfiguredLevel}' for tool '{ToolId}' is invalid. Requiring HIGH as a safe fallback.",
-                    configuredManagedLevel,
-                    toolId);
-                return new(ConfidenceLevel.HIGH, "invalid managed config; safe fallback");
-            }
+            if (strictestManagedLevel is { } managedLevel)
+                return new(managedLevel, "managed config");
         }
 
-        if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(toolId, out var configuredLevel) &&
-            Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) &&
-            Enum.IsDefined(confidenceLevel) &&
-            confidenceLevel is not ConfidenceLevel.UNKNOWN)
+        ConfidenceLevel? strictestStoredLevel = null;
+        foreach (var settingsId in settingsIds)
         {
-            return new(confidenceLevel, "stored override");
+            if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(settingsId, out var configuredLevel) &&
+                TryParseMinimumProviderConfidence(configuredLevel, out var confidenceLevel) &&
+                (strictestStoredLevel is null || confidenceLevel > strictestStoredLevel))
+            {
+                strictestStoredLevel = confidenceLevel;
+            }
         }
+
+        if (strictestStoredLevel is { } storedLevel)
+            return new(storedLevel, "stored override");
 
         return new(defaultLevel, "default fallback");
     }
 
-    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel defaultLevel) => this.GetMinimumProviderConfidenceResolutionForTool(toolId, defaultLevel).ConfidenceLevel;
+    private static bool TryParseMinimumProviderConfidence(string? configuredLevel, out ConfidenceLevel confidenceLevel) =>
+        Enum.TryParse(configuredLevel, true, out confidenceLevel) &&
+        Enum.IsDefined(confidenceLevel) &&
+        confidenceLevel is not ConfidenceLevel.UNKNOWN;
 
     /// <summary>
-    /// Stores which provider confidence a tool needs.
+    /// Stores which provider confidence a tool collection needs.
     /// </summary>
-    /// <param name="toolId">The tool to store the confidence for.</param>
+    /// <remarks>
+    /// Stored under the ID of the collection. Entries under the IDs of its tools are removed, since
+    /// the strictest entry wins and an older one would otherwise outvote the level just chosen.
+    /// </remarks>
+    /// <param name="settingsIds">The IDs which stand for the collection: its own, then those of its tools.</param>
     /// <param name="confidenceLevel">The level the user chose.</param>
-    /// <param name="defaultLevel">The tool's own minimum. Choosing it again removes the override.</param>
-    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel, ConfidenceLevel defaultLevel)
+    /// <param name="defaultLevel">The collection's own minimum. Choosing it again removes the override.</param>
+    public void SetMinimumProviderConfidence(IReadOnlyList<string> settingsIds, ConfidenceLevel confidenceLevel, ConfidenceLevel defaultLevel)
     {
-        if (confidenceLevel == defaultLevel)
-        {
-            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(toolId);
-            return;
-        }
+        foreach (var settingsId in settingsIds)
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(settingsId);
 
-        this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[toolId] = confidenceLevel.ToString();
+        if (confidenceLevel != defaultLevel)
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[settingsIds[0]] = confidenceLevel.ToString();
     }
 
+    /// <summary>
+    /// Returns the confidence level of the given provider.
+    /// </summary>
+    /// <remarks>
+    /// A prohibition by the organization comes first: a prohibited provider is always untrusted, no matter
+    /// what the confidence scheme says, and no matter which level the user or a configuration plugin chose
+    /// for it in the custom scheme. Those levels stay stored, so they apply again once the prohibition ends.
+    /// After that, the confidence scheme decides, and in the custom scheme, the level chosen for the provider.
+    /// </remarks>
+    /// <param name="llmProvider">The provider, for LLMs, embeddings, and transcriptions alike.</param>
+    /// <returns>The confidence level of the provider.</returns>
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
     {
         if(llmProvider is LLMProviders.NONE)
             return ConfidenceLevel.NONE;
-        
+
+        if (this.IsProviderProhibited(llmProvider))
+            return ConfidenceLevel.UNTRUSTED;
+
         switch (this.ConfigurationData.Confidence.ConfidenceScheme)
         {
             case ConfidenceSchemes.TRUST_ALL:

@@ -20,6 +20,12 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <!--
+            Never above the Roslyn of the .NET SDK we build with (see metadata.txt): the 9.0.1xx SDKs ship
+            Roslyn 4.12. Built against a newer one, the compiler skips this generator with CS9057, and the
+            generated namespaces such as AIStudio.Tools.PluginSystem.Assistants.Icons go missing. Raise it
+            only together with the SDK feature band, with SourceCodeRules, and with the Tests project.
+        -->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
     </ItemGroup>
 </Project>

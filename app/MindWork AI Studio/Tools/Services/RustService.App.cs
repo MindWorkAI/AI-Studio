@@ -156,4 +156,41 @@ public sealed partial class RustService
             return false;
         }
     }
+
+    /// <summary>
+    /// Requests the Rust runtime to restart the entire desktop application, e.g., to apply a prepared
+    /// restore of a backup.
+    /// </summary>
+    /// <remarks>
+    /// In the development environment, the runtime cannot restart the .NET server, which it did not
+    /// start, and refuses. The developer restarts both instead.
+    /// </remarks>
+    /// <returns>True when the restart is on its way.</returns>
+    public async Task<bool> RestartApplication()
+    {
+        try
+        {
+            var response = await this.http.PostAsync("/app/restart", null);
+            if (!response.IsSuccessStatusCode)
+            {
+                this.logger?.LogError("Failed to restart the app due to network error: {StatusCode}.", response.StatusCode);
+                return false;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<AppRestartResponse>(this.jsonRustSerializerOptions);
+            if (result is null || !result.Success)
+            {
+                this.logger?.LogError("Failed to restart the app: {Error}", result?.ErrorMessage ?? "Unknown error");
+                return false;
+            }
+
+            this.logger?.LogInformation("Restart request sent to Rust runtime.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Exception while requesting application restart.");
+            return false;
+        }
+    }
 }

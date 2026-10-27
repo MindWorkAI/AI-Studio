@@ -18,12 +18,13 @@ public sealed record ConfigurationPluginDeleteSummary(
     int DocumentAnalysisPolicies,
     int LockedSettings,
     int MandatoryInfos,
-    int Introductions)
+    int Introductions,
+    int MailboxProviders)
 {
     /// <summary>
     /// An empty summary, used when the configuration plugin is not running and we cannot tell what it configured.
     /// </summary>
-    public static readonly ConfigurationPluginDeleteSummary EMPTY = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    public static readonly ConfigurationPluginDeleteSummary EMPTY = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     /// <summary>
     /// True when the deletion affects anything beyond the plugin directory.
@@ -38,5 +39,6 @@ public sealed record ConfigurationPluginDeleteSummary(
         this.DocumentAnalysisPolicies > 0 ||
         this.LockedSettings > 0 ||
         this.MandatoryInfos > 0 ||
-        this.Introductions > 0;
+        this.Introductions > 0 ||
+        this.MailboxProviders > 0;
 }

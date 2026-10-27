@@ -6,6 +6,7 @@ using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Services.Indexing;
 
 using Microsoft.AspNetCore.Components;
 
@@ -44,18 +45,41 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private CultureInfo currentCulture = CultureInfo.InvariantCulture;
 
-    private int TotalIndexedFiles => this.Statuses.Sum(status => status.IndexedFiles);
+    /// <remarks>
+    /// The sums above every data source count files and mails alike, which is why their chips name
+    /// neither.
+    /// </remarks>
+    private int TotalIndexedDocuments => this.Statuses.Sum(status => status.IndexedDocuments);
 
-    private int TotalPendingFiles => this.Statuses.Sum(status => Math.Max(0, status.TotalFiles - status.IndexedFiles - status.FailedFiles - status.PermanentlySkippedFiles));
+    private int TotalPendingDocuments => this.Statuses.Sum(status => Math.Max(0, status.TotalDocuments - status.IndexedDocuments - status.FailedDocuments - status.SkippedDocuments));
 
-    private int TotalFailedFiles => this.Statuses.Sum(status => status.FailedFiles);
+    private int TotalFailedDocuments => this.Statuses.Sum(status => status.FailedDocuments);
 
-    private int TotalPermanentlySkippedFiles => this.Statuses.Sum(status => status.PermanentlySkippedFiles);
+    private int TotalPermanentlySkippedDocuments => this.Statuses.Sum(status => status.PermanentlySkippedDocuments);
+
+    private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
 
     /// <remarks>
-    /// The chips above count files, which says nothing about how far the list of data sources itself
-    /// has come. While several of them wait their turn, this is the one line saying so. With a single
-    /// data source there is nothing to say: its own row already tells the whole story.
+    /// Says nothing while there is no pause between the steps, which is the default.
+    /// </remarks>
+    private string PauseBetweenStepsText
+    {
+        get
+        {
+            var pause = PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing);
+            if (pause.IsNone)
+                return string.Empty;
+
+            return pause.MinimumSeconds == pause.MaximumSeconds
+                ? string.Format(T("Between two steps, AI Studio pauses for {0} seconds, to spare an embedding server which many people share."), pause.MaximumSeconds)
+                : string.Format(T("Between two steps, AI Studio pauses for {0} to {1} seconds, to spare an embedding server which many people share."), pause.MinimumSeconds, pause.MaximumSeconds);
+        }
+    }
+
+    /// <remarks>
+    /// The chips above count documents, which says nothing about how far the list of data sources
+    /// itself has come. While several of them wait their turn, this is the one line saying so. With a
+    /// single data source there is nothing to say: its own row already tells the whole story.
     /// </remarks>
     private bool IsWorkingThroughDataSources => this.Statuses.Count > 1 && this.Statuses.Any(status => status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED);
 
@@ -141,7 +165,8 @@ public partial class Embeddings : MSGComponentBase
     /// data source at once.
     /// </remarks>
     private static bool IsWorthOpening(DataSourceEmbeddingStatus status) =>
-        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED || status.FailedFiles > 0;
+        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED
+        || status.Health is not DataSourceEmbeddingHealth.HEALTHY;
 
     /// <remarks>
     /// MudBlazor keeps track of which panel is open on its own, so this only records the decision.
@@ -173,7 +198,7 @@ public partial class Embeddings : MSGComponentBase
     }
 
     /// <summary>
-    /// What the panel of a data source says about its progress through the files.
+    /// What the panel of a data source says about its progress through its files or mails.
     /// </summary>
     /// <remarks>
     /// While a file is being worked on, the sentence names that file and how far into it we are.
@@ -186,25 +211,62 @@ public partial class Embeddings : MSGComponentBase
     /// while it is being read, and hanging the choice on the block number let the line jump back
     /// and forth between two entirely different sentences at every file. Now the beginning of the
     /// sentence stays put and the blocks are appended to it as soon as the first one arrives.
+    ///
+    /// A mail has no pages: those of its attachments would not say which attachment they are in.
     /// </remarks>
-    private string GetFileProgressText(DataSourceEmbeddingStatus status)
+    private string GetProgressText(DataSourceEmbeddingStatus status)
     {
-        if (status.State is not DataSourceEmbeddingState.RUNNING || string.IsNullOrWhiteSpace(status.CurrentFile))
-            return string.Format(T("{0} of {1} files are indexed."), this.FormatNumber(status.IndexedFiles), this.FormatNumber(status.TotalFiles));
+        var isMailbox = IsMailbox(status);
+        if (status.State is not DataSourceEmbeddingState.RUNNING || string.IsNullOrWhiteSpace(status.CurrentDocument))
+        {
+            return isMailbox
+                ? string.Format(T("{0} of {1} mails are indexed."), this.FormatNumber(status.IndexedDocuments), this.FormatNumber(status.TotalDocuments))
+                : string.Format(T("{0} of {1} files are indexed."), this.FormatNumber(status.IndexedDocuments), this.FormatNumber(status.TotalDocuments));
+        }
 
         //
         // Everything already dealt with, plus the one in hand. Skipped and failed files are part of
         // that: they are behind us in the folder, and leaving them out would let the number fall
         // behind the file whose name is shown right next to it.
         //
-        var currentFileNumber = Math.Min(status.TotalFiles, status.IndexedFiles + status.PermanentlySkippedFiles + status.FailedFiles + 1);
+        var currentNumber = this.FormatNumber(Math.Min(status.TotalDocuments, status.IndexedDocuments + status.SkippedDocuments + status.FailedDocuments + 1));
+        var total = this.FormatNumber(status.TotalDocuments);
+        if (isMailbox)
+        {
+            return status.CurrentDocumentBlock is { } mailBlock
+                ? string.Format(T("Mail {0} of {1} is being indexed: block {2}."), currentNumber, total, this.FormatNumber(mailBlock))
+                : string.Format(T("Mail {0} of {1} is being indexed."), currentNumber, total);
+        }
+
         return status switch
         {
-            { CurrentFileBlock: { } block, CurrentFilePage: { } page } => string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block), this.FormatNumber(page)),
-            { CurrentFileBlock: { } block } => string.Format(T("File {0} of {1} is being indexed: block {2}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block)),
-            _ => string.Format(T("File {0} of {1} is being indexed."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles)),
+            { CurrentDocumentBlock: { } block, CurrentDocumentPage: { } page } => string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), currentNumber, total, this.FormatNumber(block), this.FormatNumber(page)),
+            { CurrentDocumentBlock: { } block } => string.Format(T("File {0} of {1} is being indexed: block {2}."), currentNumber, total, this.FormatNumber(block)),
+            _ => string.Format(T("File {0} of {1} is being indexed."), currentNumber, total),
         };
     }
+
+    private string GetSkippedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
+        ? string.Format(T("Skipped mails: {0}."), this.FormatNumber(status.PermanentlySkippedDocuments))
+        : string.Format(T("Skipped files: {0}. Open a group below to see why and what you can do."), this.FormatNumber(status.SkippedDocuments));
+
+    private string GetFailedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
+        ? string.Format(T("Failed mails: {0}"), this.FormatNumber(status.FailedDocuments))
+        : string.Format(T("Failed files: {0}"), this.FormatNumber(status.FailedDocuments));
+
+    private string GetCurrentDocumentText(DataSourceEmbeddingStatus status) => IsMailbox(status)
+        ? string.Format(T("Current mail: {0}"), status.CurrentDocument)
+        : string.Format(T("Current file: {0}"), status.CurrentDocument);
+
+    private static bool IsMailbox(DataSourceEmbeddingStatus status) => status.DataSourceType is DataSourceType.MAILBOX;
+
+    /// <remarks>
+    /// A mailbox can be searched long before it was worked through once: its first sync takes
+    /// hours with a large one, newest mails first. What the index lacks until then are older mails.
+    /// </remarks>
+    private string GetLastSyncText(DataSourceEmbeddingStatus status) => status.LastSyncUtc is { } lastSyncUtc
+        ? string.Format(T("Last complete sync: {0}"), lastSyncUtc.ToLocalTime().ToString("g", this.currentCulture))
+        : T("Not synced completely yet. AI Studio works through the mailbox piece by piece, the newest mails first, and older mails are still missing.");
 
     private string FormatNumber(int value) => value.ToString("N0", this.currentCulture);
 
@@ -212,10 +274,13 @@ public partial class Embeddings : MSGComponentBase
     {
         DataSourceEmbeddingState.RUNNING => Color.Warning,
         DataSourceEmbeddingState.QUEUED => Color.Info,
-        DataSourceEmbeddingState.FAILED => Color.Error,
-        DataSourceEmbeddingState.COMPLETED when status.FailedFiles > 0 => Color.Warning,
-        DataSourceEmbeddingState.COMPLETED => Color.Success,
-        _ => Color.Default,
+        _ => status.Health switch
+        {
+            DataSourceEmbeddingHealth.ERROR => Color.Error,
+            DataSourceEmbeddingHealth.WARNING => Color.Warning,
+            DataSourceEmbeddingHealth.HEALTHY => Color.Success,
+            _ => Color.Default,
+        },
     };
 
     /// <summary>
@@ -229,6 +294,10 @@ public partial class Embeddings : MSGComponentBase
 
     private sealed record FailureGroup(FailureCause Cause, string EmbeddingProviderName, IReadOnlyList<DataSourceEmbeddingFailure> Failures);
 
+    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color, bool NeedsDataSourceSettings, bool NeedsTranscriptionSettings);
+
+    private sealed record IgnoredFileGroup(IgnoredFileCause Cause, IReadOnlyList<DataSourceEmbeddingIgnoredFile> Files);
+
     /// <summary>
     /// Puts the failures of a data source into one group per cause, the most pressing one first.
     /// </summary>
@@ -238,7 +307,7 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private IReadOnlyList<FailureGroup> GetFailureGroups(DataSourceEmbeddingStatus status) => status.Failures
         .GroupBy(this.GetFailureCause)
-        .Select(group => new FailureGroup(group.Key, GetEmbeddingProviderName(group), group.OrderBy(failure => failure.FilePath, StringComparer.OrdinalIgnoreCase).ToList()))
+        .Select(group => new FailureGroup(group.Key, GetEmbeddingProviderName(group), group.OrderBy(failure => IsMailbox(status) ? GetMailName(failure) : failure.DocumentKey, StringComparer.OrdinalIgnoreCase).ToList()))
         .OrderBy(group => group.Cause.Priority)
         .ThenByDescending(group => group.Failures.Count)
         .ThenBy(group => group.Cause.Title, StringComparer.OrdinalIgnoreCase)
@@ -264,8 +333,9 @@ public partial class Embeddings : MSGComponentBase
         var hasCauseName = !string.IsNullOrWhiteSpace(causeName);
         var title = hasCauseName ? causeName : T("Other cause");
 
+        var showsMessagePerFile = !hasCauseName || failure.ExtractionCode is FileExtractionErrorCode.MEDIA_PROCESSING_FAILED;
         return failure.IsPermanent
-            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, !hasCauseName)
+            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, showsMessagePerFile)
             : new FailureCause(2, title, Icons.Material.Filled.ReportProblem, Color.Warning, false, false, !hasCauseName);
     }
 
@@ -274,6 +344,78 @@ public partial class Embeddings : MSGComponentBase
         .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name)) ?? string.Empty;
 
     private static string GetGroupHeader(FailureGroup group) => $"{group.Cause.Title} ({group.Failures.Count})";
+
+    private IReadOnlyList<IgnoredFileGroup> GetIgnoredFileGroups(DataSourceEmbeddingStatus status) => status.IgnoredFiles
+        .GroupBy(file => this.GetIgnoredFileCause(status, file))
+        .Select(group => new IgnoredFileGroup(group.Key, group.OrderBy(file => file.FilePath, StringComparer.OrdinalIgnoreCase).ToList()))
+        .OrderBy(group => group.Cause.Priority)
+        .ThenByDescending(group => group.Files.Count)
+        .ThenBy(group => group.Cause.Title, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    private IgnoredFileCause GetIgnoredFileCause(DataSourceEmbeddingStatus status, DataSourceEmbeddingIgnoredFile file) => file.Reason switch
+    {
+        DataSourceEmbeddingIgnoreReason.TOO_LARGE => new IgnoredFileCause(
+            0,
+            T("Too large"),
+            string.Format(T("These files match the data source patterns, but they are larger than its limit of {0}. You can raise the limit in the expert settings of the data source."), this.GetMaxFileSizeText(status)),
+            Icons.Material.Filled.Straighten,
+            Color.Warning,
+            true,
+            false),
+        DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING => new IgnoredFileCause(
+            0,
+            T("No transcription provider"),
+            T("These audio or video files match the data source patterns, but no transcription provider is configured that AI Studio may use. Once you choose one in the settings, AI Studio transcribes the files and adds their text to the index."),
+            Icons.Material.Filled.MicOff,
+            Color.Warning,
+            false,
+            true),
+        DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_NOT_ALLOWED => new IgnoredFileCause(
+            0,
+            T("Transcription provider not allowed"),
+            T("These audio or video files match the data source patterns, but your transcription provider does not meet the confidence level this data source requires. Choose another transcription provider, or change the confidence level of the data source."),
+            Icons.Material.Filled.GppBad,
+            Color.Warning,
+            true,
+            true),
+        DataSourceEmbeddingIgnoreReason.IMAGE_NOT_SUPPORTED => new IgnoredFileCause(
+            1,
+            FileTypes.IMAGE.FilterName,
+            T("These image files match the data source patterns, but images cannot currently be added to the index."),
+            Icons.Material.Filled.ImageNotSupported,
+            Color.Default,
+            false,
+            false),
+        _ => throw new ArgumentOutOfRangeException(nameof(file.Reason), file.Reason, null),
+    };
+
+    /// <remarks>
+    /// Read from the settings rather than carried by the status: the user who raised the limit
+    /// right away reads the new one, and the next run, which the change starts, settles the list.
+    /// </remarks>
+    private string GetMaxFileSizeText(DataSourceEmbeddingStatus status)
+    {
+        var maxFileSizeMegabytes = this.SettingsManager.ConfigurationData.DataSources
+            .OfType<DataSourceLocalDirectory>()
+            .Where(dataSource => dataSource.Id == status.DataSourceId)
+            .Select(dataSource => dataSource.EffectiveMaxFileSizeMegabytes)
+            .DefaultIfEmpty(FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES)
+            .First();
+
+        return FolderFileSelection.MegabytesToBytes(maxFileSizeMegabytes).FileSize();
+    }
+
+    private static string GetIgnoredGroupHeader(IgnoredFileGroup group) => $"{group.Cause.Title} ({group.Files.Count})";
+
+    private string GetFilePatternExclusionGroupText(DataSourceEmbeddingFilePatternGroup group) => string.IsNullOrWhiteSpace(group.FileType)
+        ? string.Format(T("Files without an extension ({0})"), this.FormatNumber(group.FileCount))
+        : string.Format(T("{0} files ({1})"), group.FileType, this.FormatNumber(group.FileCount));
+
+    /// <remarks>
+    /// Written the way the exclusion list names folders, so the entry which caught a folder is easy to find.
+    /// </remarks>
+    private string GetExcludedFolderGroupText(DataSourceEmbeddingExcludedFolderGroup group) => $"{group.FolderName}{FileExclusions.FOLDER_SUFFIX} ({this.FormatNumber(group.FolderCount)})";
 
     private static string GetFileName(string filePath)
     {
@@ -285,9 +427,21 @@ public partial class Embeddings : MSGComponentBase
 
     /// <remarks>
     /// A failure which was not about one file, such as a folder which is gone, carries the name of
-    /// the data source instead of a path. There is nothing to show for those.
+    /// the data source instead of a path. There is nothing to show for those, nor for a mail, which
+    /// lies on a server.
     /// </remarks>
-    private static bool CanShowInFileManager(DataSourceEmbeddingFailure failure) => !string.IsNullOrWhiteSpace(failure.FilePath) && Path.IsPathRooted(failure.FilePath);
+    private static bool CanShowInFileManager(DataSourceEmbeddingStatus status, DataSourceEmbeddingFailure failure) => !IsMailbox(status) && !string.IsNullOrWhiteSpace(failure.DocumentKey) && Path.IsPathRooted(failure.DocumentKey);
+
+    private static bool CanShowInFileManager(DataSourceEmbeddingStatus status, string filePath) => !IsMailbox(status) && !string.IsNullOrWhiteSpace(filePath) && Path.IsPathRooted(filePath);
+
+    /// <summary>
+    /// How a failed mail is called in the list: by its subject, which is all the user knows it by.
+    /// </summary>
+    /// <remarks>
+    /// The key of a mail is a hash, which means nothing to anybody. A failure which was not about
+    /// one mail carries the name of the mailbox instead.
+    /// </remarks>
+    private static string GetMailName(DataSourceEmbeddingFailure failure) => string.IsNullOrWhiteSpace(failure.DisplayName) ? failure.DocumentKey : failure.DisplayName;
 
     /// <summary>
     /// Opens the file browser of the system and selects the file in it.
@@ -297,12 +451,14 @@ public partial class Embeddings : MSGComponentBase
     /// file has to be opened, replaced, or run through an OCR. This is the same way out the log
     /// viewer offers for the log files.
     /// </remarks>
-    private async Task ShowInFileManager(DataSourceEmbeddingFailure failure)
+    private Task ShowInFileManager(DataSourceEmbeddingFailure failure) => this.ShowInFileManager(failure.DocumentKey);
+
+    private async Task ShowInFileManager(string filePath)
     {
         OpenPathResponse response;
         try
         {
-            response = await this.RustService.TryOpenPathInRuntimeFileManager(failure.FilePath);
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(filePath);
         }
         catch (Exception e)
         {
@@ -326,7 +482,9 @@ public partial class Embeddings : MSGComponentBase
     {
         return this.DataSourceEmbeddingService.CanRefreshDataSource(status.DataSourceId) &&
                status is { VectorStoreUnreadable: false, State: not DataSourceEmbeddingState.RUNNING and not DataSourceEmbeddingState.QUEUED } &&
-               (status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0);
+               (status.State is DataSourceEmbeddingState.FAILED
+                || status.FailedDocuments > 0
+                || status.NeedsTranscriptionProvider);
     }
 
     /// <remarks>
@@ -341,17 +499,64 @@ public partial class Embeddings : MSGComponentBase
     }
 
     /// <summary>
-    /// Takes the user to the settings, where the embedding providers are configured.
+    /// Takes the user to the settings, where embedding and transcription providers are configured.
     /// </summary>
     /// <remarks>
-    /// Offered only for the failures a setting fixes, such as a rejected API key. Reading what
-    /// went wrong and then having to find the right page is where people give up.
+    /// Offered only for a problem a provider setting fixes. Reading what went wrong and then
+    /// having to find the right page is where people give up.
     /// </remarks>
-    private void OpenEmbeddingProviderSettings() => this.NavigationManager.NavigateTo(Routes.SETTINGS);
+    private void OpenProviderSettings() => this.NavigationManager.NavigateTo(Routes.SETTINGS);
 
     private async Task RefreshDataSource(DataSourceEmbeddingStatus status)
     {
         await this.DataSourceEmbeddingService.RetryDataSourceAsync(status.DataSourceId);
+        this.ReloadStatuses();
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    /// <summary>
+    /// Opens the settings of a mailbox, e.g. to enter the current password after a refused sign-in.
+    /// </summary>
+    /// <remarks>
+    /// Saving them syncs the mailbox right away. With a new password, that sync is allowed to sign
+    /// in. The page reloads through CONFIGURATION_CHANGED, which it receives like everybody else.
+    /// </remarks>
+    private async Task ChangeMailboxSettings(DataSourceEmbeddingStatus status)
+    {
+        if (await MailboxEditing.EditAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, status.DataSourceId))
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    /// <remarks>
+    /// Not offered for a data source the organization manages: its settings cannot be edited.
+    /// </remarks>
+    private bool CanEditDataSource(DataSourceEmbeddingStatus status) => DataSourceEditing.CanEdit(this.SettingsManager, status.DataSourceId);
+
+    /// <summary>
+    /// Opens the settings of a data source, e.g. to select the new location of a moved folder.
+    /// </summary>
+    /// <remarks>
+    /// Saving them indexes the data source right away, and that run reconnects what is already
+    /// stored to the new location. The page reloads through CONFIGURATION_CHANGED, which it
+    /// receives like everybody else.
+    /// </remarks>
+    private async Task EditDataSource(DataSourceEmbeddingStatus status)
+    {
+        if (await DataSourceEditing.EditAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, status.DataSourceId))
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    /// <summary>
+    /// Agrees to the removal a mailbox held back, for the very number the user read.
+    /// </summary>
+    private async Task ApproveMailRemoval(DataSourceEmbeddingStatus status)
+    {
+        if (status.PendingRemovalCount is not { } removalCount)
+            return;
+
+        if (!await this.DataSourceEmbeddingService.ApprovePendingMailRemovalAsync(status.DataSourceId, removalCount))
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.PlaylistRemove, T("Your agreement could not be recorded: either the number of mails to remove changed in the meantime, or the index cannot be reached. AI Studio asks you again after the next sync.")));
+
         this.ReloadStatuses();
         await this.InvokeAsync(this.StateHasChanged);
     }

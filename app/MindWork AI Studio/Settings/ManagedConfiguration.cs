@@ -15,6 +15,15 @@ public static partial class ManagedConfiguration
     private static ILogger Log => Program.LOGGER_FACTORY.CreateLogger(nameof(ManagedConfiguration));
 
     /// <summary>
+    /// All registered settings, in no particular order.
+    /// </summary>
+    /// <remarks>
+    /// The data classes register their settings when the settings data is created. Once it exists,
+    /// this covers every managed setting, whatever its type.
+    /// </remarks>
+    internal static IEnumerable<ConfigMetaBase> RegisteredSettings => METADATA.Values.OfType<ConfigMetaBase>();
+
+    /// <summary>
     /// Attempts to retrieve the configuration metadata for a given configuration selection and
     /// property expression (enum-based).
     /// </summary>
@@ -258,6 +267,74 @@ public static partial class ManagedConfiguration
     }
 
     /// <summary>
+    /// Attempts to retrieve the configuration metadata for a setting which maps enum keys to texts.
+    /// </summary>
+    /// <remarks>
+    /// When no configuration metadata is found, it returns a NoConfig instance with the default
+    /// value set to an empty dictionary. This allows the caller to handle the absence of configuration
+    /// gracefully. In such cases, the return value of the method will be false.
+    /// </remarks>
+    /// <param name="configSelection">The expression to select the configuration class.</param>
+    /// <param name="propertyExpression">The expression to select the property within the
+    /// configuration class.</param>
+    /// <param name="configMeta">The output parameter that will hold the configuration metadata
+    /// if found.</param>
+    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
+    /// <typeparam name="TKey">The enum type of the dictionary keys.</typeparam>
+    /// <returns>True if the configuration metadata was found, otherwise false.</returns>
+    public static bool TryGet<TClass, TKey>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, Dictionary<TKey, string>>> propertyExpression, out ConfigMeta<TClass, Dictionary<TKey, string>> configMeta)
+        where TKey : struct, Enum
+    {
+        var configPath = Path(configSelection, propertyExpression);
+        if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, Dictionary<TKey, string>> meta)
+        {
+            meta.RestoreLockedConfiguration();
+            configMeta = meta;
+            return true;
+        }
+
+        configMeta = new NoConfig<TClass, Dictionary<TKey, string>>(configSelection, propertyExpression)
+        {
+            Default = new Dictionary<TKey, string>(),
+        };
+        return false;
+    }
+
+    /// <summary>
+    /// Attempts to retrieve the configuration metadata for a setting which maps numbers to enum values.
+    /// </summary>
+    /// <remarks>
+    /// When no configuration metadata is found, it returns a NoConfig instance with the default
+    /// value set to an empty dictionary. This allows the caller to handle the absence of configuration
+    /// gracefully. In such cases, the return value of the method will be false.
+    /// </remarks>
+    /// <param name="configSelection">The expression to select the configuration class.</param>
+    /// <param name="propertyExpression">The expression to select the property within the
+    /// configuration class.</param>
+    /// <param name="configMeta">The output parameter that will hold the configuration metadata
+    /// if found.</param>
+    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
+    /// <typeparam name="TValue">The enum type of the dictionary values.</typeparam>
+    /// <returns>True if the configuration metadata was found, otherwise false.</returns>
+    public static bool TryGet<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, Dictionary<int, TValue>>> propertyExpression, out ConfigMeta<TClass, Dictionary<int, TValue>> configMeta)
+        where TValue : struct, Enum
+    {
+        var configPath = Path(configSelection, propertyExpression);
+        if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, Dictionary<int, TValue>> meta)
+        {
+            meta.RestoreLockedConfiguration();
+            configMeta = meta;
+            return true;
+        }
+
+        configMeta = new NoConfig<TClass, Dictionary<int, TValue>>(configSelection, propertyExpression)
+        {
+            Default = new Dictionary<int, TValue>(),
+        };
+        return false;
+    }
+
+    /// <summary>
     /// Checks whether a configuration plugin may manage a setting, or whether that setting belongs
     /// to the IT department of an organization.
     /// </summary>
@@ -290,7 +367,7 @@ public static partial class ManagedConfiguration
     /// <summary>
     /// Determines the configuration plugin which currently manages a setting, if any.
     /// </summary>
-    private static Guid GetSettingOwner(ConfigMetaBase configMeta)
+    internal static Guid GetSettingOwner(ConfigMetaBase configMeta)
     {
         if (configMeta.IsLocked && configMeta.LockedByConfigPluginId != Guid.Empty)
             return configMeta.LockedByConfigPluginId;
@@ -325,11 +402,8 @@ public static partial class ManagedConfiguration
         var wasChanged = false;
         var registeredSettingNames = new HashSet<string>(StringComparer.Ordinal);
 
-        foreach (var config in METADATA.Values)
+        foreach (var configMeta in RegisteredSettings)
         {
-            if (config is not ConfigMetaBase configMeta)
-                continue;
-
             registeredSettingNames.Add(configMeta.SettingName);
 
             //

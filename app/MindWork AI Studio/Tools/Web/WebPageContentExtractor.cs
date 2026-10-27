@@ -386,15 +386,10 @@ internal static class WebPageContentExtractor
         if (node.NodeType is HtmlNodeType.Comment || HARD_REMOVED_ELEMENT_NAMES.Contains(node.Name))
             return true;
 
-        if (node.Attributes["hidden"] is not null ||
-            node.GetAttributeValue("aria-hidden", string.Empty).Equals("true", StringComparison.OrdinalIgnoreCase))
+        if (HtmlContentRules.IsHiddenByMarkup(node))
             return true;
 
         if (HARD_REMOVED_ROLES.Contains(node.GetAttributeValue("role", string.Empty)))
-            return true;
-
-        var style = string.Concat(node.GetAttributeValue("style", string.Empty).Where(x => !char.IsWhiteSpace(x))).ToLowerInvariant();
-        if (style.Contains("display:none", StringComparison.Ordinal) || style.Contains("visibility:hidden", StringComparison.Ordinal))
             return true;
 
         return GetClassOrIdTokens(node).Any(REMOVED_CLASS_OR_ID_TOKENS.Contains);
@@ -466,15 +461,13 @@ internal static class WebPageContentExtractor
         if (attribute is null || string.IsNullOrWhiteSpace(attribute.Value))
             return;
 
-        var value = WebUtility.HtmlDecode(attribute.Value).Trim();
-        if (value.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase) ||
-            value.StartsWith("vbscript:", StringComparison.OrdinalIgnoreCase) ||
-            value.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        if (HtmlContentRules.IsScriptOrDataUrl(attribute.Value))
         {
             node.Attributes.Remove(attribute);
             return;
         }
 
+        var value = WebUtility.HtmlDecode(attribute.Value).Trim();
         if (Uri.TryCreate(baseUrl, value, out var absoluteUrl) && absoluteUrl is { Scheme: "http" or "https" })
             attribute.Value = absoluteUrl.ToString();
     }

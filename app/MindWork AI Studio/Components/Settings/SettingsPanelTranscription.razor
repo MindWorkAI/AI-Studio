@@ -1,6 +1,7 @@
 @using AIStudio.Provider
 @using AIStudio.Settings
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.PluginSystem
 @inherits SettingsPanelProviderBase
 
 @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
@@ -40,6 +41,12 @@
 
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
+                        @if (this.SettingsManager.IsProviderProhibited(context.UsedLLMProvider))
+                        {
+                            <MudTooltip Text="@T("The use of this transcription provider has been prohibited by your organization.")">
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Block" Disabled="true"/>
+                            </MudTooltip>
+                        }
                         @if (context.IsTrustedForDataSourceSecurityChecks(this.SettingsManager))
                         {
                             <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted transcription provider is trusted for data source security checks.") : T("This transcription provider is trusted by your organization for data source security checks."))">
@@ -83,6 +90,9 @@
             </MudText>
         }
 
-        <LockableButton Text="@T("Add transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddTranscriptionProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddTranscriptionProvider" Class="mt-3" />
+        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+            <LockableButton Text="@T("Add transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddTranscriptionProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddTranscriptionProvider" Class="flex-grow-0" NoMargin="true" />
+            <LockableButton Text="@T("Import transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportTranscriptionProvider" ButtonVariant="Variant.Outlined" Class="flex-grow-0" NoMargin="true" />
+        </MudStack>
     </ExpansionPanel>
 }

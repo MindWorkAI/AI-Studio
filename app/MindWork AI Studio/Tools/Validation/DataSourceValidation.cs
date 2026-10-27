@@ -3,12 +3,17 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Validation;
 
 public sealed class DataSourceValidation
 {
     public const int MAX_NAME_LENGTH = 40;
+
+    public const int MIN_ATTACHMENT_SIZE_MEGABYTES = 1;
+
+    public const int MAX_ATTACHMENT_SIZE_MEGABYTES = 2048;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceValidation).Namespace, nameof(DataSourceValidation));
 
@@ -25,6 +30,8 @@ public sealed class DataSourceValidation
     public Func<SecurityRequirements?> GetSecurityRequirements { get; init; } = () => null;
 
     public Func<bool> GetSelectedCloudEmbedding { get; init; } = () => false;
+
+    public Func<bool> GetSelectedCloudTranscription { get; init; } = () => false;
 
     public Func<EmbeddingProvider?> GetSelectedEmbeddingProvider { get; init; } = () => null;
 
@@ -152,9 +159,14 @@ public sealed class DataSourceValidation
         
         if(!File.Exists(filePath))
             return TB("The file does not exist. Please select a valid file.");
+
+        if(!FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO))
+            return TB("The selected file is not a supported document, readable text file, audio file, or video file.");
         
         return null;
     }
+
+    public string? ValidateFilePatterns(string patterns) => FileNamePatterns.Validate(patterns);
 
     public string? ValidateEmbeddingId(string embeddingId)
     {
@@ -167,7 +179,21 @@ public sealed class DataSourceValidation
     public string? ValidateEmbeddingProviderAccess(string embeddingId)
     {
         var embeddingIssue = this.ValidateEmbeddingId(embeddingId);
-        return embeddingIssue ?? this.ValidateSelectedEmbeddingProviderAccess();
+        if(embeddingIssue is not null)
+            return embeddingIssue;
+
+        //
+        // An id which matches no provider belongs to one which was deleted since. Saved like this, the
+        // data source keeps pointing at a provider nobody can reach, and nothing of it is embedded:
+        //
+        if(this.GetSelectedEmbeddingProvider() is not { } selectedEmbedding)
+            return TB("The embedding provider of this data source no longer exists. Please select another one.");
+
+        // Saved like this, nothing of the data source would ever be embedded:
+        if(this.GetSettingsManager() is { } settingsManager && settingsManager.IsProviderProhibited(selectedEmbedding.UsedLLMProvider))
+            return TB("The use of this embedding provider has been prohibited by your organization. Please select a different embedding provider.");
+
+        return this.ValidateSelectedEmbeddingProviderAccess();
     }
 
     public string? ValidateDataSourceConfidenceLevel(ConfidenceLevel confidenceLevel)
@@ -178,8 +204,69 @@ public sealed class DataSourceValidation
         return this.ValidateSelectedEmbeddingProviderAccess();
     }
 
+    public string? ValidateMailboxConfidenceLevel(ConfidenceLevel confidenceLevel)
+    {
+        if(confidenceLevel is ConfidenceLevel.NONE)
+            return TB("Please select a required provider confidence level.");
+
+        if(!confidenceLevel.IsAllowedMailboxConfidence())
+            return string.Format(TB("A mailbox requires a provider confidence level from '{0}' to '{1}'."), ConfidenceLevel.VERY_LOW.GetName(), ConfidenceLevel.HIGH.GetName());
+
+        return this.ValidateSelectedEmbeddingProviderAccess();
+    }
+
+    public static string? ValidateMailboxHost(string host)
+    {
+        if(string.IsNullOrWhiteSpace(host))
+            return TB("Please enter the host of the IMAP server, e.g., imap.example.org.");
+
+        if(Uri.CheckHostName(host.Trim()) is not (UriHostNameType.Dns or UriHostNameType.IPv4 or UriHostNameType.IPv6))
+            return TB("Please enter the host alone, without a protocol, a port, or a path, e.g., imap.example.org.");
+
+        return null;
+    }
+
+    public static string? ValidateMailboxTransportSecurity(MailboxTransportSecurity transportSecurity)
+    {
+        if(transportSecurity is MailboxTransportSecurity.UNKNOWN)
+            return TB("Please select how the connection to the server is encrypted.");
+
+        return null;
+    }
+
+    public static string? ValidateMailboxUsername(string username)
+    {
+        if(string.IsNullOrWhiteSpace(username))
+            return TB("The username must not be empty.");
+
+        return null;
+    }
+
+    public string? ValidateMailboxPassword(string password)
+    {
+        var secretStorageIssue = this.GetSecretStorageIssue();
+        if(!string.IsNullOrWhiteSpace(secretStorageIssue))
+            return secretStorageIssue;
+
+        if(string.IsNullOrEmpty(password))
+            return TB("Please enter your password.");
+
+        return null;
+    }
+
+    public static string? ValidateMailboxMaxAttachmentSize(int megabytes)
+    {
+        if(megabytes is < MIN_ATTACHMENT_SIZE_MEGABYTES or > MAX_ATTACHMENT_SIZE_MEGABYTES)
+            return string.Format(TB("The size must be between {0} and {1} MB."), MIN_ATTACHMENT_SIZE_MEGABYTES, MAX_ATTACHMENT_SIZE_MEGABYTES);
+
+        return null;
+    }
+
     public string? ValidateUserAcknowledgedCloudEmbedding(bool value)
     {
+        if(this.GetSelectedCloudTranscription() && !value)
+            return TB("Please acknowledge that you are aware of the cloud transcription implications.");
+
         if(this.GetSelectedCloudEmbedding() && !value)
             return TB("Please acknowledge that you are aware of the cloud embedding implications.");
         

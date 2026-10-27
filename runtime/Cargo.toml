@@ -24,14 +24,16 @@ tokio-stream = { version = "0.1.18", features = ["sync"] }
 futures = "0.3.32"
 async-stream = "0.3.6"
 flexi_logger = "0.31.9"
+chrono = "0.4.44"
 dirs = "6.0.0"
 log = { version = "0.4.33", features = ["kv"] }
 once_cell = "1.21.4"
 axum = { version = "0.8.9", features = ["http2", "json", "query", "tokio"] }
 axum-server = { version = "0.8.0", features = ["tls-rustls"] }
-rustls = { version = "0.23.28", default-features = false, features = ["aws_lc_rs"] }
+rustls = { version = "0.23.45", default-features = false, features = ["aws_lc_rs"] }
 rand = "0.10.2"
 rand_chacha = "0.10.0"
+subtle = "2.6.1"
 base64 = "0.22.1"
 aes = "0.9.1"
 cbc = "0.2.1"
@@ -75,8 +77,12 @@ qdrant-edge = "0.8.0"
 regex = "1.13.1"
 aho-corasick = "1.1.5"
 toml = "1.1.4"
-image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp", "gif", "bmp", "tiff"] }
 tokenizers = "0.23.1"
+
+[dev-dependencies]
+# Sends requests through the runtime API router in tests, without starting a server.
+tower = { version = "0.5.2", features = ["util"] }
 
 [patch.crates-io]
 # Issue: This repo was not updated since 2020. The rand crate was outdated. We patched it to use a newer version of rand.
@@ -93,8 +99,8 @@ windows-collections = "=0.2.0"
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.0", features = ["keychain"] }
 objc2 = "0.6.3"
-objc2-app-kit = { version = "0.3.2", features = ["NSResponder", "NSSharingService", "NSView"] }
-objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSGeometry", "NSString", "NSURL"] }
+objc2-app-kit = { version = "0.3.2", features = ["NSResponder", "NSSharingService", "NSView", "NSWorkspace"] }
+objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSBundle", "NSGeometry", "NSString", "NSURL"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 ashpd = { version = "0.13.12", default-features = false, features = ["tokio", "open_uri", "global_shortcuts"] }
@@ -146,4 +152,41 @@ opt-level = 3
 opt-level = 3
 
 [profile.dev.package.memchr]
+opt-level = 3
+
+# Preparing images is CPU-heavy as well: AI Studio decodes a picture, scales it down to 2560 pixels,
+# and encodes it again, both for the AI and for the slides of the Slide Assistant. A photo of
+# 2912 × 1632 pixels saved as PNG takes about 0.12 seconds in a release build, 6.6 seconds in a
+# development build without this, and about 0.5 seconds with it; almost all of that is scaling and
+# encoding. `image` does the scaling; `png`, `fdeflate`, `flate2`, `miniz_oxide`, `crc32fast`,
+# and `simd-adler32` read and write PNG files; `zune-jpeg` and `zune-core` read JPEG files; and
+# `image-webp` reads and writes WebP files.
+[profile.dev.package.image]
+opt-level = 3
+
+[profile.dev.package.png]
+opt-level = 3
+
+[profile.dev.package.fdeflate]
+opt-level = 3
+
+[profile.dev.package.flate2]
+opt-level = 3
+
+[profile.dev.package.miniz_oxide]
+opt-level = 3
+
+[profile.dev.package.crc32fast]
+opt-level = 3
+
+[profile.dev.package.simd-adler32]
+opt-level = 3
+
+[profile.dev.package.zune-jpeg]
+opt-level = 3
+
+[profile.dev.package.zune-core]
+opt-level = 3
+
+[profile.dev.package.image-webp]
 opt-level = 3

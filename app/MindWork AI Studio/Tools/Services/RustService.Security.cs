@@ -27,7 +27,8 @@ public sealed partial class RustService
     /// </summary>
     /// <remarks>
     /// File content does not go through here: the runtime filters it while it streams the file.
-    /// This is the path for content the app fetched itself, i.e. web pages and retrieval contexts.
+    /// This is the path for content the app holds itself, e.g. web pages, retrieval contexts, and
+    /// the transcript of a recording loaded into the field of an assistant.
     /// </remarks>
     /// <param name="text">The content to filter.</param>
     /// <returns>The filtered content and what was found or null when the runtime could not be reached.</returns>

@@ -42,7 +42,25 @@ public sealed class Data
     /// A collection of data sources configured.
     /// </summary>
     public List<IDataSource> DataSources { get; set; } = [];
-    
+
+    /// <summary>
+    /// A collection of mailboxes configured.
+    /// </summary>
+    /// <remarks>
+    /// A list of its own rather than a part of DataSources: classic RAG, Semantic Search and the
+    /// agents read DataSources, and none of them is meant to see a mailbox. It also keeps the
+    /// settings readable for older versions of AI Studio, so the settings version stays the same.
+    /// An older version skips a property it does not know, but would fail to read the whole file
+    /// over a data source type it does not know. It drops the list, though, the next time it stores
+    /// the settings. The numbers come from NextDataSourceNum, which the data sources use as well.
+    /// </remarks>
+    public List<DataSourceMailbox> Mailboxes { get; set; } = [];
+
+    /// <summary>
+    /// Settings which apply to all mailboxes.
+    /// </summary>
+    public DataMailboxes MailboxSettings { get; init; } = new(x => x.MailboxSettings);
+
     /// <summary>
     /// List of configured profiles.
     /// </summary>
@@ -97,6 +115,16 @@ public sealed class Data
     /// not listed here: those are decided live and never touch the list of enabled plugins.
     /// </remarks>
     public List<string> AppliedEnterpriseAssistantActivations { get; set; } = [];
+
+    /// <summary>
+    /// Whether AI Studio already stored the chats and the settings once more, so that every path below
+    /// the data directory in them is relative.
+    /// </summary>
+    /// <remarks>
+    /// Compatibility shim, see documentation/compatibility-shims/2026-10-relative-data-paths.md.
+    /// Remove after 2027-04-14.
+    /// </remarks>
+    public bool StoredDataPathsAreRelative { get; set; }
 
     /// <summary>
     /// The next provider number to use.
@@ -178,7 +206,12 @@ public sealed class Data
 
     public DataEMail EMail { get; init; } = new();
     
-    public DataSlideBuilder SlideBuilder { get; init; } = new();
+    public DataSlideBuilder SlideBuilder { get; init; } = new(x => x.SlideBuilder);
+
+    /// <summary>
+    /// Gets the managed Assistant Builder defaults.
+    /// </summary>
+    public DataAssistantBuilder AssistantBuilder { get; init; } = new(x => x.AssistantBuilder);
 
     /// <summary>
     /// Gets the managed Visual Briefing Assistant defaults.

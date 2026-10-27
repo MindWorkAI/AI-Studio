@@ -59,11 +59,34 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task AToolWhosePreviewIsSwitchedOff()
+    {
+        await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition()) { IsAvailable = false }), ToolCapableProvider(), ToolOfferBlockReason.NOT_AVAILABLE_HERE, "The tool belongs to a preview the user did not switch on.");
+    }
+
+    [Test]
     public async Task AToolSwitchedOffByTheOrganization()
     {
         this.SettingsManager.ConfigurationData.Tools.DisabledToolIds.Add(TOOL_ID);
 
         await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition())), ToolCapableProvider(), ToolOfferBlockReason.TOOL_SWITCHED_OFF, "The organization turned this one tool off.");
+    }
+
+    [Test]
+    public async Task AToolSwitchedOffByTheUser()
+    {
+        this.SettingsManager.ConfigurationData.Tools.UserDisabledToolIds.Add(TOOL_ID);
+
+        await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition())), ToolCapableProvider(), ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER, "The user never needs this tool and switched it off.");
+    }
+
+    [Test]
+    public async Task TheOrganizationComesBeforeTheUser()
+    {
+        this.SettingsManager.ConfigurationData.Tools.DisabledToolIds.Add(TOOL_ID);
+        this.SettingsManager.ConfigurationData.Tools.UserDisabledToolIds.Add(TOOL_ID);
+
+        await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition())), ToolCapableProvider(), ToolOfferBlockReason.TOOL_SWITCHED_OFF, "Switching the tool on again would not help the user, so the organization is the reason which counts.");
     }
 
     [Test]
@@ -81,7 +104,7 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
     [Test]
     public async Task ARaisedRequirementCountsAsWell()
     {
-        this.SettingsManager.SetMinimumProviderConfidenceForTool(TOOL_ID, ConfidenceLevel.HIGH, ConfidenceLevel.NONE);
+        this.SettingsManager.SetMinimumProviderConfidence([TOOL_ID], ConfidenceLevel.HIGH, ConfidenceLevel.NONE);
 
         await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition())), LessTrustedProvider(), ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW, "The tool asks for nothing itself, but its requirement was raised in the settings.");
     }

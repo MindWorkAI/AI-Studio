@@ -1,0 +1,11 @@
+@inherits MSGComponentBase
+
+@* The name takes the free width, so the buttons stand right. *@
+<div class="file-dialog-title">
+    <MudText Typo="Typo.h6" Class="flex-grow-1">
+        @this.Title
+    </MudText>
+
+    @* Opening a file belongs to the bar above its content; a web page has no such bar, so it opens from here: *@
+    <FileActions Path="@this.Path" ShowOpen="@this.OpensWebPages" WarnIfMissing="@this.WarnIfMissing" TooltipPlacement="Placement.Bottom"/>
+</div>

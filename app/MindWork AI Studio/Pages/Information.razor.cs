@@ -102,7 +102,7 @@ public partial class Information : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// The vector store names the version from the build metadata, which is what this page always
-    /// showed. The index store names the one its client read from the running database instead:
+    /// showed. The SQLite stores name the one their client read from the running database instead:
     /// there, which SQLite build actually got loaded is the whole point of showing it.
     /// </remarks>
     private string DatabaseHeaderText(DatabaseSection section)
@@ -110,6 +110,7 @@ public partial class Information : MSGComponentBase
         var nameLabel = section.Role switch
         {
             DatabaseRole.VECTOR_STORE => T("Vector database"),
+            DatabaseRole.PROVENANCE_STORE => T("Provenance database"),
             _ => T("Index database"),
         };
 
@@ -163,12 +164,15 @@ public partial class Information : MSGComponentBase
     /// Everything one database block on this page needs to show itself.
     /// </summary>
     /// <remarks>
-    /// Both blocks work the same way, so they share their state and their methods and differ only
-    /// in their role. Whoever adds a third database adds one field here, not another set of methods.
+    /// The blocks work the same way, so they share their state, their methods, and their markup, and
+    /// differ only in their role and icon. Whoever adds another database adds one entry to
+    /// databaseSections, not another set of methods.
     /// </remarks>
-    private sealed class DatabaseSection(DatabaseRole role)
+    private sealed class DatabaseSection(DatabaseRole role, string icon)
     {
         public DatabaseRole Role => role;
+
+        public string Icon => icon;
 
         public DatabaseClient? Client { get; set; }
 
@@ -179,8 +183,15 @@ public partial class Information : MSGComponentBase
         public CancellationTokenSource? RefreshCancellationTokenSource { get; set; }
     }
 
-    private readonly DatabaseSection vectorStoreSection = new(DatabaseRole.VECTOR_STORE);
-    private readonly DatabaseSection indexStoreSection = new(DatabaseRole.INDEX_STORE);
+    /// <summary>
+    /// The database blocks, in the order this page shows them.
+    /// </summary>
+    private readonly IReadOnlyList<DatabaseSection> databaseSections =
+    [
+        new(DatabaseRole.VECTOR_STORE, Icons.Material.Outlined.Storage),
+        new(DatabaseRole.INDEX_STORE, Icons.Material.Outlined.ManageSearch),
+        new(DatabaseRole.PROVENANCE_STORE, Icons.Material.Outlined.Source),
+    ];
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
     
@@ -229,14 +240,11 @@ public partial class Information : MSGComponentBase
         
         // The index store goes first: the vector store asks it for the number of stored vectors,
         // and this way that client is already cached when it does.
-        await this.RefreshDatabaseInfo(this.indexStoreSection, CancellationToken.None);
-        await this.RefreshDatabaseInfo(this.vectorStoreSection, CancellationToken.None);
+        foreach (var section in this.databaseSections.OrderByDescending(section => section.Role is DatabaseRole.INDEX_STORE))
+            await this.RefreshDatabaseInfo(section, CancellationToken.None);
 
-        if (this.indexStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
-            this.StartShortDatabaseRefreshLoop(this.indexStoreSection);
-
-        if (this.vectorStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
-            this.StartShortDatabaseRefreshLoop(this.vectorStoreSection);
+        foreach (var section in this.databaseSections.Where(section => section.Client?.Status is DatabaseClientStatus.STARTING))
+            this.StartShortDatabaseRefreshLoop(section);
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
@@ -588,8 +596,8 @@ public partial class Information : MSGComponentBase
 
     protected override void DisposeResources()
     {
-        this.CancelDatabaseRefreshLoop(this.vectorStoreSection);
-        this.CancelDatabaseRefreshLoop(this.indexStoreSection);
+        foreach (var section in this.databaseSections)
+            this.CancelDatabaseRefreshLoop(section);
         base.DisposeResources();
     }
 

@@ -29,6 +29,8 @@ public sealed class ToolParameterSchemaBuilder
 
     public ToolParameterSchemaBuilder OptionalInteger(string name, string description) => this.Add(name, "integer", description, isRequired: false);
 
+    public ToolParameterSchemaBuilder OptionalBoolean(string name, string description) => this.Add(name, "boolean", description, isRequired: false);
+
     public ToolParameterSchemaBuilder RequiredEnum(string name, string description, params string[] allowedValues) => this.Add(name, "string", description, isRequired: true, allowedValues);
 
     public ToolParameterSchemaBuilder OptionalEnum(string name, string description, params string[] allowedValues) => this.Add(name, "string", description, isRequired: false, allowedValues);

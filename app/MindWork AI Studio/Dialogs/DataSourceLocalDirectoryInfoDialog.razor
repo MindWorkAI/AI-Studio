@@ -10,6 +10,12 @@
         }
 
         <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("Path")" Value="@this.DataSource.Path" ClipboardTooltipSubject="@T("this path")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.AccountTree" Label="@T("Include subfolders")" Value="@(this.DataSource.IncludeSubdirectories ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether subfolders are included")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.VisibilityOff" Label="@T("Include hidden files and folders")" Value="@(this.DataSource.IncludeHiddenFilesAndFolders ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether hidden files and folders are included")"/>
+        <TextInfoLines Icon="@Icons.Material.Filled.FilterAlt" Label="@T("Files to include")" Value="@this.DataSource.EffectiveFilePatterns" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the file patterns")"/>
+        <TextInfoLines Icon="@Icons.Material.Filled.FolderOff" Label="@T("Excluded folders")" Value="@this.Exclusions.Folders" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the excluded folders")"/>
+        <TextInfoLines Icon="@Icons.Material.Filled.FilterAltOff" Label="@T("Excluded files")" Value="@this.Exclusions.Files" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the excluded files")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.Straighten" Label="@T("Ignore files larger than")" Value="@FolderFileSelection.MegabytesToBytes(this.DataSource.EffectiveMaxFileSizeMegabytes).FileSize()" ClipboardTooltipSubject="@T("the size limit for files")"/>
         @if (!this.IsDirectoryAvailable)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
@@ -27,7 +33,7 @@
         @if (this.IsCloudEmbedding)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                @string.Format(T("The embedding runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud."), this.DataSource.Path)
+                @string.Format(T("The embedding runs in the cloud. Every file this data source selects from the folder '{0}' will be sent to the cloud."), this.DataSource.Path)
             </MudJustifiedText>
         }
         else
@@ -38,18 +44,19 @@
         }
 
         <TextInfoLine Label="@T("Required provider confidence level")" Value="@this.DataSource.ConfidenceLevel.GetName()" ClipboardTooltipSubject="@T("the required provider confidence level")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.Shield" Label="@T("Where a chat may send data after reading this data source")" Value="@this.OutboundDataRestrictionName" ClipboardTooltipSubject="@T("where a chat may send data after reading this data source")"/>
         <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
 
-        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Number of files")" Value="@this.NumberFilesInDirectory" ClipboardTooltipSubject="@T("the number of files in the directory")"/>
-        <TextInfoLines Label="@T("Files list")" MaxLines="14" Value="@this.directoryFilesText" ClipboardTooltipSubject="@T("the files list")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Number of matching files")" Value="@this.NumberFilesInDirectory" ClipboardTooltipSubject="@T("the number of matching files in the directory")"/>
+        <TextInfoLines Label="@T("Matching files")" MaxLines="14" Value="@this.directoryFilesText" ClipboardTooltipSubject="@T("the matching files list")"/>
         @if (this.directorySizeNumFiles > 100)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Warning" Class="mb-3">
-                @string.Format(T("For performance reasons, only the first 100 files are shown. The directory contains {0} files in total."), this.NumberFilesInDirectory)
+                @string.Format(T("For performance reasons, only the first 100 matching files are shown. The configured patterns match {0} files in total."), this.NumberFilesInDirectory)
             </MudJustifiedText>
         }
         
-        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Total directory size")" Value="@this.directorySizeBytes.FileSize()" ClipboardTooltipSubject="@T("the total directory size")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Total size of matching files")" Value="@this.directorySizeBytes.FileSize()" ClipboardTooltipSubject="@T("the total size of matching files")"/>
     </DialogContent>
     <DialogActions>
         @if (this.IsOperationInProgress)

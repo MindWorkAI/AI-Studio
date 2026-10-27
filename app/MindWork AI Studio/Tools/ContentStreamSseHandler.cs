@@ -16,8 +16,8 @@ public static class ContentStreamSseHandler
             case { Content: not null, Metadata: not null }:
                 switch (sseEvent.Metadata)
                 {
-                    case ContentStreamTextMetadata:
-                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);
+                    case ContentStreamTextMetadata textMetadata:
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount, SourceLocation.OnLine(textMetadata.Text?.LineNumber));
 
                     //
                     // The heading tells the AI which page it is reading. The number is handed on
@@ -31,8 +31,12 @@ public static class ContentStreamSseHandler
                                 # Page {pageNumber}
                                 {sseEvent.Content}
 
-                                """, sseEvent.TokenCount, pageNumber > 0 ? pageNumber : null);
+                                """, sseEvent.TokenCount, SourceLocation.OnPage(pageNumber));
 
+                    //
+                    // Row 0 is the heading of a sheet together with the start of its table, which
+                    // is no row of the sheet, cf. SourceLocation.InSheet:
+                    //
                     case ContentStreamSpreadsheetMetadata spreadsheetMetadata:
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
                         var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
@@ -44,7 +48,7 @@ public static class ContentStreamSseHandler
                         }
 
                         spreadSheetResult.Append(sseEvent.Content);
-                        return ContentStreamProcessedEvent.FromContent(spreadSheetResult.ToString(), sseEvent.TokenCount);
+                        return ContentStreamProcessedEvent.FromContent(spreadSheetResult.ToString(), sseEvent.TokenCount, SourceLocation.InSheet(sheetName, rowNumber));
 
                     //
                     // Documents which the runtime reads page by page are buffered, so the images of
@@ -62,7 +66,7 @@ public static class ContentStreamSseHandler
 
                         var documentManager = DOCUMENT_MANAGERS.GetOrAdd(sseEvent.StreamId!, _ => new());
                         var documentContent = documentManager.AddPage(documentMetadata, sseEvent.Content, sseEvent.TokenCount, extractImages);
-                        return documentContent is null ? ContentStreamProcessedEvent.NOTHING : ContentStreamProcessedEvent.FromContent(documentContent.Value.Content, documentContent.Value.TokenCount, documentContent.Value.PageNumber);
+                        return documentContent is null ? ContentStreamProcessedEvent.NOTHING : ContentStreamProcessedEvent.FromContent(documentContent.Value.Content, documentContent.Value.TokenCount, SourceLocation.OnPage(documentContent.Value.PageNumber));
 
                     case ContentStreamImageMetadata:
                         return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);

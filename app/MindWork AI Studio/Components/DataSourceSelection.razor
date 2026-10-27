@@ -5,16 +5,7 @@
 {
     <div class="d-flex">
         <MudTooltip Text="@T("Select the data you want to use here.")" Placement="Placement.Top">
-            @if (this.PopoverTriggerMode is PopoverTriggerMode.ICON)
-            {
-                <MudIconButton Icon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
-            }
-            else
-            {
-                <MudButton Variant="Variant.Filled" StartIcon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection">
-                    @T("Select data")
-                </MudButton>
-            }
+            <MudIconButton Icon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
         </MudTooltip>
 
         <MudPopover Open="@this.showDataSourceSelection" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" DropShadow="@true" Class="border-solid border-4 rounded-lg">
@@ -57,7 +48,14 @@
                     }
                     else if (this.showDataSourceSelection)
                     {
-                        <MudTextSwitch Label="@T("Are data sources enabled?")" Value="@this.areDataSourcesEnabled" LabelOn="@T("Yes, I want to use data sources.")" LabelOff="@T("No, I don't want to use data sources.")" ValueChanged="@this.EnabledChanged" Dense="@true"/>
+                        @if (this.ReadOnly && !string.IsNullOrWhiteSpace(this.ReadOnlyMessage))
+                        {
+                            <MudAlert Dense="@true" Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-2">
+                                @this.ReadOnlyMessage
+                            </MudAlert>
+                        }
+
+                        <MudTextSwitch Label="@T("Are data sources enabled?")" Value="@this.areDataSourcesEnabled" LabelOn="@T("Yes, I want to use data sources.")" LabelOff="@T("No, I don't want to use data sources.")" ValueChanged="@this.EnabledChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                         @if (this.areDataSourcesEnabled)
                         {
                             @* Where Semantic Search cannot be used, there is no choice to make, only the reason to tell: *@
@@ -69,15 +67,15 @@
                             }
                             else
                             {
-                                <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@T("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@T("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Dense="@true"/>
+                                <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@T("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@T("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                             }
 
-                            <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged" Dense="@true"/>
+                            <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
 
                             @* With Semantic Search, no agent takes part: nothing would validate the retrieved data. *@
                             @if (this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && !this.IsSemanticSearchEffective)
                             {
-                                <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Dense="@true"/>
+                                <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                             }
 
                             @switch (this.aiBasedSourceSelection)
@@ -95,8 +93,8 @@
                                     break;
                                     
                                 case false:
-                                    <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-2" Disabled="@this.aiBasedSourceSelection">
-                                        <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@this.SelectionChanged" Style="max-height: 14em;">
+                                    <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-2" Disabled="@(this.aiBasedSourceSelection || this.ReadOnly)">
+                                        <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@this.SelectionChanged" ReadOnly="@this.ReadOnly" Style="max-height: 14em;">
                                             @foreach (var source in this.GetListedDataSources())
                                             {
                                                 <DataSourceSelectionRow DataSource="@source" BlockReason="@this.GetBlockReason(source)"/>

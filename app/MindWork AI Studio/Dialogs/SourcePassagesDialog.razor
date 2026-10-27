@@ -1,0 +1,35 @@
+@using AIStudio.Tools.RAG
+@inherits MSGComponentBase
+
+<MudDialog ContentClass="dialog-content-fit">
+    <TitleContent>
+        <FileDialogTitle Title="@this.fileName" Path="@this.path"/>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            @T("This is exactly what the AI received from this source for its answer, after AI Studio removed any suspicious instructions.")
+        </MudText>
+
+        <div class="source-passages">
+            @* Numbers are enough here: the bar above the passage names its page or part. *@
+            @if (this.passagesInDocumentOrder.Count > 1)
+            {
+                <MudList T="SourcePassage" @bind-SelectedValue="@this.selectedPassage" SelectionMode="SelectionMode.SingleSelection" Color="Color.Primary" Dense="@true" Class="source-passages-menu">
+                    @for (var index = 0; index < this.passagesInDocumentOrder.Count; index++)
+                    {
+                        <MudListItem T="SourcePassage" Value="@this.passagesInDocumentOrder[index]" Text="@($"{index + 1}")"/>
+                    }
+                </MudList>
+            }
+
+            <div class="source-passages-content dialog-fit">
+                <SourcePassageView Passage="@this.selectedPassage" Document="@this.Document" MaxHeight="@ContentViewer.NO_HEIGHT_LIMIT"/>
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

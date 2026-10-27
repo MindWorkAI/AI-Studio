@@ -1,0 +1,27 @@
+@inherits MSGComponentBase
+
+<MudStack Spacing="1" Class="mb-3">
+    <div class="pattern-row">
+        <div class="pattern-row-main">
+            @this.AllowedContent
+        </div>
+        <MudTooltip Text="@T("Pattern help and examples")" RootStyle="display: inline-flex;">
+            <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Color="@(this.showHelp ? Color.Info : Color.Default)" OnClick="@this.ToggleHelp" aria-label="@T("Pattern help and examples")" aria-expanded="@(this.showHelp ? "true" : "false")"/>
+        </MudTooltip>
+    </div>
+    @if (this.HasExclusions)
+    {
+        <div class="pattern-row">
+            <div class="pattern-row-main mt-3">
+                @this.ExcludedContent
+            </div>
+        </div>
+    }
+    <MudCollapse Expanded="@this.showHelp">
+        <div class="pattern-row">
+            <div class="pattern-row-main">
+                <FilePatternHelp ShowExclusionExamples="@this.HasExclusions"/>
+            </div>
+        </div>
+    </MudCollapse>
+</MudStack>

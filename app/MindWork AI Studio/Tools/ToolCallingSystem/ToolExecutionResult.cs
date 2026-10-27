@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.RAG;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -19,13 +20,24 @@ public sealed class ToolExecutionResult
     /// JSON embedded in a web page, which this never is: a German document would reach the model
     /// with every umlaut as six characters. The relaxed encoder escapes only what JSON requires.
     /// </remarks>
-    private static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    // Internal, so a tool which keeps its result within a budget measures exactly what the model gets:
+    internal static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     public string? TextContent { get; init; }
 
     public JsonNode? JsonContent { get; init; }
 
     public IReadOnlyList<Source> Sources { get; init; } = [];
+
+    /// <summary>
+    /// The passages of the sources, exactly as the model reads them in this result.
+    /// </summary>
+    /// <remarks>
+    /// The result itself is not stored with the chat, see ToolInvocationTrace.Result. The passages
+    /// are, so the user can still read what the answer rests on after the chat was reloaded. A
+    /// passage belongs to one of the Sources, see SourcePassageExtensions.GetPassagesOf.
+    /// </remarks>
+    public IReadOnlyList<SourcePassage> Passages { get; init; } = [];
 
     public ConfidenceLevel RequiredProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 
@@ -39,6 +51,17 @@ public sealed class ToolExecutionResult
     /// it, and the chat stays as it was.
     /// </remarks>
     public DataSourceSecurity RequiredDataSecurity { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+
+    /// <summary>
+    /// Where the chat may still send data from now on, because of what this result brings in.
+    /// </summary>
+    /// <remarks>
+    /// A tool which returns mail content sets the restriction of the mailbox it came from, and the
+    /// strictest one when several mailboxes contributed. The chat then keeps it, see
+    /// ChatThread.RequireOutboundDataRestriction. Left at NONE, the result says nothing about it,
+    /// and the chat stays as it was.
+    /// </remarks>
+    public OutboundDataRequirement RequiredOutboundDataRestriction { get; init; } = OutboundDataRequirement.NONE;
 
     public string ToModelContent()
     {

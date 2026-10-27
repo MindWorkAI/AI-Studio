@@ -87,18 +87,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var providerConfidence = this.Provider.GetConfidence(settingsManager).Level;
 
-        //
-        // The provider-native web search is held to the same confidence the local web search tool
-        // asks for: to the user it is the same act, whoever performs the search.
-        //
-        var minimumWebSearchConfidence = toolRegistry?.GetMinimumProviderConfidence(ToolSelectionRules.WEB_SEARCH_TOOL_ID) ?? ConfidenceLevel.NONE;
-        var isWebSearchAllowed = settingsManager.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) &&
-                                 ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
-        IList<object> providerTools = modelProfile.Has(Capability.WEB_SEARCH) && isWebSearchAllowed
-            ? [ ProviderTools.WEB_SEARCH ]
-            : [];
-        
-        
         // Parse the API parameters:
         var additionalApiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
@@ -125,15 +113,14 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                        {
                                            Text = text,
                                        },
-                                       async attachment => new SubContentImageUrlNested
+                                       image => new SubContentImageUrlNested
                                        {
                                            ImageUrl = new SubContentImageUrlData
                                            {
-                                               Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                                                   ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                                                   : string.Empty,
+                                               Url = image.ToDataUrl(),
                                            },
-                                       });
+                                       },
+                                       token);
 
                                    return new ChatCompletionAPIRequest
                                    {
@@ -204,12 +191,11 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             {
                 Text = text,
             },
-            async attachment => new SubContentInputImage
+            image => new SubContentInputImage
             {
-                ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                    ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                    : string.Empty,
-            });
+                ImageUrl = image.ToDataUrl(),
+            },
+            token);
 
         var baseInput = new List<object> { systemPrompt };
         baseInput.AddRange(messages);
@@ -220,7 +206,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 chatModel,
                 baseInput,
                 additionalApiParameters,
-                providerTools,
                 runnableTools,
                 (requestDto, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, requestToken));
 
@@ -243,9 +228,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             yield break;
         }
 
-        if (runnableTools.Count > 0)
-            providerTools = [];
-        
         //
         // Create the request: either for the Responses API or the Chat Completion API
         //
@@ -277,10 +259,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 
                 // We do not want to store any data on OpenAI's servers:
                 Store = false,
-                
-                // Tools we want to use:
-                Tools = providerTools,
-                
+
                 // Additional API parameters:
                 AdditionalApiParameters = additionalApiParameters
                 
@@ -347,7 +326,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);

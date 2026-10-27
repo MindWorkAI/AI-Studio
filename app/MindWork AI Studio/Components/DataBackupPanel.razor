@@ -1,0 +1,229 @@
+@using AIStudio.Tools.ChatArchive
+@inherits MSGComponentBase
+
+<MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" PanelClass="pa-4">
+    <MudTabPanel Text="@T("Back up")" Icon="@Icons.Material.Filled.Archive" Disabled="@(this.isBusy || this.DataRestoreService.IsPreparing)">
+
+        <MudText Typo="Typo.body1" Class="mb-3">
+            @T("Back up all your data into one file: your settings, chats, plugins, and the indexes of your data sources. Your API keys and passwords stay out of it. AI Studio keeps them in the secure storage of your OS.")
+        </MudText>
+
+        @if (this.DataBackupService.IsRunning)
+        {
+            <MudProgressLinear Color="Color.Primary" Value="@this.BackupProgressPercentage" Indeterminate="@(this.DataBackupService.Progress.Total is 0)" Class="mb-2"/>
+            <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.body2">
+                    @this.BackupProgressText
+                </MudText>
+                <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@this.DataBackupService.Cancel">
+                    @T("Cancel")
+                </MudButton>
+            </MudStack>
+            <MudText Typo="Typo.caption">
+                @T("The backup goes on when you leave this page.")
+            </MudText>
+        }
+        else
+        {
+            <LockableButton Text="@T("Back up data")" Icon="@Icons.Material.Filled.Save" OnClickAsync="@this.StartBackupAsync" Disabled="@(() => this.isBusy)" IsLocked="@(() => !this.AllowBackup)" NoMargin="@true"/>
+
+            @if (this.DataBackupService.LastResult is { } backupResult)
+            {
+                @if (backupResult.Success)
+                {
+                    <MudAlert Severity="@(backupResult.IncludesDataSourceIndexes ? Severity.Success : Severity.Warning)" Dense="@true" Class="mt-3">
+                        @* Opening a backup with the default program would only unpack it, so the file manager is the one way offered. *@
+                        <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+                            <MudText Typo="Typo.body2">
+                                @string.Format(T("Backed up {0} files into: {1}"), backupResult.FileCount, backupResult.ArchivePath)
+                            </MudText>
+                            <FileActions Path="@backupResult.ArchivePath" ShowCopy="@false" ShowOpen="@false"/>
+                        </MudStack>
+                        @if (!backupResult.IncludesDataSourceIndexes)
+                        {
+                            <MudText Typo="Typo.body2">
+                                @T("The indexes of your data sources are not part of this backup, because they were not available. After a restore, AI Studio indexes your data sources anew.")
+                            </MudText>
+                        }
+                    </MudAlert>
+                }
+                else if (backupResult.Cancelled)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="@true" Class="mt-3">
+                        @T("The backup was stopped. No file was left behind.")
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Error" Dense="@true" Class="mt-3">
+                        @backupResult.Issue
+                    </MudAlert>
+                }
+            }
+        }
+
+    </MudTabPanel>
+    <MudTabPanel Text="@T("Restore")" Icon="@Icons.Material.Filled.SettingsBackupRestore" Disabled="@(this.isBusy || this.DataBackupService.IsRunning)">
+
+        <MudText Typo="Typo.body1" Class="mb-3">
+            @T("Restore a backup: replace all your data with those of the backup, e.g., on a new computer, or add only its chats to the chats you have.")
+        </MudText>
+
+        @if (this.DataRestoreService.IsRestoreUnfinished)
+        {
+            <MudAlert Severity="Severity.Error" Dense="@true" Class="mb-3">
+                @T("AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first.")
+            </MudAlert>
+        }
+
+        <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-3">
+            <LockableButton Text="@T("Choose backup")" Icon="@Icons.Material.Filled.FolderOpen" OnClickAsync="@this.ChooseArchiveAsync" Disabled="@(() => this.isBusy || this.DataRestoreService.IsPreparing)" IsLocked="@(() => !this.AllowRestore)" NoMargin="@true"/>
+            @if (!string.IsNullOrWhiteSpace(this.selectedArchivePath))
+            {
+                <MudText Typo="Typo.body2">
+                    @this.selectedArchivePath
+                </MudText>
+            }
+        </MudStack>
+
+        @if (this.preview is { } backupPreview)
+        {
+            @if (!backupPreview.Success)
+            {
+                <MudAlert Severity="Severity.Error" Dense="@true" Class="mb-3">
+                    @backupPreview.Issue
+                </MudAlert>
+            }
+            else
+            {
+                <MudPaper Outlined="@true" Class="pa-3 mb-4">
+                    <MudText Typo="Typo.body2" Class="mb-2">
+                        @string.Format(T("Created on {0} with AI Studio {1}"), CommonTools.FormatTimestampToGeneral(backupPreview.Manifest.CreatedAt.ToLocalTime().DateTime, this.currentCultureInfo), backupPreview.Manifest.AppVersion)
+                    </MudText>
+
+                    @foreach (var workspace in backupPreview.Manifest.Workspaces)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @($"{workspace.Name} ({this.ChatCount(workspace.Chats.Count)})")
+                        </MudText>
+                    }
+
+                    @if (backupPreview.Manifest.TemporaryChats.Count > 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @($"{T("Temporary chats")} ({this.ChatCount(backupPreview.Manifest.TemporaryChats.Count)})")
+                        </MudText>
+                    }
+                </MudPaper>
+
+                <MudText Typo="Typo.h6">
+                    @T("Replace all data")
+                </MudText>
+                <MudText Typo="Typo.body2" Class="mb-2">
+                    @T("Replaces your settings, chats, plugins, and the indexes of your data sources with those of the backup. AI Studio restarts to do so. The plugins and settings of your organization stay as they are.")
+                </MudText>
+
+                @if (this.DataRestoreService.IsPreparing)
+                {
+                    <MudProgressLinear Color="Color.Primary" Value="@this.RestoreProgressPercentage" Indeterminate="@(this.DataRestoreService.Progress.Total is 0)" Class="mb-2"/>
+                    <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+                        <MudText Typo="Typo.body2">
+                            @this.RestoreProgressText
+                        </MudText>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@this.DataRestoreService.Cancel">
+                            @T("Cancel")
+                        </MudButton>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.RestorePage" OnClick="@this.StartRestoreAsync" Disabled="@(this.isBusy || !this.CanRestore)">
+                        @T("Replace all data")
+                    </MudButton>
+                }
+
+                @if (this.DataRestoreService.LastResult is { Success: false } restoreResult)
+                {
+                    <MudAlert Severity="@(restoreResult.Cancelled ? Severity.Info : Severity.Error)" Dense="@true" Class="mt-3">
+                        @(restoreResult.Cancelled ? T("The restore was stopped. All your data stay as they are.") : restoreResult.Issue)
+                    </MudAlert>
+                }
+
+                <MudText Typo="Typo.h6" Class="mt-6">
+                    @T("Add chats only")
+                </MudText>
+                <MudText Typo="Typo.body2" Class="mb-2">
+                    @T("Adds the chats of the backup to the chats you have. Nothing else changes.")
+                </MudText>
+
+                <MudSelect T="ChatArchiveCollisionBehavior" @bind-Value="@this.collisionBehavior" Label="@T("When a chat already exists")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="@this.isBusy" Class="mb-3">
+                    <MudSelectItem T="ChatArchiveCollisionBehavior" Value="@ChatArchiveCollisionBehavior.SKIP">
+                        @T("Keep the existing chat")
+                    </MudSelectItem>
+                    <MudSelectItem T="ChatArchiveCollisionBehavior" Value="@ChatArchiveCollisionBehavior.IMPORT_AS_COPY">
+                        @T("Add it as an additional chat")
+                    </MudSelectItem>
+                </MudSelect>
+
+                @if (this.isImporting)
+                {
+                    <MudProgressLinear Color="Color.Primary" Value="@this.ImportProgressPercentage" Class="mb-2"/>
+                    <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+                        <MudText Typo="Typo.body2">
+                            @string.Format(T("Chat {0} of {1}"), this.importProgress.ProcessedChats + 1, this.importProgress.TotalChats)
+                        </MudText>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@this.CancelImport">
+                            @T("Cancel")
+                        </MudButton>
+                    </MudStack>
+                    <MudText Typo="Typo.caption">
+                        @T("Please stay on this page until this is done. Leaving the page stops adding the chats.")
+                    </MudText>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="@this.StartImportAsync" Disabled="@(this.isBusy || !this.CanImport)">
+                        @this.AddChatsText(backupPreview.Manifest.TotalChatCount)
+                    </MudButton>
+                }
+            }
+        }
+
+        @if (this.importResult is { } importOutcome)
+        {
+            @if (importOutcome.Success)
+            {
+                <MudAlert Severity="@(importOutcome.Cancelled ? Severity.Info : Severity.Success)" Dense="@true" Class="mt-3">
+                    <MudText Typo="Typo.body2">
+                        @string.Format(T("Chats added: {0}. Workspaces they went into: {1}."), importOutcome.ImportedChats, importOutcome.ImportedWorkspaces)
+                    </MudText>
+                    @if (importOutcome.Cancelled)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @T("Adding the chats was stopped. The chats added until then were kept.")
+                        </MudText>
+                    }
+                    @if (importOutcome.SkippedChats > 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @string.Format(T("Chats which already existed and stayed as they are: {0}."), importOutcome.SkippedChats)
+                        </MudText>
+                    }
+                    @if (importOutcome.FailedChats > 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @string.Format(T("Chats which could not be added: {0}."), importOutcome.FailedChats)
+                        </MudText>
+                    }
+                </MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Error" Dense="@true" Class="mt-3">
+                    @importOutcome.Issue
+                </MudAlert>
+            }
+        }
+
+    </MudTabPanel>
+</MudTabs>

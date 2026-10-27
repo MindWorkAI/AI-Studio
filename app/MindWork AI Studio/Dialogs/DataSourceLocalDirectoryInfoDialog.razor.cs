@@ -32,7 +32,7 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase
         
         if (this.directoryInfo.Exists)
         {
-            this.directorySizeTask = this.directoryInfo.DetermineContentSize(this.UpdateDirectorySize, this.UpdateDirectoryFiles, this.UpdateFileList, MAX_FILES_TO_SHOW, this.DirectoryOperationDone, this.cts.Token);
+            this.directorySizeTask = this.directoryInfo.DetermineContentSize(this.UpdateDirectorySize, this.UpdateDirectoryFiles, this.UpdateFileList, MAX_FILES_TO_SHOW, this.DirectoryOperationDone, this.cts.Token, FolderFileSelection.Of(this.DataSource));
             this.refreshTimer.Elapsed += (_, _) => this.InvokeAsync(this.StateHasChanged);
             this.refreshTimer.Start();
         }
@@ -59,6 +59,13 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase
     private bool IsCloudEmbedding => !this.embeddingProvider.IsTrustedForDataSourceSecurityChecks(this.SettingsManager);
 
     private bool IsDirectoryAvailable => this.directoryInfo.Exists;
+
+    private FileExclusionGroups Exclusions => FileExclusions.Group(this.DataSource.EffectiveExcludePatterns);
+
+    /// <summary>
+    /// The level which applies, including what the organization demands.
+    /// </summary>
+    private string OutboundDataRestrictionName => this.DataSource.GetEffectiveOutboundDataRestriction(this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction).GetName();
 
     /// <summary>
     /// Takes the next file which the directory scan found.

@@ -49,6 +49,14 @@ public sealed class ClassicRagStandsBackTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task ItSearchesWhenTheUserSwitchedTheToolOff()
+    {
+        this.SettingsManager.ConfigurationData.Tools.UserDisabledToolIds.Add(ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID);
+
+        Assert.That(await this.IsSearchedByTheModelAsync(DataSourceRetrievalMode.SEMANTIC_SEARCH, ToolCapableProvider()), Is.False);
+    }
+
+    [Test]
     public async Task ItSearchesWithoutARegistry()
     {
         var providerSettings = ToolCapableProvider();
@@ -69,5 +77,8 @@ public sealed class ClassicRagStandsBackTests : ToolRegistryTestBase
     private static ChatThread ThreadSearching(DataSourceRetrievalMode preference) => new()
     {
         DataSourceOptions = new() { DisableDataSources = false, AutomaticDataSourceSelection = true, RetrievalMode = preference },
+
+        // A thread names no component until its sender does, and the chat does so before every message:
+        RuntimeComponent = AIStudio.Tools.Components.CHAT,
     };
 }

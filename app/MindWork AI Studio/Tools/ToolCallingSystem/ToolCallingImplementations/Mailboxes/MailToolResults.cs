@@ -1,0 +1,297 @@
+using System.Globalization;
+using System.Text;
+using System.Text.Json.Nodes;
+
+using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases.IndexStore;
+using AIStudio.Tools.Mail;
+using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
+
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
+
+/// <summary>
+/// How the mail tools show mails to the model, and what a chat has to keep once it saw them.
+/// </summary>
+/// <remarks>
+/// Searching, reading, and counting show a mail the same way, so that the model recognizes it in
+/// every result and can take a value of one over into the arguments of another.
+/// </remarks>
+internal static class MailToolResults
+{
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MailToolResults).Namespace, nameof(MailToolResults));
+
+    public const string NO_SUBJECT = "(no subject)";
+    public const string UNKNOWN_SENDER = "(unknown sender)";
+
+    /// <summary>
+    /// Writes what the model received of a mail, for the user to read under the source of the mail.
+    /// </summary>
+    /// <remarks>
+    /// Every value is the filtered one the model got. Only the layout is made for the user: a short
+    /// list of the header, then the text of the mail, or the passage the search found, where the
+    /// model got one. A mail listed by its sender or date carries the header alone, which is all
+    /// the model received of it.
+    /// </remarks>
+    /// <param name="from">The sender, as the model got it.</param>
+    /// <param name="recipients">The recipients, as the model got them.</param>
+    /// <param name="subject">The subject.</param>
+    /// <param name="received">When the mail arrived, as the model got it.</param>
+    /// <param name="attachments">The names of the attachments.</param>
+    /// <param name="readFrom">The attachment the text is from, and where in it, or null for the text of the mail itself.</param>
+    /// <param name="text">The text of the mail, or the passage found, or null when the model got neither.</param>
+    /// <returns>The mail as Markdown.</returns>
+    public static string ComposePassage(string from, IReadOnlyList<string> recipients, string subject, string received, IReadOnlyList<string> attachments, string? readFrom, string? text)
+    {
+        var builder = new StringBuilder();
+        AppendField(TB("From"), from);
+        AppendField(TB("To"), string.Join(", ", recipients));
+        AppendField(TB("Subject"), subject);
+        AppendField(TB("Received"), received);
+        AppendField(TB("Attachments"), string.Join(", ", attachments));
+        AppendField(TB("Text from the attachment"), readFrom);
+
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            builder.AppendLine();
+            builder.AppendLine("---");
+            builder.AppendLine();
+            builder.Append(text);
+        }
+
+        return builder.ToString().TrimEnd();
+
+        void AppendField(string label, string? value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                builder.AppendLine($"- **{label}:** {value}");
+        }
+    }
+
+    /// <summary>
+    /// How many folders a result lists when the folder the model asked for does not exist.
+    /// </summary>
+    public const int MAX_LISTED_FOLDERS = 50;
+
+    /// <summary>
+    /// The conditions as the tool read them, so the model sees how its dates were understood.
+    /// </summary>
+    /// <remarks>
+    /// The conditions came from the model, not from a mail, so they need no filtering.
+    /// </remarks>
+    public static JsonObject DescribeConditions(MailConditions conditions, TimeZoneInfo timeZone)
+    {
+        var filter = conditions.Filter;
+        var description = new JsonObject();
+        if (filter.From is { } from)
+            description[MailToolArguments.FROM_ARGUMENT] = from;
+
+        if (filter.To is { } to)
+            description[MailToolArguments.TO_ARGUMENT] = to;
+
+        if (filter.ReceivedSinceUtc is { } receivedSince)
+            description["received_at_or_after"] = FormatTime(receivedSince, timeZone);
+
+        if (filter.ReceivedBeforeUtc is { } receivedBefore)
+            description["received_before"] = FormatTime(receivedBefore, timeZone);
+
+        if (filter.IsUnread is { } isUnread)
+            description[MailToolArguments.IS_UNREAD_ARGUMENT] = isUnread;
+
+        if (filter.IsFlagged is { } isFlagged)
+            description[MailToolArguments.IS_FLAGGED_ARGUMENT] = isFlagged;
+
+        if (filter.IsEncrypted is { } isEncrypted)
+            description[MailToolArguments.IS_ENCRYPTED_ARGUMENT] = isEncrypted;
+
+        if (filter.Importance is { } importance)
+            description[MailToolArguments.IMPORTANCE_ARGUMENT] = MailToolArguments.ToArgumentValue(importance);
+
+        if (filter.HasAttachments is { } hasAttachments)
+            description[MailToolArguments.HAS_ATTACHMENTS_ARGUMENT] = hasAttachments;
+
+        if (conditions.Folder is { } folder)
+            description[MailToolArguments.FOLDER_ARGUMENT] = folder;
+
+        if (conditions.SpecialFolder is { } specialFolder)
+            description[MailToolArguments.SPECIAL_FOLDER_ARGUMENT] = MailToolArguments.ToArgumentValue(specialFolder);
+
+        return description;
+    }
+
+    /// <summary>
+    /// Adds how far the index of a mailbox reaches to what the model learns about it, and what the index does not cover to its issues.
+    /// </summary>
+    /// <remarks>
+    /// Only AI Studio's own values: points in time, counts, and sentences of its own.
+    /// </remarks>
+    /// <param name="description">What the model learns about the mailbox.</param>
+    /// <param name="issues">What kept the result from covering the whole mailbox.</param>
+    /// <param name="coverage">How far the index reaches, or null when that cannot be read.</param>
+    /// <param name="timeZone">The time zone of the user.</param>
+    public static void DescribeCoverage(JsonObject description, JsonArray issues, MailboxCoverage? coverage, TimeZoneInfo timeZone)
+    {
+        if (coverage is null)
+        {
+            issues.Add("How far the index of this mailbox reaches cannot be told right now.");
+            return;
+        }
+
+        if (coverage.ReceivedSinceUtc is { } receivedSince)
+            description["indexed_since"] = FormatTime(receivedSince, timeZone);
+        else
+            description["indexes_all_mails"] = true;
+
+        if (coverage.LastCompleteSyncUtc is { } lastSync)
+            description["last_complete_sync"] = FormatTime(lastSync, timeZone);
+        else
+            issues.Add("The first sync of this mailbox is still running, so some of its mails are not in the index yet.");
+
+        if (coverage.SignInRefusedAtUtc is { } refusedAt)
+            issues.Add($"The server of this mailbox refused to let AI Studio sign in at {FormatTime(refusedAt, timeZone)}. Mails which arrived since then are missing until the user enters the current password in the settings of the mailbox.");
+
+        if (coverage.PendingRemovalCount is { } pendingRemovalCount)
+            issues.Add($"The index still holds {pendingRemovalCount} mails which a sync would have removed, because they are no longer on the server or no longer within the folders and the period of this mailbox. Some of the mails found or counted may be among them.");
+    }
+
+    /// <summary>
+    /// Registers the folders of a mailbox to be listed, because the folder the model asked for does not exist there.
+    /// </summary>
+    /// <returns>The indices of the folder paths in the texts, at most MAX_LISTED_FOLDERS of them.</returns>
+    public static IReadOnlyList<int> RegisterFolderList(MailboxCoverage coverage, DataSourceMailbox mailbox, MailTexts texts) =>
+        coverage.Folders.Take(MAX_LISTED_FOLDERS).Select(folder => texts.Add(folder.Path, mailbox)).ToList();
+
+    /// <summary>
+    /// Lists the folders of a mailbox which has no folder of those the model named, so the model can pick one.
+    /// </summary>
+    /// <remarks>
+    /// The folder of the sent mails or of the drafts is missing from the index when the mailbox
+    /// leaves it out, or when the server does not mark it as such. Only in the second case does a
+    /// folder of the list hold these mails, so the model may pick it by its name.
+    /// </remarks>
+    /// <param name="description">What the model learns about the mailbox.</param>
+    /// <param name="issues">What kept the result from covering the whole mailbox.</param>
+    /// <param name="specialFolder">What the folder the model asked for is for, or null when it gave a path.</param>
+    /// <param name="listedFolders">The folder paths to list, filtered for prompt injections.</param>
+    /// <param name="folderCount">How many folders the mailbox has.</param>
+    public static void DescribeMissingFolder(JsonObject description, JsonArray issues, MailFolderSpecialUse? specialFolder, IReadOnlyList<string> listedFolders, int folderCount)
+    {
+        var missingFolder = specialFolder switch
+        {
+            MailFolderSpecialUse.SENT => "This mailbox has no folder for sent mails in the index of AI Studio, either because the user left it out or because the server does not mark it as such.",
+            MailFolderSpecialUse.DRAFTS => "This mailbox has no folder for drafts in the index of AI Studio, either because the user left it out or because the server does not mark it as such.",
+            _ => $"This mailbox has no folder with the path given in '{MailToolArguments.FOLDER_ARGUMENT}'.",
+        };
+
+        var folderList = folderCount > listedFolders.Count
+            ? $"The first {listedFolders.Count} of its {folderCount} folders are listed in 'folders'."
+            : "Its folders are listed in 'folders'.";
+
+        issues.Add(specialFolder is null
+            ? $"{missingFolder} {folderList}"
+            : $"{missingFolder} {folderList} When one of them holds these mails, pass its path in '{MailToolArguments.FOLDER_ARGUMENT}' instead of '{MailToolArguments.SPECIAL_FOLDER_ARGUMENT}'.");
+
+        description["folders"] = new JsonArray([..listedFolders.Select(folder => (JsonNode?)folder)]);
+    }
+
+    /// <summary>
+    /// Whether a mail lies among the sent mails or the drafts, as the value of the special folder argument.
+    /// </summary>
+    /// <remarks>
+    /// Lets the model tell what the user wrote from what the user received. A mail in the folder of
+    /// the sent mails counts as sent, even when a copy of it lies among the drafts as well.
+    /// </remarks>
+    /// <param name="folderPaths">The folders the mail lies in.</param>
+    /// <param name="folders">The folders of the mailbox.</param>
+    /// <returns>The value for the sent mails or the drafts, or null for a mail in neither.</returns>
+    public static string? GetSpecialFolder(IReadOnlyCollection<string> folderPaths, IReadOnlyList<MailFolderRecord> folders)
+    {
+        var specialUses = folders.Where(folder => folderPaths.Contains(folder.Path, StringComparer.Ordinal)).Select(folder => folder.SpecialUse).ToList();
+        if (specialUses.Contains(MailFolderSpecialUse.SENT))
+            return MailToolArguments.ToArgumentValue(MailFolderSpecialUse.SENT);
+
+        return specialUses.Contains(MailFolderSpecialUse.DRAFTS) ? MailToolArguments.ToArgumentValue(MailFolderSpecialUse.DRAFTS) : null;
+    }
+
+    /// <summary>
+    /// A point in time as the user would read it, in their time zone and with its offset.
+    /// </summary>
+    public static string FormatTime(DateTimeOffset pointInTime, TimeZoneInfo timeZone) => TimeZoneInfo.ConvertTime(pointInTime, timeZone).ToString("yyyy-MM-dd'T'HH:mmzzz", CultureInfo.InvariantCulture);
+
+    public static string FormatAddress(MailAddressRecord address) => string.IsNullOrWhiteSpace(address.DisplayName) ? address.Address : $"{address.DisplayName} <{address.Address}>";
+
+    /// <summary>
+    /// Who sent a mail: the From header, or the Sender header when there is no From.
+    /// </summary>
+    public static MailAddressRecord? FindSender(IReadOnlyList<MailAddressRecord> addresses) =>
+        addresses.FirstOrDefault(address => address.Role is MailAddressRole.FROM) ?? addresses.FirstOrDefault(address => address.Role is MailAddressRole.SENDER);
+
+    /// <summary>
+    /// How to name the sender in a short line: by name when the mail gives one, otherwise by address.
+    /// </summary>
+    public static string GetSenderName(MailAddressRecord? sender) => sender switch
+    {
+        null => UNKNOWN_SENDER,
+        { DisplayName: var displayName } when !string.IsNullOrWhiteSpace(displayName) => displayName,
+        _ => sender.Address,
+    };
+
+    public static string GetEncryptionName(MailEncryptionKind encryptionKind) => encryptionKind switch
+    {
+        MailEncryptionKind.SMIME => "S/MIME",
+        MailEncryptionKind.SMIME_OPAQUE_SIGNED => "S/MIME, signed opaquely",
+        MailEncryptionKind.PGP_MIME => "PGP/MIME",
+        MailEncryptionKind.PGP_INLINE => "inline PGP",
+        MailEncryptionKind.MICROSOFT_IRM => "Microsoft rights management",
+        _ => "unknown",
+    };
+
+    /// <summary>
+    /// The source a mail which reached the model leaves in the chat.
+    /// </summary>
+    /// <remarks>
+    /// The address leads nowhere yet, so the list of sources shows the title as text; the mail
+    /// viewer will open it. Subject and sender have to be filtered already, since the user reads
+    /// the title. A mail found by a passage of one of its attachments names that attachment, so
+    /// the user knows where in the mail the answer comes from.
+    /// </remarks>
+    /// <param name="mailbox">The mailbox the mail belongs to.</param>
+    /// <param name="mailId">The id of the mail.</param>
+    /// <param name="subject">The subject, filtered for prompt injections.</param>
+    /// <param name="senderName">The name of the sender, filtered as well.</param>
+    /// <param name="receivedAtUtc">When the mail arrived at the server.</param>
+    /// <param name="timeZone">The time zone of the user.</param>
+    /// <param name="passageAttachment">The attachment the passage found is from, and where in it, e.g., "board-report.pdf, page 3", filtered as well; null for the text of the mail, or when it is not known.</param>
+    public static Source CreateSource(DataSourceMailbox mailbox, string mailId, string subject, string senderName, DateTimeOffset receivedAtUtc, TimeZoneInfo timeZone, string? passageAttachment = null) => new(
+        string.Create(CultureInfo.InvariantCulture, $"Mail: {subject} — {senderName}, {TimeZoneInfo.ConvertTime(receivedAtUtc, timeZone):yyyy-MM-dd}{(passageAttachment is null ? string.Empty : $" ({passageAttachment})")}"),
+        SourceExtensions.CreateMailSourceUrl(mailbox.Id, mailId),
+        SourceOrigin.TOOL);
+
+    /// <summary>
+    /// What the chat has to require from now on, because of the mailboxes whose content reached the model.
+    /// </summary>
+    /// <remarks>
+    /// A result which brought nothing of a mailbox into the chat requires nothing for it. Of several
+    /// mailboxes, the strictest restriction wins; on a tie, the first one is named, so the chat does
+    /// not name another mailbox with every search. A mailbox set to a less strict restriction than
+    /// the organization allows counts with the least strict one allowed.
+    /// </remarks>
+    /// <param name="contributingMailboxes">The mailboxes whose content reached the model.</param>
+    /// <param name="minimumOutboundDataRestriction">The least strict restriction the organization allows, see DataMailboxes.MinimumOutboundDataRestriction.</param>
+    /// <returns>The provider confidence and the outbound data restriction the chat requires from now on.</returns>
+    public static (ConfidenceLevel Confidence, OutboundDataRequirement OutboundData) GetRequirements(IEnumerable<DataSourceMailbox> contributingMailboxes, OutboundDataRestriction minimumOutboundDataRestriction)
+    {
+        var confidence = ConfidenceLevel.NONE;
+        var outboundData = OutboundDataRequirement.NONE;
+        foreach (var mailbox in contributingMailboxes)
+        {
+            if (mailbox.ConfidenceLevel > confidence)
+                confidence = mailbox.ConfidenceLevel;
+
+            outboundData = outboundData.StricterOf(new(mailbox.OutboundDataRestriction.StricterOf(minimumOutboundDataRestriction), OutboundDataOrigin.MAILBOX, mailbox.Id));
+        }
+
+        return (confidence, outboundData);
+    }
+}

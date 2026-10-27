@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Assistants.SWOTAnalysis;
 
@@ -22,7 +23,8 @@ public partial class AssistantSWOTAnalysis
         this.CreateChatThread();
 
         var token = this.CancellationTokenSource?.Token ?? CancellationToken.None;
-        var runnableToolIds = this.GetRunnableToolIds();
+        // The research runs in a thread of its own, which has read nothing yet:
+        var runnableToolIds = this.GetRunnableToolIds(OutboundDataRestriction.UNRESTRICTED);
         if (runnableToolIds.Count > 0)
         {
             this.isGatheringSharedResearch = true;
@@ -99,10 +101,10 @@ public partial class AssistantSWOTAnalysis
             ChatId = Guid.NewGuid(),
             Name = $"{this.Title} - {category}",
             Blocks = [],
-            RuntimeComponent = this.Component,
             RuntimeSelectedToolIds = [],
             RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null,
         };
+        this.AssignRuntimeIdentity(thread);
         thread.Blocks.Add(CreateBlock(DateTimeOffset.Now, ChatRole.USER, userPrompt));
 
         var aiText = new ContentText { InitialRemoteWait = true };
@@ -205,10 +207,10 @@ public partial class AssistantSWOTAnalysis
             ChatId = Guid.NewGuid(),
             Name = $"{this.Title} - Shared Research",
             Blocks = [],
-            RuntimeComponent = this.Component,
             RuntimeSelectedToolIds = [.. runnableToolIds],
             RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null,
         };
+        this.AssignRuntimeIdentity(thread);
         thread.Blocks.Add(CreateBlock(DateTimeOffset.Now, ChatRole.USER, userPrompt));
 
         var aiText = new ContentText { InitialRemoteWait = true };

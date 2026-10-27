@@ -11,11 +11,13 @@ namespace AIStudio.Settings.DataModel;
 /// <param name="configSelection">The managed-configuration selector.</param>
 public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessing>>? configSelection = null)
 {
-    public const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm";
+    public const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm";
     public const int MIN_DELAY_SECONDS = 6;
     public const int MAX_DELAY_SECONDS = 300;
     public const int DEFAULT_MIN_DELAY_SECONDS = 6;
     public const int DEFAULT_MAX_DELAY_SECONDS = 10;
+    public const bool DEFAULT_INCLUDE_SUBDIRECTORIES = false;
+    public const bool DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS = false;
 
     /// <summary>
     /// Initializes an unmanaged Batch Processing settings instance.
@@ -32,7 +34,13 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
 
     public string FilePatterns { get; set; } = ManagedConfiguration.Register(configSelection, value => value.FilePatterns, DEFAULT_FILE_PATTERNS);
 
-    public bool IncludeSubdirectories { get; set; } = ManagedConfiguration.Register(configSelection, value => value.IncludeSubdirectories, false);
+    public bool IncludeSubdirectories { get; set; } = ManagedConfiguration.Register(configSelection, value => value.IncludeSubdirectories, DEFAULT_INCLUDE_SUBDIRECTORIES);
+
+    public bool IncludeHiddenFilesAndFolders { get; set; } = ManagedConfiguration.Register(configSelection, value => value.IncludeHiddenFilesAndFolders, DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS);
+
+    public string ExcludePatterns { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ExcludePatterns, FileExclusions.DEFAULT_PATTERNS);
+
+    public int MaxFileSizeMegabytes { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MaxFileSizeMegabytes, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
 
     public BatchProcessingPromptSource PromptSource { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PromptSource, BatchProcessingPromptSource.FREE_PROMPT);
 
@@ -53,6 +61,16 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
     /// whole run instead of one file per document.
     /// </remarks>
     public FileExportFormat ResultFileFormat { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultFileFormat, FileExportFormat.MARKDOWN);
+
+    /// <summary>
+    /// Whether the result files can be written in a format: only in one which holds an entire answer.
+    /// </summary>
+    /// <remarks>
+    /// The format list of the assistant offers nothing else, but a configuration plugin may name
+    /// any format, a table or code for example, and the result files would then end up without an
+    /// extension.
+    /// </remarks>
+    public static bool IsValidResultFileFormat(FileExportFormat format) => FileExportFormatExtensions.ANSWER_FORMATS.Contains(format);
 
     public string CsvFileName { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvFileName, string.Empty);
 

@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/prepare-cloud-session.sh || true",
+            "statusMessage": "Preparing the toolchain for a cloud session"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -59,18 +59,16 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 Text = text,
             },
             
-            // Anthropic-specific image sub-content:
-            async attachment => new SubContentImage
+            // Anthropic-specific image sub-content, which takes the base64 and its type apart:
+            image => new SubContentImage
             {
                 Source = new SubContentBase64Image
                 {
-                    Data = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                        ? base64Content
-                        : string.Empty,
-                    
-                    MediaType = attachment.DetermineMimeType(),
+                    Data = image.Base64,
+                    MediaType = image.MimeType,
                 }
-            }
+            },
+            token
         );
 
         //
@@ -191,7 +189,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         return Task.FromResult(TranscriptionResult.Failure());
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         throw this.CreateEmbeddingsNotSupportedException();

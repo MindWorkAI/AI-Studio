@@ -1,5 +1,5 @@
-using System.Text;
-
+using AIStudio.Chat;
+using AIStudio.Settings;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 
@@ -8,14 +8,83 @@ namespace AIStudio.Assistants.BatchProcessing;
 public partial class AssistantBatchProcessing
 {
     /// <summary>
-    /// Loads a document through the Rust content stream or resolves a persistent
-    /// transcript for an audio or video file.
+    /// What one file of the batch gives to the model: either text or an image.
     /// </summary>
-    private Task<string?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
+    private readonly record struct BatchInput(string Text, FileAttachmentImage? Image);
+
+    /// <summary>
+    /// Loads a document through the Rust content stream, resolves a persistent
+    /// transcript for an audio or video file, or prepares an image for the model.
+    /// </summary>
+    /// <returns>The input for the model, or <c>null</c> when the file already got its final status.</returns>
+    private async Task<BatchInput?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
-        return IsTranscribableMedia(fileResult.FilePath)
-            ? this.LoadMediaTranscriptAsync(fileResult, token)
-            : this.LoadDocumentContentAsync(fileResult, token);
+        if (IsImage(fileResult.FilePath))
+            return await this.LoadImageAsync(fileResult, token) is { } image ? new BatchInput(string.Empty, image) : null;
+
+        var text = IsTranscribableMedia(fileResult.FilePath)
+            ? await this.LoadMediaTranscriptAsync(fileResult, token)
+            : await this.LoadDocumentContentAsync(fileResult, token);
+
+        return text is null ? null : new BatchInput(text, null);
+    }
+
+    /// <summary>
+    /// Prepares an image for the model before the request is built.
+    /// </summary>
+    /// <remarks>
+    /// The request itself would only skip an image it cannot send, with a message, and ask the model
+    /// anyway. The model would then answer about nothing, and the file would count as done, so that
+    /// continuing the run would skip it as well. Preparing the image here lets it fail as a file
+    /// instead, with the reason, e.g., an image format AI Studio cannot decode. The request then finds
+    /// the prepared image in the cache of ModelImageService, so it is not prepared twice. A failed
+    /// image is processed again when the run is continued, e.g., with a model that can read images.
+    ///
+    /// How large an image may be needs no check of its own either: the preparation scales it down
+    /// until it fits the limit of the provider, and fails only when even that is not enough.
+    ///
+    /// How many images a model accepts needs no check of its own: every file gets a thread of its own,
+    /// see CallAIAsync, so each request carries exactly one image, in every round with the model. A
+    /// limit of one image is therefore always met, and SupportsImageInput already refuses a limit of zero.
+    ///
+    /// Unlike the text of documents and transcripts, an image does not pass the prompt injection
+    /// filter of the runtime, which reads text only. Images in a chat do not either. Instructions
+    /// within an image therefore meet only the safeguards behind the filter: the system prompt tells
+    /// the model to ignore them, a thread which read internal content, such as a mailbox, may no
+    /// longer send data out, and without free address choice, its default, the Read Web Page tool
+    /// refuses an address which appears only in the image.
+    /// </remarks>
+    private async Task<FileAttachmentImage?> LoadImageAsync(BatchProcessingFileResult fileResult, CancellationToken token)
+    {
+        if (!this.ProviderSettings.SupportsImageInput())
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The selected model cannot read images. Select a model with image support to process this image."));
+            return null;
+        }
+
+        PreparedModelImage prepared;
+        FileAttachmentImage image;
+        try
+        {
+            image = new FileAttachmentImage(fileResult.FileName, fileResult.FilePath, new FileInfo(fileResult.FilePath).Length);
+            prepared = await this.ModelImageService.PrepareAsync(image, this.ProviderSettings, token);
+        }
+        catch (OperationCanceledException)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
+            return null;
+        }
+        catch (Exception e)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the file: {0}"), e.Message), e);
+            return null;
+        }
+
+        if (prepared.IsPrepared)
+            return image;
+
+        this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, prepared.ErrorCode.ToUserMessage(fileResult.FileName));
+        return null;
     }
 
     private async Task<string?> LoadDocumentContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
@@ -31,6 +100,14 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
+        return await this.TakeExtractedContentAsync(fileResult, extraction);
+    }
+
+    /// <summary>
+    /// Hands on what the runtime read for a file, or records why there is nothing to hand on.
+    /// </summary>
+    private async Task<string?> TakeExtractedContentAsync(BatchProcessingFileResult fileResult, FileExtractionResult extraction)
+    {
         //
         // The user stopped the batch run while we were reading this file. That says nothing about
         // the file, so it gets the same status as a cancelled AI request instead of a failure:
@@ -69,108 +146,42 @@ public partial class AssistantBatchProcessing
 
     private async Task<string?> LoadMediaTranscriptAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
-        var transcriptFilePath = GetTranscriptFilePath(fileResult.FilePath);
-        if (File.Exists(transcriptFilePath))
-        {
-            try
-            {
-                var existingTranscript = await File.ReadAllTextAsync(transcriptFilePath, token);
-                if (!string.IsNullOrWhiteSpace(existingTranscript))
-                {
-                    this.Logger.LogInformation("Reusing the existing batch transcript '{TranscriptFilePath}' for media file '{MediaFilePath}'.", transcriptFilePath, fileResult.FilePath);
-                    return existingTranscript;
-                }
-
-                this.Logger.LogWarning("The existing batch transcript '{TranscriptFilePath}' for media file '{MediaFilePath}' is empty and will be replaced.", transcriptFilePath, fileResult.FilePath);
-            }
-            catch (OperationCanceledException)
-            {
-                this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
-                return null;
-            }
-            catch (Exception e)
-            {
-                this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the existing transcript: {0}"), e.Message), e);
-                return null;
-            }
-        }
-
-        if (!this.MediaTranscriptionService.HasUsableTranscriptionProvider)
-        {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("No usable transcription provider is configured."));
-            return null;
-        }
-
-        var transcription = await this.MediaTranscriptionService.TranscribeAsync(fileResult.FilePath, token);
-        if (transcription.Status is MediaTranscriptionResultStatus.CANCELLED)
+        var provider = this.MediaTranscriptionService.GetUsableProvider();
+        var transcript = await PersistentMediaTranscript.ReadOrCreateAsync(MediaSidecarTranscripts.INSTANCE, fileResult.FilePath, provider, this.MediaTranscriptionService.TranscribeAsync, this.Logger, token);
+        if (transcript.Status is PersistentMediaTranscriptStatus.CANCELLED)
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
             return null;
         }
 
-        if (transcription.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
+        if (transcript.Status is not PersistentMediaTranscriptStatus.READY)
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, transcription.UserMessage);
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, transcript.UserMessage);
             return null;
         }
 
-        if (string.IsNullOrWhiteSpace(transcription.Text))
-        {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The transcription provider returned an empty transcript."));
-            return null;
-        }
-
-        return await this.StoreMediaTranscriptAsync(fileResult, transcriptFilePath, transcription.Text);
-    }
-
-    private async Task<string?> StoreMediaTranscriptAsync(BatchProcessingFileResult fileResult, string transcriptFilePath, string transcript)
-    {
-        var tempFilePath = transcriptFilePath + ".tmp";
+        //
+        // Through the runtime like every document, so its filter for prompt injections checks the
+        // transcript as well. Like the documents of a run, a filtered transcript is reported right
+        // away instead of when the run ends, which may be hours later:
+        //
+        FileExtractionResult extraction;
         try
         {
-            // Complete the small persistence step even if cancellation arrived
-            // after transcription, so the expensive provider result can be
-            // reused when the interrupted batch is continued.
-            await File.WriteAllTextAsync(tempFilePath, transcript, new UTF8Encoding(false), CancellationToken.None);
-            File.Move(tempFilePath, transcriptFilePath, true);
-            this.Logger.LogInformation("Stored the batch transcript '{TranscriptFilePath}' next to media file '{MediaFilePath}'.", transcriptFilePath, fileResult.FilePath);
-            return transcript;
+            extraction = await PersistentMediaTranscript.ReadTranscriptAsync(this.RustService, transcript, fileResult.FilePath, reportingScope: null, token);
         }
         catch (Exception e)
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to store the transcript next to the media file: {0}"), e.Message), e);
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the existing transcript: {0}"), e.Message), e);
             return null;
         }
-        finally
-        {
-            try
-            {
-                if (File.Exists(tempFilePath))
-                    File.Delete(tempFilePath);
-            }
-            catch (Exception e)
-            {
-                this.Logger.LogWarning(e, "Was not able to remove the temporary batch transcript '{TempFilePath}'.", tempFilePath);
-            }
-        }
+
+        return await this.TakeExtractedContentAsync(fileResult, extraction);
     }
 
-    private static bool IsTranscribableMedia(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO, FileTypes.VIDEO);
+    private static bool IsTranscribableMedia(string filePath) => PersistentMediaTranscript.IsMediaPath(filePath);
 
-    private static string GetTranscriptFilePath(string mediaFilePath) => mediaFilePath + TRANSCRIPT_FILE_SUFFIX;
+    private static bool IsImage(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
 
-    private static bool HasReusableTranscript(string mediaFilePath)
-    {
-        var transcriptFilePath = GetTranscriptFilePath(mediaFilePath);
-        try
-        {
-            return File.Exists(transcriptFilePath) && new FileInfo(transcriptFilePath).Length > 0;
-        }
-        catch
-        {
-            // The concrete read error is reported when the affected file is
-            // processed. Here we only decide whether a provider is required.
-            return File.Exists(transcriptFilePath);
-        }
-    }
+    private static bool HasReusableTranscript(string mediaFilePath) => MediaSidecarTranscripts.HasReusableTranscript(mediaFilePath);
 }

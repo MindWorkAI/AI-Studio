@@ -10,6 +10,62 @@ public static partial class SourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SourceExtensions).Namespace, nameof(SourceExtensions));
 
+    /// <summary>
+    /// The scheme of the address a mail leaves as a source, when a mail tool found or read it.
+    /// </summary>
+    private const string MAIL_SOURCE_SCHEME = "mailbox";
+
+    /// <summary>
+    /// The address of the source a mail leaves in a chat.
+    /// </summary>
+    /// <remarks>
+    /// Unique per mail, since the sources of a chat are told apart by their address, see
+    /// MergeSources. No browser and no program can open it; the list of sources shows such a
+    /// source as text, see IsMailSource.
+    /// </remarks>
+    /// <param name="mailboxId">The id of the mailbox.</param>
+    /// <param name="mailId">The id of the mail.</param>
+    /// <returns>The address.</returns>
+    public static string CreateMailSourceUrl(string mailboxId, string mailId) => $"{MAIL_SOURCE_SCHEME}://{mailboxId}/{mailId}";
+
+    /// <summary>
+    /// Whether a source names a mail in one of the mailboxes of the user.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <returns>True for a mail, which nothing can open by its address.</returns>
+    public static bool IsMailSource(this ISource source) =>
+        Uri.TryCreate(source.URL.Trim(), UriKind.Absolute, out var address) && address.Scheme.Equals(MAIL_SOURCE_SCHEME, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The scheme of the address a passage of a data source leaves as a source, when its path is nothing a program can open.
+    /// </summary>
+    private const string RETRIEVAL_SOURCE_SCHEME = "retrieval";
+
+    /// <summary>
+    /// The address of the source a passage of a data source leaves in a chat, when its path is
+    /// nothing a program can open, e.g., a path which only the ERI server knows.
+    /// </summary>
+    /// <remarks>
+    /// Made from the name and the path the data source gave, so that the passages of one document
+    /// gather under one source, see MergeSources. The host is the same for all of them, since the
+    /// identity of an address writes its host in lower case. Like the address of a mail, nothing can
+    /// open it, see HasNoLink.
+    /// </remarks>
+    /// <param name="name">The name of the content, e.g., the document.</param>
+    /// <param name="path">The path the data source gave, which may be empty.</param>
+    /// <returns>The address.</returns>
+    public static string CreateRetrievalSourceUrl(string name, string path) => $"{RETRIEVAL_SOURCE_SCHEME}://context/{Uri.EscapeDataString(name)}/{Uri.EscapeDataString(path)}";
+
+    /// <summary>
+    /// Whether nothing can open a source by its address: a mail, or the passage of a data source
+    /// whose path names nothing to open, see CreateRetrievalSourceUrl.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <returns>True for a source which is named as text, without a link.</returns>
+    public static bool HasNoLink(this ISource source) =>
+        Uri.TryCreate(source.URL.Trim(), UriKind.Absolute, out var address)
+        && (address.Scheme.Equals(MAIL_SOURCE_SCHEME, StringComparison.OrdinalIgnoreCase) || address.Scheme.Equals(RETRIEVAL_SOURCE_SCHEME, StringComparison.OrdinalIgnoreCase));
+
     private static void AppendMarkdownLink(StringBuilder sb, string title, string url)
     {
         sb.Append('[');
@@ -153,9 +209,14 @@ public static partial class SourceExtensions
 
             foreach (var numberedSource in group.Sources)
             {
-                var url = keepPageAnchors ? numberedSource.Source.URL : WithoutPageAnchor(numberedSource.Source.URL);
                 sb.Append($"- [{numberedSource.Number}] ");
-                AppendMarkdownLink(sb, numberedSource.Source.Title, url);
+
+                // A link to a mail, or to what only a data source knows, would lead nowhere in a document or in the clipboard, so it is named only:
+                if (numberedSource.Source.HasNoLink())
+                    sb.Append(EscapeMarkdownLinkText(numberedSource.Source.Title));
+                else
+                    AppendMarkdownLink(sb, numberedSource.Source.Title, keepPageAnchors ? numberedSource.Source.URL : WithoutPageAnchor(numberedSource.Source.URL));
+
                 sb.AppendLine();
             }
         }
@@ -274,7 +335,16 @@ public static partial class SourceExtensions
         }
     }
 
-    private static string GetSourceIdentity(string url)
+    /// <summary>
+    /// What tells two sources apart: the address without its fragment.
+    /// </summary>
+    /// <remarks>
+    /// The passages of an answer are matched to their sources by the same identity, see
+    /// SourcePassageExtensions.GetPassagesOf, so a source and its passages always agree.
+    /// </remarks>
+    /// <param name="url">The address of a source.</param>
+    /// <returns>The identity of the source.</returns>
+    internal static string GetSourceIdentity(string url)
     {
         var cleanedUrl = url.Trim().Replace("\r", string.Empty).Replace("\n", string.Empty);
         if (!Uri.TryCreate(cleanedUrl, UriKind.Absolute, out var absoluteUri))

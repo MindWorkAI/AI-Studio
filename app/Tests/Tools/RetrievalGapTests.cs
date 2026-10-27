@@ -18,13 +18,13 @@ public sealed class RetrievalGapTests
     [Test]
     public void AQueryTheModelWroteIsNotTheUsersProblem()
     {
-        Assert.That(DataSourceLocalRetrievalService.IsForTheUser(RetrievalGap.QUERY_NOT_SEARCHABLE, queryWrittenByUser: false), Is.False, "The model learns about it from the page and can search with a shorter query.");
+        Assert.That(LocalIndexSearchService.IsForTheUser(RetrievalGap.QUERY_NOT_SEARCHABLE, queryWrittenByUser: false), Is.False, "The model learns about it from the page and can search with a shorter query.");
     }
 
     [Test]
     public void AMessageTheUserWroteIsTheirsToShorten()
     {
-        Assert.That(DataSourceLocalRetrievalService.IsForTheUser(RetrievalGap.QUERY_NOT_SEARCHABLE, queryWrittenByUser: true), Is.True);
+        Assert.That(LocalIndexSearchService.IsForTheUser(RetrievalGap.QUERY_NOT_SEARCHABLE, queryWrittenByUser: true), Is.True);
     }
 
     [TestCase(RetrievalGap.NOT_SEARCHED, false)]
@@ -33,6 +33,6 @@ public sealed class RetrievalGapTests
     [TestCase(RetrievalGap.PARTLY_SEARCHED, true)]
     public void ProblemsOfTheDataSourceAreAlwaysForTheUser(RetrievalGap gap, bool queryWrittenByUser)
     {
-        Assert.That(DataSourceLocalRetrievalService.IsForTheUser(gap, queryWrittenByUser), Is.True, "Only the user can fix an index or an embedding provider.");
+        Assert.That(LocalIndexSearchService.IsForTheUser(gap, queryWrittenByUser), Is.True, "Only the user can fix an index or an embedding provider.");
     }
 }

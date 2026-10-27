@@ -56,35 +56,35 @@
                 @if (this.IsSecondToLastBlock && this.Role is ChatRole.USER && this.EditLastUserBlockFunc is not null)
                 {
                     <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastUserBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.EditLastUserBlock"/>
                     </MudTooltip>
                 }
                 @if (this.IsLastContentBlock && this.Role is ChatRole.USER && this.EditLastBlockFunc is not null)
                 {
                     <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.EditLastBlock"/>
                     </MudTooltip>
                 }
                 @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
                 {
                     <MudTooltip Text="@T("Regenerate")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" Disabled="@(!this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled() || !this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
                     </MudTooltip>
                 }
                 @if (!this.IsLastContentBlock && this.Role is ChatRole.AI && this.RollbackFunc is not null)
                 {
                     <MudTooltip Text="@T("Roll back to this response")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Restore" Color="Color.Default" Disabled="@(!this.RollbackEnabled())" OnClick="@this.RollbackBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Restore" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.RollbackBlock"/>
                     </MudTooltip>
                 }
                 @if (this.RemoveBlockFunc is not null)
                 {
                     <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.RemoveBlock"/>
                     </MudTooltip>
                 }
 
-                @if (this.Role is ChatRole.AI && this.CanExport)
+                @if (this.CanExportAnswer)
                 {
                     <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
                         <MudMenu Icon="@Icons.Material.Filled.Save">
@@ -92,12 +92,25 @@
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
                             }
-                            @if (this.MessageFiles.Count > 0)
+                            @if (this.MessageFiles.Count > MAX_FILES_WITHOUT_SUBMENUS)
+                            {
+                                <MudDivider/>
+                                @foreach (var filesOfAKind in this.MessageFilesByKind)
+                                {
+                                    <MudMenu StartIcon="@ExportGroupIcon(filesOfAKind)" Label="@this.ExportGroupLabel(filesOfAKind)">
+                                        @foreach (var messageFile in filesOfAKind)
+                                        {
+                                            <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                        }
+                                    </MudMenu>
+                                }
+                            }
+                            else if (this.MessageFiles.Count > 0)
                             {
                                 <MudDivider/>
                                 @foreach (var messageFile in this.MessageFiles)
                                 {
-                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.Format.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
                                 }
                             }
                             <MudDivider/>
@@ -108,7 +121,7 @@
                         </MudMenu>
                     </MudTooltip>
                 }
-                <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/>
+                <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium" IsAIGenerated="@this.GetsAIGeneratedContentDisclosure"/>
             </div>
         </CardHeaderActions>
     </MudCardHeader>
@@ -231,7 +244,13 @@
                                         var segmentContent = segment.GetContent(renderPlan.Source);
                                         if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
                                         {
-                                            <MudMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" />
+                                            <ExportableMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" Files="@this.FilesWithSaveButton" ValueStart="@segment.Start">
+                                                <CodeBlockActions Context="file">
+                                                    <MudTooltip Text="@this.SaveAsLabel(file)" Placement="Placement.Top">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Primary" Variant="Variant.Filled" Class="ma-2" OnClick="@(() => this.ExportFile(file))"/>
+                                                    </MudTooltip>
+                                                </CodeBlockActions>
+                                            </ExportableMarkdown>
                                         }
                                         else
                                         {
@@ -241,7 +260,7 @@
                                 }
                                 @if (textContent.Sources.Count > 0)
                                 {
-                                    <SourcesList @ref="this.sourcesList" Sources="@textContent.Sources"/>
+                                    <SourcesList @ref="this.sourcesList" Sources="@textContent.Sources" Passages="@textContent.SourcePassages"/>
                                 }
                             </div>
                         }

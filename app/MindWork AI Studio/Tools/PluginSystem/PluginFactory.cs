@@ -450,6 +450,27 @@ public static partial class PluginFactory
     }
 
     /// <summary>
+    /// Collects what the running configuration plugins tell the user while AI Studio asks for an API key.
+    /// </summary>
+    /// <returns>The prompts of all configuration plugins, at most one per plugin.</returns>
+    public static IReadOnlyList<DataUserAPIKeyPrompt> GetUserAPIKeyPrompts()
+    {
+        return ResolveLivePluginContent<PluginConfiguration, DataUserAPIKeyPrompt>("user API key prompt", plugin => plugin.UserAPIKeyPrompts).ToList();
+    }
+
+    /// <summary>
+    /// Collects the mail servers which the running configuration plugins offer for new mailboxes.
+    /// </summary>
+    /// <returns>The mail servers of all configuration plugins, ordered by name, with every ID resolved to one winner.</returns>
+    public static IReadOnlyList<DataMailboxProvider> GetMailboxProviders()
+    {
+        return ResolveLivePluginContent<PluginConfiguration, DataMailboxProvider>("mailbox provider", plugin => plugin.MailboxProviders)
+            .OrderBy(provider => provider.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(provider => provider.Id, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    /// <summary>
     /// Collects what the running model plugins declare about models.
     /// </summary>
     /// <remarks>

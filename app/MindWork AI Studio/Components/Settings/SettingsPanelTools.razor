@@ -2,11 +2,12 @@
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="@T("Tool Settings")">
     <MudText Typo="Typo.body1" Class="mb-4">
-        @T("Configure global settings for each tool.")
+        @T("Configure global settings for each tool.") @T("Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them.")
     </MudText>
 
     <MudTable Items="@this.items" Hover="@true" Dense="@true">
         <HeaderContent>
+            <MudTh>@T("Enabled")</MudTh>
             <MudTh>@T("Icon")</MudTh>
             <MudTh>@T("Name")</MudTh>
             <MudTh>@T("Description")</MudTh>
@@ -16,13 +17,18 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <MudIcon Icon="@context.Implementation.Icon" Color="Color.Info" />
+                <MudTooltip Text="@this.GetSwitchTooltip(context)">
+                    <MudSwitch T="bool" Value="@context.IsActive" ValueChanged="@(isOn => this.SwitchToolOnOrOff(context, isOn))" Disabled="@IsSwitchLocked(context)" Color="Color.Primary" />
+                </MudTooltip>
             </MudTd>
             <MudTd>
-                <MudText Typo="Typo.body1">@context.Implementation.GetDisplayName()</MudText>
+                <MudIcon Icon="@context.Icon" Color="Color.Info" />
             </MudTd>
             <MudTd>
-                <MudText Typo="Typo.body2">@context.Implementation.GetDescription()</MudText>
+                <MudText Typo="Typo.body1">@context.DisplayName</MudText>
+            </MudTd>
+            <MudTd>
+                <MudText Typo="Typo.body2">@context.Description</MudText>
             </MudTd>
             <MudTd>
                 <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsToolConfidenceManaged()">
@@ -35,7 +41,14 @@
                 </MudMenu>
             </MudTd>
             <MudTd>
-                @if (!context.IsActive)
+                @if (IsSwitchedOffByUser(context))
+                {
+                    @* Whether its settings are complete does not matter while nobody can use the tool: *@
+                    <MudTooltip Text="@T("You switched off this tool. It appears in no tool selection, and the AI cannot use it.")">
+                        <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Default" />
+                    </MudTooltip>
+                }
+                else if (!context.IsActive)
                 {
                     <MudTooltip Text="@T("This tool has been disabled by your organization.")">
                         <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" />
@@ -55,9 +68,9 @@
             <MudTd>
                 <MudStack Row="true" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Spacing="0">
                     <MudTooltip Text="@T("Settings")">
-                        <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context.Definition.Id))" aria-label="@T("Settings")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context))" aria-label="@T("Settings")" />
                     </MudTooltip>
-                    <AdminExportButton OnClick="@(() => this.OpenExport(context.Definition.Id))" />
+                    <AdminExportButton OnClick="@(() => this.OpenExport(context))" />
                 </MudStack>
             </MudTd>
         </RowTemplate>

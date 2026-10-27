@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -59,10 +60,12 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
     public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
     {
         var message = logEntry.Formatter(logEntry.State, logEntry.Exception);
-        var timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        var now = DateTimeOffset.UtcNow;
+        var timestamp = now.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture);
+        var transportTimestamp = FormatTransportTimestamp(now);
         var logLevel = logEntry.LogLevel.ToString();
         var category = logEntry.Category;
-        var exceptionMessage = logEntry.Exception?.Message;
+        var exceptionMessage = DescribeException(logEntry.Exception);
         var stackTrace = logEntry.Exception?.StackTrace;
         var colorCode = GetColorForLogLevel(logEntry.LogLevel);
 
@@ -85,11 +88,52 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
 
         // Send log event to Rust via API (fire-and-forget):
         if (RUST_SERVICE is not null)
-            RUST_SERVICE.LogEvent(timestamp, logLevel, category, message, exceptionMessage, stackTrace);
+            RUST_SERVICE.LogEvent(transportTimestamp, logLevel, category, message, exceptionMessage, stackTrace);
         
         // Buffer early log events until the RustService is available:
         else
-            EARLY_LOG_BUFFER.Enqueue(new LogEventRequest(timestamp, logLevel, category, message, exceptionMessage, stackTrace));
+            EARLY_LOG_BUFFER.Enqueue(new LogEventRequest(transportTimestamp, logLevel, category, message, exceptionMessage, stackTrace));
+    }
+
+    /// <summary>
+    /// Formats the time of a log event for the Rust runtime.
+    /// </summary>
+    /// <remarks>
+    /// The round-trip format is ISO 8601 with seven fractional digits and the offset, e.g.,
+    /// 2026-10-09T17:53:54.5629130+00:00, and it is the same in every culture. The Rust runtime
+    /// reads it as RFC 3339, so it can log the event with the time it happened instead of the
+    /// time it arrived.
+    /// </remarks>
+    /// <param name="timestamp">The time of the log event.</param>
+    /// <returns>The time in the round-trip format.</returns>
+    public static string FormatTransportTimestamp(DateTimeOffset timestamp) => timestamp.ToString("O", CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// Describes an exception by its message and the messages of its inner exceptions.
+    /// </summary>
+    /// <remarks>
+    /// The outer message alone often hides the cause. HttpClient, for example, reports a broken
+    /// upload as "Error while copying content to a stream.", and only an inner exception says
+    /// whether the other side closed the connection.
+    /// </remarks>
+    /// <param name="exception">The exception, or null when the log event has none.</param>
+    /// <returns>The messages, from the outer exception inwards, or null without an exception.</returns>
+    public static string? DescribeException(Exception? exception)
+    {
+        if (exception is null)
+            return null;
+
+        var description = exception.Message;
+        for (var innerException = exception.InnerException; innerException is not null; innerException = innerException.InnerException)
+        {
+            // An AggregateException names the messages of its inner exceptions already:
+            if (description.Contains(innerException.Message, StringComparison.Ordinal))
+                continue;
+
+            description = $"{description} ---> {innerException.Message}";
+        }
+
+        return description;
     }
 
     private static string GetColorForLogLevel(LogLevel logLevel) => logLevel switch

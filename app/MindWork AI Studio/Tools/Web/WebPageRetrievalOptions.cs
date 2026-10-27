@@ -22,6 +22,22 @@ public sealed class WebPageRetrievalOptions
 
     public bool PublicTargetsOnly { get; init; }
 
+    /// <summary>
+    /// Whether every request has to reach non-public addresses only, the counterpart of
+    /// PublicTargetsOnly.
+    /// </summary>
+    /// <remarks>
+    /// For an address the model chose on a host which counts as internal, such as one of the
+    /// allowed private hosts, while its chat may not send data to third parties. A host name says
+    /// nothing about where it leads: a pattern such as *.example.org matches public hosts as well,
+    /// and an intranet server may redirect anywhere. Every request is therefore checked, redirects
+    /// included, and one which would reach a public address is refused before anything is sent.
+    /// <br/><br/>
+    /// Holds whoever chose the address, because it guards what the address may carry rather than
+    /// where the user may go.
+    /// </remarks>
+    public bool NonPublicTargetsOnly { get; init; }
+
     public ConfidenceLevel ProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 
     public bool UseOsSso { get; init; }

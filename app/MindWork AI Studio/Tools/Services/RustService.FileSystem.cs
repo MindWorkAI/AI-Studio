@@ -13,9 +13,10 @@ public sealed partial class RustService
             async () =>
             {
                 var encodedTitle = Uri.EscapeDataString(title);
-                var result = initialDirectory is null
+                var startDirectory = initialDirectory is null ? null : PathTools.FindNearestExistingPath(initialDirectory);
+                var result = startDirectory is null
                     ? await this.http.PostAsync($"/select/directory?title={encodedTitle}", null)
-                    : await this.http.PostAsJsonAsync($"/select/directory?title={encodedTitle}", new PreviousDirectory(initialDirectory), this.jsonRustSerializerOptions);
+                    : await this.http.PostAsJsonAsync($"/select/directory?title={encodedTitle}", new PreviousDirectory(startDirectory), this.jsonRustSerializerOptions);
 
                 if (result.IsSuccessStatusCode)
                     return await result.Content.ReadFromJsonAsync<DirectorySelectionResponse>(this.jsonRustSerializerOptions);
@@ -54,11 +55,12 @@ public sealed partial class RustService
             "select file",
             async () =>
             {
+                var startPath = initialFile is null ? null : PathTools.FindNearestExistingPath(initialFile);
                 var payload = new SelectFileOptions
                 {
                     Title = title,
-                    PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    PreviousFile = startPath is null ? null : new (startPath),
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/select/file", payload, this.jsonRustSerializerOptions);
@@ -77,11 +79,12 @@ public sealed partial class RustService
             "select files",
             async () =>
             {
+                var startPath = initialFile is null ? null : PathTools.FindNearestExistingPath(initialFile);
                 var payload = new SelectFileOptions
                 {
                     Title = title,
-                    PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    PreviousFile = startPath is null ? null : new (startPath),
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/select/files", payload, this.jsonRustSerializerOptions);
@@ -112,7 +115,7 @@ public sealed partial class RustService
                 {
                     Title = title,
                     PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/save/file", payload, this.jsonRustSerializerOptions);

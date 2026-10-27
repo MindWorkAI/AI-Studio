@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 using Timer = System.Timers.Timer;
 
@@ -19,10 +20,28 @@ public partial class ConfigurationText : ConfigurationBaseCore
     public Action<string> TextUpdate { get; set; } = _ => { };
 
     /// <summary>
-    /// The icon to display next to the textfield.
+    /// The icon to display next to the textfield, when it has a single line.
     /// </summary>
     [Parameter]
     public string Icon { get; set; } = Icons.Material.Filled.Info;
+
+    /// <summary>
+    /// Removes the default bottom margin when the field is part of a compact group.
+    /// </summary>
+    [Parameter]
+    public bool Compact { get; set; }
+
+    /// <summary>
+    /// Wraps and grows with its text, including while the field is not focused, up to the lines of a
+    /// field for file patterns.
+    /// </summary>
+    /// <remarks>
+    /// Such a field shows the draft rather than the stored value. Otherwise, a reset which leaves the
+    /// stored value as it was would not reach the field, e.g., restoring the default while the field
+    /// shows a draft which the validation rejected.
+    /// </remarks>
+    [Parameter]
+    public bool ExpandToContent { get; set; }
 
     /// <summary>
     /// The color of the icon to use.
@@ -55,16 +74,26 @@ public partial class ConfigurationText : ConfigurationBaseCore
     public string ResetButtonText { get; set; } = string.Empty;
 
     /// <summary>
+    /// Uses an accessible reset icon inside the field.
+    /// </summary>
+    [Parameter]
+    public bool ResetButtonIconOnly { get; set; }
+
+    /// <summary>
     /// Validates the configured text before it is stored.
     /// </summary>
     [Parameter]
     public Func<string, string?>? Validation { get; set; }
     
     private string internalText = string.Empty;
+    private string? lastSourceText;
+
     private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
     {
         AutoReset = false
     };
+
+    protected string EditingText => this.internalText;
     
     #region Overrides of ConfigurationBase
 
@@ -72,6 +101,8 @@ public partial class ConfigurationText : ConfigurationBaseCore
     protected override bool Stretch => true;
 
     protected override Variant Variant => Variant.Outlined;
+
+    protected override string MarginClass => this.Compact ? "mb-0" : base.MarginClass;
     
     protected override string Label => this.OptionDescription;
 
@@ -83,39 +114,75 @@ public partial class ConfigurationText : ConfigurationBaseCore
 
     protected override async Task OnParametersSetAsync()
     {
-        this.internalText = this.Text();
+        var sourceText = this.Text();
+        // Re-rendering the parent must not replace a draft which is waiting for its debounce.
+        // A genuinely changed setting, e.g. from a configuration plugin, still replaces it.
+        if (this.IsDisabled || !string.Equals(sourceText, this.lastSourceText, StringComparison.Ordinal))
+        {
+            this.internalText = sourceText;
+            this.lastSourceText = sourceText;
+        }
         await base.OnParametersSetAsync();
     }
 
     #endregion
 
-    private bool AutoGrow => this.NumLines > 1;
+    private bool AutoGrow => this.ExpandToContent || this.NumLines > 1;
     
-    private int GetMaxLines => this.AutoGrow ? this.MaxLines : 1;
+    private int GetMaxLines => this.ExpandToContent ? FilePatternSelection.MAX_FIELD_LINES : this.AutoGrow ? this.MaxLines : 1;
 
-    private void InternalUpdate(string text)
+    private string InputClass => this.ExpandToContent ? "pattern-text-field" : string.Empty;
+
+    //
+    // MudBlazor centers the icon vertically, so in a field of several lines it floats in the middle
+    // of the text. Such a field goes without:
+    //
+    private Adornment IconAdornment => this.NumLines == 1 ? Adornment.Start : Adornment.None;
+
+    protected void InternalUpdate(string text)
     {
+        if (this.IsDisabled)
+            return;
+
         this.timer.Stop();
         this.internalText = text;
         this.timer.Start();
     }
 
-    private async Task ResetTextAsync()
+    private EventCallback<MouseEventArgs> ResetAdornmentClick => this.ResetButtonIconOnly
+        ? EventCallback.Factory.Create<MouseEventArgs>(this, this.ResetTextAsync)
+        : default;
+
+    protected async Task ResetTextAsync()
     {
         if (this.ResetValue is null || this.IsDisabled)
             return;
 
+        await this.ApplyTextAsync(this.ResetValue());
+    }
+
+    /// <summary>
+    /// Applies an explicit value immediately, including a reset of part of a compound setting.
+    /// </summary>
+    protected async Task ApplyTextAsync(string text)
+    {
+        if (this.IsDisabled)
+            return;
+
         this.timer.Stop();
-        this.internalText = this.ResetValue();
+        this.internalText = text;
         await this.OptionChanged(this.internalText);
     }
     
-    private async Task OptionChanged(string updatedText)
+    protected async Task OptionChanged(string updatedText)
     {
-        if (this.Validation?.Invoke(updatedText) is not null)
+        if (this.IsDisabled || this.Validation?.Invoke(updatedText) is not null)
             return;
 
         this.TextUpdate(updatedText);
+        // A save may finish after another keystroke. Remember the value it applied before
+        // awaiting storage, so its configuration-change notification cannot erase that keystroke.
+        this.lastSourceText = this.Text();
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }

@@ -5,7 +5,6 @@ use file_format::FileFormat;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
-use crate::api_token::APIToken;
 use crate::app_window::MAIN_WINDOW;
 use crate::file_data::is_executable_content;
 
@@ -119,30 +118,28 @@ pub struct PreviousFile {
 
 /// Let the user select a directory.
 pub async fn select_directory(
-    _token: APIToken,
     Query(query): Query<SelectDirectoryQuery>,
     previous_directory: Option<Json<PreviousDirectory>>,
 ) -> Json<DirectorySelectionResponse> {
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot open directory dialog: main window not available.");
-            return Json(DirectorySelectionResponse {
-                user_cancelled: true,
-                selected_directory: String::from(""),
-            });
-        }
+    let dialog = MAIN_WINDOW
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|w| w.dialog().file().set_parent(w).set_title(&query.title));
+
+    let Some(mut dialog) = dialog else {
+        error!(Source = "Tauri"; "Cannot open directory dialog: main window not available.");
+        return Json(DirectorySelectionResponse {
+            user_cancelled: true,
+            selected_directory: String::from(""),
+        });
     };
 
-    let mut dialog = main_window.dialog().file().set_parent(main_window).set_title(&query.title);
     if let Some(previous) = previous_directory {
         dialog = dialog.set_directory(previous.path.clone());
     }
 
-    drop(main_window_lock);
-
-    let folder_path = dialog.blocking_pick_folder();
+    let folder_path = await_dialog(|answer| dialog.pick_folder(answer)).await;
     match folder_path {
         Some(path) => {
             match path.into_path() {
@@ -175,7 +172,6 @@ pub async fn select_directory(
 
 /// Let the user select a file.
 pub async fn select_file(
-    _token: APIToken,
     payload: Json<SelectFileOptions>,
 ) -> Json<FileSelectionResponse> {
     // Create a new file dialog builder:
@@ -203,7 +199,7 @@ pub async fn select_file(
     }
 
     // Show the file dialog and get the selected file path:
-    let file_path = file_dialog.blocking_pick_file();
+    let file_path = await_dialog(|answer| file_dialog.pick_file(answer)).await;
     match file_path {
         Some(path) => match path.into_path() {
             Ok(pb) => {
@@ -234,7 +230,6 @@ pub async fn select_file(
 
 /// Let the user select some files.
 pub async fn select_files(
-    _token: APIToken,
     payload: Json<SelectFileOptions>,
 ) -> Json<FilesSelectionResponse> {
     // Create a new file dialog builder:
@@ -262,7 +257,7 @@ pub async fn select_files(
     }
 
     // Show the file dialog and get the selected file path:
-    let file_paths = file_dialog.blocking_pick_files();
+    let file_paths = await_dialog(|answer| file_dialog.pick_files(answer)).await;
     match file_paths {
         Some(paths) => {
             let converted: Vec<String> = paths.into_iter().filter_map(|p| p.into_path().ok()).map(|pb| pb.to_string_lossy().to_string()).collect();
@@ -283,7 +278,7 @@ pub async fn select_files(
     }
 }
 
-pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
+pub async fn save_file(payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
     // Create a new file dialog builder:
     let file_dialog = MAIN_WINDOW
         .lock()
@@ -314,7 +309,7 @@ pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json
     }
 
     // Displays the file dialogue box and select the file:
-    let file_path = file_dialog.blocking_save_file();
+    let file_path = await_dialog(|answer| file_dialog.save_file(answer)).await;
     match file_path {
         Some(path) => match path.into_path() {
             Ok(pb) => {
@@ -344,7 +339,6 @@ pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json
 }
 
 pub async fn open_path_in_file_manager(
-    _token: APIToken,
     payload: Json<OpenPathOptions>,
 ) -> Json<OpenPathResponse> {
     let requested_path = PathBuf::from(payload.path.trim());
@@ -418,7 +412,6 @@ async fn open_file_manager_target(requested_path: &Path) -> Result<(), String> {
 /// The page is best effort and never decides whether this succeeded: a viewer which cannot be told
 /// a page still shows the document, which is what the user asked for by clicking a source.
 pub async fn open_document(
-    _token: APIToken,
     payload: Json<OpenDocumentOptions>,
 ) -> Json<OpenDocumentResponse> {
     let requested_path = PathBuf::from(payload.path.trim());
@@ -522,13 +515,17 @@ fn refuse_document(requested_path: &Path) -> Option<String> {
 }
 
 /// Tries to show the document on the given page, and says whether it did.
-#[cfg(any(windows, target_os = "linux"))]
+///
+/// On macOS, `open` drops the fragment of a URL before the program it starts ever sees it, with and
+/// without `-a`, so neither a browser nor Preview can be told a page from the command line. Only a
+/// program which takes the page as an argument of its own gets there; with any other, the document
+/// opens on its first page, and the source names the page for the reader.
 async fn try_open_at_page(path: &Path, page: u32) -> bool {
     let DocumentOpenPlan::WithPage { program, arguments } = resolve_document_open_plan(path, page).await else {
         return false;
     };
 
-    match start_page_aware_viewer(&program, &arguments) {
+    match start_page_aware_viewer(&program, &arguments).await {
         Ok(()) => true,
 
         //
@@ -542,16 +539,6 @@ async fn try_open_at_page(path: &Path, page: u32) -> bool {
     }
 }
 
-/// Never shows a page on macOS.
-///
-/// `open` drops the fragment of a URL before the program it starts ever sees it, with and without
-/// `-a`, so a page cannot be named from the command line at all. The document opens on its first
-/// page, and the source names the page for the reader.
-#[cfg(target_os = "macos")]
-async fn try_open_at_page(_path: &Path, _page: u32) -> bool {
-    false
-}
-
 /// How a document viewer wants to be told which page to show.
 ///
 /// They all mean the same thing and every one of them spells it differently. A viewer which is not
@@ -559,13 +546,12 @@ async fn try_open_at_page(_path: &Path, _page: u32) -> bool {
 ///
 /// Which spellings exist follows from where a viewer is found: Acrobat and Foxit are named by the
 /// Windows registration and by nothing else, and the three Linux viewers are named by a desktop
-/// entry and by nothing else. Only a browser is reached on both, so only its spelling is needed
-/// everywhere.
-#[cfg(any(windows, target_os = "linux", test))]
+/// entry and by nothing else. A browser is reached on both, and PdfCraft on every system we run on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PageArgument {
     /// The page travels in the URL fragment, the way the PDF Open Parameters define it. Browsers
     /// read it, and on Windows a browser is what most people open a PDF with.
+    #[cfg(any(windows, target_os = "linux", test))]
     UrlFragment,
 
     /// Acrobat and Acrobat Reader take an open action: `/A page=12`.
@@ -588,10 +574,12 @@ enum PageArgument {
     /// Zathura takes `-P 12`.
     #[cfg(any(target_os = "linux", test))]
     ZathuraPage,
+
+    /// PdfCraft takes `--page 12`, counted from one, and spells it the same on every system.
+    PdfCraftPage,
 }
 
 /// What it takes to show a document on a page.
-#[cfg(any(windows, target_os = "linux"))]
 #[derive(Debug, PartialEq, Eq)]
 enum DocumentOpenPlan {
     /// Hand the file to the system and let it decide. The document opens on its first page.
@@ -606,16 +594,15 @@ enum DocumentOpenPlan {
 /// Only PDFs are sent to a page: the handler is looked up for PDFs, and the arguments below are
 /// the ones PDF viewers understand. A Word file has a page too, but the programs which show one
 /// cannot be told to go there.
-#[cfg(any(windows, target_os = "linux", test))]
 fn is_pdf_document(path: &Path) -> bool {
     path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("pdf"))
 }
 
 /// Builds the arguments which name the page, in the spelling this viewer expects.
-#[cfg(any(windows, target_os = "linux", test))]
 fn page_arguments(argument: PageArgument, path: &Path, page: u32) -> Option<Vec<String>> {
     let path_argument = path.to_string_lossy().to_string();
     Some(match argument {
+        #[cfg(any(windows, target_os = "linux", test))]
         PageArgument::UrlFragment => vec![document_url_with_page(path, page)?],
 
         #[cfg(any(windows, test))]
@@ -632,6 +619,8 @@ fn page_arguments(argument: PageArgument, path: &Path, page: u32) -> Option<Vec<
 
         #[cfg(any(target_os = "linux", test))]
         PageArgument::ZathuraPage => vec![String::from("-P"), page.to_string(), path_argument],
+
+        PageArgument::PdfCraftPage => vec![String::from("--page"), page.to_string(), path_argument],
     })
 }
 
@@ -650,20 +639,40 @@ fn document_url_with_page(path: &Path, page: u32) -> Option<String> {
 ///
 /// Waiting for it to say so is not possible: a viewer runs until the user closes it, so waiting
 /// would hold the request open for as long as the document stays on screen.
-#[cfg(any(windows, target_os = "linux"))]
-fn start_page_aware_viewer(program: &str, arguments: &[String]) -> Result<(), String> {
-    let mut command = std::process::Command::new(program);
-    command.args(arguments);
+///
+/// On macOS the program started is `open`, which ends as soon as LaunchServices has started the
+/// viewer. Its answer is waited for there, so a viewer which cannot be started still leaves the
+/// caller the chance to open the document plainly.
+async fn start_page_aware_viewer(program: &str, arguments: &[String]) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let output = tokio::process::Command::new(program)
+            .args(arguments)
+            .output()
+            .await
+            .map_err(|error| format!("Failed to start '{program}': {error}"))?;
 
-    #[cfg(windows)]
-    command.creation_flags(CREATE_NO_WINDOW);
+        if output.status.success() {
+            Ok(())
+        } else {
+            Err(format!("'{program}' could not start the viewer ({}): {}", output.status, String::from_utf8_lossy(&output.stderr).trim()))
+        }
+    }
 
-    command.spawn()
-        .map(|_| ())
-        .map_err(|error| format!("Failed to start '{program}': {error}"))
+    #[cfg(any(windows, target_os = "linux"))]
+    {
+        let mut command = std::process::Command::new(program);
+        command.args(arguments);
+
+        #[cfg(windows)]
+        command.creation_flags(CREATE_NO_WINDOW);
+
+        command.spawn()
+            .map(|_| ())
+            .map_err(|error| format!("Failed to start '{program}': {error}"))
+    }
 }
 
-#[cfg(any(windows, target_os = "linux"))]
 async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan {
     if !is_pdf_document(path) {
         return DocumentOpenPlan::Plain;
@@ -706,7 +715,46 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
             return DocumentOpenPlan::Plain;
         };
 
+        //
+        // A program installed as a Flatpak keeps the desktop entry of its native package but is
+        // not on the path. The native program comes first, because it is the one the user chose
+        // to install along with the system; the Flatpak is what is left when there is none.
+        //
+        if !linux_program_on_path(&program)
+            && let Some(app_id) = linux_flatpak_app_id(&desktop_id)
+            && linux_flatpak_installed(app_id).await
+        {
+            return DocumentOpenPlan::WithPage {
+                program: String::from("flatpak"),
+                arguments: flatpak_run_arguments(app_id, &arguments, path),
+            };
+        }
+
         DocumentOpenPlan::WithPage { program, arguments }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let Some(MacApplication { bundle_id, bundle_path }) = macos_document_application(path) else {
+            return DocumentOpenPlan::Plain;
+        };
+
+        let Some(argument) = macos_page_argument(&bundle_id) else {
+            info!("The program registered for PDFs as '{bundle_id}' cannot be sent to a page; the document opens on its first page.");
+            return DocumentOpenPlan::Plain;
+        };
+
+        let Some(arguments) = page_arguments(argument, path, page) else {
+            return DocumentOpenPlan::Plain;
+        };
+
+        //
+        // The absolute path keeps a program of the same name earlier on the path from running.
+        //
+        DocumentOpenPlan::WithPage {
+            program: String::from("/usr/bin/open"),
+            arguments: macos_open_arguments(&bundle_path, arguments),
+        }
     }
 }
 
@@ -794,6 +842,14 @@ fn windows_page_argument(prog_id: &str) -> Option<PageArgument> {
         return Some(PageArgument::FoxitOpenAction);
     }
 
+    //
+    // The installer registers PdfCraft as `PdfCraft.Document`, and the portable copy is picked
+    // through 'Open with', which registers it by its file name, `pdfcraft.exe`.
+    //
+    if prog_id.contains("pdfcraft") {
+        return Some(PageArgument::PdfCraftPage);
+    }
+
     const BROWSERS: [&str; 5] = ["msedge", "chrome", "firefox", "opera", "brave"];
     if BROWSERS.iter().any(|browser| prog_id.contains(browser)) {
         return Some(PageArgument::UrlFragment);
@@ -843,7 +899,7 @@ async fn linux_default_pdf_handler() -> Option<String> {
 /// it always did, through the desktop's own handler.
 #[cfg(any(target_os = "linux", test))]
 fn linux_page_aware_program(desktop_id: &str) -> Option<(String, PageArgument)> {
-    const KNOWN_VIEWERS: [(&str, &str, PageArgument); 9] = [
+    const KNOWN_VIEWERS: [(&str, &str, PageArgument); 10] = [
         //
         // Atril and Xreader are forks of Evince and count their pages from zero just as it does.
         //
@@ -853,6 +909,13 @@ fn linux_page_aware_program(desktop_id: &str) -> Option<(String, PageArgument)> 
 
         ("okular", "okular", PageArgument::OkularPage),
         ("zathura", "zathura", PageArgument::ZathuraPage),
+
+        //
+        // PdfCraft's desktop entry is `ai.storyteller.pdfcraft.desktop`. Its packages for Debian,
+        // Fedora and Arch put the program on the path, its Flatpak is started through `flatpak`,
+        // and its AppImage is found by neither, so it opens on the first page.
+        //
+        ("pdfcraft", "pdfcraft", PageArgument::PdfCraftPage),
 
         //
         // Chrome is asked about before Chromium, so that a desktop entry naming both lands on the
@@ -870,6 +933,110 @@ fn linux_page_aware_program(desktop_id: &str) -> Option<(String, PageArgument)> 
         .map(|(_, program, argument)| (String::from(*program), *argument))
 }
 
+/// Names the Flatpak behind a desktop entry, for the viewers we start through `flatpak` when they
+/// are not on the path.
+#[cfg(any(target_os = "linux", test))]
+fn linux_flatpak_app_id(desktop_id: &str) -> Option<&'static str> {
+    const KNOWN_FLATPAKS: [(&str, &str); 1] = [
+        ("pdfcraft", "ai.storyteller.pdfcraft"),
+    ];
+
+    let desktop_id = desktop_id.to_ascii_lowercase();
+    KNOWN_FLATPAKS.iter()
+        .find(|(needle, _)| desktop_id.contains(needle))
+        .map(|(_, app_id)| *app_id)
+}
+
+/// Whether a program of this name lies in one of the folders of the path.
+#[cfg(target_os = "linux")]
+fn linux_program_on_path(program: &str) -> bool {
+    std::env::var_os("PATH")
+        .is_some_and(|path| std::env::split_paths(&path).any(|directory| directory.join(program).is_file()))
+}
+
+/// Whether this Flatpak is installed, for the user or for the whole system.
+#[cfg(target_os = "linux")]
+async fn linux_flatpak_installed(app_id: &str) -> bool {
+    tokio::process::Command::new("flatpak")
+        .args(["info", app_id])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .await
+        .is_ok_and(|status| status.success())
+}
+
+/// Builds the arguments which start a Flatpak with the page arguments of its program.
+///
+/// A Flatpak sees only the folders it was granted, and PdfCraft's are Documents and Downloads, while
+/// a data source may lie anywhere. The file is therefore handed over through the document portal,
+/// which `--file-forwarding` does for every argument between two `@@`.
+#[cfg(any(target_os = "linux", test))]
+fn flatpak_run_arguments(app_id: &str, arguments: &[String], path: &Path) -> Vec<String> {
+    let path_argument = path.to_string_lossy().to_string();
+    let mut run_arguments = vec![String::from("run"), String::from("--file-forwarding"), String::from(app_id)];
+    for argument in arguments {
+        if *argument == path_argument {
+            run_arguments.extend([String::from("@@"), argument.clone(), String::from("@@")]);
+        } else {
+            run_arguments.push(argument.clone());
+        }
+    }
+
+    run_arguments
+}
+
+/// The application macOS opens a document with.
+#[cfg(target_os = "macos")]
+struct MacApplication {
+    /// The bundle identifier, such as `com.apple.Preview`.
+    bundle_id: String,
+
+    /// Where the application bundle lies, such as `/Applications/PdfCraft.app`.
+    bundle_path: String,
+}
+
+/// Asks LaunchServices which application opens this document.
+///
+/// The document itself is asked about rather than its type, so a program the user picked for this
+/// one file through Get Info is found as well. Only strings leave this function: the Objective-C
+/// objects behind them must not be held across an await, or the request would no longer be `Send`.
+/// The lookup runs in a pool of its own because a Tokio worker has none to collect what the
+/// framework autoreleases.
+#[cfg(target_os = "macos")]
+fn macos_document_application(path: &Path) -> Option<MacApplication> {
+    use objc2::rc::autoreleasepool;
+    use objc2_app_kit::NSWorkspace;
+    use objc2_foundation::{NSBundle, NSString, NSURL};
+
+    autoreleasepool(|_| {
+        let document = NSURL::fileURLWithPath(&NSString::from_str(&path.to_string_lossy()));
+        let application = NSWorkspace::sharedWorkspace().URLForApplicationToOpenURL(&document)?;
+        let bundle_id = NSBundle::bundleWithURL(&application)?.bundleIdentifier()?.to_string();
+        let bundle_path = application.path()?.to_string();
+
+        Some(MacApplication { bundle_id, bundle_path })
+    })
+}
+
+/// Maps a bundle identifier onto the way its program wants to hear about a page.
+#[cfg(any(target_os = "macos", test))]
+fn macos_page_argument(bundle_id: &str) -> Option<PageArgument> {
+    bundle_id.eq_ignore_ascii_case("ai.storyteller.pdfcraft").then_some(PageArgument::PdfCraftPage)
+}
+
+/// Builds the arguments with which `open` starts the application and hands it the page arguments.
+///
+/// `-n` starts a new instance even when the application already runs. Without it, a running
+/// application only comes to the front, and the arguments after `--args` are lost, document and
+/// page alike.
+#[cfg(any(target_os = "macos", test))]
+fn macos_open_arguments(bundle_path: &str, page_arguments: Vec<String>) -> Vec<String> {
+    let mut arguments = vec![String::from("-n"), String::from("-a"), String::from(bundle_path), String::from("--args")];
+    arguments.extend(page_arguments);
+    arguments
+}
+
 /// Applies an optional file type filter to a FileDialogBuilder.
 fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &Option<FileTypeFilter>) -> FileDialogBuilder<R> {
     match filter {
@@ -880,6 +1047,26 @@ fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &O
 
         None => file_dialog,
     }
+}
+
+/// Shows a file dialog and waits for the user's answer without holding up the runtime.
+///
+/// A dialog stays open until the user answers it, which can take minutes. The blocking variants of
+/// the dialog API would hold a runtime worker that long, and with it every other call of the app,
+/// because they all share one HTTP/2 connection. The plugin shows the dialog on the main thread and
+/// hands the answer to a callback, so this function awaits that callback instead.
+async fn await_dialog<T: Send + 'static>(show: impl FnOnce(Box<dyn FnOnce(Option<T>) + Send>)) -> Option<T> {
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    show(Box::new(move |answer| {
+        // The receiver is only gone when the request was dropped, and then nobody waits for the answer:
+        let _ = sender.send(answer);
+    }));
+
+    receiver.await.unwrap_or_else(|_| {
+        // The plugin drops the callback without calling it when it cannot reach the main thread:
+        error!(Source = "Tauri"; "The file dialog ended without an answer.");
+        None
+    })
 }
 
 fn split_save_file_path(file_path: &str) -> (Option<PathBuf>, Option<String>) {
@@ -1046,6 +1233,21 @@ fn create_file_manager_command(target: &FileManagerTarget) -> Command {
 mod tests {
     use super::*;
     use std::fs;
+
+    #[tokio::test]
+    async fn a_dialog_answer_arrives_through_its_callback() {
+        let answer = await_dialog(|answer| {
+            std::thread::spawn(move || answer(Some("Quarterly briefing.html")));
+        }).await;
+
+        assert_eq!(answer, Some("Quarterly briefing.html"));
+    }
+
+    #[tokio::test]
+    async fn a_dialog_without_an_answer_counts_as_cancelled() {
+        let answer = await_dialog::<String>(drop).await;
+        assert_eq!(answer, None);
+    }
 
     #[test]
     fn save_file_options_accept_the_previous_file_contract() {
@@ -1246,6 +1448,12 @@ mod tests {
             page_arguments(PageArgument::ZathuraPage, document, 12).unwrap(),
             vec![String::from("-P"), String::from("12"), String::from("/docs/handbook.pdf")],
         );
+
+        assert_eq!(
+            page_arguments(PageArgument::PdfCraftPage, document, 12).unwrap(),
+            vec![String::from("--page"), String::from("12"), String::from("/docs/handbook.pdf")],
+            "PdfCraft counts from one, so page twelve stays twelve.",
+        );
     }
 
     #[test]
@@ -1255,6 +1463,8 @@ mod tests {
         assert_eq!(windows_page_argument("FoxitPDFEditor.Document"), Some(PageArgument::FoxitOpenAction));
         assert_eq!(windows_page_argument("FoxitReader.Document"), Some(PageArgument::FoxitOpenAction));
         assert_eq!(windows_page_argument("Applications\\FoxitPDFReader.exe"), Some(PageArgument::FoxitOpenAction), "A program picked through 'Open with' is registered by its file name.");
+        assert_eq!(windows_page_argument("PdfCraft.Document"), Some(PageArgument::PdfCraftPage));
+        assert_eq!(windows_page_argument("Applications\\pdfcraft.exe"), Some(PageArgument::PdfCraftPage), "The portable PdfCraft is picked through 'Open with'.");
         assert_eq!(windows_page_argument("MSEdgePDF"), Some(PageArgument::UrlFragment));
         assert_eq!(windows_page_argument("ChromePDF"), Some(PageArgument::UrlFragment));
         assert_eq!(windows_page_argument("FirefoxPDF"), Some(PageArgument::UrlFragment));
@@ -1276,6 +1486,11 @@ mod tests {
         );
 
         assert_eq!(
+            executable_from_command(r#""C:\Program Files\PdfCraft\pdfcraft.exe" "%1""#).as_deref(),
+            Some(r"C:\Program Files\PdfCraft\pdfcraft.exe"),
+        );
+
+        assert_eq!(
             executable_from_command(r#"C:\Windows\System32\viewer.exe "%1""#).as_deref(),
             Some(r"C:\Windows\System32\viewer.exe"),
         );
@@ -1293,9 +1508,55 @@ mod tests {
 
         assert_eq!(linux_page_aware_program("okularApplication_pdf.desktop"), Some((String::from("okular"), PageArgument::OkularPage)));
         assert_eq!(linux_page_aware_program("org.pwmt.zathura.desktop"), Some((String::from("zathura"), PageArgument::ZathuraPage)));
+        assert_eq!(linux_page_aware_program("ai.storyteller.pdfcraft.desktop"), Some((String::from("pdfcraft"), PageArgument::PdfCraftPage)));
         assert_eq!(linux_page_aware_program("firefox.desktop"), Some((String::from("firefox"), PageArgument::UrlFragment)));
         assert_eq!(linux_page_aware_program("google-chrome.desktop"), Some((String::from("google-chrome"), PageArgument::UrlFragment)));
         assert_eq!(linux_page_aware_program("chromium_chromium.desktop"), Some((String::from("chromium"), PageArgument::UrlFragment)));
         assert_eq!(linux_page_aware_program("com.example.SomeViewer.desktop"), None, "A viewer we know nothing about opens its first page.");
+    }
+
+    #[test]
+    fn linux_knows_the_flatpaks_it_can_start_with_a_page() {
+        assert_eq!(linux_flatpak_app_id("ai.storyteller.pdfcraft.desktop"), Some("ai.storyteller.pdfcraft"), "The Flatpak keeps the desktop entry of the native package.");
+        assert_eq!(linux_flatpak_app_id("org.gnome.Evince.desktop"), None, "Only the Flatpaks we start ourselves are named.");
+    }
+
+    /// The Flatpak can read only Documents and Downloads, so the file has to travel through the
+    /// document portal, and the page arguments must reach the program unchanged.
+    #[test]
+    fn a_flatpak_receives_the_file_through_the_document_portal() {
+        let document = Path::new("/srv/Größere Übersicht.pdf");
+        let arguments = page_arguments(PageArgument::PdfCraftPage, document, 12).unwrap();
+
+        assert_eq!(
+            flatpak_run_arguments("ai.storyteller.pdfcraft", &arguments, document),
+            vec![
+                String::from("run"), String::from("--file-forwarding"), String::from("ai.storyteller.pdfcraft"),
+                String::from("--page"), String::from("12"),
+                String::from("@@"), String::from("/srv/Größere Übersicht.pdf"), String::from("@@"),
+            ],
+        );
+    }
+
+    #[test]
+    fn macos_recognizes_the_programs_it_can_send_to_a_page() {
+        assert_eq!(macos_page_argument("ai.storyteller.pdfcraft"), Some(PageArgument::PdfCraftPage));
+        assert_eq!(macos_page_argument("com.apple.Preview"), None, "Preview takes no page, and 'open' drops the one a URL names.");
+        assert_eq!(macos_page_argument("com.adobe.Reader"), None);
+    }
+
+    #[test]
+    fn macos_starts_a_new_instance_which_keeps_the_page() {
+        let document = Path::new("/Users/someone/Größere Übersicht.pdf");
+        let arguments = page_arguments(PageArgument::PdfCraftPage, document, 12).unwrap();
+
+        assert_eq!(
+            macos_open_arguments("/Applications/PdfCraft.app", arguments),
+            vec![
+                String::from("-n"), String::from("-a"), String::from("/Applications/PdfCraft.app"), String::from("--args"),
+                String::from("--page"), String::from("12"), String::from("/Users/someone/Größere Übersicht.pdf"),
+            ],
+            "Without -n, a running PdfCraft only comes to the front and loses document and page.",
+        );
     }
 }

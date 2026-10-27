@@ -15,12 +15,26 @@ namespace AIStudio.Chat;
 public sealed record ManagedTranscriptAttachment(string FileName, string FilePath, long FileSizeBytes, string OriginalFileName, bool IsStaged)
     : FileAttachment(FileAttachmentType.DOCUMENT, FileName, FilePath, FileSizeBytes)
 {
+    /// <summary>The folder within a chat directory which holds the attachments AI Studio made for the chat.</summary>
+    private const string ATTACHMENTS_FOLDER = "attachments";
+
+    /// <summary>The folder within the attachments folder which holds the transcripts.</summary>
+    private const string TRANSCRIPTS_FOLDER = "transcripts";
+
+    /// <summary>Gets the directory which holds the transcripts of a chat.</summary>
+    /// <param name="chatDirectory">The directory of the chat.</param>
+    /// <returns>The transcript directory, which may not exist yet.</returns>
+    public static string GetTranscriptDirectory(string chatDirectory) => Path.Combine(chatDirectory, ATTACHMENTS_FOLDER, TRANSCRIPTS_FOLDER);
+
     /// <summary>Refreshes the path-derived name and current file size.</summary>
     public override FileAttachment Normalize()
     {
         var size = File.Exists(this.FilePath) ? new FileInfo(this.FilePath).Length : 0;
         return this with { FileName = Path.GetFileName(this.FilePath), FileSizeBytes = size };
     }
+
+    /// <inheritdoc />
+    public override FileAttachment WithFilePath(string filePath) => new ManagedTranscriptAttachment(this.FileName, filePath, this.FileSizeBytes, this.OriginalFileName, this.IsStaged) { ProvenanceId = this.ProvenanceId, Version = this.Version };
 
     /// <summary>Creates a transcript in an operation-specific staging directory.</summary>
     /// <param name="originalPath">Original media path.</param>
@@ -71,7 +85,7 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
         var fullDataRoot = Path.GetFullPath(SettingsManager.DataDirectory!);
         var relative = Path.GetRelativePath(fullDataRoot, fullFilePath);
         
-        if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith($"..{Path.DirectorySeparatorChar}", PathComparison))
+        if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith($"..{Path.DirectorySeparatorChar}", PathTools.COMPARISON))
             return false;
         
         if (fileInfo.LinkTarget is not null || HasLinkedDirectory(fileInfo.Directory, fullDataRoot))
@@ -82,16 +96,12 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
                         && Guid.TryParseExact(segments[1], "N", out _)
                         && !string.IsNullOrWhiteSpace(segments[2]);
         
-        var isTemporaryChatTranscript = segments is ["tempChats", _, _, _, _]
+        var isTemporaryChatTranscript = segments is ["tempChats", _, ATTACHMENTS_FOLDER, TRANSCRIPTS_FOLDER, _]
+                                        && Guid.TryParse(segments[1], out _);
+
+        var isWorkspaceChatTranscript = segments is ["workspaces", _, _, ATTACHMENTS_FOLDER, TRANSCRIPTS_FOLDER, _]
                                         && Guid.TryParse(segments[1], out _)
-                                        && segments[2] == "attachments"
-                                        && segments[3] == "transcripts";
-        
-        var isWorkspaceChatTranscript = segments is ["workspaces", _, _, _, _, _]
-                                        && Guid.TryParse(segments[1], out _)
-                                        && Guid.TryParse(segments[2], out _)
-                                        && segments[3] == "attachments"
-                                        && segments[4] == "transcripts";
+                                        && Guid.TryParse(segments[2], out _);
         
         if (!isStaging && !isTemporaryChatTranscript && !isWorkspaceChatTranscript)
             return false;
@@ -107,7 +117,7 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
     /// <summary>Rejects paths traversing any symbolic-link or junction directory below the data root.</summary>
     private static bool HasLinkedDirectory(DirectoryInfo? directory, string fullDataRoot)
     {
-        while (directory is not null && !string.Equals(Path.GetFullPath(directory.FullName), fullDataRoot, PathComparison))
+        while (directory is not null && !string.Equals(Path.GetFullPath(directory.FullName), fullDataRoot, PathTools.COMPARISON))
         {
             if (directory.LinkTarget is not null)
                 return true;
@@ -163,7 +173,4 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
         
         await File.WriteAllTextAsync(path, markdown, new UTF8Encoding(false));
     }
-
-    /// <summary>Gets the platform path comparison used for canonical containment checks.</summary>
-    private static StringComparison PathComparison => OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 }

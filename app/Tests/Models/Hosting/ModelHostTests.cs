@@ -79,6 +79,55 @@ public sealed class ModelHostTests
     }
 
     [Test]
+    public void ARequestyNameLosesItsRegionAndTheCloudRunningIt()
+    {
+        var unwrapped = Unwrap(LLMProviders.REQUESTY, "bedrock/claude-opus-5@eu-central-1", out var vendor);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(unwrapped.Original, Is.EqualTo("claude-opus-5"));
+            Assert.That(vendor, Is.Null, "Bedrock runs the model; it did not build it.");
+        });
+    }
+
+    [Test]
+    public void ARequestyManagedPolicyOnlyLosesItsRegion()
+    {
+        var unwrapped = Unwrap(LLMProviders.REQUESTY, "claude-opus-5@eu", out var vendor);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(unwrapped.Original, Is.EqualTo("claude-opus-5"));
+            Assert.That(vendor, Is.Null);
+        });
+    }
+
+    [Test]
+    public void TheRequestyServiceTierComesOffAndTheVendorStays()
+    {
+        var unwrapped = Unwrap(LLMProviders.REQUESTY, "openai/gpt-6-sol:flex", out var vendor);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(unwrapped.Original, Is.EqualTo("gpt-6-sol"));
+            Assert.That(vendor, Is.EqualTo(ModelVendor.OPEN_AI));
+        });
+    }
+
+    [TestCase("novita/qwen/qwen3.8-max", "qwen3.8-max", ModelVendor.ALIBABA, TestName = "Behind the cloud, the organization from the hub names the vendor")]
+    [TestCase("azure/openai/text-embedding-3-large@francecentral", "text-embedding-3-large", ModelVendor.OPEN_AI, TestName = "Behind the cloud and before the region, the organization names the vendor")]
+    public void TheInnermostRequestyOrganizationNamesTheVendor(string modelId, string expectedModel, ModelVendor expectedVendor)
+    {
+        var unwrapped = Unwrap(LLMProviders.REQUESTY, modelId, out var vendor);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(unwrapped.Original, Is.EqualTo(expectedModel));
+            Assert.That(vendor, Is.EqualTo(expectedVendor));
+        });
+    }
+
+    [Test]
     public void TheFireworksAccountPathComesOffWholeWithoutAnybodyCountingItsSegments()
     {
         var unwrapped = Unwrap(LLMProviders.FIREWORKS, "accounts/fireworks/models/llama-v3p1-405b-instruct", out var vendor);
@@ -121,6 +170,25 @@ public sealed class ModelHostTests
         var unwrapped = Unwrap(LLMProviders.SELF_HOSTED, "qwen3.8:27b-mlx", out _);
 
         Assert.That(unwrapped.Original, Is.EqualTo("qwen3.8:27b-mlx"));
+    }
+
+    [TestCase("hf.co/HuggingFaceTB/SmolLM2-135M-Instruct:latest", "SmolLM2-135M-Instruct:latest", ModelVendor.HUGGING_FACE, TestName = "Behind the registry, the organization from the hub names the vendor")]
+    [TestCase("hf.co/unsloth/Qwen3.5-0.8B-GGUF:latest", "Qwen3.5-0.8B-GGUF:latest", null, TestName = "An organization which only repackaged the weights names nobody")]
+    [TestCase("docker.io/ai/qwen3.5:0.8b", "qwen3.5:0.8b", null, TestName = "The registry and its namespace come off and the variant stays")]
+    public void AnLlmmanReferenceLosesItsRegistryAndKeepsItsTag(string modelId, string expectedModel, ModelVendor? expectedVendor)
+    {
+        //
+        // llmman lists the reference it pulled a model from, with the registry in front and the tag
+        // behind. The registry is a path segment like any organization and comes off the same way.
+        // The tag is what Ollama writes after its colon, too, and stays for the same reason.
+        //
+        var unwrapped = Unwrap(LLMProviders.SELF_HOSTED, modelId, out var vendor);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(unwrapped.Original, Is.EqualTo(expectedModel));
+            Assert.That(vendor, Is.EqualTo(expectedVendor));
+        });
     }
 
     [Test]

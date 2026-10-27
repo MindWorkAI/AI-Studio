@@ -23,12 +23,27 @@ public sealed class QdrantEdgeClientImplementation(
     private const string DATABASE_NAME = "Qdrant Edge";
     private const string INFO_PATH = "/system/qdrant-edge/info";
     private const string ENSURE_PATH = "/system/qdrant-edge/ensure";
+    private const string EXISTS_PATH = "/system/qdrant-edge/exists";
     private const string INSERT_PATH = "/system/qdrant-edge/insert";
     private const string SEARCH_PATH = "/system/qdrant-edge/search";
+    private const string RETRIEVE_PATH = "/system/qdrant-edge/retrieve";
+
+    /// <summary>
+    /// How many vectors one request to the runtime reads at most.
+    /// </summary>
+    /// <remarks>
+    /// A vector travels as JSON text, some 15 KB at 1,536 dimensions. A document of thousands of
+    /// chunks in one answer would be hundreds of megabytes on the connection all other calls of the
+    /// app share.
+    /// </remarks>
+    private const int RETRIEVE_BATCH_SIZE = 256;
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
+    private const string RELOCATE_FILE_PATH = "/system/qdrant-edge/relocate-file";
     private const string OPTIMIZE_PATH = "/system/qdrant-edge/optimize";
     private const string DELETE_STORE_PATH = "/system/qdrant-edge/delete-store";
-    
+    private const string PREPARE_BACKUP_PATH = "/system/qdrant-edge/backup/prepare";
+    private const string COPY_STORE_FOR_BACKUP_PATH = "/system/qdrant-edge/backup/copy";
+
     private readonly string path = path;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(QdrantEdgeClientImplementation).Namespace, nameof(QdrantEdgeClientImplementation));
@@ -122,10 +137,26 @@ public sealed class QdrantEdgeClientImplementation(
         await rustService.ExecuteDatabaseQuery<EnsureVectorStoreRequest, VectorStoreEnsureResult>(DATABASE_NAME, ENSURE_PATH,
             new EnsureVectorStoreRequest(storeName, dataSourceName, vectorSize), token) ?? throw new InvalidOperationException("The vector store ensure response was empty.");
 
+    public override async Task<bool> VectorStoreExists(string storeName, CancellationToken token) =>
+        await rustService.ExecuteDatabaseQuery<CheckVectorStoreRequest, bool?>(DATABASE_NAME, EXISTS_PATH,
+            new CheckVectorStoreRequest(storeName), token) ?? throw new InvalidOperationException("The vector store exists response was empty.");
+
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, INSERT_PATH, new InsertEmbeddingRequest(storeName, points), token);
 
-    public override async Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token)
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token) =>
+        this.QueryEmbeddingAsync(storeName, vector, maxMatches, null, hiddenChunks, token);
+
+    public override async Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token)
+    {
+        if (maxMatches <= 0 || filter.MatchesNothing)
+            return [];
+
+        var candidates = await this.QueryEmbeddingAsync(storeName, vector, filter.GetCandidateCount(maxMatches), filter.GetRequestPointIds(), hiddenChunks, token);
+        return filter.Apply(candidates, maxMatches);
+    }
+
+    private async Task<IReadOnlyList<VectorSearchResult>> QueryEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, IReadOnlyList<string>? pointIds, IReadOnlyList<HiddenChunks> hiddenChunks, CancellationToken token)
     {
         if (maxMatches <= 0)
             return [];
@@ -133,18 +164,45 @@ public sealed class QdrantEdgeClientImplementation(
         return await rustService.ExecuteDatabaseQuery<SearchEmbeddingRequest, List<VectorSearchResult>>(
             DATABASE_NAME,
             SEARCH_PATH,
-            new SearchEmbeddingRequest(storeName, vector, maxMatches),
+            new SearchEmbeddingRequest(storeName, vector, maxMatches, pointIds, hiddenChunks),
             token) ?? [];
     }
 
-    public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
-        rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath), token);
+    public override async Task<IReadOnlyList<StoredVector>> RetrieveVectorsAsync(string storeName, IReadOnlyList<string> pointIds, CancellationToken token)
+    {
+        var vectors = new List<StoredVector>(pointIds.Count);
+        foreach (var batch in pointIds.Chunk(RETRIEVE_BATCH_SIZE))
+        {
+            token.ThrowIfCancellationRequested();
+            var batchVectors = await rustService.ExecuteDatabaseQuery<RetrieveVectorsRequest, List<StoredVector>>(DATABASE_NAME, RETRIEVE_PATH,
+                new RetrieveVectorsRequest(storeName, batch), token);
+
+            if (batchVectors is not null)
+                vectors.AddRange(batchVectors);
+        }
+
+        return vectors;
+    }
+
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, IReadOnlyCollection<string> keepPointIds, CancellationToken token) =>
+        rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath, parentFileId, keepPointIds), token);
+
+    public override Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) =>
+        rustService.ExecuteDatabaseOperation(DATABASE_NAME, RELOCATE_FILE_PATH, new RelocateEmbeddingFileRequest(storeName, parentFileId, absolutePath, Path.GetFileName(absolutePath), relativePath, fingerprint), token);
 
     public override Task OptimizeVectorStore(string storeName, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, OPTIMIZE_PATH, new OptimizeVectorStoreRequest(storeName), token);
 
     public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_STORE_PATH, new DeleteVectorStoreRequest(storeName), token);
+
+    public override async Task<VectorStoreBackupPreparation> PrepareBackupAsync(CancellationToken token) =>
+        await rustService.ExecuteDatabaseQuery<PrepareBackupRequest, VectorStoreBackupPreparation>(DATABASE_NAME, PREPARE_BACKUP_PATH,
+            new PrepareBackupRequest(), token) ?? throw new InvalidOperationException("The response preparing the backup of the vector stores was empty.");
+
+    public override async Task<long> CopyStoreForBackupAsync(string backupId, string storeName, CancellationToken token) =>
+        await rustService.ExecuteDatabaseQuery<CopyStoreForBackupRequest, long?>(DATABASE_NAME, COPY_STORE_FOR_BACKUP_PATH,
+            new CopyStoreForBackupRequest(backupId, storeName), token) ?? throw new InvalidOperationException("The response copying a vector store for the backup was empty.");
 
     public override void Dispose()
     {
@@ -160,14 +218,28 @@ public sealed class QdrantEdgeClientImplementation(
     // ReSharper disable NotAccessedPositionalProperty.Local
     private sealed record EnsureVectorStoreRequest(string StoreName, string DataSourceName, int VectorSize);
 
+    private sealed record CheckVectorStoreRequest(string StoreName);
+
     private sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
 
-    private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches);
+    /// <param name="PointIds">The only points the search may return, or null for the whole store.</param>
+    private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches, IReadOnlyList<string>? PointIds, IReadOnlyList<HiddenChunks> HiddenChunks);
 
-    private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath);
+    private sealed record RetrieveVectorsRequest(string StoreName, IReadOnlyList<string> PointIds);
+
+    private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath, string ParentFileId, IReadOnlyCollection<string> KeepPointIds);
+
+    private sealed record RelocateEmbeddingFileRequest(string StoreName, string ParentFileId, string AbsolutePath, string FileName, string RelativePath, string Fingerprint);
 
     private sealed record OptimizeVectorStoreRequest(string StoreName);
     
     private sealed record DeleteVectorStoreRequest(string StoreName);
+
+    /// <summary>
+    /// Preparing a backup needs nothing but the request itself.
+    /// </summary>
+    private sealed record PrepareBackupRequest;
+
+    private sealed record CopyStoreForBackupRequest(string BackupId, string StoreName);
     // ReSharper restore NotAccessedPositionalProperty.Local
 }

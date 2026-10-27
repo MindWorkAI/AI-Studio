@@ -1,4 +1,5 @@
-using AIStudio.Tools.Rust;
+using AIStudio.Dialogs;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -29,14 +30,20 @@ public partial class SourcesList : MSGComponentBase
     [Parameter]
     public IList<Source> Sources { get; set; } = [];
 
+    /// <summary>
+    /// The passages the AI received from the sources, which the user can read below each of them.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<SourcePassage> Passages { get; set; } = [];
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
     [Inject]
-    private IJSRuntime JsRuntime { get; init; } = null!;
+    private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
-    private ILogger<SourcesList> Logger { get; init; } = null!;
+    private IJSRuntime JsRuntime { get; init; } = null!;
 
     private readonly List<SourceEntryGroup> groups = [];
 
@@ -73,77 +80,57 @@ public partial class SourcesList : MSGComponentBase
     private void RebuildGroups()
     {
         this.groups.Clear();
+        var passagesBySource = this.Passages.SortBySource();
         foreach (var group in this.Sources.GroupSources())
         {
             var entries = new List<SourceEntry>(group.Sources.Count);
             foreach (var numberedSource in group.Sources)
             {
                 var document = numberedSource.Source.TryGetDocumentLocation(out var location) ? location : (SourceDocumentLocation?)null;
-                entries.Add(new(numberedSource.Number, numberedSource.Source.Title, numberedSource.Source.URL, document));
+                var passages = passagesBySource.GetPassagesOf(numberedSource.Source);
+
+                //
+                // Pages are links only into a document, and only under the name the title of the
+                // source was made with, see SourcePassageExtensions.NamePassagesInTitles. Parts of a
+                // document without pages are nothing a program can open, so their title stays as it is:
+                //
+                var name = passages.Count > 0 ? passages[0].DataSourceName : string.Empty;
+                var pages = document is not null && !string.IsNullOrWhiteSpace(name) && passages.GetLocation() is { ArePages: true } pageLocation ? pageLocation : null;
+
+                entries.Add(new(numberedSource.Number, numberedSource.Source.Title, numberedSource.Source.URL, document, numberedSource.Source.HasNoLink(), passages, name, pages));
             }
 
             this.groups.Add(new(group.Heading, entries));
         }
     }
 
-    /// <summary>
-    /// Opens a document in the program the system uses for it.
-    /// </summary>
-    /// <remarks>
-    /// Whether the program can be sent to a page is the runtime's business, and it says afterwards
-    /// whether it managed to. Nothing is shown about that here: the document is open, and the title
-    /// of the source names the page anyway.
-    /// </remarks>
-    /// <param name="document">The document to open, and the page to show.</param>
-    private async Task OpenDocument(SourceDocumentLocation document)
-    {
-        OpenDocumentResponse response;
-        try
-        {
-            response = await this.RustService.TryOpenDocumentInSystemViewer(document.Path, document.PageNumber);
-        }
-        catch (Exception e)
-        {
-            this.Logger.LogWarning(e, "Could not open a source document.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Description, T("Could not open the document.")));
-            return;
-        }
+    private string PassagesTooltip(SourceEntry entry) => entry.Passages.Count is 1
+        ? T("Show the passage the AI received from this source")
+        : string.Format(T("Show the {0} passages the AI received from this source"), entry.Passages.Count.CompactCount());
 
-        if (response.Success)
-            return;
+    private async Task ShowPassages(SourceEntry entry) => await SourcePassagesDialog.OpenDialogAsync(this.DialogService, entry.Passages, entry.Document);
 
-        var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Description, string.Format(T("Could not open the document: {0}"), issue)));
-    }
+    private async Task OpenDocument(SourceDocumentLocation document) => await document.OpenAsync(this.RustService);
 
     /// <summary>
-    /// Opens the file browser of the system and selects the document in it.
+    /// The files of sources which are no longer at their place, by their paths, as FileActions found out.
     /// </summary>
-    /// <remarks>
-    /// The second way out of the list: a document which the system opens in the wrong program, or
-    /// which the user wants to move or send on instead of read, is reached from here without being
-    /// opened. This is the same way out the embeddings page offers for a file it could not read.
-    /// </remarks>
-    /// <param name="document">The document to show.</param>
-    private async Task ShowInFileManager(SourceDocumentLocation document)
+    private readonly HashSet<string> missingFiles = new(PathTools.COMPARER);
+
+    private bool IsMissing(SourceEntry entry) => entry.Document is { } document && this.missingFiles.Contains(document.Path);
+
+    /// <summary>
+    /// Keeps whether the file of a source is at its place, so that its title stops being a link when it is not.
+    /// </summary>
+    private void NoteExistence(SourceEntry entry, bool exists)
     {
-        OpenPathResponse response;
-        try
-        {
-            response = await this.RustService.TryOpenPathInRuntimeFileManager(document.Path);
-        }
-        catch (Exception e)
-        {
-            this.Logger.LogWarning(e, "Could not show a source document in the file manager.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.FolderOpen, T("Could not open the file location.")));
-            return;
-        }
-
-        if (response.Success)
+        if (entry.Document is not { } document)
             return;
 
-        var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.FolderOpen, string.Format(T("Could not open the file location: {0}"), issue)));
+        if (exists)
+            this.missingFiles.Remove(document.Path);
+        else
+            this.missingFiles.Add(document.Path);
     }
 
     /// <summary>
@@ -160,5 +147,9 @@ public partial class SourcesList : MSGComponentBase
     /// <param name="Title">The title of the source.</param>
     /// <param name="Link">The address of the source, which a web source is opened by.</param>
     /// <param name="Document">The document the source names, or null when it names none.</param>
-    private readonly record struct SourceEntry(int Number, string Title, string Link, SourceDocumentLocation? Document);
+    /// <param name="HasNoLink">Whether nothing can open the source by its address, e.g., a mail, so that it is shown as text.</param>
+    /// <param name="Passages">The passages the AI received from the source; empty when it received none, or the chat is older than these.</param>
+    /// <param name="Name">The name of the source without its location, or empty when it has no passages.</param>
+    /// <param name="Location">The pages of the passages in the document, each to be opened on its own, or null when there are none.</param>
+    private readonly record struct SourceEntry(int Number, string Title, string Link, SourceDocumentLocation? Document, bool HasNoLink, IReadOnlyList<SourcePassage> Passages, string Name, PassageLocation? Location);
 }

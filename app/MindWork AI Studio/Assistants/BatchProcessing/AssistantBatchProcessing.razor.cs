@@ -1,3 +1,4 @@
+using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
@@ -15,11 +16,13 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     [Inject]
     private PandocAvailabilityService PandocAvailability { get; init; } = null!;
 
+    [Inject]
+    private ModelImageService ModelImageService { get; init; } = null!;
+
     private const string DEFAULT_OUTPUT_DIRECTORY_NAME = "ai-results";
     private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
     private const string CSV_EXTENSION = ".csv";
-    private const string RESULT_FILE_SUFFIX = "_result";
-    private const string TRANSCRIPT_FILE_SUFFIX = ".transcript.md";
+    internal const string RESULT_FILE_SUFFIX = "_result";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private const char LOG_SEPARATOR = ';';
 
@@ -27,7 +30,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     /// The name of the log file. It is fixed, so that a later batch run finds
     /// the log of a previous run and can continue it.
     /// </summary>
-    private const string LOG_FILENAME = "log.csv";
+    internal const string LOG_FILENAME = "log.csv";
 
     protected override Tools.Components Component => Tools.Components.BATCH_PROCESSING_ASSISTANT;
 
@@ -82,6 +85,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.hasReportedWriteFailure = false;
         this.numProcessedFiles = 0;
         this.pauseBeforeNextFileSeconds = 0;
+        this.numTooLargeFiles = 0;
     }
 
     protected override bool MightPreselectValues()
@@ -102,7 +106,10 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string inputDirectory = string.Empty;
     private string outputDirectory = string.Empty;
     private string filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
-    private bool includeSubdirectories;
+    private string excludePatterns = FileExclusions.DEFAULT_PATTERNS;
+    private int maxFileSizeMegabytes = FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
+    private bool includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
+    private bool includeHiddenFilesAndFolders = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
     private BatchProcessingPromptSource promptSource = BatchProcessingPromptSource.FREE_PROMPT;
     private string freePrompt = string.Empty;
     private string importedPrompt = string.Empty;
@@ -120,10 +127,17 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
 
     private readonly List<BatchProcessingFileResult> fileResults = [];
     private readonly HashSet<string> usedResultFileNames = new(StringComparer.OrdinalIgnoreCase);
+    private FileExclusionEditor? exclusionEditor;
+    private bool showExpertSettings;
     private bool isProcessingBatch;
     private bool hasReportedWriteFailure;
     private int numProcessedFiles;
     private int pauseBeforeNextFileSeconds;
+
+    /// <summary>
+    /// How many matching files the last search left out for their size, cf. FindInputFiles.
+    /// </summary>
+    private int numTooLargeFiles;
 
     /// <summary>
     /// The header of the column of the results table that holds the AI answer.
@@ -159,6 +173,10 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
 
     private void RestoreDefaultFilePatterns() => this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
 
+    private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
+
+    private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
+
     private ConfidenceLevel GetMinimumConfidenceLevel()
     {
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
@@ -178,7 +196,10 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.inputDirectory = string.Empty;
             this.outputDirectory = string.Empty;
             this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
-            this.includeSubdirectories = false;
+            this.excludePatterns = FileExclusions.DEFAULT_PATTERNS;
+            this.maxFileSizeMegabytes = FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
+            this.includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
+            this.includeHiddenFilesAndFolders = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
             this.promptSource = BatchProcessingPromptSource.FREE_PROMPT;
             this.freePrompt = string.Empty;
             this.promptFilePath = string.Empty;
@@ -197,7 +218,10 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.inputDirectory = settings.InputDirectory;
         this.outputDirectory = settings.OutputDirectory;
         this.filePatterns = settings.FilePatterns;
+        this.excludePatterns = settings.ExcludePatterns;
+        this.maxFileSizeMegabytes = Math.Max(settings.MaxFileSizeMegabytes, FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES);
         this.includeSubdirectories = settings.IncludeSubdirectories;
+        this.includeHiddenFilesAndFolders = settings.IncludeHiddenFilesAndFolders;
         this.promptSource = settings.PromptSource;
         this.freePrompt = settings.FreePrompt;
         this.promptFilePath = settings.PromptFilePath;
@@ -269,13 +293,13 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         var minimumLevel = this.GetMinimumConfidenceLevel();
         var policyProvider = this.SettingsManager.GetPreselectedProvider(this.Component, this.selectedPolicy.PreselectedProvider);
         if (policyProvider != Settings.Provider.NONE
-            && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            && this.SettingsManager.IsProviderUsable(policyProvider.UsedLLMProvider, minimumLevel))
             this.ProviderSettings = policyProvider;
         else
         {
             var fallbackProvider = this.SettingsManager.GetPreselectedProvider(this.Component, usePreselectionBeforeCurrentProvider: true);
             this.ProviderSettings = fallbackProvider != Settings.Provider.NONE
-                                    && fallbackProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel
+                                    && this.SettingsManager.IsProviderUsable(fallbackProvider.UsedLLMProvider, minimumLevel)
                 ? fallbackProvider
                 : Settings.Provider.NONE;
         }

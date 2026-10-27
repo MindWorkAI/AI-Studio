@@ -31,6 +31,7 @@ public static class LLMProvidersIconExtensions
         LLMProviders.HETZNER => $"{ICON_ROOT}/hetzner.svg",
         LLMProviders.IONOS => $"{ICON_ROOT}/ionos.svg",
         LLMProviders.LITE_LLM => $"{ICON_ROOT}/litellm.svg",
+        LLMProviders.REQUESTY => $"{ICON_ROOT}/requesty.svg",
         LLMProviders.GROQ => $"{ICON_ROOT}/groq.svg",
         LLMProviders.FIREWORKS => $"{ICON_ROOT}/fireworks.svg",
         LLMProviders.HUGGINGFACE => $"{ICON_ROOT}/hugging-face.svg",

@@ -4,9 +4,12 @@
 - Introduced: 2026-07-09
 - Remove after: when Microsoft fixes dotnet/runtime#27620 and dotnet/runtime#41914
 - Code references:
+  - `app/MindWork AI Studio/Tools/ZipEntryNames.cs` (`Normalize`, which treats backslashes as separators)
   - `app/MindWork AI Studio/Tools/PluginSystem/PluginArchive.cs`
   - `app/MindWork AI Studio/Tools/PluginSystem/PluginFactory.Download.cs`
-  - `app/MindWork AI Studio/Tools/Services/AssistantPluginInstallService.cs`
+  - `app/MindWork AI Studio/Tools/Services/PluginInstallService.Import.cs`
+  - `app/MindWork AI Studio/Tools/ChatArchive/ChatArchiveImporter.cs`
+  - `app/Tests/Tools/ZipEntryNamesTests.cs`
 
 ## User Impact
 
@@ -18,7 +21,7 @@ The same applies to plugin archives that users import from their disk. Archives 
 
 ## Compatibility Behavior
 
-AI Studio manually extracts enterprise configuration plugin archives and plugin archives imported by users. During extraction, entry names are normalized so both `/` and `\` are treated as archive path separators.
+AI Studio manually extracts enterprise configuration plugin archives and plugin archives imported by users. During extraction, entry names are normalized so both `/` and `\` are treated as archive path separators. The same normalization in `ZipEntryNames` serves adding the chats of a backup, which AI Studio always writes with forward slashes.
 
 The extraction still preserves the archive structure and validates each entry before writing it to disk. Rooted paths, drive-qualified paths, and parent-directory traversal paths are rejected.
 
@@ -28,4 +31,5 @@ This works around the behavior described in dotnet/runtime#27620. A related upst
 
 - Confirm supported .NET runtimes and administrator packaging guidance no longer require accepting backslashes in enterprise ZIP entry names.
 - Replace `PluginArchive.Extract(...)` with `ZipFile.ExtractToDirectory(...)`.
+- Stop treating `\` as a separator in `ZipEntryNames.Normalize`, and drop the backslash cases from `ZipEntryNamesTests`. Keep the checks against rooted, drive-qualified, and `..` names: they protect every extraction, not just this shim.
 - Update this document's status to `Removed`.

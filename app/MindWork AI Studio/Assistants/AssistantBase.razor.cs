@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
@@ -28,6 +29,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     protected RustService RustService { get; init; } = null!;
+
+    [Inject]
+    protected AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
 
     [Inject]
     protected ToolRegistry ToolRegistry { get; init; } = null!;
@@ -60,6 +64,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected abstract string SystemPrompt { get; }
 
     protected abstract Tools.Components Component { get; }
+
+    /// <summary>
+    /// The name of the assistant plugin, which is only set by plugin-provided assistants.
+    /// </summary>
+    protected virtual string RuntimeAssistantName => string.Empty;
     
     protected virtual Func<string> Result2Copy => () => this.ResultingContentBlock is null ? string.Empty : this.ResultingContentBlock.Content switch
     {
@@ -98,12 +107,36 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual bool ShowProfileSelection => true;
     
     protected virtual bool ShowDedicatedProgress => false;
+
+    /// <summary>
+    /// What the assistant is doing right now, shown below the dedicated progress bar; empty for no text.
+    /// </summary>
+    protected virtual string ProgressText => string.Empty;
     
     protected virtual bool ShowSendTo => true;
     
     protected virtual bool ShowCopyResult => true;
-    
+
+    /// <summary>
+    /// Whether "Copy result", and copying or exporting the answers this assistant shows, end them with the
+    /// notice that AI generated them, when that is switched on.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose result is meant for a program or another model rather than for a reader turns
+    /// this off, because one sentence more would change what the result does.
+    /// </remarks>
+    protected virtual bool AddsAIGeneratedContentDisclosure => true;
+
     protected virtual bool ShowReset => true;
+
+    /// <summary>
+    /// Whether the system prompt starts with the current date and time.
+    /// </summary>
+    /// <remarks>
+    /// Off for most assistants, whose results do not depend on the date. An assistant which writes
+    /// the date into its result, or plans around it, turns this on rather than guessing the date.
+    /// </remarks>
+    protected virtual bool IncludeDateTime => false;
 
     protected virtual string? SendToChatVisibleUserPromptPrefix => null;
 
@@ -153,7 +186,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private AssistantSessionKey assistantSessionKey;
     private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
+
+    /// <summary>
+    /// When the running session started, which the time below the progress bar counts from; null while
+    /// no session runs. It comes from the session, so an instance which returns to a running session
+    /// goes on counting where the first one was.
+    /// </summary>
+    private DateTimeOffset? processingStartedAt;
+
     private AssistantSessionSnapshot? pendingRenderedAssistantSessionSnapshot;
+    private AssistantSessionSnapshot? lastAttachedAssistantSessionSnapshot;
 
     /// <summary>
     /// Gets whether the Blazor component instance has already been disposed.
@@ -203,7 +245,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
-        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+        this.SelectedToolIds = this.ToolRegistry.GetDefaultToolIds(this.Component);
         await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
@@ -257,7 +299,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         await this.RefreshProviderSelectionFromConfigurationAsync();
         if (this.ProviderSettings == Settings.Provider.NONE)
+        {
+            await this.ReportMissingProviderAsync();
             return;
+        }
 
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
@@ -280,6 +325,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
 
         this.assistantSessionId = startedSession.SessionId;
+        this.processingStartedAt = startedSession.StartedAt;
         await this.RefreshAssistantUIAsync();
 
         var sessionStatus = AssistantSessionStatus.COMPLETED;
@@ -312,6 +358,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         finally
         {
             this.IsProcessing = false;
+            this.processingStartedAt = null;
             var sessionCancellationTokenSource = this.CancellationTokenSource;
             this.CancellationTokenSource = null;
             if (this.assistantSessionId is { } sessionId)
@@ -323,6 +370,25 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             sessionCancellationTokenSource?.Dispose();
             await this.RefreshAssistantUIAsync();
         }
+    }
+
+    /// <summary>
+    /// Tells the user that the assistant cannot start without a provider, together with whatever else is missing.
+    /// </summary>
+    /// <remarks>
+    /// Most assistants validate their form only in their submit action, which never runs without a
+    /// provider. Validating here marks the provider selection and lists the other issues as well.
+    /// The form does not report the missing provider when it holds no provider selection, as with an
+    /// assistant plugin without one, or when its selection still shows the provider which the refresh
+    /// at the start has just dropped. Then the issue is added on its own.
+    /// </remarks>
+    private async Task ReportMissingProviderAsync()
+    {
+        if (this.Form is not null)
+            await this.Form.Validate();
+
+        if (this.ValidatingProvider(this.ProviderSettings) is { } issue && !this.InputIssues.Contains(issue))
+            this.AddInputIssue(issue);
     }
 
     private void TriggerFormChange(FormFieldChangedEventArgs _)
@@ -372,7 +438,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.ChatThread = new()
         {
-            IncludeDateTime = false,
+            IncludeDateTime = this.IncludeDateTime,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
@@ -380,8 +446,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = Guid.NewGuid(),
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Blocks = [],
-            RuntimeComponent = this.Component,
         };
+
+        this.AssignRuntimeIdentity(this.ChatThread);
     }
 
     protected Guid CreateChatThread(Guid workspaceId, string name)
@@ -389,7 +456,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var chatId = Guid.NewGuid();
         this.ChatThread = new()
         {
-            IncludeDateTime = false,
+            IncludeDateTime = this.IncludeDateTime,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
@@ -397,10 +464,24 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = chatId,
             Name = name,
             Blocks = [],
-            RuntimeComponent = this.Component,
         };
         
+        this.AssignRuntimeIdentity(this.ChatThread);
         return chatId;
+    }
+
+    /// <summary>
+    /// Sets who runs the given thread: this assistant's component and, for an assistant plugin, its name.
+    /// </summary>
+    /// <remarks>
+    /// Both decide which tools the thread may use and what its requests to self-hosted servers name. Every
+    /// way an assistant creates or sends a thread goes through here, so that none of them can forget one.
+    /// </remarks>
+    /// <param name="chatThread">The thread this assistant runs.</param>
+    protected void AssignRuntimeIdentity(ChatThread chatThread)
+    {
+        chatThread.RuntimeComponent = this.Component;
+        chatThread.RuntimeAssistantName = this.RuntimeAssistantName;
     }
 
     private Task RefreshProviderSelectionFromConfigurationAsync()
@@ -414,7 +495,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
-        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+        this.SelectedToolIds = this.ToolRegistry.GetDefaultToolIds(this.Component);
     }
 
     /// <summary>
@@ -437,18 +518,20 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// always has the last word: a tool asking for more confidence than the selected provider has
     /// never reaches the model, no matter who put it on the list. That filter belongs here rather
     /// than into the stored selection, because a provider with too little confidence must not cost
-    /// the user a tool for good.
+    /// the user a tool for good. The same goes for a tool which a mailbox the thread read from
+    /// keeps back.
     /// </remarks>
-    protected HashSet<string> GetRunnableToolIds()
+    /// <param name="outboundDataRestriction">Where the thread the tools run in may still send data, see ChatThread.RequiredOutboundDataRestriction.</param>
+    protected HashSet<string> GetRunnableToolIds(OutboundDataRestriction outboundDataRestriction)
     {
         if (this.AssistantManagedToolIds is not null)
-            return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds);
+            return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds, outboundDataRestriction);
 
         // What the user cannot see, the assistant does not use:
         if (!this.SettingsManager.IsToolSelectionVisible(this.Component))
             return [];
 
-        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.SelectedToolIds);
+        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.SelectedToolIds, outboundDataRestriction);
     }
 
     /// <summary>
@@ -460,7 +543,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </remarks>
     protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
-        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(updatedToolIds);
         return Task.CompletedTask;
     }
     
@@ -497,10 +580,46 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             InitialRemoteWait = true,
         };
 
+        //
+        // The stream calls this for every chunk and waits for it. A checkpoint captures the whole
+        // state of the assistant and makes the main layout render as well, so both happen only now
+        // and then. When the stream is done, both happen in any case:
+        //
+        var lastRendering = DateTimeOffset.MinValue;
+        var lastCheckpoint = DateTimeOffset.MinValue;
+        string? lastProgressText = null;
         aiText.StreamingEvent = async () =>
         {
-            await this.CheckpointAssistantSession();
-            await this.RefreshAssistantUIAsync();
+            var now = DateTimeOffset.Now;
+            if (now - lastCheckpoint >= STREAMING_CHECKPOINT_MIN_TIME)
+            {
+                lastCheckpoint = now;
+                await this.CheckpointAssistantSession();
+            }
+
+            if (now - lastRendering < STREAMING_RENDER_MIN_TIME)
+                return;
+
+            lastRendering = now;
+            if (!hideContentFromUser)
+            {
+                await this.RefreshAssistantUIAsync();
+                return;
+            }
+
+            //
+            // A hidden answer shows nothing but the progress text, so the whole form renders only
+            // when that text changed. Thinking models stream for minutes before they write a word:
+            //
+            await this.RefreshAssistantUIAsync(() =>
+            {
+                var progressText = this.ProgressText;
+                if (progressText == lastProgressText)
+                    return false;
+
+                lastProgressText = progressText;
+                return true;
+            });
         };
 
         aiText.StreamingDone = async () =>
@@ -522,9 +641,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
-            this.ChatThread.RuntimeComponent = this.Component;
+            this.AssignRuntimeIdentity(this.ChatThread);
             this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
-            this.ChatThread.RuntimeSelectedToolIds = useSelectedTools ? this.GetRunnableToolIds() : [];
+            this.ChatThread.RuntimeSelectedToolIds = useSelectedTools ? this.GetRunnableToolIds(this.ChatThread.RequiredOutboundDataRestriction.Restriction) : [];
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
         }
 
@@ -607,6 +726,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         this.ChatThread.Blocks.Add(this.ResultingContentBlock);
         this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
+        this.AssignRuntimeIdentity(this.ChatThread);
 
         await this.CheckpointAssistantSession();
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
@@ -634,7 +754,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task CopyToClipboard()
     {
-        await this.RustService.CopyText2Clipboard(this.Result2Copy());
+        var result = this.Result2Copy();
+        if (this.AddsAIGeneratedContentDisclosure)
+            result = this.DisclosureService.AddDisclosureToMarkdown(result);
+
+        await this.RustService.CopyText2Clipboard(result);
     }
 
     private ChatThread CreateSendToChatThread()
@@ -733,6 +857,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 {
                     var convertedChatThread = this.ConvertToChatThread;
                     convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
+
+                    // Some assistants start the chat under an id of its own, so what their answers received goes along. A chat without an id received nothing:
+                    if (this.ChatThread is { } assistantChat && convertedChatThread.ChatId != Guid.Empty && assistantChat.ChatId != convertedChatThread.ChatId)
+                        await ChatProvenance.CopyChatAsync(assistantChat.ChatId, convertedChatThread.ChatId);
+
                     MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, new ChatStartRequest(convertedChatThread));
                 }
                 break;
@@ -935,15 +1064,24 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <summary>
     /// Applies an assistant session snapshot to this component instance.
     /// </summary>
+    /// <remarks>
+    /// When the user leaves an assistant while it runs and comes back, this component only shows the run.
+    /// The component which started it keeps working out of sight and reports every few seconds, yet its
+    /// form stays as it was when the user left. So once this component has taken over a run, it takes over
+    /// only what the running assistant changed since, such as the progress and the result. What the user
+    /// changes here stays, just as it would in the component which started the run.
+    /// </remarks>
     /// <param name="snapshot">The snapshot to attach.</param>
     /// <param name="restoreClientOnlyContent">Whether derived assistants should restore client-only UI state.</param>
     /// <returns>A task that completes after the component was refreshed.</returns>
     private async Task AttachAssistantSession(AssistantSessionSnapshot snapshot, bool restoreClientOnlyContent)
     {
         this.assistantSessionId = snapshot.SessionId;
-        this.ImportAssistantSessionState(snapshot.State);
+        this.ImportAssistantSessionState(snapshot.StateChangedSince(this.lastAttachedAssistantSessionSnapshot));
+        this.lastAttachedAssistantSessionSnapshot = snapshot;
         this.ChatThread = snapshot.ChatThread ?? this.ChatThread;
         this.IsProcessing = snapshot.IsActive;
+        this.processingStartedAt = snapshot.IsActive ? snapshot.StartedAt : null;
 
         if (!snapshot.IsActive)
             this.CancellationTokenSource = null;
@@ -960,15 +1098,20 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <summary>
     /// Refreshes the component when it is still mounted.
     /// </summary>
+    /// <param name="hasChanged">Decides whether anything visible changed, asked on the thread of the renderer, so it may read what the rendering reads; null to render in any case.</param>
     /// <returns>A task that completes after the renderer was notified.</returns>
-    protected async Task RefreshAssistantUIAsync()
+    protected async Task RefreshAssistantUIAsync(Func<bool>? hasChanged = null)
     {
         if (this.isDisposed)
             return;
 
         try
         {
-            await this.InvokeAsync(this.StateHasChanged);
+            await this.InvokeAsync(() =>
+            {
+                if (hasChanged is null || hasChanged())
+                    this.StateHasChanged();
+            });
         }
         catch (InvalidOperationException)
         {
@@ -1020,7 +1163,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(RESULTING_CONTENT_BLOCK_STATE_KEY, value => this.ResultingContentBlock = value);
         reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.InputIssues = value);
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
-        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(value));
+        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(value));
         this.RestoreCustomAssistantSessionState(reader);
     }
 

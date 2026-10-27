@@ -1,7 +1,5 @@
 using System.Diagnostics;
-using System.Reflection;
 
-using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -11,12 +9,8 @@ namespace AIStudio.Tools;
 
 public sealed class PandocProcessBuilder
 {
-    private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
-    private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
-
-    // Use runtime detection instead of metadata to ensure correct RID on dev machines:
+    // Pandoc is a program of its own, so it has to fit the machine, not the build of AI Studio:
     private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
-    private static readonly RID METADATA_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocProcessBuilder));
     private const string FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY = "/app/plugins/pandoc/bin";
 
@@ -139,19 +133,6 @@ public sealed class PandocProcessBuilder
 
         try
         {
-            //
-            // Log a warning if the runtime-detected RID differs from the metadata RID.
-            // This can happen on dev machines where the metadata.txt contains stale values.
-            // We always use the runtime-detected RID for correct behavior.
-            //
-            if (shouldLog && CPU_ARCHITECTURE != METADATA_ARCHITECTURE)
-            {
-                LOGGER.LogWarning(
-                    "Runtime-detected RID '{RuntimeRID}' differs from metadata RID '{MetadataRID}'. Using runtime-detected RID. This is expected on dev machines where metadata.txt may be outdated.",
-                    CPU_ARCHITECTURE.ToUserFriendlyName(),
-                    METADATA_ARCHITECTURE.ToUserFriendlyName());
-            }
-
             //
             // First, we try to find the pandoc executable in the data directory.
             // Any local installation should be preferred over the system-wide installation.

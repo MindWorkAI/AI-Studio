@@ -28,8 +28,8 @@ Are you new here? [Read here](#what-is-ai-studio) what AI Studio is.
 
 ## What is AI Studio?
 
-![MindWork AI Studio - Home](documentation/AI%20Studio%20Home.png)
-![MindWork AI Studio - Assistants](documentation/AI%20Studio%20Assistants.png)
+![MindWork AI Studio - Home](documentation/AI_Studio_main.png)
+![MindWork AI Studio - Assistants](documentation/mindworks_assistants_complete_4px.png)
 
 MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of your choice and can then use these AI systems with AI Studio. Whether you want to use Google Gemini, OpenAI GPT-6, or even your own local AI models.
 
@@ -51,8 +51,9 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
   - [Hetzner](https://experiments.hetzner.com) (experimental inference API running open-source models in the EU)
   - [IONOS](https://cloud.ionos.com/managed/ai-model-hub) (AI Model Hub running open-source models in Germany)
   - [LiteLLM](https://www.litellm.ai/) (an AI gateway you run yourself, in front of models from many providers)
+  - [Requesty](https://www.requesty.ai/) (a hosted AI gateway from the UK, in front of models from many providers)
   - [Hugging Face](https://huggingface.co/) using their [inference providers](https://huggingface.co/docs/inference-providers/index) such as Cerebras, Nebius, Sambanova, Novita, Hyperbolic, Together AI, Fireworks, Hugging Face
-  - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), and [vLLM](https://github.com/vllm-project/vllm)
+  - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), [vLLM](https://github.com/vllm-project/vllm), and [llmman](https://github.com/llmmanorg/llmman)
   - [Groq](https://groq.com/)
   - [Fireworks](https://fireworks.ai/)
   - For scientists and employees of research institutions, we also support [Helmholtz](https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570) and [GWDG](https://gwdg.de/services/application-services/ai-services/) AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
@@ -83,7 +84,7 @@ We offer various ways you can support the project:
 
 - **One-Time Contributions**: Make a one-time donation and have your name or company logo included in the app as a gesture of our gratitude.
 
-For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
+For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise. [Our sponsoring guide](documentation/Sponsoring.md) explains how it works, from delivering your logo to what sponsoring includes.
 
 To view all available tiers, please visit our [GitHub Sponsors page](https://github.com/sponsors/MindWorkAI).
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
@@ -132,6 +133,19 @@ Do you want to teach AI Studio what a model can do? [Read the model capabilities
 <details>
     <summary>
     <h2 style="display:inline-block">
+        Contributing
+    </h2>
+    </summary>
+
+Would you like to contribute to AI Studio? We welcome pull requests. We build AI Studio with AI coding agents, and we recommend that you do the same. Please read our [contribution guidelines](CONTRIBUTING.md) before you start: they explain when to ask us first, what a pull request needs, and what you agree to when you submit one.
+
+Did you find a security vulnerability? Please follow our [security policy](SECURITY.md) and never report it publicly. Everyone taking part in our community follows our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
         Enterprise IT
     </h2>
     </summary>
@@ -152,6 +166,8 @@ MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional sourc
 - **Competing Use**: Our only request is that you don't create commercial products or services that replace or compete with MindWork AI Studio or any of our other offerings.
 - **No Warranties**: The software is provided "as is", without any promises from us about it working perfectly for your needs. While we strive to make it great, we can't guarantee it will be free of bugs or issues.
 - **Future License**: Good news! The license for each release of MindWork AI Studio will automatically convert to an MIT license two years from its release date. This makes it even easier for you to use the software in the future.
+
+Contributions from outside the core team are licensed to us under the MIT License, see our [contribution guidelines](CONTRIBUTING.md#licensing-of-your-contribution) and the [NOTICE](NOTICE.md) file.
 
 For more details, refer to the [LICENSE](LICENSE.md) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
 

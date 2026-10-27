@@ -3,22 +3,11 @@
 @using AIStudio.Settings.DataModel
 @using AIStudio.Tools.Rust
 
-<MudText Typo="Typo.h5" Class="mb-3">
+<MudText Typo="Typo.h6" Class="mb-3">
     @T("Input")
 </MudText>
 
 <SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
-
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
-    <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("File patterns")" HelperText="@T("Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx")" AdornmentIcon="@Icons.Material.Filled.FilterAlt" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="flex-grow-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore" Disabled="@this.isProcessingBatch" OnClick="@this.RestoreDefaultFilePatterns">
-        @T("Restore default patterns")
-    </MudButton>
-</MudStack>
-
-<MudJustifiedText Typo="Typo.body2" Class="mb-3">
-    @T("Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.")
-</MudJustifiedText>
 
 <MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
 
@@ -29,7 +18,44 @@
     </MudJustifiedText>
 }
 
-<MudText Typo="Typo.h5" Class="mb-3 mt-6">
+<div class="mt-6">
+    <FilePatternSelection>
+        <AllowedContent>
+            <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Files to include")" AdornmentIcon="@Icons.Material.Filled.Restore" Adornment="Adornment.End" OnAdornmentClick="@this.RestoreDefaultFilePatterns" AdornmentAriaLabel="@T("Restore default patterns")" Lines="1" AutoGrow="@true" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        </AllowedContent>
+    </FilePatternSelection>
+</div>
+
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">
+    @T("Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.")
+</MudJustifiedText>
+
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">
+    @T("Images in JPG, PNG, WebP, GIF, BMP, or TIFF format are given to the model as images, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.")
+</MudJustifiedText>
+
+<MudStack Class="mb-3">
+    <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+        @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+    </MudButton>
+    <MudDivider/>
+    <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+        <MudText Typo="Typo.subtitle2" Class="mb-2">@T("Hidden files and folders")</MudText>
+        <MudTextSwitch Label="@T("Include hidden files and folders?")" Disabled="@this.isProcessingBatch" Value="@this.includeHiddenFilesAndFolders" ValueChanged="@(v => this.includeHiddenFilesAndFolders = v)" LabelOn="@T("Yes, process hidden files and folders as well")" LabelOff="@T("No, ignore hidden files and folders")"/>
+        <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+            @T("Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.")
+        </MudJustifiedText>
+
+        <div class="mt-4">
+            <FileExclusionEditor @ref="@this.exclusionEditor" @bind-Text="@this.excludePatterns" Disabled="@this.isProcessingBatch" Label="@T("Excluded files and folders")" ResetButtonText="@T("Restore default")"/>
+        </div>
+
+        <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4">@T("File size limit")</MudText>
+        <MudNumericField T="int" @bind-Value="@this.maxFileSizeMegabytes" Min="@FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Ignore files larger than")" HelperText="@T("Matching files above this size are left out, e.g., images of virtual machines.")" Adornment="Adornment.End" AdornmentText="MB" Variant="Variant.Outlined" Margin="Margin.Normal"/>
+    </MudCollapse>
+</MudStack>
+
+<MudText Typo="Typo.h6" Class="mb-3 mt-6">
     @T("Instructions")
 </MudText>
 
@@ -115,7 +141,7 @@ else
     }
 }
 
-<MudText Typo="Typo.h5" Class="mb-3 mt-6">
+<MudText Typo="Typo.h6" Class="mb-3 mt-6">
     @T("Output")
 </MudText>
 
@@ -170,7 +196,7 @@ else
     @T("We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.")
 </MudJustifiedText>
 
-<MudText Typo="Typo.h5" Class="mb-3 mt-6">
+<MudText Typo="Typo.h6" Class="mb-3 mt-6">
     @T("Processing pace")
 </MudText>
 
@@ -211,7 +237,7 @@ else
 
 @if (this.fileResults.Count > 0)
 {
-    <MudText Typo="Typo.h5" Class="mb-3 mt-6">
+    <MudText Typo="Typo.h6" Class="mb-3 mt-6">
         @T("Progress")
     </MudText>
 
@@ -269,4 +295,11 @@ else
             }
         </tbody>
     </MudSimpleTable>
+
+    @if (this.numTooLargeFiles > 0)
+    {
+        <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+            @string.Format(T("{0} matching files were left out because they are larger than {1}."), this.numTooLargeFiles, FolderFileSelection.MegabytesToBytes(this.maxFileSizeMegabytes).FileSize())
+        </MudJustifiedText>
+    }
 }

@@ -38,17 +38,19 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
         this.Component is not AIStudio.Tools.Components.CHAT &&
         !this.SettingsManager.IsToolSelectionVisible(this.Component);
 
-    private bool IsToolDisabled(string toolId) => !this.SettingsManager.IsToolActive(toolId);
+    private bool IsToolDisabled(string toolId) => !this.ToolRegistry.IsToolActive(toolId);
 
     protected override async Task OnInitializedAsync()
     {
         this.availableTools = (await this.ToolRegistry.GetCatalogAsync(this.Component))
-            .Select(x => new ConfigurationSelectData<string>(x.Implementation.GetDisplayName(), x.Definition.Id))
+            .Select(x => new ConfigurationSelectData<string>(x.DisplayName, x.Id))
             .ToList();
         await base.OnInitializedAsync();
     }
 
-    private HashSet<string> GetSelectedValues() => this.SettingsManager.GetDefaultToolIds(this.Component);
+    // The list holds no tool the user switched off, so it must not count one as selected either:
+    private HashSet<string> GetSelectedValues() => this.ToolRegistry.LeaveOutSwitchedOffByUser(this.ToolRegistry.GetDefaultToolIds(this.Component));
 
-    private void UpdateSelection(HashSet<string> values) => this.SettingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent[this.Component.ToString()] = [..ToolSelectionRules.NormalizeSelection(values)];
+    // Tools the user switched off stay preselected, so switching them on again brings them back:
+    private void UpdateSelection(HashSet<string> values) => this.SettingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent[this.Component.ToString()] = this.ToolRegistry.KeepSwitchedOffByUser(this.ToolRegistry.GetDefaultToolIds(this.Component), values);
 }

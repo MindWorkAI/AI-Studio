@@ -14,6 +14,7 @@ using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
@@ -172,7 +173,9 @@ internal sealed class Program
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<AIGeneratedContentDisclosureService>();
         builder.Services.AddSingleton<PromptInjectionGuardService>();
+        builder.Services.AddSingleton<ModelImageService>();
         builder.Services.AddSingleton<ToolSettingsService>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
@@ -182,6 +185,10 @@ internal sealed class Program
         builder.Services.AddSingleton<IWebSearchBackend, TavilySearchBackend>();
         builder.Services.AddSingleton<IToolImplementation, WebSearchTool>();
         builder.Services.AddSingleton<IToolImplementation, SemanticSearchTool>();
+        builder.Services.AddSingleton<IToolImplementation, SearchMailsTool>();
+        builder.Services.AddSingleton<IToolImplementation, ReadMailTool>();
+        builder.Services.AddSingleton<IToolImplementation, CountMailsTool>();
+        builder.Services.AddSingleton<IToolCollection, MailboxToolCollection>();
         builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();
@@ -205,7 +212,11 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddSingleton<DataSourceDescriptionService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
+        builder.Services.AddSingleton<DataBackupService>();
+        builder.Services.AddSingleton<DataRestoreService>();
+        builder.Services.AddSingleton<LocalIndexSearchService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
+        builder.Services.AddSingleton<MailboxRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         
@@ -219,12 +230,18 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<TranscriptStagingCleanupService>();
+        builder.Services.AddHostedService<ProvenanceCleanupService>();
+        builder.Services.AddHostedService<DataRestoreFollowUpService>();
+
+        // Compatibility shim, see documentation/compatibility-shims/2026-10-relative-data-paths.md. Remove after 2027-04-14:
+        builder.Services.AddHostedService<RelativeDataPathsMigrationService>();
+
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<DataSourceEmbeddingService>());
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
-        builder.Services.AddScoped<NativeShareService>();
+        builder.Services.AddSingleton<NativeShareService>();
         builder.Services.AddScoped<PluginShareService>();
 
         //

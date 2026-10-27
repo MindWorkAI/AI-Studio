@@ -6,13 +6,12 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.Builder;
 
-public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
+public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistantBuilder>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -80,8 +79,9 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     
     protected override bool ShowCopyResult => this.step is BuilderStep.DONE;
 
-    protected override bool HasSettingsPanel => false;
-    
+    // The result is the Lua code of a plugin, and a notice below it would make that code invalid:
+    protected override bool AddsAIGeneratedContentDisclosure => false;
+
     protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant) ? this.generatedLuaAssistant : this.generatedAssistantSpec;
 
     private BuilderStep step = BuilderStep.DESCRIBE;
@@ -249,8 +249,6 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.launcherDataSourceIds = [];
         this.launcherToolIds = [];
         this.selectedAssistantComponents = [];
-        this.selectedOutputLanguage = CommonLanguages.AS_IS;
-        this.customOutputLanguage = string.Empty;
         this.allowGeneratedAssistantProfiles = true;
         this.extraRules = string.Empty;
         this.exampleRequest = string.Empty;
@@ -258,9 +256,25 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.reviewNotes = string.Empty;
         this.generatedLuaAssistant = string.Empty;
         this.ResetInstallFlow();
+
+        if (!this.MightPreselectValues())
+        {
+            this.selectedOutputLanguage = CommonLanguages.AS_IS;
+            this.customOutputLanguage = string.Empty;
+        }
     }
 
-    protected override bool MightPreselectValues() => false;
+    protected override bool MightPreselectValues()
+    {
+        if (this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectOptions)
+        {
+            this.selectedOutputLanguage = this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectedOutputLanguage;
+            this.customOutputLanguage = this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectedOtherOutputLanguage;
+            return true;
+        }
+
+        return false;
+    }
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
@@ -326,7 +340,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Restore(LAUNCHER_PROFILE_ID_STATE_KEY, value => this.launcherProfileId = value);
         state.Restore(LAUNCHER_CHAT_TEMPLATE_ID_STATE_KEY, value => this.launcherChatTemplateId = value);
         state.Restore(LAUNCHER_DATA_SOURCE_IDS_STATE_KEY, value => this.launcherDataSourceIds = value);
-        state.Restore(LAUNCHER_TOOL_IDS_STATE_KEY, value => this.launcherToolIds = ToolSelectionRules.NormalizeSelection(value));
+        state.Restore(LAUNCHER_TOOL_IDS_STATE_KEY, value => this.launcherToolIds = this.ToolRegistry.NormalizeSelection(value));
         state.Restore(SELECTED_ASSISTANT_COMPONENTS_STATE_KEY, value => this.selectedAssistantComponents = value);
         state.Restore(SELECTED_OUTPUT_LANGUAGE_STATE_KEY, value => this.selectedOutputLanguage = value);
         state.Restore(CUSTOM_OUTPUT_LANGUAGE_STATE_KEY, value => this.customOutputLanguage = value);
@@ -542,7 +556,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
             return null;
 
         var dataSourceIds = this.launcherDataSourceIds.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var toolIds = ToolSelectionRules.NormalizeSelection(this.launcherToolIds).ToArray();
+        var toolIds = this.ToolRegistry.NormalizeSelection(this.launcherToolIds).ToArray();
         return new(
             this.launcherWorkspaceName.Trim(),
             NullIfEmpty(this.launcherProviderId),

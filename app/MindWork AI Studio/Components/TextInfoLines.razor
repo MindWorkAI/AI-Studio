@@ -7,9 +7,11 @@
         Text="@this.Value"
         Variant="Variant.Outlined"
         Margin="Margin.Dense"
-        Lines="3"
+        Lines="@this.Lines"
         MaxLines="@this.MaxLines"
         AutoGrow="@true"
+        Adornment="@(string.IsNullOrEmpty(this.Icon) ? Adornment.None : Adornment.Start)"
+        AdornmentIcon="@this.Icon"
         Style="@this.GetColor()"
         UserAttributes="@USER_INPUT_ATTRIBUTES" />
 

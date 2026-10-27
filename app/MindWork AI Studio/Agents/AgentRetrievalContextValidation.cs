@@ -17,6 +17,9 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     protected override Type Type => Type.WORKER;
     
     /// <inheritdoc />
+    protected override Tools.Components Component => Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION;
+
+    /// <inheritdoc />
     public override string Id => "Retrieval Context Validation";
 
     /// <inheritdoc />
@@ -97,7 +100,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             return EMPTY_BLOCK;
           
         var thread = this.CreateChatThread(this.SystemPrompt(retrievalContext));
-        var userRequest = this.AddUserRequest(thread, text.Text);
+        var userRequest = AddUserRequest(thread, text.Text);
         await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
           
         return thread.Blocks[^1];
@@ -161,10 +164,10 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// </summary>
     /// <param name="lastUserPrompt">The last user prompt.</param>
     /// <param name="chatThread">The chat thread.</param>
-    /// <param name="retrievalContexts">All retrieval contexts to validate.</param>
+    /// <param name="retrievalContexts">All retrieval contexts to validate, prepared for the AI and thus already filtered for prompt injections.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The validation results.</returns>
-    public async Task<IReadOnlyList<RetrievalContextValidationResult>> ValidateRetrievalContextsAsync(IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
+    public async Task<IReadOnlyList<RetrievalContextValidationResult>> ValidateRetrievalContextsAsync(IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<PreparedRetrievalContext> retrievalContexts, CancellationToken token = default)
     {
         // Check if the retrieval context validation is enabled:
         if (!this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
@@ -207,11 +210,11 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// </remarks>
     /// <param name="lastUserPrompt">The last user prompt.</param>
     /// <param name="chatThread">The chat thread.</param>
-    /// <param name="retrievalContext">The retrieval context to validate.</param>
+    /// <param name="retrievalContext">The retrieval context to validate, prepared for the AI and thus already filtered for prompt injections.</param>
     /// <param name="semaphore">The optional semaphore to limit the number of parallel validations.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The validation result.</returns>
-    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastUserPrompt, ChatThread chatThread, IRetrievalContext retrievalContext, SemaphoreSlim? semaphore = null, CancellationToken token = default)
+    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastUserPrompt, ChatThread chatThread, PreparedRetrievalContext retrievalContext, SemaphoreSlim? semaphore = null, CancellationToken token = default)
     {
         try
         {
@@ -246,11 +249,11 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             }
 
             //
-            // 2. Prepare the retrieval context for the agent:
+            // 2. Prepare the retrieval context for the agent. It reads the context exactly as the
+            //    AI would, filtered once for both, so the check judges what is actually sent:
             //
             var additionalData = new Dictionary<string, string>();
-            var markdownRetrievalContext = await retrievalContext.AsMarkdown(token: token);
-            additionalData.Add("retrievalContext", markdownRetrievalContext);
+            additionalData.Add("retrievalContext", retrievalContext.ToMarkdown());
 
             //
             // 3. Let the agent validate the retrieval context:
@@ -302,9 +305,9 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
 
                     //
                     // We know how bad LLM may be in generating JSON without surrounding text.
-                    // Thus, we expect the worst and try to extract the JSON list from the text:
+                    // Thus, we expect the worst and try to extract the JSON object from the text:
                     //
-                    var json = ExtractJson(validationJson);
+                    var json = ModelAnswerJson.ExtractObject(validationJson);
 
                     try
                     {
@@ -336,69 +339,5 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             // Release the semaphore slot:
             semaphore?.Release();
         }
-    }
-    
-    private static ReadOnlySpan<char> ExtractJson(ReadOnlySpan<char> input)
-    {
-        //
-        // 1. Expect the best case ;-)
-        //
-        if (CheckJsonObjectStart(input))
-            return ExtractJsonPart(input);
-
-        //
-        // 2. Okay, we have some garbage before the
-        // JSON object. We expected that...
-        //
-        for (var index = 0; index < input.Length; index++)
-        {
-            if (input[index] is '{' && CheckJsonObjectStart(input[index..]))
-                return ExtractJsonPart(input[index..]);
-        }
-
-        return [];
-    }
-    
-    private static bool CheckJsonObjectStart(ReadOnlySpan<char> area)
-    {
-        char[] expectedSymbols = ['{', '"', 'd'];
-        var symbolIndex = 0;
-
-        foreach (var c in area)
-        {
-            if (symbolIndex >= expectedSymbols.Length)
-                return true;
-
-            if (char.IsWhiteSpace(c))
-                continue;
-
-            if (c == expectedSymbols[symbolIndex++])
-                continue;
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private static ReadOnlySpan<char> ExtractJsonPart(ReadOnlySpan<char> input)
-    {
-        var insideString = false;
-        for (var index = 0; index < input.Length; index++)
-        {
-            if (input[index] is '"')
-            {
-                insideString = !insideString;
-                continue;
-            }
-
-            if (insideString)
-                continue;
-
-            if (input[index] is '}')
-                return input[..++index];
-        }
-
-        return [];
     }
 }

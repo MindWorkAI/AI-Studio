@@ -5,6 +5,10 @@
 
 <MudDialog>
     <DialogContent>
+        @if (!string.IsNullOrWhiteSpace(this.importRetrievalIssue))
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importRetrievalIssue</MudAlert>
+        }
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
@@ -102,7 +106,7 @@
             
             @if (this.availableRetrievalProcesses.Count > 0)
             {
-                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
+                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" @bind-Value:after="@this.ClearImportRetrievalIssue" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
                     @foreach (var retrievalProcess in this.availableRetrievalProcesses)
                     {
                         <MudSelectItem Value="@retrievalProcess">
@@ -120,6 +124,8 @@
                     </MudSelectItem>
                 }
             </MudSelect>
+
+            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@T("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction" SecurityPolicy="@this.dataSecurityPolicy"/>
 
             <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
             

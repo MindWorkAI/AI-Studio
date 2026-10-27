@@ -59,10 +59,18 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
 
     [Inject]
+    private DataRestoreService DataRestoreService { get; init; } = null!;
+
+    [Inject]
     private CircuitStateService CircuitState { get; init; } = null!;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
-    
+
+    private FileExportNotifications FileExportNotifications => this.fileExportNotifications ??= new(this.Snackbar);
+
     private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
     
     private const int NAVBAR_COLLAPSED_WIDTH_INT = 4;
@@ -77,10 +85,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool useDarkMode;
     private bool startupCompleted;
     private bool settingsWriteProtectionWarningShown;
+    private FileExportNotifications? fileExportNotifications;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
+    private readonly SemaphoreSlim dataRestorePendingDialogSemaphore = new(1, 1);
 
-    private DataSourceEmbeddingOverview embeddingOverview = new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
+    private DataSourceEmbeddingOverview embeddingOverview = DataSourceEmbeddingOverview.Create([]);
     private IReadOnlyCollection<NavBarItem> navItems = [];
     private NavBarItem embeddingItem = new (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false);
     private bool showEmbeddingStatusIcon;
@@ -91,6 +101,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChanging);
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.DataRestoreService.StateChanged += this.OnDataRestoreStateChanged;
         
         //
         // We use the Tauri API (Rust) to get the data and config directories
@@ -125,6 +136,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.SHOW_FILE_EXPORT_RUNNING, Event.SHOW_FILE_EXPORT_SUCCESS, Event.HIDE_FILE_EXPORT_RUNNING,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
             Event.CHAT_GENERATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED,Event.ASSISTANT_SESSION_CHANGED, 
             Event.ASSISTANT_SESSION_FINISHED,
@@ -153,7 +165,31 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await base.OnInitializedAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //
+        // After a reload of the page, the plugins are already running and do not report
+        // again. The document would keep the language of the HTML template then:
+        //
+        if (firstRender)
+            await this.SetDocumentLanguageAsync(await this.SettingsManager.GetActiveLanguagePlugin());
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
     #endregion
+
+    /// <summary>
+    /// Tells the browser in which language the user interface is written. The browser needs this, e.g.,
+    /// to hyphenate texts by the rules of that language, and screen readers need it to pronounce them.
+    /// </summary>
+    /// <param name="language">The active language plugin.</param>
+    private async Task SetDocumentLanguageAsync(ILanguagePlugin language)
+    {
+        // Without a language plugin, the user interface shows the English texts of the code:
+        var ietfTag = string.IsNullOrWhiteSpace(language.IETFTag) ? "en" : language.IETFTag;
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "setDocumentLanguage", ietfTag);
+    }
 
     private void ShowSettingsWriteProtectionWarning()
     {
@@ -294,6 +330,24 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                     break;
 
+                case Event.SHOW_FILE_EXPORT_RUNNING:
+                    if (data is DataFileExportRunningMessage exportRunning)
+                        this.FileExportNotifications.ShowRunning(exportRunning);
+
+                    break;
+
+                case Event.SHOW_FILE_EXPORT_SUCCESS:
+                    if (data is DataFileExportSuccessMessage exportSuccess)
+                        this.FileExportNotifications.ShowSuccess(exportSuccess, this.SettingsManager.ConfigurationData.App.CloseExportMessagesAutomatically);
+
+                    break;
+
+                case Event.HIDE_FILE_EXPORT_RUNNING:
+                    if (data is DataFileExportRunningMessage exportFinished)
+                        this.FileExportNotifications.HideRunning(exportFinished);
+
+                    break;
+
                 case Event.STARTUP_PLUGIN_SYSTEM:
                     Task.Run(async () =>
                     {
@@ -338,13 +392,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             // Initialize the enterprise encryption service for decrypting API keys:
                             await PluginFactory.InitializeEnterpriseEncryption(this.RustService);
 
-                            // Load (but not start) all plugins without waiting for them:
-                            #if DEBUG
-                            var pluginLoadingTimeout = new CancellationTokenSource();
-                            #else
-                            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                            #endif
-                            await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+                            // Load and start all plugins. Each plugin has a time limit of its own,
+                            // so a slow one cannot keep the others from starting:
+                            await PluginFactory.LoadAll();
 
                             // Set up hot reloading for plugins:
                             PluginFactory.SetUpHotReloading();
@@ -356,6 +406,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.PLUGINS_RELOADED:
                     this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                     I18N.Init(this.Lang);
+                    await this.SetDocumentLanguageAsync(this.Lang);
                     this.ShowSettingsWriteProtectionWarning();
                     this.LoadNavItems();
                     this.LoadEmbeddingItem();
@@ -367,7 +418,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                 case Event.STARTUP_COMPLETED:
                     this.startupCompleted = true;
-                    this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after the startup");
+                    this.ShowStartupDialogsAsync().Observe($"{nameof(MainLayout)}: dialogs after the startup");
                     break;
 
                 case Event.RAG_EMBEDDING_STATUS_CHANGED:
@@ -405,9 +456,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         }
     }
 
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    public Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
-        return Task.FromResult<TResult?>(default);
+        return Task.FromResult(MessageBusAnswer<TResult>.NONE);
     }
 
     #endregion
@@ -476,9 +527,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         (string icon, string lightcolor, string darkcolor) embeddingIcon = this.embeddingOverview.State switch
         {
-            DataSourceEmbeddingState.FAILED => (Icons.Material.Filled.Warning, palette.Error.Value, "#d32f2f"),
             DataSourceEmbeddingState.QUEUED => (Icons.Material.Filled.Sync, palette.Info.Value, "#1976d2"),
             DataSourceEmbeddingState.RUNNING => (Icons.Material.Filled.Sync, palette.Warning.Value, "#d29f00"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => (Icons.Material.Filled.Error, palette.Error.Value, "#d32f2f"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING => (Icons.Material.Filled.Warning, palette.Warning.Value, "#d29f00"),
 
             // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible
             // icon does not draw attention while there is nothing to attend to:
@@ -487,16 +539,23 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.embeddingItem = new NavBarItem(T("Data sources"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
     }
     
+    /// <remarks>
+    /// Speaks of neither files nor mails: the overview sums up data sources of every kind.
+    /// </remarks>
     private string EmbeddingNavigationTooltip => this.embeddingOverview.State switch
     {
         DataSourceEmbeddingState.QUEUED => T("Embeddings are waiting to be processed."),
         DataSourceEmbeddingState.RUNNING => string.Format(
-            T("Embeddings are running: {0} of {1} files are indexed."),
-            this.embeddingOverview.IndexedFiles,
-            this.embeddingOverview.TotalFiles),
-        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedFiles > 0
-            ? string.Format(T("Some embeddings failed. {0} file(s) need attention."), this.embeddingOverview.FailedFiles)
+            T("Embeddings are running: {0} of {1} are indexed."),
+            this.embeddingOverview.IndexedDocuments.CompactCount(),
+            this.embeddingOverview.TotalDocuments.CompactCount()),
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => this.embeddingOverview.FailedDocuments > 0
+            ? string.Format(T("Some embeddings failed: {0} could not be indexed."), this.embeddingOverview.FailedDocuments.CompactCount())
             : T("Some embeddings failed and need attention."),
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING && this.embeddingOverview.AttentionDataSources == 1 =>
+            T("One data source needs attention."),
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING =>
+            string.Format(T("{0} data sources need attention."), this.embeddingOverview.AttentionDataSources.CompactCount()),
 
         // The entry is always visible, so its resting state needs words as well. An empty tooltip
         // would leave the user guessing what the icon is there for:
@@ -613,6 +672,70 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.StateHasChanged();
     }
 
+    /// <summary>
+    /// Shows what the user has to see once the plugins started: the mandatory infos first, then how a
+    /// restore of a backup went.
+    /// </summary>
+    private async Task ShowStartupDialogsAsync()
+    {
+        await this.EnsureMandatoryInfosAcceptedAsync();
+        await this.ShowDataRestoreReportAsync();
+        await this.ShowDataRestorePendingDialogAsync();
+    }
+
+    /// <summary>
+    /// Asks for the restart as soon as a restore is prepared.
+    /// </summary>
+    private void OnDataRestoreStateChanged()
+    {
+        if (this.DataRestoreService.IsRestorePending)
+            this.InvokeAsync(this.ShowDataRestorePendingDialogAsync).Observe($"{nameof(MainLayout)}: asking for the restart which applies a restore");
+    }
+
+    /// <summary>
+    /// Blocks AI Studio while a prepared restore waits for the restart, since whatever changes until
+    /// then would be lost.
+    /// </summary>
+    private async Task ShowDataRestorePendingDialogAsync()
+    {
+        if (!await this.dataRestorePendingDialogSemaphore.WaitAsync(0))
+            return;
+
+        try
+        {
+            await this.DataRestoreService.StartupStateLoaded;
+            if (!this.DataRestoreService.IsRestorePending)
+                return;
+
+            var dialogReference = await this.DialogService.ShowAsync<DataRestorePendingDialog>(T("Restore of a Backup"), DialogOptions.BLOCKING_FULLSCREEN);
+            await dialogReference.Result;
+        }
+        finally
+        {
+            this.dataRestorePendingDialogSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Tells how the runtime applied a restore at this start, and what remains to do.
+    /// </summary>
+    private async Task ShowDataRestoreReportAsync()
+    {
+        await this.DataRestoreService.StartupStateLoaded;
+        if (this.DataRestoreService.Report is not { } report)
+            return;
+
+        var dialogParameters = new DialogParameters<DataRestoreReportDialog>
+        {
+            { x => x.Report, report },
+            { x => x.OpenPoints, await this.DataRestoreService.CollectOpenPointsAsync() },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DataRestoreReportDialog>(T("Restore of a Backup"), dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+        this.DataRestoreService.ForgetReport();
+    }
+
     private async Task EnsureMandatoryInfosAcceptedAsync()
     {
         if (!await this.mandatoryInfoDialogSemaphore.WaitAsync(0))
@@ -695,9 +818,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     public void Dispose()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.DataRestoreService.StateChanged -= this.OnDataRestoreStateChanged;
         this.CircuitState.ConnectionRestored -= this.OnConnectionRestored;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
+        this.dataRestorePendingDialogSemaphore.Dispose();
     }
 
     #endregion

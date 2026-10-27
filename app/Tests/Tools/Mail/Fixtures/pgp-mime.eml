@@ -1,0 +1,25 @@
+From: Alice <alice@example.org>
+To: Bob <bob@example.org>
+Subject: Travel plans
+Date: Wed, 30 Sep 2026 15:20:00 +0200
+Message-ID: <pgp-mime@example.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; protocol="application/pgp-encrypted"; boundary="encrypted"
+
+--encrypted
+Content-Type: application/pgp-encrypted
+Content-Description: PGP/MIME version identification
+
+Version: 1
+
+--encrypted
+Content-Type: application/octet-stream; name="encrypted.asc"
+Content-Disposition: inline; filename="encrypted.asc"
+
+-----BEGIN PGP MESSAGE-----
+
+hQEMA0Ld7lJbBHmOAQf/WvN0mJx2Y7k1dq3Z8x0mJx2Y7k1dq3Z8x0mJx2Y7k1dq
+=abcd
+-----END PGP MESSAGE-----
+
+--encrypted--

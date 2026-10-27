@@ -82,6 +82,7 @@ public partial class Writer : MSGComponentBase
                             do not repeat the task.
                             """,
             Blocks = [],
+            RuntimeComponent = Tools.Components.WRITER,
         };
         
         var time = DateTimeOffset.Now;

@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Assistants.BatchProcessing;
@@ -55,6 +56,8 @@ public partial class AssistantBatchProcessing
                 # Task description
                 You are a batch document processing agent. Each request contains exactly one DOCUMENT.
                 Your task is to process this DOCUMENT strictly according to the instructions below.
+                A DOCUMENT may also be an image attached to the request. Then, the content of the
+                DOCUMENT is what the image shows, including any text within it.
 
                 # Scope and precedence
                 Use only information explicitly contained in the DOCUMENT and the instructions.
@@ -87,11 +90,20 @@ public partial class AssistantBatchProcessing
                 """;
     }
 
+    private static string BuildImageUserPrompt(string fileName)
+    {
+        return $"""
+                # DOCUMENT
+                File name: {fileName}
+                Content: The DOCUMENT is the image attached to this request.
+                """;
+    }
+
     /// <param name="fileName">The name of the document being processed.</param>
-    /// <param name="fileContent">The content handed to the model.</param>
+    /// <param name="input">The text or the image handed to the model.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The answer of the model, and which tools it used to get there.</returns>
-    private async Task<(string Answer, string UsedTools)> CallAIAsync(string fileName, string fileContent, CancellationToken token)
+    private async Task<(string Answer, string UsedTools)> CallAIAsync(string fileName, BatchInput input, CancellationToken token)
     {
         //
         // Every file of the batch gets the tools the user picked for the job. The batch builds its
@@ -109,18 +121,19 @@ public partial class AssistantBatchProcessing
             ChatId = Guid.NewGuid(),
             Name = this.Title,
             Blocks = [],
-            RuntimeComponent = this.Component,
-            RuntimeSelectedToolIds = this.GetRunnableToolIds(),
+
+            // A thread of its own, which has read no mailbox yet:
+            RuntimeSelectedToolIds = this.GetRunnableToolIds(OutboundDataRestriction.UNRESTRICTED),
 
             // Always true here, unlike in the assistant base: a batch run takes its tools from the
             // selected policy or from its own field, never from the tool selection in the footer.
             RuntimeToolsAreAssistantManaged = true,
         };
 
-        var userPrompt = new ContentText
-        {
-            Text = BuildUserPrompt(fileName, fileContent),
-        };
+        this.AssignRuntimeIdentity(chatThread);
+        var userPrompt = input.Image is null
+            ? new ContentText { Text = BuildUserPrompt(fileName, input.Text) }
+            : new ContentText { Text = BuildImageUserPrompt(fileName), FileAttachments = [input.Image] };
 
         chatThread.Blocks.Add(new ContentBlock
         {

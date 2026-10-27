@@ -1,3 +1,4 @@
+@using AIStudio.Tools.ToolCallingSystem
 @inherits MSGComponentBase
 
 <div class="d-flex">
@@ -36,61 +37,49 @@
 
                 @if (this.SupportsTools && this.catalog.Count > 0)
                 {
-                    @*
-                        The striping sits on this wrapper: the rows share their parent with the
-                        introduction and the occasional alert, which would shift the parity.
-                    *@
-                    <div class="tool-selection-rows">
-                        @foreach (var item in this.catalog)
-                        {
-                            var isSelected = this.SelectedToolIds.Contains(item.Definition.Id);
-                            var warningText = this.GetWarningText(item);
-                            <div class="tool-selection-row">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                                    @*
-                                        Everything but the settings button switches the tool, so aiming for the
-                                        small switch is optional. The button spans that part of the row, which
-                                        keeps the settings button outside of it without any event plumbing.
-                                    *@
-                                    <MudButton Variant="Variant.Text" Color="Color.Default" Class="px-1 py-0 justify-start"
-                                               Style="min-width:auto; text-transform:none; flex-grow:1;"
-                                               Disabled="@this.IsRowDisabled(item)" OnClick="@(async () => await this.ToggleToolFromRow(item))">
-                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                            @*
-                                                A checkbox rather than a switch, because this row is one entry of a set the
-                                                user picks from, not a setting of its own -- the same question the data source
-                                                selection next to it asks, and it should not look like a different one.
+                    var itemsShownFirst = this.GetItemsShownFirst();
+                    var unavailableItems = this.GetUnavailableItems();
 
-                                                The checkbox only shows the state; the surrounding button does the switching.
-                                                It therefore takes no pointer events at all: its label reaches past the visible
-                                                box and would otherwise swallow the clicks landing in that strip.
-                                            *@
-                                            <MudCheckBox T="bool" Size="Size.Small" Dense="@true" Color="Color.Primary" Value="@isSelected" ReadOnly="@true" Disabled="@this.IsRowDisabled(item)" Style="pointer-events: none;" />
-                                            <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
-                                            @if (!item.IsActive)
-                                            {
-                                                <MudTooltip Text="@T("This tool has been disabled by your organization.")">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" />
-                                                </MudTooltip>
-                                            }
-                                            <MudTooltip Text="@item.Implementation.GetDescription()">
-                                                <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
-                                            </MudTooltip>
-                                        </MudStack>
-                                    </MudButton>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="@(async () => await this.OpenSettings(item.Definition.Id))" />
-                                </MudStack>
-                                @if (!string.IsNullOrWhiteSpace(warningText))
+                    @*
+                        Each list has a wrapper of its own, which gives its rows their compact padding:
+                        the rows share their parent with nothing else, neither the introduction nor the
+                        button between both lists.
+                    *@
+                    @if (itemsShownFirst.Count > 0)
+                    {
+                        <div class="tool-selection-rows">
+                            @foreach (var item in itemsShownFirst)
+                            {
+                                @this.RenderRow(item)
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body1">@T("No tool can be selected right now.")</MudText>
+                    }
+
+                    @if (unavailableItems.Count > 0)
+                    {
+                        <MudButton StartIcon="@(this.showUnavailableTools ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                   Size="Size.Small"
+                                   Variant="Variant.Text"
+                                   Class="mt-1"
+                                   OnClick="@this.ToggleUnavailableTools">
+                            @this.GetUnavailableToolsButtonText(unavailableItems)
+                        </MudButton>
+                        <MudCollapse Expanded="@this.showUnavailableTools">
+                            <div class="tool-selection-rows">
+                                @foreach (var item in unavailableItems)
                                 {
-                                    @*
-                                        A caption renders as an inline span by default, and an inline element
-                                        cannot be justified. The div makes it a block of its own.
-                                    *@
-                                    <MudJustifiedText Typo="Typo.caption" HtmlTag="div" Color="Color.Warning" Class="ml-2">@warningText</MudJustifiedText>
+                                    @this.RenderRow(item)
                                 }
                             </div>
-                        }
-                    </div>
+                            <MudJustifiedText Typo="Typo.caption" HtmlTag="div" Class="mt-2 ml-2">
+                                @T("You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here.")
+                            </MudJustifiedText>
+                        </MudCollapse>
+                    }
                 }
             </MudCardContent>
             <MudCardActions>
@@ -100,3 +89,57 @@
         </MudCard>
     </MudPopover>
 </div>
+
+@code {
+    /// <summary>
+    /// One row of the selection, in either list.
+    /// </summary>
+    /// <remarks>
+    /// Both lists show the same row, so it is written once. It stays in this component, which keeps
+    /// the translations of its texts: a component of its own would give each of them a new key.
+    /// </remarks>
+    private RenderFragment RenderRow(ToolCatalogItem item) => @<div class="tool-selection-row">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+            @*
+                Everything but the settings button switches the tool, so aiming for the
+                small switch is optional. The button spans that part of the row, which
+                keeps the settings button outside of it without any event plumbing.
+            *@
+            <MudButton Variant="Variant.Text" Color="Color.Default" Class="px-1 py-0 justify-start"
+                       Style="min-width:auto; text-transform:none; flex-grow:1;"
+                       Disabled="@this.IsRowDisabled(item)" OnClick="@(async () => await this.ToggleToolFromRow(item))">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    @*
+                        A checkbox rather than a switch, because this row is one entry of a set the
+                        user picks from, not a setting of its own -- the same question the data source
+                        selection next to it asks, and it should not look like a different one.
+
+                        The checkbox only shows the state; the surrounding button does the switching.
+                        It therefore takes no pointer events at all: its label reaches past the visible
+                        box and would otherwise swallow the clicks landing in that strip.
+                    *@
+                    <MudCheckBox T="bool" Size="Size.Small" Dense="@true" Color="Color.Primary" Value="@this.SelectedToolIds.Contains(item.Id)" ReadOnly="@true" Disabled="@this.IsRowDisabled(item)" Style="pointer-events: none;" />
+                    <MudIcon Icon="@item.Icon" Color="Color.Info" />
+                    @if (!item.IsActive)
+                    {
+                        <MudTooltip Text="@T("This tool has been disabled by your organization.")">
+                            <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" />
+                        </MudTooltip>
+                    }
+                    <MudTooltip Text="@item.Description">
+                        <MudText Typo="Typo.body1">@item.DisplayName</MudText>
+                    </MudTooltip>
+                </MudStack>
+            </MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="@(async () => await this.OpenSettings(item))" />
+        </MudStack>
+        @if (this.GetWarningText(item) is var warningText && !string.IsNullOrWhiteSpace(warningText))
+        {
+            @*
+                A caption renders as an inline span by default, and an inline element
+                cannot be justified. The div makes it a block of its own.
+            *@
+            <MudJustifiedText Typo="Typo.caption" HtmlTag="div" Color="Color.Warning" Class="ml-2">@warningText</MudJustifiedText>
+        }
+    </div>;
+}

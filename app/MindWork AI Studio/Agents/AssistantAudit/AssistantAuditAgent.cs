@@ -20,6 +20,8 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     
     protected override Type Type => Type.SYSTEM;
 
+    protected override Tools.Components Component => Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT;
+
     public override string Id => "Assistant Plugin Security Audit";
 
     protected override string JobDescription =>
@@ -48,7 +50,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
               "severity": "critical | medium | low",
               "category": "brief category",
               "location": "system prompt | BuildPrompt | component name | plugin.lua",
-              "description": "what is risky",
+              "description": "what is risky"
             }
           ]
         }
@@ -109,7 +111,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             return EMPTY_BLOCK;
 
         var thread = this.CreateChatThread(this.SystemPrompt(string.Empty));
-        var userRequest = this.AddUserRequest(thread, text.Text);
+        var userRequest = AddUserRequest(thread, text.Text);
         await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         return thread.Blocks[^1];
     }
@@ -257,7 +259,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             };
         }
 
-        var json = ExtractJson(content.Text);
+        var json = ModelAnswerJson.ExtractObject(content.Text);
         try
         {
             var result = JsonSerializer.Deserialize<AssistantAuditResult>(json, JSON_SERIALIZER_OPTIONS);
@@ -301,54 +303,17 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     }
 
     /// <summary>
-    /// Extracts the first complete JSON object from a model response that may contain surrounding text.
-    /// </summary>
-    /// <param name="input">The raw model response.</param>
-    /// <returns>The first complete JSON object, or an empty span when none can be found.</returns>
-    private static ReadOnlySpan<char> ExtractJson(ReadOnlySpan<char> input)
-    {
-        var start = input.IndexOf('{');
-        if (start < 0)
-            return [];
-
-        var depth = 0;
-        var insideString = false;
-        for (var index = start; index < input.Length; index++)
-        {
-            if (input[index] == '"' && (index == 0 || input[index - 1] != '\\'))
-                insideString = !insideString;
-
-            if (insideString)
-                continue;
-
-            switch (input[index])
-            {
-                case '{':
-                    depth++;
-                    break;
-                case '}':
-                    depth--;
-                    break;
-            }
-
-            if (depth == 0)
-                return input[start..(index + 1)];
-        }
-
-        return [];
-    }
-
-    /// <summary>
     /// Names the tools a plugin requests, so the auditor can weigh them against its stated purpose.
     /// </summary>
     /// <remarks>
     /// The description is the one the tool gives a model, which is exactly what the assistant's
-    /// model would read. A tool this installation does not know is listed by its ID alone: the
-    /// plugin still asks for it, and a name nobody can resolve is itself worth seeing.
+    /// model would read. A collection is listed by its tools for the same reason. A tool this
+    /// installation does not know is listed by its ID alone: the plugin still asks for it, and a
+    /// name nobody can resolve is itself worth seeing.
     /// </remarks>
     private string FormatRequestedTools(PluginAssistants plugin)
     {
-        var toolIds = ToolSelectionRules.NormalizeSelection(plugin.AssistantToolIds ?? plugin.ChatLaunchConfiguration?.ToolIds ?? []);
+        var toolIds = toolRegistry.ExpandSelection(plugin.AssistantToolIds ?? plugin.ChatLaunchConfiguration?.ToolIds ?? []);
         if (toolIds.Count == 0)
             return "None. This plugin does not request any tools.";
 

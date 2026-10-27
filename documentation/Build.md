@@ -32,7 +32,7 @@ One command checks that what you are about to build is sound:
 
 It runs the .NET tests, the Rust tests, Clippy (`cargo clippy --all-targets -- -D warnings`), and a report on the pages the model rules were written from. Every check runs, even after one of them has failed, so that a single run tells you everything that is wrong instead of the first thing.
 
-`dotnet run build` runs the gate first and stops when it does not pass. For the quick loop while you are working on something, use `dotnet run build --skip-verify`, and let the gate run before you open a pull request. The same command runs in our GitHub workflow as the `verify` job, on every pull request — including those without the `run-pipeline` label, because a gate which is closed exactly while nobody is looking is not a gate.
+`dotnet run build` runs the gate first and stops when it does not pass. For the quick loop while you are working on something, use `dotnet run build --skip-verify`, and let the gate run before you open a pull request. The same command runs in our GitHub workflow as the `verify` job, on every pull request which changes more than the documentation — including those without the `run-pipeline` label, because a gate which is closed exactly while nobody is looking is not a gate.
 
 Two notes:
 - The Rust half of the gate needs the .NET sidecar (see "One-time mandatory steps" above). While that file is missing, the gate skips the Rust tests and Clippy and says so rather than failing, because the command which produces the sidecar is `dotnet run build` itself.
@@ -65,6 +65,16 @@ You can now test your changes. To stop the application:
 - Press ``Ctrl+C`` in the terminal where the app is running.  
 - Stop the process via your IDE’s run/debug controls.
 
+## Test builds of pull requests
+When a pull request carries the `run-pipeline` label, our GitHub workflow builds the app for every platform and attaches the installers to the workflow run. Whether these test builds are signed depends on where the branch of the pull request lives:
+
+- **Branches in this repository:** The macOS and Windows builds wait until a maintainer approves them in the `PR-Signing` environment. Afterward, they are signed — and notarized for macOS — just like a release, so testers install them without any workaround.
+- **Branches in forks:** GitHub never hands secrets to workflows of forks, so these builds stay unsigned. On macOS, testers have to allow the app once in the system settings under Privacy & Security; Windows shows its SmartScreen warning.
+
+When a maintainer wants signed test builds for their own work, they push the branch to this repository instead of their fork. Pushes to `main` only check that every platform still builds; they are neither signed nor uploaded.
+
+Changes which touch only the documentation, such as the README or the files in `documentation/`, start no build at all: neither in a pull request, not even with the `run-pipeline` label, nor after the merge into `main`. The workflow lists these files under `paths-ignore`. Release tags always build.
+
 ## Create a release
 In order to create a release:
 1. To create a new release, you need to be a maintainer of the repository—see step 8.
@@ -75,7 +85,7 @@ In order to create a release:
 6. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
 7. Your proposed changes will be reviewed and merged.
 8. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.
-9. The GitHub Workflow will then build the release and upload it to the [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest).
+9. The GitHub Workflow will then build the release, sign it for macOS and Windows, and upload it to the [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest). Every job which needs the secrets of the `Release-Signing` environment waits for a maintainer's approval: syncing the Flatpak repository, building the app, collecting the Flatpak artifacts, and publishing the release.
 10. Building the release including virus scanning takes some time. Please be patient.
 
 ### Rebuild the current pre-release

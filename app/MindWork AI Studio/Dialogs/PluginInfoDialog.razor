@@ -1,0 +1,78 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Here are the details of this plugin. Most of them come from its authors, and AI Studio shows them as stated without being able to verify them.")
+        </MudJustifiedText>
+
+        <MudSimpleTable Dense="@true" Hover="@true" Bordered="@true" Striped="@true" Style="overflow-x: auto;">
+            <tbody>
+                <InfoTableRow Icon="@Icons.Material.Filled.Description" Label="@T("Description")">
+                    <MudText Typo="Typo.body2">@this.Plugin.Description</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.Extension" Label="@T("Type")">
+                    <MudText Typo="Typo.body2">@this.TypeText</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.Tag" Label="@T("Version")">
+                    <MudText Typo="Typo.body2">@this.Plugin.Version</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.EditCalendar" Label="@T("Last changed")">
+                    <MudText Typo="Typo.body2">@this.LastChangedText</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.People" Label="@T("Authors")">
+                    <MudText Typo="Typo.body2">@this.AuthorsText</MudText>
+                </InfoTableRow>
+                @if (!string.IsNullOrWhiteSpace(this.Plugin.SupportContact))
+                {
+                    <InfoTableRow Icon="@Icons.Material.Filled.SupportAgent" Label="@T("Support contact")">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.SupportContactText</MudText>
+                            <PluginLinkButton Url="@this.Plugin.SupportContact" Size="Size.Small"/>
+                        </MudStack>
+                    </InfoTableRow>
+                }
+                @if (!string.IsNullOrWhiteSpace(this.Plugin.SourceURL))
+                {
+                    <InfoTableRow Icon="@this.SourceIcon" Label="@this.SourceLabel">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.SourceText</MudText>
+                            <PluginLinkButton Url="@this.Plugin.SourceURL" Size="Size.Small"/>
+                        </MudStack>
+                    </InfoTableRow>
+                }
+                <InfoTableRow Icon="@Icons.Material.Filled.Category" Label="@T("Categories")">
+                    <MudText Typo="Typo.body2">@this.CategoriesText</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.Groups" Label="@T("Target groups")">
+                    <MudText Typo="Typo.body2">@this.TargetGroupsText</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.Fingerprint" Label="@T("Plugin ID")">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.Plugin.Id</MudText>
+                        <MudCopyClipboardButton StringContent="@this.Plugin.Id.ToString()" TooltipMessage="@T("Copies the plugin ID to the clipboard")"/>
+                    </MudStack>
+                </InfoTableRow>
+                @if (this.Plugin.IsManagedByConfigServer)
+                {
+                    <InfoTableRow Icon="@Icons.Material.Filled.Business" Label="@T("Origin")">
+                        <MudText Typo="Typo.body2">@T("Managed by your organization")</MudText>
+                    </InfoTableRow>
+                }
+            </tbody>
+        </MudSimpleTable>
+
+        @if (!this.Plugin.IsMaintained || !string.IsNullOrWhiteSpace(this.Plugin.DeprecationMessage))
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-3">
+                @(string.IsNullOrWhiteSpace(this.Plugin.DeprecationMessage)
+                    ? T("The authors marked this plugin as no longer maintained.")
+                    : string.Format(T("The authors marked this plugin as deprecated: {0}"), this.Plugin.DeprecationMessage))
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

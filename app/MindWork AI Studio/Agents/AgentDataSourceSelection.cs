@@ -19,6 +19,9 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
     protected override Type Type => Type.SYSTEM;
     
     /// <inheritdoc />
+    protected override Tools.Components Component => Tools.Components.AGENT_DATA_SOURCE_SELECTION;
+
+    /// <inheritdoc />
     public override string Id => "Data Source Selection";
 
     /// <inheritdoc />
@@ -110,7 +113,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
             return EMPTY_BLOCK;
         
         var thread = this.CreateChatThread(this.SystemPrompt(availableDataSources));
-        var userRequest = this.AddUserRequest(thread, text.Text);
+        var userRequest = AddUserRequest(thread, text.Text);
         await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         
         var answer = thread.Blocks[^1];
@@ -263,7 +266,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                 // We know how bad LLM may be in generating JSON without surrounding text.
                 // Thus, we expect the worst and try to extract the JSON list from the text:
                 //
-                var json = ExtractJson(selectedDataSourcesJson);
+                var json = ModelAnswerJson.ExtractObjectList(selectedDataSourcesJson);
                 
                 try
                 {
@@ -289,65 +292,5 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                 logger.LogWarning($"The agent answered with an unexpected content type '{aiResponse.ContentType}'.");
                 return [];
         }
-    }
-
-    /// <summary>
-    /// Extracts the JSON list from the given text. The text may contain additional
-    /// information around the JSON list. The method tries to extract the JSON list
-    /// from the text.
-    /// </summary>
-    /// <remarks>
-    /// Algorithm: The method searches for the first line that contains only a '[' character.
-    /// Then, it searches for the first line that contains only a ']' character. The method
-    /// returns the text between these two lines (including the brackets). When the method
-    /// cannot find the JSON list, it returns an empty string.
-    /// </remarks>
-    /// <param name="text">The text that may contain the JSON list.</param>
-    /// <returns>The extracted JSON list.</returns>
-    private static ReadOnlySpan<char> ExtractJson(ReadOnlySpan<char> text)
-    {
-        var startIndex = -1;
-        var endIndex = -1;
-        var foundStart = false;
-        var foundEnd = false;
-        var lineStart = 0;
-        
-        for (var i = 0; i <= text.Length; i++)
-        {
-            // Handle the end of the line or the end of the text:
-            if (i == text.Length || text[i] == '\n')
-            {
-                if (IsCharacterAloneInLine(text, lineStart, i, '[') && !foundStart)
-                {
-                    startIndex = lineStart;
-                    foundStart = true;
-                }
-                else if (IsCharacterAloneInLine(text, lineStart, i, ']') && foundStart && !foundEnd)
-                {
-                    endIndex = i;
-                    foundEnd = true;
-                    break;
-                }
-                
-                lineStart = i + 1;
-            }
-        }
-        
-        if (foundStart && foundEnd)
-        {
-            // Adjust endIndex for slicing, ensuring it's within bounds:
-            return text.Slice(startIndex, Math.Min(text.Length, endIndex + 1) - startIndex);
-        }
-        
-        return ReadOnlySpan<char>.Empty;
-    }
-    
-    private static bool IsCharacterAloneInLine(ReadOnlySpan<char> text, int lineStart, int lineEnd, char character)
-    {
-        for (var i = lineStart; i < lineEnd; i++)
-            if (!char.IsWhiteSpace(text[i]) && text[i] != character)
-                return false;
-
-        return true;
     }
 }

@@ -1,3 +1,5 @@
+using AIStudio.Tools.RAG;
+
 namespace AIStudio.Provider;
 
 /// <summary>
@@ -13,6 +15,15 @@ namespace AIStudio.Provider;
 /// <param name="Usage">What the provider said the request cost, where it said anything.</param>
 public sealed record ContentStreamChunk(string Content, IList<ISource> Sources, TokenUsage Usage = default)
 {
+    /// <summary>
+    /// The passages of the sources, as the model received them from a tool.
+    /// </summary>
+    /// <remarks>
+    /// They travel with the sources they belong to, the way the tools hand both over at the end
+    /// of their conversation, cf. ToolCallingLoop. A provider's own stream brings none.
+    /// </remarks>
+    public IReadOnlyList<SourcePassage> Passages { get; init; } = [];
+
     /// <summary>
     /// Implicit conversion to string.
     /// </summary>

@@ -23,6 +23,19 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
 
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
+    /// <summary>
+    /// How Markdown rendered by this component looks: its code blocks follow the color theme of the app.
+    /// </summary>
+    /// <remarks>
+    /// Every component which renders Markdown wants the same, so it is written down once here instead
+    /// of in each of them. Read on every render: a change of the color theme renders every component
+    /// again, cf. ProcessMessage, and the code blocks change along with it.
+    /// </remarks>
+    protected MudMarkdownStyling MarkdownStyling => new()
+    {
+        CodeBlock = { Theme = this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default },
+    };
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -67,7 +80,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
         });
     }
 
-    public async Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    public async Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
         return await this.ProcessIncomingMessageWithResult<TPayload, TResult>(sendingComponent, triggeredEvent, data);
     }
@@ -79,9 +92,13 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
         return Task.CompletedTask;
     }
 
-    protected virtual Task<TResult?> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    /// <summary>
+    /// Answers a question from the message bus. Override this for the questions your component handles,
+    /// and return MessageBusAnswer.NONE for every other one.
+    /// </summary>
+    protected virtual Task<MessageBusAnswer<TResult>> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
-        return Task.FromResult<TResult?>(default);
+        return Task.FromResult(MessageBusAnswer<TResult>.NONE);
     }
     
     protected async Task SendMessage<T>(Event triggeredEvent, T? data = default)

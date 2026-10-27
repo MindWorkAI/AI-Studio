@@ -81,6 +81,16 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public Func<string, Task<ChatThread?>> EnsureOwnerChatAsync { get; set; } = _ => Task.FromResult<ChatThread?>(null);
 
+    /// <summary>
+    /// Keeps what the preview read of an attached document, so that sending it does not read the file again.
+    /// </summary>
+    /// <remarks>
+    /// Only the chat hands one over, cf. DocumentCheckDialog.KeepReadText. Elsewhere, e.g., in the
+    /// assistants, the documents are read for every run anyway.
+    /// </remarks>
+    [Parameter]
+    public Func<FileAttachment, string, FileVersion, Task>? KeepPreviewedText { get; set; }
+
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
 
@@ -178,25 +188,13 @@ public partial class AttachDocuments : MSGComponentBase
         var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources()
             ? Array.Empty<FileAttachment>()
             : delivery?.Attachments ?? [];
-        var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
+        var pending = this.OwnerChat?.Draft.MediaTranscripts ?? [];
         var changed = false;
-        var ownerPendingChanged = false;
-        
+
         foreach (var attachment in completed.Concat(pending))
             changed |= this.DocumentPaths.Add(attachment);
 
-        if (this.OwnerChat is not null)
-        {
-            foreach (var attachment in completed.OfType<ManagedTranscriptAttachment>())
-            {
-                if (this.OwnerChat.PendingMediaTranscripts.All(existing => existing.FilePath != attachment.FilePath))
-                {
-                    this.OwnerChat.PendingMediaTranscripts.Add(attachment);
-                    ownerPendingChanged = true;
-                }
-            }
-        }
-
+        var ownerPendingChanged = this.OwnerChat?.Draft.AddAttachments(completed.OfType<ManagedTranscriptAttachment>()) ?? false;
         if (changed || ownerPendingChanged)
         {
             await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
@@ -275,11 +273,12 @@ public partial class AttachDocuments : MSGComponentBase
             return;
 
         var previousAttachments = this.DocumentPaths.ToHashSet();
-        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable);
-        foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
+        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable, this.KeepPreviewedText);
+        var removedAttachments = previousAttachments.Except(this.DocumentPaths).ToList();
+        foreach (var removedAttachment in removedAttachments)
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
 
-        this.ReconcileOwnerPendingTranscripts();
+        this.RemoveFromOwnerDraft(removedAttachments);
 
         //
         // Said out loud, like every other path in this file. Removing a file in the dialog changed
@@ -295,11 +294,12 @@ public partial class AttachDocuments : MSGComponentBase
         if (this.IsUnavailable)
             return;
 
-        foreach (var attachment in this.DocumentPaths)
+        var removedAttachments = this.DocumentPaths.ToList();
+        foreach (var attachment in removedAttachments)
             ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
-        
+
         this.DocumentPaths.Clear();
-        this.ReconcileOwnerPendingTranscripts();
+        this.RemoveFromOwnerDraft(removedAttachments);
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
@@ -311,21 +311,22 @@ public partial class AttachDocuments : MSGComponentBase
 
         this.DocumentPaths.Remove(fileAttachment);
         ManagedTranscriptAttachment.TryDeleteOwnedFile(fileAttachment);
-        this.ReconcileOwnerPendingTranscripts();
+        this.RemoveFromOwnerDraft([fileAttachment]);
 
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
 
-    /// <summary>Keeps persisted chat-draft transcript references aligned with the composer.</summary>
-    private void ReconcileOwnerPendingTranscripts()
-    {
-        if (this.OwnerChat is null)
-            return;
-
-        var retainedPaths = this.DocumentPaths.Select(attachment => attachment.FilePath).ToHashSet(StringComparer.Ordinal);
-        this.OwnerChat.PendingMediaTranscripts.RemoveAll(attachment => !retainedPaths.Contains(attachment.FilePath));
-    }
+    /// <summary>
+    /// Removes the attachments the user took out of the composer from the draft of the owner chat.
+    /// </summary>
+    /// <remarks>
+    /// Only what the user removed leaves the draft. The media transcription service hands a finished
+    /// transcript to the draft before the composer shows it, so aligning the draft with the composer
+    /// would drop such a transcript, and its file would stay behind without an owner.
+    /// </remarks>
+    /// <param name="removedAttachments">The attachments the user removed.</param>
+    private void RemoveFromOwnerDraft(IEnumerable<FileAttachment> removedAttachments) => this.OwnerChat?.Draft.RemoveAttachments(removedAttachments);
 
     /// <summary>
     /// Validates the given paths and attaches every file which passes.
@@ -392,7 +393,7 @@ public partial class AttachDocuments : MSGComponentBase
             // about whether it happened to be new to us.
             //
             var attachment = FileAttachment.FromPath(path);
-            this.DocumentPaths.Add(attachment);
+            this.DocumentPaths.AttachInPlaceOfSameFile(attachment);
             attached.Add(attachment);
         }
 
@@ -424,7 +425,7 @@ public partial class AttachDocuments : MSGComponentBase
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
             this.T("Transcribe media files"),
             dialogParameters,
-            DialogOptions.FULLSCREEN);
+            DialogOptions.BLOCKING_FULLSCREEN);
 
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
@@ -461,6 +462,7 @@ public partial class AttachDocuments : MSGComponentBase
             { x => x.Document, fileAttachment },
             { x => x.AttachPaths, this.AttachDroppedPathsAsync },
             { x => x.IsAttachingUnavailable, () => this.IsUnavailable },
+            { x => x.KeepReadText, this.KeepPreviewedText },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

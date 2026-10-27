@@ -50,7 +50,47 @@ public record ChatTemplate(
     /// whether the retrieved data is validated.
     /// </remarks>
     public DataSourceOptions? DataSourceOptions { get; init; }
-    
+
+    /// <summary>
+    /// The profile this template preselects for a chat started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing about profiles, so the chat keeps the profile it would
+    /// start with anyway: the default of the chat settings, or the one the user picked. The ID of
+    /// Profile.NO_PROFILE is a statement of its own: such chats start without a profile, whatever
+    /// that default says.<br/><br/>
+    /// A preselection, not a limit: the user picks another profile in the chat as usual. It means
+    /// nothing for a template which does not allow profiles, and a profile which is gone leaves the
+    /// chat default in place.
+    /// </remarks>
+    public string? ProfileId { get; init; }
+
+    /// <summary>
+    /// The provider, and with it the model, this template preselects for a chat started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing, so the chat starts with the provider it would start
+    /// with anyway. A preselection, not a limit, and no way around the confidence levels either: a
+    /// provider which is gone, or which may not be used for chats, leaves the chat to start as if
+    /// the template said nothing.
+    /// </remarks>
+    public string? ProviderId { get; init; }
+
+    /// <summary>
+    /// The name of the workspace a chat started with this template is kept in.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing, so the chat goes where it would go anyway. A name
+    /// rather than an ID: a workspace has an ID of its own on every computer, so a configuration
+    /// plugin has no other way to name one. Like for an assistant chat launcher, the workspace is
+    /// created when it does not exist yet; on the chat page only with the first message of the chat,
+    /// so that trying out a template creates no workspace.<br/><br/>
+    /// It only fills in where a chat would belong to no workspace otherwise. A chat started in a
+    /// workspace on purpose, for example from the workspace list, stays there, and so does every
+    /// chat while workspaces are switched off.
+    /// </remarks>
+    public string? WorkspaceName { get; init; }
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
     private static readonly ILogger<ChatTemplate> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ChatTemplate>();
@@ -67,6 +107,9 @@ public record ChatTemplate(
         AllowProfileUsage = true,
         ToolIds = null,
         DataSourceOptions = null,
+        ProfileId = null,
+        ProviderId = null,
+        WorkspaceName = null,
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
@@ -80,6 +123,16 @@ public record ChatTemplate(
     public override string ToString() => this.GetSafeName();
 
     #endregion
+
+    /// <summary>
+    /// Whether this template starts its chats without a profile, whatever the default says.
+    /// </summary>
+    /// <remarks>
+    /// That is a statement of its own, made with the ID of the no-profile entry, see ProfileId. It
+    /// names no profile which could be missing on another computer. A method rather than a property,
+    /// so that it does not end up in the stored settings.
+    /// </remarks>
+    public bool StartsWithoutProfile() => string.Equals(this.ProfileId, Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets the name of this chat template. If it is the NO_CHAT_TEMPLATE, it returns a localized string.
@@ -117,12 +170,12 @@ public record ChatTemplate(
     /// <param name="chatTemplate">The chat template the launcher opens its chat with.</param>
     /// <param name="launcherToolIds">The tools the launcher names itself, or null when it names none.</param>
     /// <returns>The tools to start with — null when neither says anything, which leaves the chat default in place — and whether the launcher's own choice was dropped for it.</returns>
-    public static (IReadOnlyCollection<string>? ToolIds, bool LauncherChoiceDropped) ChooseToolIds(ChatTemplate chatTemplate, IReadOnlyCollection<string>? launcherToolIds)
+    public static ChatTemplateToolChoice ChooseToolIds(ChatTemplate chatTemplate, IReadOnlyCollection<string>? launcherToolIds)
     {
         if (chatTemplate.ToolIds is not { } templateToolIds)
-            return (launcherToolIds, false);
+            return new(launcherToolIds, false);
 
-        return (templateToolIds, launcherToolIds is not null);
+        return new(templateToolIds, launcherToolIds is not null);
     }
 
     /// <summary>
@@ -137,12 +190,12 @@ public record ChatTemplate(
     /// <param name="chatTemplate">The chat template the launcher opens its chat with.</param>
     /// <param name="launcherOptions">The options built from the data sources the launcher names, or null when it names none.</param>
     /// <returns>The options to start with — null when neither says anything, which leaves the chat default in place — and whether the launcher's own choice was dropped for them.</returns>
-    public static (DataSourceOptions? Options, bool LauncherChoiceDropped) ChooseDataSourceOptions(ChatTemplate chatTemplate, DataSourceOptions? launcherOptions)
+    public static ChatTemplateDataSourceChoice ChooseDataSourceOptions(ChatTemplate chatTemplate, DataSourceOptions? launcherOptions)
     {
         if (chatTemplate.DataSourceOptions is not { } templateOptions)
-            return (launcherOptions, false);
+            return new(launcherOptions, false);
 
-        return (templateOptions.CreateCopy(), launcherOptions is not null);
+        return new(templateOptions.CreateCopy(), launcherOptions is not null);
     }
 
     /// <summary>
@@ -202,6 +255,10 @@ public record ChatTemplate(
 
         var fileAttachments = ParseFileAttachments(idx, table, pluginPath);
 
+        var profileId = ParseOptionalId(idx, table, "ProfileId", allowEmpty: true);
+        if (profileId is not null && !allowProfileUsage)
+            LOGGER.LogWarning("The chat template {IdxChatTemplate} preselects a profile but does not allow profiles. Chats started with it ignore that profile.", idx);
+
         template = new ChatTemplate
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -214,6 +271,9 @@ public record ChatTemplate(
             AllowProfileUsage = allowProfileUsage,
             ToolIds = ParseToolIds(idx, table),
             DataSourceOptions = ParseDataSourceOptions(idx, table),
+            ProfileId = profileId,
+            ProviderId = ParseOptionalId(idx, table, "ProviderId", allowEmpty: false),
+            WorkspaceName = ParseWorkspaceName(idx, table),
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
         };
@@ -292,6 +352,43 @@ public record ChatTemplate(
         }
 
         return toolIds;
+    }
+
+    /// <remarks>
+    /// The empty GUID is a statement for a profile — start without one — but names no provider at
+    /// all, hence the switch. Anything which is no GUID cannot point at a provider or profile and is
+    /// dropped, so that the template still works, with the chat defaults in its place.
+    /// </remarks>
+    private static string? ParseOptionalId(int idx, LuaTable table, string fieldName, bool allowEmpty)
+    {
+        if (!table.TryGetValue(fieldName, out var idValue))
+            return null;
+
+        if (!idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id) || (!allowEmpty && id == Guid.Empty))
+        {
+            LOGGER.LogWarning("The {FieldName} of chat template {IdxChatTemplate} is not a valid ID and will be ignored.", fieldName, idx);
+            return null;
+        }
+
+        return id.ToString();
+    }
+
+    /// <remarks>
+    /// An empty name would mean "no workspace", which is what a template says by leaving the field
+    /// out. So it is dropped, with a warning, as is anything which is no text.
+    /// </remarks>
+    private static string? ParseWorkspaceName(int idx, LuaTable table)
+    {
+        if (!table.TryGetValue("WorkspaceName", out var workspaceNameValue))
+            return null;
+
+        if (!workspaceNameValue.TryRead<string>(out var workspaceName) || string.IsNullOrWhiteSpace(workspaceName))
+        {
+            LOGGER.LogWarning("The WorkspaceName of chat template {IdxChatTemplate} is not a valid name and will be ignored.", idx);
+            return null;
+        }
+
+        return workspaceName.Trim();
     }
 
     private static DataSourceOptions? ParseDataSourceOptions(int idx, LuaTable table)
@@ -421,11 +518,7 @@ public record ChatTemplate(
         }
 
         var combinedPath = Path.GetFullPath(Path.Combine(pluginRoot, relativePath));
-        var pluginRootWithSeparator = pluginRoot.EndsWith(Path.DirectorySeparatorChar)
-            ? pluginRoot
-            : pluginRoot + Path.DirectorySeparatorChar;
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (!combinedPath.StartsWith(pluginRootWithSeparator, comparison))
+        if (!PathTools.IsInsideDirectory(pluginRoot, combinedPath))
         {
             LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} points outside of the plugin folder and will be ignored.", attachmentNum, idx);
             return false;
@@ -453,22 +546,25 @@ public record ChatTemplate(
         var fileAttachmentsLua = this.BuildFileAttachmentsLua(fileAttachmentPaths);
 
         //
-        // Both of these may be absent entirely, because saying nothing about tools or data sources
-        // is a statement of its own. They therefore bring their own line break and indentation
-        // instead of sitting on a line of the template:
+        // These may be absent entirely, because saying nothing about the profile, the provider, the
+        // workspace, the tools, or the data sources is a statement of its own. They therefore bring
+        // their own line break and indentation instead of sitting on a line of the template:
         //
+        var profileIdLua = BuildOptionalStringLua("ProfileId", this.ProfileId);
+        var providerIdLua = BuildOptionalStringLua("ProviderId", this.ProviderId);
+        var workspaceNameLua = BuildOptionalStringLua("WorkspaceName", this.WorkspaceName);
         var toolIdsLua = this.BuildToolIdsLua();
         var dataSourceOptionsLua = this.BuildDataSourceOptionsLua();
 
         luaCode = $$"""
-                    {{this.BuildDataSourceIdNote()}}CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                    {{this.BuildProviderAndProfileIdNote()}}{{this.BuildDataSourceIdNote()}}CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(exportId)}}",
                         ["Name"] = {{LuaTools.ToLuaStringLiteral(this.Name)}},
                         ["SystemPrompt"] = {{LuaTools.ToLuaStringLiteral(this.SystemPrompt)}},
                         ["PredefinedUserPrompt"] = {{LuaTools.ToLuaStringLiteral(this.PredefinedUserPrompt)}},
                         ["AllowProfileUsage"] = {{this.AllowProfileUsage.ToString().ToLowerInvariant()}},
                         ["FileAttachments"] = {{fileAttachmentsLua}},
-                        ["ExampleConversation"] = {{exampleConversationLua}},{{toolIdsLua}}{{dataSourceOptionsLua}}
+                        ["ExampleConversation"] = {{exampleConversationLua}},{{profileIdLua}}{{providerIdLua}}{{workspaceNameLua}}{{toolIdsLua}}{{dataSourceOptionsLua}}
                     }
                     """;
         return true;
@@ -578,6 +674,10 @@ public record ChatTemplate(
         return true;
     }
 
+    private static string BuildOptionalStringLua(string fieldName, string? value) => value is null
+        ? string.Empty
+        : $"{Environment.NewLine}    [\"{fieldName}\"] = {LuaTools.ToLuaStringLiteral(value)},";
+
     /// <remarks>
     /// An empty set is written out as an empty table rather than being left out: the two say
     /// different things, and dropping the line would turn "no tools at all" into "whatever the
@@ -653,6 +753,26 @@ public record ChatTemplate(
                -- The data source IDs below are the ones of the machine this was exported from.
                -- Please check them against your CONFIG["DATA_SOURCES"]: an ID which resolves to
                -- nothing is ignored, and a chat with this template then starts without that source.
+
+               """;
+    }
+
+    /// <remarks>
+    /// The same holds for the provider and the profile: a configuration plugin reaches only those
+    /// which it or another plugin defines, and the ones of this machine are mostly the user's own.
+    /// Starting without a profile names nothing, so it needs no note.
+    /// </remarks>
+    private string BuildProviderAndProfileIdNote()
+    {
+        var namesProfile = this.ProfileId is not null && !this.StartsWithoutProfile();
+        if (this.ProviderId is null && !namesProfile)
+            return string.Empty;
+
+        return """
+               -- The provider and profile IDs below are the ones of the machine this was exported from.
+               -- Please check them against your CONFIG["LLM_PROVIDERS"] and CONFIG["PROFILES"]: an ID
+               -- which resolves to nothing is ignored, and a chat with this template then starts with
+               -- the provider or profile it would start with anyway.
 
                """;
     }
