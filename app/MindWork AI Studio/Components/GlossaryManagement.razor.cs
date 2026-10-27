@@ -1,6 +1,8 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Tools.Glossaries;
+using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -15,6 +17,9 @@ public partial class GlossaryManagement : MSGComponentBase
 
     [Inject]
     private GlossaryStore GlossaryStore { get; init; } = null!;
+
+    [Inject]
+    private RustService RustService { get; init; } = null!;
 
     /// <summary>
     /// The number of entries per glossary; null for a glossary whose entries cannot be read.
@@ -50,16 +55,40 @@ public partial class GlossaryManagement : MSGComponentBase
 
     private static string LanguageName(CommonLanguages language, string customLanguage) => language is CommonLanguages.OTHER ? customLanguage : language.Name();
 
-    private async Task AddGlossary()
+    private Task AddGlossary() => this.AddGlossary(new DialogParameters<GlossaryDialog>
     {
+        { x => x.IsEditing, false },
+    }, isImport: false);
+
+    private async Task ImportGlossary()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.GLOSSARY, T("Import Glossary Configuration"));
+        if (import?.ConfigurationObject is not Glossary glossary)
+            return;
+
         var dialogParameters = new DialogParameters<GlossaryDialog>
         {
+            { x => x.Glossary, glossary with { PluginSource = null } },
+            { x => x.Entries, glossary.PluginSource?.Entries ?? [] },
             { x => x.IsEditing, false },
         };
 
+        await this.AddGlossary(dialogParameters, isImport: true);
+    }
+
+    private async Task AddGlossary(DialogParameters<GlossaryDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<GlossaryDialog>(T("Add Glossary"), dialogParameters, DialogOptions.FULLSCREEN_MANUAL_ESCAPE);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not GlossaryDialogResult result)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported glossary is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.GLOSSARY))
             return;
 
         // The entries go first: settings which name a glossary without its file would show it empty,
@@ -112,6 +141,39 @@ public partial class GlossaryManagement : MSGComponentBase
 
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    /// <summary>
+    /// Shows a glossary of the organization, which nobody may change here: its configuration plugin is
+    /// the source of the glossary and of its entries.
+    /// </summary>
+    private async Task ViewGlossary(Glossary glossary)
+    {
+        var dialogParameters = new DialogParameters<GlossaryDialog>
+        {
+            { x => x.Glossary, glossary },
+            { x => x.Entries, await this.GlossaryStore.LoadEntriesAsync(glossary.Id) },
+            { x => x.IsEditing, true },
+            { x => x.IsReadOnly, true },
+        };
+
+        await this.DialogService.ShowAsync<GlossaryDialog>(T("View Glossary"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+
+    /// <summary>
+    /// Copies the glossary as a Lua configuration section to the clipboard, together with its entries.
+    /// </summary>
+    private async Task ExportGlossary(Glossary glossary)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings || glossary.IsEnterpriseConfiguration)
+            return;
+
+        // An export without the entries which could not be read would pass for the whole glossary:
+        var entries = await this.GlossaryStore.TryLoadEntriesAsync(glossary.Id);
+        if (entries is null)
+            return;
+
+        await this.RustService.CopyText2Clipboard(glossary.ExportAsConfigurationSection(entries));
     }
 
     private async Task DeleteGlossary(Glossary glossary)

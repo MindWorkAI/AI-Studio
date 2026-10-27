@@ -17,10 +17,11 @@
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidateName"
                 Variant="Variant.Outlined"
+                ReadOnly="@this.IsReadOnly"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
-            <MudRadioGroup T="GlossaryType" @bind-Value="@this.dataType" Class="mb-3">
+            <MudRadioGroup T="GlossaryType" @bind-Value="@this.dataType" Disabled="@this.IsReadOnly" Class="mb-3">
                 <MudRadio Value="@GlossaryType.TRANSLATION" Color="Color.Primary">
                     <div>
                         <MudText Typo="Typo.body1">@T("Translation glossary")</MudText>
@@ -37,8 +38,8 @@
 
             @if (this.dataType is GlossaryType.TRANSLATION)
             {
-                <EnumSelection T="CommonLanguages" NameFunc="@this.LanguageName" @bind-Value="@this.dataSourceLanguage" ValidateSelection="@this.ValidateLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language of the terms")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.dataCustomSourceLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language of the terms")" />
-                <EnumSelection T="CommonLanguages" NameFunc="@this.LanguageName" @bind-Value="@this.dataTargetLanguage" ValidateSelection="@this.ValidateLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language of the translations")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.dataCustomTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language of the translations")" />
+                <EnumSelection T="CommonLanguages" NameFunc="@this.LanguageName" @bind-Value="@this.dataSourceLanguage" Disabled="@this.IsReadOnly" ValidateSelection="@this.ValidateLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language of the terms")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.dataCustomSourceLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language of the terms")" />
+                <EnumSelection T="CommonLanguages" NameFunc="@this.LanguageName" @bind-Value="@this.dataTargetLanguage" Disabled="@this.IsReadOnly" ValidateSelection="@this.ValidateLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language of the translations")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.dataCustomTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language of the translations")" />
             }
 
             <MudTextField
@@ -54,30 +55,41 @@
                 AdornmentIcon="@Icons.Material.Filled.Notes"
                 AdornmentColor="Color.Info"
                 Variant="Variant.Outlined"
+                ReadOnly="@this.IsReadOnly"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
-            <MudCheckBox T="bool" @bind-Value="@this.dataPreselectInTranslation" Color="Color.Primary" Dense="@true" Size="Size.Small" Label="@this.PreselectLabel"/>
+            <MudCheckBox T="bool" @bind-Value="@this.dataPreselectInTranslation" Color="Color.Primary" Dense="@true" Size="Size.Small" Disabled="@this.IsReadOnly" Label="@this.PreselectLabel"/>
         </MudForm>
 
         <MudText Typo="Typo.h6" Class="mt-3">@T("Entries")</MudText>
-        <MudText Typo="Typo.caption" Class="mb-2 d-block">@T("Click into a cell to change it. Add entries one by one or import them from a spreadsheet or a CSV file.")</MudText>
+        @if (this.IsReadOnly)
+        {
+            <MudText Typo="Typo.caption" Class="mb-2 d-block">@T("Your organization provides this glossary, so you can view its entries but not change them.")</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.caption" Class="mb-2 d-block">@T("Click into a cell to change it. Add entries one by one or import them from a spreadsheet or a CSV file.")</MudText>
+        }
 
         <div class="d-flex flex-wrap align-center gap-2 mb-2">
             <div style="flex: 4 1 16rem; min-width: 0;">
                 <MudTextField T="string" @bind-Value="@this.searchText" Placeholder="@T("Search entries")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="@true" Clearable="@true" Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Style="flex: 3 1 12rem;" OnClick="@this.AddRow">
-                @T("Add Entry")
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" Style="flex: 3 1 12rem;" OnClick="@this.ImportEntries">
-                @T("Import from File")
-            </MudButton>
+            @if (!this.IsReadOnly)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Style="flex: 3 1 12rem;" OnClick="@this.AddRow">
+                    @T("Add Entry")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" Style="flex: 3 1 12rem;" OnClick="@this.ImportEntries">
+                    @T("Import from File")
+                </MudButton>
+            }
         </div>
         <MudSwitch T="bool" @bind-Value="@this.showDetails" Color="Color.Primary" Size="Size.Small" Label="@T("Show other forms and notes")" Class="mb-4"/>
 
         <div class="glossary-entries">
-            <MudDataGrid T="GlossaryDialog.EntryRow" Items="@this.rows" ReadOnly="@false" EditMode="DataGridEditMode.Cell" QuickFilter="@this.MatchesSearch" Dense="@true" Hover="@true" RowsPerPage="25" Class="border-dashed border rounded-lg mb-3">
+            <MudDataGrid T="GlossaryDialog.EntryRow" Items="@this.rows" ReadOnly="@this.IsReadOnly" EditMode="DataGridEditMode.Cell" QuickFilter="@this.MatchesSearch" Dense="@true" Hover="@true" RowsPerPage="25" Class="border-dashed border rounded-lg mb-3">
                 <Columns>
                     <PropertyColumn Property="x => x.Term" Title="@this.TermTitle">
                         <EditTemplate>
@@ -99,7 +111,7 @@
                             <MudTextField T="string" @bind-Value="@context.Item.Note" Placeholder="@T("Optional remark")" Underline="@false" Margin="Margin.Dense" Lines="2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small" Class="glossary-cell" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                         </EditTemplate>
                     </PropertyColumn>
-                    <TemplateColumn T="GlossaryDialog.EntryRow" Editable="@false" Sortable="@false" Filterable="@false">
+                    <TemplateColumn T="GlossaryDialog.EntryRow" Editable="@false" Sortable="@false" Filterable="@false" Hidden="@this.IsReadOnly">
                         <CellTemplate>
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => this.RemoveRow(context.Item))"/>
@@ -121,7 +133,7 @@
             <MudText Typo="Typo.caption" Class="mb-3 d-block">@T("Other forms are further spellings or forms which count as the same term, such as a plural; separate them with semicolons. A note is a remark which the AI reads along with the entry, for example, when the entry applies.")</MudText>
         }
 
-        @if (this.CountDuplicateTerms() is var duplicates and > 0)
+        @if (!this.IsReadOnly && this.CountDuplicateTerms() is var duplicates and > 0)
         {
             <MudAlert Severity="Severity.Warning" Dense="@true" Class="mb-3">
                 @string.Format(T("{0} terms appear more than once. The AI gets all of their entries, which may contradict each other."), duplicates)
@@ -131,18 +143,27 @@
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
-            @T("Cancel")
-        </MudButton>
-        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
-            @if(this.IsEditing)
-            {
-                @T("Update")
-            }
-            else
-            {
-                @T("Add")
-            }
-        </MudButton>
+        @if (this.IsReadOnly)
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Close")
+            </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Cancel")
+            </MudButton>
+            <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+                @if(this.IsEditing)
+                {
+                    @T("Update")
+                }
+                else
+                {
+                    @T("Add")
+                }
+            </MudButton>
+        }
     </DialogActions>
 </MudDialog>

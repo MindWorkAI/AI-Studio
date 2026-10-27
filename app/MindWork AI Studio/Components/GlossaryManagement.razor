@@ -1,4 +1,5 @@
 @using AIStudio.Settings
+@using AIStudio.Tools.PluginSystem
 @inherits MSGComponentBase
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
@@ -45,12 +46,25 @@
         </MudTd>
         <MudTd>
             <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
-                <MudTooltip Text="@T("Edit")">
-                    <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditGlossary(context))"/>
-                </MudTooltip>
-                <MudTooltip Text="@T("Delete")">
-                    <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteGlossary(context))"/>
-                </MudTooltip>
+                @if (context.IsEnterpriseConfiguration)
+                {
+                    <MudTooltip Text="@T("This glossary is managed by your organization.")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("View")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Visibility" OnClick="@(() => this.ViewGlossary(context))"/>
+                    </MudTooltip>
+                }
+                else
+                {
+                    <MudTooltip Text="@T("Edit")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditGlossary(context))"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Delete")">
+                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteGlossary(context))"/>
+                    </MudTooltip>
+                    <AdminExportButton OnClick="@(() => this.ExportGlossary(context))" />
+                }
             </MudStack>
         </MudTd>
     </RowTemplate>
@@ -63,6 +77,14 @@
     </MudText>
 }
 
-<MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddGlossary">
-    @T("Add Glossary")
-</MudButton>
+<MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+    <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddGlossary">
+        @T("Add Glossary")
+    </MudButton>
+    @*
+    Two imports exist for glossaries: this one takes the configuration of a whole glossary which
+    somebody exported, the one in the glossary dialog takes entries from a spreadsheet. This one is
+    for experts, so its button is a quiet one, and its name says what it takes.
+*@
+<LockableButton Text="@T("Import Glossary")" Tooltip="@T("For experts: paste the configuration of a glossary which somebody exported from AI Studio, e.g. a colleague or your IT department.")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.GLOSSARY))" Icon="@Icons.Material.Filled.Code" OnClickAsync="@this.ImportGlossary" ButtonVariant="Variant.Outlined" NoMargin="true" />
+</MudStack>

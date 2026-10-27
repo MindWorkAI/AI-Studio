@@ -32,6 +32,12 @@ public partial class GlossaryDialog : MSGComponentBase
     [Parameter]
     public bool IsEditing { get; init; }
 
+    /// <summary>
+    /// Shows the glossary without letting anybody change it, e.g. one of the organization.
+    /// </summary>
+    [Parameter]
+    public bool IsReadOnly { get; init; }
+
     [Inject]
     private ILogger<GlossaryDialog> Logger { get; init; } = null!;
 
@@ -184,6 +190,9 @@ public partial class GlossaryDialog : MSGComponentBase
 
     private async Task Store()
     {
+        if (this.IsReadOnly)
+            return;
+
         await this.form.Validate();
         
         if (!this.dataIsValid)
