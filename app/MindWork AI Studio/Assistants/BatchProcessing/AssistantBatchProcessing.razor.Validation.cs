@@ -18,8 +18,6 @@ public partial class AssistantBatchProcessing
 
     private string? ValidateFilePatterns(string patterns) => FileNamePatterns.Validate(patterns);
 
-    private string? ValidateExcludePatterns(string patterns) => FileExclusions.Validate(patterns);
-
     private string? ValidateCsvFileName(string fileName)
     {
         if (string.IsNullOrWhiteSpace(fileName))
@@ -135,9 +133,10 @@ public partial class AssistantBatchProcessing
 
         //
         // The exclusion list sits in the expert settings, which are folded away by default. Unfold
-        // them, so the user sees the message next to the list:
+        // them, so the user sees the message next to the list. Only the editor knows about an invalid
+        // draft, since it passes on valid lists only:
         //
-        if (this.ValidateExcludePatterns(this.excludePatterns) is not null)
+        if (this.exclusionEditor is { IsValid: false })
             this.showExpertSettings = true;
 
         var instructionIssue = this.ValidateInstructionSource();

@@ -47,7 +47,7 @@
         </MudJustifiedText>
 
         <div class="mt-4">
-            <FileExclusionEditor @bind-Text="@this.excludePatterns" Disabled="@this.isProcessingBatch" Label="@T("Excluded files and folders")" ResetButtonText="@T("Restore default")"/>
+            <FileExclusionEditor @ref="@this.exclusionEditor" @bind-Text="@this.excludePatterns" Disabled="@this.isProcessingBatch" Label="@T("Excluded files and folders")" ResetButtonText="@T("Restore default")"/>
         </div>
 
         <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4">@T("File size limit")</MudText>

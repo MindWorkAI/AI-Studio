@@ -146,6 +146,33 @@ public sealed class FileExclusionEditorTests
     }
 
     [Test]
+    public async Task AnInvalidDraftMakesTheEditorInvalidWhileTheBoundTextStaysValid()
+    {
+        var published = new List<string>();
+        var editor = Create(published);
+        Assert.That(editor.IsValid, Is.True);
+
+        await editor.EditAsync("*.wrong", folders: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(editor.IsValid, Is.False);
+            Assert.That(published, Is.Empty);
+        });
+
+        await editor.EditAsync("custom/", folders: true);
+        Assert.That(editor.IsValid, Is.True);
+    }
+
+    [Test]
+    public void AnInvalidReceivedListMakesTheEditorInvalid()
+    {
+        var editor = Create(new List<string>(), "**/*.tmp");
+
+        Assert.That(editor.IsValid, Is.False);
+    }
+
+    [Test]
     public async Task HiddenResetButtonsCannotChangeTheRules()
     {
         var published = new List<string>();

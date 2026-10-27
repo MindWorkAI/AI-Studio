@@ -59,6 +59,12 @@ public partial class FileExclusionEditor : MSGComponentBase
     private readonly string fileInputId = $"exclusion-files-{Guid.NewGuid():N}";
     private bool showHelp;
 
+    /// <summary>
+    /// False while a field holds an invalid draft. The editor keeps such a draft to itself, so the
+    /// bound text is still the last valid one and cannot tell.
+    /// </summary>
+    public bool IsValid => this.state.IsValid;
+
     private string EditorLabel => string.IsNullOrWhiteSpace(this.Label) ? T("Excluded files and folders") : this.Label;
 
     private string RestoreLabel => string.IsNullOrWhiteSpace(this.ResetButtonText) ? T("Restore default") : this.ResetButtonText;
