@@ -78,6 +78,16 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private bool isGatheringSharedResearch;
     private bool isFinalizingAnalysis;
     private string sharedResearchContext = string.Empty;
+
+    /// <summary>
+    /// The answer of the shared research, whose sources the result takes over; null without research.
+    /// </summary>
+    /// <remarks>
+    /// Kept out of the session state, as is the id of its thread: only the instance which runs the
+    /// analysis finishes it, also after the user left the assistant.
+    /// </remarks>
+    private ContentText? sharedResearchAnswer;
+    private Guid sharedResearchChatId;
     private string OutputLanguageInstruction => this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage);
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));

@@ -17,6 +17,7 @@ public partial class AssistantSWOTAnalysis
         this.ClearConversationState();
         this.analysisResult = null;
         this.sharedResearchContext = string.Empty;
+        this.sharedResearchAnswer = null;
         this.isGatheringSharedResearch = false;
         this.isFinalizingAnalysis = false;
         this.categoryAnalysisProgress.Clear();
@@ -180,6 +181,7 @@ public partial class AssistantSWOTAnalysis
             {
                 resultingText.Text = SwotAnalysisMarkdownFormatter.Format(this.analysisResult);
                 resultingText.Presentation = SwotAnalysisContentPresentation.Create(this.analysisResult);
+                await this.AddSharedResearchSourcesAsync(resultingText);
             }
         }
         finally
@@ -233,7 +235,11 @@ public partial class AssistantSWOTAnalysis
                 return string.Empty;
 
             if (!string.IsNullOrWhiteSpace(aiText.Text))
+            {
+                this.sharedResearchAnswer = aiText;
+                this.sharedResearchChatId = thread.ChatId;
                 return aiText.Text.Trim();
+            }
 
             this.Logger.LogWarning("The shared research for the SWOT analysis returned no usable content.");
         }
@@ -245,11 +251,38 @@ public partial class AssistantSWOTAnalysis
         {
             this.Logger.LogWarning(exception, "The shared research for the SWOT analysis could not be created.");
         }
+        finally
+        {
+            //
+            // What the tools read tightened the research thread. The research reaches the result, and a
+            // chat started from it, through the assistant's own thread, so that thread has to demand
+            // the same. Also when the research failed: the tools may have read something before.
+            //
+            this.ChatThread?.RequireRestrictionsOf(thread);
+        }
 
         await this.MessageBus.SendWarning(new(
             Icons.Material.Filled.CloudOff,
             T("The shared research could not be created. The SWOT analysis will continue without it.")));
         return string.Empty;
+    }
+
+    /// <summary>
+    /// Adds the sources of the shared research to the result, together with what the AI received from them.
+    /// </summary>
+    /// <remarks>
+    /// The research ran in a thread of its own, so its passages are stored under that thread's id.
+    /// Copying them to the assistant's thread lets the result card and a chat started from it show
+    /// what the analysis rests on.
+    /// </remarks>
+    /// <param name="result">The text of the result.</param>
+    private async Task AddSharedResearchSourcesAsync(ContentText result)
+    {
+        if (this.sharedResearchAnswer is not { } research || this.ChatThread is null)
+            return;
+
+        result.AddSources(research.Sources, research.SourcePassages);
+        await ChatProvenance.CopyChatAsync(this.sharedResearchChatId, this.ChatThread.ChatId);
     }
 
     private async Task PublishAnalysisProgressAsync()

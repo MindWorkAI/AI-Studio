@@ -764,20 +764,35 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 SystemPrompt = SystemPrompts.DEFAULT,
             };
 
-        var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
-        var visiblePromptTime = earliestBlock is null
-            ? DateTimeOffset.Now
-            : earliestBlock.Time == DateTimeOffset.MinValue
-                ? earliestBlock.Time
-                : earliestBlock.Time.AddTicks(-1);
-
         var transferredBlocks = originalChatThread.Blocks
             .Select(block => block.Role is ChatRole.USER
                 ? block.DeepClone(changeHideState: true)
                 : block.DeepClone())
             .ToList();
 
-        transferredBlocks.Insert(0, new ContentBlock
+        transferredBlocks.Insert(0, this.CreateSendToChatPrompt(originalChatThread.Blocks));
+        return originalChatThread with
+        {
+            SystemPrompt = SystemPrompts.DEFAULT,
+            Blocks = transferredBlocks,
+        };
+    }
+
+    /// <summary>
+    /// Creates the visible message of the user which opens a chat started from this assistant.
+    /// </summary>
+    /// <param name="blocks">The blocks which follow the message in the chat; it comes right before the earliest of them.</param>
+    /// <returns>The message, with SendToChatVisibleUserPromptText as its text.</returns>
+    private protected ContentBlock CreateSendToChatPrompt(IReadOnlyCollection<ContentBlock> blocks)
+    {
+        var earliestBlock = blocks.MinBy(x => x.Time);
+        var visiblePromptTime = earliestBlock is null
+            ? DateTimeOffset.Now
+            : earliestBlock.Time == DateTimeOffset.MinValue
+                ? earliestBlock.Time
+                : earliestBlock.Time.AddTicks(-1);
+
+        return new ContentBlock
         {
             Time = visiblePromptTime,
             ContentType = ContentType.TEXT,
@@ -785,14 +800,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             Role = ChatRole.USER,
             Content = new ContentText
             {
-                Text = this.SendToChatVisibleUserPromptText,
+                Text = this.SendToChatVisibleUserPromptText ?? string.Empty,
             },
-        });
-
-        return originalChatThread with
-        {
-            SystemPrompt = SystemPrompts.DEFAULT,
-            Blocks = transferredBlocks,
         };
     }
     
