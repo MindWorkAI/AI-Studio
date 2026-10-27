@@ -1735,6 +1735,15 @@ CONFIG["PROFILES"] = {}
 -- export to Word, or a PowerPoint presentation or template (.pptx, .potx). Users see these templates
 -- in the settings, but cannot change or delete them.
 --
+-- When users export an answer into a Word template, AI Studio keeps the styles, the page layout,
+-- the headers and footers, and the logos of the template, and the answer replaces the text of its
+-- body, e.g., a cover page or sample text. The answer takes the styles Word knows by their built-in
+-- names, such as "heading 1", "List Paragraph", "Quote", or "Hyperlink", and tables take the style
+-- the template sets for new tables. A style the template lacks gets a plain definition.
+--
+-- Nothing uses the PowerPoint templates of this list yet. To provide the template of the Slide
+-- Assistant, set CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] instead, see above.
+--
 -- The simplest way is to ship the template with this plugin: put the file next to this
 -- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The
 -- path must stay inside the plugin directory, i.e., no '..' segments and no links pointing
