@@ -43,6 +43,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
         this.categoryAnalysisProgress.Clear();
         this.isGatheringSharedResearch = false;
         this.isModeratingAnalysis = false;
+        this.isRepairingModeration = false;
         this.sharedResearchContext = string.Empty;
         this.inputText = string.Empty;
         this.webContentURL = string.Empty;
@@ -87,6 +88,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress> categoryAnalysisProgress = [];
     private bool isGatheringSharedResearch;
     private bool isModeratingAnalysis;
+    private bool isRepairingModeration;
     private string sharedResearchContext = string.Empty;
 
     /// <summary>
@@ -113,6 +115,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private static readonly AssistantSessionStateKey<Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress>> CATEGORY_ANALYSIS_PROGRESS_STATE_KEY = new(nameof(categoryAnalysisProgress));
     private static readonly AssistantSessionStateKey<bool> IS_GATHERING_SHARED_RESEARCH_STATE_KEY = new(nameof(isGatheringSharedResearch));
     private static readonly AssistantSessionStateKey<bool> IS_MODERATING_ANALYSIS_STATE_KEY = new(nameof(isModeratingAnalysis));
+    private static readonly AssistantSessionStateKey<bool> IS_REPAIRING_MODERATION_STATE_KEY = new(nameof(isRepairingModeration));
     private static readonly AssistantSessionStateKey<string> SHARED_RESEARCH_CONTEXT_STATE_KEY = new(nameof(sharedResearchContext));
 
     /// <inheritdoc />
@@ -132,6 +135,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
         state.SetDictionary(CATEGORY_ANALYSIS_PROGRESS_STATE_KEY, this.categoryAnalysisProgress);
         state.Set(IS_GATHERING_SHARED_RESEARCH_STATE_KEY, this.isGatheringSharedResearch);
         state.Set(IS_MODERATING_ANALYSIS_STATE_KEY, this.isModeratingAnalysis);
+        state.Set(IS_REPAIRING_MODERATION_STATE_KEY, this.isRepairingModeration);
         state.Set(SHARED_RESEARCH_CONTEXT_STATE_KEY, this.sharedResearchContext);
     }
 
@@ -152,6 +156,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
         state.RestoreDictionary(CATEGORY_ANALYSIS_PROGRESS_STATE_KEY, this.categoryAnalysisProgress);
         state.Restore(IS_GATHERING_SHARED_RESEARCH_STATE_KEY, value => this.isGatheringSharedResearch = value);
         state.Restore(IS_MODERATING_ANALYSIS_STATE_KEY, value => this.isModeratingAnalysis = value);
+        state.Restore(IS_REPAIRING_MODERATION_STATE_KEY, value => this.isRepairingModeration = value);
         state.Restore(SHARED_RESEARCH_CONTEXT_STATE_KEY, value => this.sharedResearchContext = value);
     }
 

@@ -31,6 +31,7 @@ public partial class AssistantSWOTAnalysis
         this.sharedResearchAnswer = null;
         this.isGatheringSharedResearch = false;
         this.isModeratingAnalysis = false;
+        this.isRepairingModeration = false;
         this.categoryAnalysisProgress.Clear();
         this.CreateChatThread();
 
@@ -105,13 +106,27 @@ public partial class AssistantSWOTAnalysis
             if (token.IsCancellationRequested)
                 return new(SwotCategoryAnalysisStatus.CANCELED, Message: T("The category analysis was canceled."));
 
-            if (!SwotCategoryAnalysisResponseParser.TryParse(answer.Text, out var result, out var issue))
+            var read = await SwotModelAnswer.ReadWithOneRepairAsync<SwotCategoryAnalysisResult>(answer.Text, SwotCategoryAnalysisResponseParser.TryParse, async issue =>
             {
-                this.Logger.LogWarning("The answer for the SWOT category '{SwotCategory}' could not be read: {Issue}", category, issue);
+                this.Logger.LogWarning("The answer for the SWOT category '{SwotCategory}' could not be read, so the model is asked once more: {Issue}", category, issue);
+                this.categoryAnalysisProgress[category] = new(SwotCategoryAnalysisStatus.REPAIRING);
+                await this.PublishAnalysisProgressAsync();
+
+                // In the same thread, so the model sees its own answer; the images went along with the first request:
+                var repairedAnswer = await this.AskInPrivateThreadAsync(thread, SwotModelAnswer.RepairRequestOf(issue), [], token);
+                return repairedAnswer.Text;
+            });
+
+            if (token.IsCancellationRequested)
+                return new(SwotCategoryAnalysisStatus.CANCELED, Message: T("The category analysis was canceled."));
+
+            if (read.Result is null)
+            {
+                this.Logger.LogWarning("The answer for the SWOT category '{SwotCategory}' could not be read: {Issue}", category, read.Issue);
                 return new(SwotCategoryAnalysisStatus.FAILED, Message: T("The model response for this category did not have the expected structure."));
             }
 
-            return new(SwotCategoryAnalysisStatus.COMPLETED, result);
+            return new(SwotCategoryAnalysisStatus.COMPLETED, read.Result);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -141,7 +156,10 @@ public partial class AssistantSWOTAnalysis
     /// <remarks>
     /// The moderator runs in the assistant's own thread, so its answer becomes the result card and goes
     /// along to a chat. It runs without tools, see SwotAnalysisModeration. Its answer is JSON and stays
-    /// hidden while it streams; the result shows the analysis assembled from it.
+    /// hidden while it streams; the result shows the analysis assembled from it. An answer which cannot
+    /// be read gets one repair round in the same thread, see SwotModelAnswer.ReadWithOneRepairAsync;
+    /// the repaired answer then becomes the result, and a chat gets neither the repair request nor the
+    /// first answer, see ConvertToChatThread.
     /// </remarks>
     private async Task ModerateAnalysisAsync(
         IReadOnlyDictionary<SwotAnalysisCategory, SwotCategoryAnalysisResult> categoryResults,
@@ -159,14 +177,18 @@ public partial class AssistantSWOTAnalysis
             if (token.IsCancellationRequested || string.IsNullOrWhiteSpace(rawResponse))
                 return;
 
-            if (!SwotAnalysisModerationResponseParser.TryParse(rawResponse, out var moderation, out var issue))
+            var read = await SwotModelAnswer.ReadWithOneRepairAsync<SwotModerationResult>(rawResponse, SwotAnalysisModerationResponseParser.TryParse, this.AskModeratorOnceMoreAsync);
+            if (token.IsCancellationRequested)
+                return;
+
+            if (read.Result is null)
             {
-                this.Logger.LogWarning("The answer of the SWOT analysis moderator could not be read: {Issue}", issue);
+                this.Logger.LogWarning("The answer of the SWOT analysis moderator could not be read: {Issue}", read.Issue);
                 this.AddInputIssue(T("The four SWOT categories could not be reconciled because the model response did not have the expected structure. The preliminary results of the categories remain visible below."));
                 return;
             }
 
-            this.analysisResult = SwotAnalysisModeration.Assemble(moderation);
+            this.analysisResult = SwotAnalysisModeration.Assemble(read.Result);
             if (this.ResultingContentBlock?.Content is ContentText resultingText)
             {
                 resultingText.Text = SwotAnalysisMarkdownFormatter.Format(this.analysisResult);
@@ -177,8 +199,24 @@ public partial class AssistantSWOTAnalysis
         finally
         {
             this.isModeratingAnalysis = false;
+            this.isRepairingModeration = false;
             await this.PublishAnalysisProgressAsync();
         }
+    }
+
+    /// <summary>
+    /// Asks the moderator once more, in the assistant's thread, for an answer in the expected form.
+    /// </summary>
+    /// <param name="issue">What is wrong with the first answer.</param>
+    /// <returns>The new answer, which is empty when the provider failed.</returns>
+    private async Task<string> AskModeratorOnceMoreAsync(string issue)
+    {
+        this.Logger.LogWarning("The answer of the SWOT analysis moderator could not be read, so the model is asked once more: {Issue}", issue);
+        this.isRepairingModeration = true;
+        await this.PublishAnalysisProgressAsync();
+
+        var time = this.AddUserRequest(SwotModelAnswer.RepairRequestOf(issue), hideContentFromUser: true);
+        return await this.AddAIResponseAsync(time, hideContentFromUser: true, useSelectedTools: false);
     }
 
     private async Task<string> GatherSharedResearchAsync(HashSet<string> runnableToolIds, SwotContextualKnowledge contextualKnowledge, CancellationToken token)

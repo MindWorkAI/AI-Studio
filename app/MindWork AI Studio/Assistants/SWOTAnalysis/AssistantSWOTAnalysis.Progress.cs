@@ -17,8 +17,9 @@ public partial class AssistantSWOTAnalysis
 
     protected override string ProgressText =>
         this.isGatheringSharedResearch ? T("Gathering shared research...") :
+        this.isRepairingModeration ? T("The overall assessment did not have the expected form. Asking the model once more...") :
         this.isModeratingAnalysis ? T("Reconciling the four SWOT categories and writing the overall assessment...") :
-        this.categoryAnalysisProgress.Values.Any(progress => progress.Status is SwotCategoryAnalysisStatus.RUNNING) ? T("Analyzing the four SWOT categories...") :
+        this.categoryAnalysisProgress.Values.Any(progress => progress.Status is SwotCategoryAnalysisStatus.RUNNING or SwotCategoryAnalysisStatus.REPAIRING) ? T("Analyzing the four SWOT categories...") :
         string.Empty;
 
     private protected override RenderFragment? BelowSubmitContent =>

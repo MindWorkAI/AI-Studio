@@ -19,6 +19,10 @@ public partial class SwotAnalysisProgressView : MSGComponentBase
 
     private SwotCategoryAnalysisProgress ProgressOf(SwotAnalysisCategory category) => this.Progress.GetValueOrDefault(category, RUNNING);
 
+    private string RunningTextOf(SwotCategoryAnalysisStatus status) => status is SwotCategoryAnalysisStatus.REPAIRING
+        ? T("The answer did not have the expected form. Asking the model once more...")
+        : T("Analyzing this category...");
+
     private SwotQuadrantLabels Labels => new(
         T("Strengths"),
         T("Weaknesses"),

@@ -4,10 +4,10 @@
     <SwotQuadrantGrid Labels="@this.Labels" Context="category">
         @switch (this.ProgressOf(category))
         {
-            case { Status: SwotCategoryAnalysisStatus.RUNNING }:
+            case { Status: SwotCategoryAnalysisStatus.RUNNING or SwotCategoryAnalysisStatus.REPAIRING } running:
                 <div class="swot-category-status" aria-busy="true">
                     <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
-                    <MudText Typo="Typo.body2">@T("Analyzing this category...")</MudText>
+                    <MudText Typo="Typo.body2">@this.RunningTextOf(running.Status)</MudText>
                 </div>
                 break;
 
