@@ -5991,8 +5991,20 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T948842182"] =
 -- Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1688023907"] = "Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished."
 
+-- Show 1 unavailable tool
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1852398429"] = "Show 1 unavailable tool"
+
 -- Tools allow the LLM to perform targeted additional actions such as web searches or reading web pages.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1944689297"] = "Tools allow the LLM to perform targeted additional actions such as web searches or reading web pages."
+
+-- Show {0} unavailable tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T2227029327"] = "Show {0} unavailable tools"
+
+-- Hide unavailable tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T2707194504"] = "Hide unavailable tools"
+
+-- Show {0} unavailable tools, {1} of them selected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T30104720"] = "Show {0} unavailable tools, {1} of them selected"
 
 -- Required settings are missing. Configure this tool before enabling it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3119156561"] = "Required settings are missing. Configure this tool before enabling it."
@@ -6009,8 +6021,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3904490680"] = "No tools 
 -- This tool requires provider confidence {0}. The selected provider has {1}.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T4097602620"] = "This tool requires provider confidence {0}. The selected provider has {1}."
 
+-- Show 1 unavailable tool, which is selected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T641009275"] = "Show 1 unavailable tool, which is selected"
+
+-- You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T732483684"] = "You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here."
+
 -- Tool Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T749664565"] = "Tool Selection"
+
+-- No tool can be selected right now.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T953828816"] = "No tool can be selected right now."
 
 -- Select tools
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T998515990"] = "Select tools"
