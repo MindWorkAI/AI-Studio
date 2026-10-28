@@ -1,5 +1,7 @@
 using Build.Tools;
 
+using SharedTools;
+
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMember.Global
@@ -20,7 +22,7 @@ public sealed class VerifyCommand
     /// </summary>
     private const string SIDECAR_PREFIX = "mindworkAIStudioServer-";
 
-    [Command("verify", Description = "Run the quality gate: .NET tests, Rust tests, Clippy, and the model sources")]
+    [Command("verify", Description = "Run the quality gate: .NET tests, the trim smoke test, Rust tests, Clippy, and the model sources")]
     public async Task<int> Verify()
     {
         if(!Environment.IsWorkingDirectoryValid())
@@ -32,6 +34,7 @@ public sealed class VerifyCommand
         var results = new List<(string What, int ExitCode)>
         {
             (".NET tests", await CommandRunner.RunAsync(Environment.GetTestsDirectory(), "dotnet", "test --nologo")),
+            ("Trim smoke test", await RunTrimSmokeTestAsync()),
         };
 
         var runtimeDirectory = Environment.GetRustRuntimeDirectory();
@@ -69,6 +72,34 @@ public sealed class VerifyCommand
 
         Console.WriteLine($"- {failed} of {results.Count} checks failed.");
         return 1;
+    }
+
+    /// <summary>
+    /// Publishes the trim smoke test for this machine, trimmed like the app, and runs it.
+    /// </summary>
+    /// <remarks>
+    /// Debug builds and the tests are not trimmed, so only a published build shows that the trimmer
+    /// removed code which System.Text.Json reaches by reflection. Then AI Studio can neither load nor
+    /// save, e.g., its chats, while everything looks fine during development.
+    /// </remarks>
+    /// <returns>The exit code of the publishing, when that failed; otherwise the one of the smoke test.</returns>
+    private static async Task<int> RunTrimSmokeTestAsync()
+    {
+        var rid = Environment.GetCurrentRid();
+        if (rid is RID.NONE)
+        {
+            Console.WriteLine("- Error: The trim smoke test needs a platform AI Studio is built for.");
+            return 1;
+        }
+
+        var directory = Environment.GetTrimSmokeTestDirectory();
+        var publishDirectory = Path.Combine(directory, "bin", "verify");
+        var publishExitCode = await CommandRunner.RunAsync(directory, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --output \"{publishDirectory}\" --nologo");
+        if (publishExitCode is not 0)
+            return publishExitCode;
+
+        var program = Path.Combine(publishDirectory, OperatingSystem.IsWindows() ? "TrimSmokeTest.exe" : "TrimSmokeTest");
+        return await CommandRunner.RunAsync(directory, program, string.Empty);
     }
 
     /// <summary>
