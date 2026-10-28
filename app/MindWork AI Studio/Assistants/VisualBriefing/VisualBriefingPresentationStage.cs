@@ -42,7 +42,7 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
 
-        var run = await stageRunner.RunAsync<VisualBriefingDesignResponse>(provider, profile, BuildSystemContract(),
+        var run = await stageRunner.RunAsync<VisualBriefingDesignResponse>(provider, profile, manifest.Restrictions, BuildSystemContract(),
             BuildPrompt(manifest, plan, parentPresentation), [], VisualBriefingBuildStage.DESIGN, build.OperationId, build.BuildId,
             response => ValidateDesign(manifest, plan, content, response), token);
         

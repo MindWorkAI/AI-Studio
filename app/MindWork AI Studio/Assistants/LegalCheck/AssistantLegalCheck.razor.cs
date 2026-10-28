@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.LegalCheck;
@@ -91,16 +92,9 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
         state.Restore(INPUT_QUESTIONS_STATE_KEY, value => this.inputQuestions = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_LEGAL_CHECK_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputQuestions = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputQuestions = payload.Text;
 
     #endregion
     

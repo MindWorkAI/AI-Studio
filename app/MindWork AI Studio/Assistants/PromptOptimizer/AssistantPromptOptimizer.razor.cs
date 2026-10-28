@@ -3,6 +3,7 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
@@ -110,7 +111,6 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         },
         new SendToButton
         {
-            Self = Tools.Components.PROMPT_OPTIMIZER_ASSISTANT,
             UseResultingContentBlockData = false,
             SendToChatAsInput = true,
             GetText = () => string.IsNullOrWhiteSpace(this.optimizedPrompt) ? this.inputPrompt : this.optimizedPrompt,
@@ -163,12 +163,10 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.ResetGuidelineSummaryToDefault();
         this.hasUpdatedDefaultRecommendations = false;
 
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_PROMPT_OPTIMIZER_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputPrompt = deferredContent;
-
         await base.OnInitializedAsync();
     }
+
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputPrompt = payload.Text;
 
     private string inputPrompt = string.Empty;
     private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
@@ -460,6 +458,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         if (!this.CanImproveFurther)
             return Task.CompletedTask;
 
+        this.TakeOverRestrictionsOfResult(this.optimizedPrompt);
         this.inputPrompt = this.optimizedPrompt;
         this.ResetOutput();
         this.ClearConversationState();

@@ -1,5 +1,6 @@
 ﻿using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
@@ -160,16 +161,9 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
         state.Restore(SHARED_RESEARCH_CONTEXT_STATE_KEY, value => this.sharedResearchContext = value);
     }
 
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_SWOT_ANALYSIS_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputText = deferredContent;
-
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputText = payload.Text;
 
     #endregion
 

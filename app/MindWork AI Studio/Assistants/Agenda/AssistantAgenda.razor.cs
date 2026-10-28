@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.Agenda;
@@ -266,16 +267,9 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
         state.RestoreList(CONTENT_LINES_STATE_KEY, this.contentLines);
     }
 
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_AGENDA_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputContent = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputContent = payload.Text;
 
     #endregion
 

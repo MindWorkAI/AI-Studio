@@ -40,7 +40,8 @@ public partial class AssistantSWOTAnalysis
         if (token.IsCancellationRequested)
             return;
 
-        // The research runs in a thread of its own, which has read nothing yet:
+        // The research runs in a thread of its own, which has read nothing yet. A text sent to this
+        // assistant may still demand more, and GetRunnableToolIds holds the research to that:
         var runnableToolIds = this.GetRunnableToolIds(OutboundDataRestriction.UNRESTRICTED);
         if (runnableToolIds.Count > 0)
         {

@@ -215,6 +215,19 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
     }
 
     [Test]
+    public void EveryMessageSpeaksOfTheContentTheChatHolds([Values] OutboundDataOrigin origin)
+    {
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, origin, "intranet.example.org");
+        var message = requirement.GetToolBlockedMessage(new Data());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(message, Does.StartWith("This chat holds"), "Content sent here from another chat or an assistant was never read by this chat.");
+            Assert.That(message, Does.EndWith("A new chat without this content can use it again."), "A new chat which gets the same content sent to it is restricted just the same.");
+        });
+    }
+
+    [Test]
     public async Task ACallTurnedDownByTheWikiNamesTheWiki()
     {
         var hasRun = false;
