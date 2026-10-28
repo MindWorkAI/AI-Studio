@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
