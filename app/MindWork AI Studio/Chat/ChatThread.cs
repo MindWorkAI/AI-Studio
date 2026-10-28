@@ -144,15 +144,11 @@ public sealed record ChatThread
     /// any provider marks the chat as one which holds data of a data source, while a restriction set
     /// earlier stays. NOT_SPECIFIED demands nothing and changes nothing.<br/><br/>
     /// Shared by the RAG process and by tools which search the data sources, so both tighten a chat
-    /// the same way.
+    /// the same way. The rule itself is DataSourceSecurityExtensions.TightenedBy, which
+    /// ChatRestrictions uses as well for content which leaves the chat.
     /// </remarks>
     /// <param name="dataSecurity">What the data brought in demands.</param>
-    public void RequireDataSecurity(DataSourceSecurity dataSecurity) => this.DataSecurity = (this.DataSecurity, dataSecurity) switch
-    {
-        (DataSourceSecurity.SELF_HOSTED, _) or (_, DataSourceSecurity.SELF_HOSTED) => DataSourceSecurity.SELF_HOSTED,
-        (_, DataSourceSecurity.ALLOW_ANY) => DataSourceSecurity.ALLOW_ANY,
-        _ => this.DataSecurity,
-    };
+    public void RequireDataSecurity(DataSourceSecurity dataSecurity) => this.DataSecurity = this.DataSecurity.TightenedBy(dataSecurity);
 
     /// <summary>
     /// Where this chat may still send data, because of the internal content it holds: mails, a
@@ -187,11 +183,33 @@ public sealed record ChatThread
     /// ratchets go along, and each one only tightens.
     /// </remarks>
     /// <param name="otherThread">The thread whose result this chat takes over.</param>
-    public void RequireRestrictionsOf(ChatThread otherThread)
+    public void RequireRestrictionsOf(ChatThread otherThread) => this.RequireRestrictions(otherThread.CaptureRestrictions());
+
+    /// <summary>
+    /// What this chat demands of everybody who continues with its content, as it stands right now.
+    /// </summary>
+    /// <remarks>
+    /// A snapshot for content which leaves this chat, such as a message sent to an assistant: the chat
+    /// may tighten later on, while an answer is still being written, but the content which left does
+    /// not hold what arrives afterward. A method rather than a property, so that the snapshot is not
+    /// stored along with the chat.
+    /// </remarks>
+    /// <returns>The restrictions of this chat.</returns>
+    public ChatRestrictions CaptureRestrictions() => new(this.RequiredProviderConfidence, this.DataSecurity, this.RequiredOutboundDataRestriction);
+
+    /// <summary>
+    /// Tightens this chat to everything the given restrictions demand, and never loosens it.
+    /// </summary>
+    /// <remarks>
+    /// For content which arrives with the restrictions of where it was written, see CaptureRestrictions.
+    /// Each part tightens on its own, by the same rules as when this chat reads something itself.
+    /// </remarks>
+    /// <param name="restrictions">What the content arriving demands.</param>
+    public void RequireRestrictions(ChatRestrictions restrictions)
     {
-        this.RequireProviderConfidence(otherThread.RequiredProviderConfidence);
-        this.RequireDataSecurity(otherThread.DataSecurity);
-        this.RequireOutboundDataRestriction(otherThread.RequiredOutboundDataRestriction);
+        this.RequireProviderConfidence(restrictions.ProviderConfidence);
+        this.RequireDataSecurity(restrictions.DataSecurity);
+        this.RequireOutboundDataRestriction(restrictions.OutboundData);
     }
 
     /// <summary>

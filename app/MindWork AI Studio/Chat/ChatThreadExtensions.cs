@@ -1,7 +1,3 @@
-using AIStudio.Provider;
-using AIStudio.Settings;
-using AIStudio.Settings.DataModel;
-
 namespace AIStudio.Chat;
 
 public static class ChatThreadExtensions
@@ -14,80 +10,16 @@ public static class ChatThreadExtensions
     ///
     /// We don't check if the provider is allowed to use the data sources of the chat thread.
     /// That kind of check is done when the available data sources are resolved.<br/><br/>
-    /// 
+    ///
     /// One thing which is not so obvious: after RAG was used on this thread, the entire chat
     /// thread is kind of a data source by itself. Why? Because the augmentation data collected
     /// from the data sources is stored in the chat thread. This means we must check if the
     /// selected provider is allowed to use this thread's data security and confidence level.
+    /// The check itself is ChatRestrictionsExtensions.IsLLMProviderAllowed, which content that left
+    /// the thread is checked with as well.
     /// </remarks>
-    /// <param name="chatThread">The chat thread to check.</param>
+    /// <param name="chatThread">The chat thread to check; null for a new chat, which demands nothing yet.</param>
     /// <param name="provider">The provider to check.</param>
     /// <returns>True, when the provider is allowed for the chat thread. False, otherwise.</returns>
-    public static bool IsLLMProviderAllowed<T>(this ChatThread? chatThread, T provider)
-    {
-        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
-
-        // A provider the organization prohibited is allowed in no chat, not even in a new one:
-        if (settingsManager.IsProviderProhibited(GetLLMProvider(provider)))
-            return false;
-
-        // No chat thread available means we have a new chat. That's fine:
-        if (chatThread is null)
-            return true;
-
-        var providerConfidence = provider switch
-        {
-            IProvider p => p.GetConfidenceLevel(settingsManager),
-            AIStudio.Settings.Provider p => p.GetConfidenceLevel(settingsManager),
-
-            _ => ConfidenceLevel.UNKNOWN,
-        };
-
-        //
-        // The confidence axis is checked on its own: a provider trusted by configuration counts as
-        // self-hosted for data-source security, which is the check further down, but that trust
-        // says nothing about how confidential the provider is. An organization which wants its
-        // contractually covered cloud provider to pass here raises its level through the custom
-        // confidence scheme instead.
-        //
-        if (providerConfidence < chatThread.RequiredProviderConfidence)
-            return false;
-
-        // The chat thread is available, but the data security is not specified.
-        // Means, we never used RAG or RAG was enabled, but no data sources were selected.
-        // That's fine as well:
-        if (chatThread.DataSecurity is DataSourceSecurity.NOT_SPECIFIED)
-            return true;
-
-        //
-        // Is the provider trusted for data-source security checks?
-        //
-        var isTrustedProvider = provider switch
-        {
-            IProvider p => p.IsTrustedForDataSourceSecurityChecks(settingsManager),
-            AIStudio.Settings.Provider p => p.IsTrustedForDataSourceSecurityChecks(settingsManager),
-            
-            _ => false,
-        };
-        
-        //
-        // Check the chat data security against the selected provider:
-        //
-        return isTrustedProvider switch
-        {
-            // The provider is trusted -- we can use any data source:
-            true => true,
-            
-            // The provider is not trusted -- it depends on the data security of the chat thread:
-            false => chatThread.DataSecurity is not DataSourceSecurity.SELF_HOSTED,
-        };
-    }
-
-    private static LLMProviders GetLLMProvider<T>(T provider) => provider switch
-    {
-        IProvider p => p.Provider,
-        AIStudio.Settings.Provider p => p.UsedLLMProvider,
-
-        _ => LLMProviders.NONE,
-    };
+    public static bool IsLLMProviderAllowed<T>(this ChatThread? chatThread, T provider) => (chatThread?.CaptureRestrictions() ?? ChatRestrictions.NONE).IsLLMProviderAllowed(provider);
 }
