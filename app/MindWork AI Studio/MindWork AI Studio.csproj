@@ -101,10 +101,12 @@
     <!--
         The test project has to reach Program.LOGGER_FACTORY. Program is internal, and it stays that
         way: it is the entry point, not API. Several types initialize a static logger field from that
-        factory, so a test process must assign it before it touches any of them.
+        factory, so a test process must assign it before it touches any of them. The trim smoke test
+        needs the same, and it uses the internal JSON options of the settings and the Visual Briefing.
     -->
     <ItemGroup>
       <InternalsVisibleTo Include="Tests" />
+      <InternalsVisibleTo Include="TrimSmokeTest" />
     </ItemGroup>
 
     <!-- Read the meta data file -->
