@@ -10,7 +10,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
 {
     private static readonly ILogger<ProviderGWDG> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGWDG>();
 
-    // Source: https://docs.hpc.gwdg.de/services/saia/index.html#embeddings
+    // Source: https://docs.hpc.gwdg.de/services/ai-services/saia/index.html#embeddings
     private static readonly Model[] KNOWN_EMBEDDING_MODELS =
     [
         new("e5-mistral-7b-instruct", "E5 Mistral 7B Instruct"),
@@ -18,7 +18,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
         new("qwen3-embedding-4b", "Qwen3 Embedding 4B"),
     ];
 
-    // Source: https://docs.hpc.gwdg.de/services/saia/index.html#voice-to-text
+    // Source: https://docs.hpc.gwdg.de/services/ai-services/saia/index.html#voice-to-text
     private static readonly Model[] KNOWN_TRANSCRIPTION_MODELS =
     [
         new("whisper-large-v2", "Whisper v2 Large"),
