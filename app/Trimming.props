@@ -1,0 +1,27 @@
+<Project>
+
+    <!--
+        How a published build of AI Studio is trimmed. Kept apart from the project of the app, so that every
+        project which has to trim exactly like the app imports the same settings, instead of a copy which drifts.
+    -->
+    <PropertyGroup>
+        <PublishTrimmed>true</PublishTrimmed> <!-- Publish with trimming, to reduce size -->
+        <TrimMode>partial</TrimMode> <!-- Trim only assemblies marked as trimmable: all of .NET, but neither our own nor most packages -->
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols> <!-- Remove debug symbols -->
+        <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization> <!-- Remove unsafe binary formatter serialization -->
+        <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding> <!-- Remove unsafe UTF7 encoding -->
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault> <!-- Enable reflection for JSON serialization -->
+        <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings> <!-- Suppress trim analysis warnings -->
+    </PropertyGroup>
+
+    <!--
+        System.Text.Json builds an immutable collection, e.g., the ImmutableHashSet of a chat, through a factory method
+        like ImmutableHashSet.CreateRange, which it finds by reflection at runtime. Nothing calls that method directly,
+        so the trimmer removes it, and every type which holds such a collection fails to load and to save. Only a
+        published build shows this: debug builds and the tests are not trimmed. Hence, we keep the whole assembly.
+    -->
+    <ItemGroup>
+        <TrimmerRootAssembly Include="System.Collections.Immutable" />
+    </ItemGroup>
+
+</Project>

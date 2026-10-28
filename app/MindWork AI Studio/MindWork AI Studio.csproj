@@ -27,14 +27,6 @@
             `dotnet publish -r` instead.
         -->
         <RuntimeIdentifiers>osx-arm64;osx-x64;linux-x64;linux-arm64;win-x64;win-arm64</RuntimeIdentifiers>
-        
-        <PublishTrimmed>true</PublishTrimmed> <!-- Publish with trimming, to reduce size -->
-        <TrimMode>partial</TrimMode> <!-- Trim only assemblies marked as trimmable: all of .NET, but neither our own nor most packages -->
-        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols> <!-- Remove debug symbols -->
-        <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization> <!-- Remove unsafe binary formatter serialization -->
-        <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding> <!-- Remove unsafe UTF7 encoding -->
-        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault> <!-- Enable reflection for JSON serialization -->
-        <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings> <!-- Suppress trim analysis warnings -->
 
         <!--
             The Web SDK defaults to server GC. AI Studio is a single-user desktop app, though: workstation
@@ -48,22 +40,14 @@
         <!--
             IL2026: Usage of methods marked as RequiresUnreferencedCode, e.g., every call of JsonSerializer. Partial trim mode
             keeps our own types, so this is no issue for them. It is for types of .NET which System.Text.Json reaches by
-            reflection only, see the TrimmerRootAssembly below.
+            reflection only, see the TrimmerRootAssembly in Trimming.props.
             CS8974: Converting method group to non-delegate type; Did you intend to invoke the method? We have this issue with MudBlazor validation methods.
         -->
         <NoWarn>IL2026, CS8974</NoWarn>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
-    <!--
-        System.Text.Json builds an immutable collection, e.g., the ImmutableHashSet of a chat, through a factory method
-        like ImmutableHashSet.CreateRange, which it finds by reflection at runtime. Nothing calls that method directly,
-        so the trimmer removes it, and every type which holds such a collection fails to load and to save. Only a
-        published build shows this: debug builds and the tests are not trimmed. Hence, we keep the whole assembly.
-    -->
-    <ItemGroup>
-        <TrimmerRootAssembly Include="System.Collections.Immutable" />
-    </ItemGroup>
+    <Import Project="..\Trimming.props" />
 
     <ItemGroup>
       <!-- Remove some files from the solution view -->
