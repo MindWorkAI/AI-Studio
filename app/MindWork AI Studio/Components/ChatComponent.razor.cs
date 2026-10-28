@@ -360,8 +360,6 @@ public partial class ChatComponent : MSGComponentBase
         this.lastAppliedAutomaticDataSourceOptions = this.GetAutomaticDataSourceOptions();
 
         var deferredInput = AssistantLaunchService.TakeTextPayload(Tools.Components.CHAT);
-        if (!string.IsNullOrWhiteSpace(deferredInput?.Text))
-            this.ComposerState.SetUserInput(deferredInput.Text);
 
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
@@ -456,7 +454,13 @@ public partial class ChatComponent : MSGComponentBase
             //
             this.ApplyAutomaticDataSourceOptions();
         }
-        
+
+        //
+        // A text sent here, e.g., by an assistant, goes into the field for the next message:
+        //
+        if (deferredInput is not null)
+            await this.PutTextIntoComposerAsync(deferredInput);
+
         //
         // Check if the user wants to show the latest message after loading:
         //
@@ -1312,6 +1316,36 @@ public partial class ChatComponent : MSGComponentBase
         this.MirrorComposerIntoDraft(this.ChatThread);
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             this.draftAutosave?.Schedule(this.ChatThread);
+    }
+
+    /// <summary>
+    /// Puts a text sent here into the field for the next message, together with what it demands.
+    /// </summary>
+    /// <remarks>
+    /// The text demands here what it demanded where it was written: a provider or a tool which that
+    /// place kept from the text must not get it here either, already before the user sends it. A chat
+    /// without a thread therefore gets one right away, in the workspace its first message would get, see
+    /// ResolveWorkspaceOfFirstThreadAsync. The text counts as a message the user started, like one typed.
+    /// </remarks>
+    /// <param name="payload">The text sent, with its restrictions.</param>
+    private async Task PutTextIntoComposerAsync(TextLaunchPayload payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload.Text))
+            return;
+
+        var chat = this.ChatThread;
+        if (chat is null)
+        {
+            chat = this.NewChatThread(string.Empty, await this.ResolveWorkspaceOfFirstThreadAsync());
+            this.ChatThread = chat;
+            this.unstoredChat = chat;
+            await this.PublishNewChatThreadAsync();
+        }
+
+        chat.RequireRestrictions(payload.Restrictions);
+        this.ComposerState.SetUserInput(payload.Text);
+        this.KeepComposerInDraft();
+        this.hasUnsavedChanges = true;
     }
 
     /// <summary>

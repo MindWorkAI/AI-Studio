@@ -178,6 +178,22 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <param name="payload">The text sent.</param>
     protected virtual void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.Logger.LogError("The assistant '{Component}' allows sending text to it, but it does not take the text.", this.Component);
 
+    /// <summary>
+    /// What the text sent to this assistant demands, because of where it came from.
+    /// </summary>
+    /// <remarks>
+    /// An answer written from mails demands here what it demanded in its chat. The thread of the
+    /// assistant is created anew with every run, so the restrictions live here and go onto every thread
+    /// this assistant runs, see AssignRuntimeIdentity, and onto every tool list, see GetRunnableToolIds.
+    /// They stay until the form is reset, which removes the text as well.
+    /// </remarks>
+    private ChatRestrictions transferredRestrictions = ChatRestrictions.NONE;
+
+    /// <summary>
+    /// What everything this assistant holds demands: the text sent to it and what its current thread read.
+    /// </summary>
+    private ChatRestrictions CurrentRestrictions => this.ChatThread?.CaptureRestrictions().StricterOf(this.transferredRestrictions) ?? this.transferredRestrictions;
+
     private protected virtual RenderFragment? HeaderActions => null;
 
     private protected virtual RenderFragment? AfterResultContent => null;
@@ -231,7 +247,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         // A text sent here comes first, so that the preselected values below only fill what it left empty:
         if (AssistantLaunchService.TakeTextPayload(this.Component) is { } textLaunchPayload)
+        {
+            this.transferredRestrictions = textLaunchPayload.Restrictions;
             this.ApplyTextLaunchPayload(textLaunchPayload);
+        }
 
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
@@ -483,16 +502,20 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     /// <summary>
     /// Sets who runs the given thread: this assistant's component and, for an assistant plugin, its name.
+    /// It also puts the restrictions of a text sent to this assistant on the thread.
     /// </summary>
     /// <remarks>
     /// Both decide which tools the thread may use and what its requests to self-hosted servers name. Every
     /// way an assistant creates or sends a thread goes through here, so that none of them can forget one.
+    /// That is why the restrictions of a text sent here go onto the thread here, too: every thread of this
+    /// assistant may hold that text, its private threads for research included.
     /// </remarks>
     /// <param name="chatThread">The thread this assistant runs.</param>
     protected void AssignRuntimeIdentity(ChatThread chatThread)
     {
         chatThread.RuntimeComponent = this.Component;
         chatThread.RuntimeAssistantName = this.RuntimeAssistantName;
+        chatThread.RequireRestrictions(this.transferredRestrictions);
     }
 
     private Task RefreshProviderSelectionFromConfigurationAsync()
@@ -532,9 +555,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// the user a tool for good. The same goes for a tool which a mailbox the thread read from
     /// keeps back.
     /// </remarks>
-    /// <param name="outboundDataRestriction">Where the thread the tools run in may still send data, see ChatThread.RequiredOutboundDataRestriction.</param>
+    /// <param name="outboundDataRestriction">Where the thread the tools run in may still send data, see ChatThread.RequiredOutboundDataRestriction. A text sent to this assistant may demand more, and then that counts.</param>
     protected HashSet<string> GetRunnableToolIds(OutboundDataRestriction outboundDataRestriction)
     {
+        // Every thread of this assistant may hold the text sent to it, so what that text demands holds whoever asks:
+        outboundDataRestriction = outboundDataRestriction.StricterOf(this.transferredRestrictions.OutboundData.Restriction);
+
         if (this.AssistantManagedToolIds is not null)
             return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds, outboundDataRestriction);
 
@@ -879,7 +905,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             return;
         }
 
-        await this.AssistantLaunchService.LaunchAsync(destination, new TextLaunchPayload(contentToSend));
+        // A model wrote what an assistant sends, even when it falls back to the input, so none of its addresses counts as given:
+        await this.AssistantLaunchService.LaunchAsync(destination, new TextLaunchPayload(contentToSend, this.CurrentRestrictions.WithWebAddressesWrittenByModelIn(contentToSend)));
     }
 
     private async Task InnerResetForm()
@@ -892,6 +919,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
         this.assistantSessionId = null;
         this.ClearConversationState();
+
+        // The text sent here is gone with the form, and what it demanded goes with it:
+        this.transferredRestrictions = ChatRestrictions.NONE;
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);
@@ -1133,6 +1163,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(INPUT_ISSUES_STATE_KEY, this.InputIssues);
         state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
         state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.SelectedToolIds);
+        state.Set(TRANSFERRED_RESTRICTIONS_STATE_KEY, this.transferredRestrictions);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -1161,6 +1192,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.InputIssues = value);
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
         reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(value));
+        reader.Restore(TRANSFERRED_RESTRICTIONS_STATE_KEY, value => this.transferredRestrictions = value);
         this.RestoreCustomAssistantSessionState(reader);
     }
 
