@@ -1,0 +1,10 @@
+.swot-live-progress {
+    margin-bottom: 1.5rem;
+    margin-top: 1rem;
+}
+
+.swot-category-status {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+}

@@ -2856,6 +2856,126 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS:
 -- Keep unchanged
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS::T2931681185"] = "Unverändert übernehmen"
 
+-- Create a SWOT analysis of my content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1113304215"] = "Erstelle eine SWOT-Analyse meiner Inhalte."
+
+-- The answer for this category did not have the expected form, even after asking the model once more.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1151444865"] = "Die Antwort für diese Kategorie entsprach auch nach einer erneuten Anfrage an das Modell nicht dem erwarteten Format."
+
+-- This assistant serves as a strategic planning tool that systematically captures strengths, weaknesses, opportunities, and threats. It can assist in positioning and strategy development for companies, organizations, or individuals. The AI analyzes the four categories at the same time, then reconciles them and writes an overall assessment with prioritized actions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1281456376"] = "Dieser Assistent unterstützt die strategische Planung, indem er systematisch Stärken, Schwächen, Chancen und Risiken erfasst. Er hilft Unternehmen, Organisationen oder Einzelpersonen bei der Positionierung und Strategieentwicklung. Die KI analysiert die vier Kategorien gleichzeitig, gleicht sie anschließend miteinander ab und schreibt eine Gesamtbewertung mit priorisierten Maßnahmen."
+
+-- The overall assessment did not have the expected form. Asking the model once more...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1374582329"] = "Die Gesamtbewertung entsprach nicht dem erwarteten Format. Das Modell wird erneut gefragt …"
+
+-- Reconciling the four SWOT categories and writing the overall assessment...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1491038257"] = "Die vier SWOT-Kategorien werden abgeglichen und die Gesamtbewertung wird geschrieben …"
+
+-- Researching with the selected tools...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1849317035"] = "Recherche mit den ausgewählten Werkzeugen läuft …"
+
+-- SWOT Analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1864542518"] = "SWOT-Analyse"
+
+-- Please describe the goal the SWOT analysis should support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2136978542"] = "Bitte beschreiben Sie das Ziel, das die SWOT-Analyse unterstützen soll."
+
+-- Target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T237828418"] = "Zielsprache"
+
+-- Input
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2677268763"] = "Eingabe"
+
+-- Analysis goal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2718020690"] = "Analyseziel"
+
+-- This category could not be created.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2855208826"] = "Diese Kategorie konnte nicht erstellt werden."
+
+-- At least one SWOT category could not be created. The completed categories remain visible below.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3160246784"] = "Mindestens eine SWOT-Kategorie konnte nicht erstellt werden. Die abgeschlossenen Kategorien bleiben unten sichtbar."
+
+-- The selected model cannot read images. The SWOT analysis continues without the attached images.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3248926642"] = "Das ausgewählte Modell kann keine Bilder verarbeiten. Die SWOT-Analyse wird ohne die angehängten Bilder fortgesetzt."
+
+-- To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3485401617"] = "Um die Aussagekraft der SWOT-Analyse zu erhöhen, hängen Sie bitte ergänzende Dokumente an, die empirische oder kontextbezogene Daten für eine umfassende interne und externe Bewertung liefern."
+
+-- Create SWOT analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3549988380"] = "SWOT-Analyse erstellen"
+
+-- Please provide source material for the SWOT analysis. You can enter text, load a document, or import content from a website.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T381075478"] = "Bitte stellen Sie Quellmaterial für die SWOT-Analyse bereit. Sie können Text eingeben, ein Dokument laden oder Inhalte von einer Website importieren."
+
+-- Custom target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3848935911"] = "Benutzerdefinierte Zielsprache"
+
+-- Specify topics the SWOT analysis should pay particular attention to.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3857591121"] = "Geben Sie die Themen an, auf die die SWOT-Analyse besonders achten soll."
+
+-- Analysis Options
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3882472641"] = "Analyseoptionen"
+
+-- The image '{0}' could not be read and is left out of the SWOT analysis.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4112888115"] = "Das Bild „{0}“ konnte nicht gelesen werden und wird bei der SWOT-Analyse nicht berücksichtigt."
+
+-- The research with the selected tools failed. The SWOT analysis continues without it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T445799638"] = "Die Recherche mit den ausgewählten Werkzeugen ist fehlgeschlagen. Die SWOT-Analyse wird ohne diese Recherche fortgesetzt."
+
+-- The category analysis was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T476307744"] = "Die Analyse dieser Kategorie wurde abgebrochen."
+
+-- The quality of this SWOT analysis depends on the material you provide. The AI uses only your input, the attached documents, and the results of the tools you selected. Treat the result as a first draft and check it before you base decisions on it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T503683591"] = "Die Qualität dieser SWOT-Analyse hängt von dem Material ab, das Sie bereitstellen. Die KI verwendet ausschließlich Ihre Eingaben, die angehängten Dokumente und die Ergebnisse der ausgewählten Werkzeuge. Betrachten Sie das Ergebnis als ersten Entwurf und prüfen Sie es, bevor Sie Entscheidungen darauf stützen."
+
+-- (Optional) Analysis focus
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578386116"] = "(Optional) Analysefokus"
+
+-- Please provide a custom language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
+
+-- Contextual Knowledge
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T701558710"] = "Kontextwissen"
+
+-- Subject of analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T871926658"] = "Gegenstand der Analyse"
+
+-- Analyzing the four SWOT categories...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T981239180"] = "Die vier SWOT-Kategorien werden analysiert …"
+
+-- The four SWOT categories could not be reconciled because the answer did not have the expected form, even after asking the model once more. The preliminary results of the categories remain visible below.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T982373207"] = "Die vier SWOT-Kategorien konnten nicht miteinander abgeglichen werden, da die Antwort auch nach einer erneuten Anfrage an das Modell nicht das erwartete Format hatte. Die vorläufigen Ergebnisse der Kategorien sind unten weiterhin sichtbar."
+
+-- The answer did not have the expected form. Asking the model once more...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T1020899874"] = "Die Antwort hatte nicht das erwartete Format. Das Modell wird erneut gefragt …"
+
+-- Strengths
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T1245493657"] = "Stärken"
+
+-- Negative
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T190369114"] = "Negativ"
+
+-- Weaknesses
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T2279747526"] = "Schwächen"
+
+-- Positive
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T230444442"] = "Positiv"
+
+-- Opportunities
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T2409493450"] = "Chancen"
+
+-- Internal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T2805904416"] = "Intern"
+
+-- Analyzing this category...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T3114892934"] = "Diese Kategorie wird analysiert …"
+
+-- Threats
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T592141878"] = "Risiken"
+
+-- External
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::SWOTANALYSISPROGRESSVIEW::T697638314"] = "Extern"
+
 -- Find synonyms for the following word or phrase:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1793532807"] = "Finde Synonyme für das folgende Wort oder die folgende Phrase:"
 
@@ -10086,6 +10206,75 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T97357
 -- A slide holds at most this many bullet points, in all of its text slots together. Match it to the room for text in the layouts of your template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T995644230"] = "Eine Folie enthält höchstens so viele Aufzählungspunkte, in allen ihren Textfeldern zusammen. Stimmen Sie den Wert auf den Platz für Text in den Layouts Ihrer Vorlage ab."
 
+-- Content cleaner agent is preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
+
+-- Web content reader is shown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1030372436"] = "Der Web-Content-Reader zum Lesen von Webinhalten wird angezeigt"
+
+-- Preselect the target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1417990312"] = "Zielsprache vorauswählen"
+
+-- Preselect another target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1462295644"] = "Eine andere Zielsprache vorauswählen"
+
+-- When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1633101895"] = "Wenn aktiviert, wird der Web-Content-Reader ausgeblendet und kann nicht verwendet werden. Dadurch wird die Benutzeroberfläche etwas einfacher zu bedienen."
+
+-- Web content reader is not preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1701127912"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist nicht vorausgewählt"
+
+-- Content cleaner agent is not preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
+
+-- Hide the web content reader?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2090693677"] = "Web-Content-Reader ausblenden?"
+
+-- SWOT analysis options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2171839562"] = "Optionen für die SWOT-Analyse sind vorausgewählt"
+
+-- No SWOT analysis options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2361666775"] = "Keine Optionen für die SWOT-Analyse sind vorausgewählt"
+
+-- Preselect SWOT analysis options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2593950994"] = "Optionen für die SWOT-Analyse vorauswählen?"
+
+-- Web content reader is hidden
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2799795311"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist ausgeblendet"
+
+-- When enabled, the web content reader is preselected. This is useful when you often analyze content from websites.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3088856907"] = "Wenn aktiviert, ist der Web-Content-Reader vorausgewählt. Das kann hilfreich sein, wenn Sie häufig Inhalte von Websites analysieren."
+
+-- When enabled, the content cleaner agent is preselected for cleaning website content before it is analyzed.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T332064979"] = "Wenn aktiviert, ist der Agent zur Inhaltsbereinigung vorausgewählt, um Webinhalte vor der Analyse zu bereinigen."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3448155331"] = "Schließen"
+
+-- Which target language should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
+
+-- Web content reader is preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3641773985"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist vorausgewählt"
+
+-- Preselect the content cleaner agent?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
+
+-- Specify topics the SWOT analysis should pay particular attention to.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3857591121"] = "Geben Sie die Themen an, auf die die SWOT-Analyse besonders achten soll."
+
+-- Assistant: SWOT Analysis Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T4267340780"] = "Assistent: Optionen für die SWOT-Analyse"
+
+-- Preselect the web content reader?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T629158142"] = "Den Web-Content-Reader zum Lesen von Webinhalten vorauswählen?"
+
+-- Preselect an analysis focus
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T656094797"] = "Analysefokus vorauswählen"
+
+-- When enabled, you can preselect the SWOT analysis options. This is useful when you prefer a specific language, analysis focus, or LLM.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T975761680"] = "Wenn aktiviert, können Sie die Optionen für die SWOT-Analyse vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache, einen bestimmten Analysefokus oder ein bestimmtes LLM bevorzugen."
+
 -- When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T183953912"] = "Wenn diese Option aktiviert ist, können Sie Synonymoptionen im Voraus auswählen. Dies kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
 
@@ -10752,6 +10941,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Business"
 -- Legal Check
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1348190638"] = "Rechtliche Prüfung"
 
+-- Identify strengths, weaknesses, opportunities, threats, and practical next steps from provided information.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1356376259"] = "Stärken, Schwächen, Chancen, Risiken und praktische nächste Schritte aus den bereitgestellten Informationen identifizieren."
+
 -- General
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1432485131"] = "Allgemein"
 
@@ -10772,6 +10964,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1728590051"] = "Analysieren Sie e
 
 -- Prompt Optimizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1777666968"] = "Prompt-Optimierer"
+
+-- SWOT Analysis
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1864542518"] = "SWOT-Analyse"
 
 -- Slide Assistant
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1883918574"] = "Folien-Assistent"
@@ -11946,9 +12141,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894"] = "Werden Sie einer 
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Unterstützer"
 
--- Thank you, Sabrina, for bringing file attachments to the chat, the Slide Assistant, and the protection against prompt injection.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2978040576"] = "Vielen Dank, Sabrina, dass du den Chat um Dateianhänge erweitert und den Folien-Assistenten sowie den Schutz vor Prompt-Injection entwickelt hast."
-
 -- Content Contributors
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3060804484"] = "Inhaltliche Beiträge"
 
@@ -11957,6 +12149,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3061261435"] = "Finanzielle Unter
 
 -- Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3226413110"] = "Vielen Dank, Prodman, dass du LiteLLM als neuen Anbieter in AI Studio integriert hast."
+
+-- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, and for the protection against prompt injection.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T32630309"] = "Vielen Dank, Sabrina, dass du den Chat um Dateianhänge erweitert, den Folien-Assistenten und den SWOT-Analyse-Assistenten entwickelt und den Schutz vor Prompt-Injection eingebaut hast."
 
 -- German Aerospace Center (DLR)
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3264998714"] = "Deutsches Zentrum für Luft- und Raumfahrt (DLR)"
@@ -12761,6 +12956,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1993795352"] = "Prompt-
 
 -- Job Posting Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2212811874"] = "Stellenanzeigen-Assistent"
+
+-- SWOT Analysis Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2431303678"] = "SWOT-Analyse-Assistent"
 
 -- Icon Finder Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2457005512"] = "Icon Finder-Assistent"

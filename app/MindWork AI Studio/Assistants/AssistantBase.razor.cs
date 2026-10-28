@@ -562,7 +562,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         return time;
     }
 
-    protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
+    /// <summary>
+    /// Asks the model for an answer to the conversation so far, and adds it as the result of this assistant.
+    /// </summary>
+    /// <param name="time">When the answer was asked for.</param>
+    /// <param name="hideContentFromUser">Whether the answer is hidden from the user, e.g., because it is JSON; while
+    /// it streams, only a changed progress text renders the form anew.</param>
+    /// <param name="useSelectedTools">Whether the model may use the tools the user selected. False for a request
+    /// which must rely on what the conversation holds already, e.g., one which reconciles results the tools
+    /// gathered before.</param>
+    /// <returns>The answer, or an empty string when the provider failed.</returns>
+    protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false, bool useSelectedTools = true)
     {
         var manageCancellationLocally = this.CancellationTokenSource is null;
         this.CancellationTokenSource ??= new CancellationTokenSource();
@@ -637,7 +647,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.AssignRuntimeIdentity(this.ChatThread);
             this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
-            this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds(this.ChatThread.RequiredOutboundDataRestriction.Restriction);
+            this.ChatThread.RuntimeSelectedToolIds = useSelectedTools ? this.GetRunnableToolIds(this.ChatThread.RequiredOutboundDataRestriction.Restriction) : [];
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
         }
 
@@ -764,20 +774,35 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 SystemPrompt = SystemPrompts.DEFAULT,
             };
 
-        var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
-        var visiblePromptTime = earliestBlock is null
-            ? DateTimeOffset.Now
-            : earliestBlock.Time == DateTimeOffset.MinValue
-                ? earliestBlock.Time
-                : earliestBlock.Time.AddTicks(-1);
-
         var transferredBlocks = originalChatThread.Blocks
             .Select(block => block.Role is ChatRole.USER
                 ? block.DeepClone(changeHideState: true)
                 : block.DeepClone())
             .ToList();
 
-        transferredBlocks.Insert(0, new ContentBlock
+        transferredBlocks.Insert(0, this.CreateSendToChatPrompt(originalChatThread.Blocks));
+        return originalChatThread with
+        {
+            SystemPrompt = SystemPrompts.DEFAULT,
+            Blocks = transferredBlocks,
+        };
+    }
+
+    /// <summary>
+    /// Creates the visible message of the user which opens a chat started from this assistant.
+    /// </summary>
+    /// <param name="blocks">The blocks which follow the message in the chat; it comes right before the earliest of them.</param>
+    /// <returns>The message, with SendToChatVisibleUserPromptText as its text.</returns>
+    private protected ContentBlock CreateSendToChatPrompt(IReadOnlyCollection<ContentBlock> blocks)
+    {
+        var earliestBlock = blocks.MinBy(x => x.Time);
+        var visiblePromptTime = earliestBlock is null
+            ? DateTimeOffset.Now
+            : earliestBlock.Time == DateTimeOffset.MinValue
+                ? earliestBlock.Time
+                : earliestBlock.Time.AddTicks(-1);
+
+        return new ContentBlock
         {
             Time = visiblePromptTime,
             ContentType = ContentType.TEXT,
@@ -785,14 +810,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             Role = ChatRole.USER,
             Content = new ContentText
             {
-                Text = this.SendToChatVisibleUserPromptText,
+                Text = this.SendToChatVisibleUserPromptText ?? string.Empty,
             },
-        });
-
-        return originalChatThread with
-        {
-            SystemPrompt = SystemPrompts.DEFAULT,
-            Blocks = transferredBlocks,
         };
     }
     

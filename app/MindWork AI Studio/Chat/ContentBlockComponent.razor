@@ -226,26 +226,28 @@
                         }
                         else
                         {
-                            var renderPlan = this.GetMarkdownRenderPlan(textContent.Text);
                             <div @ref="this.mathContentContainer" class="chat-math-container">
-                                @foreach (var segment in renderPlan.Segments)
-                                {
-                                    var segmentContent = segment.GetContent(renderPlan.Source);
-                                    if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
+                                <ContentPresentationView Presentation="@textContent.Presentation">
+                                    @{ var renderPlan = this.GetMarkdownRenderPlan(textContent.Text); }
+                                    @foreach (var segment in renderPlan.Segments)
                                     {
-                                        <ExportableMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" Files="@this.FilesWithSaveButton" ValueStart="@segment.Start">
-                                            <CodeBlockActions Context="file">
-                                                <MudTooltip Text="@this.SaveAsLabel(file)" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Primary" Variant="Variant.Filled" Class="ma-2" OnClick="@(() => this.ExportFile(file))"/>
-                                                </MudTooltip>
-                                            </CodeBlockActions>
-                                        </ExportableMarkdown>
+                                        var segmentContent = segment.GetContent(renderPlan.Source);
+                                        if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
+                                        {
+                                            <ExportableMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" Files="@this.FilesWithSaveButton" ValueStart="@segment.Start">
+                                                <CodeBlockActions Context="file">
+                                                    <MudTooltip Text="@this.SaveAsLabel(file)" Placement="Placement.Top">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Primary" Variant="Variant.Filled" Class="ma-2" OnClick="@(() => this.ExportFile(file))"/>
+                                                    </MudTooltip>
+                                                </CodeBlockActions>
+                                            </ExportableMarkdown>
+                                        }
+                                        else
+                                        {
+                                            <MathJaxBlock @key="@segment.RenderKey" Value="@segmentContent" Class="mb-5" />
+                                        }
                                     }
-                                    else
-                                    {
-                                        <MathJaxBlock @key="@segment.RenderKey" Value="@segmentContent" Class="mb-5" />
-                                    }
-                                }
+                                </ContentPresentationView>
                                 @if (textContent.Sources.Count > 0)
                                 {
                                     <SourcesList @ref="this.sourcesList" Sources="@textContent.Sources" Passages="@textContent.SourcePassages"/>

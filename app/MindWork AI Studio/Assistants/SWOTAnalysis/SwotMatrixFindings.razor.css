@@ -1,0 +1,13 @@
+.swot-cell-findings {
+    margin: 0;
+    padding-left: 1.4rem;
+}
+
+.swot-cell-findings li + li {
+    margin-top: 0.5rem;
+}
+
+.swot-empty {
+    color: var(--mud-palette-text-secondary);
+    margin: 0;
+}
