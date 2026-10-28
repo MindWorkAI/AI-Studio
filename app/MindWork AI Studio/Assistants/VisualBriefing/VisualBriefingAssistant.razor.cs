@@ -153,7 +153,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
             return;
         }
 
-        this.ApplyFilters([], [Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT, Event.CONFIGURATION_CHANGED]);
+        this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
         this.MediaTranscriptionService.StateChanged += this.MediaStateChanged;
         this.BuildProgressService.Changed += this.BuildProgressChanged;
         await this.ReloadListAsync();
@@ -163,9 +163,9 @@ public partial class VisualBriefingAssistant : MSGComponentBase
 
         if (!string.IsNullOrWhiteSpace(deferredInstruction))
         {
-            if (this.selectedBriefing is null)
-                await this.CreateBriefingAsync();
-
+            // A text sent here starts a briefing of its own. The briefing open last belongs to other work,
+            // and its instruction would be gone:
+            await this.CreateBriefingAsync();
             this.editor.Instruction = deferredInstruction;
             await this.SaveCurrentAsync();
         }
@@ -236,17 +236,6 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// </summary>
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        if (triggeredEvent is Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT && data is string text)
-        {
-            if (this.selectedBriefing is null)
-                await this.CreateBriefingAsync();
-
-            this.editor.Instruction = text;
-            await this.SaveCurrentAsync();
-            this.StateHasChanged();
-            return;
-        }
-
         if (triggeredEvent is Event.CONFIGURATION_CHANGED)
         {
             // The spellchecking setting might have changed. Since this page is not re-parameterized
