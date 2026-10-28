@@ -9,6 +9,7 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
@@ -358,9 +359,9 @@ public partial class ChatComponent : MSGComponentBase
         await this.ApplyChatTemplateToolSelectionAsync();
         this.lastAppliedAutomaticDataSourceOptions = this.GetAutomaticDataSourceOptions();
 
-        var deferredInput = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).LastOrDefault();
-        if (!string.IsNullOrWhiteSpace(deferredInput))
-            this.ComposerState.SetUserInput(deferredInput);
+        var deferredInput = AssistantLaunchService.TakeTextPayload(Tools.Components.CHAT);
+        if (!string.IsNullOrWhiteSpace(deferredInput?.Text))
+            this.ComposerState.SetUserInput(deferredInput.Text);
 
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',

@@ -1,6 +1,7 @@
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Services;
 
@@ -158,7 +159,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         await this.ReloadListAsync();
         await this.ConsumePendingMediaOutcomesAsync();
         this.MonitorSourceStatusAsync(this.sourceMonitorCancellation.Token).Observe($"{nameof(VisualBriefingAssistant)}: monitoring the source status");
-        var deferredInstruction = this.MessageBus.TakeDeferredMessages<string>(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT).LastOrDefault();
+        var deferredInstruction = AssistantLaunchService.TakeTextPayload(ComponentKind.VISUAL_BRIEFING_ASSISTANT)?.Text;
 
         if (!string.IsNullOrWhiteSpace(deferredInstruction))
         {

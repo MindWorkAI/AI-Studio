@@ -166,6 +166,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual ChatThread ConvertToChatThread => this.CreateSendToChatThread();
 
+    /// <summary>
+    /// Takes over a text which another assistant or a chat sent to this assistant.
+    /// </summary>
+    /// <remarks>
+    /// Every assistant which content may be sent to puts the text into its main field, see
+    /// ComponentsExtensions.AllowSendTo. It comes before the preselected values, so a field which those only fill
+    /// when empty keeps the text. An assistant which allows sending to it but takes nothing would leave the text
+    /// lost without a word, which is why a test checks that each one overrides this.
+    /// </remarks>
+    /// <param name="payload">The text sent.</param>
+    protected virtual void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.Logger.LogError("The assistant '{Component}' allows sending text to it, but it does not take the text.", this.Component);
+
     private protected virtual RenderFragment? HeaderActions => null;
 
     private protected virtual RenderFragment? AfterResultContent => null;
@@ -217,6 +229,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override async Task OnInitializedAsync()
     {
+        // A text sent here comes first, so that the preselected values below only fill what it left empty:
+        if (AssistantLaunchService.TakeTextPayload(this.Component) is { } textLaunchPayload)
+            this.ApplyTextLaunchPayload(textLaunchPayload);
+
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
 
@@ -848,44 +864,22 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             },
         };
 
-        var sendToData = destination.GetData();
-        if (destination.HasSingleSessionSlot() && this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
+        // The chat starts from the conversation of this assistant, unless it only takes the text for the next message:
+        if (destination is Tools.Components.CHAT && !sendToButton.SendToChatAsInput)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Apps, this.TB("This assistant is already running. AI Studio opens the running session instead.")));
-            this.NavigationManager.NavigateTo(sendToData.Route);
+            var convertedChatThread = this.ConvertToChatThread;
+            convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
+
+            // Some assistants start the chat under an id of its own, so what their answers received goes along. A chat without an id received nothing:
+            if (this.ChatThread is { } assistantChat && convertedChatThread.ChatId != Guid.Empty && assistantChat.ChatId != convertedChatThread.ChatId)
+                await ChatProvenance.CopyChatAsync(assistantChat.ChatId, convertedChatThread.ChatId);
+
+            MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT, new ChatStartRequest(convertedChatThread));
+            this.NavigationManager.NavigateTo(Routes.CHAT);
             return;
         }
 
-        // Only components with a single session slot may be cleared as a group. The visual briefing
-        // assistant keys its sessions per briefing, so clearing by component would discard the
-        // status of every stored briefing instead of the one we are about to open.
-        if (destination.HasSingleSessionSlot())
-            await this.AssistantSessionService.ClearInactiveSessionsForComponentAsync(destination);
-
-        switch (destination)
-        {
-            case Tools.Components.CHAT:
-                if (sendToButton.SendToChatAsInput)
-                    MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT_INPUT, contentToSend);
-                else
-                {
-                    var convertedChatThread = this.ConvertToChatThread;
-                    convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
-
-                    // Some assistants start the chat under an id of its own, so what their answers received goes along. A chat without an id received nothing:
-                    if (this.ChatThread is { } assistantChat && convertedChatThread.ChatId != Guid.Empty && assistantChat.ChatId != convertedChatThread.ChatId)
-                        await ChatProvenance.CopyChatAsync(assistantChat.ChatId, convertedChatThread.ChatId);
-
-                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, new ChatStartRequest(convertedChatThread));
-                }
-                break;
-            
-            default:
-                MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, contentToSend);
-                break;
-        }
-
-        this.NavigationManager.NavigateTo(sendToData.Route);
+        await this.AssistantLaunchService.LaunchAsync(destination, new TextLaunchPayload(contentToSend));
     }
 
     private async Task InnerResetForm()

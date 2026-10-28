@@ -2,6 +2,7 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PowerPoint;
 using AIStudio.Tools.Security;
@@ -399,16 +400,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.StartCountingPictureLibrary();
     }
 
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputContent = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputContent = payload.Text;
 
     #endregion
     
