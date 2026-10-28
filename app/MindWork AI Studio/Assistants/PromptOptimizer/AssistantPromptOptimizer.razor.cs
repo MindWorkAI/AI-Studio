@@ -458,6 +458,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         if (!this.CanImproveFurther)
             return Task.CompletedTask;
 
+        this.TakeOverRestrictionsOfResult(this.optimizedPrompt);
         this.inputPrompt = this.optimizedPrompt;
         this.ResetOutput();
         this.ClearConversationState();

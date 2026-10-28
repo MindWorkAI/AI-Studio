@@ -194,6 +194,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     private ChatRestrictions CurrentRestrictions => this.ChatThread?.CaptureRestrictions().StricterOf(this.transferredRestrictions) ?? this.transferredRestrictions;
 
+    /// <summary>
+    /// Keeps what the current result demands, before the assistant puts that result into its own input.
+    /// </summary>
+    /// <remarks>
+    /// Call this before clearing the thread: the result was written from what this thread read, and the
+    /// web addresses in it were written by a model. Both stay with the input until the form is reset.
+    /// </remarks>
+    /// <param name="resultText">The result which becomes the new input.</param>
+    protected void TakeOverRestrictionsOfResult(string resultText) => this.transferredRestrictions = this.CurrentRestrictions.WithWebAddressesWrittenByModelIn(resultText);
+
     private protected virtual RenderFragment? HeaderActions => null;
 
     private protected virtual RenderFragment? AfterResultContent => null;
