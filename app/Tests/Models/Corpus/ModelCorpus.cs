@@ -269,8 +269,9 @@ public static class ModelCorpus
 
     /// <summary>
     /// Providers that serve other vendors' models under their plain names, without a prefix. GWDG
-    /// is the case that brought this up: next to open weights it resells Claude and GPT models.
-    /// Blablador answers with a whole sentence instead of an ID.
+    /// is the case that brought this up: next to open weights it obtains Claude and GPT models from
+    /// Azure, which are not generally available through its API but keep their vendors' names where
+    /// an organization gets them. Blablador answers with a whole sentence instead of an ID.
     /// </summary>
     private static readonly CorpusEntry[] RESELLER_ENTRIES =
     [
