@@ -321,16 +321,24 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         if(provider.UsedLLMProvider == LLMProviders.NONE)
             return this.TB("Please select a provider.");
-        
+
+        // A provider which nothing else rules out may still be kept from the text sent here, because of where it came from:
+        if (!this.transferredRestrictions.IsLLMProviderAllowed(provider) && ChatRestrictions.NONE.IsLLMProviderAllowed(provider))
+            return this.TB("This provider may not see the text sent to this assistant, because of where the text came from. Please select another provider.");
+
         return null;
     }
 
     private async Task Start()
     {
+        //
+        // A provider which may not see the text sent here would fail the run without a word, see
+        // ContentText.CreateFromProviderAsync, so the user hears about it before the run starts:
+        //
         await this.RefreshProviderSelectionFromConfigurationAsync();
-        if (this.ProviderSettings == Settings.Provider.NONE)
+        if (this.ProviderSettings == Settings.Provider.NONE || this.ValidatingProvider(this.ProviderSettings) is not null)
         {
-            await this.ReportMissingProviderAsync();
+            await this.ReportProviderIssueAsync();
             return;
         }
 
@@ -403,16 +411,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>
-    /// Tells the user that the assistant cannot start without a provider, together with whatever else is missing.
+    /// Tells the user that the assistant cannot start with the selected provider, together with whatever else is missing.
     /// </summary>
     /// <remarks>
-    /// Most assistants validate their form only in their submit action, which never runs without a
-    /// provider. Validating here marks the provider selection and lists the other issues as well.
-    /// The form does not report the missing provider when it holds no provider selection, as with an
-    /// assistant plugin without one, or when its selection still shows the provider which the refresh
-    /// at the start has just dropped. Then the issue is added on its own.
+    /// Either no provider is selected, or the selected one may not see the text sent to this assistant,
+    /// see ValidatingProvider. Most assistants validate their form only in their submit action, which
+    /// never runs without a usable provider. Validating here marks the provider selection and lists the
+    /// other issues as well. The form does not report the issue when it holds no provider selection, as
+    /// with an assistant plugin without one, or when its selection still shows the provider which the
+    /// refresh at the start has just dropped. Then the issue is added on its own.
     /// </remarks>
-    private async Task ReportMissingProviderAsync()
+    private async Task ReportProviderIssueAsync()
     {
         if (this.Form is not null)
             await this.Form.Validate();
