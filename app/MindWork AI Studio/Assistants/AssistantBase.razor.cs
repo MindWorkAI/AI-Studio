@@ -905,6 +905,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             var convertedChatThread = this.ConvertToChatThread;
             convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
 
+            //
+            // The chat holds what this assistant held, whichever thread the assistant builds it from: some
+            // assistants start it from a new thread, which has read nothing, or from none at all. The copy
+            // above is the chat's own, so tightening it leaves the thread of this assistant as it is:
+            //
+            convertedChatThread.RequireRestrictions(this.CurrentRestrictions);
+
             // Some assistants start the chat under an id of its own, so what their answers received goes along. A chat without an id received nothing:
             if (this.ChatThread is { } assistantChat && convertedChatThread.ChatId != Guid.Empty && assistantChat.ChatId != convertedChatThread.ChatId)
                 await ChatProvenance.CopyChatAsync(assistantChat.ChatId, convertedChatThread.ChatId);

@@ -123,6 +123,22 @@ public sealed class ChatRestrictionsTests
     }
 
     [Test]
+    public void TighteningACopyOfAChatLeavesTheChatAsItIs()
+    {
+        // An assistant starts a chat from a copy of its own thread:
+        var assistantThread = new ChatThread();
+        var chatToStart = assistantThread with { };
+
+        chatToStart.RequireRestrictions(new(ConfidenceLevel.HIGH, DataSourceSecurity.SELF_HOSTED, new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID), []));
+
+        Assert.Multiple(() =>
+        {
+            AssertSame(chatToStart.CaptureRestrictions(), new(ConfidenceLevel.HIGH, DataSourceSecurity.SELF_HOSTED, new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID), []));
+            AssertSame(assistantThread.CaptureRestrictions(), ChatRestrictions.NONE);
+        });
+    }
+
+    [Test]
     public void ASnapshotKeepsWhatTheChatDemandedWhenItWasTaken()
     {
         var chat = new ChatThread();
