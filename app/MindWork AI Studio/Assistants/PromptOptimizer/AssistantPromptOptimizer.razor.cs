@@ -110,7 +110,6 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         },
         new SendToButton
         {
-            Self = Tools.Components.PROMPT_OPTIMIZER_ASSISTANT,
             UseResultingContentBlockData = false,
             SendToChatAsInput = true,
             GetText = () => string.IsNullOrWhiteSpace(this.optimizedPrompt) ? this.inputPrompt : this.optimizedPrompt,

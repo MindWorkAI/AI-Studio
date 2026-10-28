@@ -5,6 +5,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
@@ -218,6 +219,7 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
         builder.Services.AddSingleton<MailboxRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();
+        builder.Services.AddScoped<AssistantLaunchService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         
         // Stateless: every method works on its arguments alone, so one instance serves everyone.

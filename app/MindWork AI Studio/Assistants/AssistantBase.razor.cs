@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
@@ -47,6 +48,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     protected AssistantSessionService AssistantSessionService { get; init; } = null!;
+
+    [Inject]
+    private AssistantLaunchService AssistantLaunchService { get; init; } = null!;
 
     /// <summary>
     /// Gets the job service used to run assistant-created chats independently from the assistant UI.
@@ -276,10 +280,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
-    private IReadOnlyList<Tools.Components> VisibleSendToAssistants => Enum.GetValues<AIStudio.Tools.Components>()
-        .Where(this.CanSendToAssistant)
-        .OrderBy(component => component.Name().Length)
-        .ToArray();
+    private IReadOnlyList<Tools.Components> VisibleSendToAssistants => this.AssistantLaunchService.GetDestinationsFor(this.Component);
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
@@ -834,7 +835,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
     {
-        if (!this.CanSendToAssistant(destination))
+        if (!this.VisibleSendToAssistants.Contains(destination))
             return;
         
         var contentToSend = sendToButton == default ? string.Empty : sendToButton.UseResultingContentBlockData switch
@@ -887,17 +888,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.NavigationManager.NavigateTo(sendToData.Route);
     }
 
-    private bool CanSendToAssistant(Tools.Components component)
-    {
-        if (!component.AllowSendTo())
-            return false;
-
-        return this.SettingsManager.IsAssistantVisible(
-            component,
-            withLogging: false,
-            requiredPreviewFeature: component.RequiredPreviewFeature());
-    }
-    
     private async Task InnerResetForm()
     {
         if ((this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)

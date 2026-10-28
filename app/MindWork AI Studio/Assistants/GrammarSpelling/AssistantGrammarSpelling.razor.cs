@@ -31,7 +31,6 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     [
         new SendToButton
         {
-            Self = Tools.Components.GRAMMAR_SPELLING_ASSISTANT,
             UseResultingContentBlockData = false,
             GetText = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
         },
