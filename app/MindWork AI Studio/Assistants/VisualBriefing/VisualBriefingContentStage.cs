@@ -37,7 +37,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
         
-        var run = await stageRunner.RunAsync<VisualBriefingContentResponse>(provider, profile, BuildSystemContract(),
+        var run = await stageRunner.RunAsync<VisualBriefingContentResponse>(provider, profile, manifest.Restrictions, BuildSystemContract(),
             BuildPrompt(manifest, evidence, plan), [], VisualBriefingBuildStage.CONTENT, build.OperationId, build.BuildId,
             response => this.ValidateResponseAndProject(manifest, plan, evidence, response), token);
         

@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
@@ -159,14 +160,12 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         await this.ReloadListAsync();
         await this.ConsumePendingMediaOutcomesAsync();
         this.MonitorSourceStatusAsync(this.sourceMonitorCancellation.Token).Observe($"{nameof(VisualBriefingAssistant)}: monitoring the source status");
-        var deferredInstruction = AssistantLaunchService.TakeTextPayload(ComponentKind.VISUAL_BRIEFING_ASSISTANT)?.Text;
-
-        if (!string.IsNullOrWhiteSpace(deferredInstruction))
+        if (AssistantLaunchService.TakeTextPayload(ComponentKind.VISUAL_BRIEFING_ASSISTANT) is { } textLaunchPayload && !string.IsNullOrWhiteSpace(textLaunchPayload.Text))
         {
-            // A text sent here starts a briefing of its own. The briefing open last belongs to other work,
-            // and its instruction would be gone:
-            await this.CreateBriefingAsync();
-            this.editor.Instruction = deferredInstruction;
+            // A text sent here starts a briefing of its own, which holds what the text demands. The briefing
+            // open last belongs to other work, and its instruction would be gone:
+            await this.CreateBriefingAsync(textLaunchPayload.Restrictions);
+            this.editor.Instruction = textLaunchPayload.Text;
             await this.SaveCurrentAsync();
         }
 

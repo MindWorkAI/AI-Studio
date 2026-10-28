@@ -9,7 +9,11 @@ public static class VisualBriefingVersions
     public const int ARTIFACT = 1;
     
     /// <summary>Gets the project manifest contract version.</summary>
-    public const int MANIFEST = 1;
+    /// <remarks>
+    /// Version 2 added the restrictions of a text sent to the briefing. An older version of AI Studio cannot
+    /// read them, so it tells the user that the briefing needs a newer version instead of ignoring them.
+    /// </remarks>
+    public const int MANIFEST = 2;
     
     /// <summary>Gets the canonical data schema version.</summary>
     public const int SCHEMA = 2;

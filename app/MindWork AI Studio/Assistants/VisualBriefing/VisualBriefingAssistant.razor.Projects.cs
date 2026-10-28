@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Tools.Media;
@@ -58,7 +59,13 @@ public partial class VisualBriefingAssistant
     /// <summary>
     /// Defines <c>CreateBriefingAsync</c> for the visual briefing feature.
     /// </summary>
-    private async Task CreateBriefingAsync()
+    private Task CreateBriefingAsync() => this.CreateBriefingAsync(ChatRestrictions.NONE);
+
+    /// <summary>
+    /// Creates a briefing which holds content with the given restrictions, see VisualBriefingManifest.Restrictions.
+    /// </summary>
+    /// <param name="restrictions">What the content of the briefing demands.</param>
+    private async Task CreateBriefingAsync(ChatRestrictions restrictions)
     {
         var defaults = this.SettingsManager.ConfigurationData.VisualBriefing;
         var defaultProvider = this.SettingsManager.GetPreselectedProvider(ComponentKind.VISUAL_BRIEFING_ASSISTANT);
@@ -79,7 +86,7 @@ public partial class VisualBriefingAssistant
             OptimizeImages = defaults.OptimizeImages,
         };
 
-        var briefing = await this.Store.CreateAsync(suggestedName, string.Empty, settings);
+        var briefing = await this.Store.CreateAsync(suggestedName, string.Empty, settings, restrictions);
         await this.ReloadListAsync(briefing.BriefingId);
     }
 

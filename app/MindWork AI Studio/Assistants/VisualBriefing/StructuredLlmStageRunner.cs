@@ -19,6 +19,7 @@ internal sealed class StructuredLlmStageRunner(
     /// <typeparam name="T">The strict response type.</typeparam>
     /// <param name="provider">The selected provider configuration.</param>
     /// <param name="profile">The selected user profile.</param>
+    /// <param name="restrictions">What the content of the briefing demands, see VisualBriefingManifest.Restrictions.</param>
     /// <param name="systemContract">The stage-specific system contract.</param>
     /// <param name="prompt">The user prompt containing stage inputs.</param>
     /// <param name="attachments">The first-turn attachments.</param>
@@ -31,6 +32,7 @@ internal sealed class StructuredLlmStageRunner(
     public async Task<StructuredLlmStageResult<T>> RunAsync<T>(
         ProviderSettings provider,
         Profile profile,
+        ChatRestrictions restrictions,
         string systemContract,
         string prompt,
         IReadOnlyList<FileAttachment> attachments,
@@ -78,6 +80,10 @@ internal sealed class StructuredLlmStageRunner(
                 CreateBlock(time, ChatRole.USER, initialPrompt),
             ],
         };
+
+        // The thread of the stage holds what the briefing holds. The orchestrator checked the provider before the
+        // build started; the provider call checks it against the thread once more:
+        thread.RequireRestrictions(restrictions);
 
         VisualBriefingContractIssue? repairIssue = null;
         for (var attempt = 1; attempt <= 2; attempt++)
