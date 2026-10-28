@@ -22,6 +22,11 @@
     </MudTooltip>
 </MudStack>
 
+<MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+    <ConfigurationSlider T="int" OptionDescription="@T("Shortest pause between indexing steps")" Min="0" Max="@this.MinimumPauseSliderMax" Step="1" Unit="@T("seconds")" Value="@(() => this.SettingsManager.ConfigurationData.App.DataSourceIndexing.MinimumPauseBetweenStepsSeconds)" ValueUpdate="@(value => this.SettingsManager.ConfigurationData.App.DataSourceIndexing.MinimumPauseBetweenStepsSeconds = value)" OptionHelp="@T("AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time between the shortest and the longest pause. This spares an embedding server which many people share, for example in your organization. Leave both at 0 seconds for no pause.")" IsLocked="@(() => IsMinimumPauseLocked)"/>
+    <ConfigurationSlider T="int" OptionDescription="@T("Longest pause between indexing steps")" Min="@this.MaximumPauseSliderMin" Max="@DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS" Step="1" Unit="@T("seconds")" Value="@(() => this.SettingsManager.ConfigurationData.App.DataSourceIndexing.MaximumPauseBetweenStepsSeconds)" ValueUpdate="@(value => this.SettingsManager.ConfigurationData.App.DataSourceIndexing.MaximumPauseBetweenStepsSeconds = value)" OptionHelp="@T("The upper end of the random pause between two indexing steps. AI Studio allows up to 300 seconds (5 minutes).")" IsLocked="@(() => IsMaximumPauseLocked)"/>
+</MudPaper>
+
 @{ var embeddingStatuses = this.DataSourceEmbeddingService.GetStatuses().ToDictionary(status => status.DataSourceId, StringComparer.OrdinalIgnoreCase); }
 <MudTable T="IDataSourceBase" Items="@this.ConfiguredDataSources" Hover="@true" Class="border-dashed border rounded-lg">
     <ColGroup>

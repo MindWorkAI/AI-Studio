@@ -6,6 +6,7 @@ using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Services.Indexing;
 
 using Microsoft.AspNetCore.Components;
 
@@ -57,6 +58,23 @@ public partial class Embeddings : MSGComponentBase
     private int TotalPermanentlySkippedDocuments => this.Statuses.Sum(status => status.PermanentlySkippedDocuments);
 
     private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
+
+    /// <remarks>
+    /// Says nothing while there is no pause between the steps, which is the default.
+    /// </remarks>
+    private string PauseBetweenStepsText
+    {
+        get
+        {
+            var pause = PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing);
+            if (pause.IsNone)
+                return string.Empty;
+
+            return pause.MinimumSeconds == pause.MaximumSeconds
+                ? string.Format(T("Between two steps, AI Studio pauses for {0} seconds, to spare an embedding server which many people share."), pause.MaximumSeconds)
+                : string.Format(T("Between two steps, AI Studio pauses for {0} to {1} seconds, to spare an embedding server which many people share."), pause.MinimumSeconds, pause.MaximumSeconds);
+        }
+    }
 
     /// <remarks>
     /// The chips above count documents, which says nothing about how far the list of data sources

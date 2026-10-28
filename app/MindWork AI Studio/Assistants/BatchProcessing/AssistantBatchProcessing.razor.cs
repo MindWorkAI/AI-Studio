@@ -1,3 +1,4 @@
+using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
@@ -126,6 +127,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
 
     private readonly List<BatchProcessingFileResult> fileResults = [];
     private readonly HashSet<string> usedResultFileNames = new(StringComparer.OrdinalIgnoreCase);
+    private FileExclusionEditor? exclusionEditor;
     private bool showExpertSettings;
     private bool isProcessingBatch;
     private bool hasReportedWriteFailure;
@@ -170,8 +172,6 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     }
 
     private void RestoreDefaultFilePatterns() => this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
-
-    private void RestoreDefaultExcludePatterns() => this.excludePatterns = FileExclusions.DEFAULT_PATTERNS;
 
     private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
 

@@ -904,7 +904,8 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are:
 --   GRAMMAR_SPELLING_ASSISTANT, ICON_FINDER_ASSISTANT, REWRITE_ASSISTANT,
 --   PROMPT_OPTIMIZER_ASSISTANT, TRANSLATION_ASSISTANT, AGENDA_ASSISTANT,
---   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
+--   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, SWOT_ANALYSIS_ASSISTANT,
+--   EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
 --   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
@@ -1093,6 +1094,8 @@ CONFIG["SETTINGS"] = {}
 -- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
 -- search the data sources with every message instead, the way it does for models without
 -- tool usage.
+-- Users can switch off further tools themselves in the tool settings, e.g., one they never need.
+-- They can never switch on a tool you disable here.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools or tool
@@ -1410,6 +1413,22 @@ CONFIG["SETTINGS"] = {}
 -- so the mailbox comes back as it was, should you allow its server again. Without any mail server
 -- in CONFIG["MAILBOX_PROVIDERS"], this blocks every mailbox.
 -- CONFIG["SETTINGS"]["DataMailboxes.AllowOnlyOrganizationMailServers"] = true
+
+-- Configure a pause between two indexing steps of local data sources, i.e., files, folders, and
+-- mailboxes. AI Studio indexes large data sources in steps of a few minutes. Between two steps, it
+-- waits for a random number of seconds between the lower and the upper bound, both included. This
+-- spares an embedding server which many users share: a single user with large folders or
+-- mailboxes no longer keeps it busy for hours. The pause applies after every step which worked on
+-- documents, also when the same data source carries on. Time which passes anyway counts toward
+-- it. Both values must be between 0 and 300 seconds. The default is 0 for both, i.e., no pause.
+-- You may set one bound or both. A bound you set wins, and AI Studio adjusts the other one to it.
+-- Should the upper bound be below the lower bound, the lower bound wins.
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds"] = 30
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds"] = 90
+--
+-- Allow users to change the bounds, so that your values are only defaults:
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.

@@ -69,9 +69,13 @@ public partial class ToolSelectionField : MSGComponentBase
 
     private bool IsToolLocked(string toolId) => !this.ToolRegistry.IsToolActive(toolId);
 
+    // The field lists no tool the user switched off, so it must not count one as selected either:
+    private HashSet<string> GetShownToolIds() => this.ToolRegistry.LeaveOutSwitchedOffByUser(this.SelectedToolIds);
+
     private async Task OptionChangedAsync(HashSet<string> updatedToolIds)
     {
-        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(updatedToolIds);
+        // Tools the user switched off stay selected, so switching them on again brings them back:
+        this.SelectedToolIds = this.ToolRegistry.KeepSwitchedOffByUser(this.SelectedToolIds, updatedToolIds);
         await this.SelectedToolIdsChanged.InvokeAsync(this.SelectedToolIds);
     }
 

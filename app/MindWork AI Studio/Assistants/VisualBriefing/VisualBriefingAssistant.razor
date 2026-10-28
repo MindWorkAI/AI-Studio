@@ -210,7 +210,7 @@
                                     </div>
                                     @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
                                     {
-                                        <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
+                                        <ConfidenceInfo LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
                                     }
                                 </MudStack>
 

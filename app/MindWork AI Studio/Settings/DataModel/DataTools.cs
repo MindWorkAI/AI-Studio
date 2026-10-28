@@ -40,6 +40,19 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
         []);
 
     /// <summary>
+    /// The tool collections the user switched off, because they never need them.
+    /// </summary>
+    /// <remarks>
+    /// The counterpart to DisabledToolIds for the user, and deliberately not managed: switching off
+    /// a tool only takes something away, which every user may do for themselves, while a tool the
+    /// organization switched off stays off whatever this holds. A collection named here appears in
+    /// no tool selection, and no model gets it. Selections which name it keep it, so switching the
+    /// collection on again brings it back wherever it was selected. The IDs are those of tool
+    /// collections, like those of DisabledToolIds.
+    /// </remarks>
+    public HashSet<string> UserDisabledToolIds { get; set; } = [];
+
+    /// <summary>
     /// The minimum provider confidence per tool collection, see DisabledToolIds for the IDs.
     /// </summary>
     /// <remarks>

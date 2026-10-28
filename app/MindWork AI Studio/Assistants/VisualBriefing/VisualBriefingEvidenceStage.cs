@@ -38,7 +38,7 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
         progressService.Publish(build);
         
         var run = await stageRunner.RunAsync<VisualBriefingEvidenceResponse>(
-            provider, profile, BuildSystemContract(), BuildPrompt(manifest, preparedSources), preparedSources.Attachments, VisualBriefingBuildStage.EVIDENCE,
+            provider, profile, manifest.Restrictions, BuildSystemContract(), BuildPrompt(manifest, preparedSources), preparedSources.Attachments, VisualBriefingBuildStage.EVIDENCE,
             build.OperationId, build.BuildId, response => VisualBriefingValidation.ValidateEvidence(manifest, response), token);
         
         stage.Attempts = run.Attempts;

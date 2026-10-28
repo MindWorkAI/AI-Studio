@@ -1,0 +1,35 @@
+using AIStudio.Components;
+
+using Microsoft.AspNetCore.Components;
+
+namespace AIStudio.Assistants.SWOTAnalysis;
+
+/// <summary>
+/// Shows how far the analysis of each SWOT category is, and its findings as soon as they are there.
+/// </summary>
+public partial class SwotAnalysisProgressView : MSGComponentBase
+{
+    /// <summary>
+    /// The progress per category; a category without one counts as running.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyDictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress> Progress { get; set; } = null!;
+
+    private static readonly SwotCategoryAnalysisProgress RUNNING = new(SwotCategoryAnalysisStatus.RUNNING);
+
+    private SwotCategoryAnalysisProgress ProgressOf(SwotAnalysisCategory category) => this.Progress.GetValueOrDefault(category, RUNNING);
+
+    private string RunningTextOf(SwotCategoryAnalysisStatus status) => status is SwotCategoryAnalysisStatus.REPAIRING
+        ? T("The answer did not have the expected form. Asking the model once more...")
+        : T("Analyzing this category...");
+
+    private SwotQuadrantLabels Labels => new(
+        T("Strengths"),
+        T("Weaknesses"),
+        T("Opportunities"),
+        T("Threats"),
+        T("Internal"),
+        T("External"),
+        T("Positive"),
+        T("Negative"));
+}

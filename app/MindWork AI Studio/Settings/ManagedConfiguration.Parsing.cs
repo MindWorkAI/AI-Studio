@@ -23,6 +23,7 @@ public static partial class ManagedConfiguration
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
     /// <param name="_">An unused parameter to help with type inference for enum types. You might ignore it when calling the method.</param>
+    /// <param name="validator">An optional validator for rejecting enum values the setting does not support, e.g., a format a feature cannot write.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
@@ -32,7 +33,8 @@ public static partial class ManagedConfiguration
         Guid configPluginId,
         LuaTable settings,
         bool dryRun,
-        TValue? _ = default)
+        TValue? _ = default,
+        Func<TValue, bool>? validator = null)
         where TValue : Enum
     {
         //
@@ -53,7 +55,8 @@ public static partial class ManagedConfiguration
             if(configuredEnumValue.TryRead<string>(out var configuredEnumText))
             {
                 // Step 3 -- try to parse the string as the enum type:
-                if (EnumNames.TryParse(typeof(TValue), configuredEnumText, out var configuredEnum))
+                if (EnumNames.TryParse(typeof(TValue), configuredEnumText, out var configuredEnum)
+                    && (validator?.Invoke((TValue)configuredEnum) ?? true))
                 {
                     configuredValue = (TValue)configuredEnum;
                     successful = true;

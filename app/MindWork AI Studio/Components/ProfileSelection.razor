@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits MSGComponentBase
 <MudTooltip Text="@this.ToolTipText" Placement="Placement.Top">
-    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass" Disabled="@this.Disabled">
+    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass" Disabled="@this.Disabled" MaxHeight="@MenuDefaults.MAX_HEIGHT">
         <ActivatorContent>
             @if (this.CurrentProfile != Profile.NO_PROFILE)
             {

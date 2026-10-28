@@ -318,22 +318,75 @@ public sealed class ToolRegistry
     public string GetCollectionId(string toolOrCollectionId) => this.collectionIdsByToolId.GetValueOrDefault(toolOrCollectionId, toolOrCollectionId);
 
     /// <summary>
-    /// Whether a tool may be used at all: tools are switched on, and the organization did not switch its collection off.
+    /// Whether a tool may be used at all: tools are switched on, and neither the organization nor the user switched its collection off.
     /// </summary>
     /// <remarks>
-    /// An organization switches a collection off by its ID or by the ID of any of its tools. A
-    /// single tool of a collection cannot be switched off: the others would stop making sense, and
-    /// an administrator who names one tool would rather lose the collection than keep the tool.
+    /// The one gate for both lists of switched-off collections. Every list, the preparation of a
+    /// request, and the token count ask here, so a collection the user switched off is left out
+    /// everywhere without a check of its own.<br/><br/>
+    /// A collection is switched off by its ID or by the ID of any of its tools. A single tool of a
+    /// collection cannot be switched off: the others would stop making sense, and an administrator
+    /// who names one tool would rather lose the collection than keep the tool.
     /// </remarks>
     /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
     /// <returns>True when the tool may be used.</returns>
-    public bool IsToolActive(string toolOrCollectionId)
+    public bool IsToolActive(string toolOrCollectionId) => this.GetSwitchOffReason(toolOrCollectionId) is ToolOfferBlockReason.NONE;
+
+    /// <summary>
+    /// Whether the user switched the collection of a tool off in the tool settings.
+    /// </summary>
+    /// <remarks>
+    /// Answers for the user alone, whatever the organization decided: what the user switched off
+    /// stays off once the organization lets go of the collection again.
+    /// </remarks>
+    /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
+    public bool IsSwitchedOffByUser(string toolOrCollectionId)
+    {
+        var userDisabledIds = this.settingsManager.ConfigurationData.Tools.UserDisabledToolIds;
+        return this.GetSettingsIds(this.GetCollectionId(toolOrCollectionId)).Any(userDisabledIds.Contains);
+    }
+
+    /// <summary>
+    /// Switches the collection of a tool off or on again, as the user chose it in the tool settings.
+    /// </summary>
+    /// <remarks>
+    /// Whatever tool of a collection the user chose this for, it is stored for the collection.
+    /// Switching it on removes the entries of its tools as well, since any of them would keep the
+    /// collection switched off.
+    /// </remarks>
+    /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
+    /// <param name="isSwitchedOff">True to switch the collection off, false to switch it on again.</param>
+    public void SetSwitchedOffByUser(string toolOrCollectionId, bool isSwitchedOff)
+    {
+        var userDisabledIds = this.settingsManager.ConfigurationData.Tools.UserDisabledToolIds;
+        var collectionId = this.GetCollectionId(toolOrCollectionId);
+        userDisabledIds.ExceptWith(this.GetSettingsIds(collectionId));
+        if (isSwitchedOff)
+            userDisabledIds.Add(collectionId);
+    }
+
+    /// <summary>
+    /// Who switched the collection of a tool off, if anybody.
+    /// </summary>
+    /// <remarks>
+    /// The organization comes before the user: the user cannot switch on what their organization
+    /// switched off, so that is the reason which counts while both apply.
+    /// </remarks>
+    /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
+    /// <returns>TOOLS_SWITCHED_OFF, TOOL_SWITCHED_OFF, TOOL_SWITCHED_OFF_BY_USER, or NONE.</returns>
+    private ToolOfferBlockReason GetSwitchOffReason(string toolOrCollectionId)
     {
         if (!this.settingsManager.AreToolsEnabled())
-            return false;
+            return ToolOfferBlockReason.TOOLS_SWITCHED_OFF;
 
-        var disabledIds = this.settingsManager.ConfigurationData.Tools.DisabledToolIds;
-        return !this.GetSettingsIds(this.GetCollectionId(toolOrCollectionId)).Any(disabledIds.Contains);
+        var settingsIds = this.GetSettingsIds(this.GetCollectionId(toolOrCollectionId));
+        if (settingsIds.Any(this.settingsManager.ConfigurationData.Tools.DisabledToolIds.Contains))
+            return ToolOfferBlockReason.TOOL_SWITCHED_OFF;
+
+        if (settingsIds.Any(this.settingsManager.ConfigurationData.Tools.UserDisabledToolIds.Contains))
+            return ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER;
+
+        return ToolOfferBlockReason.NONE;
     }
 
     /// <summary>
@@ -450,6 +503,41 @@ public sealed class ToolRegistry
         .ToHashSet(StringComparer.Ordinal);
 
     /// <summary>
+    /// The part of a selection a selection field shows: every collection but those the user switched off.
+    /// </summary>
+    /// <remarks>
+    /// A field lists no collection the user switched off, so it must not count one as selected
+    /// either. Changing the selection afterward goes through KeepSwitchedOffByUser, which puts
+    /// these collections back.
+    /// </remarks>
+    /// <param name="selectedIds">The IDs of the selected tools or collections.</param>
+    /// <returns>The IDs of the collections to show as selected, as a new set.</returns>
+    public HashSet<string> LeaveOutSwitchedOffByUser(IEnumerable<string> selectedIds)
+    {
+        var shown = this.NormalizeSelection(selectedIds);
+        shown.RemoveWhere(this.IsSwitchedOffByUser);
+        return shown;
+    }
+
+    /// <summary>
+    /// A selection as somebody changed it in a field, plus the collections of the previous selection which the user switched off.
+    /// </summary>
+    /// <remarks>
+    /// Switching a collection off only hides it. A chat template, a policy, or the defaults of an
+    /// assistant which named it keep naming it, even when somebody changes them while it is off,
+    /// so switching it on again brings it back wherever it was selected.
+    /// </remarks>
+    /// <param name="previousIds">The selection before the change, as stored.</param>
+    /// <param name="changedIds">The selection as the field reports it after the change.</param>
+    /// <returns>The IDs of the collections to store, as a new set.</returns>
+    public HashSet<string> KeepSwitchedOffByUser(IEnumerable<string> previousIds, IEnumerable<string> changedIds)
+    {
+        var kept = this.NormalizeSelection(changedIds);
+        kept.UnionWith(this.NormalizeSelection(previousIds).Where(this.IsSwitchedOffByUser));
+        return kept;
+    }
+
+    /// <summary>
     /// The collections preselected in a component, as the user chose them in the settings.
     /// </summary>
     public HashSet<string> GetDefaultToolIds(Components component) => this.settingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(component.ToString(), out var toolIds)
@@ -515,13 +603,17 @@ public sealed class ToolRegistry
     /// Every selection in the app is built from this list: the one below the message field, the
     /// defaults, the templates, and the tools the AI picks for a new assistant. A tool which offers
     /// itself from the context of a chat is left out, because selecting it would change nothing.
-    /// The tool list of the app settings asks for all definitions instead, so an organization can
-    /// still switch such a tool off or set the trust it requires.
+    /// So is a collection the user switched off: they never need it, so it would only take up room.
+    /// One the organization switched off stays, locked, so the user learns why it does not work.
+    /// The tool list of the app settings asks for all definitions instead, so the user can switch
+    /// a collection on again, and an organization can still switch a tool which offers itself off
+    /// or set the trust it requires.
     /// </remarks>
     public async Task<IReadOnlyList<ToolCatalogItem>> GetCatalogAsync(Components component)
     {
         var definitions = this.GetDefinitionsForComponent(component).Where(x => x.Activation is ToolActivation.SELECTION);
-        return await this.GetCatalogAsync(definitions);
+        var catalog = await this.GetCatalogAsync(definitions);
+        return catalog.Where(item => item.SwitchOffReason is not ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER).ToList();
     }
 
     /// <summary>
@@ -529,8 +621,8 @@ public sealed class ToolRegistry
     /// </summary>
     /// <remarks>
     /// For preselecting tools on someone's behalf, such as when a launcher opens a chat. A tool
-    /// this installation does not know, one an organization switched off, or one whose settings are
-    /// incomplete cannot be enabled by hand either, so handing it over as enabled would show the
+    /// this installation does not know, one an organization or the user switched off, or one whose
+    /// settings are incomplete cannot be enabled by hand either, so handing it over as enabled would show the
     /// user a state they could not have produced and could not fix from where they are. The
     /// provider confidence stays out of this: it belongs to the moment a message is sent, not to
     /// the selection, and it may well be a different provider by then.
@@ -612,7 +704,7 @@ public sealed class ToolRegistry
             DescriptionForLLM = declaredCollection?.Definition.DescriptionForLLM ?? firstTool.Definition.Function.DescriptionForLLM,
             Tools = tools,
             ConfigurationState = tools.FirstOrDefault(tool => !tool.ConfigurationState.IsConfigured)?.ConfigurationState ?? new() { IsConfigured = true },
-            IsActive = this.IsToolActive(collectionId),
+            SwitchOffReason = this.GetSwitchOffReason(collectionId),
             MinimumProviderConfidence = this.GetMinimumProviderConfidence(collectionId),
         };
     }
@@ -686,6 +778,10 @@ public sealed class ToolRegistry
 
                 case { BlockReason: ToolOfferBlockReason.TOOL_SWITCHED_OFF }:
                     this.logger.LogDebug("Skipping tool '{ToolId}' because it is disabled by managed configuration.", definition.Id);
+                    break;
+
+                case { BlockReason: ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER }:
+                    this.logger.LogDebug("Skipping tool '{ToolId}' because the user switched it off in the tool settings.", definition.Id);
                     break;
 
                 case { BlockReason: ToolOfferBlockReason.NOT_CONFIGURED }:
@@ -797,8 +893,9 @@ public sealed class ToolRegistry
     /// </remarks>
     private async Task<ToolCheck> CheckToolAsync(ToolDefinition definition, ConfidenceLevel providerConfidence, OutboundDataRestriction outboundDataRestriction)
     {
-        if (!this.IsToolActive(definition.Id))
-            return new(ToolOfferBlockReason.TOOL_SWITCHED_OFF, null, null);
+        var switchOffReason = this.GetSwitchOffReason(definition.Id);
+        if (switchOffReason is not ToolOfferBlockReason.NONE)
+            return new(switchOffReason, null, null);
 
         if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation) || !implementation.IsAvailable)
             return new(ToolOfferBlockReason.NOT_AVAILABLE_HERE, null, null);

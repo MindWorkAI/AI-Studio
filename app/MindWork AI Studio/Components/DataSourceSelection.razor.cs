@@ -17,9 +17,6 @@ public partial class DataSourceSelection : MSGComponentBase
     public DataSourceSelectionMode SelectionMode { get; set; } = DataSourceSelectionMode.SELECTION_MODE;
     
     [Parameter]
-    public PopoverTriggerMode PopoverTriggerMode { get; set; } = PopoverTriggerMode.BUTTON;
-    
-    [Parameter]
     public string PopoverButtonClasses { get; set; } = string.Empty;
     
     [Parameter]
@@ -397,6 +394,7 @@ public partial class DataSourceSelection : MSGComponentBase
         ToolOfferBlockReason.TOOLS_SWITCHED_OFF => T("Your organization has switched tools off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
         ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS => T("The selected model cannot use tools, so AI Studio uses classic RAG instead and searches your data sources with every message."),
         ToolOfferBlockReason.TOOL_SWITCHED_OFF => T("Your organization has switched Semantic Search off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER => T("You switched Semantic Search off in the tool settings, so AI Studio uses classic RAG instead and searches your data sources with every message."),
         ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW => T("The selected provider is not trusted enough for Semantic Search, so AI Studio uses classic RAG instead and searches your data sources with every message."),
         _ => T("Semantic Search cannot be used here, so AI Studio uses classic RAG instead and searches your data sources with every message."),
     };

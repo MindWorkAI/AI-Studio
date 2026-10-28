@@ -541,6 +541,24 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task AToolYouSwitchedOffIsNotMissing()
+    {
+        var registry = this.CreateRegistry(new TestTool(Definition()));
+        registry.SetSwitchedOffByUser(TOOL_ID, true);
+
+        var policy = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportPolicy(allowedToolIds: [TOOL_ID]), PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY), this.SettingsManager, registry);
+        var template = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportChatTemplate([], [TOOL_ID]), PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, registry);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(policy.Hints, Is.Empty, "The tool exists on this computer; switching it on again makes the policy use it.");
+            Assert.That(template.Hints, Is.Empty);
+            Assert.That(((DataDocumentAnalysisPolicy)policy.ConfigurationObject).AllowedToolIds, Is.EquivalentTo(new[] { TOOL_ID }), "The import keeps the tool.");
+            Assert.That(((ChatTemplate)template.ConfigurationObject).ToolIds, Is.EquivalentTo(new[] { TOOL_ID }));
+        });
+    }
+
+    [Test]
     public async Task AChatTemplateWhichSaysNothingAboutToolsKeepsSayingNothing()
     {
         var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportChatTemplate([], toolIds: null), PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));

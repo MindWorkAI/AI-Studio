@@ -1,6 +1,6 @@
 [package]
 name = "mindwork-ai-studio"
-version = "26.9.1"
+version = "26.10.1"
 edition = "2024"
 description = "MindWork AI Studio"
 authors = ["Thorsten Sommer"]
@@ -30,7 +30,7 @@ log = { version = "0.4.33", features = ["kv"] }
 once_cell = "1.21.4"
 axum = { version = "0.8.9", features = ["http2", "json", "query", "tokio"] }
 axum-server = { version = "0.8.0", features = ["tls-rustls"] }
-rustls = { version = "0.23.45", default-features = false, features = ["aws_lc_rs"] }
+rustls = { version = "0.23.46", default-features = false, features = ["aws_lc_rs"] }
 rand = "0.10.2"
 rand_chacha = "0.10.0"
 subtle = "2.6.1"

@@ -1,5 +1,8 @@
+using System.Text.Json;
+
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Web;
 
@@ -119,6 +122,66 @@ public sealed class ChatThreadWebAddressTests
         var thread = Thread(new ContentBlock { Time = START, ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
 
         Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False);
+    }
+
+    [Test]
+    public void AnAddressAModelWroteIsNotGivenInAMessageOfTheUser()
+    {
+        // An answer sent here from another chat, which the user then sent as a message of their own:
+        var thread = Thread(Block(ChatRole.USER, "Make slides of this: the details are on https://example.org/chosen, and our handbook is on https://example.org/handbook.", 1));
+        thread.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("The details are on https://example.org/chosen."));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False, "A model wrote it, so it could carry anything of the chat it came from.");
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/handbook")), Is.True, "Another address in the same message still counts.");
+        });
+    }
+
+    [Test]
+    public void AnAddressAModelWroteIsGivenWhenAToolReturnedItOrADocumentHoldsIt()
+    {
+        var attachedDocument = new ContentText
+        {
+            Text = "Make slides of this: the details are on https://example.org/chosen.",
+            RuntimeAttachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal) { WebAddresses.CreateRequestKey(new Uri("https://example.org/sources/2026")) },
+        };
+
+        var thread = Thread(new ContentBlock { Time = START, ContentType = ContentType.TEXT, Content = attachedDocument, Role = ChatRole.USER });
+        thread.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("See https://example.org/chosen and https://example.org/sources/2026."));
+        thread.RuntimeWebAddressesFromTools.Add(WebAddresses.CreateRequestKey(new Uri("https://example.org/chosen")));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.True, "A tool returned it in this chat, so it was not only a model which wrote it.");
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/sources/2026")), Is.True, "A document the user attached holds it.");
+        });
+    }
+
+    [Test]
+    public void TheAddressesAModelWroteOutlastARestart()
+    {
+        var thread = Thread(Block(ChatRole.USER, "Make slides of this: the details are on https://example.org/chosen.", 1));
+        thread.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("The details are on https://example.org/chosen."));
+
+        var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        Assert.That(loaded.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False, "Forgetting them would let the chat know more addresses after a restart, not fewer.");
+    }
+
+    [Test]
+    public void ACopyOfAChatKeepsTheAddressesOfTheOtherApart()
+    {
+        var thread = Thread(Block(ChatRole.USER, "Read https://example.org/chosen.", 1));
+        var copy = thread with { };
+
+        copy.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("See https://example.org/chosen."));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(copy.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False);
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.True, "What the copy took over must not reach the chat it was copied from.");
+        });
     }
 
     private static ChatThread Thread(params ContentBlock[] blocks) => new() { Blocks = [..blocks] };

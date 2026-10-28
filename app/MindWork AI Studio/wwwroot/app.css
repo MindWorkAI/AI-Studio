@@ -171,6 +171,24 @@
     margin-bottom:2em;
 }
 
+/* The actions of a code block, such as saving it, appear left of its copy button, which is 36px wide plus a margin of 8px */
+.mud-markdown-body .code-block-with-actions {
+    position: relative;
+}
+
+.mud-markdown-body .code-block-actions {
+    position: absolute;
+    display: none;
+    top: 0;
+    right: 44px;
+}
+
+/* Both appear while the pointer is on the code block, and the copy button stays while it is on the actions, which are no part of the block */
+.mud-markdown-body .code-block-with-actions:hover > .code-block-actions,
+.mud-markdown-body .code-block-with-actions:hover .mud-markdown-code-highlight-copybtn {
+    display: block;
+}
+
 .justified-markdown .mud-markdown-body p,
 .justified-markdown .mud-markdown-body li,
 .justified-markdown .mud-markdown-body blockquote p {
@@ -530,6 +548,32 @@ tr:has(> .provider-group-header) .mud-icon-button {
 .text-switch-dense .mud-input-slot.mud-input-root-outlined {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+}
+
+/* A field for file patterns with its help button on the right, which keeps its width while the field grows. */
+.pattern-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    column-gap: 8px;
+    align-items: center;
+}
+
+/* The field takes the first column, and so does what follows below it, such as the help, which keeps them equally wide. */
+.pattern-row-main {
+    grid-column: 1;
+    min-width: 0;
+}
+
+/*
+ * Pattern lists wrap and grow with their content, up to a limit beyond which they scroll. MudBlazor
+ * measures the height only on input, after a render with new text, and when the window changes its
+ * size. When the field gets narrower otherwise, e.g., in a dialog, more lines wrap than it is high,
+ * and MudBlazor hides the scrollbar below the limit. Allowing it always keeps every line reachable.
+ */
+.pattern-text-field textarea.mud-input-slot {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-y: auto !important;
 }
 
 /*

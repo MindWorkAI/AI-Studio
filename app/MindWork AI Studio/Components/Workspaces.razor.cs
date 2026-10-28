@@ -115,6 +115,8 @@ public partial class Workspaces : MSGComponentBase
 
     private bool HasSearchQuery => this.SearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
 
+    private string SearchPlaceholder => this.includeThreadContents ? T("Search chat names and contents") : T("Search chat names");
+
     private string GetAddChatToWorkspaceTooltip(string workspaceName) => string.Format(T("Start a new chat in workspace '{0}'"), workspaceName);
 
     private async Task<Func<string?, string?>> CreateWorkspaceNameValidationAsync(Guid excludedWorkspaceId = default, string? originalWorkspaceName = null)
