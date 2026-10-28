@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Web;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -50,8 +51,8 @@ public sealed class ChatRestrictionsTests
     [Test]
     public void TheStricterOfEachPartWins()
     {
-        var fromDataSource = new ChatRestrictions(ConfidenceLevel.HIGH, DataSourceSecurity.ALLOW_ANY, new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID));
-        var fromMailbox = new ChatRestrictions(ConfidenceLevel.LOW, DataSourceSecurity.SELF_HOSTED, new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID));
+        var fromDataSource = new ChatRestrictions(ConfidenceLevel.HIGH, DataSourceSecurity.ALLOW_ANY, new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID), []).WithWebAddressesWrittenByModelIn("See https://example.org/report.");
+        var fromMailbox = new ChatRestrictions(ConfidenceLevel.LOW, DataSourceSecurity.SELF_HOSTED, new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID), []).WithWebAddressesWrittenByModelIn("See https://example.org/minutes.");
 
         foreach (var combined in new[] { fromDataSource.StricterOf(fromMailbox), fromMailbox.StricterOf(fromDataSource) })
         {
@@ -61,14 +62,27 @@ public sealed class ChatRestrictionsTests
                 Assert.That(combined.DataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED), "Data for self-hosted providers only keeps them as the only choice, whichever side brings it.");
                 Assert.That(combined.OutboundData.Restriction, Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
                 Assert.That(combined.OutboundData.Reference, Is.EqualTo(MAILBOX_ID), "The source which demands the strictest restriction is the one to name.");
+                Assert.That(combined.WebAddressesWrittenByModels, Is.EquivalentTo(new[] { RequestKey("https://example.org/report"), RequestKey("https://example.org/minutes") }), "What models wrote on either side never counts as given.");
             });
         }
     }
 
     [Test]
+    public void TheAddressesInATextAModelWroteAreKeptAsTheServerGetsAskedForThem()
+    {
+        var restrictions = ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("The report is on https://EXAMPLE.org/report#summary, and the minutes are on http://10.20.30.40:8000/minutes/. Write to ftp://example.org/upload.");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(restrictions.WebAddressesWrittenByModels, Is.EquivalentTo(new[] { RequestKey("https://example.org/report"), RequestKey("http://10.20.30.40:8000/minutes/") }), "Only addresses a web page could be read from count, compared as the server gets asked for them.");
+            Assert.That(ChatRestrictions.NONE.WebAddressesWrittenByModels, Is.Empty, "Adding addresses leaves NONE as it is.");
+        });
+    }
+
+    [Test]
     public void RestrictionsWhichDemandNothingChangeNothing()
     {
-        var restrictions = new ChatRestrictions(ConfidenceLevel.MEDIUM, DataSourceSecurity.ALLOW_ANY, new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID));
+        var restrictions = new ChatRestrictions(ConfidenceLevel.MEDIUM, DataSourceSecurity.ALLOW_ANY, new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID), []).WithWebAddressesWrittenByModelIn("See https://example.org/report.");
 
         Assert.Multiple(() =>
         {
@@ -84,6 +98,7 @@ public sealed class ChatRestrictionsTests
         sourceChat.RequireProviderConfidence(ConfidenceLevel.HIGH);
         sourceChat.RequireDataSecurity(DataSourceSecurity.SELF_HOSTED);
         sourceChat.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID));
+        sourceChat.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("See https://example.org/report."));
         var otherChat = new ChatThread();
 
         otherChat.RequireRestrictions(sourceChat.CaptureRestrictions());
@@ -98,9 +113,10 @@ public sealed class ChatRestrictionsTests
         chat.RequireProviderConfidence(ConfidenceLevel.HIGH);
         chat.RequireDataSecurity(DataSourceSecurity.SELF_HOSTED);
         chat.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID));
+        chat.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("See https://example.org/report."));
         var before = chat.CaptureRestrictions();
 
-        chat.RequireRestrictions(new(ConfidenceLevel.LOW, DataSourceSecurity.ALLOW_ANY, new(OutboundDataRestriction.UNRESTRICTED, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID)));
+        chat.RequireRestrictions(new(ConfidenceLevel.LOW, DataSourceSecurity.ALLOW_ANY, new(OutboundDataRestriction.UNRESTRICTED, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID), []));
         chat.RequireRestrictions(ChatRestrictions.NONE);
 
         AssertSame(chat.CaptureRestrictions(), before);
@@ -175,7 +191,10 @@ public sealed class ChatRestrictionsTests
         Assert.That(actual.ProviderConfidence, Is.EqualTo(expected.ProviderConfidence));
         Assert.That(actual.DataSecurity, Is.EqualTo(expected.DataSecurity));
         Assert.That(actual.OutboundData, Is.EqualTo(expected.OutboundData));
+        Assert.That(actual.WebAddressesWrittenByModels, Is.EquivalentTo(expected.WebAddressesWrittenByModels));
     });
+
+    private static string RequestKey(string address) => WebAddresses.CreateRequestKey(new Uri(address));
 
     private AIStudio.Settings.Provider AddProvider(string id, LLMProviders llmProvider, bool isSelfHosted)
     {

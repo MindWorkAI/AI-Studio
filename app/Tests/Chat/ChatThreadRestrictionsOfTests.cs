@@ -34,6 +34,19 @@ public sealed class ChatThreadRestrictionsOfTests
     }
 
     [Test]
+    public void TheAddressesItsModelsWroteComeAlong()
+    {
+        // The moderation of the SWOT analysis carries what the models of the four categories wrote:
+        var researchThread = new ChatThread();
+        researchThread.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("A competitor is on https://example.org/competitor."));
+        var assistantThread = new ChatThread();
+
+        assistantThread.RequireRestrictionsOf(researchThread);
+
+        Assert.That(assistantThread.WebAddressesWrittenByModels, Is.EquivalentTo(researchThread.WebAddressesWrittenByModels));
+    }
+
+    [Test]
     public void ALooserThreadLoosensNothing()
     {
         var assistantThread = new ChatThread();
@@ -67,6 +80,7 @@ public sealed class ChatThreadRestrictionsOfTests
             Assert.That(assistantThread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.NONE));
             Assert.That(assistantThread.DataSecurity, Is.EqualTo(DataSourceSecurity.NOT_SPECIFIED));
             Assert.That(assistantThread.RequiredOutboundDataRestriction, Is.EqualTo(OutboundDataRequirement.NONE));
+            Assert.That(assistantThread.WebAddressesWrittenByModels, Is.Empty);
         });
     }
 }
