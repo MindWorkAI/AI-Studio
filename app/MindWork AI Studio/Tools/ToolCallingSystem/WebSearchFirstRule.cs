@@ -12,7 +12,7 @@ namespace AIStudio.Tools.ToolCallingSystem;
 /// The rule belongs only into a request which offers web search: a rule about a tool the model
 /// does not get would only confuse it. Once the search is gone, nothing repeats it. A call of the
 /// search in the same request is refused with a text which names the source and says that a new
-/// chat can search again, see OutboundDataRequirementExtensions.GetToolBlockedMessage, and the
+/// chat without this content can search again, see OutboundDataRequirementExtensions.GetToolBlockedMessage, and the
 /// tool selection shows the user the same text.
 /// </remarks>
 internal static class WebSearchFirstRule
