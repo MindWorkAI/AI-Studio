@@ -26,4 +26,14 @@ public readonly record struct PromptInjectionSource(PromptInjectionSourceKind Ki
     /// </remarks>
     /// <param name="mailboxName">The name of the mailbox.</param>
     public static PromptInjectionSource MailContent(string mailboxName) => new(PromptInjectionSourceKind.MAIL_CONTENT, mailboxName);
+
+    /// <summary>
+    /// What an AI wrote, sent on to an assistant or into a new chat.
+    /// </summary>
+    /// <remarks>
+    /// An answer may repeat what the AI read, such as a web page or a mail, and the instructions hidden
+    /// there with it. Named after the chat or the assistant the answer comes from, as the user knows it.
+    /// </remarks>
+    /// <param name="senderName">The name of the chat or of the assistant.</param>
+    public static PromptInjectionSource ModelAnswer(string senderName) => new(PromptInjectionSourceKind.MODEL_ANSWER, senderName);
 }

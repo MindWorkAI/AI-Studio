@@ -1,6 +1,8 @@
+using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Security;
 
 using Microsoft.AspNetCore.Components;
 
@@ -16,7 +18,8 @@ namespace AIStudio.Tools.AssistantLaunch;
 /// <param name="settingsManager">The settings, which decide the assistants the user sees.</param>
 /// <param name="assistantSessionService">The sessions of the assistants, which decide whether a destination is busy.</param>
 /// <param name="navigationManager">The navigation of the window the user sends from.</param>
-public sealed class AssistantLaunchService(SettingsManager settingsManager, AssistantSessionService assistantSessionService, NavigationManager navigationManager)
+/// <param name="promptInjectionGuardService">The filter for what an AI wrote, before it reaches another model.</param>
+public sealed class AssistantLaunchService(SettingsManager settingsManager, AssistantSessionService assistantSessionService, NavigationManager navigationManager, PromptInjectionGuardService promptInjectionGuardService)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantLaunchService).Namespace, nameof(AssistantLaunchService));
 
@@ -26,6 +29,32 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
     /// <param name="sender">The component which sends.</param>
     /// <returns>The destinations the user can choose from.</returns>
     public IReadOnlyList<Components> GetDestinationsFor(Components sender) => SelectDestinations(sender, this.IsVisible);
+
+    /// <summary>
+    /// Prepares a text for sending, together with the restrictions it takes along.
+    /// </summary>
+    /// <remarks>
+    /// What an AI wrote goes through the prompt injection filter first: an answer may repeat what the AI
+    /// read, such as a web page or a mail, and the instructions hidden there with it. Once sent, the text
+    /// reaches the next model as a message of the user, which nobody filters. The user hears about what
+    /// was removed right away, since each sending is an action of its own. The web addresses of the
+    /// filtered text count as written by a model, so none of them counts as given by the user later
+    /// on.<br/><br/>
+    /// What the user wrote is sent as it is.
+    /// </remarks>
+    /// <param name="text">The text to send.</param>
+    /// <param name="writtenByModel">Whether an AI wrote the text, rather than the user.</param>
+    /// <param name="sourceRestrictions">The restrictions of where the text comes from.</param>
+    /// <param name="sourceName">The name of the chat or of the assistant the text comes from, for the report of the filter.</param>
+    /// <returns>The text to send, with its restrictions.</returns>
+    public async Task<TextLaunchPayload> CreateTextPayloadAsync(string text, bool writtenByModel, ChatRestrictions sourceRestrictions, string sourceName)
+    {
+        if (!writtenByModel)
+            return new(text, sourceRestrictions);
+
+        var filteredText = await promptInjectionGuardService.SanitizeAsync(text, PromptInjectionSource.ModelAnswer(sourceName));
+        return new(filteredText, sourceRestrictions.WithWebAddressesWrittenByModelIn(filteredText));
+    }
 
     /// <summary>
     /// Opens the destination with the text sent to it.

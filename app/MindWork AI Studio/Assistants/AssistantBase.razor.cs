@@ -931,8 +931,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             return;
         }
 
-        // A model wrote what an assistant sends, even when it falls back to the input, so none of its addresses counts as given:
-        await this.AssistantLaunchService.LaunchAsync(destination, new TextLaunchPayload(contentToSend, this.CurrentRestrictions.WithWebAddressesWrittenByModelIn(contentToSend)));
+        // A model wrote what an assistant sends, even when it falls back to the input, so it gets filtered, and none of its addresses counts as given:
+        var payload = await this.AssistantLaunchService.CreateTextPayloadAsync(contentToSend, writtenByModel: true, this.CurrentRestrictions, this.Title);
+        await this.AssistantLaunchService.LaunchAsync(destination, payload);
     }
 
     private async Task InnerResetForm()
