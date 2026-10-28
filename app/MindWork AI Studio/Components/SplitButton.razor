@@ -13,7 +13,7 @@
             @this.SelectedValueName()
         </MudButton>
     }
-    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
+    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;" MaxHeight="@MenuDefaults.MAX_HEIGHT">
         @foreach(var item in this.Items)
         {
             <MudMenuItem OnClick="() => this.SelectItem(item)">

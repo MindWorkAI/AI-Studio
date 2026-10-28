@@ -128,7 +128,7 @@
                 {
                     @if (this.ShowSendTo && this.VisibleSendToAssistants.Count > 0)
                     {
-                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                             @foreach (var assistant in this.VisibleSendToAssistants)
                             {
                                 <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, new()))">
@@ -160,7 +160,7 @@
                         case SendToButton sendToButton:
                             @if (this.VisibleSendToAssistants.Count > 0)
                             {
-                                <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                                <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                                     @foreach (var assistant in this.VisibleSendToAssistants)
                                     {
                                         <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, sendToButton))">
