@@ -120,6 +120,17 @@
                         </MudMenu>
                     </MudTooltip>
                 }
+                @if (this.CanSendTo)
+                {
+                    <MudTooltip Text="@T("Send to ...")" Placement="Placement.Bottom">
+                        <MudMenu Icon="@Icons.Material.Filled.Apps" Disabled="@(!this.IsSendToEnabled)">
+                            @foreach (var destination in this.SendToDestinations)
+                            {
+                                <MudMenuItem OnClick="@(() => this.SendTo(destination))" Label="@destination.Name()"/>
+                            }
+                        </MudMenu>
+                    </MudTooltip>
+                }
                 <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium" IsAIGenerated="@this.GetsAIGeneratedContentDisclosure"/>
             </div>
         </CardHeaderActions>

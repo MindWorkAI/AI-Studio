@@ -90,6 +90,9 @@ public partial class ChatComponent : MSGComponentBase
     [Inject]
     private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
 
+    [Inject]
+    private AssistantLaunchService AssistantLaunchService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -1859,7 +1862,8 @@ public partial class ChatComponent : MSGComponentBase
     /// <param name="deletePreviousChat">Whether to delete the open chat first.</param>
     /// <param name="targetWorkspaceId">The workspace for the new chat, when the workspace tree asks for one. When given, the new chat gets a thread in that workspace, whatever useSameWorkspace says.</param>
     /// <param name="chatTemplate">The chat template of the new chat, when the user picked another one. Without one, the new chat keeps the template of the open chat.</param>
-    private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null, ChatTemplate? chatTemplate = null)
+    /// <returns>True when the new chat started. False when the user kept the open chat, or when it could not be deleted.</returns>
+    private async Task<bool> StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null, ChatTemplate? chatTemplate = null)
     {
         //
         // Where the new chat goes is decided right away, when it is asked for. Deleting the open chat
@@ -1884,7 +1888,7 @@ public partial class ChatComponent : MSGComponentBase
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start New Chat"), dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
-                return;
+                return false;
         }
 
         //
@@ -1923,7 +1927,7 @@ public partial class ChatComponent : MSGComponentBase
             }
 
             if (!chatIsGone)
-                return;
+                return false;
         }
 
         //
@@ -2022,6 +2026,7 @@ public partial class ChatComponent : MSGComponentBase
         await this.ApplyChatTemplateToolSelectionAsync();
         this.ApplyAutomaticDataSourceOptions();
         await this.SyncForegroundChatAsync();
+        return true;
     }
 
     private async Task MoveChatToWorkspace()
@@ -2238,6 +2243,41 @@ public partial class ChatComponent : MSGComponentBase
         await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_TOGGLE_OVERLAY);
     }
     
+    /// <summary>
+    /// Sends the text of a message of this chat to an assistant, or into a new chat.
+    /// </summary>
+    /// <remarks>
+    /// The text takes along what this chat demands, and what the AI wrote goes through the prompt injection
+    /// filter, see AssistantLaunchService.CreateTextPayloadAsync. Sending changes nothing in this chat.<br/><br/>
+    /// A new chat starts in the workspace of this chat, or as a temporary chat when this one is temporary, and
+    /// gets the text into its field for the next message, where the user decides what to send. It starts first:
+    /// when the user keeps this chat, nothing is filtered in vain. The page of the chat stays open meanwhile, so
+    /// the text cannot wait for it as it waits for an assistant.
+    /// </remarks>
+    /// <param name="content">The content of the message.</param>
+    /// <param name="destination">The assistant, or the chat for a new chat.</param>
+    private async Task SendBlockToAsync(IContent content, Tools.Components destination)
+    {
+        if (this.ChatThread is not { } sourceChat)
+            return;
+
+        if (destination is not Tools.Components.CHAT)
+        {
+            if (await this.AssistantLaunchService.CreateTextPayloadAsync(sourceChat, content) is { } payload)
+                await this.AssistantLaunchService.LaunchAsync(destination, payload);
+
+            return;
+        }
+
+        if (!await this.StartNewChat(targetWorkspaceId: sourceChat.WorkspaceId))
+            return;
+
+        if (await this.AssistantLaunchService.CreateTextPayloadAsync(sourceChat, content) is { } textForNewChat)
+            await this.PutTextIntoComposerAsync(textForNewChat);
+
+        this.StateHasChanged();
+    }
+
     private async Task RemoveBlock(IContent block)
     {
         if (!this.blockActions.TryRemove(this.ChatThread, block))

@@ -141,6 +141,25 @@ public partial class ContentBlockComponent : MSGComponentBase
     [Parameter]
     public bool AddsAIGeneratedContentDisclosure { get; set; } = true;
 
+    /// <summary>
+    /// Sends the text of this block to the given assistant, or into a new chat.
+    /// </summary>
+    /// <remarks>
+    /// Null hides the menu for it. An assistant shows its result with this block as well, and it offers
+    /// sending the result through its own footer instead.
+    /// </remarks>
+    [Parameter]
+    public Func<IContent, Tools.Components, Task>? SendToFunc { get; set; }
+
+    /// <summary>
+    /// The assistants and the chat the menu offers, in its order, see AssistantLaunchService.GetDestinationsFor.
+    /// </summary>
+    /// <remarks>
+    /// Whoever passes SendToFunc passes them as well, so that a chat asks for them once for all of its blocks.
+    /// </remarks>
+    [Parameter]
+    public IReadOnlyList<Tools.Components> SendToDestinations { get; set; } = [];
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -198,6 +217,21 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// got back that way after many changes to it, without copying it out of the chat.
     /// </remarks>
     private bool CanSaveCodeBlocks => this.Role is ChatRole.AI or ChatRole.USER && this.CanExport;
+
+    /// <summary>
+    /// Whether this block offers its text to an assistant or a new chat.
+    /// </summary>
+    private bool CanSendTo => this.SendToFunc is not null && this.SendToDestinations.Count > 0 && this.Role is ChatRole.AI or ChatRole.USER && this.Content is ContentText;
+
+    /// <summary>
+    /// Whether the text of this block can be sent right now.
+    /// </summary>
+    /// <remarks>
+    /// Like the export, the menu waits for the stream to finish: half an answer is nothing anybody wants
+    /// to continue with. Sending changes nothing in this chat, so an answer written meanwhile for another
+    /// block does not stand in the way.
+    /// </remarks>
+    private bool IsSendToEnabled => this.Content is ContentText { InitialRemoteWait: false, IsStreaming: false } text && !string.IsNullOrWhiteSpace(text.Text);
 
     /// <summary>
     /// Whether this block leaves AI Studio with the notice that AI generated it, when that is switched on.
@@ -420,6 +454,10 @@ public partial class ContentBlockComponent : MSGComponentBase
         hash.Add(this.Content.IsStreaming);
         hash.Add(this.Content.FileAttachments.Count);
         hash.Add(this.Content.Sources.Count);
+        hash.Add(this.SendToFunc is not null);
+        hash.Add(this.SendToDestinations.Count);
+        foreach (var destination in this.SendToDestinations)
+            hash.Add(destination);
 
         switch (this.Content)
         {
@@ -835,6 +873,14 @@ public partial class ContentBlockComponent : MSGComponentBase
         
         if (remove.HasValue && remove.Value)
             await this.RemoveBlockFunc(this.Content);
+    }
+
+    private async Task SendTo(Tools.Components destination)
+    {
+        if (this.SendToFunc is null || !this.IsSendToEnabled)
+            return;
+
+        await this.SendToFunc(this.Content, destination);
     }
     
     /// <summary>

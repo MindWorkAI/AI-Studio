@@ -57,6 +57,27 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
     }
 
     /// <summary>
+    /// Prepares the text of a message of a chat for sending, together with what the chat demands.
+    /// </summary>
+    /// <remarks>
+    /// A message of the AI counts as written by a model, a message of the user does not, see the overload
+    /// for a text. The restrictions are those of the chat as it is now: a message of the user written before
+    /// the chat read a mailbox demands what the chat demands since, which is the safe side.
+    /// </remarks>
+    /// <param name="sourceChat">The chat the message belongs to.</param>
+    /// <param name="content">The content of the message.</param>
+    /// <returns>The text to send, with its restrictions, or null when the content is no message of the chat with a text to send.</returns>
+    public async Task<TextLaunchPayload?> CreateTextPayloadAsync(ChatThread sourceChat, IContent content)
+    {
+        var block = sourceChat.Blocks.FirstOrDefault(candidate => ReferenceEquals(candidate.Content, content));
+        if (block is not { Role: ChatRole.AI or ChatRole.USER, Content: ContentText { Text: var text } } || string.IsNullOrWhiteSpace(text))
+            return null;
+
+        var sourceName = string.IsNullOrWhiteSpace(sourceChat.Name) ? TB("Unnamed chat") : sourceChat.Name;
+        return await this.CreateTextPayloadAsync(text, writtenByModel: block.Role is ChatRole.AI, sourceChat.CaptureRestrictions(), sourceName);
+    }
+
+    /// <summary>
     /// Opens the destination with the text sent to it.
     /// </summary>
     /// <remarks>
