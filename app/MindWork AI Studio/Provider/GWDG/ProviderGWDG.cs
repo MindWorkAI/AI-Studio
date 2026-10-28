@@ -22,6 +22,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     private static readonly Model[] KNOWN_TRANSCRIPTION_MODELS =
     [
         new("whisper-large-v2", "Whisper v2 Large"),
+        new("whisper-large-v3", "Whisper v3 Large"),
     ];
 
     #region Implementation of IProvider

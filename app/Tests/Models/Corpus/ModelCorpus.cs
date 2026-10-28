@@ -284,6 +284,7 @@ public static class ModelCorpus
         new(GWDG, "internvl2.5-8b", NAMED_BY_A_RULE),
         new(GWDG, "e5-mistral-7b-instruct", NAMED_BY_NO_RULE),
         new(GWDG, "whisper-large-v2", BUILT_INTO_THE_APP),
+        new(GWDG, "whisper-large-v3", BUILT_INTO_THE_APP),
         new(HELMHOLTZ, "1 - Llama3 405 the best general model", QUOTED_AS_A_NAME_SHAPE),
         new(HELMHOLTZ, "01 - GPT-5.5 - great overall performance", QUOTED_AS_A_NAME_SHAPE),
         new(HELMHOLTZ, "10 - Muse Glimmer 30b - the newest META model", QUOTED_AS_A_NAME_SHAPE),
