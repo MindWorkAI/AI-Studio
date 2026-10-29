@@ -51,6 +51,11 @@ env:
   SSIGN_VERSION: 0.1.7
   SSIGN_SHA256: 4ee5389a74ddbeb67e18fe8c8b963734ca13de7b24beffbe430c3f427ecc5e40
 
+  # The oldest Tauri CLI which may bundle the app; cargo installs the newest one with the same major
+  # version. The version also names the cache of the CLI, so raising it installs the new CLI once on
+  # each platform and caches it from then on:
+  TAURI_CLI_VERSION: "2.11.0"
+
 jobs:
   determine_run_mode:
     name: Determine run mode
@@ -1280,7 +1285,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo-tauri-cli
-          key: tauri-cli-v2-${{ runner.os }}-${{ runner.arch }}
+          key: tauri-cli-${{ env.TAURI_CLI_VERSION }}-${{ runner.os }}-${{ runner.arch }}
       
       - name: Setup dependencies (Ubuntu-specific, x86)
         if: matrix.platform == 'ubuntu-22.04' && contains(matrix.rust_target, 'x86_64')
@@ -1300,10 +1305,15 @@ jobs:
           echo "$HOME/.cargo-tauri-cli/bin" >> "$GITHUB_PATH"
           export PATH="$HOME/.cargo-tauri-cli/bin:$PATH"
 
-          if ! cargo tauri --version 2>/dev/null | grep -Eq '^tauri-cli 2\.'; then
-            cargo install tauri-cli --version "^2.11.0" --locked --force --root "$HOME/.cargo-tauri-cli"
+          # The cached CLI counts only when it has the major version of TAURI_CLI_VERSION and is not
+          # older than it; otherwise, the one which TAURI_CLI_VERSION asks for gets installed:
+          installed_version=$(cargo tauri --version 2>/dev/null | sed -n 's/^tauri-cli \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' || true)
+          IFS=. read -r required_major required_minor required_patch <<< "${TAURI_CLI_VERSION}"
+          IFS=. read -r installed_major installed_minor installed_patch <<< "${installed_version:-0.0.0}"
+          if (( installed_major != required_major || installed_minor < required_minor || (installed_minor == required_minor && installed_patch < required_patch) )); then
+            cargo install tauri-cli --version "^${TAURI_CLI_VERSION}" --locked --force --root "$HOME/.cargo-tauri-cli"
           else
-            echo "Tauri CLI v2 is already installed"
+            echo "Tauri CLI ${installed_version} is already installed"
           fi
           
       - name: Setup Tauri (Windows)
@@ -1312,11 +1322,19 @@ jobs:
           "$env:USERPROFILE\.cargo-tauri-cli\bin" >> $env:GITHUB_PATH
           $env:PATH = "$env:USERPROFILE\.cargo-tauri-cli\bin;$env:PATH"
 
+          # The cached CLI counts only when it has the major version of TAURI_CLI_VERSION and is not
+          # older than it; otherwise, the one which TAURI_CLI_VERSION asks for gets installed:
+          $requiredVersion = [version]$env:TAURI_CLI_VERSION
+          $installedVersion = $null
           $tauriVersion = cargo tauri --version 2>$null
-          if (-not $tauriVersion -or $tauriVersion -notmatch '^tauri-cli 2\.') {
-            cargo install tauri-cli --version "^2.11.0" --locked --force --root "$env:USERPROFILE\.cargo-tauri-cli"
+          if ($tauriVersion -match '^tauri-cli (\d+\.\d+\.\d+)') {
+            $installedVersion = [version]$Matches[1]
+          }
+
+          if (-not $installedVersion -or $installedVersion.Major -ne $requiredVersion.Major -or $installedVersion -lt $requiredVersion) {
+            cargo install tauri-cli --version "^$($env:TAURI_CLI_VERSION)" --locked --force --root "$env:USERPROFILE\.cargo-tauri-cli"
           } else {
-            Write-Output "Tauri CLI v2 is already installed"
+            Write-Output "Tauri CLI $installedVersion is already installed"
           }
 
       - name: Install ssign (Windows)
