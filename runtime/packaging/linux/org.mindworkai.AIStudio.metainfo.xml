@@ -43,6 +43,11 @@
         tools a model may use.
       </li>
       <li>
+        Your own data: The AI can search folders and files on your computer, your organization's
+        data, and, as a prototype, your mailboxes, and answer with the passages it used. These are
+        preview features, which you enable in the app settings first.
+      </li>
+      <li>
         Voice input: Dictate your messages and have recordings as well as audio and video files
         transcribed by the provider of your choice, including one you host yourself.
       </li>
