@@ -43,23 +43,11 @@ After downloading the file, open the DMG file and drag the app to your Applicati
 
 ![macOS Installation 1](macOS%20Mount.png)
 
-When you try to open the app, you get a message that the app is damaged:
+When you open the app for the first time, macOS asks whether you want to open an app downloaded from the internet. AI Studio is signed and checked by Apple, so you can confirm with "Open". Afterward, the app starts like any other app.
 
-![macOS Installation 2](macOS%20Damage.png)
+Signing AI Studio for Windows and macOS costs us around €150 per year. Would you like to help us with this? [Please consider supporting us](https://github.com/sponsors/MindWorkAI).
 
-This is because we don't have an Apple Developer account, [which costs around $100 per year](https://github.com/MindWorkAI/Planning/issues/56). Would you like to help us with this? [Please consider supporting us](https://github.com/sponsors/MindWorkAI). You might want to [visit our release page](https://github.com/MindWorkAI/AI-Studio/releases/latest). There, we provide VirusTotal scan results for each release. If you are unsure about the safety of the app, you can check the results there. Ensure that the majority of scanners have a green checkmark.
-
-When you are confident in the app's safety, follow these steps:
-
-1. Start the Terminal app. Just use Spotlight (Cmd + Space) and type "Terminal."
-2. Open your Finder and navigate to the Applications folder.
-3. Find the MindWork AI Studio app.
-4. Type this command: `xattr -r -d com.apple.quarantine ` (with a space at the end).
-5. Drag the MindWork AI Studio app from the Finder into the Terminal window. The path to the app will be added to the command automatically.
-6. The final command should be: `xattr -r -d com.apple.quarantine "/Applications/MindWork AI Studio.app"`. Press Enter.
-7. Now, you might close the Terminal app and the Finder.
-
-The AI Studio app should now open without any issues. Once the app is installed, it will check for updates automatically. If a new version is available, you will be prompted to install it.
+Once the app is installed, it will check for updates automatically. If a new version is available, you will be prompted to install it.
 
 ## Linux
 MindWork AI Studio is available for modern 64-bit Linux systems. Starting with release v26.7.3, Flatpak is the recommended installation method. We test AI Studio on Ubuntu 24.04 and 26.04, Kubuntu 24.04, Fedora 43 or newer, and openSUSE Leap 16 or newer, but it should work on other distributions as well.
