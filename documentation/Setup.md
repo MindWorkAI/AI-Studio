@@ -14,13 +14,17 @@ AI Studio is only available for modern 64-bit Windows systems. When you have an 
 
 - **Intel/AMD:** In almost all other cases, you have an Intel/AMD system. [Download the x64 version](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/MindWork.AI.Studio_x64-setup.exe) of AI Studio.
 
-When you try to install the app, you get a message regarding protection of your PC (see screenshots below). For Windows to trust our app, we need to purchase a certificate that [costs around $1000 per year](https://github.com/MindWorkAI/Planning/issues/56). Would you like to help us with this? [Please consider supporting us](https://github.com/sponsors/MindWorkAI). You might want to [visit our release page](https://github.com/MindWorkAI/AI-Studio/releases/latest). There, we provide VirusTotal scan results for each release. If you are unsure about the safety of the app, you can check the results there. Ensure that the majority of scanners have a green checkmark.
-
-When you are confident in the app's safety, click on "More info" and then "Run anyway" to proceed with the installation:
+Our installer is signed, so Windows can show that it comes from us. Because our certificate is still new, Windows may nevertheless warn you for a while when you start the installer. In that case, click on "More info":
 
 ![Windows Protection 1](Windows%20Warning%201.png)
 
+Check that the publisher ends with "Open Source Developer Thorsten Sommer". Then click on "Run anyway" to proceed with the installation:
+
 ![Windows Protection 2](Windows%20Warning%202.png)
+
+When the publisher reads "Unknown publisher" or names somebody else, do not run the installer. Download it again from our [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest) instead. There, we also provide VirusTotal scan results for each release.
+
+Signing AI Studio for Windows and macOS costs us around €150 per year. Would you like to help us with this? [Please consider supporting us](https://github.com/sponsors/MindWorkAI).
 
 Once the app is installed, it will check for updates automatically. If a new version is available, you will be prompted to install it.
 
