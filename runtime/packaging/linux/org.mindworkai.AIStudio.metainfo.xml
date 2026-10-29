@@ -115,7 +115,7 @@
   </screenshots>
 
   <releases>
-    <release type="stable" version="26.10.1" date="2026-10-28">
+    <release type="stable" version="26.10.1" date="2026-10-29">
       <description>
         <ul>
           <li>Added your mailboxes (e-mails) as a new kind of data source, as a prototype. AI Studio keeps a local index of your mails, including the ones you sent and your drafts, and the AI can search, read, and count them. It works with every mail provider that offers IMAP, among them Gmail, GMX, WEB.DE, iCloud Mail, and an Exchange server of your organization with IMAP switched on. Microsoft 365 and Outlook.com follow later because they require a sign-in with Microsoft. To try it, open the app settings, allow preview features down to prototype, and enable both RAG and mailboxes.</li>
