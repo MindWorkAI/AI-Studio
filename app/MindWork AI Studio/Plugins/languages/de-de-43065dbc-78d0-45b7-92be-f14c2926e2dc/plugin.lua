@@ -11340,6 +11340,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1024253064"] = "Willkommen bei MindWork
 -- Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated LLM. Instead, you will need to bring an API key from a suitable provider.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1146553980"] = "Vielen Dank, dass Sie MindWork AI Studio für Ihre KI-Anwendungen in Betracht ziehen. Diese App wurde entwickelt, um Ihnen die Nutzung von leistungsstarken Sprachmodellen (LLMs) zu ermöglichen. Bitte beachten Sie, dass die App kein integriertes LLM enthält. Stattdessen benötigen Sie einen API-Schlüssel von einem passenden Anbieter."
 
+-- The AI can answer from your own documents. Add folders and files from your computer, or your organization's data through ERI, as data sources, and the AI searches them whenever a question calls for it and names the passages it used. AI Studio keeps the index on your computer, and you choose the embedding provider, including one you host yourself. As a prototype, the AI can also search and read your mailboxes. Both are preview features, which you enable in the app settings first.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1406933829"] = "Die KI kann Fragen anhand Ihrer eigenen Dokumente beantworten. Fügen Sie Ordner und Dateien von Ihrem Rechner oder die Daten Ihrer Organisation über ERI als Datenquellen hinzu. Wenn eine Frage es erfordert, durchsucht die KI diese Quellen und nennt die Textstellen, auf die sie sich stützt. AI Studio speichert den Index auf Ihrem Rechner, und Sie wählen den Einbettungsanbieter – auch einen, den Sie selbst betreiben. Als Prototyp kann die KI außerdem Ihre Postfächer durchsuchen und lesen. Beides sind Vorschaufunktionen, die Sie zuerst in den App-Einstellungen aktivieren müssen."
+
 -- The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T144565305"] = "Die App benötigt nur wenig Speicherplatz für die Installation und verwendet wenig Arbeitsspeicher. Außerdem hat sie einen minimalen Einfluss auf die Systemressourcen, was sich positiv auf die Akkulaufzeit auswirkt."
 
@@ -11402,6 +11405,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3275341342"] = "Wir hoffen, dass Sie vi
 
 -- Cost-effective
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3341379752"] = "Kosteneffizient"
+
+-- Your own data
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3665704402"] = "Ihre eigenen Daten"
 
 -- Flexibility
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3723223888"] = "Flexibilität"
