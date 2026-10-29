@@ -805,8 +805,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          cache: true
-          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
 
       - name: Pin the .NET SDK from the metadata
         shell: bash
@@ -1076,8 +1074,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          cache: true
-          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
 
       - name: Pin the .NET SDK from the metadata
         shell: bash
