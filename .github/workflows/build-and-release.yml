@@ -777,6 +777,11 @@ jobs:
     permissions:
       contents: read
 
+    # Full debug information takes up most of the space which this job's Rust build fills, and with
+    # it most of its cache. Line tables alone keep file and line in the backtrace of a failing test:
+    env:
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
