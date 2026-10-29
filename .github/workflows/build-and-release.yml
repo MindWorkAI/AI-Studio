@@ -815,22 +815,29 @@ jobs:
           used_dotnet_sdk_version=$(dotnet --version)
           echo ".NET SDK in use: '${used_dotnet_sdk_version}'"
 
-      - name: Cache Rust
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/git/db/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            runtime/target
-
-          key: verify-linux-x64-rust-${{ env.RUST_VERSION }}
-
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master (v1) of 2026-10-09
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
+
+      # The key of this cache includes the version of rustc and Cargo.lock, so the cache has to come
+      # after the setup of Rust. A new toolchain or a change to the dependencies leads to a new cache;
+      # until then, the latest cache of the same toolchain serves as the starting point. Before the
+      # cache is saved, the action removes everything which is no dependency, our own crate among it.
+      # Only pushes to main save a cache: pull requests and releases read it alone, so they cannot
+      # crowd out the other caches, since GitHub keeps at most 10 GB of them per repository.
+      #
+      # This job and build_main never share their caches, because they have no artifact in common:
+      # this job compiles for the tests and Clippy in the debug profile, build_main compiles in the
+      # release profile for one target triple each. Nothing here installs binaries with cargo, and
+      # the Tauri CLI of build_main has a cache of its own, so ~/.cargo/bin stays out:
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: runtime -> target
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Setup dependencies (Ubuntu-specific)
         run: |
@@ -1250,22 +1257,23 @@ jobs:
           cd publish/dotnet
           mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}"
           
-      - name: Cache Rust
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/git/db/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            runtime/target
-            
-          key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}
-            
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master (v1) of 2026-10-09
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.rust_target }}
+
+      # The same step of the verify job explains how this cache works, and why the two jobs keep
+      # separate caches. The action tells the caches apart by the job name and the runner. Both are
+      # the same for the two macOS builds, and for the two Windows builds as well, so the runtime
+      # identifier gives each platform a cache of its own:
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: runtime -> target
+          key: ${{ matrix.dotnet_runtime }}
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Cache Tauri CLI
         uses: actions/cache@v4
