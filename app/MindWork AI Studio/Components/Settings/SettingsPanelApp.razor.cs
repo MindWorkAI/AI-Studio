@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -58,8 +59,8 @@ public partial class SettingsPanelApp : SettingsPanelBase
     private string InterfaceSizeHelp => this.MeasuredScreen switch
     {
         null => T("AI Studio cannot measure this screen right now, so you cannot set its size."),
-        { } screen when this.OffersAppDefault => string.Format(T("Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop, system scaling follows your operating system."), this.DescribeScreen(screen)),
-        { } screen => string.Format(T("Applies to this screen only ({0}). System scaling follows your operating system."), this.DescribeScreen(screen)),
+        { } screen when this.OffersAppDefault => string.Format(I18N.I.Culture, T("Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop, system scaling follows your operating system."), this.DescribeScreen(screen)),
+        { } screen => string.Format(I18N.I.Culture, T("Applies to this screen only ({0}). System scaling follows your operating system."), this.DescribeScreen(screen)),
     };
 
     private int InterfaceScaleMinPercent => this.MeasuredScreen?.MinPercent ?? InterfaceSizeService.MIN_CUSTOM_PERCENT;
@@ -89,13 +90,13 @@ public partial class SettingsPanelApp : SettingsPanelBase
     private string InterfaceScaleHelp => this.MeasuredScreen switch
     {
         null => string.Empty,
-        { } screen when this.OffersAppDefault => string.Format(T("You can choose from {0} % to {1} %. The app default on this screen is {2} %."), screen.MinPercent, screen.MaxPercent, screen.AppDefaultPercent),
-        { } screen => string.Format(T("You can choose from {0} % to {1} %. The system scaling on this screen is {2} %."), screen.MinPercent, screen.MaxPercent, screen.SystemPercent),
+        { } screen when this.OffersAppDefault => string.Format(I18N.I.Culture, T("You can choose from {0} % to {1} %. The app default on this screen is {2} %."), screen.MinPercent, screen.MaxPercent, screen.AppDefaultPercent),
+        { } screen => string.Format(I18N.I.Culture, T("You can choose from {0} % to {1} %. The system scaling on this screen is {2} %."), screen.MinPercent, screen.MaxPercent, screen.SystemPercent),
     };
 
     private string DescribeScreen(InterfaceSizeResponse screen) => screen.ScreenDiagonalInches is { } diagonal
-        ? string.Format(T("{0} × {1} pixels, {2:0.#} inches"), screen.ScreenWidth, screen.ScreenHeight, diagonal)
-        : string.Format(T("{0} × {1} pixels"), screen.ScreenWidth, screen.ScreenHeight);
+        ? string.Format(I18N.I.Culture, T("{0} × {1} pixels, {2:0.#} inches"), screen.ScreenWidth, screen.ScreenHeight, diagonal)
+        : string.Format(I18N.I.Culture, T("{0} × {1} pixels"), screen.ScreenWidth, screen.ScreenHeight);
 
     private void UpdateInterfaceScalePercent(int percent)
     {
