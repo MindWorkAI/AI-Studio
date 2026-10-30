@@ -16,7 +16,7 @@
         <SelfContained>true</SelfContained> <!-- Publish as self-contained; requires no .NET runtime installed on the target machine -->
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> <!-- Include native libraries for self-extract -->
         <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> <!-- Generate embedded files manifest -->
-        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> <!-- Restore packages with lock file; needed for caching NuGet packages-->
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> <!-- Restore packages with lock file, so that every restore resolves exactly the same package versions -->
 
         <!--
             SelfContained makes the SDK pick the RID of the machine which runs the restore, and the lock file
