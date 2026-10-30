@@ -457,8 +457,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Please drop a tokenizer file in the JSON format.")));
     }
 
-    private async Task OnDataFilePathChanged(string filePath)
+    private async Task OnDataFilePathChanged(string? changedFilePath)
     {
+        var filePath = changedFilePath ?? string.Empty;
         this.dataFilePath = filePath;
         var validationRevision = ++this.dataTokenizerValidationRevision;
         this.dataTokenizerValidationTask = this.ValidateCustomTokenizer(filePath, validationRevision);

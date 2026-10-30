@@ -97,9 +97,9 @@ public partial class DebouncedTextField : MudComponentBase, IDisposable
 
     #endregion
 
-    private void OnTextChanged(string value)
+    private void OnTextChanged(string? value)
     {
-        this.text = value;
+        this.text = value ?? string.Empty;
         this.debounceTimer.Stop();
         this.debounceTimer.Start();
     }

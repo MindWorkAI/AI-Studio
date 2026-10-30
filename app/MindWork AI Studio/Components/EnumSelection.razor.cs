@@ -80,9 +80,9 @@ public partial class EnumSelection<T> : EnumSelectionBase where T : struct, Enum
         await this.SelectionUpdated(value);
     }
     
-    private async Task OtherValueChanged(string value)
+    private async Task OtherValueChanged(string? value)
     {
-        await this.OtherInputChanged.InvokeAsync(value);
+        await this.OtherInputChanged.InvokeAsync(value ?? string.Empty);
         await this.SelectionUpdated(this.Value);
     }
 }

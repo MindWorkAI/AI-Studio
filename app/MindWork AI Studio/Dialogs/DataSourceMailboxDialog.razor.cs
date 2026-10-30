@@ -469,7 +469,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.SelectProvider(GetProviderKey(this.organizationProviders[0]));
     }
 
-    private void SelectProvider(string providerKey)
+    private void SelectProvider(string? providerKey)
     {
         this.selectedOrganizationProvider = this.organizationProviders.FirstOrDefault(candidate => GetProviderKey(candidate) == providerKey);
         this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(candidate => GetProviderKey(candidate) == providerKey);

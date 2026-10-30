@@ -102,22 +102,22 @@ public partial class DirectChatLauncherForm : MSGComponentBase
         await this.WorkspaceNameChanged.InvokeAsync(workspaceName);
     }
 
-    private async Task SetProviderId(string providerId)
+    private async Task SetProviderId(string? providerId)
     {
-        this.ProviderId = providerId;
-        await this.ProviderIdChanged.InvokeAsync(providerId);
+        this.ProviderId = providerId ?? string.Empty;
+        await this.ProviderIdChanged.InvokeAsync(this.ProviderId);
     }
 
-    private async Task SetProfileId(string profileId)
+    private async Task SetProfileId(string? profileId)
     {
-        this.ProfileId = profileId;
-        await this.ProfileIdChanged.InvokeAsync(profileId);
+        this.ProfileId = profileId ?? string.Empty;
+        await this.ProfileIdChanged.InvokeAsync(this.ProfileId);
     }
 
-    private async Task SetChatTemplateId(string chatTemplateId)
+    private async Task SetChatTemplateId(string? chatTemplateId)
     {
-        this.ChatTemplateId = chatTemplateId;
-        await this.ChatTemplateIdChanged.InvokeAsync(chatTemplateId);
+        this.ChatTemplateId = chatTemplateId ?? string.Empty;
+        await this.ChatTemplateIdChanged.InvokeAsync(this.ChatTemplateId);
     }
 
     //

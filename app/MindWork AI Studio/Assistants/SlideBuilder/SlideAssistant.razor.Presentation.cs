@@ -299,9 +299,9 @@ public partial class SlideAssistant
     /// <returns>The name, or empty when the LLM decides, which it also does when the template has no layout of this name.</returns>
     private string LayoutNameOf(LayoutPurpose purpose) => this.template is not null && this.layoutNames.TryGetValue(purpose, out var name) && this.template.FindFamilyByName(name) is not null ? name : string.Empty;
 
-    private void SetLayoutName(LayoutPurpose purpose, string name)
+    private void SetLayoutName(LayoutPurpose purpose, string? name)
     {
-        if (name.Length == 0)
+        if (string.IsNullOrEmpty(name))
             this.layoutNames.Remove(purpose);
         else
             this.layoutNames[purpose] = name;

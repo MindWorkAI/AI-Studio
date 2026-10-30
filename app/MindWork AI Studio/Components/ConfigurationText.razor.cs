@@ -141,13 +141,13 @@ public partial class ConfigurationText : ConfigurationBaseCore
     //
     private Adornment IconAdornment => this.NumLines == 1 ? Adornment.Start : Adornment.None;
 
-    protected void InternalUpdate(string text)
+    protected void InternalUpdate(string? text)
     {
         if (this.IsDisabled)
             return;
 
         this.timer.Stop();
-        this.internalText = text;
+        this.internalText = text ?? string.Empty;
         this.timer.Start();
     }
 

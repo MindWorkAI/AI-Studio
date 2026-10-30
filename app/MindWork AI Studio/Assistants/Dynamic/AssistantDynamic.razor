@@ -95,7 +95,7 @@ else
                     <MudTextField T="string"
                                   UserAttributes="@SPELLCHECK_ATTRIBUTES"
                                   Text="@this.assistantState.Text[textArea.Name]"
-                                  TextChanged="@(value => this.assistantState.Text[textArea.Name] = value)"
+                                  TextChanged="@(value => this.assistantState.Text[textArea.Name] = value ?? string.Empty)"
                                   Label="@textArea.Label"
                                   HelperText="@textArea.HelperText"
                                   HelperTextOnFocus="@textArea.HelperTextOnFocus"
@@ -479,7 +479,7 @@ else
 
                     <MudItem Class="d-flex">
                         <MudColorPicker Text="@this.assistantState.Colors[colorPicker.Name]"
-                                        TextChanged="@(value => this.assistantState.Colors[colorPicker.Name] = value)"
+                                        TextChanged="@(value => this.assistantState.Colors[colorPicker.Name] = value ?? string.Empty)"
                                         Label="@colorPicker.Label"
                                         Placeholder="@colorPicker.Placeholder"
                                         ShowAlpha="@colorPicker.ShowAlpha"
