@@ -403,7 +403,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
             }
         }
 
-        await this.form.Validate();
+        await this.form.ValidateAsync();
 
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)

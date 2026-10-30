@@ -91,7 +91,7 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
 
     private async Task FindIcon()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

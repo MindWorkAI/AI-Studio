@@ -155,7 +155,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private async Task OnDocumentsChanged(HashSet<FileAttachment> _)
     {
         if(this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
     }
 
     private string? ValidateProfile(Profile profile)
@@ -204,7 +204,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     private async Task AnalyzeText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

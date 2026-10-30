@@ -114,7 +114,7 @@ public partial class ProfileDialog : MSGComponentBase
         if (this.IsReadOnly)
             return;
 
-        await this.form.Validate();
+        await this.form.ValidateAsync();
 
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)

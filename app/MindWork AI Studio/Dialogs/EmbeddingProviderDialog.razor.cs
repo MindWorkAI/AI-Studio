@@ -251,7 +251,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
-                    await this.form.Validate();
+                    await this.form.ValidateAsync();
                 }
             }
 
@@ -298,7 +298,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
         this.dataStoreWasAttempted = true;
         await this.dataTokenizerValidationTask;
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         this.dataAPIKeyStorageIssue = string.Empty;
 
         // Manually validate the model selection (needed when no models are loaded
@@ -343,7 +343,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (!response.Success)
         {
             this.dataCustomTokenizerValidationIssue = string.IsNullOrWhiteSpace(response.Message) ? string.Empty : response.Message;
-            await this.form.Validate();
+            await this.form.ValidateAsync();
             return;
         }
         this.dataFilePath = response.StoredPath;
@@ -358,7 +358,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -372,7 +372,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             if (!deleteResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -406,7 +406,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
         {
             this.dataAPIKeyStorageIssue = string.Empty;
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         }
     }
 
@@ -477,7 +477,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.dataTokenizerFingerprint = tokenizerFingerprint;
 
         if (this.dataStoreWasAttempted)
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         else
             await this.form.ResetValidationAsync();
     }

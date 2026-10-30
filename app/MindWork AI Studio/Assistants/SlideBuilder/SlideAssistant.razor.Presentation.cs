@@ -245,7 +245,7 @@ public partial class SlideAssistant
         this.LoadTemplate();
         this.ApplyPreselectedTemplateSlideUses();
         if (this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
     }
 
     /// <summary>

@@ -120,7 +120,7 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
 
         this.createWorkspaceError = null;
         this.createWorkspaceErrorName = null;
-        await this.createWorkspaceForm.Validate();
+        await this.createWorkspaceForm.ValidateAsync();
         if (!this.createWorkspaceForm.IsValid)
             return;
 
@@ -132,7 +132,7 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
             {
                 this.createWorkspaceError = T("There is already a workspace with this name. Please choose a different name.");
                 this.createWorkspaceErrorName = WorkspaceBehaviour.NormalizeWorkspaceName(this.newWorkspaceName);
-                await this.createWorkspaceForm.Validate();
+                await this.createWorkspaceForm.ValidateAsync();
                 return;
             }
 

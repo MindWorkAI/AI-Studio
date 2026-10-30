@@ -300,7 +300,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
-                    await this.form.Validate();
+                    await this.form.ValidateAsync();
                 }
             }
 
@@ -347,7 +347,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         this.dataStoreWasAttempted = true;
         await this.dataTokenizerValidationTask;
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             this.dataAPIKeyStorageIssue = string.Empty;
 
@@ -376,7 +376,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             if (!string.IsNullOrWhiteSpace(this.dataFilePath))
             {
                 this.dataCustomTokenizerValidationIssue = tokenizerResponse.Message;
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -395,7 +395,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -409,7 +409,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             if (!deleteResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -435,7 +435,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
         {
             this.dataAPIKeyStorageIssue = string.Empty;
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         }
     }
 
@@ -497,7 +497,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             return;
 
         if (this.dataStoreWasAttempted)
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         else
             await this.form.ResetValidationAsync();
     }

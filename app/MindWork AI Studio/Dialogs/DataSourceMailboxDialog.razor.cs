@@ -538,7 +538,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         }
 
         await this.RecordSignInOutcomeAsync(settings, this.testFailure, serverAnswer);
-        await this.form.Validate();
+        await this.form.ValidateAsync();
     }
 
     private async Task<MailServerFolder?> CreateFolder(string parentFullName, string name)
@@ -618,7 +618,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         if (this.IsAddingNotAllowed)
             return;
 
-        await this.form.Validate();
+        await this.form.ValidateAsync();
 
         if (this.RequiresConnectionTest && this.dataSourceValidation.ValidateTestedConnection() is { } testIssue)
         {
@@ -654,7 +654,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             if (!storeResponse.Success)
             {
                 this.dataSecretStorageIssue = string.Format(T("Failed to store the password in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
         }

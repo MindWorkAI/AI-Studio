@@ -434,7 +434,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task ReportProviderIssueAsync()
     {
         if (this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
 
         if (this.ValidatingProvider(this.ProviderSettings) is { } issue && !this.InputIssues.Contains(issue))
             this.AddInputIssue(issue);

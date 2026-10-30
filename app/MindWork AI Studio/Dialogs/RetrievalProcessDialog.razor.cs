@@ -187,7 +187,7 @@ public partial class RetrievalProcessDialog : MSGComponentBase
     
     private async Task Store()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         foreach (var parameter in this.retrievalParameters)
         {
             if (this.ValidateParameter(parameter) is { } issue)

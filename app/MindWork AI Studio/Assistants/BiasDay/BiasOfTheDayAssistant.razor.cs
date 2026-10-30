@@ -151,7 +151,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
             }
         }
         
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

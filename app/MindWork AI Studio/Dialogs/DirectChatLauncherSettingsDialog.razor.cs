@@ -170,7 +170,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
         if (!this.CanSave || this.assistantPlugin is null || this.availablePlugin is null || this.form is null)
             return;
 
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         if (!this.form.IsValid)
             return;
 

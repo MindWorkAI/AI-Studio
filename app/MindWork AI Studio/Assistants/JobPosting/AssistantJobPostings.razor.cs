@@ -325,7 +325,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     
     private async Task CreateJobPosting()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

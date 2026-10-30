@@ -411,7 +411,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 
     private async Task CreateAgenda()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

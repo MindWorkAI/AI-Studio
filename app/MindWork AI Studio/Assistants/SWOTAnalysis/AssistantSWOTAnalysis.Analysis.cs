@@ -20,7 +20,7 @@ public partial class AssistantSWOTAnalysis
     /// </remarks>
     private async Task AnalyzeText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

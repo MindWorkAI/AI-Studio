@@ -76,7 +76,7 @@ public partial class SingleInputDialog : MSGComponentBase
 
     private async Task Confirm()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         if(!this.form.IsValid)
             return;
         

@@ -135,7 +135,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
 
     private async Task ProofreadText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

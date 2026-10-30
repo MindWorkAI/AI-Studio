@@ -148,7 +148,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     private async Task RewriteText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

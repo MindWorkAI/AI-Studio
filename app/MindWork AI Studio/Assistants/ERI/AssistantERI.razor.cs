@@ -1107,7 +1107,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return;
         
         await this.AutoSave();
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         
