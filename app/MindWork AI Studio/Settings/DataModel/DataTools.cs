@@ -26,6 +26,35 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
         true);
 
     /// <summary>
+    /// Which tool calls the user confirms before they run.
+    /// </summary>
+    /// <remarks>
+    /// Asking for critical calls only is the default: a web search sends the query the AI wrote to
+    /// a third party, while the search of the wiki or the data sources stays within the
+    /// organization. An organization which wants every call confirmed locks this to
+    /// ASK_FOR_EVERY_TOOL. See ToolApprovalRules.
+    /// </remarks>
+    public ToolApprovalMode ToolApprovalMode { get; set; } = ManagedConfiguration.Register(
+        configSelection,
+        x => x.ToolApprovalMode,
+        ToolApprovalMode.ASK_FOR_CRITICAL_TOOLS);
+
+    /// <summary>
+    /// Whether the user may allow a tool which needs confirmation for a whole chat, instead of
+    /// confirming each of its calls.
+    /// </summary>
+    /// <remarks>
+    /// An organization which wants every call confirmed switches this off. The allowance then
+    /// disappears from the confirmation, an allowance given before stops counting, and assistants
+    /// which run their requests out of sight can no longer use such tools at all, since nobody
+    /// could confirm a single call there. See ToolApprovalRules.
+    /// </remarks>
+    public bool AllowApprovingToolsForWholeChat { get; set; } = ManagedConfiguration.Register(
+        configSelection,
+        x => x.AllowApprovingToolsForWholeChat,
+        true);
+
+    /// <summary>
     /// The tool collections an organization switched off.
     /// </summary>
     /// <remarks>

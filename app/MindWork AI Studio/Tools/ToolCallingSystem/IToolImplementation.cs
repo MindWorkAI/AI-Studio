@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using AIStudio.Chat;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.ToolCallingSystem;
@@ -117,6 +118,19 @@ public interface IToolImplementation
     /// and refuse what goes too far.
     /// </remarks>
     public bool EnforcesOutboundDataRestriction => false;
+
+    /// <summary>
+    /// Whether the user has to confirm this call before it runs.
+    /// </summary>
+    /// <remarks>
+    /// Follows OutboundData unless a tool knows better for a single call, see ToolApprovalRules.
+    /// Asked before the call runs, with arguments nobody checked yet, so a tool which reads them
+    /// here treats arguments it cannot read as needing confirmation.
+    /// </remarks>
+    /// <param name="arguments">The arguments the model passed.</param>
+    /// <param name="chatThread">The chat the call belongs to.</param>
+    /// <returns>True when the user has to confirm the call.</returns>
+    public bool RequiresApproval(JsonElement arguments, ChatThread chatThread) => ToolApprovalRules.RequiresApprovalByDefault(this.OutboundData);
 
     public string GetDisplayName() => TB("Tool");
 

@@ -1766,6 +1766,9 @@ public partial class ChatComponent : MSGComponentBase
         this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
         this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds, this.ChatThread.RequiredOutboundDataRestriction.Restriction);
 
+        // The answer appears in this chat, so the user can confirm a tool call there:
+        this.ChatThread.RuntimeAsksForToolApproval = true;
+
         // From here on, the AI job stores the chat, in every storage mode:
         this.unstoredChat = null;
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest

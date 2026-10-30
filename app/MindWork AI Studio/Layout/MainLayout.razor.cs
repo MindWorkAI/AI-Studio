@@ -136,7 +136,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
-            Event.SHOW_FILE_EXPORT_RUNNING, Event.SHOW_FILE_EXPORT_SUCCESS, Event.HIDE_FILE_EXPORT_RUNNING,
+            Event.SHOW_FILE_EXPORT_RUNNING, Event.SHOW_FILE_EXPORT_SUCCESS, Event.HIDE_FILE_EXPORT_RUNNING, Event.HIDE_NOTIFICATION,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
             Event.CHAT_GENERATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED,Event.ASSISTANT_SESSION_CHANGED, 
             Event.ASSISTANT_SESSION_FINISHED,
@@ -342,6 +342,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                     break;
 
+                case Event.HIDE_NOTIFICATION:
+                    if (data is string notificationKey)
+                        this.Snackbar.RemoveByKey(notificationKey);
+
+                    break;
+
                 case Event.HIDE_FILE_EXPORT_RUNNING:
                     if (data is DataFileExportRunningMessage exportFinished)
                         this.FileExportNotifications.HideRunning(exportFinished);
@@ -496,8 +502,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var assistantsDarkColor = hasActiveAssistantWork ? activityIndicatorDarkColor : defaultDarkColor;
         
         yield return new(T("Home"), Icons.Material.Filled.Home, defaultLightColor, defaultDarkColor, Routes.HOME, true);
-        yield return new(T("Chat"), Icons.Material.Filled.Chat, chatLightColor, chatDarkColor, Routes.CHAT, false);
-        yield return new(T("Assistants"), Icons.Material.Filled.Apps, assistantsLightColor, assistantsDarkColor, Routes.ASSISTANTS, false);
+        // A chat may wait for a confirmation while the user works elsewhere, so the badge shows on every page:
+        yield return new(T("Chat"), Icons.Material.Filled.Chat, chatLightColor, chatDarkColor, Routes.CHAT, false, this.AIJobService.IsAnyChatWaitingForToolApproval);
+        yield return new(T("Assistants"), Icons.Material.Filled.Apps, assistantsLightColor, assistantsDarkColor, Routes.ASSISTANTS, false, this.AssistantSessionService.IsAnySessionWaitingForToolApproval);
 
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
             yield return new(T("Writer"), Icons.Material.Filled.Create, defaultLightColor, defaultDarkColor, Routes.WRITER, false);

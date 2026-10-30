@@ -75,6 +75,13 @@ public static class ConfigurationSelectDataFactory
             yield return option;
     }
 
+    public static IEnumerable<ConfigurationSelectData<ToolApprovalMode>> GetToolApprovalModeData()
+    {
+        yield return new(TB("Ask only for critical tool calls, such as a web search"), ToolApprovalMode.ASK_FOR_CRITICAL_TOOLS);
+        yield return new(TB("Ask before every tool call"), ToolApprovalMode.ASK_FOR_EVERY_TOOL);
+        yield return new(TB("Never ask, allow all tool calls which data protection permits"), ToolApprovalMode.NEVER_ASK);
+    }
+
     public static IEnumerable<ConfigurationSelectData<UpdateInstallation>> GetUpdateBehaviourData()
     {
         yield return new(TB("Install updates manually"), UpdateInstallation.MANUAL);

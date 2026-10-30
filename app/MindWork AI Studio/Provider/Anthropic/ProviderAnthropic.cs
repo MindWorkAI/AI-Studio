@@ -109,6 +109,9 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 ProviderInstanceName = this.InstanceName,
                 ProviderType = this.Provider,
                 ModelId = chatModel.Id,
+                MayApproveToolsForWholeChat = ToolApprovalRules.MayApproveForWholeChat(settingsManager),
+                ToolApprovalMode = ToolApprovalRules.GetMode(settingsManager),
+                GetToolCollectionId = toolRegistry is null ? (toolId => toolId) : toolRegistry.GetCollectionId,
             };
 
             await foreach (var content in loop.RunAsync(adapter, loopContext, token))

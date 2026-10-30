@@ -95,6 +95,12 @@ public enum Event
     HIDE_FILE_EXPORT_RUNNING,
 
     /// <summary>
+    /// Requests removal of a notification which was shown with a key, see DataWarningMessage.Key.
+    /// The data is the key.
+    /// </summary>
+    HIDE_NOTIFICATION,
+
+    /// <summary>
     /// Requests display of a prompt-injection alert dialog.
     /// </summary>
     SHOW_PROMPT_INJECTION_ALERT,

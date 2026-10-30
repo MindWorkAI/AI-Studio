@@ -16,7 +16,7 @@
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("No")
         </MudButton>
-        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Error">
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="@this.ConfirmColor">
             @T("Yes")
         </MudButton>
     </DialogActions>

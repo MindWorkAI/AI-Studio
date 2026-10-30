@@ -148,7 +148,11 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
         _ => this.AssistantSessionIndicatorWithoutMedia,
     };
 
-    private AssistantSessionIndicatorData? AssistantSessionIndicatorWithoutMedia => this.AssistantSessionSnapshot?.Status switch
+    private AssistantSessionIndicatorData? AssistantSessionIndicatorWithoutMedia => this.AssistantSessionSnapshot is { IsWaitingForToolApproval: true }
+        ? new(Icons.Material.Filled.Warning, Color.Warning, this.T("The assistant waits for you to confirm a tool call."))
+        : this.AssistantSessionIndicatorByStatus;
+
+    private AssistantSessionIndicatorData? AssistantSessionIndicatorByStatus => this.AssistantSessionSnapshot?.Status switch
     {
         AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(Icons.Material.Filled.ChangeCircle, Color.Info, this.T("Assistant is still running.")),
         AssistantSessionStatus.COMPLETED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("The result is ready.")),

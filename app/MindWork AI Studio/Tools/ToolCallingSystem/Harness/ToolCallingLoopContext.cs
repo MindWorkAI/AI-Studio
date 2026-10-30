@@ -1,6 +1,10 @@
+using System.Text.Json;
+
 using AIStudio.Chat;
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Tools.ToolCallingSystem.Harness;
 
@@ -41,6 +45,147 @@ public sealed class ToolCallingLoopContext
     public required LLMProviders ProviderType { get; init; }
 
     public required string ModelId { get; init; }
+
+    /// <summary>
+    /// Whether the user may allow a tool for the rest of the chat, see ToolApprovalRules.MayApproveForWholeChat.
+    /// </summary>
+    /// <remarks>
+    /// Read once per request. False unless the caller says otherwise, so a context which forgets it
+    /// asks for every call rather than letting an allowance count which the organization forbade.
+    /// </remarks>
+    public bool MayApproveToolsForWholeChat { get; init; }
+
+    /// <summary>
+    /// How much the user wants to be asked, see ToolApprovalRules.GetMode. Read once per request.
+    /// </summary>
+    public ToolApprovalMode ToolApprovalMode { get; init; } = ToolApprovalMode.ASK_FOR_CRITICAL_TOOLS;
+
+    /// <summary>
+    /// Finds the collection of a tool, see ToolRegistry.GetCollectionId. An allowance for the chat holds for a whole collection.
+    /// </summary>
+    public Func<string, string> GetToolCollectionId { get; init; } = toolId => toolId;
+
+    /// <summary>
+    /// Asks the user to confirm a tool call, when it needs confirmation.
+    /// </summary>
+    /// <remarks>
+    /// Waits for as long as the user takes, and ends with the token: pressing stop while a call
+    /// waits stops the request. Nobody can answer when there is no assistant message to show the
+    /// request on, or when nobody sees the thread, see ChatThread.RuntimeAsksForToolApproval. The
+    /// call then runs only when its collection was allowed beforehand.
+    /// </remarks>
+    /// <param name="definition">The definition of the tool.</param>
+    /// <param name="implementation">The implementation of the tool.</param>
+    /// <param name="argumentsJson">The arguments the model passed.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>Whether and how the call may run.</returns>
+    public async Task<ToolCallApproval> ApproveToolCallAsync(ToolDefinition definition, IToolImplementation implementation, string argumentsJson, CancellationToken token)
+    {
+        bool requiresApproval;
+        try
+        {
+            using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
+            requiresApproval = ToolApprovalRules.RequiresApproval(this.ToolApprovalMode, implementation, document.RootElement, this.ChatThread);
+        }
+        catch (JsonException)
+        {
+            // Arguments which cannot be read cannot run either. The executor reports them as broken:
+            return ToolCallApproval.NOT_NEEDED;
+        }
+
+        if (!requiresApproval)
+            return ToolCallApproval.NOT_NEEDED;
+
+        var collectionId = this.GetToolCollectionId(definition.Id);
+        if (this.MayApproveToolsForWholeChat && this.ChatThread.RuntimeApprovedToolCollectionIds.Contains(collectionId))
+        {
+            await this.ShowApprovedToolAsync(implementation, ToolApprovalDecision.RUN_ALWAYS_IN_THIS_CHAT);
+            return ToolCallApproval.Allowed(ToolApprovalDecision.RUN_ALWAYS_IN_THIS_CHAT);
+        }
+
+        if (this.CurrentAssistantContent is null || !this.ChatThread.RuntimeAsksForToolApproval)
+            return ToolCallApproval.NOBODY_TO_CONFIRM;
+
+        var request = new ToolApprovalRequest
+        {
+            ToolName = implementation.GetDisplayName(),
+            ToolIcon = implementation.Icon,
+            Arguments = ToolExecutor.FormatTraceArguments(argumentsJson, implementation),
+            MayApproveForWholeChat = this.MayApproveToolsForWholeChat,
+        };
+
+        ToolApprovalDecision decision;
+        this.CurrentAssistantContent.PendingToolApproval = request;
+        try
+        {
+            await this.AnnounceAsync(this.CurrentAssistantContent);
+            await this.ReportWaitingForToolApprovalAsync(true);
+            decision = await request.WaitAsync(token);
+        }
+        finally
+        {
+            this.CurrentAssistantContent.PendingToolApproval = null;
+            await this.ReportWaitingForToolApprovalAsync(false);
+            await this.AnnounceAsync(this.CurrentAssistantContent);
+        }
+
+        switch (decision)
+        {
+            case ToolApprovalDecision.RUN_ALWAYS_IN_THIS_CHAT:
+                if (this.MayApproveToolsForWholeChat)
+                    this.ChatThread.RuntimeApprovedToolCollectionIds.Add(collectionId);
+
+                await this.ShowApprovedToolAsync(implementation, decision);
+                return ToolCallApproval.Allowed(decision);
+
+            case ToolApprovalDecision.RUN:
+                await this.ShowApprovedToolAsync(implementation, decision);
+                return ToolCallApproval.Allowed(decision);
+
+            default:
+                return ToolCallApproval.DECLINED_BY_USER;
+        }
+    }
+
+    /// <summary>
+    /// Tells whoever runs this thread that a tool call waits for confirmation, or no longer does.
+    /// </summary>
+    /// <remarks>
+    /// A chat runs as a job, an assistant as a session, and both run on when the user leaves them.
+    /// Each marks itself and notifies the user, so a confirmation never waits where nobody looks.
+    /// Asked for here rather than taken as dependencies, like the job service in AnnounceAsync:
+    /// only one of them knows the thread, and neither is around in every context.
+    /// </remarks>
+    private async Task ReportWaitingForToolApprovalAsync(bool isWaiting)
+    {
+        if (Program.SERVICE_PROVIDER.GetService<AIJobService>() is { } jobService)
+            await jobService.SetWaitingForToolApprovalAsync(this.ChatThread.ChatId, isWaiting);
+
+        if (Program.SERVICE_PROVIDER.GetService<AssistantSessionService>() is { } assistantSessionService)
+            await assistantSessionService.SetWaitingForToolApprovalAsync(this.ChatThread.ChatId, isWaiting);
+    }
+
+    /// <summary>
+    /// Tells the UI that a tool runs with the permission of the user, and how it got it.
+    /// </summary>
+    /// <remarks>
+    /// Names only this tool, although the status of the round names all of its tools: the
+    /// permission belongs to this call. The status is reset when the round ends, as always.
+    /// </remarks>
+    private async Task ShowApprovedToolAsync(IToolImplementation implementation, ToolApprovalDecision decision)
+    {
+        if (this.CurrentAssistantContent is null)
+            return;
+
+        this.CurrentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
+        {
+            IsRunning = true,
+            ToolNames = [implementation.GetDisplayName()],
+            Approval = decision,
+        };
+
+        await this.AnnounceAsync(this.CurrentAssistantContent);
+    }
 
     /// <summary>
     /// Records one tool invocation for the UI.

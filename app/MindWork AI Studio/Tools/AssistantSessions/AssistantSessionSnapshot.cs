@@ -52,6 +52,11 @@ public sealed record AssistantSessionSnapshot
     public string ErrorMessage { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets whether the answer of the session waits for the user to confirm a tool call.
+    /// </summary>
+    public bool IsWaitingForToolApproval { get; init; }
+
+    /// <summary>
     /// Gets the assistant chat thread captured for this session.
     /// </summary>
     public ChatThread? ChatThread { get; init; }

@@ -226,6 +226,28 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     }
 
                     toolCallCount++;
+
+                    //
+                    // Some calls run only once the user confirmed them, see ToolApprovalRules. A
+                    // declined call counts towards the limit as well, so a model which asks again
+                    // and again cannot keep the user clicking forever. A tool which is not runnable
+                    // here needs no confirmation, since the executor refuses it anyway:
+                    //
+                    var (definition, implementation) = FindRunnableTool(context, call.ToolName);
+                    var approval = implementation is null
+                        ? ToolCallApproval.NOT_NEEDED
+                        : await context.ApproveToolCallAsync(definition, implementation, call.ArgumentsJson, token);
+
+                    if (implementation is not null && approval.DeclinedMessage is { } declinedMessage)
+                    {
+                        var declined = context.ToolExecutor.CreateDeclinedResult(call.CallId, definition, implementation, call.ArgumentsJson, toolCallCount, declinedMessage, approval.Decision);
+                        toolResultCharacterCount += declined.Content.Length;
+                        await context.AddToolInvocationAsync(declined.Trace);
+                        adapter.RecordToolResult(call.CallId, declined.Content, isError: true);
+                        await context.PublishPendingToolConversationAsync(adapter);
+                        continue;
+                    }
+
                     var outcome = await context.ToolExecutor.ExecuteAsync(
                         call.CallId,
                         call.ToolName,
@@ -235,6 +257,9 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                         context.ChatThread,
                         toolCallCount,
                         token);
+
+                    // The answer keeps saying that the user allowed what the tool sent:
+                    outcome.Trace.Approval = approval.Decision;
 
                     toolResultCharacterCount += outcome.Content.Length;
                     context.ChatThread.RequireProviderConfidence(outcome.RequiredProviderConfidence);
@@ -265,7 +290,8 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
         ContentStreamChunk WithWhatTheToolsContributed(string content) => new(content, [..toolSources]) { Passages = [..toolPassages] };
     }
 
-    private static string GetDisplayName(ToolCallingLoopContext context, string toolName) => context.RunnableTools
-            .FirstOrDefault(tool => tool.Definition.Function.Name.Equals(toolName, StringComparison.Ordinal))
-            .Implementation?.GetDisplayName() ?? toolName;
+    private static string GetDisplayName(ToolCallingLoopContext context, string toolName) => FindRunnableTool(context, toolName).Implementation?.GetDisplayName() ?? toolName;
+
+    private static (ToolDefinition Definition, IToolImplementation Implementation) FindRunnableTool(ToolCallingLoopContext context, string toolName) => context.RunnableTools
+            .FirstOrDefault(tool => tool.Definition.Function.Name.Equals(toolName, StringComparison.Ordinal));
 }

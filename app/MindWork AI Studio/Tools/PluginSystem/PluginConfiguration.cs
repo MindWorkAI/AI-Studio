@@ -341,6 +341,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.EnableTools, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.DisabledToolIds, this.Id, settingsTable, dryRun);
 
+        // Config: which tool calls the user confirms before they run
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.ToolApprovalMode, this.Id, settingsTable, dryRun);
+
+        // Config: may the user allow a tool which needs confirmation for a whole chat?
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.AllowApprovingToolsForWholeChat, this.Id, settingsTable, dryRun);
+
         // Config: minimum provider confidence per tool collection; a tool outside of one forms its own
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, this.Id, settingsTable, dryRun);
 

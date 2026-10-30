@@ -6,4 +6,9 @@ public enum ToolInvocationTraceStatus
     SUCCESS,
     ERROR,
     BLOCKED,
+
+    /// <summary>
+    /// The user declined the call, or nobody was there to confirm it, so it never ran.
+    /// </summary>
+    DECLINED,
 }

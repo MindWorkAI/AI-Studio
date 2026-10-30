@@ -209,17 +209,30 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         Assert.That(outcome.Passages, Is.Empty, REASON);
     }
 
-    private ToolCallingLoopContext LoopContext(TestTool tool, ChatThread thread) => new()
+    /// <summary>
+    /// A context in which the test tool runs.
+    /// </summary>
+    /// <remarks>
+    /// The test tool sends its data anywhere, as every tool which says nothing, so its calls need
+    /// confirmation, and nobody could give it here. These tests are about what a call which ran
+    /// leaves behind, so the tool counts as allowed for the chat beforehand, see ToolApprovalTests.
+    /// </remarks>
+    private ToolCallingLoopContext LoopContext(TestTool tool, ChatThread thread)
     {
-        ChatThread = thread,
-        RunnableTools = [(tool.GetDefinition(), tool)],
-        ToolExecutor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance),
-        Provider = new NoProvider(),
-        CurrentAssistantContent = null,
-        ProviderInstanceName = "Test provider",
-        ProviderType = LLMProviders.NONE,
-        ModelId = "test-model",
-    };
+        thread.RuntimeApprovedToolCollectionIds.Add(tool.GetDefinition().Id);
+        return new()
+        {
+            ChatThread = thread,
+            RunnableTools = [(tool.GetDefinition(), tool)],
+            ToolExecutor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance),
+            Provider = new NoProvider(),
+            CurrentAssistantContent = null,
+            ProviderInstanceName = "Test provider",
+            ProviderType = LLMProviders.NONE,
+            ModelId = "test-model",
+            MayApproveToolsForWholeChat = true,
+        };
+    }
 
     private Task<ToolCallOutcome> Execute(TestTool tool, ChatThread thread, string argumentsJson = "{}")
     {

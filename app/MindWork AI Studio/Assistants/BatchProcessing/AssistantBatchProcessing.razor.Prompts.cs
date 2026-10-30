@@ -128,6 +128,9 @@ public partial class AssistantBatchProcessing
             // Always true here, unlike in the assistant base: a batch run takes its tools from the
             // selected policy or from its own field, never from the tool selection in the footer.
             RuntimeToolsAreAssistantManaged = true,
+
+            // Nobody sees the answer for a single file, so the tools were allowed once, for the whole run:
+            RuntimeApprovedToolCollectionIds = new(this.approvedToolCollectionIds, StringComparer.Ordinal),
         };
 
         this.AssignRuntimeIdentity(chatThread);
@@ -177,6 +180,7 @@ public partial class AssistantBatchProcessing
         {
             ToolInvocationTraceStatus.ERROR => $"{nameWithCount} [{this.T("failed")}]",
             ToolInvocationTraceStatus.BLOCKED => $"{nameWithCount} [{this.T("blocked")}]",
+            ToolInvocationTraceStatus.DECLINED => $"{nameWithCount} [{this.T("declined")}]",
 
             _ => nameWithCount,
         };

@@ -220,6 +220,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 ProviderInstanceName = this.InstanceName,
                 ProviderType = this.Provider,
                 ModelId = chatModel.Id,
+                MayApproveToolsForWholeChat = ToolApprovalRules.MayApproveForWholeChat(settingsManager),
+                ToolApprovalMode = ToolApprovalRules.GetMode(settingsManager),
+                GetToolCollectionId = toolRegistry is null ? (toolId => toolId) : toolRegistry.GetCollectionId,
             };
 
             await foreach (var content in loop.RunAsync(adapter, loopContext, token))

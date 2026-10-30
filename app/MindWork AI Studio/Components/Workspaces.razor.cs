@@ -393,6 +393,14 @@ public partial class Workspaces : MSGComponentBase
         return this.GetChatTreeIcon(treeItem.ChatId, defaultIcon);
     }
 
+    /// <summary>
+    /// Colors the icon of a chat which waits for the user to confirm a tool call, so it stands out in the list.
+    /// </summary>
+    private Color GetTreeItemIconColor(TreeItemData treeItem) =>
+        treeItem.Type is TreeItemType.CHAT && this.AIJobService.TryGetChatSnapshot(treeItem.ChatId) is { Status: AIJobStatus.WAITING_FOR_APPROVAL }
+            ? Color.Warning
+            : Color.Default;
+
     private bool IsChatTreeItemBusy(TreeItemData treeItem)
     {
         return treeItem.Type is TreeItemType.CHAT && this.IsChatBusy(treeItem.ChatId);
@@ -455,6 +463,7 @@ public partial class Workspaces : MSGComponentBase
         {
             AIJobStatus.WAITING_FOR_REMOTE => Icons.Material.Filled.HourglassTop,
             AIJobStatus.RUNNING => Icons.Material.Filled.ChangeCircle,
+            AIJobStatus.WAITING_FOR_APPROVAL => Icons.Material.Filled.Warning,
             _ => defaultIcon,
         };
     }

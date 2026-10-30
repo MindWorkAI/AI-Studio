@@ -1076,6 +1076,21 @@ CONFIG["SETTINGS"] = {}
 -- but the global tool settings remain available to administrators.
 -- CONFIG["SETTINGS"]["DataTools.EnableTools"] = false
 
+-- Configure which tool calls the user confirms before they run.
+-- Allowed values are: ASK_FOR_CRITICAL_TOOLS, ASK_FOR_EVERY_TOOL, NEVER_ASK
+-- ASK_FOR_CRITICAL_TOOLS, the default, asks for tools which send data the AI wrote to third
+-- parties, such as the web search, or which open web addresses the AI chose itself. Tools which
+-- stay within your organization, such as the Confluence search or the data sources, run without
+-- asking. ASK_FOR_EVERY_TOOL asks for every call of every tool. NEVER_ASK asks for none. In every
+-- mode, a chat which holds internal content keeps tools from running whose data would go too far.
+-- CONFIG["SETTINGS"]["DataTools.ToolApprovalMode"] = "ASK_FOR_EVERY_TOOL"
+
+-- Confirming a call may also allow the tool for the rest of the chat. Set this to false when
+-- every single call has to be confirmed. Assistants which run their requests out of sight, such as the batch
+-- processing or the SWOT analysis, then cannot use such tools, since nobody could confirm a call
+-- there. The default is true.
+-- CONFIG["SETTINGS"]["DataTools.AllowApprovingToolsForWholeChat"] = false
+
 -- Tools and tool collections:
 -- Some tools only make sense together, e.g., searching, reading, and counting mails. They form a
 -- tool collection: users select it as one, it needs one minimum provider confidence, and you

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 
 using AIStudio.Chat;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -12,6 +13,8 @@ namespace AIStudio.Tools.AssistantSessions;
 /// <param name="messageBus">The message bus used to publish assistant session changes.</param>
 public sealed class AssistantSessionService(MessageBus messageBus)
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantSessionService).Namespace, nameof(AssistantSessionService));
+
     /// <summary>
     /// Mutable runtime state owned exclusively by <see cref="AssistantSessionService"/>.
     /// </summary>
@@ -78,6 +81,11 @@ public sealed class AssistantSessionService(MessageBus messageBus)
         public Dictionary<string, IAssistantSessionSnapshotField> State { get; set; } = new(StringComparer.Ordinal);
 
         /// <summary>
+        /// Whether the answer of the session waits for the user to confirm a tool call.
+        /// </summary>
+        public bool IsWaitingForToolApproval { get; set; }
+
+        /// <summary>
         /// Guards mutable fields while snapshots are created or updates are applied.
         /// </summary>
         public readonly Lock SyncRoot = new();
@@ -92,6 +100,103 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     /// Gets whether at least one assistant session is still active.
     /// </summary>
     public bool HasActiveSessions => this.sessions.Values.Any(session => session.Status is AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING);
+
+    /// <summary>
+    /// Gets whether at least one assistant session waits for the user to confirm a tool call.
+    /// </summary>
+    public bool IsAnySessionWaitingForToolApproval => this.sessions.Values.Any(session => session.IsWaitingForToolApproval);
+
+    /// <summary>
+    /// How many components show each assistant right now, see SetShown.
+    /// </summary>
+    private readonly ConcurrentDictionary<AssistantSessionKey, int> shownAssistants = new();
+
+    /// <summary>
+    /// Says that a component shows an assistant, or no longer does.
+    /// </summary>
+    /// <remarks>
+    /// A session runs on when the user leaves its assistant, and only then does a tool call which
+    /// waits for confirmation need a notification: on the page of the assistant, the user sees it
+    /// anyway. Counted rather than flagged, because the next page may show the same assistant
+    /// before the previous one is disposed.
+    /// </remarks>
+    /// <param name="key">The assistant session key the component shows.</param>
+    /// <param name="isShown">True when the component appears, false when it goes.</param>
+    public void SetShown(AssistantSessionKey key, bool isShown)
+    {
+        if (isShown)
+        {
+            this.shownAssistants.AddOrUpdate(key, 1, (_, count) => count + 1);
+
+            // The user comes back to an assistant which waits, and the request stands in front of them again:
+            if (this.sessions.TryGetValue(key, out var shownSession) && shownSession.IsWaitingForToolApproval)
+                messageBus.HideNotification(ToolApprovalNotificationKey(key)).Observe($"{nameof(AssistantSessionService)}: hiding a notification the user no longer needs");
+
+            return;
+        }
+
+        var remaining = this.shownAssistants.AddOrUpdate(key, 0, (_, count) => Math.Max(0, count - 1));
+
+        // The user leaves an assistant which waits for a confirmation, so the request is out of sight from now on:
+        if (remaining is 0 && this.sessions.TryGetValue(key, out var session) && session.IsWaitingForToolApproval)
+            this.NotifyWaitingForToolApprovalAsync(key, session.Title).Observe($"{nameof(AssistantSessionService)}: notifying about a confirmation the user left");
+    }
+
+    /// <summary>
+    /// Tells the user that an assistant which is out of sight waits for a confirmation.
+    /// </summary>
+    /// <remarks>
+    /// Sent when the confirmation begins while nobody shows the assistant, and when the user leaves
+    /// an assistant which waits: in both cases, only the notification tells them. It stays until the
+    /// user closes it or nothing waits anymore: the user answered, came back to the assistant, or
+    /// the run ended. One per assistant, identified by ToolApprovalNotificationKey.
+    /// </remarks>
+    private Task NotifyWaitingForToolApprovalAsync(AssistantSessionKey key, string title) => messageBus.SendWarning(new(Icons.Material.Filled.Warning, string.Format(TB("The assistant '{0}' waits for you to confirm a tool call."), title.Shorten(MAX_TITLE_CHARACTERS_IN_NOTIFICATIONS)), StaysUntilClosed: true, Key: ToolApprovalNotificationKey(key)));
+
+    /// <summary>
+    /// The key of the notification that an assistant waits for a confirmation.
+    /// </summary>
+    private static string ToolApprovalNotificationKey(AssistantSessionKey key) => $"tool-approval-assistant-{key}";
+
+    /// <summary>
+    /// How much of the title of an assistant a notification quotes.
+    /// </summary>
+    private const int MAX_TITLE_CHARACTERS_IN_NOTIFICATIONS = 50;
+
+    /// <summary>
+    /// Says that the answer of an assistant waits for the user to confirm a tool call, or no longer does.
+    /// </summary>
+    /// <remarks>
+    /// The counterpart to AIJobService.SetWaitingForToolApprovalAsync for the assistants. The tool
+    /// calling loop only knows the thread it runs for, so the session is found by its thread. A
+    /// thread no session holds is not an error: chats run the same loop, and so do the threads an
+    /// assistant runs out of sight.
+    /// </remarks>
+    /// <param name="chatId">The ID of the thread whose answer waits.</param>
+    /// <param name="isWaiting">True when a call waits for confirmation, false when the user answered.</param>
+    public async Task SetWaitingForToolApprovalAsync(Guid chatId, bool isWaiting)
+    {
+        var session = this.sessions.Values.FirstOrDefault(session => session.ChatThread?.ChatId == chatId && session.Status is AssistantSessionStatus.RUNNING);
+        if (session is null)
+            return;
+
+        string title;
+        lock (session.SyncRoot)
+        {
+            if (session.IsWaitingForToolApproval == isWaiting)
+                return;
+
+            session.IsWaitingForToolApproval = isWaiting;
+            session.UpdatedAt = DateTimeOffset.Now;
+            title = session.Title;
+        }
+
+        await this.NotifyChangedAsync(session);
+        if (!isWaiting)
+            await messageBus.HideNotification(ToolApprovalNotificationKey(session.Key));
+        else if (this.shownAssistants.GetValueOrDefault(session.Key) is 0)
+            await this.NotifyWaitingForToolApprovalAsync(session.Key, title);
+    }
 
     /// <summary>
     /// Gets copied snapshots for all known assistant sessions.
@@ -258,6 +363,7 @@ public sealed class AssistantSessionService(MessageBus messageBus)
                 return;
 
             session.Status = status;
+            session.IsWaitingForToolApproval = false;
             session.ErrorMessage = errorMessage;
             session.ChatThread = chatThread;
             session.State = state;
@@ -265,6 +371,8 @@ public sealed class AssistantSessionService(MessageBus messageBus)
             session.FinishedAt = session.UpdatedAt;
         }
 
+        // A confirmation the run still waited for, e.g., when the user stopped it, waits no more:
+        await messageBus.HideNotification(ToolApprovalNotificationKey(key));
         await this.NotifyChangedAsync(session, sendingComponent);
         await messageBus.SendMessage(sendingComponent, Event.ASSISTANT_SESSION_FINISHED, CreateSnapshot(session));
 
@@ -358,6 +466,7 @@ public sealed class AssistantSessionService(MessageBus messageBus)
             UpdatedAt = session.UpdatedAt,
             FinishedAt = session.FinishedAt,
             ErrorMessage = session.ErrorMessage,
+            IsWaitingForToolApproval = session.IsWaitingForToolApproval,
             ChatThread = session.ChatThread,
             State = new Dictionary<string, IAssistantSessionSnapshotField>(session.State, StringComparer.Ordinal),
         };
