@@ -164,6 +164,10 @@ internal sealed class Program
             config.SnackbarConfiguration.HideTransitionDuration = 500;
             config.SnackbarConfiguration.ShowTransitionDuration = 500;
             config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
+
+            // Since MudBlazor 9, a click outside an open menu or select also reaches the page behind
+            // it. We keep both modal, so that such a click only closes them:
+            config.PopoverOptions.ModalOverlay = true;
         });
 
         builder.Services.AddMemoryCache(); // Needed for the Markdown library
