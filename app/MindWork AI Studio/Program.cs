@@ -240,6 +240,7 @@ internal sealed class Program
         builder.Services.AddHostedService(sp => sp.GetRequiredService<DataSourceEmbeddingService>());
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
+        builder.Services.AddHostedService<InterfaceSizeService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         builder.Services.AddSingleton<NativeShareService>();
         builder.Services.AddScoped<PluginShareService>();

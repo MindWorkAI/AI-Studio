@@ -14,6 +14,7 @@ use pdfium_render::prelude::Pdfium;
 use serde::{Deserialize, Serialize};
 use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent};
 use tauri::path::PathResolver;
+use tauri::webview::PageLoadEvent;
 use tauri::WebviewWindow;
 use tauri::PhysicalPosition;
 use tauri_plugin_updater::{UpdaterExt, Update};
@@ -141,6 +142,21 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
         )
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .on_page_load(|webview, payload| {
+            //
+            // A webview may forget its zoom when it loads a page from another origin, as the page
+            // of the app is, see interface_zoom.rs. Measuring the screen needs the main thread,
+            // which this handler is not guaranteed to run on:
+            //
+            if matches!(payload.event(), PageLoadEvent::Finished)
+                && let Some(window) = webview.app_handle().get_webview_window(webview.label())
+            {
+                let ui_window = window.clone();
+                if let Err(error) = window.run_on_main_thread(move || crate::interface_zoom::zoom_window(&ui_window)) {
+                    warn!(Source = "Interface size"; "Failed to schedule the zoom after a page load: {error}");
+                }
+            }
+        })
         .setup(move |app| {
 
             // Get the main window:
@@ -162,17 +178,25 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             window.on_window_event(move |event| {
 
                 //
-                // Only a drag and drop event carries a position, and only that position needs the
-                // scale factor. Asking the window on every window event would be needless work.
-                // Asking it anew for every drag is what keeps a display change covered: we hold no
-                // factor of our own which a moved window could leave behind.
+                // A window which moved may rest on another screen now, whose size calls for
+                // another zoom of the webview:
                 //
-                let scale_factor = match event {
-                    WindowEvent::DragDrop(_) => event_window.scale_factor().unwrap_or(1.0),
-                    _ => 1.0,
+                if matches!(event, WindowEvent::Moved(_) | WindowEvent::ScaleFactorChanged { .. }) {
+                    crate::interface_zoom::follow_window(&event_window);
+                }
+
+                //
+                // Only a drag and drop event carries a position, and only that position needs the
+                // scale factor and the zoom. Asking the window on every window event would be
+                // needless work. Asking it anew for every drag is what keeps a display change
+                // covered: we hold no factor of our own which a moved window could leave behind.
+                //
+                let (scale_factor, zoom) = match event {
+                    WindowEvent::DragDrop(_) => (event_window.scale_factor().unwrap_or(1.0), crate::interface_zoom::current_zoom()),
+                    _ => (1.0, 1.0),
                 };
 
-                let Some(event_to_send) = Event::from_window_event(event, scale_factor) else {
+                let Some(event_to_send) = Event::from_window_event(event, scale_factor, zoom) else {
                     return;
                 };
 
@@ -185,6 +209,9 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
                     }
                 });
             });
+
+            // The screen shows in its default size from the start, long before the app sends the sizes the user chose:
+            crate::interface_zoom::zoom_window(&window);
 
             // Save the main window for later access:
             *MAIN_WINDOW.lock().unwrap() = Some(window);
@@ -472,15 +499,17 @@ pub struct CursorPosition {
 /// in the first place: a point stays a point when the window moves to a display with a different
 /// pixel density, and only the number of device pixels behind it changes.
 ///
-/// What the equality of a logical point and a CSS pixel does depend on is that nobody zooms the
-/// webview: neither through WebviewWindow::set_zoom nor through zoomHotkeysEnabled, which our
-/// tauri.conf.json leaves off. Should AI Studio ever offer a zoom, say for accessibility, the
-/// position has to be divided by it as well -- on every platform, this time.
+/// A logical point equals a CSS pixel only as long as the webview is not zoomed. AI Studio zooms it
+/// to show in the same size on every laptop, see interface_zoom.rs, and a zoomed CSS pixel covers
+/// that many logical points. The position is therefore divided by the zoom as well, on every
+/// platform. Keyboard zooming stays off: tauri.conf.json leaves zoomHotkeysEnabled unset, and a
+/// zoom we did not set ourselves would put the position off.
 ///
 /// The decision is written with cfg! rather than #[cfg], so that both branches are compiled and
 /// type-checked on every platform instead of only on the one they apply to.
-fn cursor_position_in_css_pixels(position: PhysicalPosition<f64>, scale_factor: f64) -> CursorPosition {
-    scale_cursor_position(position, if cfg!(target_os = "windows") { scale_factor } else { 1.0 })
+fn cursor_position_in_css_pixels(position: PhysicalPosition<f64>, scale_factor: f64, zoom: f64) -> CursorPosition {
+    let platform_scale_factor = if cfg!(target_os = "windows") { scale_factor } else { 1.0 };
+    scale_cursor_position(position, platform_scale_factor * zoom)
 }
 
 /// Divides a cursor position by a scale factor.
@@ -538,7 +567,10 @@ impl Event {
     }
 
     /// Creates an Event instance from a Tauri WindowEvent, unless the event is none of our business.
-    pub fn from_window_event(window_event: &WindowEvent, scale_factor: f64) -> Option<Self> {
+    ///
+    /// The scale factor and the zoom only matter for the position of a drag and drop event, see
+    /// `cursor_position_in_css_pixels`.
+    pub fn from_window_event(window_event: &WindowEvent, scale_factor: f64, zoom: f64) -> Option<Self> {
         match window_event {
             WindowEvent::DragDrop(drop_event) => {
                 match drop_event {
@@ -547,7 +579,7 @@ impl Event {
                         Some(Event::with_position(
                             TauriEventType::FileDropHovered,
                             paths.iter().map(|p| p.display().to_string()).collect(),
-                            cursor_position_in_css_pixels(*position, scale_factor),
+                            cursor_position_in_css_pixels(*position, scale_factor, zoom),
                         ))
                     },
 
@@ -564,7 +596,7 @@ impl Event {
                         Some(Event::with_position(
                             TauriEventType::FileDropOver,
                             Vec::new(),
-                            cursor_position_in_css_pixels(*position, scale_factor),
+                            cursor_position_in_css_pixels(*position, scale_factor, zoom),
                         ))
                     },
 
@@ -573,7 +605,7 @@ impl Event {
                         Some(Event::with_position(
                             TauriEventType::FileDropDropped,
                             paths.iter().map(|p| p.display().to_string()).collect(),
-                            cursor_position_in_css_pixels(*position, scale_factor),
+                            cursor_position_in_css_pixels(*position, scale_factor, zoom),
                         ))
                     },
 
@@ -625,6 +657,24 @@ pub enum TauriEventType {
 
     GlobalShortcutPressed,
     GlobalShortcutChanged,
+
+    /// The interface size on the screen the window shows on changed, see interface_zoom.rs.
+    InterfaceSizeChanged,
+}
+
+/// Sends an event to the app.
+///
+/// Locks only the broadcast sender, never the main window, so it may run on the main thread.
+pub fn send_event(event: Event) {
+    let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
+    let Some(event_sender) = event_sender else {
+        warn!(Source = "Tauri"; "Cannot send the event {:?} before the event channel exists.", event.event_type);
+        return;
+    };
+
+    if let Err(error) = event_sender.send(event) {
+        error!(Source = "Tauri"; "Failed to send an event: {error}");
+    }
 }
 
 /// Changes the location of the main window to the given URL.
@@ -1167,20 +1217,26 @@ mod tests {
 
     #[test]
     fn the_cursor_position_is_scaled_on_windows_only() {
-        let position = cursor_position_in_css_pixels(PhysicalPosition::new(200.0, 100.0), 2.0);
+        let position = cursor_position_in_css_pixels(PhysicalPosition::new(200.0, 100.0), 2.0, 1.0);
         let expected = if cfg!(target_os = "windows") { (100.0, 50.0) } else { (200.0, 100.0) };
 
         assert_eq!((position.x, position.y), expected);
     }
 
     #[test]
+    fn the_zoom_divides_the_cursor_position_on_every_platform() {
+        let position = cursor_position_in_css_pixels(PhysicalPosition::new(200.0, 100.0), 1.0, 2.0);
+        assert_eq!((position.x, position.y), (100.0, 50.0));
+    }
+
+    #[test]
     fn a_window_event_we_do_not_care_about_is_not_channeled() {
-        assert!(Event::from_window_event(&WindowEvent::Destroyed, 1.0).is_none());
+        assert!(Event::from_window_event(&WindowEvent::Destroyed, 1.0, 1.0).is_none());
     }
 
     #[test]
     fn losing_the_window_focus_is_channeled_without_a_position() {
-        let event = Event::from_window_event(&WindowEvent::Focused(false), 1.0).unwrap();
+        let event = Event::from_window_event(&WindowEvent::Focused(false), 1.0, 1.0).unwrap();
 
         assert!(matches!(event.event_type, TauriEventType::WindowNotFocused));
         assert!(event.position.is_none());

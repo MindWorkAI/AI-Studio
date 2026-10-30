@@ -67,6 +67,19 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
 
     /// <summary>
+    /// How large AI Studio shows its interface on the screens the user chose a size for, the most
+    /// recently set first.
+    /// </summary>
+    /// <remarks>
+    /// Kept per screen, as the operating systems keep their scaling per monitor: a laptop calls for
+    /// another size than an external monitor, and the same scale looks different on screens of
+    /// different densities. A screen missing here gets <see cref="InterfaceSize.APP_DEFAULT"/> when
+    /// it is the screen of a laptop, and <see cref="InterfaceSize.SYSTEM_SCALING"/> otherwise. The
+    /// user's own, like the scaling of the operating system: no configuration plugin manages it.
+    /// </remarks>
+    public List<InterfaceScreenSize> InterfaceScreenSizes { get; set; } = [];
+
+    /// <summary>
     /// Whether an alert dialog should be shown when prompt-injection content is blocked.
     /// </summary>
     public bool ShowPromptInjectionAlert { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowPromptInjectionAlert, true);
