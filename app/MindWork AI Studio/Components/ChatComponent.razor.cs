@@ -103,6 +103,7 @@ public partial class ChatComponent : MSGComponentBase
     private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     private bool hasUnsavedChanges;
     private bool mustScrollToBottomAfterRender;
+    private bool mustFollowLayoutWhenScrolling;
     private InnerScrolling scrollingArea = null!;
     private byte scrollRenderCountdown;
     private bool mustStoreChat;
@@ -476,6 +477,7 @@ public partial class ChatComponent : MSGComponentBase
             // to scroll to the bottom after the rendering process.:
             //
             this.mustScrollToBottomAfterRender = true;
+            this.mustFollowLayoutWhenScrolling = true;
             this.scrollRenderCountdown = 4;
             this.StateHasChanged();
         }
@@ -586,7 +588,16 @@ public partial class ChatComponent : MSGComponentBase
         {
             if (--this.scrollRenderCountdown == 0)
             {
-                await this.scrollingArea.ScrollToBottom();
+                //
+                // A loaded chat keeps growing after this render, e.g., while its code blocks get
+                // highlighted. Thus, we follow its layout until it is done. After sending a message,
+                // we scroll just once, so that the view does not follow the answer being generated:
+                //
+                if (this.mustFollowLayoutWhenScrolling)
+                    await this.scrollingArea.ScrollToEndAndFollow();
+                else
+                    await this.scrollingArea.ScrollToBottom();
+
                 this.mustScrollToBottomAfterRender = false;
             }
             else
@@ -1756,6 +1767,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
             this.mustScrollToBottomAfterRender = true;
+            this.mustFollowLayoutWhenScrolling = false;
             this.scrollRenderCountdown = 2;
         }
         
@@ -2181,6 +2193,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
             this.mustScrollToBottomAfterRender = true;
+            this.mustFollowLayoutWhenScrolling = true;
             this.scrollRenderCountdown = 2;
         }
         
