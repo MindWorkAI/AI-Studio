@@ -829,6 +829,20 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
 
+      # The cache below puts the version of every installed toolchain into its key, also of the stable
+      # one which comes with the runner image. That version changes with the image, independently of
+      # RUST_VERSION, and each change would start a new cache. Therefore, only our toolchain stays:
+      - name: Remove the other Rust toolchains
+        shell: bash
+        run: |
+          for toolchain in $(rustup toolchain list --quiet | tr -d '\r'); do
+            if [[ "${toolchain}" != "${RUST_VERSION}-"* ]]; then
+              rustup toolchain uninstall "${toolchain}"
+            fi
+          done
+
+          rustup toolchain list
+
       # The key of this cache includes the version of rustc and Cargo.lock, so the cache has to come
       # after the setup of Rust. A new toolchain or a change to the dependencies leads to a new cache;
       # until then, the latest cache of the same toolchain serves as the starting point. Before the
@@ -1268,6 +1282,18 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.rust_target }}
+
+      # The same step of the verify job explains why the other toolchains have to go:
+      - name: Remove the other Rust toolchains
+        shell: bash
+        run: |
+          for toolchain in $(rustup toolchain list --quiet | tr -d '\r'); do
+            if [[ "${toolchain}" != "${RUST_VERSION}-"* ]]; then
+              rustup toolchain uninstall "${toolchain}"
+            fi
+          done
+
+          rustup toolchain list
 
       # The same step of the verify job explains how this cache works, and why the two jobs keep
       # separate caches. The action tells the caches apart by the job name and the runner. Both are
