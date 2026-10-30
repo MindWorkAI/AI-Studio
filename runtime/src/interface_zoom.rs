@@ -310,6 +310,7 @@ fn apply_zoom(window: &WebviewWindow, force: bool) -> InterfaceSizeReport {
         match window.set_zoom(report.zoom) {
             Ok(()) => {
                 CURRENT_ZOOM.store(report.zoom.to_bits(), Ordering::Release);
+                zoom_svg_icons(window, report.zoom);
                 info!(Source = "Interface size"; "Zoomed the webview to {:.3} for the screen {screen:?}, which shows AI Studio at {} percent with the size {:?}.", report.zoom, report.current_percent, report.size);
             },
 
@@ -335,6 +336,26 @@ fn apply_zoom(window: &WebviewWindow, force: bool) -> InterfaceSizeReport {
     }
 
     report
+}
+
+/// Hands the zoom to the SVG icons of the page, on Linux, whose webview does not zoom them.
+///
+/// WebKitGTK, the webview on Linux, leaves the page zoom out of the font size of an SVG element.
+/// The icons of MudBlazor take their size from that font size, so they would keep their size while
+/// everything around them grows or shrinks. app.css multiplies their size with the CSS variable set
+/// here. The webviews of Windows and macOS zoom SVG elements like everything else.
+///
+/// The variable belongs to the page and is gone once another one loads. Every page load sets the
+/// zoom anew, see [`zoom_window`], and thereby the variable as well.
+fn zoom_svg_icons(window: &WebviewWindow, zoom: f64) {
+    if !cfg!(target_os = "linux") {
+        return;
+    }
+
+    let script = format!("document.documentElement.style.setProperty('--svg-icon-zoom', '{zoom}');");
+    if let Err(error) = window.eval(&script) {
+        warn!(Source = "Interface size"; "Failed to hand the zoom to the SVG icons: {error}");
+    }
 }
 
 /// The screen the window shows on.

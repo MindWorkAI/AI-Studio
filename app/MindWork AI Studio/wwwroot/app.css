@@ -122,6 +122,19 @@
     color: var(--custom-icon-color) !important;
 }
 
+/*
+   WebKitGTK, the webview on Linux, leaves the zoom of the page out of the font size of an SVG
+   element. MudBlazor sizes its icons with 1em of that font size, so they would keep their size while
+   everything around them grows or shrinks with the interface size. The runtime therefore sets
+   --svg-icon-zoom to its zoom on Linux, see interface_zoom.rs. The webviews of Windows and macOS zoom
+   SVG elements like everything else, and the variable stays unset there. The :where keeps this as
+   weak as MudBlazor's own rule, so that every more specific size still wins.
+*/
+.mud-icon-root:where(svg) {
+    width: calc(1em * var(--svg-icon-zoom, 1));
+    height: calc(1em * var(--svg-icon-zoom, 1));
+}
+
 .improvedDiff .wikEdDiffFragment {
     background-color: initial !important;
 }
