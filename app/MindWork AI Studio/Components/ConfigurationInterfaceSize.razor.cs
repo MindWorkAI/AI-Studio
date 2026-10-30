@@ -65,8 +65,8 @@ public partial class ConfigurationInterfaceSize : MSGComponentBase
 
     private string SizeHelp => this.MeasuredScreen switch
     {
-        null => T("AI Studio cannot measure this screen right now, so you cannot set its size."),
-        { } screen when this.OffersAppDefault => string.Format(I18N.I.Culture, T("Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop, system scaling follows your operating system."), this.DescribeScreen(screen)),
+        null => T("AI Studio cannot measure this screen right now, so you cannot set the interface size here."),
+        { } screen when this.OffersAppDefault => string.Format(I18N.I.Culture, T("Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop. System scaling follows your operating system."), this.DescribeScreen(screen)),
         { } screen => string.Format(I18N.I.Culture, T("Applies to this screen only ({0}). System scaling follows your operating system."), this.DescribeScreen(screen)),
     };
 

@@ -9,5 +9,5 @@
 <ConfigurationSelect @key="@this.ScreenKey" OptionDescription="@T("Interface size on this screen")" SelectedValue="@(() => this.SizeOnScreen)" Data="@ConfigurationSelectDataFactory.GetInterfaceSizeData(this.OffersAppDefault)" SelectionUpdateAsync="@this.UpdateSize" Disabled="@(() => this.MeasuredScreen is null)" OptionHelp="@this.SizeHelp"/>
 @if (this.MeasuredScreen is { } screen && this.SizeOnScreen is InterfaceSize.CUSTOM)
 {
-    <ConfigurationSlider T="int" OptionDescription="@T("Custom interface size of this screen")" Min="@screen.MinPercent" Max="@screen.MaxPercent" Step="5" Unit="%" Value="@(() => this.ScalePercent(screen))" ValueUpdate="@this.UpdateScalePercent" Immediate="@false" OptionHelp="@this.ScaleHelp(screen)"/>
+    <ConfigurationSlider T="int" OptionDescription="@T("Custom interface size on this screen")" Min="@screen.MinPercent" Max="@screen.MaxPercent" Step="5" Unit="%" Value="@(() => this.ScalePercent(screen))" ValueUpdate="@this.UpdateScalePercent" Immediate="@false" OptionHelp="@this.ScaleHelp(screen)"/>
 }
