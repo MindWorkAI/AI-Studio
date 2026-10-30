@@ -101,10 +101,10 @@ pptx-to-md = { git = "https://github.com/SommerEngineering/pptx-parser.git", rev
 windows-registry = "0.6.1"
 windows-native-keyring-store = "1.1.0"
 
-# The share sheet hands the window handle it gets from Tauri to the Windows API of this crate. Both
-# sides must use the same version of `windows`, otherwise the handle types differ and the build fails
-# on Windows. Keep this pin, and `windows-collections` with it, at the version Tauri uses.
-windows = { version = "=0.62.2", features = ["ApplicationModel_DataTransfer", "Foundation", "Foundation_Collections", "Storage", "Storage_Streams", "Win32_Foundation", "Win32_System_WinRT", "Win32_UI_Shell"] }
+# The share sheet and the interface size hand the window handle they get from Tauri to the Windows API
+# of this crate. Both sides must use the same version of `windows`, otherwise the handle types differ and
+# the build fails on Windows. Keep this pin, and `windows-collections` with it, at the version Tauri uses.
+windows = { version = "=0.62.2", features = ["ApplicationModel_DataTransfer", "Foundation", "Foundation_Collections", "Storage", "Storage_Streams", "Win32_Foundation", "Win32_Graphics_Gdi", "Win32_System_WinRT", "Win32_UI_HiDpi", "Win32_UI_Shell"] }
 windows-collections = "=0.3.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
@@ -117,6 +117,7 @@ objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSBundle", "NSGe
 ashpd = { version = "0.13.12", default-features = false, features = ["tokio", "open_uri", "global_shortcuts"] }
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
 dbus-secret-service = "4.1.0"
+gtk = "0.18"
 webkit2gtk = { version = "2.0.2", features = ["v2_8"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

@@ -122,6 +122,46 @@
     color: var(--custom-icon-color) !important;
 }
 
+/*
+   WebKitGTK, the webview on Linux, leaves the zoom of the page out of the font size of an SVG
+   element. MudBlazor sizes its icons with 1em of that font size, so they would keep their size while
+   everything around them grows or shrinks with the interface size. The runtime therefore sets
+   --svg-icon-zoom to its zoom on Linux, see interface_zoom.rs. The webviews of Windows and macOS zoom
+   SVG elements like everything else, and the variable stays unset there. The :where keeps this as
+   weak as MudBlazor's own rule, so that every more specific size still wins.
+*/
+.mud-icon-root:where(svg) {
+    width: calc(1em * var(--svg-icon-zoom, 1));
+    height: calc(1em * var(--svg-icon-zoom, 1));
+}
+
+/*
+   MudBlazor draws the thumb of a slider as a dot of 4px, scaled up five times. Zoomed to an interface
+   size, the dot covers a fraction of a pixel, which the webview rounds to whole pixels before the
+   scaling magnifies the error: the thumb turns into an uneven shape. These rules draw the thumb in its
+   final size instead, with the shadows MudBlazor's scaling gave it. All sliders of the app have the
+   medium size and the primary color.
+*/
+.mud-slider.mud-slider-medium .mud-slider-input::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: -8px;
+    transform: none;
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input::-webkit-slider-thumb {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3);
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input::-webkit-slider-thumb:hover {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3), 0 0 0 5px rgba(var(--mud-palette-primary-rgb), 0.24);
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input:focus-visible::-webkit-slider-thumb,
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input:active::-webkit-slider-thumb {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3), 0 0 0 10px rgba(var(--mud-palette-primary-rgb), 0.24);
+}
+
 .improvedDiff .wikEdDiffFragment {
     background-color: initial !important;
 }

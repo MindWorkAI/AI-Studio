@@ -4297,6 +4297,7 @@ dependencies = [
  "file-format",
  "flexi_logger",
  "futures",
+ "gtk",
  "hmac 0.13.0",
  "image",
  "keyring-core",

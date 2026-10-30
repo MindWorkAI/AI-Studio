@@ -4170,6 +4170,33 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T1984243691"] = "You c
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T4285779702"] = "Choose File"
 
+-- Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop. System scaling follows your operating system.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T1103704506"] = "Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop. System scaling follows your operating system."
+
+-- You can choose from {0} % to {1} %. The app default on this screen is {2} %.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T1110635214"] = "You can choose from {0} % to {1} %. The app default on this screen is {2} %."
+
+-- {0} × {1} pixels, {2:0.#} inches
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T2376030041"] = "{0} × {1} pixels, {2:0.#} inches"
+
+-- You can choose from {0} % to {1} %. The system scaling on this screen is {2} %.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3009448744"] = "You can choose from {0} % to {1} %. The system scaling on this screen is {2} %."
+
+-- Custom interface size on this screen
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3268281815"] = "Custom interface size on this screen"
+
+-- AI Studio cannot measure this screen right now, so you cannot set the interface size here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3560281885"] = "AI Studio cannot measure this screen right now, so you cannot set the interface size here."
+
+-- Interface size on this screen
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3568633122"] = "Interface size on this screen"
+
+-- Applies to this screen only ({0}). System scaling follows your operating system.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3653703912"] = "Applies to this screen only ({0}). System scaling follows your operating system."
+
+-- {0} × {1} pixels
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T990356864"] = "{0} × {1} pixels"
+
 -- Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T2526727283"] = "Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level."
 
@@ -12519,6 +12546,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1258653480
 -- No key is sending the input
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1311973034"] = "No key is sending the input; you have to click the send button"
 
+-- App default
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1382522201"] = "App default"
+
 -- Navigation never expands, no tooltips
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1402851833"] = "Navigation never expands, no tooltips; there are only icons"
 
@@ -12563,6 +12593,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T238099712"
 
 -- Delete disappearing chats older than 1 year
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2405705561"] = "Disappearing chats: delete chats older than 1 year"
+
+-- Custom
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2502277006"] = "Custom"
 
 -- Store chats manually
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2520325466"] = "Store chats manually"
@@ -12626,6 +12659,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4256323669
 
 -- All preview features are hidden
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4289410063"] = "All preview features are hidden"
+
+-- System scaling
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T453866521"] = "System scaling"
 
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T578410699"] = "Chat"

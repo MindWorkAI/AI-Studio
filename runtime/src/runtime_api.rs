@@ -55,6 +55,8 @@ fn create_router() -> Router {
         .route("/updates/install", get(crate::app_window::install_update))
         .route("/app/exit", post(crate::app_window::exit_app))
         .route("/app/restart", post(crate::app_window::restart_app))
+        .route("/app/interface-size", get(crate::interface_zoom::get_interface_size))
+        .route("/app/interface-size", post(crate::interface_zoom::set_interface_size))
         .route("/select/directory", post(crate::file_actions::select_directory))
         .route("/select/file", post(crate::file_actions::select_file))
         .route("/select/files", post(crate::file_actions::select_files))
