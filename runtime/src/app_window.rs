@@ -765,6 +765,11 @@ pub async fn install_update() {
     match cloned_response_option {
         Some(update_response) => {
             info!(Source = "Tauri"; "Updater: update is pending!");
+
+            // Once the download is complete, the .NET server and Qdrant Edge stop so that the installer
+            // can replace their files. When the update fails after that, e.g., because the installer
+            // cannot start, the app would remain without both. Restarting it brings them back.
+            let mut servers_stopped = false;
             let result = update_response.download_and_install(
                 |chunk_length, _content_length| {
                     trace!(Source = "Tauri"; "Updater: downloading chunk of {chunk_length} bytes");
@@ -776,6 +781,7 @@ pub async fn install_update() {
                     if is_prod() {
                         stop_dotnet_server();
                         stop_qdrant_edge_database();
+                        servers_stopped = true;
                     } else {
                         warn!(Source = "Tauri"; "Development environment detected; do not stop the .NET server.");
                     }
@@ -799,6 +805,14 @@ pub async fn install_update() {
                 }
                 Err(e) => {
                     warn!(Source = "Tauri"; "Updater: failed to update: {e}");
+                    if servers_stopped {
+                        warn!(Source = "Tauri"; "The .NET server and Qdrant Edge are already stopped; try to restart the app now...");
+                        if let Some(handle) = app_handle {
+                            handle.restart();
+                        } else {
+                            warn!(Source = "Tauri"; "Cannot restart after the failed update: main window not available.");
+                        }
+                    }
                 }
             }
         },
