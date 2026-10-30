@@ -13,9 +13,9 @@
     <MudTextSwitch Label="@T("Do you want to provide compiler messages?")" @bind-Value="@this.provideCompilerMessages" LabelOn="@T("Yes, provide compiler messages")" LabelOff="@T("No, there are no compiler messages")" />
     @if (this.provideCompilerMessages)
     {
-        <MudTextField T="string" @bind-Text="@this.compilerMessages" Validation="@this.ValidatingCompilerMessages" AdornmentIcon="@Icons.Material.Filled.Error" Adornment="Adornment.Start" Label="@T("Compiler messages")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField T="string" @bind-Text="@this.compilerMessages" Validation="@this.ValidatingCompilerMessages" AdornmentIcon="@Icons.Material.Filled.Error" Adornment="Adornment.Start" Label="@T("Compiler messages")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 </MudStack>
 
-<MudTextField T="string" @bind-Text="@this.questions" Validation="@this.ValidateQuestions" AdornmentIcon="@Icons.Material.Filled.QuestionMark" Adornment="Adornment.Start" Label="@T("Your question(s)")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" @bind-Text="@this.questions" Validation="@this.ValidateQuestions" AdornmentIcon="@Icons.Material.Filled.QuestionMark" Adornment="Adornment.Start" Label="@T("Your question(s)")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

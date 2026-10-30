@@ -21,7 +21,7 @@
 <div class="mt-6">
     <FilePatternSelection>
         <AllowedContent>
-            <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Files to include")" AdornmentIcon="@Icons.Material.Filled.Restore" Adornment="Adornment.End" OnAdornmentClick="@this.RestoreDefaultFilePatterns" AdornmentAriaLabel="@T("Restore default patterns")" Lines="1" AutoGrow="@true" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Files to include")" AdornmentIcon="@Icons.Material.Filled.Restore" Adornment="Adornment.End" OnAdornmentClick="@this.RestoreDefaultFilePatterns" AdornmentAriaLabel="@T("Restore default patterns")" Lines="1" Sizing="InputSizing.Auto" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
         </AllowedContent>
     </FilePatternSelection>
 </div>
@@ -75,7 +75,7 @@
 {
     <ReadFileContent Text="@T("Load prompt from file")" @bind-FileContent="@this.freePrompt" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
-    <MudTextField T="string" @bind-Text="@this.freePrompt" Validation="@this.ValidateFreePrompt" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("What should the AI do with each document?")" HelperText="@T("These instructions are applied to every single document of the batch run.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" @bind-Text="@this.freePrompt" Validation="@this.ValidateFreePrompt" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("What should the AI do with each document?")" HelperText="@T("These instructions are applied to every single document of the batch run.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" Sizing="InputSizing.Auto" MaxLines="26" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
     <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
 }

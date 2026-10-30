@@ -128,7 +128,9 @@ public partial class ConfigurationText : ConfigurationBaseCore
     #endregion
 
     private bool AutoGrow => this.ExpandToContent || this.NumLines > 1;
-    
+
+    private InputSizing Sizing => this.AutoGrow ? InputSizing.Auto : InputSizing.Fixed;
+
     private int GetMaxLines => this.ExpandToContent ? FilePatternSelection.MAX_FIELD_LINES : this.AutoGrow ? this.MaxLines : 1;
 
     private string InputClass => this.ExpandToContent ? "pattern-text-field" : string.Empty;

@@ -15,7 +15,7 @@
                 </MudField>
             </MudTabPanel>
             <MudTabPanel Text="@T("Edit")" Icon="@Icons.Material.Filled.Edit">
-                <MudTextField T="string" @bind-Text="@this.DraftMarkdown" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("Assistant draft Markdown")" Variant="Variant.Outlined" Lines="16" AutoGrow="@true" MaxLines="32" Class="ma-2"/>
+                <MudTextField T="string" @bind-Text="@this.DraftMarkdown" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("Assistant draft Markdown")" Variant="Variant.Outlined" Lines="16" Sizing="InputSizing.Auto" MaxLines="32" Class="ma-2"/>
             </MudTabPanel>
         </MudTabs>
     </DialogContent>

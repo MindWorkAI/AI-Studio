@@ -90,7 +90,7 @@ else
                 if (component is AssistantTextArea textArea)
                 {
                     var lines = textArea.IsSingleLine ? 1 : 6;
-                    var autoGrow = !textArea.IsSingleLine;
+                    var sizing = textArea.IsSingleLine ? InputSizing.Fixed : InputSizing.Auto;
 
                     <MudTextField T="string"
                                   UserAttributes="@SPELLCHECK_ATTRIBUTES"
@@ -109,7 +109,7 @@ else
                                   AdornmentColor="@textArea.GetAdornmentColor()"
                                   Variant="Variant.Outlined"
                                   Lines="@lines"
-                                  AutoGrow="@autoGrow"
+                                  Sizing="@sizing"
                                   MaxLines="12"
                                   Class='@MergeClass(textArea.Class, "mb-3")'
                                   Style="@GetOptionalStyle(textArea.Style)" />

@@ -5,7 +5,7 @@
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("Paste a configuration which was exported from AI Studio, for example by a colleague. AI Studio only reads its values and never runs the pasted text. You can review and change everything afterward.")
         </MudJustifiedText>
-        <MudTextField T="string" Text="@this.snippet" TextChanged="@this.SnippetChanged" Immediate="true" Label="@T("Exported configuration")" Lines="6" AutoGrow="true" MaxLines="14" Variant="Variant.Outlined" />
+        <MudTextField T="string" Text="@this.snippet" TextChanged="@this.SnippetChanged" Immediate="true" Label="@T("Exported configuration")" Lines="6" Sizing="InputSizing.Auto" MaxLines="14" Variant="Variant.Outlined" />
         @if (!string.IsNullOrWhiteSpace(this.issue))
         {
             <MudAlert Severity="Severity.Error" Class="mt-3">@this.issue</MudAlert>
