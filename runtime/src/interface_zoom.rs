@@ -39,7 +39,7 @@ use axum::Json;
 use log::{info, warn};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use tauri::WebviewWindow;
+use tauri::{Monitor, WebviewWindow};
 use crate::app_window::{Event, TauriEventType};
 
 /// The density App default aims for on the screen of a laptop, in CSS pixels per inch.
@@ -528,19 +528,24 @@ fn to_percent(scale: f64) -> u32 {
 }
 
 /// Measures the screen the window shows on. Runs on the main thread.
+///
+/// The physical size has to come from the same screen as the pixels and the scaling, or the density
+/// mixes two screens. Each platform therefore asks for the screen the way Tao does in `current_monitor`.
 fn measure_screen(window: &WebviewWindow) -> Option<Screen> {
     let monitor = window.current_monitor().ok().flatten()?;
     Some(Screen {
         device_width: f64::from(monitor.size().width),
         device_height: f64::from(monitor.size().height),
         system_scale: monitor.scale_factor(),
-        size_mm: screen_size_mm(window),
+        size_mm: screen_size_mm(window, &monitor),
     })
 }
 
 /// The physical size of the screen the window shows on, in millimeters, as the monitor reports it.
+///
+/// Windows looks the screen up the same way Tao does for the monitor: by the window, nearest first.
 #[cfg(target_os = "windows")]
-fn screen_size_mm(window: &WebviewWindow) -> Option<(f64, f64)> {
+fn screen_size_mm(window: &WebviewWindow, _monitor: &Monitor) -> Option<(f64, f64)> {
     use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST};
     use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_RAW_DPI};
 
@@ -575,9 +580,9 @@ fn screen_size_mm(window: &WebviewWindow) -> Option<(f64, f64)> {
     ))
 }
 
-/// The physical size of the screen the window shows on, in millimeters, as the display reports it.
+/// The physical size of the given screen, in millimeters, as the display reports it.
 #[cfg(target_os = "macos")]
-fn screen_size_mm(window: &WebviewWindow) -> Option<(f64, f64)> {
+fn screen_size_mm(_window: &WebviewWindow, monitor: &Monitor) -> Option<(f64, f64)> {
     // Core Graphics reads this point, which the compiler does not see:
     #[allow(dead_code)]
     #[repr(C)]
@@ -599,13 +604,18 @@ fn screen_size_mm(window: &WebviewWindow) -> Option<(f64, f64)> {
     }
 
     //
-    // Tao reports the position in physical pixels from the top left of the main display. Divided
-    // by the scale factor of the window, it becomes a point in the global display space of Core
-    // Graphics, which counts in points from the same corner:
+    // Tao takes the screen macOS shows the window on, the one holding its largest part. Core
+    // Graphics has to find that display, too, rather than the one under the center of the window: a
+    // window spanning two screens may have its center on the other one, whose size would then meet
+    // the pixels of this one. Hence the center of the screen itself.
     //
-    let position = window.outer_position().ok()?;
-    let size = window.outer_size().ok()?;
-    let scale_factor = window.scale_factor().ok()?;
+    // Tao reports the position and the size of a screen in physical pixels, from the top left of the
+    // main display. Divided by the scale factor of the screen, its center becomes a point in the
+    // global display space of Core Graphics, which counts in points from the same corner:
+    //
+    let position = monitor.position();
+    let size = monitor.size();
+    let scale_factor = monitor.scale_factor();
     let center = CGPoint {
         x: (f64::from(position.x) + f64::from(size.width) / 2.0) / scale_factor,
         y: (f64::from(position.y) + f64::from(size.height) / 2.0) / scale_factor,
@@ -622,9 +632,10 @@ fn screen_size_mm(window: &WebviewWindow) -> Option<(f64, f64)> {
 
 /// The physical size of the screen the window shows on, in millimeters, as the monitor reports it.
 ///
-/// GTK may only be called on the main thread, which is where the callers run.
+/// GDK looks the screen up the same way Tao does for the monitor: by the window. GTK may only be
+/// called on the main thread, which is where the callers run.
 #[cfg(target_os = "linux")]
-fn screen_size_mm(window: &WebviewWindow) -> Option<(f64, f64)> {
+fn screen_size_mm(window: &WebviewWindow, _monitor: &Monitor) -> Option<(f64, f64)> {
     use gtk::prelude::*;
 
     let gtk_window = window.gtk_window().ok()?;
@@ -640,7 +651,7 @@ fn screen_size_mm(window: &WebviewWindow) -> Option<(f64, f64)> {
 
 /// Other systems report no physical size we know how to read, so their screens count as of unknown size.
 #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-fn screen_size_mm(_window: &WebviewWindow) -> Option<(f64, f64)> {
+fn screen_size_mm(_window: &WebviewWindow, _monitor: &Monitor) -> Option<(f64, f64)> {
     None
 }
 
