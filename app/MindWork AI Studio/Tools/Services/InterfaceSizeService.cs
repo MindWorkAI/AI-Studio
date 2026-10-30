@@ -1,5 +1,4 @@
 using AIStudio.Settings;
-using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
@@ -21,19 +20,13 @@ public sealed class InterfaceSizeService : BackgroundService, IMessageBusReceive
     /// The smallest custom scale on any screen, in percent. A screen may allow less of the range,
     /// which the runtime reports.
     /// </summary>
-    public const int MIN_CUSTOM_PERCENT = 60;
+    private const int MIN_CUSTOM_PERCENT = 60;
 
     /// <summary>
     /// The largest custom scale on any screen, in percent. A screen may allow less of the range,
     /// which the runtime reports.
     /// </summary>
-    public const int MAX_CUSTOM_PERCENT = 300;
-
-    /// <summary>
-    /// How many screens keep their size. Setting the size of one more forgets the screen whose size
-    /// was set the longest time ago, which then gets its default size again.
-    /// </summary>
-    public const int MAX_REMEMBERED_SCREENS = 20;
+    private const int MAX_CUSTOM_PERCENT = 300;
 
     /// <summary>
     /// How often the service looks whether the settings have loaded. Short, because a screen with a
@@ -58,27 +51,6 @@ public sealed class InterfaceSizeService : BackgroundService, IMessageBusReceive
 
         this.messageBus.RegisterComponent(this);
         this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
-    }
-
-    /// <summary>
-    /// What the user chose for the given screen, or null when they chose nothing for it.
-    /// </summary>
-    public static InterfaceScreenSize? GetScreenSize(DataApp app, string screenKey) => app.InterfaceScreenSizes.FirstOrDefault(screen => screen.ScreenKey == screenKey);
-
-    /// <summary>
-    /// Remembers what the user chose for a screen, as the most recently set one.
-    /// </summary>
-    /// <remarks>
-    /// Keeps <see cref="MAX_REMEMBERED_SCREENS"/> screens at most and forgets the ones beyond, those
-    /// whose size was set the longest time ago.
-    /// </remarks>
-    public static void RememberScreenSize(DataApp app, InterfaceScreenSize screenSize)
-    {
-        app.InterfaceScreenSizes = app.InterfaceScreenSizes
-            .Where(screen => screen.ScreenKey != screenSize.ScreenKey)
-            .Prepend(screenSize)
-            .Take(MAX_REMEMBERED_SCREENS)
-            .ToList();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

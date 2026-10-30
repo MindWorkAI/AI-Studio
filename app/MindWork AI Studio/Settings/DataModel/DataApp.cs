@@ -80,6 +80,36 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public List<InterfaceScreenSize> InterfaceScreenSizes { get; set; } = [];
 
     /// <summary>
+    /// How many screens keep their interface size. Setting the size of one more forgets the screen
+    /// whose size was set the longest time ago, which then gets its default size again.
+    /// </summary>
+    public const int MAX_REMEMBERED_INTERFACE_SCREENS = 20;
+
+    /// <summary>
+    /// What the user chose for the given screen, or null when they chose nothing for it.
+    /// </summary>
+    /// <param name="screenKey">The screen, as the runtime names it.</param>
+    public InterfaceScreenSize? GetInterfaceScreenSize(string screenKey) => this.InterfaceScreenSizes.FirstOrDefault(screen => screen.ScreenKey == screenKey);
+
+    /// <summary>
+    /// Remembers what the user chose for a screen, as the most recently set one.
+    /// </summary>
+    /// <remarks>
+    /// Keeps MAX_REMEMBERED_INTERFACE_SCREENS screens at most and forgets the ones beyond, those whose
+    /// size was set the longest time ago. Replaces the list instead of changing it, since the
+    /// InterfaceSizeService may read it at the same time.
+    /// </remarks>
+    /// <param name="screenSize">What the user chose for the screen.</param>
+    public void RememberInterfaceScreenSize(InterfaceScreenSize screenSize)
+    {
+        this.InterfaceScreenSizes = this.InterfaceScreenSizes
+            .Where(screen => screen.ScreenKey != screenSize.ScreenKey)
+            .Prepend(screenSize)
+            .Take(MAX_REMEMBERED_INTERFACE_SCREENS)
+            .ToList();
+    }
+
+    /// <summary>
     /// Whether an alert dialog should be shown when prompt-injection content is blocked.
     /// </summary>
     public bool ShowPromptInjectionAlert { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowPromptInjectionAlert, true);
