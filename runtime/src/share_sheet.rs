@@ -128,7 +128,7 @@ async fn share_file_on_platform(_path: PathBuf) -> Result<(), ShareFailure> {
 
 #[cfg(windows)]
 async fn share_file_on_platform(path: PathBuf) -> Result<(), ShareFailure> {
-    use std::cell::RefCell;
+    use std::cell::{Cell, RefCell};
     use std::time::{Duration, Instant};
     use log::{debug, warn};
     use windows::ApplicationModel::DataTransfer::{DataPackage, DataRequestedEventArgs, DataTransferManager, ShareCompletedEventArgs};
@@ -231,7 +231,10 @@ async fn share_file_on_platform(path: PathBuf) -> Result<(), ShareFailure> {
             // that lock.
             //
             let share_started = Instant::now();
-            let mut data_requested = Some(data_requested_sender);
+
+            // Windows accepts only handlers which do not change what they captured, yet the first
+            // request has to take the sender. The cell allows that through a shared reference:
+            let data_requested = Cell::new(Some(data_requested_sender));
             let handler = TypedEventHandler::<DataTransferManager, DataRequestedEventArgs>::new(move |_, arguments| {
                 let Some(arguments) = arguments.as_ref() else {
                     return Ok(());
