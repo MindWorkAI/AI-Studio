@@ -54,7 +54,7 @@ env:
   # The Tauri CLI which bundles the app, exactly this version on every platform. Keep it at the minor
   # version of the tauri crate in runtime/Cargo.toml. The version also names the cache of the CLI, so
   # changing it installs the new CLI once on each platform and caches it from then on:
-  TAURI_CLI_VERSION: "2.11.5"
+  TAURI_CLI_VERSION: "2.12.4"
 
 jobs:
   determine_run_mode:
