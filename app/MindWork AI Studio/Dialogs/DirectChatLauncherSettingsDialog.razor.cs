@@ -47,7 +47,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
     private string providerId = string.Empty;
     private string profileId = string.Empty;
     private string chatTemplateId = string.Empty;
-    private IEnumerable<string> dataSourceIds = [];
+    private IReadOnlyCollection<string> dataSourceIds = [];
     private HashSet<string> toolIds = [];
     private string issue = string.Empty;
     private bool canEdit;

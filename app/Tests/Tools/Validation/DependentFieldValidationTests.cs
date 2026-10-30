@@ -84,7 +84,7 @@ public sealed class DependentFieldValidationTests
 
         public List<string> ValidationErrors { get; set; } = [];
 
-        public Task Validate()
+        public Task ValidateAsync()
         {
             this.ValidationCount++;
             return Task.CompletedTask;
@@ -92,8 +92,6 @@ public sealed class DependentFieldValidationTests
 
         public Task ResetAsync() => Task.CompletedTask;
 
-        public void ResetValidation()
-        {
-        }
+        public Task ResetValidationAsync() => Task.CompletedTask;
     }
 }

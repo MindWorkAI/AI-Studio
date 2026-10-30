@@ -29,7 +29,7 @@ public static class DataSourceRepair
         // A repair discards the index, which waits for the end of a pause:
         if (embeddingService.IsIndexingPaused)
         {
-            await dialogService.ShowMessageBox(TB("Repair Data Source"), TB("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), TB("Close"));
+            await dialogService.ShowMessageBoxAsync(TB("Repair Data Source"), TB("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), TB("Close"));
             return false;
         }
 

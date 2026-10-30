@@ -102,9 +102,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string launcherProviderId = string.Empty;
     private string launcherProfileId = string.Empty;
     private string launcherChatTemplateId = string.Empty;
-    private IEnumerable<string> launcherDataSourceIds = [];
+    private IReadOnlyCollection<string> launcherDataSourceIds = [];
     private HashSet<string> launcherToolIds = [];
-    private IEnumerable<AssistantComponentType> selectedAssistantComponents = [];
+    private IReadOnlyCollection<AssistantComponentType> selectedAssistantComponents = [];
     private CommonLanguages selectedOutputLanguage = CommonLanguages.AS_IS;
     private string customOutputLanguage = string.Empty;
     private bool allowGeneratedAssistantProfiles = true;
@@ -530,7 +530,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         _ => this.selectedOutputLanguage.Name(),
     };
 
-    private string GetSelectedAssistantComponentText(List<string?>? selectedValues)
+    private string GetSelectedAssistantComponentText(IReadOnlyList<string?>? selectedValues)
     {
         if (selectedValues is null || selectedValues.Count == 0)
             return T("Model decides");

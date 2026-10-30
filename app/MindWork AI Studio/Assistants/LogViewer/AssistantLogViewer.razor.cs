@@ -443,7 +443,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         return value == OTHER_OPTION_VALUE ? T("Other") : value;
     }
 
-    private string GetMultiSelectionText(List<string?>? selectedValues)
+    private string GetMultiSelectionText(IReadOnlyList<string?>? selectedValues)
     {
         if (selectedValues is null || selectedValues.Count == 0)
             return T("All");

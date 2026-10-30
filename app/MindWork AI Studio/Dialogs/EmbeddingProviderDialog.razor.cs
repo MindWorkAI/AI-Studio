@@ -272,7 +272,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -479,7 +479,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (this.dataStoreWasAttempted)
             await this.form.Validate();
         else
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
     }
 
     private async Task ValidateCustomTokenizer(string filePath, int validationRevision)

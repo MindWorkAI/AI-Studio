@@ -97,7 +97,7 @@ namespace AIStudio.Components
             return [this.Default, .. items];
         }
 
-        private string GetMultiSelectionText(List<string?>? selectedValues)
+        private string GetMultiSelectionText(IReadOnlyList<string?>? selectedValues)
         {
             if (selectedValues is null || selectedValues.Count == 0)
                 return this.Default.Display;

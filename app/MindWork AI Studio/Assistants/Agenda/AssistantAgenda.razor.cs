@@ -168,8 +168,8 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string inputContent = string.Empty;
     private string inputDuration = string.Empty;
     private string inputStartTime = string.Empty;
-    private IEnumerable<string> selectedFoci = new HashSet<string>();
-    private IEnumerable<string> justBriefly = new HashSet<string>();
+    private IReadOnlyCollection<string> selectedFoci = new HashSet<string>();
+    private IReadOnlyCollection<string> justBriefly = new HashSet<string>();
     private string inputObjective = string.Empty;
     private string inputModerator = string.Empty;
     private CommonLanguages selectedTargetLanguage;

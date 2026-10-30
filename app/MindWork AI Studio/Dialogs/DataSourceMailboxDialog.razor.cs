@@ -207,7 +207,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if (!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
 
         // A check asked for in code waits until the fields hold their new values, cf. ToggleExpertSettings:
         if (this.revalidateAfterRender)

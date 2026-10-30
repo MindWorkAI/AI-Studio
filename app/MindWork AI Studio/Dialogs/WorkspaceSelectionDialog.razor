@@ -40,7 +40,7 @@
             }
 
             <MudStack Row="@true" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="2">
-                <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                <MudButton OnClick="@this.CancelAsync" Variant="Variant.Filled">
                     @T("Cancel")
                 </MudButton>
                 @if (this.showCreateWorkspaceForm)

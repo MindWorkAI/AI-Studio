@@ -60,10 +60,10 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     /// The data sources the chat starts with. An empty selection keeps the normal chat defaults.
     /// </summary>
     [Parameter]
-    public IEnumerable<string> DataSourceIds { get; set; } = [];
+    public IReadOnlyCollection<string> DataSourceIds { get; set; } = [];
 
     [Parameter]
-    public EventCallback<IEnumerable<string>> DataSourceIdsChanged { get; set; }
+    public EventCallback<IReadOnlyCollection<string>> DataSourceIdsChanged { get; set; }
 
     /// <summary>
     /// The tools preselected for the chat. An empty selection keeps the normal chat defaults.
@@ -121,10 +121,10 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     }
 
     //
-    // MudSelect hands out its selection as a lazy sequence of nullable strings. We materialize it
-    // once and drop empty entries, so the host always receives a stable list of usable IDs:
+    // MudSelect hands out its selection as a collection of nullable strings. We copy it and drop
+    // empty entries, so the host always receives a stable list of usable IDs:
     //
-    private async Task SetDataSourceIds(IEnumerable<string?>? dataSourceIds)
+    private async Task SetDataSourceIds(IReadOnlyCollection<string?>? dataSourceIds)
     {
         var selectedDataSourceIds = dataSourceIds is null ? [] : dataSourceIds.Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!).ToArray();
 
@@ -138,7 +138,7 @@ public partial class DirectChatLauncherForm : MSGComponentBase
         await this.ToolIdsChanged.InvokeAsync(toolIds);
     }
 
-    private string GetSelectedDataSourceText(List<string?>? selectedValues)
+    private string GetSelectedDataSourceText(IReadOnlyList<string?>? selectedValues)
     {
         if (selectedValues is null || selectedValues.Count == 0)
             return T("Use the normal chat data source defaults");

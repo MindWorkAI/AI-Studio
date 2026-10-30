@@ -123,7 +123,7 @@ public partial class Plugins : MSGComponentBase
         {
             var blockedAudit = securityState.Audit;
             if (blockedAudit is not null)
-                await this.DialogService.ShowMessageBox(this.T("Assistant Audit"), $"{blockedAudit.Level.GetName()}: {blockedAudit.Summary}", this.T("Close"));
+                await this.DialogService.ShowMessageBoxAsync(this.T("Assistant Audit"), $"{blockedAudit.Level.GetName()}: {blockedAudit.Summary}", this.T("Close"));
             return;
         }
 

@@ -37,7 +37,7 @@ public static class DependentFieldValidation
                 continue;
 
             if (field.Touched || field.HasErrors)
-                await field.Validate();
+                await field.ValidateAsync();
         }
     }
 }

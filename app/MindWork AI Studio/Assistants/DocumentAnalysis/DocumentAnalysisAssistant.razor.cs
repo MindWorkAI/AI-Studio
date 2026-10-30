@@ -445,7 +445,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private bool ArePolicyControlsDisabled => this.IsProcessing || this.IsMediaImportBusy;
     
-    private void SelectedPolicyChanged(DataDocumentAnalysisPolicy? policy)
+    private async Task SelectedPolicyChanged(DataDocumentAnalysisPolicy? policy)
     {
         if (this.ArePolicyControlsDisabled)
             return;
@@ -455,8 +455,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
         this.documentSelectionExpanded = !this.policyDefinitionExpanded;
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
-        
-        this.Form?.ResetValidation();
+
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
+
         this.ClearInputIssues();
     }
 
@@ -502,7 +504,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Add(addedPolicy);
         await this.SettingsManager.StoreSettings();
-        this.SelectedPolicyChanged(addedPolicy);
+        await this.SelectedPolicyChanged(addedPolicy);
     }
 
     private async Task AddPolicy()
@@ -556,7 +558,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ResetForm();
         
         await this.SettingsManager.StoreSettings();
-        this.Form?.ResetValidation();
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
     }
     
     /// <summary>
@@ -728,7 +731,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     #region Overrides of MSGComponentBase
 
-    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
@@ -738,17 +741,17 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                 break;
 
             case Event.PLUGINS_RELOADED:
-                this.HandlePluginsReloaded();
+                await this.HandlePluginsReloaded();
                 this.StateHasChanged();
                 break;
         }
 
-        return base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+        await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
 
     #endregion
 
-    private void HandlePluginsReloaded()
+    private async Task HandlePluginsReloaded()
     {
         // Check if the currently selected policy still exists after plugin reload:
         if (this.selectedPolicy is not null)
@@ -788,7 +791,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
 
         // Reset validation state:
-        this.Form?.ResetValidation();
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
+
         this.ClearInputIssues();
     }
     

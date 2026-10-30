@@ -139,7 +139,9 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
             this.workspaces.Add(new(result.Workspace.WorkspaceId, result.Workspace.Name));
             this.selectedWorkspace = result.Workspace.WorkspaceId;
             this.newWorkspaceName = string.Empty;
-            this.createWorkspaceForm?.ResetValidation();
+            if (this.createWorkspaceForm is not null)
+                await this.createWorkspaceForm.ResetValidationAsync();
+
             this.showCreateWorkspaceForm = false;
             await this.SendMessage(Event.WORKSPACE_CREATED, result.Workspace.WorkspaceId);
         }
@@ -149,7 +151,7 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         }
     }
 
-    private void Cancel()
+    private async Task CancelAsync()
     {
         if (!this.showCreateWorkspaceForm)
         {
@@ -160,7 +162,9 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         this.createWorkspaceError = null;
         this.createWorkspaceErrorName = null;
         this.newWorkspaceName = string.Empty;
-        this.createWorkspaceForm?.ResetValidation();
+        if (this.createWorkspaceForm is not null)
+            await this.createWorkspaceForm.ResetValidationAsync();
+
         this.showCreateWorkspaceForm = false;
         this.shouldFocusNewWorkspaceName = false;
     }
@@ -168,9 +172,9 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
     [JSInvokable]
     public async Task HandleEscapeKeyAsync()
     {
-        await this.InvokeAsync(() =>
+        await this.InvokeAsync(async () =>
         {
-            this.Cancel();
+            await this.CancelAsync();
             this.StateHasChanged();
         });
     }
