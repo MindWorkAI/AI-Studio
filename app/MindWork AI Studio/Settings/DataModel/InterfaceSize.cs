@@ -18,7 +18,7 @@ public enum InterfaceSize
     SYSTEM_SCALING,
 
     /// <summary>
-    /// A scale of the user's own, see <see cref="InterfaceScreenSize.CustomPercent"/>.
+    /// A scale of the user's own, see InterfaceScreenSize.CustomPercent.
     /// </summary>
     CUSTOM,
 }

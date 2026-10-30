@@ -73,8 +73,8 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <remarks>
     /// Kept per screen, as the operating systems keep their scaling per monitor: a laptop calls for
     /// another size than an external monitor, and the same scale looks different on screens of
-    /// different densities. A screen missing here gets <see cref="InterfaceSize.APP_DEFAULT"/> when
-    /// it is the screen of a laptop, and <see cref="InterfaceSize.SYSTEM_SCALING"/> otherwise. The
+    /// different densities. A screen missing here gets InterfaceSize.APP_DEFAULT when it is the
+    /// screen of a laptop, and InterfaceSize.SYSTEM_SCALING otherwise. The
     /// user's own, like the scaling of the operating system: no configuration plugin manages it.
     /// </remarks>
     public List<InterfaceScreenSize> InterfaceScreenSizes { get; set; } = [];

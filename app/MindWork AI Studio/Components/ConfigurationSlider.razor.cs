@@ -55,7 +55,7 @@ public partial class ConfigurationSlider<T> : ConfigurationBaseCore where T : st
     public bool Immediate { get; set; } = true;
 
     /// <summary>
-    /// The value the user drags the slider to, while the option waits for the release, see <see cref="Immediate"/>.
+    /// The value the user drags the slider to, while the option waits for the release, see Immediate.
     /// </summary>
     private T? draggedValue;
 

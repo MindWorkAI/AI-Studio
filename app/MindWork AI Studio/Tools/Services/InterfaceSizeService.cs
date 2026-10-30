@@ -18,13 +18,13 @@ public sealed class InterfaceSizeService : BackgroundService, IMessageBusReceive
 {
     /// <summary>
     /// The smallest custom scale on any screen, in percent. A screen may allow less of the range,
-    /// which the runtime reports.
+    /// which the runtime reports. Keep in sync with MIN_SCALE in runtime/src/interface_zoom.rs.
     /// </summary>
     private const int MIN_CUSTOM_PERCENT = 60;
 
     /// <summary>
     /// The largest custom scale on any screen, in percent. A screen may allow less of the range,
-    /// which the runtime reports.
+    /// which the runtime reports. Keep in sync with MAX_SCALE in runtime/src/interface_zoom.rs.
     /// </summary>
     private const int MAX_CUSTOM_PERCENT = 300;
 

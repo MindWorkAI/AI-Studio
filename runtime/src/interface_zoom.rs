@@ -58,10 +58,12 @@ const MAX_CSS_PIXELS_PER_INCH: f64 = 200.0;
 /// The narrowest a screen may become in CSS pixels, which is the narrowest layout AI Studio supports.
 const MIN_CSS_WIDTH: f64 = 1024.0;
 
-/// The smallest scale on any screen, as device pixels per CSS pixel.
+/// The smallest scale on any screen, as device pixels per CSS pixel. Keep in sync with
+/// MIN_CUSTOM_PERCENT in InterfaceSizeService of the app.
 const MIN_SCALE: f64 = 0.6;
 
-/// The largest scale on any screen, as device pixels per CSS pixel.
+/// The largest scale on any screen, as device pixels per CSS pixel. Keep in sync with
+/// MAX_CUSTOM_PERCENT in InterfaceSizeService of the app.
 const MAX_SCALE: f64 = 3.0;
 
 /// How far a scale may shrink below the scaling of the system on a screen of unknown size, where
