@@ -17,7 +17,7 @@ Therefore, we cannot provide a static list here that is valid for all Linux syst
 Regardless of whether you want to build the app locally for yourself (not trusting the pre-built binaries) or test your changes before creating a PR, you have to run the following commands at least once:
 
 1. Open a terminal.
-2. Install the Tauri CLI by running `cargo install tauri-cli --version 2.11.0 --locked`.
+2. Install the Tauri CLI by running `cargo install tauri-cli --version 2.12.4 --locked`.
 3. Navigate to the `/app/Build` directory within the repository.
 4. Run `dotnet run build` to build the entire app.
 
