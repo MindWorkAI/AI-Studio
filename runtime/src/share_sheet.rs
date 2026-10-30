@@ -151,7 +151,7 @@ async fn share_file_on_platform(path: PathBuf) -> Result<(), ShareFailure> {
     fn provide_shared_file(arguments: &DataRequestedEventArgs, path: &str) -> windows::core::Result<()> {
         let request = arguments.Request()?;
         let lookup_started = Instant::now();
-        let file = StorageFile::GetFileFromPathAsync(&HSTRING::from(path))?.get()?;
+        let file = StorageFile::GetFileFromPathAsync(&HSTRING::from(path))?.join()?;
         let lookup_duration = lookup_started.elapsed();
         if lookup_duration > DATA_PACKAGE_DEADLINE {
             warn!(Source = "Share sheet"; "Looking up the shared file took {} ms, but Windows allows only {} ms to provide the data.", lookup_duration.as_millis(), DATA_PACKAGE_DEADLINE.as_millis());
