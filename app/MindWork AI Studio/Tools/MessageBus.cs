@@ -166,6 +166,12 @@ public sealed class MessageBus
     public Task SendInfo(DataInfoMessage dataInfoMessage) => this.SendMessage(null, Event.SHOW_INFO, dataInfoMessage);
 
     /// <summary>
+    /// Removes a notification which was shown with a key, see DataWarningMessage.Key.
+    /// </summary>
+    /// <param name="key">The key of the notification.</param>
+    public Task HideNotification(string key) => this.SendMessage(null, Event.HIDE_NOTIFICATION, key);
+
+    /// <summary>
     /// Stores a message until someone asks for it, cf. TakeDeferredMessages. This is how a
     /// component hands data to a component which does not exist yet, e.g. an assistant which
     /// sends its result to the chat before the user gets there.

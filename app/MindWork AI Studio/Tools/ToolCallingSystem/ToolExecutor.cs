@@ -32,6 +32,58 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         });
     }
 
+    /// <summary>
+    /// The outcome of a call which did not run, because the user declined it or nobody could confirm it.
+    /// </summary>
+    /// <param name="toolCallId">The ID of the call.</param>
+    /// <param name="definition">The definition of the tool.</param>
+    /// <param name="implementation">The implementation of the tool.</param>
+    /// <param name="argumentsJson">The arguments the model passed.</param>
+    /// <param name="order">The number of the call in this answer.</param>
+    /// <param name="messageForModel">What the model reads instead of a result, see ToolApprovalRules.</param>
+    /// <param name="approval">DECLINE when the user declined, NONE when nobody could confirm the call.</param>
+    /// <returns>The outcome, with a trace in the state DECLINED.</returns>
+    public ToolCallOutcome CreateDeclinedResult(string toolCallId, ToolDefinition definition, IToolImplementation implementation, string argumentsJson, int order, string messageForModel, ToolApprovalDecision approval)
+    {
+        logger.LogInformation("Tool execution was declined. ToolName={ToolName}, ToolCallId={ToolCallId}, Status={Status}", definition.Function.Name, toolCallId, ToolInvocationTraceStatus.DECLINED);
+        return new ToolCallOutcome(messageForModel, new ToolInvocationTrace
+        {
+            Order = order,
+            ToolId = definition.Id,
+            ToolName = implementation.GetDisplayName(),
+            ToolIcon = implementation.Icon,
+            ToolCallId = toolCallId,
+            Status = ToolInvocationTraceStatus.DECLINED,
+            Approval = approval,
+
+            //
+            // No status message: the message is meant for the model, and it already stands as the
+            // result. The user learns what happened from the status and the notice of the answer.
+            //
+            Arguments = FormatTraceArguments(argumentsJson, implementation),
+            Result = messageForModel,
+        });
+    }
+
+    /// <summary>
+    /// The arguments of a call the way the user sees them, with the sensitive ones masked.
+    /// </summary>
+    /// <param name="argumentsJson">The arguments the model passed.</param>
+    /// <param name="implementation">The tool, which names its sensitive arguments.</param>
+    /// <returns>The arguments by name, or none when they cannot be read.</returns>
+    public static Dictionary<string, string> FormatTraceArguments(string argumentsJson, IToolImplementation implementation)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
+            return FormatArguments(document.RootElement, implementation.SensitiveTraceArgumentNames);
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
     public static bool IsValidArgumentsJson(string? argumentsJson)
     {
         if (string.IsNullOrWhiteSpace(argumentsJson))

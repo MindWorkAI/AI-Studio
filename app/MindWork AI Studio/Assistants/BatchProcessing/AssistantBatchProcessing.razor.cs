@@ -130,6 +130,11 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private FileExclusionEditor? exclusionEditor;
     private bool showExpertSettings;
     private bool isProcessingBatch;
+
+    /// <summary>
+    /// The tool collections the user allowed for the current run, see ApproveToolsForPrivateRunAsync.
+    /// </summary>
+    private HashSet<string> approvedToolCollectionIds = [];
     private bool hasReportedWriteFailure;
     private int numProcessedFiles;
     private int pauseBeforeNextFileSeconds;

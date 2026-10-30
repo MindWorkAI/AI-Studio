@@ -472,6 +472,10 @@ public partial class ContentBlockComponent : MSGComponentBase
                 hash.Add(text.Presentation?.GetDataHashCode() ?? 0);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
+
+                // The instance, not only whether there is one: a call may wait right after the one before.
+                hash.Add(text.PendingToolApproval);
+                hash.Add(text.PendingToolApproval?.IsAnswered);
                 hash.Add(this.showToolTrace);
                 hash.Add(this.expandedToolInvocations.Count);
                 foreach (var expandedInvocation in this.expandedToolInvocations.Order())
@@ -481,6 +485,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                     hash.Add(invocation.Order);
                     hash.Add(invocation.ToolId);
                     hash.Add(invocation.Status);
+                    hash.Add(invocation.Approval);
                     hash.Add(invocation.StatusMessage);
                     hash.Add(invocation.Result);
                     hash.Add(invocation.JsonResult is not null);
@@ -513,6 +518,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         ToolInvocationTraceStatus.SUCCESS => Color.Success,
         ToolInvocationTraceStatus.ERROR => Color.Error,
         ToolInvocationTraceStatus.BLOCKED => Color.Warning,
+        ToolInvocationTraceStatus.DECLINED => Color.Error,
         _ => Color.Default,
     };
 
@@ -521,8 +527,43 @@ public partial class ContentBlockComponent : MSGComponentBase
         ToolInvocationTraceStatus.SUCCESS => this.T("Executed"),
         ToolInvocationTraceStatus.ERROR => this.T("Failed"),
         ToolInvocationTraceStatus.BLOCKED => this.T("Blocked"),
+        ToolInvocationTraceStatus.DECLINED => this.T("Declined"),
         _ => this.T("Unknown"),
     };
+
+    /// <summary>
+    /// One notice per tool whose calls needed the confirmation of the user: what the user decided about them.
+    /// </summary>
+    /// <remarks>
+    /// Read from the traces, which are stored with the answer, so the notice stays when the answer
+    /// is written and after the chat was loaded again. Without it, only the reasoning of the model
+    /// would tell why an answer lacks what a declined call would have found.<br/><br/>
+    /// One per tool rather than one per call: a model which searches five times would otherwise
+    /// stack five notices saying the same. Blue when every call ran, red when none did, and orange
+    /// when the user allowed some and declined others.
+    /// </remarks>
+    private IEnumerable<(Severity Severity, string Message)> GetToolApprovalNotices() => this.GetToolInvocations()
+        .Where(invocation => invocation.Approval is not ToolApprovalDecision.NONE || invocation.Status is ToolInvocationTraceStatus.DECLINED)
+        .GroupBy(invocation => invocation.ToolName, StringComparer.Ordinal)
+        .Select(calls => this.CreateToolApprovalNotice(calls.Key, calls.ToList()));
+
+    private (Severity Severity, string Message) CreateToolApprovalNotice(string toolName, IReadOnlyList<ToolInvocationTrace> calls)
+    {
+        var declined = calls.Where(call => call.Status is ToolInvocationTraceStatus.DECLINED).ToList();
+        var ran = calls.Count - declined.Count;
+
+        if (declined.Count is 0)
+            return calls.Any(call => call.Approval is ToolApprovalDecision.RUN_ALWAYS_IN_THIS_CHAT)
+                ? (Severity.Info, string.Format(this.T("You allowed the tool '{0}' for this chat."), toolName))
+                : (Severity.Info, string.Format(this.T("You allowed the tool '{0}' to run."), toolName));
+
+        if (ran is 0)
+            return declined.All(call => call.Approval is ToolApprovalDecision.NONE)
+                ? (Severity.Error, string.Format(this.T("The tool '{0}' needs your confirmation, which cannot be given here, so it did not run. The answer may therefore be outdated or incomplete."), toolName))
+                : (Severity.Error, string.Format(this.T("You declined the tool '{0}', so it did not run. The answer may therefore be outdated or incomplete."), toolName));
+
+        return (Severity.Warning, string.Format(this.T("You allowed the tool '{0}' for some of its calls and declined the others. The answer may therefore be incomplete."), toolName));
+    }
 
     private IReadOnlyList<ToolInvocationTrace> GetToolInvocations() => this.Content is ContentText textContent
         ? textContent.ToolInvocations.OrderBy(x => x.Order).ToList()
@@ -542,6 +583,19 @@ public partial class ContentBlockComponent : MSGComponentBase
     private void ToggleToolTrace() => this.showToolTrace = !this.showToolTrace;
 
     private bool IsToolInvocationExpanded(int order) => this.expandedToolInvocations.Contains(order);
+
+    /// <summary>
+    /// Passes on what the user decided about a tool call which waits for confirmation.
+    /// </summary>
+    /// <remarks>
+    /// The buttons disappear right away, before the tool calling loop takes the request away: the
+    /// tool may take a while, and a second click must not look as if it did anything.
+    /// </remarks>
+    private void AnswerToolApproval(ToolApprovalRequest request, ToolApprovalDecision decision)
+    {
+        request.Answer(decision);
+        this.StateHasChanged();
+    }
 
     private void ToggleToolInvocation(int order)
     {

@@ -107,6 +107,26 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     // IsAllowedByOutboundDataRestriction:
     public bool EnforcesOutboundDataRestriction => true;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// An address the model was given carries nothing the model chose, see
+    /// ChatThread.IsWebAddressGivenToTheModel: the user wrote it into the chat, or a tool returned
+    /// it, such as a hit of the wiki search. Asking for each of those would make the search of the
+    /// wiki, which runs without confirmation, ask after all whenever it opens a page.
+    /// </remarks>
+    public bool RequiresApproval(JsonElement arguments, ChatThread chatThread)
+    {
+        if (arguments.ValueKind is JsonValueKind.Object
+            && arguments.TryGetProperty(URL_ARGUMENT, out var urlElement)
+            && urlElement.ValueKind is JsonValueKind.String
+            && Uri.TryCreate(urlElement.GetString(), UriKind.Absolute, out var url)
+            && url is { Scheme: "http" or "https" }
+            && chatThread.IsWebAddressGivenToTheModel(url))
+            return false;
+
+        return ToolApprovalRules.RequiresApprovalByDefault(this.OutboundData);
+    }
+
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
 
     public string GetDisplayName() => TB("Read Web Page");

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
@@ -42,6 +43,12 @@ public partial class AssistantBatchProcessing
 
             (previousLog, previousResults) = previousRun.Value;
         }
+
+        //
+        // Nobody sees the answers for single files, so no tool call could be confirmed there. The
+        // user allows the tools which need confirmation once, for the whole run:
+        //
+        this.approvedToolCollectionIds = await this.ApproveToolsForPrivateRunAsync(this.GetRunnableToolIds(OutboundDataRestriction.UNRESTRICTED));
 
         this.PrepareFileResults(resolvedOutputDirectory, files, previousLog, previousResults);
         await this.WarnAboutUnreadableImagesAsync();

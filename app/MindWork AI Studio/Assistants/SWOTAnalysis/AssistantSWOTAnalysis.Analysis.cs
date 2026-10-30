@@ -33,6 +33,7 @@ public partial class AssistantSWOTAnalysis
         this.isModeratingAnalysis = false;
         this.isRepairingModeration = false;
         this.categoryAnalysisProgress.Clear();
+        this.approvedToolCollectionIds = [];
         this.CreateChatThread();
 
         var token = this.CancellationTokenSource?.Token ?? CancellationToken.None;
@@ -45,6 +46,8 @@ public partial class AssistantSWOTAnalysis
         var runnableToolIds = this.GetRunnableToolIds(OutboundDataRestriction.UNRESTRICTED);
         if (runnableToolIds.Count > 0)
         {
+            // Nobody sees the research while it runs, so its tools are allowed once, for the whole analysis:
+            this.approvedToolCollectionIds = await this.ApproveToolsForPrivateRunAsync(runnableToolIds);
             this.isGatheringSharedResearch = true;
             await this.PublishAnalysisProgressAsync();
             try
@@ -348,6 +351,11 @@ public partial class AssistantSWOTAnalysis
     /// <param name="systemPrompt">The system prompt of the request.</param>
     /// <param name="runnableToolIds">The tools the model may use; empty for none.</param>
     /// <returns>The thread, without any blocks yet.</returns>
+    /// <summary>
+    /// The tool collections the user allowed for the current analysis, see ApproveToolsForPrivateRunAsync.
+    /// </summary>
+    private HashSet<string> approvedToolCollectionIds = [];
+
     private ChatThread CreatePrivateThread(string name, string systemPrompt, HashSet<string> runnableToolIds)
     {
         var thread = new ChatThread
@@ -363,6 +371,7 @@ public partial class AssistantSWOTAnalysis
             Blocks = [],
             RuntimeSelectedToolIds = [.. runnableToolIds],
             RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null,
+            RuntimeApprovedToolCollectionIds = new(this.approvedToolCollectionIds, StringComparer.Ordinal),
         };
 
         this.AssignRuntimeIdentity(thread);

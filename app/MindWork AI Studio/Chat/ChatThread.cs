@@ -266,6 +266,28 @@ public sealed record ChatThread
     public HashSet<string> RuntimeSelectedToolIds { get; set; } = [];
 
     /// <summary>
+    /// Whether somebody sees the answer of this thread while it is written, and can confirm a tool call there.
+    /// </summary>
+    /// <remarks>
+    /// Set by the chat and by the assistants for the threads they show. A thread which nobody sees,
+    /// such as one of the batch processing, keeps it false: a call which needs confirmation then
+    /// runs only when its collection was allowed beforehand, see RuntimeApprovedToolCollectionIds,
+    /// rather than waiting for an answer which never comes. See ToolApprovalRules.
+    /// </remarks>
+    [JsonIgnore]
+    public bool RuntimeAsksForToolApproval { get; set; }
+
+    /// <summary>
+    /// The tool collections the user allowed for this chat, so their calls run without asking.
+    /// </summary>
+    /// <remarks>
+    /// Not stored: after a restart, the user confirms again. Counts only while the organization
+    /// permits such an allowance, see ToolApprovalRules.MayApproveForWholeChat.
+    /// </remarks>
+    [JsonIgnore]
+    public HashSet<string> RuntimeApprovedToolCollectionIds { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
     /// The web addresses tools returned in this chat since it was opened, as request keys, see
     /// WebAddresses.CreateRequestKey.
     /// </summary>

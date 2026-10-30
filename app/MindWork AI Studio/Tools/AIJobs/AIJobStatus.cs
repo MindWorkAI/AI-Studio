@@ -9,4 +9,9 @@ public enum AIJobStatus
     COMPLETED,
     CANCELED,
     FAILED,
+
+    /// <summary>
+    /// The model asked for a tool call which the user has to confirm first, see ToolApprovalRequest.
+    /// </summary>
+    WAITING_FOR_APPROVAL,
 }

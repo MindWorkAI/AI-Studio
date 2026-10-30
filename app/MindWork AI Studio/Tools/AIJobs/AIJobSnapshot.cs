@@ -30,5 +30,5 @@ public sealed record AIJobSnapshot
 
     public string ErrorMessage { get; init; } = string.Empty;
 
-    public bool IsActive => this.Status is AIJobStatus.QUEUED or AIJobStatus.WAITING_FOR_REMOTE or AIJobStatus.RUNNING;
+    public bool IsActive => this.Status is AIJobStatus.QUEUED or AIJobStatus.WAITING_FOR_REMOTE or AIJobStatus.RUNNING or AIJobStatus.WAITING_FOR_APPROVAL;
 }

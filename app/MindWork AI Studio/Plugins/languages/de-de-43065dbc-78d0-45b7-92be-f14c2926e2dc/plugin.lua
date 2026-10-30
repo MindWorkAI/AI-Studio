@@ -312,6 +312,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::NUMBERPARTICIPANTSEXTENSIONS::T56
 -- 1,000+ (large event)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::NUMBERPARTICIPANTSEXTENSIONS::T812476179"] = "1.000+ (Großveranstaltung)"
 
+-- This assistant sends its requests to the AI without showing them, so you cannot confirm single tool calls. Do you want to allow these tools for this run: {0}? If you do not allow them, calls which need your confirmation do not run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1253854297"] = "Dieser Assistent sendet seine Anfragen an die KI, ohne sie anzuzeigen. Deshalb können Sie einzelne Werkzeugaufrufe nicht bestätigen. Möchten Sie diese Werkzeuge für diesen Durchlauf erlauben: {0}? Wenn Sie sie nicht erlauben, werden Aufrufe, die Ihre Bestätigung benötigen, nicht ausgeführt."
+
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1317408357"] = "Generierung stoppen"
 
@@ -339,11 +342,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T268581738"] = "Der an die
 -- Assistant - {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T3043922"] = "Assistent – {0}"
 
+-- Your organization requires you to confirm every call of these tools: {0}. This assistant cannot show single calls for confirmation, so it does without them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T3550292728"] = "Ihre Organisation verlangt, dass Sie jeden Aufruf dieser Werkzeuge bestätigen: {0}. Dieser Assistent kann einzelne Aufrufe nicht zur Bestätigung anzeigen und verzichtet deshalb auf diese Werkzeuge."
+
 -- Send to ...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T4242312602"] = "Senden an ..."
 
 -- Copy result
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T83711157"] = "Ergebnis kopieren"
+
+-- Allow tools
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T92352233"] = "Werkzeuge erlauben"
 
 -- Hide Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1108876344"] = "Experten-Einstellungen ausblenden"
@@ -368,6 +377,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Instructions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1221801316"] = "Anweisungen"
+
+-- declined
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T128482375"] = "abgelehnt"
 
 -- Process all documents and media files of a folder in one batch run: documents are converted to Markdown, while audio and video files are transcribed automatically, before their content is sent to the AI along with your instructions. You choose whether each answer is stored as its own Markdown file or whether all answers are collected in one CSV results table. A log records what happened to every file, so a run which was interrupted or produced errors can be continued later. A single failing file never stops the entire run.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T131887991"] = "Verarbeitung alle Dokumente und Mediendateien eines Ordners in einem einzigen Durchlauf: Dokumente werden in Markdown umgewandelt, während Audio- und Videodateien automatisch transkribiert werden. Anschließend werden ihre Inhalte zusammen mit Ihren Anweisungen an die KI gesendet. Sie entscheiden, ob jede Antwort in einer eigenen Markdown-Datei gespeichert oder alle Antworten in einer CSV-Ergebnistabelle gesammelt werden. Ein Protokoll hält fest, was mit jeder Datei passiert ist, sodass ein unterbrochener oder fehlerhafter Durchlauf später fortgesetzt werden kann. Eine einzelne fehlerhafte Datei hält niemals den gesamten Durchlauf auf."
@@ -3663,6 +3675,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T3768991250"] = "Benutzer"
 -- AI
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T601166687"] = "KI"
 
+-- You allowed the tool '{0}' to run.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1153462851"] = "Sie haben die Ausführung des Werkzeugs '{0}' erlaubt."
+
 -- Edit Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1183581066"] = "Nachricht bearbeiten"
 
@@ -3683,6 +3698,12 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Ja, ent
 
 -- Failed
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1434043348"] = "Fehlgeschlagen"
+
+-- Declined
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1456918375"] = "Abgelehnt"
+
+-- Decline
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1491791673"] = "Ablehnen"
 
 -- Tool Calls ({0})
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1493057571"] = "Werkzeugaufrufe"
@@ -3705,6 +3726,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1848978959"] = "Anzahl 
 -- Code block {0} ({1})
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1934297017"] = "Codeblock {0} ({1})"
 
+-- You allowed the tool '{0}' for some of its calls and declined the others. The answer may therefore be incomplete.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T194355920"] = "Sie haben das Werkzeug '{0}' für einige Aufrufe erlaubt und die übrigen abgelehnt. Die Antwort ist daher möglicherweise unvollständig."
+
 -- Show {0} tool calls
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1981771421"] = "{0} Werkzeugaufrufe anzeigen"
 
@@ -3717,8 +3741,14 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Möchte
 -- Removes this block
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Entfernt diesen Block"
 
+-- The tool '{0}' needs your confirmation, which cannot be given here, so it did not run. The answer may therefore be outdated or incomplete.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2245802547"] = "Das Werkzeug '{0}' benötigt Ihre Bestätigung, die hier nicht möglich ist, und wurde deshalb nicht ausgeführt. Die Antwort ist daher möglicherweise veraltet oder unvollständig."
+
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Nachricht neu erstellen"
+
+-- Run
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2371348074"] = "Ausführen"
 
 -- Failed to export this message, because the file format '{0}' is unknown.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2544592344"] = "Diese Nachricht konnte nicht exportiert werden, da das Dateiformat „{0}“ unbekannt ist."
@@ -3732,8 +3762,14 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2814713106"] = "Als {0}
 -- Export AI response
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2822776450"] = "KI-Antwort exportieren"
 
+-- Always allow in this chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2877127686"] = "In diesem Chat immer erlauben"
+
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Anzahl der Anhänge"
+
+-- You allowed the tool '{0}' for this chat.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3040528366"] = "Sie haben das Werkzeug '{0}' für diesen Chat erlaubt."
 
 -- Roll back to this response
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3132525321"] = "Zu dieser Antwort zurücksetzen"
@@ -3756,8 +3792,14 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3587744975"] = "Neu gen
 -- Tables ({0})
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3588342717"] = "Tabellen ({0})"
 
+-- The AI wants to use the tool '{0}'. Do you want to allow it?
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3746709998"] = "Die KI möchte das Werkzeug '{0}' verwenden. Möchten Sie das erlauben?"
+
 -- Blocked
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3816336467"] = "Blockiert"
+
+-- You declined the tool '{0}', so it did not run. The answer may therefore be outdated or incomplete.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T381924939"] = "Sie haben das Werkzeug '{0}' abgelehnt, deshalb wurde es nicht ausgeführt. Die Antwort ist daher möglicherweise veraltet oder unvollständig."
 
 -- Code block: {0}
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3840086915"] = "Codeblock: {0}"
@@ -3833,6 +3875,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2600900617"] = "Die Medi
 
 -- Assistant is still running.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2719896610"] = "Assistent läuft noch."
+
+-- The assistant waits for you to confirm a tool call.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T310378664"] = "Der Assistent wartet darauf, dass Sie einen Werkzeugaufruf bestätigen."
 
 -- The media transcript is ready.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3248321953"] = "Das Medientranskript ist fertig."
@@ -5964,6 +6009,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T782238
 -- Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1112962504"] = "Deaktivieren Sie dieses Werkzeug, wenn Sie es nie benötigen. Es erscheint dann in keiner Werkzeugauswahl, und die KI kann es nicht verwenden."
 
+-- Allow a tool for a whole chat?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T124410577"] = "Ein Werkzeug für den ganzen Chat erlauben?"
+
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1258653480"] = "Einstellungen"
 
@@ -5976,8 +6024,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1759955728
 -- This tool still needs to be configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1958939818"] = "Dieses Werkzeug muss noch konfiguriert werden."
 
+-- Decide which tool calls you confirm before they run. Critical calls send what the AI wrote to third parties, such as the query of a web search. Tools which stay within your organization, such as the search of your data sources, are not critical. In every case, a chat which holds internal content does not use tools which would carry it outside.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2057241883"] = "Legen Sie fest, welche Werkzeugaufrufe Sie vorher bestätigen möchten. Kritische Aufrufe schicken Text der KI an Dritte, zum Beispiel die Suchanfrage einer Websuche. Werkzeuge innerhalb Ihrer Organisation sind nicht kritisch, zum Beispiel die Suche in Ihren Datenquellen. Ein Chat mit internen Inhalten nutzt nie Werkzeuge, die diese Inhalte nach außen tragen würden."
+
 -- Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2160193517"] = "Deaktivieren Sie die Werkzeuge, die Sie nie benötigen. Diese erscheinen dann in keiner Werkzeugauswahl, und die KI kann sie nicht verwenden."
+
+-- A confirmation may allow the tool for the rest of the chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2543907790"] = "Eine Bestätigung kann das Werkzeug für den Rest des Chats erlauben"
 
 -- Missing required settings: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2588115579"] = "Fehlende erforderliche Einstellungen: {0}"
@@ -6003,14 +6057,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3728248397
 -- Tool Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3730473128"] = "Werkzeugeinstellungen"
 
+-- Every call has to be confirmed on its own
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3731360418"] = "Jeder Aufruf muss einzeln bestätigt werden"
+
 -- This tool has been disabled by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3794167684"] = "Dieses Werkzeug wurde von Ihrer Organisation deaktiviert."
+
+-- When enabled, you can allow a tool for the rest of a chat while confirming one of its calls, and assistants which work out of sight ask once before they start. When disabled, such assistants cannot use tools which need your confirmation.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T614299369"] = "Wenn aktiviert, können Sie ein Werkzeug beim Bestätigen für den Rest des Chats erlauben. Assistenten, die im Hintergrund arbeiten, fragen dann einmal vor dem Start. Wenn deaktiviert, können diese Assistenten keine Werkzeuge verwenden, die Ihre Bestätigung brauchen."
 
 -- Status
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T6222351"] = "Status"
 
 -- No minimum
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T671311234"] = "Kein Minimum"
+
+-- Confirm tool calls
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T681692566"] = "Werkzeugaufrufe bestätigen"
 
 -- No transcription provider configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1079350363"] = "Es ist bisher kein Anbieter für Transkriptionen konfiguriert."
@@ -12507,6 +12570,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1188453609
 -- Show also prototype features: these are works in progress; expect bugs and missing features
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1245257804"] = "Auch Prototyp-Funktionen anzeigen: Diese befinden sich noch in der Entwicklung; Fehler und fehlende Funktionen sind zu erwarten"
 
+-- Never ask, allow all tool calls which data protection permits
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1245352019"] = "Nie nachfragen, alle Werkzeugaufrufe erlauben, die der Datenschutz zulässt"
+
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1258653480"] = "Einstellungen"
 
@@ -12620,6 +12686,12 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4256323669
 
 -- All preview features are hidden
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4289410063"] = "Alle Vorschaufunktionen sind ausgeblendet"
+
+-- Ask before every tool call
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T475236"] = "Vor jedem Werkzeugaufruf nachfragen"
+
+-- Ask only for critical tool calls, such as a web search
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T542889847"] = "Nur bei kritischen Werkzeugaufrufen nachfragen, z. B. bei einer Websuche"
 
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T578410699"] = "Chat"
@@ -12840,6 +12912,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T3378120620"] = "Wir kon
 -- Your data sources could not be used. This answer was created without them.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T373499115"] = "Ihre Datenquellen konnten nicht verwendet werden. Diese Antwort wurde ohne sie erstellt."
 
+-- The chat '{0}' waits for you to confirm a tool call.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T4110597684"] = "Der Chat '{0}' wartet darauf, dass Sie einen Werkzeugaufruf bestätigen."
+
 -- Software Development
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1025369409"] = "Softwareentwicklung"
 
@@ -12875,6 +12950,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTLAUNCH::ASSISTANTLAUNCHSERVICE::T2575
 
 -- Unnamed chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTLAUNCH::ASSISTANTLAUNCHSERVICE::T3310482275"] = "Unbenannter Chat"
+
+-- The assistant '{0}' waits for you to confirm a tool call.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTSESSIONS::ASSISTANTSESSIONSERVICE::T2771945194"] = "Der Assistent '{0}' wartet darauf, dass Sie einen Werkzeugaufruf bestätigen."
 
 -- SSO (Kerberos)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T268552140"] = "SSO (Kerberos)"
@@ -16698,8 +16776,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Using tools: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T2834986024"] = "Verwendung von Werkzeugen: {0}"
 
+-- Using tool: {0}. You allowed this call.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T3557445956"] = "Verwendetes Werkzeug: {0}. Sie haben diesen Aufruf erlaubt."
+
 -- Using tool: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T4185351801"] = "Verwendetes Werkzeug: {0}"
+
+-- Using tool: {0}. You allowed it for this chat.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T612371004"] = "Verwendetes Werkzeug: {0}. Sie haben es für diesen Chat erlaubt."
 
 -- Only the preferred one
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T1404354313"] = "Nur die bevorzugte"

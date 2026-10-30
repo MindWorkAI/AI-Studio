@@ -251,6 +251,28 @@
     left: 2.2em !important;
 }
 
+/* Puts the badge of a navigation item onto the upper right corner of its icon, instead of the corner of the whole row: */
+.nav-attention-badge {
+    /* MudBlazor places the badge through all four sides, from the right and the bottom, so all four are set here: */
+    inset: 0.1em auto auto 2.3em !important;
+
+    /* It covers part of the icon, so a click has to reach the link below: */
+    pointer-events: none !important;
+}
+
+/* Only the orange triangle, without the circle around it. Two classes, to win over the !important of the theme color: */
+.nav-attention-badge.mud-badge {
+    background-color: transparent !important;
+    color: var(--mud-palette-warning) !important;
+    padding: 0 !important;
+    width: 20px;
+    height: 20px;
+}
+
+.nav-attention-badge .mud-icon-badge {
+    font-size: 20px !important;
+}
+
 .chat-mathjax-block {
     text-align: left;
 }

@@ -208,6 +208,12 @@ public sealed class ContentText : IContent
     public ToolRuntimeStatus ToolRuntimeStatus { get; set; } = new();
 
     /// <summary>
+    /// The tool call which waits for the user to confirm it, or null when none does.
+    /// </summary>
+    [JsonIgnore]
+    public ToolApprovalRequest? PendingToolApproval { get; set; }
+
+    /// <summary>
     /// What the tool conversation of the running request adds to it, as far as it has got.
     /// </summary>
     /// <remarks>

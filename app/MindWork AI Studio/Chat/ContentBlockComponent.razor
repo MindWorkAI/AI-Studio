@@ -1,4 +1,5 @@
 @using AIStudio.Tools
+@using AIStudio.Tools.ToolCallingSystem
 @using MudBlazor
 @using AIStudio.Components
 @inherits AIStudio.Components.MSGComponentBase
@@ -231,9 +232,16 @@
                         }
                         else if (this.Content.IsStreaming)
                         {
-                            <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
-                                @textContent.Text.RemoveThinkTags()
-                            </MudText>
+                            @*
+                                Nothing written yet, e.g., while a tool call waits for confirmation: an
+                                empty paragraph would only leave a gap above it.
+                            *@
+                            @if (!string.IsNullOrWhiteSpace(textContent.Text))
+                            {
+                                <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
+                                    @textContent.Text.RemoveThinkTags()
+                                </MudText>
+                            }
                         }
                         else
                         {
@@ -266,7 +274,53 @@
                             </div>
                         }
 
-                        @if (this.Role is ChatRole.AI && !string.IsNullOrWhiteSpace(textContent.ToolRuntimeStatus.Message))
+                        @if (this.Role is ChatRole.AI)
+                        {
+                            @foreach (var notice in this.GetToolApprovalNotices())
+                            {
+                                <MudAlert Dense="@true" Severity="@notice.Severity" Variant="Variant.Outlined" Class="mt-4">
+                                    @notice.Message
+                                </MudAlert>
+                            }
+                        }
+
+                        @if (this.Role is ChatRole.AI && textContent.PendingToolApproval is { IsAnswered: false } approval)
+                        {
+                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Warning" Class="@(string.IsNullOrWhiteSpace(textContent.Text) ? string.Empty : "mt-4")">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                                    <MudIcon Icon="@approval.ToolIcon" Size="Size.Small" />
+                                    <MudText Typo="Typo.body1">
+                                        @string.Format(T("The AI wants to use the tool '{0}'. Do you want to allow it?"), approval.ToolName)
+                                    </MudText>
+                                </MudStack>
+                                @if (approval.Arguments.Count > 0)
+                                {
+                                    <MudList T="string" Dense="@true" Class="mb-2">
+                                        @foreach (var argument in approval.Arguments)
+                                        {
+                                            <MudListItem T="string">
+                                                <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;"><strong>@argument.Key:</strong> @argument.Value</MudText>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                                <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@(() => this.AnswerToolApproval(approval, ToolApprovalDecision.RUN))">
+                                        @T("Run")
+                                    </MudButton>
+                                    @if (approval.MayApproveForWholeChat)
+                                    {
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DoneAll" OnClick="@(() => this.AnswerToolApproval(approval, ToolApprovalDecision.RUN_ALWAYS_IN_THIS_CHAT))">
+                                            @T("Always allow in this chat")
+                                        </MudButton>
+                                    }
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" OnClick="@(() => this.AnswerToolApproval(approval, ToolApprovalDecision.DECLINE))">
+                                        @T("Decline")
+                                    </MudButton>
+                                </MudStack>
+                            </MudAlert>
+                        }
+                        else if (this.Role is ChatRole.AI && !string.IsNullOrWhiteSpace(textContent.ToolRuntimeStatus.Message))
                         {
                             <MudAlert Dense="@true" Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-4">
                                 @textContent.ToolRuntimeStatus.Message

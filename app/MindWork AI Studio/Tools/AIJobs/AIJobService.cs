@@ -39,6 +39,11 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
         public bool IsCompletionStarted { get; set; }
 
+        /// <summary>
+        /// The status to return to once the user answered a confirmation, see SetWaitingForToolApprovalAsync.
+        /// </summary>
+        public AIJobStatus StatusBeforeToolApproval { get; set; } = AIJobStatus.RUNNING;
+
         public readonly Lock SyncRoot = new();
     }
 
@@ -60,6 +65,11 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
     }
 
     public bool HasActiveJobs => this.jobs.Values.Any(job => job.Snapshot.IsActive);
+
+    /// <summary>
+    /// Whether any chat waits for the user to confirm a tool call, see SetWaitingForToolApprovalAsync.
+    /// </summary>
+    public bool IsAnyChatWaitingForToolApproval => this.jobs.Values.Any(job => job.Snapshot.Status is AIJobStatus.WAITING_FOR_APPROVAL);
 
     public bool IsChatGenerationActive(Guid chatId)
     {
@@ -124,6 +134,60 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         }
 
         await this.NotifyChangedAsync(job);
+    }
+
+    /// <summary>
+    /// Says that the answer of a chat waits for the user to confirm a tool call, or no longer does.
+    /// </summary>
+    /// <remarks>
+    /// A chat runs on when the user leaves it, so a confirmation may wait where nobody looks. The
+    /// workspaces show the state of the job, and a chat which is not in front gets a notification
+    /// on top. A chat without a running job is not an error: assistants run the same loop.
+    /// </remarks>
+    /// <param name="chatId">The chat whose answer waits.</param>
+    /// <param name="isWaiting">True when a call waits for confirmation, false when the user answered.</param>
+    public async Task SetWaitingForToolApprovalAsync(Guid chatId, bool isWaiting)
+    {
+        if (!this.activeChatJobsByChatId.TryGetValue(chatId, out var jobId))
+            return;
+
+        if (!this.jobs.TryGetValue(jobId, out var job))
+            return;
+
+        bool mustNotify;
+        var hasStoppedWaiting = false;
+        lock (job.SyncRoot)
+        {
+            if (job.IsCompletionStarted)
+                return;
+
+            if (isWaiting)
+            {
+                job.StatusBeforeToolApproval = job.Snapshot.Status;
+                job.Snapshot = job.Snapshot with
+                {
+                    Status = AIJobStatus.WAITING_FOR_APPROVAL,
+                    UpdatedAt = DateTimeOffset.Now,
+                };
+            }
+            else if (job.Snapshot.Status is AIJobStatus.WAITING_FOR_APPROVAL)
+            {
+                hasStoppedWaiting = true;
+                job.Snapshot = job.Snapshot with
+                {
+                    Status = job.StatusBeforeToolApproval,
+                    UpdatedAt = DateTimeOffset.Now,
+                };
+            }
+
+            mustNotify = isWaiting && !job.Snapshot.IsForeground;
+        }
+
+        await this.NotifyChangedAsync(job);
+        if (mustNotify)
+            await this.NotifyWaitingForToolApprovalAsync(job);
+        else if (hasStoppedWaiting)
+            await messageBus.HideNotification(ToolApprovalNotificationKey(job.Snapshot.SubjectId));
     }
 
     public async Task<AIJobSnapshot?> TryStartChatGenerationAsync(ChatGenerationRequest request)
@@ -227,8 +291,15 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
         foreach (var job in matchingJobs)
         {
+            bool leftWhileWaiting;
+            bool returnedWhileWaiting;
             lock (job.SyncRoot)
             {
+                // The user leaves a chat which waits for a confirmation, so the request is out of sight from now on:
+                leftWhileWaiting = !isForeground && job.Snapshot.IsForeground && job.Snapshot.Status is AIJobStatus.WAITING_FOR_APPROVAL;
+
+                // The user comes back to it, and the request stands in front of them again:
+                returnedWhileWaiting = isForeground && job.Snapshot.Status is AIJobStatus.WAITING_FOR_APPROVAL;
                 job.Snapshot = job.Snapshot with
                 {
                     IsForeground = isForeground,
@@ -237,8 +308,34 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             }
 
             await this.NotifyChangedAsync(job);
+            if (leftWhileWaiting)
+                await this.NotifyWaitingForToolApprovalAsync(job);
+            else if (returnedWhileWaiting)
+                await messageBus.HideNotification(ToolApprovalNotificationKey(job.Snapshot.SubjectId));
         }
     }
+
+    /// <summary>
+    /// Tells the user that a chat which is out of sight waits for a confirmation.
+    /// </summary>
+    /// <remarks>
+    /// Sent when the confirmation begins while the chat is out of sight, and when the user leaves
+    /// a chat which waits: in both cases, only the notification tells them. It stays until the user
+    /// closes it or nothing waits anymore: the user answered, came back to the chat, or the answer
+    /// ended. One per chat, identified by ToolApprovalNotificationKey. The title of a chat is its
+    /// first message unless the user renamed it, so it is shortened.
+    /// </remarks>
+    private Task NotifyWaitingForToolApprovalAsync(AIJobState job) => messageBus.SendWarning(new(Icons.Material.Filled.Warning, string.Format(TB("The chat '{0}' waits for you to confirm a tool call."), job.Snapshot.Title.Shorten(MAX_TITLE_CHARACTERS_IN_NOTIFICATIONS)), StaysUntilClosed: true, Key: ToolApprovalNotificationKey(job.Snapshot.SubjectId)));
+
+    /// <summary>
+    /// The key of the notification that a chat waits for a confirmation.
+    /// </summary>
+    private static string ToolApprovalNotificationKey(Guid chatId) => $"tool-approval-chat-{chatId}";
+
+    /// <summary>
+    /// How much of the title of a chat a notification quotes.
+    /// </summary>
+    private const int MAX_TITLE_CHARACTERS_IN_NOTIFICATIONS = 50;
 
     private async Task RunChatGenerationAsync(AIJobState state)
     {
@@ -393,6 +490,9 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         }
 
         this.activeChatJobsByChatId.TryRemove(request.ChatThread.ChatId, out _);
+
+        // A confirmation the answer still waited for, e.g., when the user stopped it, waits no more:
+        await messageBus.HideNotification(ToolApprovalNotificationKey(request.ChatThread.ChatId));
         await CheckpointChatAsync(state, force: true);
         await this.NotifyChangedAsync(state);
         await messageBus.SendMessage(null, Event.AI_JOB_FINISHED, state.Snapshot);

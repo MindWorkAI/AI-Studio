@@ -1402,6 +1402,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                     ProviderInstanceName = this.InstanceName,
                     ProviderType = this.Provider,
                     ModelId = chatModel.Id,
+                    MayApproveToolsForWholeChat = ToolApprovalRules.MayApproveForWholeChat(settingsManager),
+                    ToolApprovalMode = ToolApprovalRules.GetMode(settingsManager),
+                    GetToolCollectionId = toolRegistry.GetCollectionId,
                 };
 
                 await foreach (var content in loop.RunAsync(adapter, loopContext, token))

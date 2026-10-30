@@ -1,9 +1,14 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
 @inherits SettingsPanelBase
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="@T("Tool Settings")">
     <MudText Typo="Typo.body1" Class="mb-4">
         @T("Configure global settings for each tool.") @T("Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them.")
     </MudText>
+
+    <ConfigurationSelect OptionDescription="@T("Confirm tool calls")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Tools.ToolApprovalMode)" Data="@ConfigurationSelectDataFactory.GetToolApprovalModeData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Tools.ToolApprovalMode = selectedValue)" OptionHelp="@T("Decide which tool calls you confirm before they run. Critical calls send what the AI wrote to third parties, such as the query of a web search. Tools which stay within your organization, such as the search of your data sources, are not critical. In every case, a chat which holds internal content does not use tools which would carry it outside.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.Tools, x => x.ToolApprovalMode, out var meta) && meta.IsLocked"/>
+    <ConfigurationOption OptionDescription="@T("Allow a tool for a whole chat?")" LabelOn="@T("A confirmation may allow the tool for the rest of the chat")" LabelOff="@T("Every call has to be confirmed on its own")" State="@(() => this.SettingsManager.ConfigurationData.Tools.AllowApprovingToolsForWholeChat)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Tools.AllowApprovingToolsForWholeChat = updatedState)" OptionHelp="@T("When enabled, you can allow a tool for the rest of a chat while confirming one of its calls, and assistants which work out of sight ask once before they start. When disabled, such assistants cannot use tools which need your confirmation.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.Tools, x => x.AllowApprovingToolsForWholeChat, out var meta) && meta.IsLocked"/>
 
     <MudTable Items="@this.items" Hover="@true" Dense="@true">
         <HeaderContent>

@@ -21,6 +21,12 @@ public partial class ConfirmDialog : MSGComponentBase
     [Parameter]
     public string MarkdownBody { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The color of the confirming button. Red by default, since most confirmations ask before something is deleted.
+    /// </summary>
+    [Parameter]
+    public Color ConfirmColor { get; set; } = Color.Error;
+
     private void Cancel() => this.MudDialog.Cancel();
     
     private void Confirm() => this.MudDialog.Close(DialogResult.Ok(true));

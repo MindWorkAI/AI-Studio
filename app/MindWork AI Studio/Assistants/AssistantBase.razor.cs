@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantLaunch;
@@ -291,6 +292,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.SelectedToolIds = this.ToolRegistry.GetDefaultToolIds(this.Component);
         await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
+        this.AssistantSessionService.SetShown(this.assistantSessionKey, true);
         await this.AttachAssistantSessionIfAvailable();
         await this.ConsumeMediaOutcomeAsync();
     }
@@ -591,6 +593,93 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>
+    /// Asks once, before requests which nobody sees, whether their tools which need confirmation may run.
+    /// </summary>
+    /// <remarks>
+    /// A request out of sight, such as one document of a batch or the research of the SWOT analysis,
+    /// cannot show a single tool call for confirmation, see ChatThread.RuntimeAsksForToolApproval.
+    /// The user therefore decides for the whole run beforehand. Where the organization permits no
+    /// allowance beyond a single call, there is nothing to decide: such calls do not run there, and
+    /// the user learns so. See ToolApprovalRules.
+    /// </remarks>
+    /// <param name="runnableToolIds">The tools the requests may use.</param>
+    /// <param name="alreadyApproved">The collections allowed before, which are not asked about again.</param>
+    /// <returns>The collections the user allowed, to put into ChatThread.RuntimeApprovedToolCollectionIds.</returns>
+    protected async Task<HashSet<string>> ApproveToolsForPrivateRunAsync(IEnumerable<string> runnableToolIds, IReadOnlySet<string>? alreadyApproved = null)
+    {
+        var collectionIds = this.ToolRegistry.ExpandSelection(runnableToolIds)
+            .Where(toolId => this.ToolRegistry.GetDefinition(toolId) is { } definition
+                             && this.ToolRegistry.GetImplementation(definition.ImplementationKey) is { } implementation
+                             && ToolApprovalRules.MayRequireApproval(ToolApprovalRules.GetMode(this.SettingsManager), implementation))
+            .Select(this.ToolRegistry.GetCollectionId)
+            .Where(collectionId => alreadyApproved is null || !alreadyApproved.Contains(collectionId))
+            .ToHashSet(StringComparer.Ordinal);
+
+        if (collectionIds.Count is 0)
+            return [];
+
+        var toolNames = new List<string>(collectionIds.Count);
+        foreach (var collectionId in collectionIds.Order(StringComparer.Ordinal))
+            toolNames.Add((await this.ToolRegistry.GetCatalogItemAsync(collectionId))?.DisplayName ?? collectionId);
+
+        var namesText = string.Join(", ", toolNames);
+        if (!ToolApprovalRules.MayApproveForWholeChat(this.SettingsManager))
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, string.Format(this.TB("Your organization requires you to confirm every call of these tools: {0}. This assistant cannot show single calls for confirmation, so it does without them."), namesText)));
+            return [];
+        }
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, string.Format(this.TB("This assistant sends its requests to the AI without showing them, so you cannot confirm single tool calls. Do you want to allow these tools for this run: {0}? If you do not allow them, calls which need your confirmation do not run."), namesText) },
+
+            // Allowing something is no warning, unlike the deletions this dialog usually confirms:
+            { x => x.ConfirmColor, Color.Primary },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.TB("Allow tools"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return [];
+
+        return collectionIds;
+    }
+
+    /// <summary>
+    /// The thread whose hidden answers asked about their tools, see ApproveToolsForHiddenAnswerAsync.
+    /// </summary>
+    private ChatThread? toolApprovalAskedThread;
+
+    /// <summary>
+    /// The collections asked about for that thread, whatever the user answered.
+    /// </summary>
+    private readonly HashSet<string> toolApprovalAskedCollectionIds = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Asks before a hidden answer of the assistant's own thread whether its tools may run, once per thread and collection.
+    /// </summary>
+    /// <remarks>
+    /// An assistant which hides its answers, such as the Slide Assistant, often asks again right
+    /// away to repair an answer. Asking the user each time would not tell them anything new, so a
+    /// collection once asked about counts as decided for the thread, also when the user declined.
+    /// </remarks>
+    private async Task ApproveToolsForHiddenAnswerAsync(ChatThread thread)
+    {
+        if (!ReferenceEquals(this.toolApprovalAskedThread, thread))
+        {
+            this.toolApprovalAskedThread = thread;
+            this.toolApprovalAskedCollectionIds.Clear();
+        }
+
+        var decided = new HashSet<string>(this.toolApprovalAskedCollectionIds, StringComparer.Ordinal);
+        decided.UnionWith(thread.RuntimeApprovedToolCollectionIds);
+
+        var asked = this.ToolRegistry.NormalizeSelection(thread.RuntimeSelectedToolIds);
+        thread.RuntimeApprovedToolCollectionIds.UnionWith(await this.ApproveToolsForPrivateRunAsync(thread.RuntimeSelectedToolIds, decided));
+        this.toolApprovalAskedCollectionIds.UnionWith(asked);
+    }
+
+    /// <summary>
     /// Takes over a changed tool selection, no matter where the user made it.
     /// </summary>
     /// <remarks>
@@ -711,6 +800,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
             this.ChatThread.RuntimeSelectedToolIds = useSelectedTools ? this.GetRunnableToolIds(this.ChatThread.RequiredOutboundDataRestriction.Restriction) : [];
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
+
+            // Only an answer the user sees can show a tool call which waits for confirmation:
+            this.ChatThread.RuntimeAsksForToolApproval = !hideContentFromUser;
+            if (hideContentFromUser && this.ChatThread.RuntimeSelectedToolIds.Count > 0)
+                await this.ApproveToolsForHiddenAnswerAsync(this.ChatThread);
         }
 
         this.IsProcessing = true;
@@ -984,6 +1078,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.AssistantSessionService.SetShown(this.assistantSessionKey, false);
         this.isDisposed = true;
         try
         {
