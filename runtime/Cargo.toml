@@ -90,6 +90,13 @@ tower = { version = "0.5.2", features = ["util"] }
 #        on this crate in version 0.1.2, so the patch stays relevant: https://github.com/asimihsan/permutation-iterator-rs/pull/14
 permutation_iterator = { git = "https://github.com/SommerEngineering/permutation-iterator-rs.git", rev = "76836ed316d18dfef530ba908f58481c343e80d7" }
 
+# Issue: docx-to-md 0.1.0 and pptx-to-md 1.0.0 require zip 8, which is affected by several security advisories, among them
+#        GHSA-m665-v7pm-7grj. Our forks upgrade both crates to zip 9 and limit pptx-to-md to the deflate compression.
+# State: We opened PRs for both crates: https://github.com/nilskruthoff/docx-parser/pull/6 and
+#        https://github.com/nilskruthoff/pptx-parser/pull/49. Remove these patches once both crates are released with zip 9.
+docx-to-md = { git = "https://github.com/SommerEngineering/docx-parser.git", rev = "3434bd405fc95a6a4f5de1d09c74dfd27a409996" }
+pptx-to-md = { git = "https://github.com/SommerEngineering/pptx-parser.git", rev = "540af00586d122c192093f6c42991ce015a67223" }
+
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"
 windows-native-keyring-store = "1.1.0"
