@@ -58,7 +58,7 @@ symphonia = { version = "0.6", default-features = false, features = ["aac", "aif
 ropus = "=0.12.18"
 rubato = { version = "4", default-features = false, features = ["fft_resampler"] }
 webm-iterable = "0.6.4"
-calamine = "0.36.0"
+calamine = "0.37.0"
 pdfium-render = "0.9.1"
 sys-locale = "0.3.2"
 whoami = "2.1.2"
