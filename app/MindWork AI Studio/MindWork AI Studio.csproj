@@ -56,7 +56,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+        <!-- The app serves no pre-compressed copies and no source maps, see UpdateWebAssetsCommand -->
+        <EmbeddedResource Include="wwwroot\**" Exclude="wwwroot\**\*.br;wwwroot\**\*.gz;wwwroot\**\*.map" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Plugins\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\I18N\allTexts.lua" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\PromptOptimizer\prompting_guideline.md" CopyToOutputDirectory="PreserveNewest" />
