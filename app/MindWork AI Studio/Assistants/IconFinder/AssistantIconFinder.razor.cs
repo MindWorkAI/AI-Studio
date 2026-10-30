@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.IconFinder;
@@ -74,16 +75,9 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
         state.Restore(SELECTED_ICON_SOURCE_STATE_KEY, value => this.selectedIconSource = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_ICON_FINDER_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputContext = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputContext = payload.Text;
 
     #endregion
 

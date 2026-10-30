@@ -195,9 +195,10 @@ public sealed class ModelHostTests
     public void AResellerLeavesTheNameAloneAndOnlyTakesTheApiAway()
     {
         //
-        // This is the GWDG case: it offers Claude and GPT under the names their vendors use, so the
-        // rules recognize them and answer with everything those models can do. Everything except
-        // the API -- the request goes to Göttingen, and the Responses API is not served there.
+        // This is the GWDG case: where it serves Claude or GPT, it does so under the names their
+        // vendors use, so the rules recognize them and answer with everything those models can do.
+        // Everything except the API -- the request goes to Göttingen, and the Responses API is not
+        // served there.
         //
         var atItsVendor = new ModelProfile { Capabilities = Capability.TEXT_INPUT | Capability.FUNCTION_CALLING | Capability.RESPONSES_API };
         var throughTheReseller = Transport(LLMProviders.GWDG, atItsVendor);

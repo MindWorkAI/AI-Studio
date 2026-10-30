@@ -41,6 +41,13 @@ public static class Environment
         return Path.GetFullPath(directory);
     }
 
+    public static string GetTrimSmokeTestDirectory()
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var directory = Path.Combine(currentDirectory, "..", "TrimSmokeTest");
+        return Path.GetFullPath(directory);
+    }
+
     /// <summary>
     /// The root of the git repository, which is what a path in a report is written relative to.
     /// </summary>

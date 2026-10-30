@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using AIStudio.Chat;
+
 namespace AIStudio.Assistants.VisualBriefing;
 
 public sealed partial class VisualBriefingStore
@@ -294,10 +296,14 @@ public sealed partial class VisualBriefingStore
     /// <summary>
     /// Defines <c>CreateAsync</c> for the visual briefing feature.
     /// </summary>
+    /// <remarks>
+    /// The restrictions are set here only, see VisualBriefingManifest.Restrictions: nothing later on loosens them.
+    /// </remarks>
     public async Task<VisualBriefingManifest> CreateAsync(
         string name,
         string author,
         VisualBriefingLocalSettings settings,
+        ChatRestrictions restrictions,
         Guid? briefingId = null,
         CancellationToken token = default)
     {
@@ -330,6 +336,7 @@ public sealed partial class VisualBriefingStore
                 CreatedAtUtc = now,
                 ModifiedAtUtc = now,
                 Settings = settings,
+                Restrictions = restrictions,
             };
             
             await this.StoreManifestAtomicAsync(manifest, token);
@@ -455,6 +462,8 @@ public sealed partial class VisualBriefingStore
     /// </summary>
     private async Task StoreManifestAtomicAsync(VisualBriefingManifest manifest, CancellationToken token)
     {
+        // What is written now holds everything of the current version, the restrictions among them, which an older AI Studio cannot read:
+        manifest.ManifestVersion = VisualBriefingVersions.MANIFEST;
         var json = JsonSerializer.Serialize(manifest, JSON_OPTIONS);
         await WriteTextAtomicAsync(this.ManifestPath(manifest.BriefingId), json, overwrite: true, token);
     }

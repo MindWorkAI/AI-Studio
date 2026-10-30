@@ -26,6 +26,25 @@ public static class DataSourceSecurityExtensions
         _ => TB("Unknown security policy")
     };
     
+    /// <summary>
+    /// The data security which demands what the one held and the one arriving demand together.
+    /// </summary>
+    /// <remarks>
+    /// Data which may only be used with self-hosted providers keeps them as the only choice, no matter
+    /// what arrives later: the data was seen. Data which may be used with any provider marks the holder
+    /// as one which holds data of a data source, while a restriction set earlier stays. NOT_SPECIFIED
+    /// demands nothing and changes nothing. The order does not matter.
+    /// </remarks>
+    /// <param name="held">The data security held so far.</param>
+    /// <param name="arriving">What the data arriving demands.</param>
+    /// <returns>The tightened data security; never looser than either of the two.</returns>
+    public static DataSourceSecurity TightenedBy(this DataSourceSecurity held, DataSourceSecurity arriving) => (held, arriving) switch
+    {
+        (DataSourceSecurity.SELF_HOSTED, _) or (_, DataSourceSecurity.SELF_HOSTED) => DataSourceSecurity.SELF_HOSTED,
+        (_, DataSourceSecurity.ALLOW_ANY) => DataSourceSecurity.ALLOW_ANY,
+        _ => held,
+    };
+
     public static TextColor GetColor(this DataSourceSecurity security) => security switch
     {
         DataSourceSecurity.ALLOW_ANY => TextColor.WARN,

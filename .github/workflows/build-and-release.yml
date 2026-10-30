@@ -51,6 +51,11 @@ env:
   SSIGN_VERSION: 0.1.7
   SSIGN_SHA256: 4ee5389a74ddbeb67e18fe8c8b963734ca13de7b24beffbe430c3f427ecc5e40
 
+  # The Tauri CLI which bundles the app, exactly this version on every platform. Keep it at the minor
+  # version of the tauri crate in runtime/Cargo.toml. The version also names the cache of the CLI, so
+  # changing it installs the new CLI once on each platform and caches it from then on:
+  TAURI_CLI_VERSION: "2.12.4"
+
 jobs:
   determine_run_mode:
     name: Determine run mode
@@ -777,6 +782,11 @@ jobs:
     permissions:
       contents: read
 
+    # Full debug information takes up most of the space which this job's Rust build fills, and with
+    # it most of its cache. Line tables alone keep file and line in the backtrace of a failing test:
+    env:
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -800,8 +810,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          cache: true
-          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
 
       - name: Pin the .NET SDK from the metadata
         shell: bash
@@ -815,22 +823,60 @@ jobs:
           used_dotnet_sdk_version=$(dotnet --version)
           echo ".NET SDK in use: '${used_dotnet_sdk_version}'"
 
-      - name: Cache Rust
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/git/db/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            runtime/target
-
-          key: verify-linux-x64-rust-${{ env.RUST_VERSION }}
-
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master (v1) of 2026-10-09
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
+
+      # The cache below puts the version of every installed toolchain into its key, also of the stable
+      # one which comes with the runner image. That version changes with the image, independently of
+      # RUST_VERSION, and each change would start a new cache. Therefore, only our toolchain stays:
+      - name: Remove the other Rust toolchains
+        shell: bash
+        run: |
+          for toolchain in $(rustup toolchain list --quiet | tr -d '\r'); do
+            if [[ "${toolchain}" != "${RUST_VERSION}-"* ]]; then
+              rustup toolchain uninstall "${toolchain}"
+            fi
+          done
+
+          rustup toolchain list
+
+      # Without a key of our own, the cache below would start from the latest cache of the same
+      # toolchain whenever the dependencies change. The action then keeps the old version of each
+      # updated crate next to its new one: a single update of Tauri let the caches grow by a fifth to
+      # a third. Also, GitHub dropped the new cache of this job right away, since build_main still
+      # read its old caches afterwards. Therefore, a hash of Cargo.toml and Cargo.lock goes into the
+      # key, so that only the very same dependencies restore a cache. The version of our own crate
+      # stays out of the hash, since every release changes it; in both files, it directly follows the
+      # name of the crate:
+      - name: Hash the Rust dependencies
+        id: rust_dependencies
+        shell: bash
+        run: |
+          hash=$(sed '/^name = "mindwork-ai-studio"/{n;d;}' runtime/Cargo.toml runtime/Cargo.lock | git hash-object --stdin)
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+          echo "Hash of the Rust dependencies: '${hash}'"
+
+      # The key of this cache includes the version of rustc and the hash from above, so the cache has
+      # to come after both steps. A new toolchain or a change to the dependencies leads to a new
+      # cache, which starts empty. Before the cache is saved, the action removes everything which is
+      # no dependency, our own crate among it.
+      # Only pushes to main save a cache: pull requests and releases read it alone, so they cannot
+      # crowd out the other caches, since GitHub keeps at most 10 GB of them per repository.
+      #
+      # This job and build_main never share their caches, because they have no artifact in common:
+      # this job compiles for the tests and Clippy in the debug profile, build_main compiles in the
+      # release profile for one target triple each. Nothing here installs binaries with cargo, and
+      # the Tauri CLI of build_main has a cache of its own, so ~/.cargo/bin stays out:
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: runtime -> target
+          key: ${{ steps.rust_dependencies.outputs.hash }}
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Setup dependencies (Ubuntu-specific)
         run: |
@@ -1064,8 +1110,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          cache: true
-          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
 
       - name: Pin the .NET SDK from the metadata
         shell: bash
@@ -1250,28 +1294,50 @@ jobs:
           cd publish/dotnet
           mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}"
           
-      - name: Cache Rust
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/git/db/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            runtime/target
-            
-          key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}
-            
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master (v1) of 2026-10-09
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.rust_target }}
 
+      # The same step of the verify job explains why the other toolchains have to go:
+      - name: Remove the other Rust toolchains
+        shell: bash
+        run: |
+          for toolchain in $(rustup toolchain list --quiet | tr -d '\r'); do
+            if [[ "${toolchain}" != "${RUST_VERSION}-"* ]]; then
+              rustup toolchain uninstall "${toolchain}"
+            fi
+          done
+
+          rustup toolchain list
+
+      # The same step of the verify job explains why the cache needs this hash:
+      - name: Hash the Rust dependencies
+        id: rust_dependencies
+        shell: bash
+        run: |
+          hash=$(sed '/^name = "mindwork-ai-studio"/{n;d;}' runtime/Cargo.toml runtime/Cargo.lock | git hash-object --stdin)
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+          echo "Hash of the Rust dependencies: '${hash}'"
+
+      # The same step of the verify job explains how this cache works, and why the two jobs keep
+      # separate caches. The action tells the caches apart by the job name and the runner. Both are
+      # the same for the two macOS builds, and for the two Windows builds as well, so the key holds
+      # the runtime identifier, which gives each platform a cache of its own, next to the hash:
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: runtime -> target
+          key: ${{ matrix.dotnet_runtime }}-${{ steps.rust_dependencies.outputs.hash }}
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
       - name: Cache Tauri CLI
         uses: actions/cache@v4
         with:
           path: ~/.cargo-tauri-cli
-          key: tauri-cli-v2-${{ runner.os }}-${{ runner.arch }}
+          key: tauri-cli-${{ env.TAURI_CLI_VERSION }}-${{ runner.os }}-${{ runner.arch }}
       
       - name: Setup dependencies (Ubuntu-specific, x86)
         if: matrix.platform == 'ubuntu-22.04' && contains(matrix.rust_target, 'x86_64')
@@ -1291,10 +1357,12 @@ jobs:
           echo "$HOME/.cargo-tauri-cli/bin" >> "$GITHUB_PATH"
           export PATH="$HOME/.cargo-tauri-cli/bin:$PATH"
 
-          if ! cargo tauri --version 2>/dev/null | grep -Eq '^tauri-cli 2\.'; then
-            cargo install tauri-cli --version "^2.11.0" --locked --force --root "$HOME/.cargo-tauri-cli"
+          # The cached CLI counts only when it is exactly the version of TAURI_CLI_VERSION; otherwise,
+          # that version gets installed:
+          if ! cargo tauri --version 2>/dev/null | grep -Fxq "tauri-cli ${TAURI_CLI_VERSION}"; then
+            cargo install tauri-cli --version "=${TAURI_CLI_VERSION}" --locked --force --root "$HOME/.cargo-tauri-cli"
           else
-            echo "Tauri CLI v2 is already installed"
+            echo "Tauri CLI ${TAURI_CLI_VERSION} is already installed"
           fi
           
       - name: Setup Tauri (Windows)
@@ -1303,11 +1371,13 @@ jobs:
           "$env:USERPROFILE\.cargo-tauri-cli\bin" >> $env:GITHUB_PATH
           $env:PATH = "$env:USERPROFILE\.cargo-tauri-cli\bin;$env:PATH"
 
+          # The cached CLI counts only when it is exactly the version of TAURI_CLI_VERSION; otherwise,
+          # that version gets installed:
           $tauriVersion = cargo tauri --version 2>$null
-          if (-not $tauriVersion -or $tauriVersion -notmatch '^tauri-cli 2\.') {
-            cargo install tauri-cli --version "^2.11.0" --locked --force --root "$env:USERPROFILE\.cargo-tauri-cli"
+          if ($tauriVersion -ne "tauri-cli $($env:TAURI_CLI_VERSION)") {
+            cargo install tauri-cli --version "=$($env:TAURI_CLI_VERSION)" --locked --force --root "$env:USERPROFILE\.cargo-tauri-cli"
           } else {
-            Write-Output "Tauri CLI v2 is already installed"
+            Write-Output "Tauri CLI $($env:TAURI_CLI_VERSION) is already installed"
           }
 
       - name: Install ssign (Windows)

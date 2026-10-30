@@ -83,6 +83,7 @@ internal static class VisualBriefingFailureExtensions
     private static string ToUserMessage(this VisualBriefingFailureCode code) => code switch
     {
         VisualBriefingFailureCode.PROVIDER_NOT_SELECTED => TB("This briefing has no provider selected. Please select a provider before you generate a briefing."),
+        VisualBriefingFailureCode.PROVIDER_NOT_ALLOWED => TB("The selected provider may not see the content of this briefing. Please select another provider."),
         VisualBriefingFailureCode.MODEL_CAPABILITY_MISSING => TB("The selected model lacks a capability this briefing needs. Please select another model."),
         VisualBriefingFailureCode.SOURCE_UNREACHABLE => TB("A source of this briefing can no longer be reached. Please relink or remove the affected source."),
         VisualBriefingFailureCode.TRANSCRIPT_UNAVAILABLE => TB("A media transcript of this briefing is missing or outdated. Please transcribe the affected media again."),

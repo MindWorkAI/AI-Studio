@@ -2,7 +2,7 @@
 @inherits MSGComponentBase
 
 <MudTooltip Placement="Placement.Top" Text="@T("Start a new chat with a chat template")">
-    <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="@Origin.BottomLeft" Class="@this.MarginClass">
+    <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="@Origin.BottomLeft" Class="@this.MarginClass" MaxHeight="@MenuDefaults.MAX_HEIGHT">
         <ActivatorContent>
             @if (this.CurrentChatTemplate != ChatTemplate.NO_CHAT_TEMPLATE)
             {

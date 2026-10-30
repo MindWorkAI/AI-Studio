@@ -16,7 +16,7 @@
         <SelfContained>true</SelfContained> <!-- Publish as self-contained; requires no .NET runtime installed on the target machine -->
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> <!-- Include native libraries for self-extract -->
         <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> <!-- Generate embedded files manifest -->
-        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> <!-- Restore packages with lock file; needed for caching NuGet packages-->
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> <!-- Restore packages with lock file, so that every restore resolves exactly the same package versions -->
 
         <!--
             SelfContained makes the SDK pick the RID of the machine which runs the restore, and the lock file
@@ -27,14 +27,6 @@
             `dotnet publish -r` instead.
         -->
         <RuntimeIdentifiers>osx-arm64;osx-x64;linux-x64;linux-arm64;win-x64;win-arm64</RuntimeIdentifiers>
-        
-        <PublishTrimmed>true</PublishTrimmed> <!-- Publish with trimming, to reduce size -->
-        <TrimMode>partial</TrimMode> <!-- Trim unused assemblies, but keep all assemblies referenced by the project -->
-        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols> <!-- Remove debug symbols -->
-        <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization> <!-- Remove unsafe binary formatter serialization -->
-        <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding> <!-- Remove unsafe UTF7 encoding -->
-        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault> <!-- Enable reflection for JSON serialization -->
-        <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings> <!-- Suppress trim analysis warnings -->
 
         <!--
             The Web SDK defaults to server GC. AI Studio is a single-user desktop app, though: workstation
@@ -46,15 +38,19 @@
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 
         <!--
-            IL2026: Usage of methods marked as RequiresUnreferencedCode. None issue here, since we use partial trim mode, though.
+            IL2026: Usage of methods marked as RequiresUnreferencedCode, e.g., every call of JsonSerializer. Partial trim mode
+            keeps our own types, so this is no issue for them. It is for types of .NET which System.Text.Json reaches by
+            reflection only, see the TrimmerRootAssembly in Trimming.props.
             CS8974: Converting method group to non-delegate type; Did you intend to invoke the method? We have this issue with MudBlazor validation methods.
         -->
         <NoWarn>IL2026, CS8974</NoWarn>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
+    <Import Project="..\Trimming.props" />
+
     <ItemGroup>
-      <!-- Remove some files from the solution view -->  
+      <!-- Remove some files from the solution view -->
       <None Remove="Properties\launchSettings.json" />
       <None Remove="build.nu" />
     </ItemGroup>
@@ -105,10 +101,12 @@
     <!--
         The test project has to reach Program.LOGGER_FACTORY. Program is internal, and it stays that
         way: it is the entry point, not API. Several types initialize a static logger field from that
-        factory, so a test process must assign it before it touches any of them.
+        factory, so a test process must assign it before it touches any of them. The trim smoke test
+        needs the same, and it uses the internal JSON options of the settings and the Visual Briefing.
     -->
     <ItemGroup>
       <InternalsVisibleTo Include="Tests" />
+      <InternalsVisibleTo Include="TrimSmokeTest" />
     </ItemGroup>
 
     <!-- Read the meta data file -->

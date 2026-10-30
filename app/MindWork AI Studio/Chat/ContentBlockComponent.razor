@@ -86,7 +86,7 @@
                 @if (this.CanExportAnswer)
                 {
                     <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
-                        <MudMenu Icon="@Icons.Material.Filled.Save">
+                        <MudMenu Icon="@Icons.Material.Filled.Save" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                             @foreach (var documentFormat in FileExportFormatExtensions.DOCUMENT_FORMATS)
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
@@ -96,7 +96,7 @@
                                 <MudDivider/>
                                 @foreach (var filesOfAKind in this.MessageFilesByKind)
                                 {
-                                    <MudMenu StartIcon="@ExportGroupIcon(filesOfAKind)" Label="@this.ExportGroupLabel(filesOfAKind)">
+                                    <MudMenu StartIcon="@ExportGroupIcon(filesOfAKind)" Label="@this.ExportGroupLabel(filesOfAKind)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                                         @foreach (var messageFile in filesOfAKind)
                                         {
                                             <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
@@ -116,6 +116,17 @@
                             @foreach (var textFormat in FileExportFormatExtensions.TEXT_FORMATS)
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.ToIcon()" Label="@textFormat.ToName()"/>
+                            }
+                        </MudMenu>
+                    </MudTooltip>
+                }
+                @if (this.CanSendTo)
+                {
+                    <MudTooltip Text="@T("Send to ...")" Placement="Placement.Bottom">
+                        <MudMenu Icon="@Icons.Material.Filled.Apps" Disabled="@(!this.IsSendToEnabled)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                            @foreach (var destination in this.SendToDestinations)
+                            {
+                                <MudMenuItem OnClick="@(() => this.SendTo(destination))" Label="@destination.Name()"/>
                             }
                         </MudMenu>
                     </MudTooltip>

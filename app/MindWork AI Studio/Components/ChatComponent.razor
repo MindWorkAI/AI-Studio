@@ -8,6 +8,7 @@
         @if (this.ChatThread is not null)
         {
             var blocks = this.ChatThread.Blocks.OrderBy(n => n.Time).ToList();
+            var sendToDestinations = this.AssistantLaunchService.GetDestinationsFor(Components.CHAT);
             for (var i = 0; i < blocks.Count; i++)
             {
                 var block = blocks[i];
@@ -30,7 +31,9 @@
                         RollbackFunc="@this.RollbackBlock"
                         BlockActionsEnabled="@(() => this.blockActions.AreAllowed(this.ChatThread))"
                         EditLastBlockFunc="@this.EditLastBlock"
-                        EditLastUserBlockFunc="@this.EditLastUserBlock"/>
+                        EditLastUserBlockFunc="@this.EditLastUserBlock"
+                        SendToFunc="@this.SendBlockToAsync"
+                        SendToDestinations="@sendToDestinations"/>
                 }
             }
         }

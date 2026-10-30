@@ -1,3 +1,5 @@
+using AIStudio.Chat;
+
 namespace AIStudio.Assistants.VisualBriefing;
 
 /// <summary>
@@ -39,6 +41,18 @@ public sealed class VisualBriefingManifest
     /// Defines <c>Settings</c> for the visual briefing feature.
     /// </summary>
     public VisualBriefingLocalSettings Settings { get; set; } = new();
+
+    /// <summary>
+    /// What the text sent to this briefing demands, because of where it came from.
+    /// </summary>
+    /// <remarks>
+    /// An answer written from mails demands here what it demanded in its chat, and every stage of every build
+    /// holds to it. The restrictions are set when the briefing is created for the text, and they never loosen:
+    /// the text may still be part of the instruction, and of the versions built from it. They live here rather
+    /// than in the settings, which the editor replaces with every save. A briefing nothing was sent to, or one
+    /// written before this property existed, demands nothing.
+    /// </remarks>
+    public ChatRestrictions Restrictions { get; init; } = ChatRestrictions.NONE;
 
     /// <summary>
     /// Defines <c>Sources</c> for the visual briefing feature.
