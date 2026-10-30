@@ -4170,6 +4170,33 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T1984243691"] = "Sie k
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T4285779702"] = "Datei auswählen"
 
+-- Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop. System scaling follows your operating system.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T1103704506"] = "Gilt nur für diesen Bildschirm ({0}). Der App-Standard zeigt AI Studio auf jedem Laptop in derselben Größe an. Die Systemskalierung richtet sich nach Ihrem Betriebssystem."
+
+-- You can choose from {0} % to {1} %. The app default on this screen is {2} %.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T1110635214"] = "Sie können zwischen {0} % und {1} % wählen. Der App-Standard beträgt auf diesem Bildschirm {2} %."
+
+-- {0} × {1} pixels, {2:0.#} inches
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T2376030041"] = "{0} × {1} Pixel, {2:0.#} Zoll"
+
+-- You can choose from {0} % to {1} %. The system scaling on this screen is {2} %.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3009448744"] = "Sie können zwischen {0} % und {1} % wählen. Die Systemskalierung beträgt auf diesem Bildschirm {2} %."
+
+-- Custom interface size on this screen
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3268281815"] = "Benutzerdefinierte Größe der Benutzeroberfläche auf diesem Bildschirm"
+
+-- AI Studio cannot measure this screen right now, so you cannot set the interface size here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3560281885"] = "AI Studio kann diesen Bildschirm derzeit nicht vermessen, daher können Sie die Größe der Benutzeroberfläche hier nicht festlegen."
+
+-- Interface size on this screen
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3568633122"] = "Größe der Benutzeroberfläche auf diesem Bildschirm"
+
+-- Applies to this screen only ({0}). System scaling follows your operating system.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T3653703912"] = "Gilt nur für diesen Bildschirm ({0}). Die Systemskalierung richtet sich nach Ihrem Betriebssystem."
+
+-- {0} × {1} pixels
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONINTERFACESIZE::T990356864"] = "{0} × {1} Pixel"
+
 -- Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T2526727283"] = "Wählen Sie das minimale Vertrauensniveau, das alle LLM-Anbieter erfüllen müssen. So stellen Sie sicher, dass nur vertrauenswürdige Anbieter verwendet werden. Anbieter, die dieses Niveau unterschreiten, können nicht verwendet werden."
 
@@ -5466,9 +5493,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONT
 -- Spellchecking is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"] = "Rechtschreibprüfung ist deaktiviert"
 
--- You can choose from {0} % to {1} %. The app default on this screen is {2} %.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1110635214"] = "Sie können zwischen {0} % und {1} % wählen. Der App-Standard beträgt auf diesem Bildschirm {2} %."
-
 -- Do you want to show preview features in the app?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044"] = "Möchten Sie Vorschaufunktionen in der App anzeigen lassen?"
 
@@ -5571,9 +5595,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2330147290"]
 -- Language behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"] = "Sprachverhalten"
 
--- {0} × {1} pixels, {2:0.#} inches
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2376030041"] = "{0} × {1} Pixel, {2:0.#} Zoll"
-
 -- Update installation method
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T237706157"] = "Installationsmethode für Updates"
 
@@ -5607,9 +5628,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2918560776"]
 -- Enter one host pattern per line. Exact hosts such as data.intra.example.org and one-label wildcards such as *.intra.example.org are supported. Cloud provider endpoints built into AI Studio, such as OpenAI, Google, etc., never use these additional root certificates.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2960110864"] = "Geben Sie pro Zeile ein Hostmuster ein. Exakte Hosts wie data.intra.example.org sowie Wildcards mit einem Label wie *.intra.example.org werden unterstützt. In AI Studio integrierte Endpunkte von Cloud-Anbietern wie OpenAI, Google usw. verwenden diese zusätzlichen Stammzertifikate nicht."
 
--- You can choose from {0} % to {1} %. The system scaling on this screen is {2} %.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3009448744"] = "Sie können zwischen {0} % und {1} % wählen. Die Systemskalierung beträgt auf diesem Bildschirm {2} %."
-
 -- Add a notice to AI-generated content?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3070682674"] = "KI-generierte Inhalte kennzeichnen?"
 
@@ -5628,9 +5646,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3165555978"]
 -- Operators of self-hosted servers learn which feature sent a request
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3294604676"] = "Betreiber selbst gehosteter Server erfahren, von welcher Funktion eine Anfrage stammt"
 
--- AI Studio cannot measure this screen right now, so you cannot set its size.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3319795715"] = "AI Studio kann diesen Bildschirm derzeit nicht vermessen, daher können Sie die Größe der Benutzeroberfläche hier nicht festlegen."
-
 -- External HTTPS certificates
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T348936513"] = "Externe HTTPS-Zertifikate"
 
@@ -5639,9 +5654,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3513450626"]
 
 -- Allowed hosts for additional root certificates
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3562495752"] = "Zugelassene Hosts für zusätzliche Stammzertifikate"
-
--- Interface size on this screen
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3568633122"] = "Größe der Benutzeroberfläche auf diesem Bildschirm"
 
 -- Request timeout
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3569531009"] = "Zeitüberschreitung bei der Anfrage"
@@ -5655,9 +5667,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T362833"] = "
 -- When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3652888444"] = "Wenn aktiviert, wird gestreamter Inhalt von der KI alle drei Sekunden aktualisiert. Wenn deaktiviert, wird gestreamter Inhalt sofort aktualisiert, sobald er verfügbar ist."
 
--- Applies to this screen only ({0}). System scaling follows your operating system.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3653703912"] = "Gilt nur für diesen Bildschirm ({0}). Die Systemskalierung richtet sich nach Ihrem Betriebssystem."
-
 -- Show administration settings?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3694781396"] = "Optionen für die Administration anzeigen?"
 
@@ -5669,9 +5678,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3705451321"]
 
 -- When enabled, AI Studio can trust root certificates from a configured PEM bundle for external HTTPS requests, such as self-hosted AI providers, embeddings, transcription, ERI data sources, and enterprise configuration downloads. Normal hostname and certificate validity checks still apply. Integrated cloud providers, such as OpenAI, Google, and others, will never use these additional certificates. Please note that you usually do not need this setting on macOS or Windows. If you use Linux with the AppImage version of MindWork AI Studio, you also do not need this option. A valid use case is a Linux environment where AI Studio runs from a Flatpak.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3798070907"] = "Wenn diese Option aktiviert ist, kann AI Studio Stammzertifikate aus einem konfigurierten PEM-Bundle für externe HTTPS-Anfragen vertrauen, zum Beispiel für selbst gehostete KI-Anbieter, Einbettungen, Transkription, ERI-Datenquellen und das Herunterladen von Unternehmenskonfigurationen. Die üblichen Prüfungen von Hostnamen und Zertifikatsgültigkeit gelten weiterhin. Integrierte Cloud-Anbieter wie OpenAI, Google und andere verwenden diese zusätzlichen Zertifikate niemals. Bitte beachten Sie, dass Sie diese Einstellung unter macOS oder Windows in der Regel nicht benötigen. Wenn Sie Linux mit der AppImage-Version von MindWork AI Studio verwenden, benötigen Sie diese Option ebenfalls nicht. Ein gültiger Anwendungsfall ist eine Linux-Umgebung, in der AI Studio aus einem Flatpak heraus ausgeführt wird."
-
--- Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop, system scaling follows your operating system.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3913746396"] = "Gilt nur für diesen Bildschirm ({0}). Der App-Standard zeigt AI Studio auf jedem Laptop in derselben Größe an, die Systemskalierung richtet sich nach Ihrem Betriebssystem."
 
 -- Enable spellchecking?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3914529369"] = "Rechtschreibprüfung aktivieren?"
@@ -5724,9 +5730,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602293588"] 
 -- Choose the color theme that best suits for you.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T654667432"] = "Wählen Sie das Farbschema, das am besten zu Ihnen passt."
 
--- Custom interface size of this screen
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T696401183"] = "Benutzerdefinierte Größe der Benutzeroberfläche auf diesem Bildschirm"
-
 -- Should updates be installed automatically or manually?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T707880477"] = "Sollen Updates automatisch oder manuell installiert werden?"
 
@@ -5756,9 +5759,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T929143445"] 
 
 -- Format for encrypted secrets in exports
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T938676916"] = "Format für verschlüsselte Geheimnisse in Exporten"
-
--- {0} × {1} pixels
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T990356864"] = "{0} × {1} Pixel"
 
 -- Show provider's confidence level?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1052533048"] = "Vertrauensniveau des Anbieters anzeigen?"
