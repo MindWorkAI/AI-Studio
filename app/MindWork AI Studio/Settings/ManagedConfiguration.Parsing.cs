@@ -1080,9 +1080,14 @@ public static partial class ManagedConfiguration
         if(dryRun)
             return successful;
 
+        //
         // The setting might belong to the IT department of an organization. In that case, no local
-        // configuration plugin may touch it, no matter what it declares:
-        if (!MayManageSetting(configPluginId, configMeta))
+        // configuration plugin may touch it, no matter what it declares. A plugin which does not
+        // declare the setting touches nothing below unless it owns the setting, so we ask only when it
+        // declares the setting. Otherwise, the log would report every local plugin for every setting
+        // of the organization:
+        //
+        if (successful && !MayManageSetting(configPluginId, configMeta))
             return false;
 
         //
@@ -1141,9 +1146,14 @@ public static partial class ManagedConfiguration
         if (dryRun)
             return successful;
 
+        //
         // The setting might belong to the IT department of an organization. In that case, no local
-        // configuration plugin may touch it, no matter what it declares:
-        if (!MayManageSetting(configPluginId, configMeta))
+        // configuration plugin may touch it, no matter what it declares. A plugin which does not
+        // declare the setting touches nothing below unless it owns the setting, so we ask only when it
+        // declares the setting. Otherwise, the log would report every local plugin for every setting
+        // of the organization:
+        //
+        if (successful && !MayManageSetting(configPluginId, configMeta))
             return false;
 
         //

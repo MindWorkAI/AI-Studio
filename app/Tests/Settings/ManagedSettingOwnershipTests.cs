@@ -8,6 +8,7 @@ using Lua;
 using Lua.Standard;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.Settings;
@@ -32,6 +33,7 @@ public sealed class ManagedSettingOwnershipTests
     private static readonly Guid SECOND_ORGANIZATION_PLUGIN_ID = Guid.Parse("a7c94e02-3b5d-4f81-8d26-7e1f0b9c4a58");
     private static readonly Guid LOCAL_PLUGIN_ID = Guid.Parse("e2b61f8d-4c07-4a9e-b3d5-90f8a6c2e714");
 
+    private const string PROHIBITED_PROVIDERS = "DataApp.ProhibitedProviders";
     private const string LOCKED_TOOL_SETTINGS = "DataTools.LockedToolSettings";
     private const string DEFAULT_TOOL_SETTINGS = "DataTools.DefaultToolSettings";
     private const string MINIMUM_PROVIDER_CONFIDENCE = "DataTools.MinimumProviderConfidenceByToolId";
@@ -40,6 +42,7 @@ public sealed class ManagedSettingOwnershipTests
     private ServiceProvider serviceProvider = null!;
     private IServiceProvider previousServiceProvider = null!;
     private Func<Guid, bool> previousIsOrganizationPlugin = null!;
+    private ILoggerFactory previousLoggerFactory = null!;
 
     [SetUp]
     public void CreateSettings()
@@ -53,6 +56,8 @@ public sealed class ManagedSettingOwnershipTests
 
         this.previousIsOrganizationPlugin = ManagedConfiguration.IsOrganizationPlugin;
         ManagedConfiguration.IsOrganizationPlugin = pluginId => pluginId == ORGANIZATION_PLUGIN_ID || pluginId == SECOND_ORGANIZATION_PLUGIN_ID;
+
+        this.previousLoggerFactory = Program.LOGGER_FACTORY;
     }
 
     [TearDown]
@@ -61,6 +66,7 @@ public sealed class ManagedSettingOwnershipTests
         // The managed state of a setting outlives this fixture, so we release what the plugins took over:
         ManagedConfiguration.CleanupLeftOverManagedConfigurations([], new HashSet<Guid>());
         ManagedConfiguration.IsOrganizationPlugin = this.previousIsOrganizationPlugin;
+        Program.LOGGER_FACTORY = this.previousLoggerFactory;
 
         Program.SERVICE_PROVIDER = this.previousServiceProvider;
         this.serviceProvider.Dispose();
@@ -289,11 +295,55 @@ public sealed class ManagedSettingOwnershipTests
     }
 
     /// <summary>
+    /// Checks that the log names a local configuration plugin only for a setting of the organization
+    /// which the plugin actually declares.
+    /// </summary>
+    /// <remarks>
+    /// Administrators read this warning as an attempt to take over what their organization configured.
+    /// A local plugin which merely exists, without declaring the setting, attempts nothing, so warning
+    /// about it would bury the real attempts under false ones: one for every setting of the organization,
+    /// every time the plugins load. Both ways of handling a setting are covered, the one for sets and the
+    /// one for single values and tables.
+    /// </remarks>
+    [TestCase(PROHIBITED_PROVIDERS, """{ "DEEP_SEEK" }""", """{ "MISTRAL" }""")]
+    [TestCase(MINIMUM_PROVIDER_CONFIDENCE, """{ ["read_web_page"] = "HIGH" }""", """{ ["read_web_page"] = "NONE" }""")]
+    public async Task ALocalPluginIsReportedOnlyForSettingsItDeclares(string settingName, string organizationValue, string localValue)
+    {
+        await ProcessSettingAsync(settingName, ORGANIZATION_PLUGIN_ID, organizationValue);
+
+        var recorder = new WarningRecorder();
+        Program.LOGGER_FACTORY = recorder;
+
+        await ProcessSettingAsync(settingName, LOCAL_PLUGIN_ID, "nil");
+        var warningsWithoutDeclaration = recorder.Warnings.ToList();
+
+        await ProcessSettingAsync(settingName, LOCAL_PLUGIN_ID, localValue);
+        var warningsWithDeclaration = recorder.Warnings.Skip(warningsWithoutDeclaration.Count).ToList();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(warningsWithoutDeclaration, Is.Empty, "A local plugin which does not declare the setting attempts nothing.");
+            Assert.That(warningsWithDeclaration, Has.Count.EqualTo(1), "A local plugin which declares the setting of the organization has to be reported.");
+            Assert.That(warningsWithDeclaration, Has.All.Contains(settingName).And.All.Contains(LOCAL_PLUGIN_ID.ToString()), "The warning has to name the setting and the plugin.");
+        });
+    }
+
+    /// <summary>
+    /// Lets a configuration plugin set one of the settings which ALocalPluginIsReportedOnlyForSettingsItDeclares covers.
+    /// </summary>
+    private static Task<bool> ProcessSettingAsync(string settingName, Guid pluginId, string luaValue) => settingName switch
+    {
+        PROHIBITED_PROVIDERS => ProcessProhibitedProvidersAsync(pluginId, luaValue),
+
+        _ => ProcessToolTableAsync(settingName, pluginId, luaValue, allowUserOverride: false),
+    };
+
+    /// <summary>
     /// Lets a configuration plugin set the prohibited providers, a setting which holds a set.
     /// </summary>
     private static async Task<bool> ProcessProhibitedProvidersAsync(Guid pluginId, string luaList)
     {
-        var settings = await CreateSettingsAsync("DataApp.ProhibitedProviders", luaList, allowUserOverride: false);
+        var settings = await CreateSettingsAsync(PROHIBITED_PROVIDERS, luaList, allowUserOverride: false);
         return ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, pluginId, settings, false);
     }
 
@@ -381,6 +431,41 @@ public sealed class ManagedSettingOwnershipTests
     /// An entry of a tool table, with the value an organization configures and the one a local plugin configures.
     /// </summary>
     private sealed record ToolTableEntry(string Key, string OrganizationValue, string LocalValue);
+
+    /// <summary>
+    /// Records the warnings ManagedConfiguration writes to the log.
+    /// </summary>
+    /// <remarks>
+    /// Every other category gets a logger which writes nowhere. A type which keeps its logger in a
+    /// static field, and happens to be initialized during the test, would otherwise keep this recorder
+    /// for the rest of the test run.
+    /// </remarks>
+    private sealed class WarningRecorder : ILoggerFactory, ILogger
+    {
+        private readonly List<string> warnings = [];
+
+        public IReadOnlyList<string> Warnings => this.warnings;
+
+        public ILogger CreateLogger(string categoryName) => categoryName == nameof(ManagedConfiguration) ? this : NullLogger.Instance;
+
+        public void AddProvider(ILoggerProvider provider)
+        {
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => logLevel is LogLevel.Warning;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel is LogLevel.Warning)
+                this.warnings.Add(formatter(state, exception));
+        }
+    }
 
     /// <summary>
     /// Builds the table of settings a configuration plugin declares.
