@@ -4026,9 +4026,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1028969501"] = "{0}, plus
 -- Move chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Chat verschieben"
 
--- Are you sure you want to move this chat? All unsaved changes will be lost.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1142475422"] = "Sind Sie sicher, dass Sie diesen Chat verschieben möchten? Alle ungespeicherten Änderungen gehen verloren."
-
 -- Bold
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1165397398"] = "Fett"
 
@@ -4064,9 +4061,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2059172343"] = "plus {0} 
 
 -- Are you sure you want to start a new chat? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2111282488"] = "Möchten Sie wirklich einen neuen Chat starten? Alle nicht gespeicherten Änderungen gehen verloren."
-
--- Unsaved Changes
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2123670756"] = "Nicht gespeicherte Änderungen"
 
 -- Start New Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2310454789"] = "Neuen Chat starten"
