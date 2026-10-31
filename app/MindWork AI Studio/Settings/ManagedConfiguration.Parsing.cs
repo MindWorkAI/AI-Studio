@@ -830,7 +830,7 @@ public static partial class ManagedConfiguration
 
         var settingName = SettingName(propertyExpression);
         var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
-        return HandleParsedDictionaryValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
 
     /// <summary>
@@ -1204,67 +1204,6 @@ public static partial class ManagedConfiguration
         return successful;
     }
 
-    private static bool HandleParsedDictionaryValue<TClass>(
-        Guid configPluginId,
-        bool dryRun,
-        bool successful,
-        ConfigMeta<TClass, IDictionary<string, string>> configMeta,
-        IDictionary<string, string> configuredValue,
-        ManagedConfigurationMode managedMode,
-        string settingName)
-    {
-        if (dryRun)
-            return successful;
-
-        switch (successful)
-        {
-            case true when managedMode is ManagedConfigurationMode.LOCKED:
-                ClearEditableDefaultState(settingName);
-                configMeta.ClearEditableDefaultConfiguration();
-                configMeta.SetValue(CloneStringDictionary(configuredValue));
-                configMeta.LockConfiguration(configPluginId);
-                break;
-
-            case true when managedMode is ManagedConfigurationMode.EDITABLE_DEFAULT:
-                var currentValueSerialized = SerializeManagedStringDictionaryValue(configMeta.GetValue());
-                var configuredValueSerialized = SerializeManagedStringDictionaryValue(configuredValue);
-
-                string lastAppliedValue;
-                if (!TryGetEditableDefaultState(settingName, out var editableDefaultState))
-                {
-                    configMeta.SetValue(CloneStringDictionary(configuredValue));
-                    lastAppliedValue = configuredValueSerialized;
-                }
-                else
-                {
-                    lastAppliedValue = editableDefaultState.LastAppliedValue;
-                    if (string.Equals(currentValueSerialized, lastAppliedValue, StringComparison.Ordinal))
-                    {
-                        configMeta.SetValue(CloneStringDictionary(configuredValue));
-                        lastAppliedValue = configuredValueSerialized;
-                    }
-                }
-
-                SetEditableDefaultState(settingName, configPluginId, lastAppliedValue);
-                configMeta.UnlockConfiguration();
-                configMeta.SetEditableDefaultConfiguration(configPluginId);
-                break;
-
-            case false when configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId:
-                configMeta.ResetLockedConfiguration();
-                break;
-
-            case false when configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT
-                            && TryGetEditableDefaultState(settingName, out var editableDefaultStateToRemove)
-                            && editableDefaultStateToRemove.ConfigPluginId == configPluginId:
-                configMeta.ClearEditableDefaultConfiguration();
-                ClearEditableDefaultState(settingName);
-                break;
-        }
-
-        return successful;
-    }
-
     private static ManagedConfigurationMode ReadManagedConfigurationMode<TClass, TValue>(
         Expression<Func<TClass, TValue>> propertyExpression,
         LuaTable settings)
@@ -1286,6 +1225,17 @@ public static partial class ManagedConfiguration
     {
         null => string.Empty,
         string text => text,
+
+        //
+        // Tables of texts, i.e., the tool tables, keep the form they were stored in before they shared
+        // this method with the other settings. The settings of installed versions hold the last applied
+        // editable default in that form, and any other form would make each of them look as if the user
+        // had changed it, so that the organization could never update it again:
+        //
+        IDictionary<string, string> texts => string.Join("\n", texts
+            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => $"{pair.Key}={pair.Value}")),
+
         System.Collections.IDictionary dictionary => string.Join(";", dictionary.Keys
             .Cast<object>()
             .OrderBy(key => key.ToString(), StringComparer.Ordinal)
@@ -1300,10 +1250,4 @@ public static partial class ManagedConfiguration
     };
 
     private static Dictionary<string, string> CloneStringDictionary(IDictionary<string, string> values) => new(values, StringComparer.Ordinal);
-
-    private static string SerializeManagedStringDictionaryValue(IDictionary<string, string> values) => string.Join(
-        "\n",
-        values
-            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
-            .Select(pair => $"{pair.Key}={pair.Value}"));
 }
