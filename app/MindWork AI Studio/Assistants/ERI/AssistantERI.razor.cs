@@ -874,13 +874,19 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                    Use the following JSON schema:
                                    
                                    {
-                                     [
-                                         "path/to/file1",
-                                         "path/to/file2"
+                                     "files": [
+                                       "path/to/file1",
+                                       "path/to/file2"
                                      ]
                                    }
                                    """, true);
         var fileListAnswer = await this.AddAIResponseAsync(time, true);
+        if (!ERIServerFileList.TryParse(fileListAnswer, out var filesToGenerate))
+        {
+            this.Logger.LogWarning("The list of files could not be read from the answer of the model: '{Answer}'", fileListAnswer);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.SaveAs, T("The list of files in the answer of the model could not be read, so no files were created. Please try again.")));
+            return;
+        }
 
         //
         // Is this an update of the ERI server? If so, we need to delete the previously generated files.
@@ -888,7 +894,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         // and it outlives a change of the base directory, as well as a restore on another computer.
         // There, the same path may belong to files of somebody else:
         //
-        if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
+        if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0)
         {
             foreach (var file in previouslyGeneratedFilesSnapshot)
             {
@@ -918,7 +924,6 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         }
         
         var generatedFiles = new List<string>();
-        var filesToGenerate = ERIServerFiles.ReadFileList(fileListAnswer).ToArray();
         foreach (var file in filesToGenerate)
         {
             this.Logger.LogInformation($"The LLM want to create the file: '{file}'");

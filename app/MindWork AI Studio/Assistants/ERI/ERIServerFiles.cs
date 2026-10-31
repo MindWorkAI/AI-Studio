@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 
 using Markdig.Extensions.Mathematics;
 using Markdig.Syntax;
@@ -9,32 +8,8 @@ namespace AIStudio.Assistants.ERI;
 /// <summary>
 /// Reads the files of an ERI server out of the answers of the model and writes them to disk.
 /// </summary>
-internal static partial class ERIServerFiles
+internal static class ERIServerFiles
 {
-    [GeneratedRegex("""
-                    "([\\/._\w-]+)"
-                    """, RegexOptions.NonBacktracking)]
-    private static partial Regex FileExtractRegex();
-
-    /// <summary>
-    /// Reads which files the model wants to create.
-    /// </summary>
-    /// <param name="fileListAnswer">The answer of the model to the request for the list of files.</param>
-    /// <returns>The paths of the files, relative to the base directory.</returns>
-    public static IEnumerable<string> ReadFileList(string fileListAnswer)
-    {
-        //
-        // We asked the LLM for answering using a specific JSON scheme.
-        // However, the LLM might not follow this scheme. Therefore, we
-        // need to parse the answer and extract the files.
-        // The parsing strategy is to look for all strings.
-        //
-        var matches = FileExtractRegex().Matches(fileListAnswer);
-        foreach (Match match in matches)
-            if(match.Groups[1].Value is {} file && !string.IsNullOrWhiteSpace(file) && !file.Equals("files", StringComparison.OrdinalIgnoreCase))
-                yield return file;
-    }
-
     /// <summary>
     /// Reads the content of a file out of the answer which wrote it.
     /// </summary>

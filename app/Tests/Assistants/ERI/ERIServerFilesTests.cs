@@ -15,8 +15,6 @@ public sealed class ERIServerFilesTests
 {
     private const string COMPOSE_FILE = "services:\n  eri:\n    build: .\n    ports:\n      - \"8080:8080\"\n";
 
-    private static readonly string[] PATHS_WITH_HYPHENS = ["docker-compose.yml", "src/my-server/main.py"];
-
     [TestCase("## docker-compose.yml", TestName = "A heading with a hyphen")]
     [TestCase("## `docker-compose.yml`", TestName = "A heading with the path in backticks")]
     [TestCase("### File: deploy/my-server/docker-compose.yml", TestName = "A heading with a label in front of the path")]
@@ -84,14 +82,6 @@ public sealed class ERIServerFilesTests
     public void AnAnswerWithoutACodeBlockIsNoFile()
     {
         Assert.That(ERIServerFiles.ReadFileContent("I cannot create this file."), Is.Empty);
-    }
-
-    [Test]
-    public void TheListOfFilesKeepsPathsWithHyphens()
-    {
-        var files = ERIServerFiles.ReadFileList("""{ "files": [ "docker-compose.yml", "src/my-server/main.py" ] }""");
-
-        Assert.That(files, Is.EqualTo(PATHS_WITH_HYPHENS));
     }
 
     private static string Answer(params string[] lines) => string.Join('\n', lines);
