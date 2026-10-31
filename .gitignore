@@ -1,6 +1,9 @@
 # Ignore any startup.env file:
 startup.env
 
+# Ignore the boot link of development builds:
+dev-boot-link.txt
+
 # Ignore pdfium library:
 libpdfium.dylib
 libpdfium.so

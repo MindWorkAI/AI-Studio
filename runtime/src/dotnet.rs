@@ -301,6 +301,11 @@ pub async fn dotnet_ready() {
     }
 
     let dotnet_server_port = *DOTNET_SERVER_PORT;
+
+    // A development build lets other browsers in, too, such as the one of an agent:
+    #[cfg(debug_assertions)]
+    tokio::task::spawn_blocking(move || crate::app_access::write_dev_boot_link(dotnet_server_port));
+
     let url = match Url::parse(app_address(dotnet_server_port).as_str())
     {
         Ok(url) => url,

@@ -7,8 +7,9 @@ namespace AIStudio.Tools.Security;
 /// </summary>
 /// <remarks>
 /// The middleware runs before every other one, so it covers pages, static files, the Blazor hub
-/// with all of its transports, and every endpoint alike. There are no exceptions: a request without
-/// the session cookie gets refused, whatever it asks for.
+/// with all of its transports, and every endpoint alike. A release build makes no exception: a
+/// request without the session cookie gets refused, whatever it asks for. Only a development build
+/// also takes its boot link, with which another browser gets the cookie.
 ///
 /// A request which carries an Origin header must, in addition, come from a page of the app.
 /// Browsers send that header with requests made by a script, the WebSocket of the Blazor hub
@@ -45,6 +46,14 @@ public sealed class AppAccessMiddleware(RequestDelegate next, AppAccessPolicy po
             return;
         }
 
+#if DEBUG
+        if (HttpMethods.IsGet(context.Request.Method) && context.Request.Path.Equals(DEV_BOOT_PATH, StringComparison.Ordinal))
+        {
+            await this.BootAsync(context);
+            return;
+        }
+#endif
+
         if (!policy.HasSessionCookie(context.Request))
         {
             await this.RefuseAsync(context, "a client without the session cookie");
@@ -53,6 +62,38 @@ public sealed class AppAccessMiddleware(RequestDelegate next, AppAccessPolicy po
 
         await next(context);
     }
+
+#if DEBUG
+    /// <summary>
+    /// The path of the boot link which development builds write for other browsers, such as the
+    /// one of an agent. A release build knows neither the link nor this path.
+    /// </summary>
+    private const string DEV_BOOT_PATH = "/dev/boot";
+
+    /// <summary>
+    /// Trades the token of a boot link for the session cookie and sends the browser on to the app.
+    /// The browser opens the link by itself, so it sends the cookie along after the redirect.
+    /// </summary>
+    private async Task BootAsync(HttpContext context)
+    {
+        var token = context.Request.Query["token"].ToString();
+        if (!policy.IsUIToken(token))
+        {
+            await this.RefuseAsync(context, "a boot link with a wrong token");
+            return;
+        }
+
+        context.Response.Cookies.Append(AppAccessPolicy.SESSION_COOKIE_NAME, token, new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.Strict,
+            Path = "/",
+            IsEssential = true
+        });
+
+        context.Response.Redirect("/");
+    }
+#endif
 
     private async Task RefuseAsync(HttpContext context, string reason)
     {

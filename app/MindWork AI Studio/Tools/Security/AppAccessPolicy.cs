@@ -64,11 +64,13 @@ public sealed class AppAccessPolicy(int appPort, string uiToken)
     /// </remarks>
     /// <param name="request">The request.</param>
     /// <returns>True when the request comes from the app window.</returns>
-    public bool HasSessionCookie(HttpRequest request)
-    {
-        if (!request.Cookies.TryGetValue(SESSION_COOKIE_NAME, out var value) || string.IsNullOrEmpty(value))
-            return false;
+    public bool HasSessionCookie(HttpRequest request) => request.Cookies.TryGetValue(SESSION_COOKIE_NAME, out var value) && this.IsUIToken(value);
 
-        return CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(value), this.uiTokenBytes);
-    }
+    /// <summary>
+    /// Checks whether the given value is the token of this start, in a time which does not depend
+    /// on where a wrong value differs.
+    /// </summary>
+    /// <param name="value">The value to check.</param>
+    /// <returns>True when the value is the token.</returns>
+    public bool IsUIToken(string? value) => !string.IsNullOrEmpty(value) && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(value), this.uiTokenBytes);
 }

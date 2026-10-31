@@ -116,4 +116,61 @@ public sealed class AppAccessMiddlewareTests
     {
         Assert.That(await SendAsync("/_blazor/negotiate", UI_TOKEN, "http://127.0.0.1:61153", "http://rebind.example:61153"), Is.EqualTo(StatusCodes.Status403Forbidden));
     }
+
+#if DEBUG
+    private static async Task<HttpResponse> BootAsync(string method, string? token)
+    {
+        var middleware = new AppAccessMiddleware(Pass, new AppAccessPolicy(APP_PORT, UI_TOKEN), NullLogger<AppAccessMiddleware>.Instance);
+        var context = new DefaultHttpContext { Request = { Method = method, Path = "/dev/boot" } };
+        if (token is not null)
+            context.Request.QueryString = QueryString.Create("token", token);
+
+        await middleware.InvokeAsync(context);
+        return context.Response;
+    }
+
+    [Test]
+    public async Task TheBootLinkOfADevelopmentBuildHandsOutTheSessionCookie()
+    {
+        var response = await BootAsync(HttpMethods.Get, UI_TOKEN);
+        var cookie = response.Headers.SetCookie.ToString().ToLowerInvariant();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(StatusCodes.Status302Found));
+            Assert.That(response.Headers.Location.ToString(), Is.EqualTo("/"));
+            Assert.That(cookie, Does.StartWith($"{AppAccessPolicy.SESSION_COOKIE_NAME}={UI_TOKEN}"));
+            Assert.That(cookie, Does.Contain("httponly"));
+            Assert.That(cookie, Does.Contain("samesite=strict"));
+            Assert.That(cookie, Does.Contain("path=/"));
+            Assert.That(cookie, Does.Not.Contain("expires"));
+        });
+    }
+
+    [TestCase("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdee")]
+    [TestCase("")]
+    [TestCase(null)]
+    public async Task TheBootLinkWithAWrongTokenIsRefused(string? token)
+    {
+        var response = await BootAsync(HttpMethods.Get, token);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
+            Assert.That(response.Headers.SetCookie.ToString(), Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task TheBootLinkAnswersOnlyAGet()
+    {
+        var response = await BootAsync(HttpMethods.Post, UI_TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
+            Assert.That(response.Headers.SetCookie.ToString(), Is.Empty);
+        });
+    }
+#endif
 }
