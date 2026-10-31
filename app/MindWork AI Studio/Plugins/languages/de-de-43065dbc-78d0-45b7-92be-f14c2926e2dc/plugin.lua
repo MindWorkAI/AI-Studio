@@ -736,10 +736,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOU
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T3309547196"] = "Regelwerk für die Dokumentenanalyse verwenden"
 
 -- Extended bias poster
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1241605514"] = "Erweitertes Bias-Poster"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1241605514"] = "Erweitertes Poster der Verzerrungen"
 
 -- Please select a target language for the bias.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1380819730"] = "Bitte wählen Sie eine Zielsprache für die Voreingenommenheit aus."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1380819730"] = "Bitte wählen Sie eine Zielsprache für die Verzerrung aus."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T237828418"] = "Zielsprache"
@@ -751,13 +751,13 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T25245739
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3097054642"] = "Wikipedia-Liste kognitiver Verzerrungen"
 
 -- Show me the bias of the day
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3489946962"] = "Zeig mir das Vorurteil des Tages"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3489946962"] = "Vorurteil des Tages anzeigen"
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
 -- Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind  "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia versions, updated them, and added source references. The idea of learning about one bias each day based on John's poster comes from Drew Nelson.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3882885376"] = "Lerne jeden Tag einen neuen kognitiven Bias kennen. Sie können dem LLM auch eigenen Fragen stellen. Die Idee hinter „Bias des Tages” basiert auf der Arbeit von Buster Benson, John Manoogian III und Brian Rene Morrissette. Buster Benson hat die Biases gruppiert, und die Originaltexte stammen aus der Wikipedia. Brian Rene Morrissette hat sie in einer kürzeren Version zusammengefasst. Schließlich hat John Manoogian III auf Grundlage von Bensons Arbeit und den Texten von Morrissette das Original-Poster erstellt. Thorsten Sommer hat alle Texte für die Integration in AI Studio mit den aktuellen Wikipedia-Versionen verglichen, sie aktualisiert und Quellenangaben hinzugefügt. Die Idee, jeden Tag einen Bias anhand von Johns Poster kennenzulernen, stammt von Drew Nelson."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3882885376"] = "Lernen Sie jeden Tag eine neue kognitive Verzerrung kennen. Sie können dem LLM auch eigene Fragen stellen. Die Idee hinter „Vorurteil des Tages“ basiert auf der Arbeit von Buster Benson, John Manoogian III und Brian Rene Morrissette. Buster Benson hat die Verzerrungen gruppiert, und die Originaltexte stammen aus der Wikipedia. Brian Rene Morrissette hat sie in einer kürzeren Version zusammengefasst. Schließlich hat John Manoogian III auf Grundlage von Bensons Arbeit und den Texten von Morrissette das Original-Poster erstellt. Thorsten Sommer hat alle Texte für die Integration in AI Studio mit den aktuellen Wikipedia-Versionen verglichen, sie aktualisiert und Quellenangaben hinzugefügt. Die Idee, jeden Tag eine Verzerrung anhand von Johns Poster kennenzulernen, stammt von Drew Nelson."
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
@@ -9292,19 +9292,19 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T816053055"]
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T817726429"] = "Wählen Sie aus, ob die Teilnehmenden aktiv beteiligt sein sollen."
 
 -- Restrict to one bias a day?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1608129203"] = "Auf einen Bias pro Tag beschränken?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1608129203"] = "Auf eine Verzerrung pro Tag beschränken?"
 
 -- Yes, you can only retrieve one bias per day
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1765683725"] = "Ja, Sie können nur einmal pro Tag eine Voreingenommenheit abrufen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1765683725"] = "Ja, Sie können nur eine Verzerrung pro Tag abrufen"
 
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1766361623"] = "Wähle aus, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1766361623"] = "Wählen Sie, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
 
 -- Reset
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T180921696"] = "Zurücksetzen"
 
 -- No restriction. You can retrieve as many biases as you want per day.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2305356277"] = "Keine Einschränkung. Sie können beliebig viele Vorurteile pro Tag abrufen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2305356277"] = "Keine Einschränkung. Sie können beliebig viele Verzerrungen pro Tag abrufen"
 
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2322771068"] = "Profil vorauswählen"
@@ -9337,13 +9337,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T3875
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T405627382"] = "Sind Sie sicher, dass Sie Ihre „Vorurteil des Tages“-Statistiken zurücksetzen möchten? Das System merkt sich dann nicht mehr, welche Verzerrungen Sie bereits kennen. Dadurch kann es sein, dass Ihnen bereits bekannte Verzerrungen erneut angezeigt werden."
 
 -- Assistant: Bias of the Day Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T4235808594"] = "Assistent: Optionen für „Bias des Tages“"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T4235808594"] = "Assistent: Optionen für „Vorurteil des Tages“"
 
 -- Preselect options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T42672465"] = "Optionen vorauswählen?"
 
 -- You have learned about {0} out of {1} biases.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T679061561"] = "Sie haben {0} von {1} Vorurteilen kennengelernt."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T679061561"] = "Sie haben {0} von {1} Verzerrungen kennengelernt."
 
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "Wenn diese Option aktiviert ist, können Sie Voreinstellungen vornehmen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
@@ -11131,7 +11131,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T782102948"] = "Vorurteil des Tage
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T854996482"] = "Stapelverarbeitung"
 
 -- Learn about one cognitive bias every day.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Lerne jeden Tag einen kognitiven Bias kennen."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Lernen Sie jeden Tag eine kognitive Verzerrung kennen."
 
 -- View and filter AI Studio log files.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T892147062"] = "AI Studio-Protokolldateien anzeigen und filtern."
