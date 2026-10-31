@@ -205,21 +205,16 @@ The documentation for users and IT departments lives in the wiki, https://github
 the user guide in US English and German, the Enterprise IT guides, and pages for developers. The files in
 `documentation/` are meant for contributors.
 
-- The wiki is a Git repository of its own, `MindWorkAI/AI-Studio.wiki`, with the folders `user-guide/` and
-  `de/` for the user guide, `enterprise/`, and `developers/`. GitHub renders only its `master` branch, and
-  only collaborators of the repository can change it.
+The maintainers write the wiki, and they update it when a release is published, not before: a page which
+describes a version nobody can install yet misleads users and IT departments. Contributors need neither
+access to the wiki nor a copy of it.
+
 - A change which users or IT departments notice, such as a new assistant, a changed default, or a new
-  capability of configuration plugins, needs its wiki pages updated no later than the release which ships
-  it. When the wiki is cloned next to this repository, as `../AI-Studio.wiki`, change it there in commits of
-  its own. Otherwise, name the needed changes in the description of the pull request.
-- Mark what needs a certain version with "Requires AI Studio vX.Y.Z or newer": organizations take weeks
-  until every device runs a new version, so the pages describe several versions at once.
-- Write each page of the user guide in both languages, in the same commit; its first line links to the
-  other language. German pages use the wording of the de-de language plugin and the formal "Sie", like the
-  app.
-- GitHub shows the file name of a page as its title. Start a page without a `#` heading, keep commas out of
-  file names, and keep each name unique across all folders, because the URLs ignore them. Link pages as
-  `[[Text|Page-Name]]`, and list a new page in the `_Sidebar.md` of its folder; `de/` has its own.
+  capability of configuration plugins, gets the section "Wiki" in the description of its pull request:
+  what changes for users or IT departments, which settings or configuration keys are new or changed, and
+  which pages of the wiki it concerns, if you know them. Write "none" when nobody notices the change.
+- Leave the wiki itself to the maintainers. They carry these sections into it for the release, see
+  "Release Process" in `app/Build/AGENTS.md`.
 
 ## Changelogs
 Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users

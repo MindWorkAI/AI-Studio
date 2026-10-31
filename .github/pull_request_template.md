@@ -21,6 +21,10 @@ once it is done: that is our signal to take over. The automated check waits unti
 
 <!-- For example: ran `dotnet run verify`, ran the app locally, and tried out … -->
 
+## Wiki
+
+<!-- Does this change something users or IT departments notice, such as a new feature, a changed default, or a new setting for configuration plugins? Then describe what the wiki should say about it; the maintainers update the wiki when the release comes out. Otherwise, write "none". -->
+
 ## Required statements
 
 <!-- Please tick each box yourself: these are statements you make personally, see "Licensing of your contribution" in CONTRIBUTING.md. Do not change their wording; the automated check compares it word by word. -->
