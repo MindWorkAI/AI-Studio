@@ -22,14 +22,17 @@ namespace AIStudio.Tests.Tools.PluginSystem;
 /// Briefing assistant stayed out of reach of every organization that way.<br/><br/>
 /// The test therefore configures every registered setting in one plugin and runs it for real. A dry
 /// run would not do: it reads the values but applies none of them, so it cannot tell which settings
-/// were read. The settings are reached through Program.SERVICE_PROVIDER, and the managed state of each
-/// setting is static, which is why this fixture does not run alongside others.
+/// were read. The same plugin, run once for an organization and once locally, shows that no way of
+/// reading a setting lets a local plugin take over what the organization manages. The settings are
+/// reached through Program.SERVICE_PROVIDER, and the managed state of each setting is static, which is
+/// why this fixture does not run alongside others.
 /// </remarks>
 [TestFixture]
 [NonParallelizable]
 public sealed class ManagedSettingsCoverageTests
 {
     private static readonly Guid PLUGIN_ID = Guid.Parse("cd426cd3-bcff-4d6f-87bd-2c3c0756aa7d");
+    private static readonly Guid LOCAL_PLUGIN_ID = Guid.Parse("71f3b8e5-2d94-4c0a-a6e1-5b8c07d2f9a3");
 
     /// <summary>
     /// The value configured for every setting holding a string.
@@ -72,6 +75,7 @@ public sealed class ManagedSettingsCoverageTests
     private RustService rustService = null!;
     private ServiceProvider serviceProvider = null!;
     private IServiceProvider previousServiceProvider = null!;
+    private Func<Guid, bool> previousIsOrganizationPlugin = null!;
 
     [SetUp]
     public void CreateSettings()
@@ -85,6 +89,8 @@ public sealed class ManagedSettingsCoverageTests
         this.previousServiceProvider = Program.SERVICE_PROVIDER;
         this.serviceProvider = new ServiceCollection().AddSingleton(settingsManager).AddSingleton(this.rustService).BuildServiceProvider();
         Program.SERVICE_PROVIDER = this.serviceProvider;
+
+        this.previousIsOrganizationPlugin = ManagedConfiguration.IsOrganizationPlugin;
     }
 
     [TearDown]
@@ -96,6 +102,7 @@ public sealed class ManagedSettingsCoverageTests
         // long as it still reaches the settings of this test:
         //
         ManagedConfiguration.CleanupLeftOverManagedConfigurations([], new HashSet<Guid>());
+        ManagedConfiguration.IsOrganizationPlugin = this.previousIsOrganizationPlugin;
 
         Program.SERVICE_PROVIDER = this.previousServiceProvider;
         this.serviceProvider.Dispose();
@@ -105,7 +112,7 @@ public sealed class ManagedSettingsCoverageTests
     [Test]
     public async Task EveryRegisteredSettingCanBeManagedByAConfigurationPlugin()
     {
-        using var plugin = await RunPluginWithEveryRegisteredSettingAsync();
+        using var plugin = await RunPluginWithEveryRegisteredSettingAsync(PLUGIN_ID);
         var registeredSettings = ManagedConfiguration.RegisteredSettings.ToList();
         var unmanagedSettingNames = registeredSettings
             .Where(setting => !EXEMPT_SETTINGS.ContainsKey(setting.SettingName) && !IsManagedByThePlugin(setting))
@@ -124,7 +131,7 @@ public sealed class ManagedSettingsCoverageTests
     [Test]
     public async Task EveryExemptSettingIsRegisteredAndStaysUnmanaged()
     {
-        using var plugin = await RunPluginWithEveryRegisteredSettingAsync();
+        using var plugin = await RunPluginWithEveryRegisteredSettingAsync(PLUGIN_ID);
         var registeredSettings = ManagedConfiguration.RegisteredSettings.ToDictionary(setting => setting.SettingName, StringComparer.Ordinal);
 
         Assert.Multiple(() =>
@@ -139,14 +146,46 @@ public sealed class ManagedSettingsCoverageTests
     }
 
     /// <summary>
+    /// Checks that a local configuration plugin takes over none of the settings an organization manages.
+    /// </summary>
+    /// <remarks>
+    /// Every way of reading a setting from a configuration plugin has to ask whether that plugin may
+    /// manage the setting before it changes anything. A way which forgets to ask lets any local plugin
+    /// replace what the organization configured, as the tool tables once did. A local plugin declaring
+    /// every setting after the organization did finds such a way, whichever setting it serves.
+    /// </remarks>
+    [Test]
+    public async Task NoLocalPluginTakesOverASettingOfAnOrganization()
+    {
+        ManagedConfiguration.IsOrganizationPlugin = pluginId => pluginId == PLUGIN_ID;
+
+        using var organizationPlugin = await RunPluginWithEveryRegisteredSettingAsync(PLUGIN_ID);
+        var settingsOfTheOrganization = ManagedConfiguration.RegisteredSettings.Where(IsManagedByThePlugin).ToList();
+
+        using var localPlugin = await RunPluginWithEveryRegisteredSettingAsync(LOCAL_PLUGIN_ID);
+        var takenOverSettingNames = settingsOfTheOrganization
+            .Where(setting => !IsManagedByThePlugin(setting))
+            .Select(setting => setting.SettingName)
+            .Order(StringComparer.Ordinal)
+            .ToList();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(settingsOfTheOrganization, Is.Not.Empty, "The organization manages no setting, so this test would check nothing.");
+            Assert.That(takenOverSettingNames, Is.Empty, "A local configuration plugin took these settings over from the organization. Every way of reading a setting from a configuration plugin has to ask ManagedConfiguration.MayManageSetting before it changes anything.");
+        });
+    }
+
+    /// <summary>
     /// Loads a configuration plugin which declares a valid value for every registered setting, and
     /// applies it the way AI Studio does when the plugin starts.
     /// </summary>
+    /// <param name="pluginId">The ID of the configuration plugin.</param>
     /// <returns>The started configuration plugin.</returns>
-    private static async Task<PluginConfiguration> RunPluginWithEveryRegisteredSettingAsync()
+    private static async Task<PluginConfiguration> RunPluginWithEveryRegisteredSettingAsync(Guid pluginId)
     {
         var code = new StringBuilder($$"""
-            ID = "{{PLUGIN_ID}}"
+            ID = "{{pluginId}}"
             NAME = "Configuration for the tests"
             DESCRIPTION = "A configuration plugin which declares every managed setting."
             VERSION = "1.0.0"
