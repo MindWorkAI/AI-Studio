@@ -9,7 +9,8 @@ namespace AIStudio.Tools;
 /// </summary>
 /// <remarks>
 /// The app reads files such as its changelogs directly instead of requesting them over HTTP from
-/// its own server. The release build serves its static files from the same provider.
+/// its own server, which answers the app window only. The release build serves its static files
+/// from the same provider.
 /// </remarks>
 public sealed class WebRootFiles
 {

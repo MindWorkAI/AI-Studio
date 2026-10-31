@@ -92,7 +92,14 @@ internal sealed class Program
         }
         
         API_TOKEN = apiToken;
-        
+
+        var uiToken = Environment.GetEnvironmentVariable(AppAccessPolicy.UI_TOKEN_ENVIRONMENT_VARIABLE);
+        if(string.IsNullOrWhiteSpace(uiToken))
+        {
+            Console.WriteLine($"Error: The {AppAccessPolicy.UI_TOKEN_ENVIRONMENT_VARIABLE} environment variable is not set.");
+            return;
+        }
+
         using var rust = new RustService(rustApiPort, certificateFingerprint);
         var appPort = await rust.GetAppPort();
         if(appPort == 0)
@@ -290,7 +297,7 @@ internal sealed class Program
         //
         builder.WebHost.UseUrls($"http://127.0.0.1:{appPort}");
         builder.Services.Configure<HostFilteringOptions>(AppAccessPolicy.ConfigureHostFiltering);
-        builder.Services.AddSingleton(new AppAccessPolicy(appPort));
+        builder.Services.AddSingleton(new AppAccessPolicy(appPort, uiToken));
 
         #if DEBUG
         builder.WebHost.UseWebRoot("wwwroot");

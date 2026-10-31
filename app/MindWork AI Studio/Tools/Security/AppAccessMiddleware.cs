@@ -7,10 +7,13 @@ namespace AIStudio.Tools.Security;
 /// </summary>
 /// <remarks>
 /// The middleware runs before every other one, so it covers pages, static files, the Blazor hub
-/// with all of its transports, and every endpoint alike. A request which carries an Origin header
-/// must come from a page of the app. Browsers send that header with requests made by a script, the
-/// WebSocket of the Blazor hub included, but not when they load a page. A sandboxed iframe sends
-/// "null", which gets refused as well.
+/// with all of its transports, and every endpoint alike. There are no exceptions: a request without
+/// the session cookie gets refused, whatever it asks for.
+///
+/// A request which carries an Origin header must, in addition, come from a page of the app.
+/// Browsers send that header with requests made by a script, the WebSocket of the Blazor hub
+/// included, but not when they load a page. A sandboxed iframe sends "null", which gets refused as
+/// well.
 /// </remarks>
 /// <param name="next">The next middleware.</param>
 /// <param name="policy">Decides which requests may pass.</param>
@@ -23,6 +26,12 @@ public sealed class AppAccessMiddleware(RequestDelegate next, AppAccessPolicy po
     /// </summary>
     private static readonly TimeSpan REFUSAL_LOG_INTERVAL = TimeSpan.FromMinutes(1);
 
+    /// <summary>
+    /// What a refused request gets to read. The app window only shows it when it lost its cookie,
+    /// and a new start gives it a new one.
+    /// </summary>
+    private const string REFUSAL_TEXT = "This window cannot access AI Studio. Please restart AI Studio.";
+
     private readonly Lock refusalLock = new();
     private DateTimeOffset lastRefusalLog = DateTimeOffset.MinValue;
     private int refusalsSinceLastLog;
@@ -32,17 +41,25 @@ public sealed class AppAccessMiddleware(RequestDelegate next, AppAccessPolicy po
         var origin = context.Request.Headers.Origin;
         if (!StringValues.IsNullOrEmpty(origin) && (origin.Count != 1 || !policy.IsAppOrigin(origin.ToString())))
         {
-            this.Refuse(context, "another origin");
+            await this.RefuseAsync(context, "another origin");
+            return;
+        }
+
+        if (!policy.HasSessionCookie(context.Request))
+        {
+            await this.RefuseAsync(context, "a client without the session cookie");
             return;
         }
 
         await next(context);
     }
 
-    private void Refuse(HttpContext context, string reason)
+    private async Task RefuseAsync(HttpContext context, string reason)
     {
-        context.Response.StatusCode = StatusCodes.Status403Forbidden;
         this.LogRefusal(context, reason);
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        context.Response.ContentType = "text/plain; charset=utf-8";
+        await context.Response.WriteAsync(REFUSAL_TEXT);
     }
 
     /// <summary>
