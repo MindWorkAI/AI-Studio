@@ -312,7 +312,7 @@ fn is_tauri_asset_url(url: &tauri::Url) -> bool {
     matches!(url.scheme(), "http" | "https") && is_tauri_asset_host(url.host_str())
 }
 
-fn is_local_http_url(url: &tauri::Url) -> bool {
+pub(crate) fn is_local_http_url(url: &tauri::Url) -> bool {
     matches!(url.scheme(), "http" | "https") && is_local_host(url.host_str())
 }
 
@@ -678,7 +678,7 @@ pub fn send_event(event: Event) {
 }
 
 /// Changes the location of the main window to the given URL.
-pub async fn change_location_to(url: &str) {
+pub async fn change_location_to(url: tauri::Url) {
     // Try to get the main window. If it is not available yet, wait for it:
     let mut main_window_ready = false;
     let mut main_window_status_reported = false;
@@ -700,13 +700,18 @@ pub async fn change_location_to(url: &str) {
         }
     }
 
-    if let Ok(parsed_url) = tauri::Url::parse(url) && is_local_http_url(&parsed_url) {
-        *APPROVED_APP_URL.lock().unwrap() = Some(parsed_url);
+    if is_local_http_url(&url) {
+        *APPROVED_APP_URL.lock().unwrap() = Some(url.clone());
     }
 
-    let js_location_change = format!("window.location = '{url}';");
-    let main_window = main_window_spawn_clone.lock().unwrap();
-    let location_change_result = main_window.as_ref().unwrap().eval(js_location_change.as_str());
+    //
+    // The window navigates by itself instead of through a script of the page it shows. That page
+    // comes from Tauri, which is another site than the app, so the app would count as opened by
+    // another site. We take the window out of the lock first: navigating needs the main thread,
+    // which may wait for this lock meanwhile.
+    //
+    let main_window = main_window_spawn_clone.lock().unwrap().clone().unwrap();
+    let location_change_result = main_window.navigate(url.clone());
     match location_change_result {
         Ok(_) => info!("The app location was changed to {url}."),
         Err(e) => error!("Failed to change the app location to {url}: {e}."),

@@ -303,7 +303,7 @@ pub async fn dotnet_ready() {
     }
 
     let dotnet_server_port = *DOTNET_SERVER_PORT;
-    let url = match Url::parse(format!("http://localhost:{dotnet_server_port}").as_str())
+    let url = match Url::parse(app_address(dotnet_server_port).as_str())
     {
         Ok(url) => url,
         Err(msg) => {
@@ -312,7 +312,14 @@ pub async fn dotnet_ready() {
         }
     };
 
-    change_location_to(url.as_str()).await;
+    change_location_to(url).await;
+}
+
+/// Returns the address of the app on the .NET server. The server listens on the IPv4 loopback
+/// address only, so the window goes there directly instead of resolving `localhost`, which may
+/// answer with the IPv6 loopback address first.
+fn app_address(port: u16) -> String {
+    format!("http://127.0.0.1:{port}/")
 }
 
 /// Stops the .NET server process.
@@ -335,5 +342,26 @@ pub fn cleanup_dotnet_server() {
     let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME);
     if let Err(e) = kill_stale_process(pid_path, SIDECAR_TYPE) {
         warn!(Source = ".NET"; "Error during the cleanup of .NET: {}", e);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_window::is_local_http_url;
+
+    #[test]
+    fn the_app_address_is_the_ipv4_loopback_address() {
+        let url = Url::parse(app_address(61153).as_str()).unwrap();
+
+        assert_eq!(url.host_str(), Some("127.0.0.1"));
+        assert_eq!(url.port(), Some(61153));
+        assert_eq!(url.path(), "/");
+    }
+
+    #[test]
+    fn the_app_address_counts_as_local() {
+        let url = Url::parse(app_address(61153).as_str()).unwrap();
+        assert!(is_local_http_url(&url));
     }
 }

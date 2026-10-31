@@ -285,10 +285,15 @@ internal sealed class Program
 
         builder.Services.AddSingleton(new HttpClient
         {
-            BaseAddress = new Uri($"http://localhost:{appPort}")
+            BaseAddress = new Uri($"http://127.0.0.1:{appPort}")
         });
 
-        builder.WebHost.UseUrls($"http://localhost:{appPort}");
+        //
+        // We listen on the IPv4 loopback address only, where the app window goes. With localhost, the
+        // server would listen on the IPv6 loopback address as well, and a client which resolves
+        // localhost could end up with another process holding that port there.
+        //
+        builder.WebHost.UseUrls($"http://127.0.0.1:{appPort}");
 
         #if DEBUG
         builder.WebHost.UseWebRoot("wwwroot");
