@@ -36,6 +36,11 @@ internal sealed class ERIServerPrompt
 
     public IEnumerable<Auth> AuthenticationMethods { get; init; } = [];
 
+    /// <summary>
+    /// How the authentication methods are meant to be used, e.g., which data is public.
+    /// </summary>
+    public string AuthDescription { get; init; } = string.Empty;
+
     public OperatingSystem OperatingSystem { get; init; } = OperatingSystem.NONE;
 
     public AllowedLLMProviders AllowedLLMProviders { get; init; } = AllowedLLMProviders.NONE;
@@ -86,6 +91,7 @@ internal sealed class ERIServerPrompt
         {
             case DataSources.CUSTOM:
                 sb.Append($"""
+
                            The data source for the retrieval process is described as follows:
 
                            ```
@@ -125,6 +131,7 @@ internal sealed class ERIServerPrompt
             case DataSources.RELATIONAL_DATABASE:
             case DataSources.GRAPH_DATABASE:
                 sb.Append($"""
+
                            The data source for the retrieval process is an "{this.DataSourceProductName}" database running on the
                            host `{this.DataSourceHostname}` and is accessible via port `{this.DataSourcePort}`.
                            """);
@@ -162,7 +169,24 @@ internal sealed class ERIServerPrompt
                   """);
 
         foreach (var auth in this.AuthenticationMethods)
-            sb.Append($"- {auth.ToPrompt()}");
+        {
+            sb.Append($"""
+
+                       - {auth.ToPrompt()}
+                       """);
+        }
+
+        if(!string.IsNullOrWhiteSpace(this.AuthDescription))
+        {
+            sb.Append($"""
+
+                       The authentication process is planned as follows:
+
+                       ```
+                       {this.AuthDescription}
+                       ```
+                       """);
+        }
 
         if(this.AuthenticationMethods.Contains(Auth.KERBEROS))
         {

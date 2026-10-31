@@ -40,6 +40,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         DataSourceHostname = this.dataSourceHostname,
         DataSourcePort = this.dataSourcePort,
         AuthenticationMethods = this.selectedAuthenticationMethods,
+        AuthDescription = this.authDescription,
         OperatingSystem = this.selectedOperatingSystem,
         AllowedLLMProviders = this.allowedLLMProviders,
         RetrievalProcesses = this.retrievalProcesses,
