@@ -595,12 +595,14 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the preselected provider.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
--- Please note: using an empty string ("") will lock the preselected provider selection, even though no valid preselected provider is found.
+-- Please note: an empty string ("") locks the selection to no preselected provider. This needs
+-- AI Studio v26.11.1 or newer; older versions ignore the empty string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure the preselected profile.
 -- It must be one of the profile IDs defined in CONFIG["PROFILES"].
--- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
+-- Please note: an empty string ("") locks the selection to no preselected profile. This needs
+-- AI Studio v26.11.1 or newer; older versions ignore the empty string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure chat-specific preselected options.
@@ -885,7 +887,9 @@ CONFIG["SETTINGS"] = {}
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
 -- Without a selected transcription provider, dictation and transcription features will be disabled.
--- Please note: using an empty string ("") will lock the selection and disable dictation/transcription.
+-- Please note: an empty string ("") locks the selection to no transcription provider, which disables
+-- dictation/transcription. This needs AI Studio v26.11.1 or newer; older versions ignore the empty
+-- string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.UseTranscriptionProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure the Opus bitrate used when normalizing uploaded audio/video for transcription.

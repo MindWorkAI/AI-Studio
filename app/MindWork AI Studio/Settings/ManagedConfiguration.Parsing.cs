@@ -218,8 +218,24 @@ public static partial class ManagedConfiguration
                 {
                     // Case: the read string is a Guid:
                     case Guid:
+                        //
+                        // An empty text selects nothing, which is also the default of these settings. This is
+                        // how an organization locks a selection to none, e.g., to switch off transcription:
+                        //
+                        if (string.IsNullOrWhiteSpace(configuredText))
+                        {
+                            successful = true;
+                            configuredValue = string.Empty;
+                            break;
+                        }
+
                         successful = Guid.TryParse(configuredText, out var id);
                         configuredValue = successful ? id.ToString().ToLowerInvariant() : configuredText;
+
+                        // A dry run comes before the actual one, so only the actual one reports the text:
+                        if (!successful && !dryRun)
+                            Log.LogWarning($"The configuration plugin '{configPluginId}' sets '{configuredText}' for the setting '{configMeta.SettingName}', which is no valid ID. Ignoring it.");
+
                         break;
 
                     // Case: the read string is just a string:
