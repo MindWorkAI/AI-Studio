@@ -290,7 +290,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private async Task OptimizePromptAsync()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

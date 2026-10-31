@@ -307,8 +307,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
-        if(firstRender)
-            this.Form?.ResetValidation();
+        if(firstRender && this.Form is not null)
+            await this.Form.ResetValidationAsync();
 
         if (this.pendingRenderedAssistantSessionSnapshot is { } snapshot)
         {
@@ -434,7 +434,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task ReportProviderIssueAsync()
     {
         if (this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
 
         if (this.ValidatingProvider(this.ProviderSettings) is { } issue && !this.InputIssues.Contains(issue))
             this.AddInputIssue(issue);
@@ -962,9 +962,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.InputIsValid = false;
         this.InputIssues = [];
         
-        this.Form?.ResetValidation();
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
+
         await this.RefreshAssistantUIAsync();
-        this.Form?.ResetValidation();
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
     }
 
     private string GetResetColor() => this.SettingsManager.IsDarkMode switch

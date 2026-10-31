@@ -129,7 +129,7 @@ public partial class AssistantBatchProcessing
     /// <returns>The output folder and the documents, or <c>null</c> when the run must not start.</returns>
     private async Task<(string ResolvedOutputDirectory, IReadOnlyList<string> Files)?> PrepareRunAsync()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
 
         //
         // The exclusion list sits in the expert settings, which are folded away by default. Unfold

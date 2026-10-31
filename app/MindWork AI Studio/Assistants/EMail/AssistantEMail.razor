@@ -5,7 +5,7 @@
 @if (this.provideHistory)
 {
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
-        <MudTextField T="string" @bind-Text="@this.inputHistory" Validation="@this.ValidateHistory" Label="@T("Previous conversation")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="@T("Provide the previous conversation, e.g., the last e-mail, the last chat, etc.")" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DocumentScanner"/>
+        <MudTextField T="string" @bind-Text="@this.inputHistory" Validation="@this.ValidateHistory" Label="@T("Previous conversation")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="12" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="@T("Provide the previous conversation, e.g., the last e-mail, the last chat, etc.")" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DocumentScanner"/>
     </MudPaper>
 }
 

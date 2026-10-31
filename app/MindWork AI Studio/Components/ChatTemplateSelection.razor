@@ -6,13 +6,13 @@
         <ActivatorContent>
             @if (this.CurrentChatTemplate != ChatTemplate.NO_CHAT_TEMPLATE)
             {
-                <MudButton IconSize="Size.Large" StartIcon="@this.ChatTemplateIcon(this.CurrentChatTemplate)" IconColor="Color.Default">
+                <MudButton IconSize="Size.Large" StartIcon="@this.ChatTemplateIcon(this.CurrentChatTemplate)" IconColor="Color.Default" OnClick="@context.ToggleAsync">
                     @this.CurrentChatTemplate.GetSafeName()
                 </MudButton>
             }
             else
             {
-                <MudIconButton Icon="@Icons.Material.Filled.RateReview" />
+                <MudIconButton Icon="@Icons.Material.Filled.RateReview" OnClick="@context.ToggleAsync" />
             }
         </ActivatorContent>
         <ChildContent>

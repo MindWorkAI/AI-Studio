@@ -293,7 +293,7 @@ window.localShortcut = {
 }
 
 // What floats above the page without ever being a drop target. Two of these take part in hit testing as
-// MudBlazor 8.15 stands: an open .mud-popover -- a closed one already declines pointer events through
+// MudBlazor 9.12 stands: an open .mud-popover -- a closed one already declines pointer events through
 // .mud-popover:not(.mud-popover-open) -- and .mud-snackbar, which asks for them explicitly with
 // pointer-events: auto even though its container declines them, and snackbars appear constantly in this
 // app. Without this list, a drag would be answered by whatever happens to float on screen rather than by
@@ -306,12 +306,12 @@ const skippedDropOverlays = '.mud-popover, .mud-tooltip, .mud-snackbar, #mud-sna
 
 // The drop zones of the app, addressed by the cursor position of a native drag and drop event.
 //
-// The arbitration between overlapping zones is left to the browser, and it can be: MudBlazor 8.15 gives
+// The arbitration between overlapping zones is left to the browser, and it can be: MudBlazor 9.12 gives
 // neither .mud-dialog-container nor .mud-overlay a pointer-events: none. Both fill the viewport while a
 // dialog is open, so a point beside the dialog box hits the container, and nothing there is a drop zone. A
 //  drop, therefore, cannot reach through an open dialog into the page behind it -- the very thing the app
 // used to enforce by counting layers in C#. That single CSS property carries this whole design, so it
-// belongs on the checklist for every MudBlazor major version, starting with the move to 9.
+// belongs on the checklist for every MudBlazor major version.
 window.dropZones = {
 
     // Names the drop zone at the given viewport position, or null when there is none.
@@ -338,81 +338,4 @@ window.dropZones = {
     list: function () {
         return Array.from(document.querySelectorAll('[data-drop-zone-id]'), zone => zone.getAttribute('data-drop-zone-id'))
     }
-}
-
-// Keeps an open popover inside the window while its content grows or shrinks.
-//
-// MudBlazor 8.15 places an open popover when it opens, when the window is resized or scrolled, and when the
-// component of the popover renders again. It never measures the popover afterward, though. Content which
-// unfolds later, such as the unavailable tools of the tool selection or a panel of the data source selection,
-// lets the popover grow out of the window until something unrelated places it again. So we place an open
-// popover again whenever its size changes, at most once per frame, which keeps it at its anchor during the
-// whole animation. Placing a popover may change its size once, when MudBlazor limits its height to the
-// window, but placing it again at the same spot changes nothing, so this settles right away.
-//
-// This relies on window.mudpopoverHelper.placePopoverByNode, which is internal to MudBlazor. It exists in
-// 8.15 and 9.2; without it, this does nothing. Check it with every new MudBlazor version.
-const popoverResize = (function () {
-    const resizedPopovers = new Set()
-    let isPlacementPending = false
-
-    const placeResizedPopovers = function () {
-        isPlacementPending = false
-        for (const popover of resizedPopovers) {
-            if (popover.isConnected && popover.classList.contains('mud-popover-open'))
-                window.mudpopoverHelper?.placePopoverByNode?.(popover)
-        }
-
-        resizedPopovers.clear()
-    }
-
-    const resizeObserver = new ResizeObserver(function (entries) {
-        for (const entry of entries)
-            resizedPopovers.add(entry.target)
-
-        if (isPlacementPending)
-            return
-
-        isPlacementPending = true
-        requestAnimationFrame(placeResizedPopovers)
-    })
-
-    // MudBlazor renders the content of every popover as a direct child of the provider:
-    const observePopover = function (node) {
-        if (node instanceof Element && node.classList.contains('mud-popover'))
-            resizeObserver.observe(node)
-    }
-
-    const forgetPopover = function (node) {
-        if (node instanceof Element)
-            resizeObserver.unobserve(node)
-    }
-
-    const observeProvider = function () {
-        const provider = document.querySelector('.mud-popover-provider')
-        if (!provider)
-            return false
-
-        provider.childNodes.forEach(observePopover)
-        new MutationObserver(function (mutations) {
-            for (const mutation of mutations) {
-                mutation.addedNodes.forEach(observePopover)
-                mutation.removedNodes.forEach(forgetPopover)
-            }
-        }).observe(provider, { childList: true })
-
-        return true
-    }
-
-    return { observeProvider: observeProvider }
-})()
-
-// The provider appears only once Blazor has rendered the app, so we wait for it, and only for it:
-if (!popoverResize.observeProvider()) {
-    const providerObserver = new MutationObserver(function () {
-        if (popoverResize.observeProvider())
-            providerObserver.disconnect()
-    })
-
-    providerObserver.observe(document.body, { childList: true, subtree: true })
 }

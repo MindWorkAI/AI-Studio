@@ -1,7 +1,7 @@
 @using AIStudio.Tools.ChatArchive
 @inherits MSGComponentBase
 
-<MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" PanelClass="pa-4">
+<MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" TabPanelsClass="pa-4">
     <MudTabPanel Text="@T("Back up")" Icon="@Icons.Material.Filled.Archive" Disabled="@(this.isBusy || this.DataRestoreService.IsPreparing)">
 
         <MudText Typo="Typo.body1" Class="mb-3">

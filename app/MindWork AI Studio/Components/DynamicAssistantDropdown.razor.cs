@@ -62,8 +62,9 @@ namespace AIStudio.Components
         [Parameter]
         public string Style { get; set; } = string.Empty;
 
-        private async Task OnValueChanged(string newValue)
+        private async Task OnValueChanged(string? changedValue)
         {
+            var newValue = changedValue ?? string.Empty;
             if (this.Value != newValue)
             {
                 this.Value = newValue;
@@ -97,7 +98,7 @@ namespace AIStudio.Components
             return [this.Default, .. items];
         }
 
-        private string GetMultiSelectionText(List<string?>? selectedValues)
+        private string GetMultiSelectionText(IReadOnlyList<string?>? selectedValues)
         {
             if (selectedValues is null || selectedValues.Count == 0)
                 return this.Default.Display;

@@ -91,7 +91,7 @@ public partial class RetrievalProcessDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -187,7 +187,7 @@ public partial class RetrievalProcessDialog : MSGComponentBase
     
     private async Task Store()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         foreach (var parameter in this.retrievalParameters)
         {
             if (this.ValidateParameter(parameter) is { } issue)

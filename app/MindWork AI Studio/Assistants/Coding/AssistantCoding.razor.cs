@@ -193,7 +193,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     private async Task GetSupport()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

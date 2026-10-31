@@ -203,7 +203,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         if (this.formValidationPending && this.visualBriefingForm is not null)
         {
             this.formValidationPending = false;
-            await this.visualBriefingForm.Validate();
+            await this.visualBriefingForm.ValidateAsync();
         }
 
         if (this.selectedBriefing is null || this.IsCurrentBusy)

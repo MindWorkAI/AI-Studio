@@ -183,7 +183,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     
     private async Task FindSynonyms()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

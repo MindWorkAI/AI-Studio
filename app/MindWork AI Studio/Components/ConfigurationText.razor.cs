@@ -128,7 +128,9 @@ public partial class ConfigurationText : ConfigurationBaseCore
     #endregion
 
     private bool AutoGrow => this.ExpandToContent || this.NumLines > 1;
-    
+
+    private InputSizing Sizing => this.AutoGrow ? InputSizing.Auto : InputSizing.Fixed;
+
     private int GetMaxLines => this.ExpandToContent ? FilePatternSelection.MAX_FIELD_LINES : this.AutoGrow ? this.MaxLines : 1;
 
     private string InputClass => this.ExpandToContent ? "pattern-text-field" : string.Empty;
@@ -139,13 +141,13 @@ public partial class ConfigurationText : ConfigurationBaseCore
     //
     private Adornment IconAdornment => this.NumLines == 1 ? Adornment.Start : Adornment.None;
 
-    protected void InternalUpdate(string text)
+    protected void InternalUpdate(string? text)
     {
         if (this.IsDisabled)
             return;
 
         this.timer.Stop();
-        this.internalText = text;
+        this.internalText = text ?? string.Empty;
         this.timer.Start();
     }
 

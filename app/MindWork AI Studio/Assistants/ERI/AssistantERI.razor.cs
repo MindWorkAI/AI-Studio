@@ -611,7 +611,8 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         this.ResetForm();
         
         await this.SettingsManager.StoreSettings();
-        this.Form?.ResetValidation();
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
     }
     
     private bool IsNoneERIServerSelected => this.selectedERIServer is null;
@@ -1106,7 +1107,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return;
         
         await this.AutoSave();
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

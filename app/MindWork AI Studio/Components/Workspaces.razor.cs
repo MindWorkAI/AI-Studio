@@ -536,9 +536,9 @@ public partial class Workspaces : MSGComponentBase
         }
     }
 
-    private async Task OnSearchTextChanged(string value)
+    private async Task OnSearchTextChanged(string? value)
     {
-        this.searchText = value;
+        this.searchText = value ?? string.Empty;
         if (string.IsNullOrWhiteSpace(this.searchText))
         {
             await this.CancelSearchAsync();

@@ -5,13 +5,13 @@
         <ActivatorContent>
             @if (this.CurrentProfile != Profile.NO_PROFILE)
             {
-                <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Person4" IconColor="Color.Default">
+                <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Person4" IconColor="Color.Default" OnClick="@context.ToggleAsync">
                     @this.CurrentProfile.GetSafeName()
                 </MudButton>
             }
             else
             {
-                <MudIconButton Icon="@Icons.Material.Filled.Person4" Color="Color.Default" />
+                <MudIconButton Icon="@Icons.Material.Filled.Person4" Color="Color.Default" OnClick="@context.ToggleAsync" />
             }
         </ActivatorContent>
         <ChildContent>

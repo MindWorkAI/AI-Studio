@@ -865,7 +865,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         if (this.RemoveBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
-        var remove = await this.DialogService.ShowMessageBox(
+        var remove = await this.DialogService.ShowMessageBoxAsync(
             T("Remove Message"),
             T("Do you really want to remove this message?"),
             T("Yes, remove it"),
@@ -947,7 +947,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         if(this.Role is not ChatRole.AI)
             return;
         
-        var regenerate = await this.DialogService.ShowMessageBox(
+        var regenerate = await this.DialogService.ShowMessageBoxAsync(
             T("Regenerate Message"),
             T("Do you really want to regenerate this message?"),
             T("Yes, regenerate it"),
@@ -962,7 +962,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.BlockActionsEnabled())
             return;
 
-        var rollback = await this.DialogService.ShowMessageBox(
+        var rollback = await this.DialogService.ShowMessageBoxAsync(
             T("Roll Back Chat"),
             T("Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed."),
             T("Yes, roll back the chat"),
@@ -991,7 +991,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         if(this.Role is not ChatRole.USER)
             return;
         
-        var edit = await this.DialogService.ShowMessageBox(
+        var edit = await this.DialogService.ShowMessageBoxAsync(
             T("Edit Message"),
             T("Do you really want to edit this message? In order to edit this message, the AI response will be deleted."),
             T("Yes, remove the AI response and edit it"),

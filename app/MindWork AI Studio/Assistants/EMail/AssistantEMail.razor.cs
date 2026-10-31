@@ -74,7 +74,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string inputGreeting = string.Empty;
     private string inputBulletPoints = string.Empty;
     private readonly List<string> bulletPointsLines = [];
-    private IEnumerable<string> selectedFoci = new HashSet<string>();
+    private IReadOnlyCollection<string> selectedFoci = new HashSet<string>();
     private string inputName = string.Empty;
     private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
     private string customTargetLanguage = string.Empty;
@@ -259,7 +259,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
 
     private async Task CreateMail()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

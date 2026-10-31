@@ -8,8 +8,8 @@
 
 @* Two zones, so no default target: the user has to aim at the one they mean. *@
 <ReadFileContent Text="@T("Load the legal document from file")" @bind-FileContent="@this.inputLegalDocument" EnableDragDrop="true"/>
-<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputLegalDocument" Validation="@this.ValidatingLegalDocument" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Legal document")" Variant="Variant.Outlined" Lines="12" AutoGrow="@true" MaxLines="24" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputLegalDocument" Validation="@this.ValidatingLegalDocument" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Legal document")" Variant="Variant.Outlined" Lines="12" Sizing="InputSizing.Auto" MaxLines="24" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <ReadFileContent Text="@T("Load your questions from file")" @bind-FileContent="@this.inputQuestions" EnableDragDrop="true"/>
-<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputQuestions" Validation="@this.ValidatingQuestions" AdornmentIcon="@Icons.Material.Filled.QuestionAnswer" Adornment="Adornment.Start" Label="@T("Your questions")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputQuestions" Validation="@this.ValidatingQuestions" AdornmentIcon="@Icons.Material.Filled.QuestionAnswer" Adornment="Adornment.Start" Label="@T("Your questions")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

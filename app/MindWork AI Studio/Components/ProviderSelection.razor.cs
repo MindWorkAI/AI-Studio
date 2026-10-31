@@ -57,13 +57,13 @@ public partial class ProviderSelection : MSGComponentBase
 
     #endregion
     
-    private async Task SelectionChanged(AIStudio.Settings.Provider provider)
+    private async Task SelectionChanged(AIStudio.Settings.Provider? provider)
     {
         if (this.Disabled)
             return;
 
-        this.ProviderSettings = provider;
-        await this.ProviderSettingsChanged.InvokeAsync(provider);
+        this.ProviderSettings = provider ?? AIStudio.Settings.Provider.NONE;
+        await this.ProviderSettingsChanged.InvokeAsync(this.ProviderSettings);
     }
 
     private IEnumerable<ProviderSelectionItem> GetAvailableProviderSelectionItems()

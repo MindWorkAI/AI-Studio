@@ -427,14 +427,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         await this.KeepSlidePicturesOutOfDocumentsAsync();
         if(this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
     }
 
     private async Task OnSlidePicturesChanged(HashSet<FileAttachment> _)
     {
         await this.KeepSlidePicturesOutOfDocumentsAsync();
         if(this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
     }
 
     /// <summary>
@@ -622,7 +622,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     private async Task CreateSlideBuilder()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

@@ -217,7 +217,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
     {
         if (!chatTemplate.TryExportAsConfigurationSection(out var luaCode, out var issue))
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export Chat Template"),
                 issue,
                 T("Close"));
@@ -232,7 +232,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
     {
         if (!chatTemplate.TryExportAsConfigurationSectionWithPackagedAttachments(pluginDirectory, out var luaCode, out var issue))
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export Chat Template"),
                 issue,
                 T("Close"));

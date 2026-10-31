@@ -70,9 +70,9 @@ public partial class FileExclusionEditor : MSGComponentBase
         base.OnParametersSet();
     }
 
-    protected Task ChangeFoldersAsync(string text) => this.ChangePatternsAsync(text, folders: true);
+    protected Task ChangeFoldersAsync(string? text) => this.ChangePatternsAsync(text ?? string.Empty, folders: true);
 
-    protected Task ChangeFilesAsync(string text) => this.ChangePatternsAsync(text, folders: false);
+    protected Task ChangeFilesAsync(string? text) => this.ChangePatternsAsync(text ?? string.Empty, folders: false);
 
     private async Task ChangePatternsAsync(string text, bool folders)
     {

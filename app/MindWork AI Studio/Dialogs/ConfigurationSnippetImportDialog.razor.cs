@@ -28,10 +28,10 @@ public partial class ConfigurationSnippetImportDialog : MSGComponentBase
     /// </summary>
     private ConfigurationSnippetImportResult? importWithHints;
 
-    private void SnippetChanged(string text)
+    private void SnippetChanged(string? text)
     {
         // The issue and the hints belong to the snippet they were found in:
-        this.snippet = text;
+        this.snippet = text ?? string.Empty;
         this.issue = string.Empty;
         this.importWithHints = null;
     }

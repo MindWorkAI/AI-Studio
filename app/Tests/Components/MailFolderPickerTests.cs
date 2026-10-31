@@ -110,7 +110,7 @@ public sealed class MailFolderPickerTests
 
     private static TreeItemData<string> BuildRoot(params MailServerFolder[] folders) => MailFolderPicker.BuildTree(folders, string.Empty, WHOLE_MAILBOX).Single();
 
-    private static IEnumerable<string?> ValuesOf(TreeItemData<string> item) => item.Children?.Select(child => child.Value) ?? [];
+    private static IEnumerable<string?> ValuesOf(ITreeItemData<string> item) => item.Children?.Select(child => child.Value) ?? [];
 
-    private static TreeItemData<string> Child(TreeItemData<string> item, string fullName) => item.Children!.Single(child => child.Value == fullName);
+    private static ITreeItemData<string> Child(ITreeItemData<string> item, string fullName) => item.Children!.Single(child => child.Value == fullName);
 }

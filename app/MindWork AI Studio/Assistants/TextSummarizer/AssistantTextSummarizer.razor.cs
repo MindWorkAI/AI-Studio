@@ -160,7 +160,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
 
     private async Task SummarizeText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

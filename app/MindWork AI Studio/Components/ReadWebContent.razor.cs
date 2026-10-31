@@ -247,9 +247,9 @@ public partial class ReadWebContent : MSGComponentBase
     /// </remarks>
     private bool UrlIsValid => this.ValidateURL(this.URL) is null;
 
-    private async Task URLValueChanged(string url)
+    private async Task URLValueChanged(string? url)
     {
-        await this.URLChanged.InvokeAsync(url);
+        await this.URLChanged.InvokeAsync(url ?? string.Empty);
     }
 
     private async Task ShowWebContentReaderChanged(bool state)

@@ -90,12 +90,12 @@ else
                 if (component is AssistantTextArea textArea)
                 {
                     var lines = textArea.IsSingleLine ? 1 : 6;
-                    var autoGrow = !textArea.IsSingleLine;
+                    var sizing = textArea.IsSingleLine ? InputSizing.Fixed : InputSizing.Auto;
 
                     <MudTextField T="string"
                                   UserAttributes="@SPELLCHECK_ATTRIBUTES"
                                   Text="@this.assistantState.Text[textArea.Name]"
-                                  TextChanged="@(value => this.assistantState.Text[textArea.Name] = value)"
+                                  TextChanged="@(value => this.assistantState.Text[textArea.Name] = value ?? string.Empty)"
                                   Label="@textArea.Label"
                                   HelperText="@textArea.HelperText"
                                   HelperTextOnFocus="@textArea.HelperTextOnFocus"
@@ -109,7 +109,7 @@ else
                                   AdornmentColor="@textArea.GetAdornmentColor()"
                                   Variant="Variant.Outlined"
                                   Lines="@lines"
-                                  AutoGrow="@autoGrow"
+                                  Sizing="@sizing"
                                   MaxLines="12"
                                   Class='@MergeClass(textArea.Class, "mb-3")'
                                   Style="@GetOptionalStyle(textArea.Style)" />
@@ -479,7 +479,7 @@ else
 
                     <MudItem Class="d-flex">
                         <MudColorPicker Text="@this.assistantState.Colors[colorPicker.Name]"
-                                        TextChanged="@(value => this.assistantState.Colors[colorPicker.Name] = value)"
+                                        TextChanged="@(value => this.assistantState.Colors[colorPicker.Name] = value ?? string.Empty)"
                                         Label="@colorPicker.Label"
                                         Placeholder="@colorPicker.Placeholder"
                                         ShowAlpha="@colorPicker.ShowAlpha"
