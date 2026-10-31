@@ -1998,8 +1998,9 @@ dependencies = [
 
 [[package]]
 name = "docx-to-md"
-version = "0.1.0"
-source = "git+https://github.com/SommerEngineering/docx-parser.git?rev=3434bd405fc95a6a4f5de1d09c74dfd27a409996#3434bd405fc95a6a4f5de1d09c74dfd27a409996"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9775b3bbffa71f4c07054e8b0a1df4835c3e13f39f9586f347173038e40f2ac3"
 dependencies = [
  "base64 0.22.1",
  "image",
@@ -5467,8 +5468,9 @@ checksum = "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391"
 
 [[package]]
 name = "pptx-to-md"
-version = "1.0.0"
-source = "git+https://github.com/SommerEngineering/pptx-parser.git?rev=540af00586d122c192093f6c42991ce015a67223#540af00586d122c192093f6c42991ce015a67223"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f62d052ef911339e6de17c24300cba547919391d73f34301b22c4224aae33925"
 dependencies = [
  "base64 0.22.1",
  "image",
