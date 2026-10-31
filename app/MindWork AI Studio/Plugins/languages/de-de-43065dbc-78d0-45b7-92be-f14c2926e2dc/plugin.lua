@@ -1539,11 +1539,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2205711729"] = "Betri
 -- You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2241311898"] = "Sie können zusätzliche Bibliotheken integrieren. Vielleicht möchten Sie die Prompts im Voraus mit einer Machine-Learning-Methode auswerten oder sie mithilfe eines Text-Mining-Ansatzes analysieren? Oder möchten Sie vielleicht Bilder in den Prompts vorverarbeiten? Für solche erweiterten Szenarien können Sie hier angeben, welche Bibliotheken Sie verwenden möchten. Beschreiben Sie am besten, welche Bibliothek Sie für welchen Zweck einbinden möchten. So kann das LLM, das den ERI-Server für Sie erstellt, versuchen, diese Bibliotheken effektiv zu nutzen. Dadurch sollte weniger Nacharbeit nötig sein. Falls Sie die benötigten Bibliotheken nicht kennen, können Sie stattdessen versuchen, den geplanten Einsatzzweck zu beschreiben. Das LLM kann dann versuchen, passende Bibliotheken auszuwählen. Allerdings können dabei Halluzinationen auftreten und fiktive Bibliotheken gewählt werden."
 
+-- The ERI specification was saved.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2258857117"] = "Die ERI-Spezifikation wurde gespeichert."
+
+-- Save the ERI specification
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2260814268"] = "ERI-Spezifikation speichern"
+
 -- The ERI specification could not be loaded. Please try again later.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2265640084"] = "Die ERI-Spezifikation konnte nicht geladen werden. Bitte versuchen Sie es später erneut."
 
 -- You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2299793803"] = "Sie können es sich so vorstellen: Hypothetisch gesehen würde die Wikipedia beim Einsatz von ERI alle Seiten mithilfe einer Einbettungsmethode „vektorisieren“. Alle Daten von Wikipedia, einschließlich der Vektordatenbank, würden bei der Wikipedia bleiben (dezentraler Ansatz). Danach könnte jeder Nutzer von MindWork AI Studio Wikipedia als Datenquelle hinzufügen, um Halluzinationen des LLM bei Wissensfragen deutlich zu reduzieren."
+
+-- The ERI specification could not be saved.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2361742875"] = "Die ERI-Spezifikation konnte nicht gespeichert werden."
 
 -- Are you sure you want to delete the ERI server preset '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2417944396"] = "Sind Sie sicher, dass Sie die ERI-Server-Voreinstellung „{0}“ löschen möchten?"
@@ -1674,9 +1683,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3709185824"] = "Ja, b
 -- Common ERI server settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T371718034"] = "Allgemeine ERI-Server-Einstellungen"
 
--- Download specification
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3770339156"] = "Spezifikation herunterladen"
-
 -- Are you sure you want to delete the embedding '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3792084967"] = "Möchten Sie die Einbettung „{0}“ wirklich löschen?"
 
@@ -1742,6 +1748,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T746826190"] = "ERI-Se
 
 -- Are you sure you want to delete the retrieval process '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T748762927"] = "Sind Sie sicher, dass Sie den Abrufprozess „{0}“ löschen möchten?"
+
+-- Save specification
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T756799053"] = "Spezifikation speichern"
 
 -- Data source: hostname
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T761552889"] = "Datenquelle: Hostname"
