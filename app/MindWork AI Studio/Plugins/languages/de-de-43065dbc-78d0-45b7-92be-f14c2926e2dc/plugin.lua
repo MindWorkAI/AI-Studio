@@ -1315,7 +1315,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T465395981"] =
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage Ihrer Angaben."
 
 -- Your name for the closing salutation of your e-mail.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T134060413"] = "Ihr Name für die Grußformel am Ende ihrer E-Mail."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T134060413"] = "Ihr Name für die Grußformel am Ende Ihrer E-Mail."
 
 -- Please start each line of your content list with a dash (-) to create a bullet point list.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1384718254"] = "Bitte beginnen Sie jede Zeile der Inhaltsliste mit einem Bindestrich (-), um eine Aufzählung zu erstellen."
@@ -1468,7 +1468,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1456749976"] = "Bitte
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1469573738"] = "Löschen"
 
 -- When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1531680404"] = "Wenn Sie den ERI-Server-Code neu erstellen oder generieren, geht AI Studio wie folgt vor: Alle beim letzten Mal generierten Dateien werden gelöscht. Alle anderen von ihnen erstellten Dateien bleiben erhalten. Anschließend generiert die KI die neuen Dateien."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1531680404"] = "Wenn Sie den ERI-Server-Code neu erstellen oder generieren, geht AI Studio wie folgt vor: Alle beim letzten Mal generierten Dateien werden gelöscht. Alle anderen von Ihnen erstellten Dateien bleiben erhalten. Anschließend generiert die KI die neuen Dateien."
 
 -- Related links:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1565111217"] = "Relevante Links:"
@@ -1534,7 +1534,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T218617347"] = "Für I
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2202387805"] = "Sie können mehr als eine Einbettungsmethode angeben. Das ist nützlich, wenn Sie unterschiedliche Einbettungen für verschiedene Abfragen oder Datentypen verwenden möchten. Zum Beispiel eine Einbettung für Texte, eine andere für Bilder und eine dritte für Videos usw."
 
 -- Operating system on which your ERI will run
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2205711729"] = "Betriebssystem, auf dem ihr ERI-Server ausgeführt wird"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2205711729"] = "Betriebssystem, auf dem Ihr ERI-Server ausgeführt wird"
 
 -- You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2241311898"] = "Sie können zusätzliche Bibliotheken integrieren. Vielleicht möchten Sie die Prompts im Voraus mit einer Machine-Learning-Methode auswerten oder sie mithilfe eines Text-Mining-Ansatzes analysieren? Oder möchten Sie vielleicht Bilder in den Prompts vorverarbeiten? Für solche erweiterten Szenarien können Sie hier angeben, welche Bibliotheken Sie verwenden möchten. Beschreiben Sie am besten, welche Bibliothek Sie für welchen Zweck einbinden möchten. So kann das LLM, das den ERI-Server für Sie erstellt, versuchen, diese Bibliotheken effektiv zu nutzen. Dadurch sollte weniger Nacharbeit nötig sein. Falls Sie die benötigten Bibliotheken nicht kennen, können Sie stattdessen versuchen, den geplanten Einsatzzweck zu beschreiben. Das LLM kann dann versuchen, passende Bibliotheken auszuwählen. Allerdings können dabei Halluzinationen auftreten und fiktive Bibliotheken gewählt werden."
@@ -1708,7 +1708,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4156384463"] = "Bitte
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4204533420"] = "ERI-Server"
 
 -- The name of your ERI server must be between 6 and 60 characters long.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4215418115"] = "Der Name ihres ERI-Servers muss zwischen 6 und 60 Zeichen lang sein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4215418115"] = "Der Name Ihres ERI-Servers muss zwischen 6 und 60 Zeichen lang sein."
 
 -- Describe your data source
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4272497758"] = "Beschreiben Sie Ihre Datenquelle"
@@ -1720,7 +1720,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T458158948"] = "Das ER
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T476513814"] = "Zulässige LLM-Anbieter für diese Datenquelle"
 
 -- The description of your ERI server must be between 32 and 512 characters long.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T528250165"] = "Die Beschreibung ihres ERI-Servers muss zwischen 32 und 512 Zeichen lang sein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T528250165"] = "Die Beschreibung Ihres ERI-Servers muss zwischen 32 und 512 Zeichen lang sein."
 
 -- (Optional) Additional libraries
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T605643256"] = "(Optional) Zusätzliche Bibliotheken"
@@ -4813,7 +4813,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3440789294"] = "Nei
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3448155331"] = "Schließen"
 
 -- The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3574254516"] = "Die KI bewertet jede ihrer Eingaben, um zu bestimmen, ob und welche Datenquellen notwendig sind. Derzeit hat die KI keine Quelle ausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3574254516"] = "Die KI bewertet jede Ihrer Eingaben, um zu bestimmen, ob und welche Datenquellen notwendig sind. Derzeit hat die KI keine Quelle ausgewählt."
 
 -- No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3622679053"] = "Nein, AI Studio durchsucht Ihre Datenquellen bei jeder Nachricht, bevor die KI antwortet (klassisches RAG)."
@@ -6295,7 +6295,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1061000046"] = "Wir hoffen, dass
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1127694951"] = "Integration von Unternehmensdaten"
 
 -- Meet your needs
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T127032776"] = "Entspricht ihren Bedürfnissen"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T127032776"] = "Entspricht Ihren Bedürfnissen"
 
 -- We're integrating a writing mode to help you create extensive works, like comprehensive project proposals, tenders, or your next fantasy novel.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1457213518"] = "Wir integrieren einen Schreibmodus, der Ihnen dabei hilft, umfangreiche Werke zu erstellen – zum Beispiel ausführliche Projektvorschläge, Ausschreibungen oder Ihren nächsten Fantasyroman."
@@ -6325,7 +6325,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2289234741"] = "Sie können Ihre
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2345974992"] = "Browser-Nutzung"
 
 -- Integrating your data
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2416595938"] = "Integration ihrer Daten"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2416595938"] = "Integration Ihrer Daten"
 
 -- Curious about the vision for MindWork AI Studio and what the future holds? We're here to address just that. Remember, this is a free, open-source project, meaning we can't guarantee when or if this vision will be fully realized. Our aim is to share our vision with you to help you decide whether this app is right for you.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2491403346"] = "Neugierig auf die Vision von MindWork AI Studio und darauf, was die Zukunft bringt? Genau darauf möchten wir eingehen. Bitte denken Sie daran, dass dies ein kostenloses Open-Source-Projekt ist. Das bedeutet, wir können nicht garantieren, wann oder ob diese Vision vollständig umgesetzt wird. Unser Ziel ist es, Ihnen unsere Vision zu vermitteln, damit Sie entscheiden können, ob diese App das Richtige für Sie ist."
@@ -7636,7 +7636,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1711249
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1725856265"] = "Beschreibung"
 
 -- The embedding runs locally or in your organization. Your data is not sent to the cloud.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1950544032"] = "Die Einbettung läuft lokal oder in ihrer Organisation. Ihre Daten werden nicht in die Cloud gesendet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1950544032"] = "Die Einbettung läuft lokal oder in Ihrer Organisation. Ihre Daten werden nicht in die Cloud gesendet."
 
 -- Files to include
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2000156297"] = "Einbezogene Dateien"
@@ -7852,7 +7852,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T171124909"] 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1725856265"] = "Beschreibung"
 
 -- The embedding runs locally or in your organization. Your data is not sent to the cloud.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1950544032"] = "Die Einbettung erfolgt lokal oder in ihrem Unternehmen. Ihre Daten werden nicht in die Cloud gesendet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1950544032"] = "Die Einbettung läuft lokal oder in Ihrer Organisation. Ihre Daten werden nicht in die Cloud gesendet."
 
 -- The file chosen for the data source does not exist anymore. Please edit the data source and choose another file or correct the path.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2235729121"] = "Die für die Datenquelle ausgewählte Datei existiert nicht mehr. Bitte bearbeiten Sie die Datenquelle und wählen Sie eine andere Datei aus oder korrigieren Sie den Pfad."
@@ -7900,7 +7900,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3528266571"]
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3650018664"] = "Dateigröße"
 
 -- The embedding runs in the cloud. All your data within the file '{0}' will be sent to the cloud.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3688254408"] = "Das Einbetten erfolgt in der Cloud. Alle ihre Daten in der Datei „{0}“ werden in die Cloud gesendet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3688254408"] = "Das Einbetten erfolgt in der Cloud. Alle Ihre Daten in der Datei „{0}“ werden in die Cloud gesendet."
 
 -- the required provider confidence level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T818422588"] = "das erforderliche Vertrauensniveau des Anbieters"
@@ -8461,7 +8461,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T313476957"] = "Fügen Sie den
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3263447722"] = "Akzeptieren Sie die Bedingungen der GPL-Lizenz und laden Sie das neueste Archiv mit dem untenstehenden Download-Button herunter."
 
 -- Pandoc doesn't seem to be installed on this system. AI Studio can help you install the correct version.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3355132094"] = "Pandoc scheint auf diesem System nicht installiert zu sein. AI Studio kann ihnen helfen, die richtige Version zu installieren."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3355132094"] = "Pandoc scheint auf diesem System nicht installiert zu sein. AI Studio kann Ihnen helfen, die richtige Version zu installieren."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3448155331"] = "Schließen"
@@ -8470,7 +8470,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3448155331"] = "Schließen"
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3653795841"] = "Pandoc ist installiert und die Version entspricht den Anforderungen von MindWork AI Studio."
 
 -- Pandoc is installed, but the version is too old and does not meet the requirements of MindWork AI Studio. AI Studio can help you install a newer version.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3692691761"] = "Pandoc ist installiert, aber die Version ist zu alt und erfüllt nicht die Anforderungen von MindWork AI Studio. AI Studio kann ihnen helfen, eine neuere Version zu installieren."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3692691761"] = "Pandoc ist installiert, aber die Version ist zu alt und erfüllt nicht die Anforderungen von MindWork AI Studio. AI Studio kann Ihnen helfen, eine neuere Version zu installieren."
 
 -- Execute the installer and follow the instructions.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3730261061"] = "Führen Sie das Installationsprogramm aus und folgen Sie den Anweisungen."
@@ -9073,7 +9073,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2933579640"] = "Sie
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3015844908"] = "Bitte geben Sie zunächst einige allgemeine Informationen über Ihren Abrufprozess an. Diese Angaben können den Nutzern angezeigt werden."
 
 -- The name of your retrieval process.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3207262684"] = "Der Name ihres Abrufprozesses."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3207262684"] = "Der Name Ihres Abrufprozesses."
 
 -- You may want to parameterize your retrieval process. However, this is optional. You can specify any parameters that can be set by the user or the system during the call. Nevertheless, you should use sensible default values in your code so that users are not forced to set the parameters manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3292152705"] = "Möglicherweise möchten Sie Ihren Abrufprozess parameterisieren. Dies ist jedoch optional. Sie können beliebige Parameter angeben, die vom Benutzer oder vom System während des Aufrufs festgelegt werden können. Dennoch sollten Sie sinnvolle Standardwerte in Ihrem Code verwenden, damit Benutzer die Parameter nicht manuell einstellen müssen."
@@ -10555,7 +10555,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T956
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T963676741"] = "Standard-Zielgruppenprofil"
 
 -- If and when should we delete your temporary chats?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T1014418451"] = "Sollen ihre selbstlöschenden Chats gelöscht werden, und wenn ja, wann?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T1014418451"] = "Sollen Ihre selbstlöschenden Chats gelöscht werden, und wenn ja, wann?"
 
 -- Workspace display behavior
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T2151409362"] = "Verhalten der Arbeitsbereichs-Anzeige"
@@ -10567,10 +10567,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T2562846
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T3448155331"] = "Schließen"
 
 -- How should we display your workspaces?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T3566924898"] = "Wie sollen wir ihre Arbeitsbereiche anzeigen?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T3566924898"] = "Wie sollen wir Ihre Arbeitsbereiche anzeigen?"
 
 -- Should we store your chats?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T3942969162"] = "Sollen wir ihre Chats speichern?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T3942969162"] = "Sollen wir Ihre Chats speichern?"
 
 -- Your Workspaces Configuration
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T404802870"] = "Konfiguration Ihrer Arbeitsbereiche"
@@ -12370,7 +12370,7 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T700894460"] = "Der Anbieter 
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T991839585"] = "Der API-Schlüssel für den Anbieter „{0}“ fehlt oder wurde abgelehnt. Bitte überprüfen Sie den Schlüssel in den Einstellungen."
 
 -- The trust level of this provider **has not yet** been thoroughly **investigated and evaluated**. We do not know if your data is safe.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauensniveau dieses Anbieters wurde **noch nicht** gründlich **untersucht und bewertet**. Wir wissen nicht, ob ihre Daten sicher sind."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauensniveau dieses Anbieters wurde **noch nicht** gründlich **untersucht und bewertet**. Wir wissen nicht, ob Ihre Daten sicher sind."
 
 -- You or your organization operate the LLM locally or within your trusted network. In terms of data processing and security, this is the best possible way.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2124364471"] = "Sie oder Ihre Organisation betreiben das LLM lokal oder innerhalb Ihres vertrauenswürdigen Netzwerks. In Bezug auf Datenverarbeitung und Sicherheit ist dies die bestmögliche Lösung."
@@ -12379,7 +12379,7 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2124364471"] = "Sie oder Ihre 
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2930312134"] = "Der Anbieter betreibt seinen Dienst in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Er bietet Zugang zu **Open-Source-Modellen**. Der Dienst befindet sich jedoch derzeit in einer **experimentellen** Phase; Leistung und Verfügbarkeit werden nicht garantiert. Uns liegen keine anbieterspezifischen Informationen dazu vor, ob übermittelte Daten für das Training verwendet werden."
 
 -- The provider is located in the EU and is subject to the **GDPR** (General Data Protection Regulation). Additionally, the provider states that **your data is not used for training**.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3010553924"] = "Der Anbieter hat seinen Sitz in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Außerdem gibt der Anbieter an, dass **ihre Daten nicht zum Training verwendet werden**."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3010553924"] = "Der Anbieter hat seinen Sitz in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Außerdem gibt der Anbieter an, dass **Ihre Daten nicht zum Training verwendet werden**."
 
 -- No provider selected. Please select a provider to get see its confidence level.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3368531176"] = "Kein Anbieter ausgewählt. Bitte wählen Sie einen Anbieter aus, um dessen Vertrauensniveau zu sehen."
@@ -12388,13 +12388,13 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3368531176"] = "Kein Anbieter 
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3370749159"] = "Sie oder Ihre Organisation betreiben dieses Gateway. Es leitet Ihre Daten jedoch an **die Anbieter weiter, die Sie dahinter konfiguriert haben**. Dabei kann es sich um Cloud-Dienste in beliebigen Rechtsräumen handeln. Wir können nicht wissen, wo Ihre Daten letztendlich landen. **Bitte legen Sie das Vertrauensniveau daher selbst fest.**"
 
 -- The provider operates its service from the USA and is subject to **US jurisdiction**. In case of suspicion, authorities in the USA can access your data. However, **your data is not used for training** purposes.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3528165925"] = "Der Anbieter betreibt seinen Dienst aus den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Bei Verdacht können US-Behörden auf ihre Daten zugreifen. **Ihre Daten werden jedoch nicht für Trainingszwecke** verwendet."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3528165925"] = "Der Anbieter betreibt seinen Dienst aus den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Bei Verdacht können US-Behörden auf Ihre Daten zugreifen. **Ihre Daten werden jedoch nicht für Trainingszwecke** verwendet."
 
 -- The provider operates its service from the USA and is subject to **U.S. jurisdiction**. In case of suspicion, authorities in the USA can access your data. Please inform yourself about the use of your data. We do not know if your data is safe.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3788466789"] = "Der Anbieter betreibt seinen Service in den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Im Verdachtsfall können US-Behörden auf Ihre Daten zugreifen. Bitte informieren Sie sich über die Verwendung Ihrer Daten. Wir wissen nicht, ob Ihre Daten sicher sind."
 
 -- The provider operates its service from China. In case of suspicion, authorities in the respective countries of operation may access your data. However, **your data is not used for training** purposes.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T991875725"] = "Der Anbieter betreibt seinen Dienst von China aus. Im Verdachtsfall können Behörden in den jeweiligen Ländern auf ihre Daten zugreifen. **Ihre Daten werden jedoch nicht zum Trainieren** verwendet."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T991875725"] = "Der Anbieter betreibt seinen Dienst von China aus. Im Verdachtsfall können Behörden in den jeweiligen Ländern auf Ihre Daten zugreifen. **Ihre Daten werden jedoch nicht zum Trainieren** verwendet."
 
 -- Medium
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T163471254"] = "Mittel"
@@ -13387,7 +13387,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T2031831095"] = "Die zugehörigen Daten können an jeden Anbieter gesendet werden, unabhängig davon, ob dieser in der Cloud oder selbst gehostet wird."
 
 -- The related data can be sent to a provider that is hosted by the same organization, either on-premises or locally. Cloud-based providers are not allowed.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T2943101676"] = "Die entsprechenden Daten können an einen Anbieter gesendet werden, der von derselben Organisation betrieben wird – entweder auf ihrem Gerät oder im Unternehmens-Netzwerk. Cloud-basierte Anbieter sind nicht zulässig."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T2943101676"] = "Die entsprechenden Daten können an einen Anbieter gesendet werden, der von derselben Organisation betrieben wird – entweder lokal oder im eigenen Netzwerk der Organisation. Cloud-basierte Anbieter sind nicht zulässig."
 
 -- Unknown configuration. This data source cannot be used at the moment.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T647911863"] = "Unbekannte Konfiguration. Diese Datenquelle kann derzeit nicht verwendet werden."
