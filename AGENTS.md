@@ -199,6 +199,28 @@ again yourself when `metadata.txt` changes during the session, e.g., after a mer
 - **Spaces in paths** - Always quote paths with spaces in bash commands
 - **Compatibility shims** - Temporary fallback or read-repair code must be documented in `documentation/compatibility-shims/` with an introduced date, remove-after date, code references, and removal checklist. Add a short code comment near the shim that references the document and remove-after date. Check this folder before adding similar fallback logic, and do not extend expired shims without explicit maintainer direction. Do not use this process for permanent settings schema migrations; those belong in `app/MindWork AI Studio/Settings/SettingsMigrations.cs`.
 
+## Wiki
+
+The documentation for users and IT departments lives in the wiki, https://github.com/MindWorkAI/AI-Studio/wiki:
+the user guide in US English and German, the Enterprise IT guides, and pages for developers. The files in
+`documentation/` are meant for contributors.
+
+- The wiki is a Git repository of its own, `MindWorkAI/AI-Studio.wiki`, with the folders `user-guide/` and
+  `de/` for the user guide, `enterprise/`, and `developers/`. GitHub renders only its `master` branch, and
+  only collaborators of the repository can change it.
+- A change which users or IT departments notice, such as a new assistant, a changed default, or a new
+  capability of configuration plugins, needs its wiki pages updated no later than the release which ships
+  it. When the wiki is cloned next to this repository, as `../AI-Studio.wiki`, change it there in commits of
+  its own. Otherwise, name the needed changes in the description of the pull request.
+- Mark what needs a certain version with "Requires AI Studio vX.Y.Z or newer": organizations take weeks
+  until every device runs a new version, so the pages describe several versions at once.
+- Write each page of the user guide in both languages, in the same commit; its first line links to the
+  other language. German pages use the wording of the de-de language plugin and the formal "Sie", like the
+  app.
+- GitHub shows the file name of a page as its title. Start a page without a `#` heading, keep commas out of
+  file names, and keep each name unique across all folders, because the URLs ignore them. Link pages as
+  `[[Text|Page-Name]]`, and list a new page in the `_Sidebar.md` of its folder; `de/` has its own.
+
 ## Changelogs
 Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users
 and should be written in a non-technical way, focusing on user-facing changes and improvements. Additionally, changes made regarding the plugin system

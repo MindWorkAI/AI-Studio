@@ -17,6 +17,9 @@ changelog entries.
 6. After PR merge, maintainer creates git tag: `vX.Y.Z`
 7. GitHub Actions builds release binaries for all platforms
 8. Binaries uploaded to GitHub Releases
+9. Update the wiki (`MindWorkAI/AI-Studio.wiki`): raise the version in `_Footer.md` and `de/_Footer.md`, and
+   check that the user guide and the Enterprise IT pages describe the release; see "Wiki" in the root
+   `AGENTS.md`
 
 ## Crediting contributors
 
