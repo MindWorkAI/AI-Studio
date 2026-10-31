@@ -2088,19 +2088,6 @@ public partial class ChatComponent : MSGComponentBase
         if(this.ChatThread is null)
             return;
         
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges && !this.IsCurrentChatStreaming)
-        {
-            var confirmationDialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                { x => x.Message, T("Are you sure you want to move this chat? All unsaved changes will be lost.") },
-            };
-        
-            var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Unsaved Changes"), confirmationDialogParameters, DialogOptions.FULLSCREEN);
-            var confirmationDialogResult = await confirmationDialogReference.Result;
-            if (confirmationDialogResult is null || confirmationDialogResult.Canceled)
-                return;
-        }
-        
         var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
             { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
@@ -2119,13 +2106,15 @@ public partial class ChatComponent : MSGComponentBase
         
         //
         // Like saving and copying, the move goes through the workspace component whenever there is
-        // one, so its tree shows the chat in the new place right away:
+        // one, so its tree shows the chat in the new place right away. Nothing the user did not save
+        // gets lost, so nothing is asked: it reaches the new place only while chats are stored
+        // automatically, and otherwise stays unsaved, see WorkspaceBehaviour.MoveChatAsync:
         //
         var previousWorkspaceId = this.ChatThread!.WorkspaceId;
         if (this.Workspaces is not null)
             await this.Workspaces.MoveChatAsync(this.ChatThread!, workspaceId);
         else
-            await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
+            await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId, this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
 
         await this.FollowMovedChatAsync(previousWorkspaceId);
     }

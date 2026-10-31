@@ -64,7 +64,7 @@ public sealed class WorkspaceTreeCacheTests
         var targetId = await CreateLoadedWorkspaceAsync("Projects");
         var chat = await StoreChatAsync(Guid.Empty, "Meeting notes");
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
         var target = snapshot.Workspaces.Single(workspace => workspace.WorkspaceId == targetId);
@@ -86,7 +86,7 @@ public sealed class WorkspaceTreeCacheTests
         var targetId = await CreateLoadedWorkspaceAsync("Projects");
         var chat = await StoreChatAsync(Guid.Empty, "Meeting notes");
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var other = await GetWorkspaceAsync(otherId);
         Assert.Multiple(() =>
@@ -103,7 +103,7 @@ public sealed class WorkspaceTreeCacheTests
         var targetId = await CreateLoadedWorkspaceAsync("Projects");
         var chat = await StoreChatAsync(sourceId, "Meeting notes");
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var source = await GetWorkspaceAsync(sourceId);
         var target = await GetWorkspaceAsync(targetId);
@@ -124,7 +124,7 @@ public sealed class WorkspaceTreeCacheTests
         await WorkspaceBehaviour.ForceReloadWorkspaceTreeAsync();
         var chat = await StoreChatAsync(Guid.Empty, "Meeting notes");
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var chats = await WorkspaceBehaviour.GetWorkspaceChatsAsync(targetId);
         Assert.That(chats.Select(entry => entry.ChatId), Does.Contain(chat.ChatId), "Loading the chats of the workspace later reads them from the disk, the moved one included.");
@@ -137,7 +137,7 @@ public sealed class WorkspaceTreeCacheTests
 
         // As in the dialog for moving a chat, which can create the workspace it moves the chat into:
         var targetResult = await WorkspaceBehaviour.TryCreateWorkspaceAsync("Projects");
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetResult.Workspace.WorkspaceId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetResult.Workspace.WorkspaceId, storeUnsavedChanges: true);
 
         var target = await GetWorkspaceAsync(targetResult.Workspace.WorkspaceId);
         Assert.Multiple(() =>
@@ -153,7 +153,7 @@ public sealed class WorkspaceTreeCacheTests
         var chat = await StoreChatAsync(Guid.Empty, "Meeting notes");
         var targetId = Guid.NewGuid();
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
         var chats = await WorkspaceBehaviour.GetWorkspaceChatsAsync(targetId);

@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
@@ -1009,11 +1010,14 @@ public partial class Workspaces : MSGComponentBase
     /// Neither asks for the target workspace nor follows the chat in the chat view: both depend on
     /// where the move was asked for. Whoever moves a chat while this component exists goes through
     /// here, though, since the tree draws what it has built before and would otherwise keep showing
-    /// the chat in its old place.
+    /// the chat in its old place.<br/><br/>
+    ///
+    /// What the user did not save reaches the new place only while chats are stored automatically,
+    /// see WorkspaceBehaviour.MoveChatAsync.
     /// </remarks>
     public async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
     {
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId, this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
@@ -1024,9 +1028,10 @@ public partial class Workspaces : MSGComponentBase
             return;
 
         //
-        // The open chat moves as it stands on the screen, just like with the button in the chat
-        // itself. The copy from the disk lacks whatever is not stored yet, such as a message being
-        // edited, and the chat would continue with that copy afterward:
+        // The open chat is the one which moves, just like with the button in the chat itself. The
+        // copy from the disk lacks whatever is not stored yet, such as a message being edited, and
+        // the chat would continue with that copy afterward. Whether that reaches the disk in the new
+        // place depends on how chats are stored, see MoveChatAsync:
         //
         var chat = this.CurrentChatThread is { } openChat && openChat.ChatId == storedChat.ChatId ? openChat : storedChat;
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
