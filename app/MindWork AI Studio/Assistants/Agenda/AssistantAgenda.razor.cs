@@ -480,7 +480,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string PromptSocialActivity()
     {
         if (this.doingSocialActivity)
-            return "- The participants will engage in a social activity after the meeting or seminar. This can be a team-building exercise, a sightseeing tour, or a visit to a local attraction. Please make a recommendation for an activity at '{this.inputLocation}'.";
+            return $"- The participants will engage in a social activity after the meeting or seminar. This can be a team-building exercise, a sightseeing tour, or a visit to a local attraction. Please make a recommendation for an activity at '{this.inputLocation}'.";
 
         return "- The participants will not engage in a social activity after the meeting or seminar.";
     }
