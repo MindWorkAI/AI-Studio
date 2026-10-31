@@ -4129,7 +4129,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T474393241"] = "Bitte wäh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Verschieben Sie den Chat in einen Arbeitsbereich oder in einen anderen, falls er sich bereits in einem befindet."
 
 -- Show your workspaces
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Ihre Arbeitsbereiche anzeigen"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Arbeitsbereiche anzeigen"
 
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T857715435"] = "ca. {0} Token"
@@ -11161,7 +11161,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3046519404"] = "Selbstlöschender Chat"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3059773282"] = "Arbeitsbereiche durchsuchen"
 
 -- Configure your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3586092784"] = "Konfigurieren Sie Ihre Arbeitsbereiche"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3586092784"] = "Arbeitsbereiche konfigurieren"
 
 -- Your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3745240468"] = "Ihre Arbeitsbereiche"
@@ -11176,7 +11176,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T4132756393"] = "Chat-Optionen anzeigen"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T582100343"] = "Chat im Arbeitsbereich"
 
 -- Show your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T733672375"] = "Ihre Arbeitsbereiche anzeigen"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T733672375"] = "Arbeitsbereiche anzeigen"
 
 -- Mail {0} of {1} is being indexed.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1030874026"] = "E-Mail {0} von {1} wird indexiert."
