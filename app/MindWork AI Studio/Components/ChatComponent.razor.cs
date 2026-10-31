@@ -2316,8 +2316,11 @@ public partial class ChatComponent : MSGComponentBase
         if (!this.blockActions.TryRemove(this.ChatThread, block))
             return;
 
+        // Like every other change, stored right away only while chats are stored automatically:
         this.hasUnsavedChanges = true;
-        await this.SaveThread();
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            await this.SaveThread();
+
         this.StateHasChanged();
     }
 
@@ -2343,8 +2346,12 @@ public partial class ChatComponent : MSGComponentBase
 
         // The rollback reset the AI-selected data sources, which the data source selection still shows:
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
+
+        // Like every other change, stored right away only while chats are stored automatically:
         this.hasUnsavedChanges = true;
-        await this.SaveThread();
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            await this.SaveThread();
+
         this.tokenTracker?.Nudge();
         this.StateHasChanged();
         await this.inputField.FocusAsync();
