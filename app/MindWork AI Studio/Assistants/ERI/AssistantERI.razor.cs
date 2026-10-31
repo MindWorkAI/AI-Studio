@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
@@ -826,36 +825,6 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         await this.AutoSave();
     }
 
-    [GeneratedRegex("""
-                    "([\\/._\w-]+)"
-                    """, RegexOptions.NonBacktracking)]
-    private static partial Regex FileExtractRegex();
-
-    private IEnumerable<string> ExtractFiles(string fileListAnswer)
-    {
-        //
-        // We asked the LLM for answering using a specific JSON scheme.
-        // However, the LLM might not follow this scheme. Therefore, we
-        // need to parse the answer and extract the files.
-        // The parsing strategy is to look for all strings.
-        //
-        var matches = FileExtractRegex().Matches(fileListAnswer);
-        foreach (Match match in matches)
-            if(match.Groups[1].Value is {} file && !string.IsNullOrWhiteSpace(file) && !file.Equals("files", StringComparison.OrdinalIgnoreCase))
-                yield return file;
-    }
-    
-    [GeneratedRegex("""
-                    \s*#+\s+[\w\\/.]+\s*```\w*\s+([\s\w\W]+)\s*```\s*
-                    """, RegexOptions.Singleline)]
-    private static partial Regex CodeExtractRegex();
-    
-    private string ExtractCode(string markdown)
-    {
-        var match = CodeExtractRegex().Match(markdown);
-        return match.Success ? match.Groups[1].Value : string.Empty;
-    }
-
     private async Task GenerateServer()
     {
         if(this.IsNoneERIServerSelected)
@@ -951,7 +920,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         }
         
         var generatedFiles = new List<string>();
-        var filesToGenerate = this.ExtractFiles(fileListAnswer).ToArray();
+        var filesToGenerate = ERIServerFiles.ReadFileList(fileListAnswer).ToArray();
         foreach (var file in filesToGenerate)
         {
             this.Logger.LogInformation($"The LLM want to create the file: '{file}'");
@@ -970,6 +939,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                         ```language
                                         content of the file
                                         ```
+
+                                        When the file itself contains code blocks, enclose its content in a longer
+                                        fence, such as four backticks.
                                         """, true);
             var generatedCodeMarkdown = await this.AddAIResponseAsync(time);
             if (writeToFilesystemSnapshot)
@@ -984,7 +956,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                 
                 else
                 {
-                    var code = this.ExtractCode(generatedCodeMarkdown);
+                    var code = ERIServerFiles.ReadFileContent(generatedCodeMarkdown);
                     if (string.IsNullOrWhiteSpace(code))
                         this.Logger.LogWarning($"The file content for '{desiredFilePath}' is empty or was not found.");
 
