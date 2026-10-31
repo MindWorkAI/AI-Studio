@@ -40,4 +40,34 @@ public sealed class WebRootFilesTests
         var text = await new WebRootFiles().ReadTextAsync("changelog/does-not-exist.md");
         Assert.That(text, Is.Empty);
     }
+
+    [TestCaseSource(nameof(SpecificationVersions))]
+    public async Task EveryERISpecificationCanBeSaved(ERIVersion version)
+    {
+        var webRootFiles = new WebRootFiles();
+        var destinationPath = Path.Combine(Path.GetTempPath(), $"eri-specification-{Guid.NewGuid():N}.json");
+        try
+        {
+            Assert.That(await webRootFiles.CopyToAsync(version.SpecificationURL(), destinationPath), Is.True);
+            Assert.That(await File.ReadAllTextAsync(destinationPath), Is.EqualTo(await version.ReadSpecification(webRootFiles)));
+        }
+        finally
+        {
+            File.Delete(destinationPath);
+        }
+    }
+
+    [Test]
+    public async Task AMissingFileIsNotCopied()
+    {
+        var destinationPath = Path.Combine(Path.GetTempPath(), $"eri-specification-{Guid.NewGuid():N}.json");
+
+        var copied = await new WebRootFiles().CopyToAsync("specs/eri/does-not-exist.json", destinationPath);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(copied, Is.False);
+            Assert.That(File.Exists(destinationPath), Is.False);
+        });
+    }
 }

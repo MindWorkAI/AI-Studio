@@ -34,4 +34,22 @@ public sealed class WebRootFiles
         using var reader = new StreamReader(fileStream);
         return await reader.ReadToEndAsync();
     }
+
+    /// <summary>
+    /// Copies a file below wwwroot to the given place, such as one the user chose to save it to.
+    /// </summary>
+    /// <param name="path">The path below wwwroot, such as <c>specs/eri/v1.json</c>.</param>
+    /// <param name="destinationPath">Where to write the copy. An existing file there gets replaced.</param>
+    /// <returns>True when the copy was written, false when there is no such file below wwwroot.</returns>
+    public async Task<bool> CopyToAsync(string path, string destinationPath)
+    {
+        var file = this.FileProvider.GetFileInfo(path);
+        if (!file.Exists)
+            return false;
+
+        await using var source = file.CreateReadStream();
+        await using var destination = File.Create(destinationPath);
+        await source.CopyToAsync(destination);
+        return true;
+    }
 }
