@@ -32,11 +32,6 @@ using MudBlazor.Services;
 
 using MudExtensions.Services;
 
-#if !DEBUG
-using System.Reflection;
-using Microsoft.Extensions.FileProviders;
-#endif
-
 namespace AIStudio;
 
 internal sealed class Program
@@ -283,10 +278,9 @@ internal sealed class Program
                 options.KeepAliveInterval = TimeSpan.FromSeconds(30);
             });
 
-        builder.Services.AddSingleton(new HttpClient
-        {
-            BaseAddress = new Uri($"http://127.0.0.1:{appPort}")
-        });
+        // For absolute URLs only. The app reads its own files through WebRootFiles:
+        builder.Services.AddSingleton(new HttpClient());
+        builder.Services.AddSingleton<WebRootFiles>();
 
         //
         // We listen on the IPv4 loopback address only, where the app window goes. With localhost, the
@@ -356,10 +350,9 @@ internal sealed class Program
         app.UseStaticFiles();
         app.UseDeveloperExceptionPage();
 #else
-        var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
         app.UseStaticFiles(new StaticFileOptions
         {
-            FileProvider = fileProvider,
+            FileProvider = app.Services.GetRequiredService<WebRootFiles>().FileProvider,
             RequestPath = string.Empty,
         });
 #endif

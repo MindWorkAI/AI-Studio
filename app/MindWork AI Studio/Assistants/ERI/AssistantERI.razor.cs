@@ -13,7 +13,7 @@ namespace AIStudio.Assistants.ERI;
 public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 {
     [Inject]
-    private HttpClient HttpClient { get; set; } = null!;
+    private WebRootFiles WebRootFiles { get; set; } = null!;
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -843,7 +843,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         var baseDirectorySnapshot = this.baseDirectory;
         var previouslyGeneratedFilesSnapshot = this.previouslyGeneratedFiles.ToArray();
         
-        this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
+        this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.WebRootFiles);
         if (string.IsNullOrWhiteSpace(this.eriSpecification))
         {
             this.AddInputIssue(T("The ERI specification could not be loaded. Please try again later."));
