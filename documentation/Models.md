@@ -104,7 +104,7 @@ Two surfaces, and they answer different questions:
 - **A model plugin** (`PluginType.MODEL`) describes a model wherever it is reached — a fine-tune of your own, a model behind an internal name. It only describes: no endpoint, no key, no code. `app/MindWork AI Studio/Plugins/models/plugin.lua` documents every key with examples.
 - **`CapabilityOverrides` on an LLM provider** in a configuration plugin describes **this one installation** of a model. This is the right place for the window an operator actually configured, as opposed to the one the model card advertises.
 
-Both are documented for administrators in `documentation/Enterprise IT.md`. Model plugins are deployed, not imported: a user cannot install one themselves.
+Both are documented for administrators on the wiki page [Providers and API Keys](https://github.com/MindWorkAI/AI-Studio/wiki/Providers-and-API-Keys#describing-your-own-models). Model plugins are deployed, not imported: a user cannot install one themselves.
 
 ## Live Metadata From The Model Lists
 
