@@ -25,6 +25,7 @@ using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
 
@@ -288,6 +289,8 @@ internal sealed class Program
         // localhost could end up with another process holding that port there.
         //
         builder.WebHost.UseUrls($"http://127.0.0.1:{appPort}");
+        builder.Services.Configure<HostFilteringOptions>(AppAccessPolicy.ConfigureHostFiltering);
+        builder.Services.AddSingleton(new AppAccessPolicy(appPort));
 
         #if DEBUG
         builder.WebHost.UseWebRoot("wwwroot");
@@ -341,6 +344,13 @@ internal sealed class Program
         ENCRYPTION = encryption;
         
         DATABASE_CLIENT_PROVIDER = app.Services.GetRequiredService<DatabaseClientProvider>();
+
+        //
+        // These two come first, so that no request reaches anything else without passing them. We add
+        // the host filtering ourselves instead of relying on the defaults of ASP.NET Core to do so:
+        //
+        app.UseHostFiltering();
+        app.UseMiddleware<AppAccessMiddleware>();
 
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
