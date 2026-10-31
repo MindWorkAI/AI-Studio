@@ -154,12 +154,13 @@ and the rules which are easy to break.
 ## Enterprise IT Support
 
 AI Studio supports centralized configuration for enterprise environments:
-- **Registry (Windows)** or **environment variables** (all platforms) specify configuration server URL and ID
+- **Registry (Windows)**, **policy files**, or **environment variables** (all platforms) specify configuration server URL and ID
 - Configuration downloaded as ZIP containing Lua plugin
 - Checks for updates every ~16 minutes via ETag
 - Allows IT departments to pre-configure providers, settings, and chat templates
 
-**Documentation:** `documentation/Enterprise IT.md`
+**Documentation:** the Enterprise IT section of the wiki, https://github.com/MindWorkAI/AI-Studio/wiki/Enterprise-IT;
+see "Wiki" in the root `AGENTS.md`.
 
 ## Provider Confidence System
 

@@ -1,5 +1,5 @@
 # Building
-You just want to use the app? Then simply [download the appropriate setup for your operating system](Setup.md). This chapter is intended for developers who want to modify and customize the code.
+You just want to use the app? Then simply [download the appropriate setup for your operating system](https://github.com/MindWorkAI/AI-Studio/wiki/Installing-AI-Studio). This chapter is intended for developers who want to modify and customize the code.
 
 ## Prefaces regarding Linux development systems
 Unfortunately, we have to provide a note regarding development on Linux systems. MindWork AI Studio consists of a Rust and a .NET part. Compiling the .NET code works smoothly on all operating systems. However, this is not the case for our Rust part. More specifically, it is not the Rust code itself that is problematic, but rather the Tauri framework on which we base our work. Tauri has certain dependencies that depend on the operating system. The specific dependencies vary between different Linux distributions and between versions of distributions.

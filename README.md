@@ -33,7 +33,7 @@ Are you new here? [Read here](#what-is-ai-studio) what AI Studio is.
 
 MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of your choice and can then use these AI systems with AI Studio. Whether you want to use Google Gemini, OpenAI GPT-6, or even your own local AI models.
 
-**Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
+**Ready to get started 🤩?** [Download the appropriate setup for your operating system here](https://github.com/MindWorkAI/AI-Studio/wiki/Installing-AI-Studio).
 
 **Key advantages:**
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
@@ -64,11 +64,11 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 - **Unrestricted usage**: Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 - **Cost-effective**: You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.
 - **Privacy**: You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems.
-- **Enterprise IT**: Your IT department can manage AI Studio centrally: roll out providers, assistants, chat templates, and tools, set defaults, or lock settings for the whole organization. [Here's how it works.](documentation/Enterprise%20IT.md)
+- **Enterprise IT**: Your IT department can manage AI Studio centrally: roll out providers, assistants, chat templates, and tools, set defaults, or lock settings for the whole organization. [Here's how it works.](https://github.com/MindWorkAI/AI-Studio/wiki/Enterprise-IT)
 - **Flexibility**: Choose the provider and model best suited for your current task.
 - **No bloatware**: The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.
 
-## **Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
+## **Ready to get started 🤩?** [Download the appropriate setup for your operating system here](https://github.com/MindWorkAI/AI-Studio/wiki/Installing-AI-Studio).
 
 <details>
     <summary>
@@ -151,7 +151,7 @@ Did you find a security vulnerability? Please follow our [security policy](SECUR
     </h2>
     </summary>
 
-Do you want to manage AI Studio centrally from your IT department? Yes, that’s possible. [Here’s how it works.](documentation/Enterprise%20IT.md)
+Do you want to manage AI Studio centrally from your IT department? Yes, that’s possible. [Here’s how it works.](https://github.com/MindWorkAI/AI-Studio/wiki/Enterprise-IT)
 
 </details>
 
