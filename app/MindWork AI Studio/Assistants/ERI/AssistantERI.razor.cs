@@ -1,5 +1,3 @@
-using System.Text;
-
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
@@ -946,44 +944,11 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             var generatedCodeMarkdown = await this.AddAIResponseAsync(time);
             if (writeToFilesystemSnapshot)
             {
-                var desiredFilePath = Path.Join(baseDirectorySnapshot, file);
-                
-                // Security check: ensure that the desired file path is inside the base directory.
-                // We cannot trust the beginning of the file path because it would be possible
-                // to escape by using `..` in the file path.
-                if (!PathTools.IsInsideDirectory(baseDirectorySnapshot, desiredFilePath))
-                    this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{baseDirectorySnapshot}'.");
-                
+                var outcome = await ERIServerFiles.WriteAsync(baseDirectorySnapshot, file, generatedCodeMarkdown, this.Logger);
+                if (outcome is ERIServerFileOutcome.WRITTEN)
+                    generatedFiles.Add(ERIServerFiles.PathOf(baseDirectorySnapshot, file));
                 else
-                {
-                    var code = ERIServerFiles.ReadFileContent(generatedCodeMarkdown);
-                    if (string.IsNullOrWhiteSpace(code))
-                        this.Logger.LogWarning($"The file content for '{desiredFilePath}' is empty or was not found.");
-
-                    else
-                    {
-
-                        // Ensure that the directory exists:
-                        var fileDirectory = Path.GetDirectoryName(desiredFilePath);
-                        if (fileDirectory is null)
-                            this.Logger.LogWarning($"The file path '{desiredFilePath}' does not contain a directory.");
-                        
-                        else
-                        {
-                            generatedFiles.Add(desiredFilePath);
-                            var fileDirectoryInfo = new DirectoryInfo(fileDirectory);
-                            if(!fileDirectoryInfo.Exists)
-                            {
-                                fileDirectoryInfo.Create();
-                                this.Logger.LogInformation($"The directory '{fileDirectory}' was created.");
-                            }
-
-                            // Save the file to the file system:
-                            await File.WriteAllTextAsync(desiredFilePath, code, Encoding.UTF8);
-                            this.Logger.LogInformation($"The file '{desiredFilePath}' was created.");
-                        }
-                    }
-                }
+                    await this.MessageBus.SendWarning(new(Icons.Material.Filled.SaveAs, outcome.ToUserMessage(file)));
             }
         }
         
