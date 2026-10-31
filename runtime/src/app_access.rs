@@ -50,7 +50,7 @@ pub fn hand_over_session_cookie(window: &WebviewWindow, app_url: &Url) {
         return;
     }
 
-    match window.cookies_for_url(app_url.clone()) {
+    match app_host_cookies(window, app_url) {
         Ok(cookies) if cookies.iter().any(|cookie| cookie.name() == SESSION_COOKIE_NAME) => {
             info!(Source = "App access"; "The app window got its session cookie.");
         },
@@ -63,6 +63,26 @@ pub fn hand_over_session_cookie(window: &WebviewWindow, app_url: &Url) {
             error!(Source = "App access"; "Failed to check the session cookie of the app window: {error}");
         },
     }
+}
+
+/// Reads the cookies of the app host from the given window.
+///
+/// On macOS, wry picks the cookies for a URL by comparing their domain with the domain of the
+/// URL. An IP address such as the app host has no domain in that sense, so wry would never find
+/// a cookie of the app there. We read all cookies instead and pick those of the app host
+/// ourselves.
+#[cfg(target_os = "macos")]
+fn app_host_cookies(window: &WebviewWindow, _app_url: &Url) -> tauri::Result<Vec<Cookie<'static>>> {
+    Ok(window.cookies()?.into_iter().filter(|cookie| cookie.domain() == Some(APP_HOST)).collect())
+}
+
+/// Reads the cookies of the app host from the given window.
+///
+/// WebView2 and WebKitGTK pick the cookies for a URL by themselves. Reading all cookies instead
+/// would need WebKitGTK 2.42 or newer.
+#[cfg(not(target_os = "macos"))]
+fn app_host_cookies(window: &WebviewWindow, app_url: &Url) -> tauri::Result<Vec<Cookie<'static>>> {
+    window.cookies_for_url(app_url.clone())
 }
 
 /// Returns the link with which another browser gets the session cookie of a development build,
