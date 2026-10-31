@@ -21,6 +21,7 @@ use tauri_plugin_updater::{UpdaterExt, Update};
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
+use crate::app_access::hand_over_session_cookie;
 use crate::clipboard::shutdown_clipboard;
 use crate::data_restore::apply_pending_restore;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
@@ -677,7 +678,8 @@ pub fn send_event(event: Event) {
     }
 }
 
-/// Changes the location of the main window to the given URL.
+/// Changes the location of the main window to the given URL. The window gets its session cookie
+/// first, so that the .NET server lets it in.
 pub async fn change_location_to(url: tauri::Url) {
     // Try to get the main window. If it is not available yet, wait for it:
     let mut main_window_ready = false;
@@ -707,14 +709,24 @@ pub async fn change_location_to(url: tauri::Url) {
     //
     // The window navigates by itself instead of through a script of the page it shows. That page
     // comes from Tauri, which is another site than the app, so the app would count as opened by
-    // another site. We take the window out of the lock first: navigating needs the main thread,
-    // which may wait for this lock meanwhile.
+    // another site, and the window would withhold the session cookie. We take the window out of
+    // the lock first: the cookie and the navigation need the main thread, which may wait for this
+    // lock meanwhile.
+    //
+    // Handing over the cookie waits for the main thread. This function serves a request of the
+    // runtime API, so the waiting happens outside the async runtime, see runtime/AGENTS.md.
     //
     let main_window = main_window_spawn_clone.lock().unwrap().clone().unwrap();
-    let location_change_result = main_window.navigate(url.clone());
-    match location_change_result {
-        Ok(_) => info!("The app location was changed to {url}."),
-        Err(e) => error!("Failed to change the app location to {url}: {e}."),
+    let navigation = tokio::task::spawn_blocking(move || {
+        hand_over_session_cookie(&main_window, &url);
+        match main_window.navigate(url.clone()) {
+            Ok(_) => info!("The app location was changed to {url}."),
+            Err(e) => error!("Failed to change the app location to {url}: {e}."),
+        }
+    });
+
+    if let Err(error) = navigation.await {
+        error!("Failed to open the app in the main window: {error}");
     }
 }
 
