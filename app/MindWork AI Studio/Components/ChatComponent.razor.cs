@@ -1766,7 +1766,7 @@ public partial class ChatComponent : MSGComponentBase
         this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
         this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds, this.ChatThread.RequiredOutboundDataRestriction.Restriction);
 
-        // From here on, the AI job stores the chat, in every storage mode:
+        // From here on, the AI job stores the chat, while chats are stored automatically:
         this.unstoredChat = null;
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
@@ -2568,7 +2568,8 @@ public partial class ChatComponent : MSGComponentBase
                     this.ChatThread = this.AIJobService.TryGetLiveChatThread(snapshot.SubjectId) ?? this.ChatThread;
                     if (!snapshot.IsActive)
                     {
-                        this.hasUnsavedChanges = false;
+                        // The job stored the answer only while chats are stored automatically, see AIJobService.CheckpointChatAsync:
+                        this.hasUnsavedChanges = this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
                         this.previousInputForbidden = true;
                     }
 
