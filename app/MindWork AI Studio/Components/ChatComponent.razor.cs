@@ -1583,9 +1583,15 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// Creates and stores the chat the composer belongs to, when there is none yet, e.g., for what an
-    /// attachment brings along before the first message is sent.
+    /// Creates the chat the composer belongs to, when there is none yet, e.g., for what an attachment
+    /// brings along before the first message is sent.
     /// </summary>
+    /// <remarks>
+    /// Only while chats are stored automatically, the new chat reaches the disk right away. Otherwise, it
+    /// counts as unsaved, like a message typed into a new chat: a transcript made for it waits in the
+    /// staging area until the user saves the chat, see WorkspaceBehaviour.StoreChatAsync, and the next
+    /// start removes it when they never do.
+    /// </remarks>
     /// <param name="nameWithoutInput">The name of the chat while the user typed nothing yet.</param>
     /// <returns>The chat of the composer.</returns>
     private async Task<ChatThread?> EnsureChatAsync(string nameWithoutInput)
@@ -1618,7 +1624,11 @@ public partial class ChatComponent : MSGComponentBase
         // lists the new chat right away, together with the progress of the transcription, instead
         // of only after the first message was sent:
         //
-        await this.StoreAndListChatAsync(chat);
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            await this.StoreAndListChatAsync(chat);
+        else
+            this.hasUnsavedChanges = true;
+
         await this.SyncForegroundChatAsync();
         return chat;
     }
@@ -1850,7 +1860,21 @@ public partial class ChatComponent : MSGComponentBase
         if (!this.CanThreadBeSaved)
             return;
 
+        var stagedTranscripts = this.ChatThread.Draft.MediaTranscripts.Where(transcript => transcript.IsStaged).Select(transcript => transcript.FilePath).ToHashSet(StringComparer.Ordinal);
         await this.StoreAndListChatAsync(this.ChatThread);
+
+        //
+        // Storing moved the staged transcripts of the message being written into the chat directory,
+        // see WorkspaceBehaviour.StoreChatAsync. The composer still knows them by where they were, so
+        // sending the message would lose them:
+        //
+        if (stagedTranscripts.Count > 0)
+        {
+            this.ComposerState.FileAttachments.RemoveWhere(attachment => stagedTranscripts.Contains(attachment.FilePath));
+            foreach (var transcript in this.ChatThread.Draft.MediaTranscripts)
+                this.ComposerState.FileAttachments.Add(transcript);
+        }
+
         this.hasUnsavedChanges = false;
 
         // A new chat is on the disk now, like any other:
