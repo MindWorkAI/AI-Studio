@@ -674,6 +674,9 @@ public partial class ChatComponent : MSGComponentBase
         }
 
         var leftChatHadNoThread = !isFirstChat && this.loadedParameterChatId == Guid.Empty;
+        if (!isFirstChat)
+            await this.StopAnswerOfLeftChatAsync(this.loadedParameterChatId);
+
         this.loadedParameterChatId = chatId;
         this.loadedParameterWorkspaceId = workspaceId;
 
@@ -1787,6 +1790,28 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
+    /// Stops the answer which is still being written in a chat the user leaves, unless chats are stored automatically.
+    /// </summary>
+    /// <remarks>
+    /// Only while chats are stored automatically, the AI job stores the answer, so that the user finds
+    /// it when coming back. Otherwise, the answer would end up nowhere, and writing it would only cost
+    /// the user. The user was asked before, since an answer being written counts as an unsaved change
+    /// then.<br/><br/>
+    ///
+    /// Called only where the user leaves a chat: opening another one, starting a new one, or leaving the
+    /// chat page. Never when this component goes away, since the page creates it anew, e.g., whenever the
+    /// workspace sidebar is shown or hidden, while the chat stays.
+    /// </remarks>
+    /// <param name="chatId">The chat being left.</param>
+    private async Task StopAnswerOfLeftChatAsync(Guid chatId)
+    {
+        if (chatId == Guid.Empty || this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            return;
+
+        await this.AIJobService.CancelChatGenerationAsync(chatId);
+    }
+
+    /// <summary>
     /// Takes over the tool selection of the chat that was just loaded or handed to this component.
     /// </summary>
     /// <remarks>
@@ -1876,9 +1901,11 @@ public partial class ChatComponent : MSGComponentBase
 
         //
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
-        // about possible data loss:
+        // about possible data loss. An answer still being written is lost as well, whenever chats are
+        // not stored automatically, since leaving stops it, see StopAnswerOfLeftChatAsync:
         //
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges && !this.IsCurrentChatStreaming)
+        var storageBehavior = this.SettingsManager.ConfigurationData.Workspace.StorageBehavior;
+        if ((storageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges) || (storageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY && this.IsCurrentChatStreaming))
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
@@ -1929,6 +1956,9 @@ public partial class ChatComponent : MSGComponentBase
             if (!chatIsGone)
                 return false;
         }
+
+        if (this.ChatThread is not null)
+            await this.StopAnswerOfLeftChatAsync(this.ChatThread.ChatId);
 
         //
         // Reset our state:
@@ -2204,6 +2234,9 @@ public partial class ChatComponent : MSGComponentBase
     {
         await this.FlushDraftAsync();
         await this.PreserveNewChatDraftAsync(this.ChatThread is null);
+        if (this.ChatThread is not null)
+            await this.StopAnswerOfLeftChatAsync(this.ChatThread.ChatId);
+
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
         this.ClearWorkspaceHeaderState();
@@ -2588,8 +2621,9 @@ public partial class ChatComponent : MSGComponentBase
                 if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                     return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) false));
 
+                // Nothing stores an answer being written now, and leaving stops it, see StopAnswerOfLeftChatAsync:
                 if (this.IsCurrentChatStreaming)
-                    return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) false));
+                    return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) true));
 
                 //
                 // A message the user started counts as unsaved on its own only while there is no chat
