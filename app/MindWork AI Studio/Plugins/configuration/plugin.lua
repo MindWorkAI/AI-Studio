@@ -158,8 +158,9 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- or "ENC:v1:<base64-encoded encrypted data>", which every version of AI Studio reads. Both
 --     -- formats use the same secret. DataApp.EnterpriseEncryptionExportFormat below decides which
 --     -- one your exports write.
---     -- The encryption secret must be configured via:
+--     -- The encryption secret must be configured via one of:
 --     --   Windows Registry: HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret
+--     --   Policy file: config_encryption_secret.yaml, in the folder of the other policy files
 --     --   Environment variable: MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
 --     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
@@ -1283,11 +1284,20 @@ CONFIG["SETTINGS"] = {}
 --
 -- IMPORTANT: A configuration plugin cannot fix the very first download of that same
 -- configuration plugin. For bootstrapping enterprise configuration downloads, deploy
--- the equivalent environment variables before AI Studio starts:
+-- the policy file external_http_custom_root_certificates.yaml, in the folder of the
+-- other policy files, before AI Studio starts. It takes precedence over everything else:
+--
+-- enabled: true
+-- bundle_path: "/path/in/sandbox/company-root-cas.pem"
+-- allowed_hosts: "*.intra.example.org;data.example.org"
+--
+-- Alternatively, deploy the equivalent environment variables before AI Studio starts:
 --
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED=true
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH=/path/in/sandbox/company-root-cas.pem
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS=*.intra.example.org;data.example.org
+--
+-- See https://github.com/MindWorkAI/AI-Studio/wiki/Configuration-Server#your-own-certificate-authorities
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the host
 -- list completely. Deploy this setting in one configuration only, or repeat every host
@@ -1336,7 +1346,7 @@ CONFIG["SETTINGS"] = {}
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
 -- table. Every configuration that sets this must therefore list all providers it wants
 -- to cover. A partial table is not completed from the configuration below it, and the
--- providers left out fall back to the app default.
+-- providers left out get the confidence level UNKNOWN.
 -- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme"] = {
 --     ["OPEN_AI"] = "MODERATE",
 --     ["ANTHROPIC"] = "MODERATE",

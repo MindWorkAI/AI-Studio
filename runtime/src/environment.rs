@@ -254,11 +254,11 @@ fn detect_installation_kind() -> InstallationKind {
 
     // The updater replaces the entire app bundle, so it needs to write into the directory that
     // contains the bundle. On a device managed through an MDM solution like Jamf, the bundle sits
-    // in a location the user cannot write to. We deliberately do not look for a marker file here:
-    // any additional file inside the bundle would break its code signature. As a consequence, a
-    // macOS installation is never reported as managed, only as an unsupported location. An
-    // organization that wants AI Studio to name it explicitly sets DataApp.UpdateInterval to
-    // DISABLE_UPDATES in its enterprise configuration, which takes precedence anyway.
+    // in a location the user cannot write to, and update_target_installation_kind reports such an
+    // installation as managed. We deliberately do not look for a marker file here: any additional
+    // file inside the bundle would break its code signature. An organization that wants AI Studio to
+    // name it explicitly sets DataApp.UpdateInterval to DISABLE_UPDATES in its enterprise
+    // configuration, which takes precedence anyway.
     match macos_app_bundle_directory(&executable_path) {
         Some(bundle_directory) => update_target_installation_kind(&bundle_directory),
         None => InstallationKind::User,
