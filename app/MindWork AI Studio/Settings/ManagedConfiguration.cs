@@ -15,6 +15,17 @@ public static partial class ManagedConfiguration
     private static ILogger Log => Program.LOGGER_FACTORY.CreateLogger(nameof(ManagedConfiguration));
 
     /// <summary>
+    /// Decides whether a configuration plugin speaks for an organization.
+    /// </summary>
+    /// <remarks>
+    /// The plugin factory decides this by the directories of a running app, which a test does not
+    /// have. Tests therefore replace this for their duration and restore it afterward, so that they
+    /// can check what an organization owns against a local configuration plugin. The app itself
+    /// never replaces it.
+    /// </remarks>
+    internal static Func<Guid, bool> IsOrganizationPlugin { get; set; } = PluginFactory.IsOrganizationConfigurationPlugin;
+
+    /// <summary>
     /// All registered settings, in no particular order.
     /// </summary>
     /// <remarks>
@@ -354,10 +365,10 @@ public static partial class ManagedConfiguration
         if (owningConfigPluginId == Guid.Empty || owningConfigPluginId == configPluginId)
             return true;
 
-        if (!PluginFactory.IsOrganizationConfigurationPlugin(owningConfigPluginId))
+        if (!IsOrganizationPlugin(owningConfigPluginId))
             return true;
 
-        if (PluginFactory.IsOrganizationConfigurationPlugin(configPluginId))
+        if (IsOrganizationPlugin(configPluginId))
             return true;
 
         Log.LogWarning($"The configuration plugin '{configPluginId}' tried to manage the setting '{configMeta.SettingName}', which is managed by the configuration plugin '{owningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.");
