@@ -1626,6 +1626,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3315518334"] = "Daten
 -- No, just show me the code
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3316699247"] = "Nein, zeig mir einfach den Code."
 
+-- The list of files in the answer of the model could not be read, so no files were created. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3342789164"] = "Die Liste der Dateien in der Antwort des Modells konnte nicht ausgelesen werden. Daher wurden keine Dateien erstellt. Bitte versuchen Sie es erneut."
+
 -- Other language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3374524465"] = "Andere Sprache"
 
@@ -1793,6 +1796,18 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T3394837922"]
 
 -- Unknown data source
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T752426884"] = "Unbekannte Datenquelle"
+
+-- The file '{0}' was not written, because the answer of the model contains no complete code block for it. You find the answer in the conversation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ERISERVERFILEOUTCOMEEXTENSIONS::T1485612676"] = "Die Datei „{0}“ wurde nicht geschrieben, weil die Antwort des Modells keinen vollständigen Codeblock für diese Datei enthält. Die Antwort finden Sie in der Unterhaltung."
+
+-- The file '{0}' was not written.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ERISERVERFILEOUTCOMEEXTENSIONS::T1622509075"] = "Die Datei „{0}“ wurde nicht geschrieben."
+
+-- The file '{0}' could not be written. The log of AI Studio names the reason.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ERISERVERFILEOUTCOMEEXTENSIONS::T2881284775"] = "Die Datei „{0}“ konnte nicht geschrieben werden. Das Protokoll von AI Studio nennt den Grund."
+
+-- The file '{0}' was not written, because its path leads outside the base directory.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ERISERVERFILEOUTCOMEEXTENSIONS::T3820652397"] = "Die Datei „{0}“ wurde nicht geschrieben, da ihr Pfad außerhalb des Basisverzeichnisses liegt."
 
 -- Windows
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T104858250"] = "Windows"

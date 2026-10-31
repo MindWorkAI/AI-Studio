@@ -1,6 +1,3 @@
-using System.Text;
-using System.Text.RegularExpressions;
-
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
@@ -27,270 +24,25 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     protected override string Description => T("The ERI is the External Retrieval Interface for AI Studio and other tools. The ERI acts as a contract between decentralized data sources and, e.g., AI Studio. The ERI is implemented by the data sources, allowing them to be integrated into AI Studio later. This means that the data sources assume the server role and AI Studio (or any other LLM tool) assumes the client role of the API. This approach serves to realize a Retrieval-Augmented Generation (RAG) process with external data.");
     
-    protected override string SystemPrompt
+    protected override string SystemPrompt => new ERIServerPrompt
     {
-        get
-        {
-            var sb = new StringBuilder();
-            
-            //
-            // ---------------------------------
-            // Introduction
-            // ---------------------------------
-            //
-            var programmingLanguage = this.selectedProgrammingLanguage is ProgrammingLanguages.OTHER ? this.otherProgrammingLanguage : this.selectedProgrammingLanguage.ToPrompt();
-            sb.Append($"""
-                       # Introduction
-                       You are an experienced {programmingLanguage} developer. Your task is to implement an API server in
-                       the {programmingLanguage} language according to the following OpenAPI Description (OAD):
-                       
-                       ```
-                       {this.eriSpecification}
-                       ```
-                       
-                       The server realizes the data retrieval component for a "Retrieval-Augmentation Generation" (RAG) process.
-                       The server is called "{this.serverName}" and is described as follows:
-                       
-                       ```
-                       {this.serverDescription}
-                       ```
-                       """);
-
-            //
-            // ---------------------------------
-            // Data Source
-            // ---------------------------------
-            //
-            
-            sb.Append("""
-                      
-                      # Data Source
-                      """);
-            
-            switch (this.selectedDataSource)
-            {
-                case DataSources.CUSTOM:
-                    sb.Append($"""
-                               The data source for the retrieval process is described as follows:
-                               
-                               ```
-                               {this.otherDataSource}
-                               ```
-                               """);
-                    
-                    if(!string.IsNullOrWhiteSpace(this.dataSourceHostname))
-                    {
-                        sb.Append($"""
-                                   
-                                   The data source is accessible via the hostname `{this.dataSourceHostname}`.
-                                   """);
-                    }
-                    
-                    if(this.dataSourcePort is not null)
-                    {
-                        sb.Append($"""
-                                   
-                                   The data source is accessible via port `{this.dataSourcePort}`.
-                                   """);
-                    }
-                    
-                    break;
-                
-                case DataSources.FILE_SYSTEM:
-                    sb.Append("""
-
-                              The data source for the retrieval process is the local file system. Use a placeholder for the data source path.
-                              """);
-                    break;
-                
-                default:
-                case DataSources.OBJECT_STORAGE:
-                case DataSources.KEY_VALUE_STORE:
-                case DataSources.DOCUMENT_STORE:
-                case DataSources.RELATIONAL_DATABASE:
-                case DataSources.GRAPH_DATABASE:
-                    sb.Append($"""
-                               The data source for the retrieval process is an "{this.dataSourceProductName}" database running on the
-                               host `{this.dataSourceHostname}` and is accessible via port `{this.dataSourcePort}`.
-                               """);
-                    break;
-            }
-
-            //
-            // ---------------------------------
-            // Authentication and Authorization
-            // ---------------------------------
-            //
-            
-            sb.Append("""
-                      
-                      # Authentication and Authorization
-                      The process for authentication and authorization is two-step. Step 1: Users must authenticate
-                      with the API server using a `POST` call on `/auth` with the chosen method. If this step is
-                      successful, the API server returns a token. Step 2: This token is then required for all
-                      other API calls.
-                      
-                      Important notes:
-                      - Calls to `/auth` and `/auth/methods` are accessible without authentication. All other API
-                      endpoints require a valid step 2 token.
-                      
-                      - It is possible that a token (step 1 token) is desired as `authMethod`. These step 1 tokens
-                      must never be accepted as valid tokens for step 2.
-                      
-                      - The OpenAPI Description (OAD) for `/auth` is not complete. This is because, at the time of
-                      writing the OAD, it is not known what kind of authentication is desired. Therefore, you must
-                      supplement the corresponding fields or data in the implementation. Example: If username/password
-                      is desired, you must expect and read both. If both token and username/password are desired, you
-                      must dynamically read the `authMethod` and expect and evaluate different fields accordingly.
-                      
-                      The following authentications and authorizations should be implemented for the API server:
-                      """);
-            
-            foreach (var auth in this.selectedAuthenticationMethods)
-                sb.Append($"- {auth.ToPrompt()}");
-            
-            if(this.IsUsingKerberos())
-            {
-                sb.Append($"""
-                           
-                           The server will run on {this.selectedOperatingSystem.ToPrompt()} operating systems. Keep
-                           this in mind when implementing the SSO with Kerberos.
-                           """);
-            }
-
-            //
-            // ---------------------------------
-            // Security
-            // ---------------------------------
-            //
-            
-            sb.Append($"""
-                      
-                      # Security
-                      The following security requirement for `allowedProviderType` was chosen: `{this.allowedLLMProviders}`
-                      """);
-            
-            //
-            // ---------------------------------
-            // Retrieval Processes
-            // ---------------------------------
-            //
-            
-            sb.Append($"""
-                       
-                       # Retrieval Processes
-                       You are implementing the following data retrieval processes:
-                       """);
-            
-            var retrievalProcessCounter = 1;
-            foreach (var retrievalProcess in this.retrievalProcesses)
-            {
-                sb.Append($"""
-                           
-                           ## {retrievalProcessCounter++}. Retrieval Process
-                           - Name: {retrievalProcess.Name}
-                           - Description:
-                           
-                           ```
-                           {retrievalProcess.Description}
-                           ```
-                           """);
-                
-                if(retrievalProcess.ParametersDescription?.Count > 0)
-                {
-                    sb.Append("""
-                              
-                              This retrieval process recognizes the following parameters:
-                              """);
-                    
-                    var parameterCounter = 1;
-                    foreach (var (parameter, description) in retrievalProcess.ParametersDescription)
-                    {
-                        sb.Append($"""
-                                   
-                                   - The {parameterCounter++} parameter is named "{parameter}":
-                                   
-                                   ```
-                                   {description}
-                                   ```
-                                   """);
-                    }
-
-                    sb.Append("""
-
-                              Please use sensible default values for the parameters. They are optional
-                              for the user.
-                              """);
-                }
-                
-                if(retrievalProcess.Embeddings?.Count > 0)
-                {
-                    sb.Append("""
-                               
-                               The following embeddings are implemented for this retrieval process:
-                               """);
-                    
-                    var embeddingCounter = 1;
-                    foreach (var embedding in retrievalProcess.Embeddings)
-                    {
-                        sb.Append($"""
-                                   
-                                   - {embeddingCounter++}. Embedding
-                                   - Name: {embedding.EmbeddingName}
-                                   - Type: {embedding.EmbeddingType}
-                                   
-                                   - Description:
-                                   
-                                   ```
-                                   {embedding.Description}
-                                   ```
-                                   
-                                   - When used:
-                                   
-                                   ```
-                                   {embedding.UsedWhen}
-                                   ```
-                                   """);
-                    }
-                }
-            }
-
-            //
-            // ---------------------------------
-            // Additional Libraries
-            // ---------------------------------
-            //
-            
-            if (!string.IsNullOrWhiteSpace(this.additionalLibraries))
-            {
-                sb.Append($"""
-                           
-                           # Additional Libraries
-                           You use the following libraries for your implementation:
-                           
-                           {this.additionalLibraries}
-                           """);
-            }
-
-            //
-            // ---------------------------------
-            // Remarks
-            // ---------------------------------
-            //
-            
-            sb.Append("""
-                      
-                      # Remarks
-                      - You do not ask follow-up questions.
-                      - You consider the security of the implementation by applying the Security by Design principle.
-                      - Your output is formatted as Markdown. Code is formatted as code blocks. For every file, you
-                        create a separate code block with its file path and name as chapter title.
-                      - Important: The JSON objects of the API messages use camel case for the data field names.
-                      """);
-            
-            return sb.ToString();
-        }
-    }
+        ProgrammingLanguage = this.selectedProgrammingLanguage,
+        OtherProgrammingLanguage = this.otherProgrammingLanguage,
+        ERISpecification = this.eriSpecification,
+        ServerName = this.serverName,
+        ServerDescription = this.serverDescription,
+        DataSource = this.selectedDataSource,
+        OtherDataSource = this.otherDataSource,
+        DataSourceProductName = this.dataSourceProductName,
+        DataSourceHostname = this.dataSourceHostname,
+        DataSourcePort = this.dataSourcePort,
+        AuthenticationMethods = this.selectedAuthenticationMethods,
+        AuthDescription = this.authDescription,
+        OperatingSystem = this.selectedOperatingSystem,
+        AllowedLLMProviders = this.allowedLLMProviders,
+        RetrievalProcesses = this.retrievalProcesses,
+        AdditionalLibraries = this.additionalLibraries,
+    }.ToSystemPrompt();
 
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
@@ -1071,36 +823,6 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         await this.AutoSave();
     }
 
-    [GeneratedRegex("""
-                    "([\\/._\w-]+)"
-                    """, RegexOptions.NonBacktracking)]
-    private static partial Regex FileExtractRegex();
-
-    private IEnumerable<string> ExtractFiles(string fileListAnswer)
-    {
-        //
-        // We asked the LLM for answering using a specific JSON scheme.
-        // However, the LLM might not follow this scheme. Therefore, we
-        // need to parse the answer and extract the files.
-        // The parsing strategy is to look for all strings.
-        //
-        var matches = FileExtractRegex().Matches(fileListAnswer);
-        foreach (Match match in matches)
-            if(match.Groups[1].Value is {} file && !string.IsNullOrWhiteSpace(file) && !file.Equals("files", StringComparison.OrdinalIgnoreCase))
-                yield return file;
-    }
-    
-    [GeneratedRegex("""
-                    \s*#+\s+[\w\\/.]+\s*```\w*\s+([\s\w\W]+)\s*```\s*
-                    """, RegexOptions.Singleline)]
-    private static partial Regex CodeExtractRegex();
-    
-    private string ExtractCode(string markdown)
-    {
-        var match = CodeExtractRegex().Match(markdown);
-        return match.Success ? match.Groups[1].Value : string.Empty;
-    }
-
     private async Task GenerateServer()
     {
         if(this.IsNoneERIServerSelected)
@@ -1152,13 +874,19 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                    Use the following JSON schema:
                                    
                                    {
-                                     [
-                                         "path/to/file1",
-                                         "path/to/file2"
+                                     "files": [
+                                       "path/to/file1",
+                                       "path/to/file2"
                                      ]
                                    }
                                    """, true);
         var fileListAnswer = await this.AddAIResponseAsync(time, true);
+        if (!ERIServerFileList.TryParse(fileListAnswer, out var filesToGenerate))
+        {
+            this.Logger.LogWarning("The list of files could not be read from the answer of the model: '{Answer}'", fileListAnswer);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.SaveAs, T("The list of files in the answer of the model could not be read, so no files were created. Please try again.")));
+            return;
+        }
 
         //
         // Is this an update of the ERI server? If so, we need to delete the previously generated files.
@@ -1166,7 +894,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         // and it outlives a change of the base directory, as well as a restore on another computer.
         // There, the same path may belong to files of somebody else:
         //
-        if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
+        if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0)
         {
             foreach (var file in previouslyGeneratedFilesSnapshot)
             {
@@ -1196,7 +924,6 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         }
         
         var generatedFiles = new List<string>();
-        var filesToGenerate = this.ExtractFiles(fileListAnswer).ToArray();
         foreach (var file in filesToGenerate)
         {
             this.Logger.LogInformation($"The LLM want to create the file: '{file}'");
@@ -1215,48 +942,18 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                         ```language
                                         content of the file
                                         ```
+
+                                        When the file itself contains code blocks, enclose its content in a longer
+                                        fence, such as four backticks.
                                         """, true);
             var generatedCodeMarkdown = await this.AddAIResponseAsync(time);
             if (writeToFilesystemSnapshot)
             {
-                var desiredFilePath = Path.Join(baseDirectorySnapshot, file);
-                
-                // Security check: ensure that the desired file path is inside the base directory.
-                // We cannot trust the beginning of the file path because it would be possible
-                // to escape by using `..` in the file path.
-                if (!PathTools.IsInsideDirectory(baseDirectorySnapshot, desiredFilePath))
-                    this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{baseDirectorySnapshot}'.");
-                
+                var outcome = await ERIServerFiles.WriteAsync(baseDirectorySnapshot, file, generatedCodeMarkdown, this.Logger);
+                if (outcome is ERIServerFileOutcome.WRITTEN)
+                    generatedFiles.Add(ERIServerFiles.PathOf(baseDirectorySnapshot, file));
                 else
-                {
-                    var code = this.ExtractCode(generatedCodeMarkdown);
-                    if (string.IsNullOrWhiteSpace(code))
-                        this.Logger.LogWarning($"The file content for '{desiredFilePath}' is empty or was not found.");
-
-                    else
-                    {
-
-                        // Ensure that the directory exists:
-                        var fileDirectory = Path.GetDirectoryName(desiredFilePath);
-                        if (fileDirectory is null)
-                            this.Logger.LogWarning($"The file path '{desiredFilePath}' does not contain a directory.");
-                        
-                        else
-                        {
-                            generatedFiles.Add(desiredFilePath);
-                            var fileDirectoryInfo = new DirectoryInfo(fileDirectory);
-                            if(!fileDirectoryInfo.Exists)
-                            {
-                                fileDirectoryInfo.Create();
-                                this.Logger.LogInformation($"The directory '{fileDirectory}' was created.");
-                            }
-
-                            // Save the file to the file system:
-                            await File.WriteAllTextAsync(desiredFilePath, code, Encoding.UTF8);
-                            this.Logger.LogInformation($"The file '{desiredFilePath}' was created.");
-                        }
-                    }
-                }
+                    await this.MessageBus.SendWarning(new(Icons.Material.Filled.SaveAs, outcome.ToUserMessage(file)));
             }
         }
         

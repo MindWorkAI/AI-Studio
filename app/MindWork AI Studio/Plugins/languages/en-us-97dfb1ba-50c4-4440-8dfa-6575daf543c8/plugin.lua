@@ -1626,6 +1626,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3315518334"] = "Data 
 -- No, just show me the code
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3316699247"] = "No, just show me the code"
 
+-- The list of files in the answer of the model could not be read, so no files were created. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3342789164"] = "The list of files in the answer of the model could not be read, so no files were created. Please try again."
+
 -- Other language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3374524465"] = "Other language"
 
@@ -1793,6 +1796,18 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T3394837922"]
 
 -- Unknown data source
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T752426884"] = "Unknown data source"
+
+-- The file '{0}' was not written, because the answer of the model contains no complete code block for it. You find the answer in the conversation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ERISERVERFILEOUTCOMEEXTENSIONS::T1485612676"] = "The file '{0}' was not written, because the answer of the model contains no complete code block for it. You find the answer in the conversation."
+
+-- The file '{0}' was not written.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ERISERVERFILEOUTCOMEEXTENSIONS::T1622509075"] = "The file '{0}' was not written."
+
+-- The file '{0}' could not be written. The log of AI Studio names the reason.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ERISERVERFILEOUTCOMEEXTENSIONS::T2881284775"] = "The file '{0}' could not be written. The log of AI Studio names the reason."
+
+-- The file '{0}' was not written, because its path leads outside the base directory.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ERISERVERFILEOUTCOMEEXTENSIONS::T3820652397"] = "The file '{0}' was not written, because its path leads outside the base directory."
 
 -- Windows
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T104858250"] = "Windows"
