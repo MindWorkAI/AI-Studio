@@ -778,7 +778,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1199074722"] 
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1239995078"] = "Zusätzliche Regeln (optional)"
 
 -- Auditing assistants safety...
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1322393857"] = "Sicherheitsprüfung der Assistenten..."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1322393857"] = "Sicherheitsprüfung des Assistenten..."
 
 -- The assistant is enabled.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1373471225"] = "Der Assistent ist aktiviert."
@@ -880,7 +880,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2686336585"] 
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2703350865"] = "Ich brauche einen Assistenten, der Besprechungsnotizen in klare Aufgaben mit Verantwortlichen und Fristen umwandelt."
 
 -- Custom assistant category
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2720431578"] = "Kategorie für benutzerdefinierte Assistenten"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2720431578"] = "Benutzerdefinierte Assistentenkategorie"
 
 -- Generated Lua plugin
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2745057219"] = "Generiertes Lua-Plugin"
@@ -958,7 +958,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3673389100"] 
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3741657159"] = "Beschreiben Sie die Aufgabe, die Eingaben und die gewünschte Ausgabe in eigenen Worten. Das Modell leitet alle Plugin-Details ab."
 
 -- Meeting Task Extractor
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3782909247"] = "Meeting-Aufgaben extrahieren"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3782909247"] = "Aufgabenextraktor für Meetings"
 
 -- What to avoid or consider, e.g. do not invent missing facts
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3843866124"] = "Was zu vermeiden oder zu beachten ist, z. B. keine fehlenden Fakten erfinden"
@@ -1621,7 +1621,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3267849393"] = "Bearb
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3295594136"] = "Programmiersprache"
 
 -- Data source: product name
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3315518334"] = "Datenquelle"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3315518334"] = "Datenquelle: Produktname"
 
 -- No, just show me the code
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3316699247"] = "Nein, zeig mir einfach den Code."
@@ -1897,7 +1897,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T237325294"] = "Kein
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T237828418"] = "Zielsprache"
 
 -- Write Lua code to language plugin file
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T253827221"] = "Lua-Code für Sprach-Plugin-Datei schreiben"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T253827221"] = "Lua-Code in die Sprach-Plugin-Datei schreiben"
 
 -- Language plugin used for comparision
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T263317578"] = "Sprach-Plugin für den Vergleich"
@@ -2410,10 +2410,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
 -- Passive voice
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T132535068"] = "Passive Sprache"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T132535068"] = "Passiv"
 
 -- Active voice
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T3548001825"] = "Aktive Sprache"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T3548001825"] = "Aktiv"
 
 -- Not Specified
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T4281286216"] = "Nicht angegeben"
@@ -2479,7 +2479,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEEXPERTISEEXTENSIONS
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEEXPERTISEEXTENSIONS::T3130182982"] = "Experten"
 
 -- Individual contributors
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T1893672448"] = "Einzelne Mitwirkende"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T1893672448"] = "Fachkräfte ohne Führungsverantwortung"
 
 -- Team leads
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T2112906979"] = "Teamleitung"
@@ -3046,7 +3046,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T24391765"] = "(Optional) Wichtige Aspekte"
 
 -- Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T359929871"] = "Fassen Sie einen langen Text zu einer kürzeren Version zusammen und behalten Sie dabei die wichtigsten Punkte bei. Sie können die Sprache des Textes anpassen, um die Zusammenfassung verständlicher zu machen. Außerdem ist es möglich, die Zusammenfassung einfacher zu formulieren, damit sie leichter zu verstehen ist."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T359929871"] = "Fassen Sie einen langen Text zu einer kürzeren Version zusammen und behalten Sie dabei die wichtigsten Punkte bei. Sie können die Sprache der Zusammenfassung anpassen, um sie verständlicher zu machen. Außerdem ist es möglich, die Zusammenfassung einfacher zu formulieren, damit sie leichter zu verstehen ist."
 
 -- Please provide your field of expertise.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T3610378685"] = "Bitte geben Sie Ihr Fachgebiet an."
@@ -3292,7 +3292,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T294572739"] = "Visuelles Briefing dauerhaft löschen"
 
 -- Opened the visual briefing project folder.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2964042492"] = "Projektordner für das visuelle Briefing öffnen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2964042492"] = "Der Projektordner für das visuelle Briefing wurde geöffnet."
 
 -- The visual briefing could not be exported. Please check that the target file is not open in another program.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3136382170"] = "Das visuelle Briefing konnte nicht exportiert werden. Bitte überprüfen Sie, ob die Zieldatei nicht in einem anderen Programm geöffnet ist."
@@ -3403,7 +3403,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4158473953"] = "Transkript veraltet"
 
 -- Large visual briefing
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4198749440"] = "Umfassendes visuelles Briefing"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4198749440"] = "Großes visuelles Briefing"
 
 -- Relink
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4202336288"] = "Neu verknüpfen"
@@ -3619,7 +3619,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTE
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2853629903"] = "Das Modell hat nicht jedes visuelle Element dieses Briefings genau einmal geplant. Bitte versuchen Sie es erneut oder wählen Sie ein anderes Modell aus."
 
 -- The assembled briefing did not pass the security validation.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T295498807"] = "Die zusammengestellte Zusammenfassung hat die Sicherheitsprüfung nicht bestanden."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T295498807"] = "Das zusammengestellte Briefing hat die Sicherheitsprüfung nicht bestanden."
 
 -- The selected provider may not see the content of this briefing. Please select another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T300791290"] = "Der ausgewählte Anbieter darf den Inhalt dieses Briefings nicht sehen. Bitte wählen Sie einen anderen Anbieter."
@@ -3700,7 +3700,7 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Ja, ent
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1434043348"] = "Fehlgeschlagen"
 
 -- Tool Calls ({0})
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1493057571"] = "Werkzeugaufrufe"
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1493057571"] = "Werkzeugaufrufe ({0})"
 
 -- Executed
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1564757972"] = "Ausgeführt"
@@ -3724,7 +3724,7 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1934297017"] = "Codeblo
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1981771421"] = "{0} Werkzeugaufrufe anzeigen"
 
 -- Show tool call for {0}
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2004842583"] = "Werkzeugaufruf für {0}"
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2004842583"] = "Werkzeugaufruf für {0} anzeigen"
 
 -- Do you really want to edit this message? In order to edit this message, the AI response will be deleted.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Möchten Sie diese Nachricht wirklich bearbeiten? Um die Nachricht zu bearbeiten, wird die Antwort der KI gelöscht."
@@ -3793,7 +3793,7 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T413085919"] = "Codeblö
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "Nein, behalten"
 
 -- No tool calls
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4224149521"] = "Verstanden."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4224149521"] = "Keine Werkzeugaufrufe"
 
 -- Send to ...
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4242312602"] = "Senden an ..."
@@ -3952,7 +3952,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4170340306"
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4256679240"] = "Für dieses Assistenten-Plugin wurden keine Sicherheitsbefunde gespeichert."
 
 -- Status source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4289123040"] = "Quellstatus"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4289123040"] = "Statusquelle"
 
 -- Audit hash
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T53507304"] = "Prüf-Hash"
@@ -3961,7 +3961,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T53507304"] 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T561695293"] = "Aktivierung"
 
 -- {0} Finding(s)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T631393016"] = "{0} Fund(e)"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T631393016"] = "{0} Befund(e)"
 
 -- Approved by
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T894543751"] = "Genehmigt von"
@@ -4858,7 +4858,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1286170698"] = "
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1648955896"] = "Chat-Anbieter"
 
 -- The tile opens its chat in this workspace and creates the workspace when it does not exist yet.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1797236585"] = "Die Kachel öffnet ihren Chat in diesem Arbeitsbereich oder erstellt den Arbeitsbereich, falls er noch nicht existiert."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1797236585"] = "Die Kachel öffnet ihren Chat in diesem Arbeitsbereich und erstellt den Arbeitsbereich, falls er noch nicht existiert."
 
 -- Workspace name (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1873204484"] = "Name des Arbeitsbereichs (optional)"
@@ -5452,7 +5452,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANE
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T1297967572"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann hilfreich sein, wenn Sie ein bestimmtes LLM bevorzugen."
 
 -- Use Case: this agent is used to select the appropriate data sources for the current prompt.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2208143316"] = "Anwendungsfall: Dieser Assistent wird verwendet, um die passenden Datenquellen für die aktuelle Eingabe auszuwählen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2208143316"] = "Anwendungsfall: Dieser Agent wird verwendet, um die passenden Datenquellen für die aktuelle Eingabe auszuwählen."
 
 -- Agent: Data Source Selection Options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2258031949"] = "Agent: Wahl der Datenquellen"
@@ -5671,7 +5671,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3513450626"]
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3562495752"] = "Zugelassene Hosts für zusätzliche Stammzertifikate"
 
 -- Request timeout
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3569531009"] = "Zeitüberschreitung bei der Anfrage"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3569531009"] = "Zeitlimit für Anfragen"
 
 -- App Options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3577148634"] = "App-Einstellungen"
@@ -5761,7 +5761,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T735114866"] 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T78084670"] = "Startseite"
 
 -- Preview feature visibility
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] = "Sichtbarkeit der Vorschaufunktion"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] = "Sichtbarkeit der Vorschaufunktionen"
 
 -- Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T844514734"] = "Möchten Sie einen Anbieter als Standard für die gesamte App festlegen? Wenn Sie einen anderen Anbieter für einen Assistenten konfigurieren, hat dieser immer Vorrang."
@@ -6583,7 +6583,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1834795216"] = 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1839656215"] = "Dieses Plugin kann nicht aktiviert werden, weil sein Prüfergebnis unter dem erforderlichen Sicherheitsniveau liegt und Ihre Einstellungen die Aktivierung in diesem Fall blockieren."
 
 -- Children: {0}
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T193192210"] = "Untergeordnete: {0}"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T193192210"] = "Untergeordnete Elemente: {0}"
 
 -- null
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1996966820"] = "null"
@@ -6610,7 +6610,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2789707388"] = 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2941224401"] = "Kein Modell konfiguriert"
 
 -- Prompt: set
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3156437951"] = "Prompt: festlegen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3156437951"] = "Prompt: festgelegt"
 
 -- Findings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3224848879"] = "Ergebnisse"
@@ -8146,7 +8146,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T253086978
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T3705971409"] = "Der auf der Kachel angezeigte Titel."
 
 -- Only locally managed direct chat launchers can be edited here.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T378728350"] = "Hier können nur lokale Chat-Schnellstarts bearbeitet werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T378728350"] = "Hier können nur lokal verwaltete Chat-Schnellstarts bearbeitet werden."
 
 -- The name shown on the plugins page.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T3915583159"] = "Der auf der Plugin-Seite angezeigte Name."
@@ -8236,7 +8236,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T2764429350"] = "Typ 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T290945550"] = "Link zur Einbettung"
 
 -- Used when
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3229398952"] = "Verwenden, wenn"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3229398952"] = "Verwendet, wenn"
 
 -- The embedding type must not be longer than 56 characters.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T32602319"] = "Der Typ der Einbettung darf nicht länger als 56 Zeichen sein."
@@ -8689,13 +8689,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1254789334"] = "Aus einer Da
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Teilen Sie der KI mit, was sie machen soll. Was sind Ihre Ziele oder was möchten Sie erreichen? Zum Beispiel, dass die KI Sie duzt."
 
 -- Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1717545317"] = "Bitte beachten Sie, dass Ihre Profilinformationen Teil des System-Prompts werden. Das bedeutet, sie belegen einen Teil des Kontexts – den „Speicher“, den das LLM nutzt, um Ihre Anfrage zu verstehen und darauf zu antworten. Wenn Ihr Profil extrem lang ist, kann das LLM Schwierigkeiten haben, die Aufgabe auszuführen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1717545317"] = "Bitte beachten Sie, dass Ihre Profilinformationen Teil des System-Prompts werden. Das bedeutet, sie belegen einen Teil des Kontexts – den „Speicher“, den das LLM nutzt, um Ihre Anfrage zu verstehen und darauf zu antworten. Wenn Ihr Profil extrem lang ist, kann das LLM Schwierigkeiten haben, sich auf Ihre eigentliche Aufgabe zu konzentrieren."
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1847791252"] = "Aktualisieren"
 
 -- Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2119274961"] = "Erzählen Sie der KI etwas über sich. Was ist Ihr Beruf? Wie erfahren sind Sie in diesem Beruf? Welche Technologien verwenden Sie?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2119274961"] = "Erzählen Sie der KI etwas über sich. Was ist Ihr Beruf? Wie erfahren sind Sie in diesem Beruf? Welche Technologien bevorzugen Sie?"
 
 -- What should the AI do for you?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2261456575"] = "Was soll die KI für Sie tun?"
@@ -8770,7 +8770,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3122726298"] = 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = "Schließen"
 
 -- Removed content
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3549539878"] = "Inhalt entfernt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3549539878"] = "Entfernte Inhalte"
 
 -- Typical attacks on AI systems (e.g. prompt injection) hide instructions within untrusted content to trick an AI model into ignoring its intended rules or performing unintended actions.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typische Angriffe auf KI-Systeme (z. B. Prompt-Injection) verbergen Anweisungen in nicht vertrauenswürdigen Inhalten, um ein KI-Modell dazu zu bringen, seine vorgesehenen Regeln zu ignorieren oder unbeabsichtigte Aktionen auszuführen."
@@ -8941,7 +8941,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3187806707"] = "Maximal {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3217987877"] = "Deaktiviert"
 
 -- The model always uses reasoning (thinking); it cannot be disabled.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3294757333"] = "Das Modell verwendet immer Schlussfolgerungen (Denken); es kann nicht deaktiviert werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3294757333"] = "Das Modell verwendet immer Schlussfolgerungen (Denken); diese können nicht deaktiviert werden."
 
 -- Can be enabled
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3299454847"] = "Kann aktiviert werden"
@@ -9004,7 +9004,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T641757736"] = "Immer schlus
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T808120719"] = "Host"
 
 -- Multiple image input
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T858529900"] = "Bildeingabe"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T858529900"] = "Eingabe mehrerer Bilder"
 
 -- No reasoning (thinking)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T87434533"] = "Keine Schlussfolgerungen (Denken)"
@@ -9265,7 +9265,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3835166371"
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T4055846391"] = "Wählen Sie die Sprache der Agenda vorab aus"
 
 -- No agenda options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T4094211586"] = "Keine Tagesordnungspunkte sind vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T4094211586"] = "Keine Agendaoptionen sind vorausgewählt"
 
 -- Participants should get to know each other
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T464127805"] = "Die Teilnehmer sollten sich kennenlernen"
@@ -9583,7 +9583,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1915793195"] 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2322771068"] = "Profil vorauswählen"
 
 -- Apply default data source option when sending assistant results to chat
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] = "Standarddatenquelle verwenden, wenn Assistentenergebnisse in den Chat gesendet werden"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] = "Standardoption für Datenquellen anwenden, wenn Assistentenergebnisse in den Chat gesendet werden"
 
 -- Control how the LLM provider for added chats is selected.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] = "Steuern Sie, wie der LLM-Anbieter für hinzugefügte Chats ausgewählt wird."
@@ -9685,7 +9685,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T34481
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576775249"] = "Diesee Vorlage wird von Ihrer Organisation verwaltet."
 
 -- Select configuration plugin folder
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576816894"] = "Konfigurationsordner für Plugins auswählen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576816894"] = "Ordner des Konfigurations-Plugins auswählen"
 
 -- Edit Chat Template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3596030597"] = "Chat-Vorlage bearbeiten"
@@ -9853,7 +9853,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T7252523
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T1257718691"] = "Keine Joboptionen sind vorausgewählt"
 
 -- Preselect some mandatory information about the job posting?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T1332068481"] = "Wählen Sie einige Pflichtangaben zur Stellenanzeige im Voraus aus."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T1332068481"] = "Einige Pflichtangaben zur Stellenanzeige vorauswählen?"
 
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T1462295644"] = "Eine andere Zielsprache vorauswählen"
@@ -9976,7 +9976,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T3448155331
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T354528094"] = "Keine Optionen sind vorausgewählt"
 
 -- Assistant: My Tasks Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T3710380967"] = "Assistent: Meine Aufgabenoptionen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T3710380967"] = "Assistent: Optionen für „Meine Aufgaben“"
 
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T3875604319"] = "Optionen sind vorausgewählt"
@@ -10084,16 +10084,16 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1462295644
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1621537655"] = "Satzstruktur vorauswählen"
 
 -- Assistant: Rewrite & Improve Text Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1995708818"] = "Assistent: Text umformulieren & verbessern"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1995708818"] = "Assistent: Optionen für „Text umformulieren & verbessern“"
 
 -- Which voice should be preselected for the sentence structure?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T2661599097"] = "Welche Stimme soll für die Satzstruktur vorausgewählt werden?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T2661599097"] = "Welche Satzstruktur soll vorausgewählt werden?"
 
 -- Preselect a writing style
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T28456020"] = "Wählen Sie einen Schreibstil aus"
 
 -- Rewrite & improve text options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3303192024"] = "Optionen für „Text umformulieren & verbessern“ sind bereits vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3303192024"] = "Optionen für „Text umformulieren & verbessern“ sind vorausgewählt"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3448155331"] = "Schließen"
@@ -11035,7 +11035,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T200518635"] = "Alle Dokumente ein
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T209791153"] = "Text in eine andere Sprache übersetzen."
 
 -- Turn documents, data, images, audio, and video into an audience-ready interactive briefing.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2357398627"] = "Verwandeln Sie Dokumente, Daten, Bilder, Audio- und Videodateien in eine interaktive Präsentation für Ihr Publikum."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2357398627"] = "Verwandeln Sie Dokumente, Daten, Bilder, Audio- und Videodateien in ein interaktives Briefing für Ihr Publikum."
 
 -- Generate an e-mail for a given context.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2383649630"] = "Erstellen Sie eine E-Mail für einen bestimmten Kontext."
@@ -11779,7 +11779,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Änderungsprotok
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3019585985"] = "Testkonfiguration: Niemand hat diese Konfiguration bereitgestellt. Sie ist gültig, bis Sie AI Studio neu starten."
 
 -- External HTTPS custom root certificates are configured but not active.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3021325354"] = "Externe benutzerdefinierte Stammzertifikate sind konfiguriert, aber nicht aktiv."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3021325354"] = "Externe benutzerdefinierte HTTPS-Stammzertifikate sind konfiguriert, aber nicht aktiv."
 
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Unternehmenskonfigurations-ID:"
@@ -11800,7 +11800,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3183837919"] = "Details ausblend
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3196139293"] = "Linux-Paket"
 
 -- External HTTPS custom root certificates are active.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208455732"] = "Externe Stammzertifikate sind aktiv."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208455732"] = "Externe benutzerdefinierte HTTPS-Stammzertifikate sind aktiv."
 
 -- Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208719461"] = "Der Axum-Server führt den internen Axum-Dienst über eine sichere lokale Verbindung aus. Dadurch kann AI Studio die Kommunikation zwischen der Rust-Laufzeitumgebung und der Benutzeroberfläche schützen."
@@ -11830,7 +11830,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3385332793"] = "webm-iterable st
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3396815215"] = "Status:"
 
 -- The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3405978777"] = "Die folgende Liste zeigt die Versionen von MindWork AI Studio und des verwendeten Compilers, den Build-Zeitpunkt und weitere Informationen:"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3405978777"] = "Die folgende Liste zeigt die Versionen von MindWork AI Studio und der verwendeten Compiler, den Build-Zeitpunkt und weitere Informationen:"
 
 -- Information about MindWork AI Studio
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3433065373"] = "Informationen über MindWork AI Studio"
@@ -12094,7 +12094,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "Die Kachel „{0}“
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2445896850"] = "Dialog zum Teilen nicht verfügbar"
 
 -- Edit Assistant Plugin
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Plugin für „Assistent bearbeiten“"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Assistenten-Plugin bearbeiten"
 
 -- The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2608443050"] = "Das Assistenten-Plugin „{0}“ wurde mit der Stufe „{1}“ geprüft, die unter der erforderlichen Mindeststufe „{2}“ liegt. Ihre aktuellen Einstellungen erlauben die Aktivierung dennoch, dies kann jedoch potenziell gefährlich sein. Möchten Sie dieses Plugin wirklich aktivieren?"
@@ -14254,7 +14254,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3667396132"] = "Die
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3763759727"] = "Das Feld NAME ist leer. Der Name darf nicht leer sein."
 
 -- The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3890922974"] = "Das Feld DEPRECATION_MESSAGE existiert nicht und ist keine gültige Zeichenkette. Diese Nachricht ist optional: Verwenden Sie eine leere Zeichenkette, um anzugeben, dass das Plugin nicht veraltet ist."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3890922974"] = "Das Feld DEPRECATION_MESSAGE existiert nicht oder ist keine gültige Zeichenkette. Diese Nachricht ist optional: Verwenden Sie eine leere Zeichenkette, um anzugeben, dass das Plugin nicht veraltet ist."
 
 -- The field SUPPORT_CONTACT does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4189964941"] = "Das Feld SUPPORT_CONTACT existiert nicht oder ist keine gültige Zeichenkette."
@@ -15496,7 +15496,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCS
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3047786484"] = "Dieser RAG-Prozess filtert Datenquellen, wählt automatisch passende Quellen aus, ermöglicht optional die manuelle Auswahl von Quellen, ruft Daten ab und überprüft den Abrufkontext automatisch."
 
 -- AI source selection with AI retrieval context validation
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "KI-basierte Datenquellen-Auswahl mit Validierung des Abrufkontexts"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "KI-basierte Datenquellen-Auswahl mit KI-gestützter Validierung des Abrufkontexts"
 
 -- Pages {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::SOURCEPASSAGEEXTENSIONS::T1095604049"] = "Seiten {0}"
@@ -16393,7 +16393,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T40564
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T1110311702"] = "Bitte wählen Sie einen LLM-Anbieter aus."
 
 -- Tool calling support is not enabled by default for this model, but you can enable this capability in the expert settings of the provider if you are sure the model supports it.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3805542503"] = "Die Unterstützung für Werkzeug-Aufrufe ist standardmäßig nicht aktiviert, aber Sie können diese Funktion in den Experteneinstellungen des Anbieters aktivieren, wenn Sie sicher sind, dass das Modell dies unterstützt."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3805542503"] = "Die Unterstützung für Werkzeug-Aufrufe ist für dieses Modell standardmäßig nicht aktiviert, aber Sie können diese Funktion in den Experteneinstellungen des Anbieters aktivieren, wenn Sie sicher sind, dass das Modell dies unterstützt."
 
 -- The setting '{0}' must be less than or equal to {1}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T1391527409"] = "Die Einstellung „{0}“ muss kleiner oder gleich {1} sein."
@@ -16681,7 +16681,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T2175837709"] = "Bevorzugter Suchdienst"
 
 -- Default Safe Search Policy
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T2514181501"] = "SafeSearch-Richtlinie"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T2514181501"] = "Standard-SafeSearch-Richtlinie"
 
 -- Default Language
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T2526826120"] = "Standardsprache"
@@ -16696,7 +16696,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T299004879"] = "Das konfigurierte Budget für Web-Suchinhalte ist ungültig."
 
 -- Optional HTTP timeout for the search request in seconds.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3078115445"] = "Optionale Zeitüberschreitung für die HTTP-Suchanfrage in Sekunden."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3078115445"] = "Optionales Zeitlimit für die HTTP-Suchanfrage in Sekunden."
 
 -- Search Timeout Seconds
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3219072199"] = "Such-Timeout (Sekunden)"
@@ -16714,7 +16714,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T366488298"] = "Maximale Gesamtanzahl Zeichen"
 
 -- Optional timeout for loading each individual result page in seconds.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3668086641"] = "Optionale Zeitüberschreitung für das Laden jeder einzelnen Ergebnisseite in Sekunden."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3668086641"] = "Optionales Zeitlimit für das Laden jeder einzelnen Ergebnisseite in Sekunden."
 
 -- Use Of Several Search Services
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3703157929"] = "Nutzung mehrerer Suchdienste"
@@ -16723,7 +16723,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3815068443"] = "Websuche"
 
 -- Optional overall timeout for retrieving all result pages in seconds.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3854998169"] = "Optionale Gesamtzeitüberschreitung zum Abrufen aller Ergebnisseiten in Sekunden."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3854998169"] = "Optionales Gesamtzeitlimit für den Abruf aller Ergebnisseiten in Sekunden."
 
 -- Search the web with one of the configured search services and retrieve the readable content of the best matching pages.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T3935418048"] = "Durchsuchen Sie das Web mit einem der konfigurierten Suchdienste und rufen Sie den lesbaren Inhalt der am besten passenden Seiten ab."
@@ -16750,7 +16750,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T836062282"] = "Optionales Gesamtzeichenkontingent, das von allen abgerufenen Seiten gemeinsam genutzt wird."
 
 -- What to do with the search services you configured. Asking them one after another moves on to the next one whenever the one before it found nothing, which is the sensible choice for almost everyone. Asking all of them at once combines their results and uses one request of every service for each search, which finds more but spends your free requests several times as fast. When this is not set, the services are asked one after another.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T935060005"] = "Wie die von Ihnen konfigurierten Suchdienste verwendet werden sollen. Wenn sie nacheinander abgefragt werden, wird zum nächsten Dienst gewechselt, sobald der vorherige keine Ergebnisse gefunden hat. Das ist für die meisten Menschen die sinnvollste Wahl. Wenn alle gleichzeitig abgefragt werden, werden ihre Ergebnisse kombiniert und für jede Suche eine Anfrage an jeden Dienst gesendet. Dadurch werden zwar mehr Ergebnisse gefunden, aber Ihre kostenlosen Anfragen werden mehrfach so schnell aufgebraucht. Wenn diese Option nicht aktiviert ist, werden die Dienste nacheinander abgefragt."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::WEBSEARCHTOOL::T935060005"] = "Wie die von Ihnen konfigurierten Suchdienste verwendet werden sollen. Wenn sie nacheinander abgefragt werden, wird zum nächsten Dienst gewechselt, sobald der vorherige keine Ergebnisse gefunden hat. Das ist für die meisten Menschen die sinnvollste Wahl. Wenn alle gleichzeitig abgefragt werden, werden ihre Ergebnisse kombiniert und für jede Suche eine Anfrage an jeden Dienst gesendet. Dadurch werden zwar mehr Ergebnisse gefunden, aber Ihre kostenlosen Anfragen werden mehrfach so schnell aufgebraucht. Wenn nichts festgelegt ist, werden die Dienste nacheinander abgefragt."
 
 -- Using tools: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T2834986024"] = "Verwendung von Werkzeugen: {0}"
