@@ -220,6 +220,11 @@ the user guide in US English and German, the Enterprise IT guides, and pages for
 - GitHub shows the file name of a page as its title. Start a page without a `#` heading, keep commas out of
   file names, and keep each name unique across all folders, because the URLs ignore them. Link pages as
   `[[Text|Page-Name]]`, and list a new page in the `_Sidebar.md` of its folder; `de/` has its own.
+- In a table, GitHub splits the cell at the `|` of a `[[Text|Page-Name]]` link. There, and for links to a
+  section of a page, use the full URL: `[Text](https://github.com/MindWorkAI/AI-Studio/wiki/Page-Name#section)`.
+- Quote the texts of the app, such as labels, options, and messages, exactly as the app shows them: "…" in
+  English and „…“ in German, never in bold. A bold label runs into the sentence when it ends with a period
+  itself. Bold is for a term which a paragraph introduces.
 
 ## Changelogs
 Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users
