@@ -9,7 +9,8 @@ public static class JsonTypeGraph
 {
     /// <summary>
     /// Returns the root and every type it holds: the types of its properties, the keys and elements of its
-    /// collections, and its derived types, each of them once and in the order they were met.
+    /// collections, and its derived types, each of them once and in the order they were met. The type of an
+    /// ignored property doesn't count, since System.Text.Json never meets it.
     /// </summary>
     /// <param name="root">The type to start with.</param>
     /// <param name="options">The options whose contracts tell what a type holds.</param>
@@ -27,7 +28,7 @@ public static class JsonTypeGraph
 
         types.Add(type);
         var typeInfo = options.GetTypeInfo(type);
-        foreach (var property in typeInfo.Properties)
+        foreach (var property in typeInfo.Properties.Where(property => !JsonContractDescription.IsIgnored(property)))
             Visit(property.PropertyType, options, visited, types);
 
         if (typeInfo.KeyType is { } keyType)

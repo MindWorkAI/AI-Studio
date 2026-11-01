@@ -44,7 +44,8 @@ public static class JsonTestRoots
             yield return Case(new(valueType, SettingsManager.JSON_OPTIONS));
 
         // The SWOT analysis, which a chat stores as the presentation of a message:
-        yield return Case(new(typeof(SwotAnalysisResult), SwotAnalysisContentPresentation.JSON_OPTIONS));
+        yield return Case(new(typeof(SwotAnalysisResult), SwotAnalysisContentPresentation.JSON_OPTIONS), "read");
+        yield return Case(new(typeof(SwotAnalysisResult), SwotAnalysisContentPresentation.WRITE_OPTIONS), "written");
 
         // Backups and their restore:
         yield return Case(new(typeof(DataBackupManifest), DataBackupFormat.JSON_OPTIONS));
@@ -56,14 +57,14 @@ public static class JsonTestRoots
         yield return Case(new(typeof(List<string>), SqliteProvenanceStoreClientImplementation.JSON_OPTIONS));
     }
 
-    private static TestCaseData Case(JsonTestRoot root)
+    private static TestCaseData Case(JsonTestRoot root, string? purpose = null)
     {
         //
         // The same System.Text.Json does with the first call of Serialize or Deserialize. Only then, the
         // options hand out contracts:
         //
         root.Options.MakeReadOnly(populateMissingResolver: true);
-        return new TestCaseData(root).SetArgDisplayNames(root.ToString());
+        return new TestCaseData(root).SetArgDisplayNames(purpose is null ? root.ToString() : $"{root}, {purpose}");
     }
 
     private static IEnumerable<Type> ManagedSettingValueTypes()

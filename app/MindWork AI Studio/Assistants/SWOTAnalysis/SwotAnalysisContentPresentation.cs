@@ -10,13 +10,22 @@ internal static class SwotAnalysisContentPresentation
     /// Fails the reading of stored data which holds a null where the result expects a value, so that
     /// the result view never meets one.
     /// </summary>
-    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         RespectNullableAnnotations = true,
-    };
+        TypeInfoResolver = SwotAnalysisJsonContext.Default,
+    }.AsReadOnly();
+
+    /// <summary>
+    /// Writes the analysis with the defaults of System.Text.Json, which let a null pass, unlike the reading.
+    /// </summary>
+    internal static readonly JsonSerializerOptions WRITE_OPTIONS = new JsonSerializerOptions
+    {
+        TypeInfoResolver = SwotAnalysisJsonContext.Default,
+    }.AsReadOnly();
 
     public static ContentPresentation Create(SwotAnalysisResult result) =>
-        ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, result);
+        ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, result, WRITE_OPTIONS);
 
     /// <summary>
     /// Reads the SWOT analysis stored as the presentation of a text, so it can be shown as a matrix.

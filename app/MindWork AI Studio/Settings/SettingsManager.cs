@@ -26,11 +26,12 @@ public sealed class SettingsManager
     
     private readonly record struct CurrentSettingsReadResult(Data? SettingsData, SettingsWriteBlockReason FailureReason);
     
-    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
         Converters = { new TolerantEnumConverter() },
-    };
+        TypeInfoResolver = SettingsJsonContext.Default,
+    }.AsReadOnly();
 
     /// <summary>
     /// From this duration on, storing the settings is reported as slow.
