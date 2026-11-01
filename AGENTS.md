@@ -81,7 +81,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 
 **Key Architecture Points:**
 - **Runtime:** Rust-based Tauri v2 application providing the native window, system integration, and IPC layer
-- **App:** .NET 9 Blazor Server application providing the UI and core functionality
+- **App:** .NET 10 Blazor Server application providing the UI and core functionality
 - **Communication:** The Rust runtime and .NET app communicate via HTTPS with TLS certificates generated at startup
 - **Providers:** Multi-provider architecture supporting OpenAI, Anthropic, Google, Mistral, Perplexity, self-hosted models, and others
 - **Plugin System:** Lua-based plugin system for language packs, configuration, assistants, and model knowledge
@@ -89,7 +89,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 ## Building
 
 ### Prerequisites
-- .NET 9 SDK
+- .NET 10 SDK
 - Rust toolchain (stable)
 - Tauri v2 CLI
 - Tauri prerequisites (platform-specific dependencies)
