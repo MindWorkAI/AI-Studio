@@ -45,6 +45,13 @@
         -->
         <NoWarn>IL2026, CS8974</NoWarn>
         <LangVersion>latest</LangVersion>
+
+        <!--
+            Since .NET 10, the scripts of Blazor come from a package, which the release embeds: see the
+            EmbedBlazorScript target. The SDK adds that package by itself when it spots Razor files; we
+            ask for it here, so that the release does not hinge on that guess.
+        -->
+        <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
     </PropertyGroup>
 
     <Import Project="..\Trimming.props" />
@@ -204,6 +211,30 @@
 
         <ItemGroup>
             <EmbeddedResource Include="$(ScopedCssBundleToEmbed)" Link="wwwroot\$(AssemblyName).styles.css" />
+        </ItemGroup>
+    </Target>
+
+    <!--
+        `_framework/blazor.web.js` makes the UI interactive, and App.razor loads it. Up to .NET 9, the shared
+        framework served it. Since .NET 10, it is a static web asset of the package Microsoft.AspNetCore.App.Internal.Assets,
+        which names its folder in BlazorFrameworkStaticWebAssetRoot. Like the scoped CSS bundle above, the release
+        would therefore lack it: the window would show the app, but nothing in it would react. Hence: embed it
+        before the manifest is written.
+    -->
+    <Target Name="EmbedBlazorScript" BeforeTargets="_CalculateEmbeddedFilesManifestInputs">
+        <PropertyGroup>
+            <BlazorScriptToEmbed>$(BlazorFrameworkStaticWebAssetRoot)\blazor.web.js</BlazorScriptToEmbed>
+        </PropertyGroup>
+
+        <!--
+            Fail loudly instead of shipping a release without the script: a missing file here means the
+            package moved it, or the SDK no longer adds the package.
+        -->
+        <Error Condition="'$(BlazorFrameworkStaticWebAssetRoot)' == '' Or !Exists('$(BlazorScriptToEmbed)')"
+               Text="The script of Blazor was not found at '$(BlazorScriptToEmbed)'. Without it, the release starts with a window which does not react at all. Check where .NET keeps blazor.web.js and adjust the EmbedBlazorScript target." />
+
+        <ItemGroup>
+            <EmbeddedResource Include="$(BlazorScriptToEmbed)" Link="wwwroot\_framework\blazor.web.js" />
         </ItemGroup>
     </Target>
 
