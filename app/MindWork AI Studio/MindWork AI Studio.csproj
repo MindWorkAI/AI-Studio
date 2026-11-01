@@ -122,13 +122,26 @@
         <ReadLinesFromFile File="../../metadata.txt">
             <Output TaskParameter="Lines" PropertyName="Metadata" />
         </ReadLinesFromFile>
-        
+
+        <!--
+            metadata.txt names the .NET SDK which the pipeline pins, but a local build may use another
+            one. Hence, we take the SDK which builds right now. Its .version file starts with the commit
+            it was built from. The .NET runtime is not recorded at all: the app asks for it while it runs.
+        -->
+        <PropertyGroup>
+            <DotnetSdkVersionFile>$(NetCoreRoot)sdk/$(NETCoreSdkVersion)/.version</DotnetSdkVersionFile>
+        </PropertyGroup>
+
+        <ReadLinesFromFile File="$(DotnetSdkVersionFile)" Condition="Exists('$(DotnetSdkVersionFile)')">
+            <Output TaskParameter="Lines" PropertyName="DotnetSdkVersionLines" />
+        </ReadLinesFromFile>
+
         <PropertyGroup>
             <MetaVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 0 ])</MetaVersion>
             <MetaBuildTime>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 1 ])</MetaBuildTime>
             <MetaBuild>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 2 ])</MetaBuild>
             <MetaDotnetSdkVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 3 ])</MetaDotnetSdkVersion>
-            <MetaDotnetVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 4 ])</MetaDotnetVersion>
+            <MetaDotnetSdkVersion Condition="'$(DotnetSdkVersionLines)' != ''">$(NETCoreSdkVersion) (commit $([System.String]::Copy( $(DotnetSdkVersionLines) ).Split( ';' )[ 0 ].Substring( 0, 10 )))</MetaDotnetSdkVersion>
             <MetaRustVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 5 ])</MetaRustVersion>
             <MetaMudBlazorVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 6 ])</MetaMudBlazorVersion>
             <MetaTauriVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 7 ])</MetaTauriVersion>
@@ -157,11 +170,10 @@
                 <_Parameter3>$(MetaBuild)</_Parameter3>
                 <_Parameter3_TypeName>System.UInt32</_Parameter3_TypeName>
                 <_Parameter4>$(MetaDotnetSdkVersion)</_Parameter4>
-                <_Parameter5>$(MetaDotnetVersion)</_Parameter5>
-                <_Parameter6>$(MetaRustVersion)</_Parameter6>
-                <_Parameter7>$(MetaMudBlazorVersion)</_Parameter7>
-                <_Parameter8>$(MetaTauriVersion)</_Parameter8>
-                <_Parameter9>$(MetaAppCommitHash)</_Parameter9>
+                <_Parameter5>$(MetaRustVersion)</_Parameter5>
+                <_Parameter6>$(MetaMudBlazorVersion)</_Parameter6>
+                <_Parameter7>$(MetaTauriVersion)</_Parameter7>
+                <_Parameter8>$(MetaAppCommitHash)</_Parameter8>
             </AssemblyAttribute>
             <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataArchitecture">
                 <_Parameter1>$(MetaArchitecture)</_Parameter1>
