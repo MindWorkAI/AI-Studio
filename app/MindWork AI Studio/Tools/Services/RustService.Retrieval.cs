@@ -352,9 +352,8 @@ public sealed partial class RustService
             await using var stream = await response.Content.ReadAsStreamAsync(token);
             using var reader = new StreamReader(stream);
 
-            while (!reader.EndOfStream && !token.IsCancellationRequested)
+            while (!token.IsCancellationRequested && await reader.ReadLineAsync(token) is { } line)
             {
-                var line = await reader.ReadLineAsync(token);
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
