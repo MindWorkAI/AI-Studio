@@ -43,12 +43,12 @@ public sealed class FileAttachmentSerializationTests
 
         var json = JsonSerializer.Serialize(template, SettingsManager.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(json, Does.Contain(FILE_PATH.Replace(@"\", @"\\")), "The attachment has to reach the JSON, or this test checks nothing.");
             Assert.That(json, Does.Contain("chart.png"), "The attachment of the example conversation has to reach the JSON, or this test checks nothing.");
             Assert.That(json, Does.Not.Contain("\"Exists\""));
-        });
+        }
     }
 
     [Test]
@@ -67,11 +67,11 @@ public sealed class FileAttachmentSerializationTests
 
         var read = JsonSerializer.Deserialize<FileAttachment>(LEGACY_JSON, SettingsManager.JSON_OPTIONS)!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.FileName, Is.EqualTo("report.pdf"));
             Assert.That(read.FilePath, Is.EqualTo("/tmp/report.pdf"));
             Assert.That(read.FileSizeBytes, Is.EqualTo(1024));
-        });
+        }
     }
 }

@@ -19,11 +19,11 @@ public sealed class PluginConfigurationObjectDescriptorsTests
         var describedTypes = PluginConfigurationObjectDescriptors.ALL.Select(descriptor => descriptor.Type).ToList();
         var configurableTypes = Enum.GetValues<PluginConfigurationObjectType>().Where(type => type is not PluginConfigurationObjectType.NONE and not PluginConfigurationObjectType.UNKNOWN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(describedTypes, Is.EquivalentTo(configurableTypes));
             Assert.That(describedTypes, Is.Unique, "A type described twice would be read and cleaned up twice.");
-        });
+        }
     }
 
     [Test]
@@ -31,17 +31,17 @@ public sealed class PluginConfigurationObjectDescriptorsTests
     {
         var tableNames = PluginConfigurationObjectDescriptors.ALL.Select(descriptor => descriptor.LuaTableName).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tableNames, Has.None.Empty);
             Assert.That(tableNames, Is.Unique, "Two types reading the same table would each take the objects of the other.");
-        });
+        }
     }
 
     [Test]
     public void EveryDescriptorIsFoundByItsTypeAndByItsTable()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var descriptor in PluginConfigurationObjectDescriptors.ALL)
             {
@@ -49,7 +49,7 @@ public sealed class PluginConfigurationObjectDescriptorsTests
                 Assert.That(PluginConfigurationObjectDescriptors.TryGet(descriptor.LuaTableName, out var found), Is.True, descriptor.LuaTableName);
                 Assert.That(found, Is.SameAs(descriptor), descriptor.LuaTableName);
             }
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.NONE)]

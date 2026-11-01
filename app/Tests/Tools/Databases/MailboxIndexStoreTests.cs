@@ -50,14 +50,14 @@ public sealed class MailboxIndexStoreTests
         var stored = await this.Client.GetMailAsync(DATA_SOURCE_ID, mail.MailId, TOKEN);
 
         Assert.That(stored, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(stored! with { ReferenceMessageIds = mail.ReferenceMessageIds, Addresses = mail.Addresses, Parts = mail.Parts, Locations = mail.Locations }, Is.EqualTo(mail), "The dates come back in UTC, but have to name the same moments.");
             Assert.That(stored.ReferenceMessageIds, Is.EqualTo(mail.ReferenceMessageIds));
             Assert.That(stored.Addresses, Is.EqualTo(mail.Addresses));
             Assert.That(stored.Parts, Is.EqualTo(mail.Parts));
             Assert.That(stored.Locations, Is.EquivalentTo(mail.Locations));
-        });
+        }
     }
 
     [Test]
@@ -70,11 +70,11 @@ public sealed class MailboxIndexStoreTests
 
         var folders = await this.Client.GetMailFoldersAsync(DATA_SOURCE_ID, TOKEN);
         var inboxLocations = await this.Client.GetMailLocationsAsync(DATA_SOURCE_ID, INBOX, TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(folders, Is.EqualTo(new[] { Folder(ARCHIVE, 1), synced }), "Ordered by path.");
             Assert.That(inboxLocations.Keys, Is.EquivalentTo(new long[] { 7 }), "The UIDVALIDITY did not change, so the UIDs stay valid.");
-        });
+        }
     }
 
     [Test]
@@ -93,14 +93,14 @@ public sealed class MailboxIndexStoreTests
 
         var stored = await this.Client.GetMailAsync(DATA_SOURCE_ID, mailId, TOKEN);
         var inboxLocations = await this.Client.GetMailLocationsAsync(DATA_SOURCE_ID, INBOX, TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(stored!.FirstSeenUtc, Is.EqualTo(FIRST_SEEN), "The mail was found before, and when it was first seen stays the earlier moment.");
             Assert.That(stored.Addresses, Is.EqualTo(again.Addresses));
             Assert.That(stored.Parts, Is.EqualTo(again.Parts));
             Assert.That(stored.Locations, Is.EqualTo(again.Locations));
             Assert.That(inboxLocations, Is.Empty, "The places are replaced as well, not added to.");
-        });
+        }
     }
 
     [Test]
@@ -116,13 +116,13 @@ public sealed class MailboxIndexStoreTests
         var orphanedAfterLinking = await this.Client.GetOrphanedMailsAsync(DATA_SOURCE_ID, DateTimeOffset.UtcNow.AddMinutes(1), TOKEN);
         var archiveLocations = await this.Client.GetMailLocationsAsync(DATA_SOURCE_ID, ARCHIVE, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(orphanedAfterRemoval, Is.EqualTo(new[] { KEY_A }), "Without any place left, the mail is an orphan.");
             Assert.That(linked, Is.True);
             Assert.That(orphanedAfterLinking, Is.Empty, "Found in another folder, the mail is no orphan any more and keeps its embedding.");
             Assert.That(archiveLocations, Is.EqualTo(new Dictionary<long, MailFlags> { [3] = new(true, false, false) }));
-        });
+        }
     }
 
     [Test]
@@ -145,11 +145,11 @@ public sealed class MailboxIndexStoreTests
         var dueThisRun = await this.Client.GetOrphanedMailsAsync(DATA_SOURCE_ID, runStart, TOKEN);
         var dueNextRun = await this.Client.GetOrphanedMailsAsync(DATA_SOURCE_ID, nextRunStart, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(dueThisRun, Is.Empty, "The run which lost the mail may still find it in a folder it gets to later.");
             Assert.That(dueNextRun, Is.EqualTo(new[] { KEY_A }));
-        });
+        }
     }
 
     [Test]
@@ -166,13 +166,13 @@ public sealed class MailboxIndexStoreTests
         var orphaned = await this.Client.GetOrphanedMailsAsync(DATA_SOURCE_ID, DateTimeOffset.UtcNow.AddMinutes(1), TOKEN);
         var orphan = await this.Client.GetMailAsync(DATA_SOURCE_ID, onlyInInbox, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(inboxLocations, Is.Empty, "Under a new UIDVALIDITY, the stored UIDs name nothing any more.");
             Assert.That(archiveLocations.Keys, Is.EquivalentTo(new long[] { 3 }), "Other folders are not affected.");
             Assert.That(orphaned, Is.EqualTo(new[] { KEY_A }), "Only the mail which lies nowhere else is an orphan.");
             Assert.That(orphan, Is.Not.Null, "Orphaned, not deleted: found again under its new UID, it is only linked anew.");
-        });
+        }
     }
 
     [Test]
@@ -185,11 +185,11 @@ public sealed class MailboxIndexStoreTests
 
         var folders = await this.Client.GetMailFoldersAsync(DATA_SOURCE_ID, TOKEN);
         var orphaned = await this.Client.GetOrphanedMailsAsync(DATA_SOURCE_ID, DateTimeOffset.UtcNow.AddMinutes(1), TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(folders.Select(folder => folder.Path), Is.EqualTo(new[] { ARCHIVE }));
             Assert.That(orphaned, Is.EqualTo(new[] { KEY_A }));
-        });
+        }
     }
 
     [Test]
@@ -201,11 +201,11 @@ public sealed class MailboxIndexStoreTests
 
         var inboxLocations = await this.Client.GetMailLocationsAsync(DATA_SOURCE_ID, INBOX, TOKEN);
         var archiveLocations = await this.Client.GetMailLocationsAsync(DATA_SOURCE_ID, ARCHIVE, TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(inboxLocations, Is.EqualTo(new Dictionary<long, MailFlags> { [7] = new(true, true, false) }), "A UID the index does not hold is ignored, not added.");
             Assert.That(archiveLocations, Is.EqualTo(new Dictionary<long, MailFlags> { [3] = new(false, false, false) }), "IMAP keeps flags per folder, so the copy in the archive keeps its own.");
-        });
+        }
     }
 
     [Test]
@@ -220,12 +220,12 @@ public sealed class MailboxIndexStoreTests
         var firstStored = await this.Client.GetMailAsync(DATA_SOURCE_ID, first, TOKEN);
         var secondStored = await this.Client.GetMailAsync(DATA_SOURCE_ID, second, TOKEN);
         var orphaned = await this.Client.GetOrphanedMailsAsync(DATA_SOURCE_ID, DateTimeOffset.UtcNow.AddMinutes(1), TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(firstStored!.Locations, Is.Empty, "The server says another mail lies there now, so the stored place was stale.");
             Assert.That(secondStored!.Locations, Is.EqualTo(new[] { At(INBOX, 7) }));
             Assert.That(orphaned, Is.EqualTo(new[] { KEY_A }));
-        });
+        }
     }
 
     [Test]

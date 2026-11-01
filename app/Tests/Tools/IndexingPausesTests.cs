@@ -33,11 +33,11 @@ public sealed class IndexingPausesTests
     {
         var pauses = new IndexingPauses();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(pauses.IsPaused, Is.False);
             Assert.That(pauses.WaitWhilePausedAsync(CancellationToken.None).IsCompleted, Is.True);
-        });
+        }
     }
 
     [Test]
@@ -66,11 +66,11 @@ public sealed class IndexingPausesTests
         var waiting = pauses.WaitWhilePausedAsync(CancellationToken.None);
         await Task.Delay(50);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(stoppedRunsAfterTheFirstEnd, Is.Empty, "The other pause still holds the indexing back, so nothing may start yet.");
             Assert.That(waiting.IsCompleted, Is.False);
-        });
+        }
 
         var stoppedRuns = pauses.End();
         await waiting;
@@ -86,11 +86,11 @@ public sealed class IndexingPausesTests
         pauses.RecordStoppedRun("folder", DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);
         pauses.RecordStoppedRun("folder", DataSourceEmbeddingRefreshMode.HASH_CHECK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(pauses.End(), Has.Count.EqualTo(1));
             Assert.That(pauses.End(), Is.Empty, "Ending a pause which does not exist changes nothing.");
-        });
+        }
     }
 
     [Test]

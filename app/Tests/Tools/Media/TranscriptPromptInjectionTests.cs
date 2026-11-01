@@ -78,12 +78,12 @@ public sealed class TranscriptPromptInjectionTests
 
         var extraction = await PersistentMediaTranscript.ReadTranscriptAsync(this.rustService, transcript, this.mediaPath, reportingScope: null, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.runtime.ReadFiles, Is.EqualTo(new[] { transcript.TranscriptPath }), "The transcript did not go through the runtime, or the runtime was asked for the recording instead.");
             Assert.That(extraction.Content, Does.Not.Contain(SUSPICIOUS_PASSAGE), "The suspicious passage reached the AI.");
             Assert.That(extraction.Content, Does.Contain("Welcome to the meeting.").And.Contain(FakeRuntime.REDACTION_MARKER), "The rest of the transcript got lost.");
-        });
+        }
     }
 
     [Test]
@@ -113,12 +113,12 @@ public sealed class TranscriptPromptInjectionTests
         await service.AddCompletedTextAsync(target, this.mediaPath, $"Welcome to the meeting. {SUSPICIOUS_PASSAGE} Let us begin.");
         var delivered = service.GetPendingDelivery(target)?.Text;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.runtime.FilteredTexts, Has.Count.EqualTo(1), "The transcript did not go through the filter.");
             Assert.That(delivered, Does.Not.Contain(SUSPICIOUS_PASSAGE), "The suspicious passage reached the field, and with it the AI.");
             Assert.That(delivered, Does.Contain("Welcome to the meeting.").And.Contain(FakeRuntime.REDACTION_MARKER), "The rest of the transcript got lost.");
-        });
+        }
     }
 
     [Test]

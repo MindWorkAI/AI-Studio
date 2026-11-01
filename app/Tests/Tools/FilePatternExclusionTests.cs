@@ -41,11 +41,11 @@ public sealed class FilePatternExclusionTests
         var patterns = FileExclusions.Parse("*build/");
         var path = Path.Combine(Path.GetTempPath(), "test-data", name);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileExclusions.ExcludesFolder(path, patterns), Is.EqualTo(expected));
             Assert.That(FileExclusions.ExcludesFile(path, patterns), Is.False);
-        });
+        }
     }
 
     [TestCase(false, "", true, false)]
@@ -72,13 +72,13 @@ public sealed class FilePatternExclusionTests
                 FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
             var selectedFiles = selection.EnumerateCandidates(directoryPath).Where(selection.Selects).ToArray();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(selectedFiles.Contains(rootFile), Is.EqualTo(selectsRootFile));
                 Assert.That(selectedFiles.Contains(nestedFile), Is.EqualTo(selectsNestedFile));
                 Assert.That(selection.LeavesOut(directoryPath, rootFile), Is.EqualTo(!selectsRootFile));
                 Assert.That(selection.LeavesOut(directoryPath, nestedFile), Is.EqualTo(!selectsNestedFile));
-            });
+            }
         }
         finally
         {
@@ -91,14 +91,14 @@ public sealed class FilePatternExclusionTests
     {
         var defaults = FileExclusions.Parse(FileExclusions.DEFAULT_PATTERNS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileExclusions.ExcludesFolder("env", defaults), Is.True);
             Assert.That(FileExclusions.ExcludesFolder("venv", defaults), Is.True);
             Assert.That(FileExclusions.ExcludesFile(".env", defaults), Is.False);
             Assert.That(FileExclusions.ExcludesFolder(".env", defaults), Is.False,
                 "Hidden folders are handled by the hidden-file switch, not by the default exclusion list.");
-        });
+        }
     }
 
     [TestCase(null)]
@@ -106,23 +106,23 @@ public sealed class FilePatternExclusionTests
     [TestCase("   ")]
     public void ExclusionsMayBeEmptyWhileIncludesAreRequired(string? patterns)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileExclusions.Validate(patterns), Is.Null);
             Assert.That(FileExclusions.IsValid(patterns), Is.True);
             Assert.That(FileNamePatterns.IsValid(patterns), Is.False);
-        });
+        }
     }
 
     [TestCase("**/*.txt")]
     [TestCase("folder/*.txt")]
     public void OptionalExclusionsStillRejectMalformedRules(string patterns)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileExclusions.Validate(patterns), Is.Not.Null);
             Assert.That(FileExclusions.IsValid(patterns), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -139,11 +139,11 @@ public sealed class FilePatternExclusionTests
             var selection = new FolderFileSelection(
                 [":text:"], ["*.tf"], false, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(selection.Selects(terraform), Is.False);
                 Assert.That(selection.Selects(caddy), Is.True);
-            });
+            }
         }
         finally
         {

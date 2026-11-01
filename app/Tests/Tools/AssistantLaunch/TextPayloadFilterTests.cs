@@ -61,13 +61,13 @@ public sealed class TextPayloadFilterTests
     {
         var payload = await this.launchService.CreateTextPayloadAsync($"Here is the report. {SUSPICIOUS_PASSAGE} That is all.", writtenByModel: true, ChatRestrictions.NONE, this.sourceName);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.runtime.FilteredTexts, Has.Count.EqualTo(1), "The answer did not go through the filter.");
             Assert.That(payload.Text, Does.Not.Contain(SUSPICIOUS_PASSAGE), "The suspicious passage would reach the next model.");
             Assert.That(payload.Text, Does.Contain("Here is the report.").And.Contain(FakeRuntime.REDACTION_MARKER), "The rest of the answer got lost.");
             Assert.That(this.collector.Alerts, Is.EqualTo(new[] { new[] { this.sourceName } }), "The user should hear once, naming where the answer came from.");
-        });
+        }
     }
 
     [Test]
@@ -78,12 +78,12 @@ public sealed class TextPayloadFilterTests
 
         var payload = await this.launchService.CreateTextPayloadAsync(text, writtenByModel: false, restrictions, this.sourceName);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.runtime.FilteredTexts, Is.Empty, "The user wrote the text, which is theirs to send.");
             Assert.That(payload.Text, Is.EqualTo(text));
             Assert.That(payload.Restrictions, Is.SameAs(restrictions), "The text keeps the restrictions of its chat, and the addresses the user wrote count as given.");
-        });
+        }
     }
 
     [Test]
@@ -93,13 +93,13 @@ public sealed class TextPayloadFilterTests
 
         var payload = await this.launchService.CreateTextPayloadAsync("The minutes are on https://example.org/minutes.", writtenByModel: true, restrictions, this.sourceName);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(payload.Restrictions.ProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH));
             Assert.That(payload.Restrictions.DataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED));
             Assert.That(payload.Restrictions.OutboundData, Is.EqualTo(restrictions.OutboundData));
             Assert.That(payload.Restrictions.WebAddressesWrittenByModels, Is.EquivalentTo(new[] { WebAddresses.CreateRequestKey(new Uri("https://example.org/minutes")) }));
-        });
+        }
     }
 
     [Test]

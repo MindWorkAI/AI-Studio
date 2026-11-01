@@ -207,11 +207,11 @@ public sealed class FileSourceRelocationTests
             new RunShare(RunShare.DEFAULT_DURATION), new IndexingPass(new DataSourceRunSignature("signature", "selection")), null!, null!, _ => { }, NullLogger.Instance);
         var newId = context.GetFileParentId(originalPath);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(context.GetFileParentId(relocatedPath), Is.EqualTo(originalId));
             Assert.That(newId, Is.Not.EqualTo(originalId));
             Assert.That(context.GetFileParentId(originalPath), Is.EqualTo(newId), "A media file may ask for its identity once before and once after transcription.");
-        });
+        }
     }
 }

@@ -53,12 +53,12 @@ public sealed class DataSourceOutboundDataRestrictionTests
     [Test]
     public void ANewDataSourceAllowsOnlyLinksFromTheChat()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new DataSourceLocalFile().OutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT));
             Assert.That(new DataSourceLocalDirectory().OutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT));
             Assert.That(new DataSourceERI_V1().OutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT));
-        });
+        }
     }
 
     [TestCase(nameof(DataSourceType.LOCAL_FILE))]
@@ -101,11 +101,11 @@ public sealed class DataSourceOutboundDataRestrictionTests
     [Test]
     public void WithoutAnOrganizationTheUserDecides()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new DataSourceSecuritySettings().MinimumOutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.UNRESTRICTED));
             Assert.That(OPEN_FOLDER.GetEffectiveOutboundDataRestriction(OutboundDataRestriction.UNRESTRICTED), Is.EqualTo(OutboundDataRestriction.UNRESTRICTED));
-        });
+        }
     }
 
     [Test]
@@ -119,11 +119,11 @@ public sealed class DataSourceOutboundDataRestrictionTests
     [Test]
     public void ADataSourceForSelfHostedProvidersAllowsOnlyTheConfiguredServices()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SELF_HOSTED_SERVER.GetEffectiveOutboundDataRestriction(OutboundDataRestriction.UNRESTRICTED), Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES), "Stored before, or provided by a configuration plugin, its level never went through the dialog.");
             Assert.That(OPEN_SERVER.GetEffectiveOutboundDataRestriction(OutboundDataRestriction.UNRESTRICTED), Is.EqualTo(OutboundDataRestriction.UNRESTRICTED));
-        });
+        }
     }
 
     [TestCase(DataSourceSecurity.NOT_SPECIFIED, OutboundDataRestriction.UNRESTRICTED, OutboundDataRestriction.UNRESTRICTED)]

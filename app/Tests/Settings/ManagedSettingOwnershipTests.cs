@@ -79,12 +79,12 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessProhibitedProvidersAsync(LOCAL_PLUGIN_ID, """{ "MISTRAL" }""");
 
         ManagedConfiguration.TryGet(x => x.App, x => x.ProhibitedProviders, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False, "The setting of the organization is out of reach of a local plugin.");
             Assert.That(this.settingsManager.ConfigurationData.App.ProhibitedProviders, Is.EquivalentTo(new[] { LLMProviders.DEEP_SEEK }), "The value of the organization has to stay.");
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(ORGANIZATION_PLUGIN_ID), "The organization has to stay the owner of the setting.");
-        });
+        }
     }
 
     [Test]
@@ -94,13 +94,13 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessUpdateIntervalAsync(LOCAL_PLUGIN_ID, "DAILY", allowUserOverride: false);
 
         ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInterval, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False, "The editable default of the organization is out of reach of a local plugin.");
             Assert.That(this.settingsManager.ConfigurationData.App.UpdateInterval, Is.EqualTo(UpdateInterval.WEEKLY), "The value of the organization has to stay.");
             Assert.That(configMeta.IsLocked, Is.False, "A local plugin must not lock what the organization left to the user.");
             Assert.That(ManagedConfiguration.GetSettingOwner(configMeta), Is.EqualTo(ORGANIZATION_PLUGIN_ID), "The organization has to stay the owner of the setting.");
-        });
+        }
     }
 
     [Test]
@@ -110,12 +110,12 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessProhibitedProvidersAsync(SECOND_ORGANIZATION_PLUGIN_ID, """{ "MISTRAL" }""");
 
         ManagedConfiguration.TryGet(x => x.App, x => x.ProhibitedProviders, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True, "Two configuration plugins of the same organization may override each other.");
             Assert.That(this.settingsManager.ConfigurationData.App.ProhibitedProviders, Is.EquivalentTo(new[] { LLMProviders.MISTRAL }), "The plugin applied later wins.");
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(SECOND_ORGANIZATION_PLUGIN_ID));
-        });
+        }
     }
 
     [Test]
@@ -124,12 +124,12 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessProhibitedProvidersAsync(LOCAL_PLUGIN_ID, """{ "MISTRAL" }""");
 
         ManagedConfiguration.TryGet(x => x.App, x => x.ProhibitedProviders, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True, "Without an organization, a local plugin may manage the setting.");
             Assert.That(this.settingsManager.ConfigurationData.App.ProhibitedProviders, Is.EquivalentTo(new[] { LLMProviders.MISTRAL }));
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(LOCAL_PLUGIN_ID));
-        });
+        }
     }
 
     [TestCase(LOCKED_TOOL_SETTINGS)]
@@ -142,12 +142,12 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessToolTableAsync(settingName, LOCAL_PLUGIN_ID, ToLuaTable(entry.Key, entry.LocalValue), allowUserOverride: false);
 
         var configMeta = GetToolTableMeta(settingName);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False, "The table of the organization is out of reach of a local plugin.");
             Assert.That(this.ToolTableOf(settingName), Is.EquivalentTo(new Dictionary<string, string> { [entry.Key] = entry.OrganizationValue }), "The values of the organization have to stay.");
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(ORGANIZATION_PLUGIN_ID), "The organization has to stay the owner of the table.");
-        });
+        }
     }
 
     [TestCase(LOCKED_TOOL_SETTINGS)]
@@ -160,13 +160,13 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessToolTableAsync(settingName, LOCAL_PLUGIN_ID, ToLuaTable(entry.Key, entry.LocalValue), allowUserOverride: true);
 
         var configMeta = GetToolTableMeta(settingName);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False);
             Assert.That(configMeta.IsLocked, Is.True, "A local plugin must not hand the user a table the organization locked.");
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(ORGANIZATION_PLUGIN_ID));
             Assert.That(this.ToolTableOf(settingName), Is.EquivalentTo(new Dictionary<string, string> { [entry.Key] = entry.OrganizationValue }));
-        });
+        }
     }
 
     [TestCase(LOCKED_TOOL_SETTINGS)]
@@ -179,13 +179,13 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessToolTableAsync(settingName, LOCAL_PLUGIN_ID, ToLuaTable(entry.Key, entry.LocalValue), allowUserOverride: false);
 
         var configMeta = GetToolTableMeta(settingName);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False);
             Assert.That(configMeta.IsLocked, Is.False, "A local plugin must not lock what the organization left to the user.");
             Assert.That(ManagedConfiguration.GetSettingOwner(configMeta), Is.EqualTo(ORGANIZATION_PLUGIN_ID), "The organization has to stay the owner of the table.");
             Assert.That(this.ToolTableOf(settingName), Is.EquivalentTo(new Dictionary<string, string> { [entry.Key] = entry.OrganizationValue }));
-        });
+        }
     }
 
     [TestCase(LOCKED_TOOL_SETTINGS)]
@@ -198,12 +198,12 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessToolTableAsync(settingName, SECOND_ORGANIZATION_PLUGIN_ID, ToLuaTable(entry.Key, entry.LocalValue), allowUserOverride: false);
 
         var configMeta = GetToolTableMeta(settingName);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True, "Two configuration plugins of the same organization may override each other.");
             Assert.That(this.ToolTableOf(settingName), Is.EquivalentTo(new Dictionary<string, string> { [entry.Key] = entry.LocalValue }), "The plugin applied later wins.");
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(SECOND_ORGANIZATION_PLUGIN_ID));
-        });
+        }
     }
 
     [TestCase(LOCKED_TOOL_SETTINGS)]
@@ -215,12 +215,12 @@ public sealed class ManagedSettingOwnershipTests
         var processed = await ProcessToolTableAsync(settingName, LOCAL_PLUGIN_ID, ToLuaTable(entry.Key, entry.LocalValue), allowUserOverride: false);
 
         var configMeta = GetToolTableMeta(settingName);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True, "Without an organization, a local plugin may manage the table.");
             Assert.That(this.ToolTableOf(settingName), Is.EquivalentTo(new Dictionary<string, string> { [entry.Key] = entry.LocalValue }));
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(LOCAL_PLUGIN_ID));
-        });
+        }
     }
 
     /// <summary>
@@ -320,12 +320,12 @@ public sealed class ManagedSettingOwnershipTests
         await ProcessSettingAsync(settingName, LOCAL_PLUGIN_ID, localValue);
         var warningsWithDeclaration = recorder.Warnings.Skip(warningsWithoutDeclaration.Count).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(warningsWithoutDeclaration, Is.Empty, "A local plugin which does not declare the setting attempts nothing.");
             Assert.That(warningsWithDeclaration, Has.Count.EqualTo(1), "A local plugin which declares the setting of the organization has to be reported.");
             Assert.That(warningsWithDeclaration, Has.All.Contains(settingName).And.All.Contains(LOCAL_PLUGIN_ID.ToString()), "The warning has to name the setting and the plugin.");
-        });
+        }
     }
 
     /// <summary>

@@ -44,11 +44,11 @@ public sealed class MailAttachmentPiecesTests
         var server = new PieceServer(file);
 
         var written = await WriteDecodedAsync(server, transferEncoding);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(written, Is.EqualTo(file));
             Assert.That(server.RequestedOffsets, Is.EqualTo(new[] { 0, 7, 14, 21 }));
-        });
+        }
     }
 
     [Test]

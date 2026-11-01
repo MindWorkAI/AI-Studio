@@ -63,12 +63,12 @@ public sealed class MailboxOutboundDataRestrictionTests
     [Test]
     public void TheDialogOffersOnlyTheLevelsAllowed()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(GetOfferedLevels(OutboundDataRestriction.UNRESTRICTED), Is.EqualTo(new[] { OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataRestriction.UNRESTRICTED }));
             Assert.That(GetOfferedLevels(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT), Is.EqualTo(new[] { OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataRestriction.ONLY_LINKS_FROM_CHAT }));
             Assert.That(GetOfferedLevels(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES), Is.EqualTo(new[] { OutboundDataRestriction.ONLY_CONFIGURED_SERVICES }));
-        });
+        }
     }
 
     private static IEnumerable<OutboundDataRestriction> GetOfferedLevels(OutboundDataRestriction minimumRestriction) => ConfigurationSelectDataFactory.GetOutboundDataRestrictionData(minimumRestriction).Select(option => option.Value);

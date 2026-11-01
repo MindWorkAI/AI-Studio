@@ -58,12 +58,12 @@ public sealed class ProhibitedProvidersTests
     {
         await ProcessAsync("""{ "DEEP_SEEK", "mistral" }""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.settingsManager.ConfigurationData.App.ProhibitedProviders, Is.EquivalentTo(new[] { LLMProviders.DEEP_SEEK, LLMProviders.MISTRAL }), "Names count whatever their case, as everywhere in a configuration.");
             Assert.That(this.settingsManager.IsProviderProhibited(LLMProviders.DEEP_SEEK), Is.True);
             Assert.That(this.settingsManager.IsProviderProhibited(LLMProviders.OPEN_AI), Is.False, "A provider the plugin does not name stays allowed.");
-        });
+        }
     }
 
     /// <summary>
@@ -87,12 +87,12 @@ public sealed class ProhibitedProvidersTests
         await ProcessAsync("""{ "DEEP_SEEK" }""");
 
         var isManaged = ManagedConfiguration.TryGet(x => x.App, x => x.ProhibitedProviders, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isManaged, Is.True);
             Assert.That(configMeta.IsLocked, Is.True, "Users must not lift a prohibition of their organization.");
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(PLUGIN_ID));
-        });
+        }
     }
 
     [Test]
@@ -129,11 +129,11 @@ public sealed class ProhibitedProvidersTests
 
         var selectable = this.settingsManager.GetConfidentProviders(AIStudio.Tools.Components.CHAT).Select(x => x.Id).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(selectable, Is.EqualTo(new[] { ALLOWED_PROVIDER_ID }), "A prohibited provider must not be offered, whatever its confidence level.");
             Assert.That(this.settingsManager.GetAllProviders(), Has.Count.EqualTo(2), "The settings still list it, so that the user can see and delete it.");
-        });
+        }
     }
 
     [Test]
@@ -144,11 +144,11 @@ public sealed class ProhibitedProvidersTests
         this.settingsManager.ConfigurationData.App.PreselectedProvider = PROHIBITED_PROVIDER_ID;
         this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.settingsManager.GetPreselectedProvider(AIStudio.Tools.Components.CHAT, PROHIBITED_PROVIDER_ID), Is.EqualTo(AIStudio.Settings.Provider.NONE), "Neither the current provider nor the app-wide default may hand over a prohibited provider.");
             Assert.That(this.settingsManager.GetChatProviderForLoadedChat(PROHIBITED_PROVIDER_ID).Id, Is.Not.EqualTo(PROHIBITED_PROVIDER_ID), "A chat stored with a prohibited provider has to continue with another one.");
-        });
+        }
     }
 
     /// <summary>
@@ -178,12 +178,12 @@ public sealed class ProhibitedProvidersTests
         var prohibited = this.settingsManager.GetProviderById(PROHIBITED_PROVIDER_ID);
         ChatThread? newChat = null;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(newChat.IsLLMProviderAllowed(prohibited), Is.False, "Even a new chat, which has no requirements yet, must not use a prohibited provider.");
             Assert.That(new ChatThread().IsLLMProviderAllowed(prohibited), Is.False);
             Assert.That(newChat.IsLLMProviderAllowed(allowed), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -195,11 +195,11 @@ public sealed class ProhibitedProvidersTests
 
         this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.MISTRAL);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceEmbeddingProviders.TryResolve(this.settingsManager, dataSource, out _), Is.False, "Indexing and searching must not embed anything with a prohibited provider.");
             Assert.That(DataSourceEmbeddingProviders.IsProhibited(this.settingsManager, dataSource), Is.True, "The status of the data source has to name the prohibition as the reason.");
-        });
+        }
     }
 
     [Test]
@@ -251,13 +251,13 @@ public sealed class ProhibitedProvidersTests
         var transcriptionProvider = new TranscriptionProvider { Id = Guid.NewGuid().ToString(), UsedLLMProvider = LLMProviders.DEEP_SEEK };
         this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.settingsManager.GetProviderById(PROHIBITED_PROVIDER_ID).CreateProvider(), Is.TypeOf<NoProvider>());
             Assert.That(embeddingProvider.CreateProvider(), Is.TypeOf<NoProvider>());
             Assert.That(transcriptionProvider.CreateProvider(), Is.TypeOf<NoProvider>());
             Assert.That(this.settingsManager.GetProviderById(ALLOWED_PROVIDER_ID).CreateProvider(), Is.Not.TypeOf<NoProvider>(), "Providers the organization did not prohibit are created as before.");
-        });
+        }
     }
 
     [Test]
@@ -265,7 +265,7 @@ public sealed class ProhibitedProvidersTests
     {
         this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var scheme in Enum.GetValues<AIStudio.Tools.ConfidenceSchemes>())
             {
@@ -273,7 +273,7 @@ public sealed class ProhibitedProvidersTests
                 Assert.That(LLMProviders.DEEP_SEEK.GetConfidence(this.settingsManager).Level, Is.EqualTo(ConfidenceLevel.UNTRUSTED), $"The scheme {scheme} must not trust a prohibited provider.");
                 Assert.That(LLMProviders.OPEN_AI.GetConfidence(this.settingsManager).Level, Is.Not.EqualTo(ConfidenceLevel.UNTRUSTED), $"Under the scheme {scheme}, a provider the organization did not prohibit keeps its level.");
             }
-        });
+        }
     }
 
     /// <summary>
@@ -291,11 +291,11 @@ public sealed class ProhibitedProvidersTests
         confidence.CustomConfidenceScheme[LLMProviders.DEEP_SEEK] = ConfidenceLevel.HIGH;
         this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.settingsManager.GetConfiguredConfidenceLevel(LLMProviders.DEEP_SEEK), Is.EqualTo(ConfidenceLevel.UNTRUSTED), "The prohibition comes before the chosen level.");
             Assert.That(confidence.CustomConfidenceScheme[LLMProviders.DEEP_SEEK], Is.EqualTo(ConfidenceLevel.HIGH), "The chosen level stays stored.");
-        });
+        }
 
         this.settingsManager.ConfigurationData.App.ProhibitedProviders.Remove(LLMProviders.DEEP_SEEK);
 

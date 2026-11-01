@@ -56,7 +56,7 @@ public sealed class ModelDeclarationTests
         var declaration = await ReadAsync(A_COMPLETE_DECLARATION);
 
         Assert.That(declaration, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(declaration!.Pattern.Text, Is.EqualTo("acme-assistant"));
             Assert.That(declaration.Pattern.Kind, Is.EqualTo(MatchKind.PREFIX));
@@ -68,7 +68,7 @@ public sealed class ModelDeclarationTests
             Assert.That(declaration.Change.Images, Is.EqualTo(new ImageLimits(1, 8)));
             Assert.That(declaration.Source.CheckedOn, Is.EqualTo(new DateOnly(2026, 9, 12)));
             Assert.That(declaration.EnterpriseConfigurationPluginId, Is.EqualTo(PLUGIN_ID));
-        });
+        }
     }
 
     [Test]
@@ -77,7 +77,7 @@ public sealed class ModelDeclarationTests
         var declaration = await ReadAsync(THE_LEAST_A_DECLARATION_CAN_SAY);
 
         Assert.That(declaration, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(declaration!.Pattern.Kind, Is.EqualTo(MatchKind.SEGMENT), "The kind to reach for by default, here as everywhere else.");
             Assert.That(declaration.Change.Reasoning, Is.EqualTo(ReasoningSupport.NONE));
@@ -85,7 +85,7 @@ public sealed class ModelDeclarationTests
             Assert.That(declaration.Change.Context, Is.Null);
             Assert.That(declaration.Change.Tokenizer, Is.Null);
             Assert.That(declaration.Change.Images, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -199,11 +199,11 @@ public sealed class ModelDeclarationTests
         var theSameNames = await ReadAsync(A_COMPLETE_DECLARATION.Replace("""["CONTEXT_WINDOW"] = 131072,""", """["CONTEXT_WINDOW"] = 65536,""", StringComparison.Ordinal));
         var otherNames = await ReadAsync(A_COMPLETE_DECLARATION.Replace("""["MATCH"] = "PREFIX",""", """["MATCH"] = "SEGMENT",""", StringComparison.Ordinal));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(theSameNames?.Id, Is.EqualTo(declaration?.Id), "The same pattern, so one of the two has to win.");
             Assert.That(otherNames?.Id, Is.Not.EqualTo(declaration?.Id), "Bound to the name differently, so they claim different sets of names.");
-        });
+        }
     }
 
     private static async Task<ModelDeclaration?> ReadAsync(string entry)

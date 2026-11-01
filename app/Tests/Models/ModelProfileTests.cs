@@ -14,7 +14,7 @@ public sealed class ModelProfileTests
     {
         var untouched = ModelProfile.UNKNOWN;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(untouched.Capabilities, Is.EqualTo(Capability.NONE));
             Assert.That(untouched.Reasoning, Is.EqualTo(ReasoningSupport.NONE));
@@ -27,7 +27,7 @@ public sealed class ModelProfileTests
             // meaning "no idea".
             //
             Assert.That(untouched.Kind, Is.EqualTo(ModelKind.CHAT));
-        });
+        }
     }
 
     [Test]
@@ -35,13 +35,13 @@ public sealed class ModelProfileTests
     {
         var profile = new ModelProfile { Capabilities = Capability.TEXT_INPUT | Capability.TEXT_OUTPUT };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.TEXT_INPUT | Capability.TEXT_OUTPUT), Is.True);
             Assert.That(profile.Has(Capability.TEXT_INPUT | Capability.WEB_SEARCH), Is.False);
             Assert.That(profile.HasAny(Capability.TEXT_INPUT | Capability.WEB_SEARCH), Is.True);
             Assert.That(profile.HasAny(Capability.WEB_SEARCH | Capability.EMBEDDING), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -69,13 +69,13 @@ public sealed class ModelProfileTests
 
         var after = new ModelProfileChange { Removes = Capability.WEB_SEARCH }.ApplyTo(before);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Capabilities, Is.EqualTo(Capability.TEXT_INPUT));
             Assert.That(after.Reasoning, Is.EqualTo(ReasoningSupport.OPTIONAL), "A change saying nothing about reasoning must not reset it.");
             Assert.That(after.Context, Is.EqualTo(before.Context), "A change saying nothing about the context window must not reset it.");
             Assert.That(after.SystemPromptRole, Is.EqualTo(SystemPromptRole.DEVELOPER), "A change saying nothing about the system prompt role must not reset it.");
-        });
+        }
     }
 
     [Test]
@@ -106,11 +106,11 @@ public sealed class ModelProfileTests
 
         var profile = change.ApplyTo(ModelProfile.UNKNOWN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Capabilities, Is.EqualTo(Capability.TEXT_INPUT));
             Assert.That(profile.Has(Capability.ALWAYS_REASONING), Is.False);
             Assert.That(profile.Reasoning, Is.EqualTo(ReasoningSupport.ALWAYS));
-        });
+        }
     }
 }

@@ -38,14 +38,14 @@ public sealed class ProvenanceStoreTests
 
         Assert.That(entries, Contains.Key(id.Value));
         var entry = entries[id.Value];
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entry.Id, Is.EqualTo(id.Value));
             Assert.That(entry.Kind, Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
             Assert.That(entry.Content, Is.EqualTo("The budget grew by 4 %.\nÄnderungen folgen."));
             Assert.That(entry.SurroundingContent, Is.EqualTo(new[] { "Before the passage.", "After the passage." }));
             Assert.That(entry.CreatedAtUtc, Is.GreaterThan(before));
-        });
+        }
     }
 
     [Test]
@@ -59,12 +59,12 @@ public sealed class ProvenanceStoreTests
 
         await using var context = store.CreateContext();
         var rowsWithSurroundingContent = await context.Entries.CountAsync(entry => entry.SurroundingContent != null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries[withNull.Value].SurroundingContent, Is.Empty);
             Assert.That(entries[withEmpty.Value].SurroundingContent, Is.Empty);
             Assert.That(rowsWithSurroundingContent, Is.Zero, "Only an ERI passage brings content around it, so every other row keeps the column empty.");
-        });
+        }
     }
 
     [Test]
@@ -111,11 +111,11 @@ public sealed class ProvenanceStoreTests
         await store.Client.DeleteChatsAsync([assistantChat], TOKEN);
         var entries = await store.Client.GetEntriesAsync([passage!.Value, page!.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries[passage.Value].Content, Is.EqualTo("a passage"));
             Assert.That(entries[page.Value].Content, Is.EqualTo("a page"));
-        });
+        }
     }
 
     [Test]
@@ -146,11 +146,11 @@ public sealed class ProvenanceStoreTests
         var entries = await store.Client.GetEntriesAsync([deleted!.Value, kept!.Value], TOKEN);
         var chatIds = await store.Client.GetChatIdsAsync(TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { kept.Value }));
             Assert.That(chatIds, Is.EquivalentTo(new[] { keptChat }));
-        });
+        }
     }
 
     [Test]
@@ -168,11 +168,11 @@ public sealed class ProvenanceStoreTests
         var deleted = await store.Client.DeleteChatsAsync([firstChat, secondChat], TOKEN);
         var chatIds = await store.Client.GetChatIdsAsync(TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deleted, Is.EqualTo(3));
             Assert.That(chatIds, Is.EquivalentTo(new[] { keptChat }));
-        });
+        }
     }
 
     [Test]
@@ -237,12 +237,12 @@ public sealed class ProvenanceStoreTests
         await store.Client.DeleteChatsAsync([copy], TOKEN);
         var entriesWithoutTheCopy = await store.Client.GetEntriesAsync([sent.Value, unsent.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deleted, Is.EqualTo(1), "Only the entry of the chat goes, not the one of its copy, which keeps the same id.");
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { sent.Value, unsent.Value }), "The copy still holds the entry.");
             Assert.That(entriesWithoutTheCopy.Keys, Is.EquivalentTo(new[] { sent.Value }));
-        });
+        }
     }
 
     [Test]
@@ -257,13 +257,13 @@ public sealed class ProvenanceStoreTests
         var kept = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
         var deletedAfter = await store.Client.DeleteChatsAsync([chat], TOKEN, DateTimeOffset.UtcNow.AddMinutes(1));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deletedBefore, Is.Zero);
             Assert.That(deletedExceptBefore, Is.Zero);
             Assert.That(kept.Keys, Is.EquivalentTo(new[] { entry.Value }), "The time is compared as stored text, which has to keep the order of time.");
             Assert.That(deletedAfter, Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -289,11 +289,11 @@ public sealed class ProvenanceStoreTests
         var sinceBefore = await store.Client.GetChatIdsAsync(TOKEN, DateTimeOffset.UtcNow.AddMinutes(-1));
         var sinceAfter = await store.Client.GetChatIdsAsync(TOKEN, DateTimeOffset.UtcNow.AddMinutes(1));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sinceBefore, Is.EquivalentTo(new[] { chat }));
             Assert.That(sinceAfter, Is.Empty, "The time is compared as stored text, which has to keep the order of time.");
-        });
+        }
     }
 
     [Test]
@@ -306,11 +306,11 @@ public sealed class ProvenanceStoreTests
         await store.Client.SetLastCleanupAsync(startedAt, TOKEN);
         var afterTheCleanup = await store.Client.GetLastCleanupAsync(TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(beforeAnyCleanup, Is.Null, "A store without a cleanup, e.g., one a restore brought back, needs every chat read.");
             Assert.That(afterTheCleanup, Is.EqualTo(startedAt));
-        });
+        }
     }
 
     [Test]
@@ -326,12 +326,12 @@ public sealed class ProvenanceStoreTests
             var copy = new SqliteProvenanceStoreClientImplementation("SQLite", copyPath, copyDirectory, string.Empty);
             var entries = await copy.GetEntriesAsync([id!.Value], TOKEN);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(Path.GetFileName(copyPath), Is.EqualTo(SqliteProvenanceStoreClientImplementation.DATABASE_FILENAME), "A restore puts the copy where the store belongs, under the same name.");
                 Assert.That(entries[id.Value].Content, Is.EqualTo("a passage"));
                 Assert.That(entries[id.Value].SurroundingContent, Is.EqualTo(new[] { "around it" }));
-            });
+            }
         }
         finally
         {
@@ -362,7 +362,7 @@ public sealed class ProvenanceStoreTests
             var chatIds = await store.Client.GetChatIdsAsync(TOKEN);
             var original = await backup.Client.GetEntriesAsync([passage.Value], TOKEN);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(imported, Is.EqualTo(2));
                 Assert.That(importedAgain, Is.Zero, "Entries the chat holds already stay as they are.");
@@ -371,7 +371,7 @@ public sealed class ProvenanceStoreTests
                 Assert.That(entries[passage.Value].SurroundingContent, Is.EqualTo(new[] { "around it" }));
                 Assert.That(entries[passage.Value].CreatedAtUtc, Is.EqualTo(original[passage.Value].CreatedAtUtc), "The time says when the AI received the content, not when the chat came back.");
                 Assert.That(chatIds, Is.EquivalentTo(new[] { importedChat }));
-            });
+            }
         }
         finally
         {
@@ -409,7 +409,7 @@ public sealed class ProvenanceStoreTests
 
         var lines = await ReadDisplayInfoAsync(store);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(lines["Stored items across all chats"], Is.EqualTo("4"));
             Assert.That(lines["Chats with stored items"], Is.EqualTo("2"));
@@ -419,7 +419,7 @@ public sealed class ProvenanceStoreTests
             Assert.That(lines, Does.Not.ContainKey("Passages of data sources"), "A kind no chat received would only say zero.");
             Assert.That(lines["Journal mode"], Is.EqualTo("WAL"));
             Assert.That(lines["Schema version"], Does.StartWith("20261024000000_InitialProvenanceStore"));
-        });
+        }
     }
 
     [Test]
@@ -429,12 +429,12 @@ public sealed class ProvenanceStoreTests
 
         var lines = await ReadDisplayInfoAsync(store);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(lines["Stored items across all chats"], Is.EqualTo("0"));
             Assert.That(lines["Chats with stored items"], Is.EqualTo("0"));
             Assert.That(lines, Does.Not.ContainKey("Attached files"));
-        });
+        }
     }
 
     private static string CreateCopyDirectory() => Path.Combine(Path.GetTempPath(), $"ai-studio-provenance-copy-{Guid.NewGuid():N}");

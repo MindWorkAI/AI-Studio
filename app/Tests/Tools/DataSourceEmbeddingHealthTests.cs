@@ -37,11 +37,11 @@ public sealed class DataSourceEmbeddingHealthTests
             ],
         };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(status.Health, Is.EqualTo(DataSourceEmbeddingHealth.WARNING));
             Assert.That(status.NeedsTranscriptionProvider, Is.True, "The embedding page offers the way to the settings only then.");
-        });
+        }
     }
 
     [Test]
@@ -88,12 +88,12 @@ public sealed class DataSourceEmbeddingHealthTests
 
         var overview = DataSourceEmbeddingOverview.Create([healthy, warning]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(overview.State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(overview.Health, Is.EqualTo(DataSourceEmbeddingHealth.WARNING));
             Assert.That(overview.AttentionDataSources, Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -106,14 +106,14 @@ public sealed class DataSourceEmbeddingHealthTests
 
         var overview = DataSourceEmbeddingOverview.Create([queued, warning, running, error]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(overview.State, Is.EqualTo(DataSourceEmbeddingState.RUNNING), "The sync icon must remain visible while work is underway.");
             Assert.That(overview.Health, Is.EqualTo(DataSourceEmbeddingHealth.ERROR), "The existing error must reappear as soon as the active run settles.");
             Assert.That(overview.AttentionDataSources, Is.EqualTo(2));
             Assert.That(overview.IndexedDocuments, Is.EqualTo(1), "Running progress belongs to the active data source, not the aggregate.");
             Assert.That(overview.TotalDocuments, Is.EqualTo(3));
-        });
+        }
     }
 
     [Test]
@@ -125,13 +125,13 @@ public sealed class DataSourceEmbeddingHealthTests
 
         var overview = DataSourceEmbeddingOverview.Create([warning, firstError, secondError]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(overview.State, Is.EqualTo(DataSourceEmbeddingState.FAILED));
             Assert.That(overview.Health, Is.EqualTo(DataSourceEmbeddingHealth.ERROR));
             Assert.That(overview.AttentionDataSources, Is.EqualTo(3));
             Assert.That(overview.FailedDocuments, Is.EqualTo(3));
-        });
+        }
     }
 
     private static DataSourceEmbeddingStatus Status(

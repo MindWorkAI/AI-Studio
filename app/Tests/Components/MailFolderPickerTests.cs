@@ -27,13 +27,13 @@ public sealed class MailFolderPickerTests
             Folder("Archive", specialUse: MailFolderSpecialUse.ARCHIVE),
             Folder("INBOX", isInbox: true));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(root.Value, Is.Empty, "The root does not stand for the whole mailbox.");
             Assert.That(root.Text, Is.EqualTo(WHOLE_MAILBOX));
             Assert.That(ValuesOf(root), Is.EqualTo(new[] { "INBOX", "Archive", "Projects" }), "The top level is not ordered with the inbox first.");
             Assert.That(ValuesOf(Child(root, "Projects")), Is.EqualTo(new[] { "Projects/Alpha" }), "The subfolder did not land below its parent.");
-        });
+        }
     }
 
     [Test]
@@ -44,11 +44,11 @@ public sealed class MailFolderPickerTests
             Folder("INBOX.Sent", "INBOX", separator: '.', specialUse: MailFolderSpecialUse.SENT),
             Folder("INBOX.Drafts", "INBOX", separator: '.', specialUse: MailFolderSpecialUse.DRAFTS));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValuesOf(root), Is.EqualTo(new[] { "INBOX" }));
             Assert.That(ValuesOf(Child(root, "INBOX")), Is.EqualTo(new[] { "INBOX.Drafts", "INBOX.Sent" }));
-        });
+        }
     }
 
     [Test]
@@ -85,13 +85,13 @@ public sealed class MailFolderPickerTests
         };
 
         var root = MailFolderPicker.BuildTree(folders, "Projects/Alpha/Reports", WHOLE_MAILBOX).Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(root.Expanded, Is.True, "The whole mailbox is collapsed.");
             Assert.That(Child(root, "Projects").Expanded, Is.True, "The way to the picked folder is collapsed.");
             Assert.That(Child(Child(root, "Projects"), "Projects/Alpha").Expanded, Is.True, "The way to the picked folder is collapsed.");
             Assert.That(Child(root, "Private").Expanded, Is.False, "A folder off the way to the picked folder is expanded.");
-        });
+        }
     }
 
     [TestCase(MailFolderSpecialUse.NONE, ExpectedResult = true)]

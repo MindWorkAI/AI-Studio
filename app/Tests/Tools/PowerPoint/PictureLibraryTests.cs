@@ -27,7 +27,7 @@ public sealed class PictureLibraryTests
 
         var library = PictureLibrary.Read(this.folder, new Random(1), PictureLibrary.MAX_LIBRARY_PICTURES, null, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(library.Pictures.Select(picture => picture.Name), Is.EquivalentTo(new[] { "rocket.png", "Moon.JPG", "mars.jpeg", "icon-star.png", "icons/flag.png", "IconSet/small/planet.png", "photos/crater.png" }), "Hidden files stay out, as everywhere in AI Studio.");
             Assert.That(library.Pictures.Select(picture => picture.Name), Is.Ordered.Using<string>(StringComparer.OrdinalIgnoreCase));
@@ -36,7 +36,7 @@ public sealed class PictureLibraryTests
             Assert.That(library.IconCount, Is.EqualTo(3));
             Assert.That(library.SkippedFileCount, Is.EqualTo(2), "The SVG icon and the notes are neither PNG nor JPEG.");
             Assert.That(library.IsSampled, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -51,12 +51,12 @@ public sealed class PictureLibraryTests
         var photoFolder = Path.Combine(this.folder, "iconography", "Photos");
         this.CreateFiles("Icons/rocket.png", "Icons/planets/mars.png", "IconSet/moon.jpg", "iconography/Photos/crater.png");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PictureLibrary.Read(iconFolder, new Random(1), PictureLibrary.MAX_LIBRARY_PICTURES, null, CancellationToken.None).Pictures.Select(picture => picture.IsIcon), Is.EqualTo(new[] { true, true }));
             Assert.That(PictureLibrary.Read(iconSetFolder + Path.DirectorySeparatorChar, new Random(1), PictureLibrary.MAX_LIBRARY_PICTURES, null, CancellationToken.None).IconCount, Is.EqualTo(1), "A trailing separator changes nothing.");
             Assert.That(PictureLibrary.Read(photoFolder, new Random(1), PictureLibrary.MAX_LIBRARY_PICTURES, null, CancellationToken.None).IconCount, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -67,7 +67,7 @@ public sealed class PictureLibraryTests
         var sample = PictureLibrary.Read(this.folder, new Random(7), 10, null, CancellationToken.None);
         var again = PictureLibrary.Read(this.folder, new Random(7), 10, null, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sample.Pictures, Has.Count.EqualTo(10));
             Assert.That(sample.Pictures.Select(picture => picture.Name), Is.Unique);
@@ -75,7 +75,7 @@ public sealed class PictureLibraryTests
             Assert.That(sample.PictureCount, Is.EqualTo(30), "The count tells about the whole library.");
             Assert.That(sample.IsSampled, Is.True);
             Assert.That(again.Pictures.Select(picture => picture.Name), Is.EqualTo(sample.Pictures.Select(picture => picture.Name)), "The same random numbers draw the same sample.");
-        });
+        }
     }
 
     [Test]

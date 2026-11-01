@@ -45,11 +45,11 @@ public sealed class ERIServerFileWritingTests
     {
         var outcome = await ERIServerFiles.WriteAsync(this.baseDirectory, "src/my-server/main.py", ANSWER, NullLogger.Instance);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome, Is.EqualTo(ERIServerFileOutcome.WRITTEN));
             Assert.That(File.ReadAllText(Path.Join(this.baseDirectory, "src", "my-server", "main.py")), Is.EqualTo(MAIN_PY));
-        });
+        }
     }
 
     [Test]
@@ -58,11 +58,11 @@ public sealed class ERIServerFileWritingTests
         var file = $"../outside-{Guid.NewGuid():N}.py";
         var outcome = await ERIServerFiles.WriteAsync(this.baseDirectory, file, ANSWER, NullLogger.Instance);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome, Is.EqualTo(ERIServerFileOutcome.OUTSIDE_BASE_DIRECTORY));
             Assert.That(File.Exists(Path.GetFullPath(Path.Join(this.baseDirectory, file))), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -70,11 +70,11 @@ public sealed class ERIServerFileWritingTests
     {
         var outcome = await ERIServerFiles.WriteAsync(this.baseDirectory, "main.py", "## main.py\n\n```python\nprint(", NullLogger.Instance);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome, Is.EqualTo(ERIServerFileOutcome.NO_COMPLETE_CODE_BLOCK));
             Assert.That(File.Exists(Path.Join(this.baseDirectory, "main.py")), Is.False);
-        });
+        }
     }
 
     [Test]

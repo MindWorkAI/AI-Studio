@@ -25,11 +25,11 @@ public sealed class HFModelTests
     [Test]
     public void AChosenProviderAnswersForItself()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SERVED_BY_THREE.ContextWindowTokens("novita"), Is.EqualTo(64_000));
             Assert.That(SERVED_BY_THREE.ContextWindowTokens("together"), Is.EqualTo(128_000));
-        });
+        }
     }
 
     [Test]
@@ -58,11 +58,11 @@ public sealed class HFModelTests
             new("together", "live", 128_000),
         ]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(oneIsDown.ContextWindowTokens(AUTOMATIC), Is.EqualTo(128_000), "The small window belongs to a provider nobody can reach.");
             Assert.That(oneIsDown.ContextWindowTokens("novita"), Is.Null, "And asking for that provider by name does not bring it back either.");
-        });
+        }
     }
 
     [Test]
@@ -86,10 +86,10 @@ public sealed class HFModelTests
     [Test]
     public void AModelNobodyServesHasNoWindow()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new HFModel("org/model", null).ContextWindowTokens(AUTOMATIC), Is.Null);
             Assert.That(new HFModel("org/model", []).ContextWindowTokens(AUTOMATIC), Is.Null);
-        });
+        }
     }
 }

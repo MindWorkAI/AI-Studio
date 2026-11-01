@@ -42,7 +42,7 @@ public sealed class MailToolArgumentsTests
             }
             """), UserTimeZone());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(conditions.Filter, Is.EqualTo(new MailFilter
             {
@@ -57,7 +57,7 @@ public sealed class MailToolArgumentsTests
                 HasAttachments = true,
             }));
             Assert.That(conditions.Folder, Is.EqualTo("Archive/2026"));
-        });
+        }
     }
 
     [TestCase("""{}""")]
@@ -66,13 +66,13 @@ public sealed class MailToolArgumentsTests
     {
         var conditions = MailToolArguments.ReadConditions(Arguments(json), UserTimeZone());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(conditions.Filter.HasConditions, Is.False, "A strict schema makes the model pass null for every condition it does not want.");
             Assert.That(conditions.Folder, Is.Null);
             Assert.That(conditions.SpecialFolder, Is.Null);
             Assert.That(conditions.NamesFolder, Is.False);
-        });
+        }
     }
 
     [TestCase("sent", MailFolderSpecialUse.SENT)]
@@ -81,13 +81,13 @@ public sealed class MailToolArgumentsTests
     {
         var conditions = MailToolArguments.ReadConditions(Arguments($$"""{"special_folder":"{{value}}"}"""), UserTimeZone());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(conditions.SpecialFolder, Is.EqualTo(expected));
             Assert.That(conditions.Folder, Is.Null);
             Assert.That(conditions.NamesFolder, Is.True);
             Assert.That(MailToolArguments.ToArgumentValue(expected), Is.EqualTo(value), "Results mark the mails with the value the argument takes.");
-        });
+        }
     }
 
     [Test]
@@ -128,11 +128,11 @@ public sealed class MailToolArgumentsTests
         var all = MailToolArguments.ReadMailboxes(Arguments("""{}"""), OFFERED, "search");
         var some = MailToolArguments.ReadMailboxes(Arguments($$"""{"mailbox_ids":["{{PRIVATE.Id}}"]}"""), OFFERED, "search");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(all.Select(mailbox => mailbox.Id), Is.EqualTo(new[] { WORK.Id, PRIVATE.Id }));
             Assert.That(some.Select(mailbox => mailbox.Id), Is.EqualTo(new[] { PRIVATE.Id }));
-        });
+        }
     }
 
     [Test]
@@ -151,11 +151,11 @@ public sealed class MailToolArgumentsTests
         var inbox = new MailConditions(new MailFilter(), "Inbox", null).ForMailbox(folders);
         var archive = new MailConditions(new MailFilter(), "ARCHIVE", null).ForMailbox(folders);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(inbox.FolderPaths, Is.EqualTo(new[] { "INBOX" }), "Its subfolders are folders of their own.");
             Assert.That(archive.FolderPaths, Is.EqualTo(new[] { "Archive", "archive" }), "The model cannot tell two folders apart which differ only in case.");
-        });
+        }
     }
 
     [Test]
@@ -163,11 +163,11 @@ public sealed class MailToolArgumentsTests
     {
         var filter = new MailConditions(new MailFilter { IsUnread = true }, "Projects", null).ForMailbox([Folder("INBOX")]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(filter.FolderPaths, Is.Empty, "An empty list matches no mail; a missing one would match every mail.");
             Assert.That(filter.IsUnread, Is.True, "The other conditions stay.");
-        });
+        }
     }
 
     [Test]
@@ -178,11 +178,11 @@ public sealed class MailToolArgumentsTests
         var sent = new MailConditions(new MailFilter(), null, MailFolderSpecialUse.SENT).ForMailbox(folders);
         var drafts = new MailConditions(new MailFilter(), null, MailFolderSpecialUse.DRAFTS).ForMailbox(folders);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sent.FolderPaths, Is.EqualTo(new[] { "Gesendete Elemente" }), "A folder merely named like the sent mails is not theirs.");
             Assert.That(drafts.FolderPaths, Is.EqualTo(new[] { "Entwürfe" }));
-        });
+        }
     }
 
     [Test]
@@ -205,7 +205,7 @@ public sealed class MailToolArgumentsTests
         var schema = JsonNode.Parse(ToolParameterSchemaBuilder.Create().AddMailConditions("search", WORK.Id, PRIVATE.Id).Build().GetRawText())!;
         var properties = schema["properties"]!.AsObject();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(properties.Select(property => property.Key), Is.EquivalentTo(new[]
             {
@@ -216,7 +216,7 @@ public sealed class MailToolArgumentsTests
             Assert.That(properties[MailToolArguments.SPECIAL_FOLDER_ARGUMENT]!["enum"]!.AsArray().Select(value => value?.GetValue<string>()), Is.EqualTo(new[] { "sent", "drafts" }));
             Assert.That(properties[MailToolArguments.MAILBOX_IDS_ARGUMENT]!["items"]!["enum"]!.AsArray().Select(id => id!.GetValue<string>()), Is.EqualTo(new[] { WORK.Id, PRIVATE.Id }));
             Assert.That(schema["required"]!.AsArray(), Is.Empty, "Every condition may be left out.");
-        });
+        }
     }
 
     private static MailFolderRecord Folder(string path, MailFolderSpecialUse specialUse = MailFolderSpecialUse.NONE) => new(path, specialUse, 1, null, null, null, null, null);

@@ -22,11 +22,11 @@ public sealed class LocalRetrievalLocationTests
         var pages = DataSourceLocalRetrievalService.LocatePassage(new ChunkLocation(PageNumber: 3, EndPageNumber: 5), RetrievalContentType.TEXT_DOCUMENT, 2);
         var onePage = DataSourceLocalRetrievalService.LocatePassage(new ChunkLocation(PageNumber: 3, EndPageNumber: 3), RetrievalContentType.TEXT_DOCUMENT, 2);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That((pages.PageNumber, pages.EndPageNumber), Is.EqualTo(((int?)3, (int?)5)));
             Assert.That((onePage.PageNumber, onePage.EndPageNumber), Is.EqualTo(((int?)3, (int?)null)));
-        });
+        }
     }
 
     [Test]
@@ -51,11 +51,11 @@ public sealed class LocalRetrievalLocationTests
         var lines = DataSourceLocalRetrievalService.LocatePassage(new ChunkLocation(StartLine: 40, EndLine: 85), RetrievalContentType.TEXT_DOCUMENT, 4);
         var oneLine = DataSourceLocalRetrievalService.LocatePassage(new ChunkLocation(StartLine: 40, EndLine: 40), RetrievalContentType.TEXT_DOCUMENT, 4);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That((lines.StartLine, lines.EndLine, lines.StartRow), Is.EqualTo(((int?)40, (int?)85, (int?)null)));
             Assert.That((oneLine.StartLine, oneLine.EndLine), Is.EqualTo(((int?)40, (int?)null)));
-        });
+        }
     }
 
     [Test]
@@ -63,11 +63,11 @@ public sealed class LocalRetrievalLocationTests
     {
         var located = DataSourceLocalRetrievalService.LocatePassage(new ChunkLocation(StartLine: 1, EndLine: 9), RetrievalContentType.TEXT_TRANSCRIPT, 4);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That((located.StartLine, located.EndLine), Is.EqualTo(((int?)null, (int?)null)), "The user never sees the transcript, so its lines would point nowhere.");
             Assert.That(located.GetLocationLabel(), Is.EqualTo(DataSourceLocalRetrievalService.LocatePassage(new ChunkLocation(), RetrievalContentType.TEXT_TRANSCRIPT, 4).GetLocationLabel()), "It is named by its part, as before.");
-        });
+        }
     }
 
     [Test]
@@ -75,10 +75,10 @@ public sealed class LocalRetrievalLocationTests
     {
         var located = DataSourceLocalRetrievalService.LocatePassage(new ChunkLocation(), RetrievalContentType.TEXT_SPREADSHEET, 4);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That((located.PageNumber, located.SheetName, located.StartRow, located.StartLine), Is.EqualTo(((int?)null, (string?)null, (int?)null, (int?)null)));
             Assert.That(located.GetLocationRange(), Is.EqualTo(new LocationRange(4, 4)), "It keeps the label it had before.");
-        });
+        }
     }
 }

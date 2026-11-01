@@ -27,7 +27,7 @@ public sealed class Gpt6FamilyTests
     {
         var profile = LLMProviders.OPEN_AI.GetModelProfile(new Model(modelId, null));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.RESPONSES_API), Is.True);
             Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True);
@@ -35,7 +35,7 @@ public sealed class Gpt6FamilyTests
             Assert.That(profile.Has(Capability.WEB_SEARCH), Is.True);
             Assert.That(profile.Context.IsKnown, Is.True);
             Assert.That(profile.Context.DefaultTokens, Is.EqualTo(1_050_000));
-        });
+        }
     }
 
     [TestCase("gpt-6-astra", ReasoningSupport.ALWAYS, TestName = "Astra reasons on every request")]

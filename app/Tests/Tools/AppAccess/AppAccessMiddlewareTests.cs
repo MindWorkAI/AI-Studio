@@ -135,7 +135,7 @@ public sealed class AppAccessMiddlewareTests
         var response = await BootAsync(HttpMethods.Get, UI_TOKEN);
         var cookie = response.Headers.SetCookie.ToString().ToLowerInvariant();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response.StatusCode, Is.EqualTo(StatusCodes.Status302Found));
             Assert.That(response.Headers.Location.ToString(), Is.EqualTo("/"));
@@ -144,7 +144,7 @@ public sealed class AppAccessMiddlewareTests
             Assert.That(cookie, Does.Contain("samesite=lax"));
             Assert.That(cookie, Does.Contain("path=/"));
             Assert.That(cookie, Does.Not.Contain("expires"));
-        });
+        }
     }
 
     [TestCase("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdee")]
@@ -154,11 +154,11 @@ public sealed class AppAccessMiddlewareTests
     {
         var response = await BootAsync(HttpMethods.Get, token);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response.StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
             Assert.That(response.Headers.SetCookie.ToString(), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -166,11 +166,11 @@ public sealed class AppAccessMiddlewareTests
     {
         var response = await BootAsync(HttpMethods.Post, UI_TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response.StatusCode, Is.EqualTo(StatusCodes.Status403Forbidden));
             Assert.That(response.Headers.SetCookie.ToString(), Is.Empty);
-        });
+        }
     }
 #endif
 }

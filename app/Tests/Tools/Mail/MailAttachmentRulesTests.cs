@@ -32,22 +32,22 @@ public sealed class MailAttachmentRulesTests
     public void AMailboxWhichReadsNoAttachmentsSkipsEveryOne()
     {
         var mailbox = new DataSourceMailbox { IndexAttachments = false, MaxAttachmentSizeMegabytes = 10 };
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailAttachmentRules.GetMaxSizeMegabytes(mailbox), Is.Null);
             Assert.That(MailAttachmentRules.GetReasonToSkip(Attachment("application", "pdf", "board-report.pdf", 1024), null), Is.EqualTo(MailPartTextState.ATTACHMENTS_DISABLED));
-        });
+        }
     }
 
     [Test]
     public void AnythingButADocumentIsKnownByItsNameOnly()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailAttachmentRules.GetReasonToSkip(Attachment("image", "png", "photo.png", 1024), 10), Is.EqualTo(MailPartTextState.UNSUPPORTED_TYPE));
             Assert.That(MailAttachmentRules.GetReasonToSkip(Attachment("application", "zip", "reports.zip", 1024), 10), Is.EqualTo(MailPartTextState.UNSUPPORTED_TYPE));
             Assert.That(MailAttachmentRules.GetReasonToSkip(Attachment("application", "octet-stream", null, 1024), 10), Is.EqualTo(MailPartTextState.UNSUPPORTED_TYPE));
-        });
+        }
     }
 
     [Test]
@@ -57,12 +57,12 @@ public sealed class MailAttachmentRulesTests
         var base64 = Attachment("application", "pdf", "board-report.pdf", 12 * MEGABYTE);
         var unencoded = Attachment("application", "pdf", "board-report.pdf", 12 * MEGABYTE, "binary");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailAttachmentRules.EstimateDecodedSize(base64), Is.EqualTo(9 * MEGABYTE));
             Assert.That(MailAttachmentRules.GetReasonToSkip(base64, 10), Is.Null);
             Assert.That(MailAttachmentRules.GetReasonToSkip(unencoded, 10), Is.EqualTo(MailPartTextState.TOO_LARGE));
-        });
+        }
     }
 
     [Test]
@@ -70,46 +70,46 @@ public sealed class MailAttachmentRulesTests
     {
         // 2.5 GB of Base64 decode to less than the largest limit, but cannot be fetched in pieces:
         var attachment = Attachment("application", "pdf", "scanned-archive.pdf", 2560 * MEGABYTE);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailAttachmentRules.EstimateDecodedSize(attachment), Is.LessThan(DataSourceValidation.MAX_ATTACHMENT_SIZE_MEGABYTES * MEGABYTE));
             Assert.That(MailAttachmentRules.GetReasonToSkip(attachment, DataSourceValidation.MAX_ATTACHMENT_SIZE_MEGABYTES), Is.EqualTo(MailPartTextState.TOO_LARGE));
-        });
+        }
     }
 
     [Test]
     public void TheTypeComesFromTheNameOrElseFromTheContentType()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailAttachmentRules.GetExtension(Attachment("application", "octet-stream", "Minutes.DOCX", 1024)), Is.EqualTo("docx"));
             Assert.That(MailAttachmentRules.GetExtension(Attachment("application", "pdf", null, 1024)), Is.EqualTo("pdf"));
             Assert.That(MailAttachmentRules.GetExtension(Attachment("application", "pdf", "../../../evil.pdf", 1024)), Is.EqualTo("pdf"), "Something of the name but its type made it into the path of the file.");
             Assert.That(MailAttachmentRules.GetExtension(Attachment("application", "x-unknown", "notes", 1024)), Is.Empty);
-        });
+        }
     }
 
     [Test]
     public void ALimitBeyondTheDialogIsBroughtBackIntoRange()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailAttachmentRules.GetMaxSizeMegabytes(new DataSourceMailbox { MaxAttachmentSizeMegabytes = 25 }), Is.EqualTo(25));
             Assert.That(MailAttachmentRules.GetMaxSizeMegabytes(new DataSourceMailbox { MaxAttachmentSizeMegabytes = 100_000 }), Is.EqualTo(DataSourceValidation.MAX_ATTACHMENT_SIZE_MEGABYTES));
             Assert.That(MailAttachmentRules.GetMaxSizeMegabytes(new DataSourceMailbox { MaxAttachmentSizeMegabytes = -1 }), Is.EqualTo(DataSourceValidation.MIN_ATTACHMENT_SIZE_MEGABYTES));
-        });
+        }
     }
 
     [Test]
     public void TheSignatureOfASignedMailIsNoAttachment()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailAttachmentRules.IsSignature(new ContentType("application", "pkcs7-signature")), Is.True);
             Assert.That(MailAttachmentRules.IsSignature(new ContentType("application", "x-pkcs7-signature")), Is.True);
             Assert.That(MailAttachmentRules.IsSignature(new ContentType("application", "pgp-signature")), Is.True);
             Assert.That(MailAttachmentRules.IsSignature(new ContentType("application", "pdf")), Is.False);
-        });
+        }
     }
 
     private static BodyPartBasic Attachment(string mediaType, string mediaSubtype, string? fileName, long octets, string transferEncoding = "base64") => new(new ContentType(mediaType, mediaSubtype), PART_SPECIFIER)

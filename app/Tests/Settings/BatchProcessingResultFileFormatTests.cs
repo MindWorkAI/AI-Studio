@@ -54,11 +54,11 @@ public sealed class BatchProcessingResultFileFormatTests
     {
         var processed = await ProcessAsync("MICROSOFT_WORD");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True);
             Assert.That(this.ResultFileFormat, Is.EqualTo(FileExportFormat.MICROSOFT_WORD));
-        });
+        }
     }
 
     [TestCase("CSV", TestName = "A table, which holds one table out of an answer")]
@@ -70,12 +70,12 @@ public sealed class BatchProcessingResultFileFormatTests
         var processed = await ProcessAsync(configuredFormat);
 
         ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ResultFileFormat, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False, "The result files would end up without an extension or as something other than an answer.");
             Assert.That(this.ResultFileFormat, Is.EqualTo(FileExportFormat.HTML), "A rejected value leaves the choice of the user untouched.");
             Assert.That(configMeta.IsLocked, Is.False, "A rejected value locks nothing.");
-        });
+        }
     }
 
     private FileExportFormat ResultFileFormat

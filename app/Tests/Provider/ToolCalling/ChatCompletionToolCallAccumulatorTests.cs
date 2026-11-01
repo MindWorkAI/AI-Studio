@@ -28,12 +28,12 @@ public sealed class ChatCompletionToolCallAccumulatorTests
             "[DONE]");
 
         var call = message!.ToolCalls!.Single()!;
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(call.Id, Is.EqualTo("call_1"), "The ID arrived with the first fragment and belongs to the whole call.");
             Assert.That(call.Function!.Name, Is.EqualTo("web_search"), "So does the name.");
             Assert.That(call.Function!.Arguments, Is.EqualTo("""{"query":"weather"}"""), "And the arguments are the fragments in the order they came, joined without anything in between.");
-        });
+        }
     }
     
     [Test]
@@ -68,11 +68,11 @@ public sealed class ChatCompletionToolCallAccumulatorTests
             """{"choices":[{"index":0,"delta":{"tool_calls":[{"function":{"arguments":"\"weather\"}"}}]}}]}""");
 
         var call = message!.ToolCalls!.Single()!;
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(call.Id, Is.EqualTo("call_1"), "One call, not two: a fragment without an index belongs to the one being written.");
             Assert.That(call.Function!.Arguments, Is.EqualTo("""{"query":"weather"}"""), "And its arguments are complete.");
-        });
+        }
     }
     
     [Test]
@@ -100,12 +100,12 @@ public sealed class ChatCompletionToolCallAccumulatorTests
             .Select(part => part.TextDelta));
 
         var message = accumulator.Build();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(shown, Is.EqualTo("Let me look that up."), "The text goes out while it is being written, in the pieces it arrives in.");
             Assert.That(message!.Content, Is.EqualTo("Let me look that up."), "And the same text goes back to the provider as what the model said.");
             Assert.That(message.ToolCalls!.Single()!.Id, Is.EqualTo("call_1"), "The tool call of that round is there as well.");
-        });
+        }
     }
     
     [Test]
@@ -124,11 +124,11 @@ public sealed class ChatCompletionToolCallAccumulatorTests
             """{"choices":[{"index":0,"delta":{"reasoning_content":"Thinking about it."}}]}""",
             """{"choices":[{"index":0,"delta":{"content":"The answer."}}]}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message!.ReasoningContent, Is.EqualTo("Thinking about it."), "Reasoning is kept, because the next request is charged for it.");
             Assert.That(message.Content, Is.EqualTo("The answer."), "And it is not mixed into the answer.");
-        });
+        }
     }
     
     [Test]
@@ -142,11 +142,11 @@ public sealed class ChatCompletionToolCallAccumulatorTests
         var withoutAnyFragment = Read("""{"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"get_time"}}]}}]}""");
         var withAnEmptyFragment = Read("""{"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"get_time","arguments":""}}]}}]}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutAnyFragment!.ToolCalls!.Single()!.Function!.Arguments, Is.EqualTo("{}"), "No fragment at all is a call without arguments, not a broken one.");
             Assert.That(withAnEmptyFragment!.ToolCalls!.Single()!.Function!.Arguments, Is.EqualTo("{}"), "And neither is the empty fragment some providers send instead.");
-        });
+        }
     }
     
     [Test]
@@ -158,11 +158,11 @@ public sealed class ChatCompletionToolCallAccumulatorTests
         //
         var message = Read("""{"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"web_search","arguments":"{}"}}]}}]}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message!.RawContent, Is.Null, "No text means no content field.");
             Assert.That(message.Content, Is.Null, "Which is what the adapter reads as an answer without words.");
-        });
+        }
     }
     
     [Test]
@@ -190,12 +190,12 @@ public sealed class ChatCompletionToolCallAccumulatorTests
         var accumulator = new ChatCompletionToolCallAccumulator();
         var part = accumulator.Process(Event("""{"choices":[],"usage":{"prompt_tokens":1200,"completion_tokens":345,"total_tokens":1545}}"""));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(part.Usage.IsKnown, Is.True, "The last line of the stream has no choices, and it must not be dropped for that.");
             Assert.That(part.Usage.PromptTokens, Is.EqualTo(1200));
             Assert.That(part.HasContent, Is.False, "It has nothing to show, though.");
-        });
+        }
     }
 
     [Test]
@@ -208,11 +208,11 @@ public sealed class ChatCompletionToolCallAccumulatorTests
         var accumulator = new ChatCompletionToolCallAccumulator();
         var part = accumulator.Process(Event("""{"choices":[{"index":0,"delta":{"content":"Bye"}}],"usage":{"prompt_tokens":1200,"completion_tokens":2}}"""));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(part.TextDelta, Is.EqualTo("Bye"));
             Assert.That(part.Usage.PromptTokens, Is.EqualTo(1200));
-        });
+        }
     }
 
     private static ChatCompletionResponseMessage? Read(params string[] data)

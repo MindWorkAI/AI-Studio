@@ -36,7 +36,7 @@ public sealed class SwotAnalysisContentPresentationTests
         var restoredContent = (ContentText)restoredThread!.Blocks.Single().Content!;
         var presentationWasRead = SwotAnalysisContentPresentation.TryRead(restoredContent.Presentation, out var restoredResult);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(clone.Presentation, Is.Not.SameAs(content.Presentation));
             Assert.That(clone.Text, Is.EqualTo(content.Text));
@@ -45,7 +45,7 @@ public sealed class SwotAnalysisContentPresentationTests
             Assert.That(restoredResult.MatrixHeading, Is.EqualTo("SWOT Matrix"));
             Assert.That(restoredResult.Strengths.Findings.Single().Summary, Is.EqualTo("Experienced team"));
             Assert.That(restoredResult.PrioritizedActions.Items.Single().Action, Is.EqualTo("Prepare expansion"));
-        });
+        }
     }
 
     [Test]
@@ -59,11 +59,11 @@ public sealed class SwotAnalysisContentPresentationTests
 
         var presentationWasRead = SwotAnalysisContentPresentation.TryRead(content.Presentation, out _);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(presentationWasRead, Is.False);
             Assert.That(content.Text, Is.EqualTo("Fallback Markdown"));
-        });
+        }
     }
 
     [Test]
@@ -90,12 +90,12 @@ public sealed class SwotAnalysisContentPresentationTests
 
         var presentationWasRead = SwotAnalysisContentPresentation.TryRead(content.Presentation, out var readResult);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(presentationWasRead, Is.True);
             Assert.That(readResult.Categories.All(category => category.Findings.Count == 0), Is.True);
             Assert.That(readResult.PrioritizedActions.Items, Is.Empty);
-        });
+        }
     }
 
     [Test]

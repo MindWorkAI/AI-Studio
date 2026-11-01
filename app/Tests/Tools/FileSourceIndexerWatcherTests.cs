@@ -183,11 +183,11 @@ public sealed class FileSourceIndexerWatcherTests
                 FilePatterns: FileNamePatterns.Parse("*.txt"));
             var includingHiddenDirectories = visibleDirectoriesOnly with { IncludeHiddenFilesAndFolders = true };
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(visibleDirectoriesOnly, filePath, WatcherChangeTypes.Changed), Is.False);
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(includingHiddenDirectories, filePath, WatcherChangeTypes.Changed), Is.True);
-            });
+            }
         }
         finally
         {
@@ -209,12 +209,12 @@ public sealed class FileSourceIndexerWatcherTests
         var namingTheFile = everything with { FilePatterns = FileNamePatterns.Parse("*;.env") };
         var includingHiddenFiles = everything with { IncludeHiddenFilesAndFolders = true };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(everything, environmentPath, changeType), Is.False, "A hidden file is no part of the data source, so changing it needs no run.");
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(namingTheFile, environmentPath, changeType), Is.True);
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(includingHiddenFiles, environmentPath, changeType), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -323,12 +323,12 @@ public sealed class FileSourceIndexerWatcherTests
                 FilePatterns: FileNamePatterns.Parse("*"));
             var unrelatedPatterns = configuration with { FilePatterns = FileNamePatterns.Parse("*.tf") };
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, mediaPath, WatcherChangeTypes.Changed), Is.True);
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, transcriptPath, WatcherChangeTypes.Created), Is.False);
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(unrelatedPatterns, transcriptPath, WatcherChangeTypes.Created), Is.False);
-            });
+            }
         }
         finally
         {
@@ -371,11 +371,11 @@ public sealed class FileSourceIndexerWatcherTests
         var documents = DefaultConfiguration(rootPath);
         var everything = documents with { FilePatterns = FileNamePatterns.Parse("*") };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(documents, path, WatcherChangeTypes.Created), Is.False, "The documents selector never selects audio or video.");
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(everything, path, WatcherChangeTypes.Created), Is.True);
-        });
+        }
     }
 
     private static FileSourceIndexer.DataSourceWatcherConfiguration DefaultConfiguration(string rootPath) => new(

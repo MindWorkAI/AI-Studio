@@ -51,12 +51,12 @@ public sealed class ModelPatternLiteralAnalyzerTests
     {
         var reported = await AnalyzeAsync(statements);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reported, Has.Count.EqualTo(1));
             Assert.That(reported.FirstOrDefault()?.Id, Is.EqualTo("MWAIS0013"));
             Assert.That(reported.FirstOrDefault()?.GetMessage(), Does.Contain($"write it as \"{expectedSpelling}\""));
-        });
+        }
     }
 
     [Test]
@@ -64,11 +64,11 @@ public sealed class ModelPatternLiteralAnalyzerTests
     {
         var reported = await AnalyzeAsync("""builder.Rule("___");""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reported, Has.Count.EqualTo(1));
             Assert.That(reported.FirstOrDefault()?.GetMessage(), Does.Contain("nothing of it survives"));
-        });
+        }
     }
 
     [Test]

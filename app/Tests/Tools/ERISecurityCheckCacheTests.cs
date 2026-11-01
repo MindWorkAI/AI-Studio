@@ -42,11 +42,11 @@ public sealed class ERISecurityCheckCacheTests
     {
         var answered = Answer(true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ERISecurityCheckCache.IsValid(answered, TimeSpan.FromSeconds(59)), Is.True, "The rounds of one answer share a single sign-in.");
             Assert.That(ERISecurityCheckCache.IsValid(answered, TimeSpan.FromSeconds(61)), Is.False, "The operator may change the requirements at any time.");
-        });
+        }
     }
 
     [Test]
@@ -54,11 +54,11 @@ public sealed class ERISecurityCheckCacheTests
     {
         var unanswered = Answer(false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ERISecurityCheckCache.IsValid(unanswered, TimeSpan.FromSeconds(14)), Is.True, "The rounds of one answer do not wait six seconds each for the same server.");
             Assert.That(ERISecurityCheckCache.IsValid(unanswered, TimeSpan.FromSeconds(16)), Is.False, "The server may well be back.");
-        });
+        }
     }
 
     [Test]
@@ -79,11 +79,11 @@ public sealed class ERISecurityCheckCacheTests
         var first = cache.GetAsync(INTRANET);
         var second = cache.GetAsync(INTRANET);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(fetches, Is.EqualTo(1), "Semantic Search checks when it is offered and again before every search; one sign-in has to do for both.");
             Assert.That(second, Is.SameAs(first));
-        });
+        }
     }
 
     [Test]

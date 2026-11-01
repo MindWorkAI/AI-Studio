@@ -23,13 +23,13 @@ public sealed class WebSearchToolArgumentTests
     {
         var arguments = Arguments("""{"query":"weather"}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(WebSearchTool.ReadLanguage(arguments), Is.Null);
             Assert.That(WebSearchTool.ReadTimeRange(arguments), Is.Null);
             Assert.That(WebSearchTool.ReadPage(arguments), Is.Null);
             Assert.That(WebSearchTool.ReadLimit(arguments), Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -37,13 +37,13 @@ public sealed class WebSearchToolArgumentTests
     {
         var arguments = Arguments("""{"query":"weather","language":null,"time_range":null,"page":null,"limit":null}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(WebSearchTool.ReadLanguage(arguments), Is.Null);
             Assert.That(WebSearchTool.ReadTimeRange(arguments), Is.Null);
             Assert.That(WebSearchTool.ReadPage(arguments), Is.Null);
             Assert.That(WebSearchTool.ReadLimit(arguments), Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -51,14 +51,14 @@ public sealed class WebSearchToolArgumentTests
     {
         var arguments = Arguments("""{"query":"  weather  ","language":"de-DE","time_range":"day","page":2,"limit":7}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(WebSearchTool.ReadQuery(arguments), Is.EqualTo("weather"));
             Assert.That(WebSearchTool.ReadLanguage(arguments), Is.EqualTo("de-DE"));
             Assert.That(WebSearchTool.ReadTimeRange(arguments), Is.EqualTo("day"));
             Assert.That(WebSearchTool.ReadPage(arguments), Is.EqualTo(2));
             Assert.That(WebSearchTool.ReadLimit(arguments), Is.EqualTo(7));
-        });
+        }
     }
 
     [TestCase("0")]
@@ -70,12 +70,12 @@ public sealed class WebSearchToolArgumentTests
     {
         var message = Refusal(() => WebSearchTool.ReadPage(Arguments($$"""{"query":"weather","page":{{value}}}""")));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("'page'").And.Contain("a positive integer"));
             Assert.That(message, Does.Contain($"but was {value}."), "Without the value, the model cannot tell which of its arguments the tool means.");
             Assert.That(message, Does.Contain("Leave it out"), "The way out a model needs when it believes the argument is required.");
-        });
+        }
     }
 
     [TestCase("0")]
@@ -85,12 +85,12 @@ public sealed class WebSearchToolArgumentTests
     {
         var message = Refusal(() => WebSearchTool.ReadLimit(Arguments($$"""{"query":"weather","limit":{{value}}}""")));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("'limit'").And.Contain("a positive integer"));
             Assert.That(message, Does.Contain($"but was {value}."));
             Assert.That(message, Does.Contain("Leave it out"));
-        });
+        }
     }
 
     [TestCase("day")]
@@ -114,12 +114,12 @@ public sealed class WebSearchToolArgumentTests
     {
         var message = Refusal(() => WebSearchTool.ReadTimeRange(Arguments($$"""{"query":"weather","time_range":{{value}}}""")));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("'time_range'").And.Contain("one of day, week, month, year"));
             Assert.That(message, Does.Contain($"but was {value}."));
             Assert.That(message, Does.Contain("Leave it out"));
-        });
+        }
     }
 
     [Test]
@@ -141,11 +141,11 @@ public sealed class WebSearchToolArgumentTests
     {
         var message = Refusal(() => WebSearchTool.ReadQuery(Arguments("""{"query":42}""")));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("'query'").And.Contain("but was 42."));
             Assert.That(message, Does.Not.Contain("Leave it out"), "The query is required, so leaving it out is no way out.");
-        });
+        }
     }
 
     [Test]
@@ -154,11 +154,11 @@ public sealed class WebSearchToolArgumentTests
         var longValue = new string('x', 500);
         var message = Refusal(() => WebSearchTool.ReadTimeRange(Arguments($$"""{"query":"weather","time_range":"{{longValue}}"}""")));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Not.Contain(longValue), "The model sent the value itself; repeating all of it back only costs tokens.");
             Assert.That(message, Does.Contain("..."));
-        });
+        }
     }
 
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);

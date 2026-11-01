@@ -75,7 +75,7 @@ public sealed class BackupChatImportTests
         var transcript = ((ContentText)chat!.Blocks.Single().Content!).FileAttachments.Single();
         var chatsWithEntries = await provenance.Client.GetChatIdsAsync(CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chatsWithEntries, Is.Empty, "A backup without a provenance store, e.g., of an older version, brings its chats all the same.");
             Assert.That(preview.Success, Is.True, preview.Issue);
@@ -85,7 +85,7 @@ public sealed class BackupChatImportTests
             Assert.That(result.ImportedWorkspaces, Is.EqualTo(1));
             Assert.That(transcript.FilePath, Does.StartWith(WorkspaceBehaviour.GetChatDirectory(storedChat.WorkspaceId, storedChat.ChatId)),"The transcript belongs to the chat on this computer, not to the data folder of the other one.");
             Assert.That(File.ReadAllText(transcript.FilePath), Does.Contain("Hello and welcome."));
-        });
+        }
     }
 
     [Test]
@@ -98,11 +98,11 @@ public sealed class BackupChatImportTests
         await ChatArchiveImporter.ImportAsync(this.ArchivePath, provenance.Client, ChatArchiveCollisionBehavior.SKIP, null, CancellationToken.None);
         var secondResult = await ChatArchiveImporter.ImportAsync(this.ArchivePath, provenance.Client, ChatArchiveCollisionBehavior.SKIP, null, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(secondResult.ImportedChats, Is.Zero);
             Assert.That(secondResult.SkippedChats, Is.EqualTo(1), "Two chats with one ID would leave the app unable to tell them apart.");
-        });
+        }
     }
 
     [Test]
@@ -119,13 +119,13 @@ public sealed class BackupChatImportTests
         var stagingDirectory = Path.Combine(this.TargetDataDirectory, ".backup-staging");
         var stagingLeftovers = Directory.Exists(stagingDirectory) ? Directory.GetFileSystemEntries(stagingDirectory) : Array.Empty<string>();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ImportedChats, Is.EqualTo(1));
             Assert.That(entries[storedChat.ProvenanceId.Value].Content, Is.EqualTo("Hello and welcome."), "The chat refers to the entry by its id, which the import keeps.");
             Assert.That(chatsWithEntries, Is.EqualTo(new[] { storedChat.ChatId }), "Another chat's entries of the source computer stay behind.");
             Assert.That(stagingLeftovers, Is.Empty, "The unpacked store of the backup is removed afterward.");
-        });
+        }
     }
 
     [Test]
@@ -144,13 +144,13 @@ public sealed class BackupChatImportTests
         await using var context = provenance.CreateContext();
         var copiesOfTheEntry = await context.Entries.CountAsync(entry => entry.Id == entryKey);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(secondResult.ImportedChats, Is.EqualTo(1));
             Assert.That(chatsWithEntries, Has.Count.EqualTo(2), "The copy under its new id gets entries of its own, so deleting one of the two chats leaves the other whole.");
             Assert.That(chatsWithEntries, Does.Contain(storedChat.ChatId));
             Assert.That(copiesOfTheEntry, Is.EqualTo(2), "Both chats refer to the entry by the same id.");
-        });
+        }
     }
 
     [Test]
@@ -166,11 +166,11 @@ public sealed class BackupChatImportTests
 
         var preview = await ChatArchiveImporter.ReadPreviewAsync(this.ArchivePath, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(preview.Success, Is.False, "This version cannot know what a later format holds.");
             Assert.That(preview.Issue, Is.Not.Empty);
-        });
+        }
     }
 
     [Test]

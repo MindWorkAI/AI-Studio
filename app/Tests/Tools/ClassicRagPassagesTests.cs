@@ -66,14 +66,14 @@ public sealed class ClassicRagPassagesTests
 
         var augmentation = await new AugmentationOne().ProcessAsync(new NoProvider(), new ContentText { Text = "Where is the mixing console?" }, chatThread, [handbook, manual]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(augmentation.UsedContexts.Select(context => context.Context), Is.EqualTo(new IRetrievalContext[] { handbook, manual }), "Without the check, the AI receives every context, in the order it was retrieved.");
             Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain($"# Retrieval context 1 of 2{Environment.NewLine}"));
             Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain($"# Retrieval context 2 of 2{Environment.NewLine}"));
             Assert.That(this.runtime.FilteredBatches, Has.Count.EqualTo(1), "All contexts are filtered together, in one request.");
             Assert.That(this.runtime.FilteredTexts, Has.Count.EqualTo(4), "Each description and each matched text is filtered once, and nothing a second time on its own.");
-        });
+        }
     }
 
     [Test]
@@ -86,11 +86,11 @@ public sealed class ClassicRagPassagesTests
 
         AISrcSelWithRetCtxVal.AddWhatTheAIReceived(answer, [handbook, withoutSource]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answer.Sources.Select(source => source.URL), Is.EqualTo(new[] { handbookPassage.SourceUrl }));
             Assert.That(answer.SourcePassages, Is.EqualTo(new[] { handbookPassage }), "A context without a source has no passage to show.");
-        });
+        }
     }
 
     [Test]
@@ -107,12 +107,12 @@ public sealed class ClassicRagPassagesTests
             new PreparedRetrievalContext(TextContext("handbook.pdf", results.Text), "body", [new Source("handbook.pdf (Page 11)", results.SourceUrl, SourceOrigin.RAG)], results),
         ]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answer.Sources, Has.Count.EqualTo(1), "The list keeps one entry per document.");
             Assert.That(answer.Sources[0].Title, Does.StartWith("handbook.pdf (").And.Contain("1, 11"), "The entry names the pages of both passages the AI received.");
             Assert.That(answer.SourcePassages, Is.EqualTo(new[] { introduction, results }));
-        });
+        }
     }
 
     [Test]
@@ -125,11 +125,11 @@ public sealed class ClassicRagPassagesTests
         AISrcSelWithRetCtxVal.AddWhatTheAIReceived(answer, [context]);
         AISrcSelWithRetCtxVal.AddWhatTheAIReceived(answer, [context]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answer.Sources, Has.Count.EqualTo(1));
             Assert.That(answer.SourcePassages, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -145,13 +145,13 @@ public sealed class ClassicRagPassagesTests
         var passagesBeingRead = answer.SourcePassages;
         answer.AddSources([new Source("notes.txt", notes.SourceUrl, SourceOrigin.RAG)], [notes]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sourcesBeingRead, Has.Count.EqualTo(1), "A list being read changed under its reader.");
             Assert.That(passagesBeingRead, Has.Count.EqualTo(1), "A list being read changed under its reader.");
             Assert.That(answer.Sources, Has.Count.EqualTo(2));
             Assert.That(answer.SourcePassages, Is.EqualTo(new[] { handbook, notes }));
-        });
+        }
     }
 
     private static RetrievalTextContext TextContext(string fileName, string matchedText) => new()

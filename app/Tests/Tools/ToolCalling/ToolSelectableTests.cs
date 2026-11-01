@@ -86,11 +86,11 @@ public sealed class ToolSelectableTests : ToolRegistryTestBase
     {
         var item = await this.GetCollectionItemAsync(readToolOutboundData: ToolOutboundData.MODEL_CHOSEN_ADDRESSES);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ToolSelectionRules.IsSelectable(item, ConfidenceLevel.HIGH, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES), Is.False, "Nothing of the collection is left to run.");
             Assert.That(ToolSelectionRules.IsSelectable(item, ConfidenceLevel.HIGH, OutboundDataRestriction.UNRESTRICTED), Is.True, "Without a restriction, both tools run.");
-        });
+        }
     }
 
     private async Task<ToolCatalogItem> GetItemAsync(TestTool tool)

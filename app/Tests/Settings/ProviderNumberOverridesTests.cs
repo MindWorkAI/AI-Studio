@@ -42,13 +42,13 @@ public sealed class ProviderNumberOverridesTests
         var overrides = new ProviderCapabilityOverrides { ContextWindowTokens = 32_768 };
         var after = overrides.ApplyTo(WHAT_THE_RULES_SAY);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Context.DefaultTokens, Is.EqualTo(32_768));
             Assert.That(after.Context.RaisableToTokens, Is.Null, "What the model card says it could be raised to is not a property of this installation.");
             Assert.That(after.Images, Is.EqualTo(WHAT_THE_RULES_SAY.Images), "Stating a window says nothing about pictures.");
             Assert.That(after.Capabilities, Is.EqualTo(WHAT_THE_RULES_SAY.Capabilities));
-        });
+        }
     }
 
     [Test]
@@ -56,11 +56,11 @@ public sealed class ProviderNumberOverridesTests
     {
         var after = new ProviderCapabilityOverrides().ApplyTo(WHAT_THE_RULES_SAY);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Context, Is.EqualTo(WHAT_THE_RULES_SAY.Context));
             Assert.That(after.Images, Is.EqualTo(WHAT_THE_RULES_SAY.Images));
-        });
+        }
     }
 
     [Test]
@@ -69,12 +69,12 @@ public sealed class ProviderNumberOverridesTests
         var overrides = new ProviderCapabilityOverrides { MaxImagesPerMessage = 4 };
         var after = overrides.ApplyTo(WHAT_THE_RULES_SAY);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Images.MaxPerMessage, Is.EqualTo(4));
             Assert.That(after.Images.MaxPerRequest, Is.EqualTo(20), "Nobody contradicted the request limit, so it stands.");
             Assert.That(after.Images.MaxInOneMessage, Is.EqualTo(4));
-        });
+        }
     }
 
     [Test]
@@ -88,11 +88,11 @@ public sealed class ProviderNumberOverridesTests
         var rules = WHAT_THE_RULES_SAY with { Images = new(3, null) };
         var after = new ProviderCapabilityOverrides { MaxImagesPerRequest = 100 }.ApplyTo(rules);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Images.MaxPerRequest, Is.EqualTo(100));
             Assert.That(after.Images.MaxInOneMessage, Is.EqualTo(3));
-        });
+        }
     }
 
     [Test]
@@ -100,11 +100,11 @@ public sealed class ProviderNumberOverridesTests
     {
         var after = new ProviderCapabilityOverrides { MaxImagesPerRequest = 0 }.ApplyTo(WHAT_THE_RULES_SAY);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Images.IsKnown, Is.True);
             Assert.That(after.Images.MaxInOneMessage, Is.EqualTo(0));
-        });
+        }
     }
 
     [TestCase(0)]
@@ -134,13 +134,13 @@ public sealed class ProviderNumberOverridesTests
         // The dialog throws the record away when this says false, so a person who set nothing but a
         // window would watch their number disappear on the way out of the dialog.
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new ProviderCapabilityOverrides { ContextWindowTokens = 8_192 }.HasOverrides, Is.True);
             Assert.That(new ProviderCapabilityOverrides { MaxImagesPerMessage = 1 }.HasOverrides, Is.True);
             Assert.That(new ProviderCapabilityOverrides { MaxImagesPerRequest = 0 }.HasOverrides, Is.True, "Zero is a statement, and the person made it.");
             Assert.That(new ProviderCapabilityOverrides().HasOverrides, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -157,14 +157,14 @@ public sealed class ProviderNumberOverridesTests
         var json = JsonSerializer.Serialize(written);
         var read = JsonSerializer.Deserialize<ProviderCapabilityOverrides>(json);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read, Is.EqualTo(written));
             Assert.That(json, Does.Contain("\"CONTEXT_WINDOW\""), "The key names are the surface an administrator sees; they are not free to change.");
             Assert.That(json, Does.Contain("\"MAX_IMAGES_PER_MESSAGE\""));
             Assert.That(json, Does.Contain("\"MAX_IMAGES_PER_REQUEST\""));
             Assert.That(json, Does.Not.Contain("AUDIO_INPUT"), "Saying nothing is not the same as saying null, and a settings file should not be full of it.");
-        });
+        }
     }
 
     [Test]
@@ -193,11 +193,11 @@ public sealed class ProviderNumberOverridesTests
                                     """);
 
         Assert.That(read, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read!.ContextWindowTokens, Is.EqualTo(32_768));
             Assert.That(read.MaxImagesPerRequest, Is.EqualTo(4), "The capability words are read loosely too, and a table is read by the app rather than by a compiler.");
-        });
+        }
     }
 
     [TestCase("[\"CONTEXT_WINDOW\"] = 0", TestName = "A window of no tokens")]
@@ -220,12 +220,12 @@ public sealed class ProviderNumberOverridesTests
                                       """);
 
         Assert.That(read, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read!.VideoInput, Is.EqualTo(false));
             Assert.That(read.ContextWindowTokens, Is.Null);
             Assert.That(read.MaxImagesPerRequest, Is.Null);
-        });
+        }
     }
 
     [Test]

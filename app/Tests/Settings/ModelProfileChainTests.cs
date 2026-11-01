@@ -39,7 +39,7 @@ public sealed class ModelProfileChainTests
     [Test]
     public void EveryModelLeftToTheDefaultIsAnsweredByTheAssumption()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var left in LeftToTheDefault.ENTRIES)
             {
@@ -50,7 +50,7 @@ public sealed class ModelProfileChainTests
 
                 Assert.That(profile.Capabilities, Is.EqualTo(wanted), $"{left.Provider} \"{left.ModelId}\": {left.Reason}");
             }
-        });
+        }
     }
 
     [Test]
@@ -58,7 +58,7 @@ public sealed class ModelProfileChainTests
     {
         var profile = LLMProviders.SELF_HOSTED.GetModelProfile(new Model("a-model-nobody-has-heard-of", null));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.TEXT_INPUT), Is.True);
             Assert.That(profile.Has(Capability.TEXT_OUTPUT), Is.True);
@@ -67,7 +67,7 @@ public sealed class ModelProfileChainTests
             Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.False, "The assumption says nothing about what a model reads besides text.");
             Assert.That(profile.Reasoning, Is.EqualTo(ReasoningSupport.NONE));
             Assert.That(profile.Context.IsKnown, Is.False, "A context window nobody stated is unknown, not a number somebody picked.");
-        });
+        }
     }
 
     [Test]
@@ -111,12 +111,12 @@ public sealed class ModelProfileChainTests
 
         var profile = configured.GetModelProfile();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True, "The rules say this model reads text only; the person says otherwise and can see their installation.");
             Assert.That(profile.Has(Capability.FUNCTION_CALLING), Is.False, "And the other way round.");
             Assert.That(profile.Has(Capability.TEXT_INPUT), Is.True, "Everything nobody said anything about stays as the rules had it.");
-        });
+        }
     }
 
     [Test]
@@ -160,11 +160,11 @@ public sealed class ModelProfileChainTests
         ListedModels.Shared.Report(MACHINE, [new(MODEL.Id, ContextWindow.Of(WHAT_THE_MACHINE_REPORTS))]);
         var configured = ProviderWith(new() { ContextWindowTokens = 8_192 });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(configured.GetAutomaticModelProfile().Context.DefaultTokens, Is.EqualTo(WHAT_THE_MACHINE_REPORTS));
             Assert.That(configured.GetModelProfile().Context.DefaultTokens, Is.EqualTo(8_192), "What the person typed is still what counts everywhere else.");
-        });
+        }
     }
 
     [Test]

@@ -18,7 +18,7 @@ public sealed class SwotAnalysisSendToChatTests
 
         var chatThread = AssistantSWOTAnalysis.CreateChatThreadForResult(assistantThread, visiblePrompt, result);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chatThread.Blocks, Has.Count.EqualTo(2));
             Assert.That(chatThread.Blocks[0], Is.SameAs(visiblePrompt));
@@ -27,7 +27,7 @@ public sealed class SwotAnalysisSendToChatTests
             Assert.That(((ContentText)chatThread.Blocks[1].Content!).Text, Is.EqualTo("## SWOT Matrix"));
             Assert.That(chatThread.Blocks[1].Content, Is.Not.SameAs(result.Content));
             Assert.That(chatThread.SystemPrompt, Is.EqualTo(SystemPrompts.DEFAULT));
-        });
+        }
     }
 
     [Test]
@@ -38,11 +38,11 @@ public sealed class SwotAnalysisSendToChatTests
 
         var chatThread = AssistantSWOTAnalysis.CreateChatThreadForResult(assistantThread, VisiblePrompt(result.Time.AddTicks(-1)), result);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(assistantThread.IsWebAddressGivenToTheModel(new Uri(ADDRESS_A_MODEL_CHOSE)), Is.True, "The hidden request counts as a message of the user.");
             Assert.That(chatThread.IsWebAddressGivenToTheModel(new Uri(ADDRESS_A_MODEL_CHOSE)), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -54,11 +54,11 @@ public sealed class SwotAnalysisSendToChatTests
 
         var chatThread = AssistantSWOTAnalysis.CreateChatThreadForResult(assistantThread, VisiblePrompt(result.Time.AddTicks(-1)), result);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chatThread.ChatId, Is.EqualTo(assistantThread.ChatId));
             Assert.That(chatThread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH));
-        });
+        }
     }
 
     [Test]

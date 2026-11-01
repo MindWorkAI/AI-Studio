@@ -52,13 +52,13 @@ public sealed class PresentationFileTests
         var result = await PresentationFile.CreateAsync(templatePath, targetPath, DECK, BasisOf(templatePath), OPTIONS, new NoPictures(), NullLogger.Instance, CancellationToken.None);
 
         using var document = PresentationDocument.Open(targetPath, false);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsWritten, Is.True);
             Assert.That(Directory.GetFileSystemEntries(this.targetFolder), Is.EqualTo(new[] { targetPath }), "Nothing else came about next to the chosen file.");
             Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(2), "The chosen file holds the presentation instead of what it held before.");
             Assert.That(TemporaryFiles(), Is.EquivalentTo(temporaryFiles), "The copy of the template is gone.");
-        });
+        }
     }
 
     [Test]
@@ -73,12 +73,12 @@ public sealed class PresentationFileTests
         var result = await PresentationFile.CreateAsync(templatePath, targetPath, DECK, new Dictionary<string, string>(), OPTIONS, new NoPictures(), NullLogger.Instance, CancellationToken.None);
 
         var targetContent = await File.ReadAllBytesAsync(targetPath);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsWritten, Is.False);
             Assert.That(targetContent, Is.EqualTo(PREVIOUS_CONTENT));
             Assert.That(TemporaryFiles(), Is.EquivalentTo(temporaryFiles), "The copy of the template is gone.");
-        });
+        }
     }
 
     [Test]
@@ -90,11 +90,11 @@ public sealed class PresentationFileTests
         var result = await PresentationFile.CreateAsync(templatePath, templatePath, DECK, basis, OPTIONS, new NoPictures(), NullLogger.Instance, CancellationToken.None);
 
         using var document = PresentationDocument.Open(templatePath, false);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsWritten, Is.True);
             Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(2), "The template was copied before it was written over.");
-        });
+        }
     }
 
     private async Task<string> CreateTemplateAsync()

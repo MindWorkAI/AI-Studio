@@ -24,13 +24,13 @@ public sealed class ChatThreadRestrictionsOfTests
 
         assistantThread.RequireRestrictionsOf(researchThread);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(assistantThread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH));
             Assert.That(assistantThread.DataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED));
             Assert.That(assistantThread.RequiredOutboundDataRestriction.Restriction, Is.EqualTo(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT));
             Assert.That(assistantThread.RequiredOutboundDataRestriction.Reference, Is.EqualTo(DATA_SOURCE_ID));
-        });
+        }
     }
 
     [Test]
@@ -60,12 +60,12 @@ public sealed class ChatThreadRestrictionsOfTests
 
         assistantThread.RequireRestrictionsOf(researchThread);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(assistantThread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH));
             Assert.That(assistantThread.DataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED));
             Assert.That(assistantThread.RequiredOutboundDataRestriction.Restriction, Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
-        });
+        }
     }
 
     [Test]
@@ -75,12 +75,12 @@ public sealed class ChatThreadRestrictionsOfTests
 
         assistantThread.RequireRestrictionsOf(new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(assistantThread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.NONE));
             Assert.That(assistantThread.DataSecurity, Is.EqualTo(DataSourceSecurity.NOT_SPECIFIED));
             Assert.That(assistantThread.RequiredOutboundDataRestriction, Is.EqualTo(OutboundDataRequirement.NONE));
             Assert.That(assistantThread.WebAddressesWrittenByModels, Is.Empty);
-        });
+        }
     }
 }

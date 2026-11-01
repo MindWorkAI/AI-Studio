@@ -67,13 +67,13 @@ public sealed class ManagedGuidSettingTests
         var processed = await ProcessAsync(settingName, configuredText, allowUserOverride: false);
 
         var configMeta = GetMeta(settingName);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True, "An empty text is a valid choice: none.");
             Assert.That(this.GetValue(settingName), Is.Empty);
             Assert.That(configMeta.IsLocked, Is.True);
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(PLUGIN_ID));
-        });
+        }
     }
 
     [Test]
@@ -83,13 +83,13 @@ public sealed class ManagedGuidSettingTests
         var processed = await ProcessAsync(PRESELECTED_PROVIDER, string.Empty, allowUserOverride: true);
 
         var configMeta = GetMeta(PRESELECTED_PROVIDER);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True);
             Assert.That(this.GetValue(PRESELECTED_PROVIDER), Is.Empty, "The default of the organization applies until the user chooses otherwise.");
             Assert.That(configMeta.IsLocked, Is.False);
             Assert.That(configMeta.ManagedMode, Is.EqualTo(ManagedConfigurationMode.EDITABLE_DEFAULT));
-        });
+        }
     }
 
     [Test]
@@ -97,12 +97,12 @@ public sealed class ManagedGuidSettingTests
     {
         var processed = await ProcessAsync(PRESELECTED_PROVIDER, ORGANIZATIONS_PROVIDER_ID.ToUpperInvariant(), allowUserOverride: false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True);
             Assert.That(this.GetValue(PRESELECTED_PROVIDER), Is.EqualTo(ORGANIZATIONS_PROVIDER_ID));
             Assert.That(GetMeta(PRESELECTED_PROVIDER).IsLocked, Is.True);
-        });
+        }
     }
 
     [Test]
@@ -111,12 +111,12 @@ public sealed class ManagedGuidSettingTests
         this.SetValue(PRESELECTED_PROVIDER, USERS_PROVIDER_ID);
         var processed = await ProcessAsync(PRESELECTED_PROVIDER, "not-a-guid", allowUserOverride: false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False);
             Assert.That(this.GetValue(PRESELECTED_PROVIDER), Is.EqualTo(USERS_PROVIDER_ID), "An invalid ID leaves the choice of the user untouched.");
             Assert.That(GetMeta(PRESELECTED_PROVIDER).IsLocked, Is.False, "An invalid ID locks nothing.");
-        });
+        }
     }
 
     [Test]
@@ -126,12 +126,12 @@ public sealed class ManagedGuidSettingTests
         await ProcessAsync(PRESELECTED_PROVIDER, string.Empty, allowUserOverride: false);
         var processed = await ProcessAsync(PRESELECTED_PROVIDER, null, allowUserOverride: false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False);
             Assert.That(GetMeta(PRESELECTED_PROVIDER).IsLocked, Is.False);
             Assert.That(this.GetValue(PRESELECTED_PROVIDER), Is.EqualTo(USERS_PROVIDER_ID), "The user gets back the choice made before the plugin took the setting over.");
-        });
+        }
     }
 
     private string GetValue(string settingName) => PropertyOf(settingName).Compile().Invoke(this.settingsManager.ConfigurationData.App);

@@ -25,12 +25,12 @@ public sealed class ChatComposerStateTests
 
         composer.RestoreFromDraft(draft);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(composer.UserInput, Is.EqualTo("Summarize the meeting"));
             Assert.That(composer.FileAttachments.Select(attachment => attachment.FilePath), Is.EqualTo(new[] { "/documents/agenda.pdf" }));
             Assert.That(composer.HasUserDraft, Is.True, "A chat template must not replace the message the user came back to.");
-        });
+        }
     }
 
     [Test]
@@ -41,11 +41,11 @@ public sealed class ChatComposerStateTests
 
         composer.RestoreFromDraft(new ChatDraft());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(composer.UserInput, Is.Empty, "The message of the chat before belongs to that chat.");
             Assert.That(composer.HasUserDraft, Is.False, "Nobody started a message in this chat, so a chat template may still fill the composer.");
-        });
+        }
     }
 
     [Test]
@@ -55,10 +55,10 @@ public sealed class ChatComposerStateTests
 
         composer.ApplyTemplate(new ChatTemplate { PredefinedUserPrompt = "Translate the following text:" });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(composer.UserInput, Is.EqualTo("Translate the following text:"));
             Assert.That(composer.HasUserDraft, Is.False, "Leaving the chat must not warn about a message the user never wrote.");
-        });
+        }
     }
 }

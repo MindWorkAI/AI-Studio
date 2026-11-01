@@ -57,11 +57,11 @@ public sealed class HTMLParserConcurrencyTests
         var failureKinds = string.Join(", ", failures.Select(x => x.GetType().Name).Distinct(StringComparer.Ordinal));
         var deviatingCount = results.Count(x => !string.Equals(x, expected, StringComparison.Ordinal));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(failures, Is.Empty, $"Converting in parallel threw {failures.Count} times ({failureKinds}). A conversion must not depend on what another thread is converting.");
             Assert.That(deviatingCount, Is.Zero, $"{deviatingCount} of {results.Count} conversions came back different from the same page converted on its own. Their indentation was counted from ancestors belonging to another conversion.");
-        });
+        }
     }
 
     /// <summary>

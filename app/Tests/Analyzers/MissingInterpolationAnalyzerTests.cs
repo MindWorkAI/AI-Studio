@@ -26,12 +26,12 @@ public sealed class MissingInterpolationAnalyzerTests
     {
         var reported = await AnalyzeAsync(expression);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reported, Has.Count.EqualTo(1));
             Assert.That(reported.FirstOrDefault()?.Id, Is.EqualTo("MWAIS0014"));
             Assert.That(reported.FirstOrDefault()?.GetMessage(), Does.Contain("\"{this.location}\""));
-        });
+        }
     }
 
     [Test]

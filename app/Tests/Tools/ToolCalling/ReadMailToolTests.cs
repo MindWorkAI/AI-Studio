@@ -30,13 +30,13 @@ public sealed class ReadMailToolTests : ToolRegistryTestBase
     {
         var request = ReadMailTool.ReadRequest(Arguments($$"""{"mail_id":"{{MAIL_ID.ToUpperInvariant()}}"}"""));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.MailId, Is.EqualTo(MAIL_ID), "The index stores ids in lower case, and a model may write them in upper case.");
             Assert.That(request.AttachmentNumber, Is.Null, "Without an attachment, the text of the mail is read.");
             Assert.That(request.IncludeHeaders, Is.False);
             Assert.That(request.Page, Is.EqualTo(1));
-        });
+        }
     }
 
     [TestCase("""{"mail_id":"the budget mail"}""")]
@@ -113,11 +113,11 @@ public sealed class ReadMailToolTests : ToolRegistryTestBase
 
         var pages = Enumerable.Range(1, lastPage).Select(page => ReadMailTool.GetPage(text, page, 10)).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(string.Concat(pages), Is.EqualTo(text));
             Assert.That(pages.Take(lastPage - 1).Select(page => page.Length), Is.All.EqualTo(10));
-        });
+        }
     }
 
     [Test]
@@ -129,12 +129,12 @@ public sealed class ReadMailToolTests : ToolRegistryTestBase
         var first = ReadMailTool.GetPage(text, 1, 10);
         var second = ReadMailTool.GetPage(text, 2, 10);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(first, Is.EqualTo("012345678"));
             Assert.That(second, Does.StartWith("😀"));
             Assert.That(first + second, Is.EqualTo(text));
-        });
+        }
     }
 
     [TestCase(MailPartTextState.ATTACHMENTS_DISABLED)]
@@ -161,13 +161,13 @@ public sealed class ReadMailToolTests : ToolRegistryTestBase
     {
         var tool = this.Tool();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tool.IsAvailable, Is.False, "Without the previews, the tool does not exist.");
             Assert.That(new MailboxToolCollection().GetDefinition().ToolIds, Does.Contain(ToolSelectionRules.READ_MAIL_TOOL_ID), "The mailbox collection states the confidence the tool needs.");
             Assert.That(tool.OutboundData, Is.EqualTo(ToolOutboundData.NONE), "Reading sends no query anywhere.");
             Assert.That(tool.ReturnsUntrustedExternalContent, Is.True, "Mails are written by others.");
-        });
+        }
     }
 
     // Stating its definition and reading its arguments needs none of the services the tool reads with:

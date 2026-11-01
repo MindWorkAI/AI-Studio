@@ -16,7 +16,7 @@ public sealed class SwotAnalysisMarkdownFormatterTests
 
         var markdown = SwotAnalysisMarkdownFormatter.Format(result);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(markdown, Does.Contain("| | Positive | Negative |"));
             Assert.That(Count(markdown, "Experienced team"), Is.GreaterThanOrEqualTo(2));
@@ -26,7 +26,7 @@ public sealed class SwotAnalysisMarkdownFormatterTests
             Assert.That(markdown.IndexOf("## SWOT Matrix", StringComparison.Ordinal), Is.LessThan(markdown.IndexOf("## Strengths", StringComparison.Ordinal)));
             Assert.That(markdown.IndexOf("## SWOT Matrix", StringComparison.Ordinal), Is.LessThan(markdown.IndexOf("## Prioritized Actions", StringComparison.Ordinal)));
             Assert.That(markdown, Does.Contain("| **External** | **Opportunities:** Growing market | **Threats:** New competitor |"));
-        });
+        }
     }
 
     [Test]
@@ -45,13 +45,13 @@ public sealed class SwotAnalysisMarkdownFormatterTests
             .Select(heading => markdown.IndexOf(heading, StringComparison.Ordinal))
             .ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(positions, Is.All.GreaterThanOrEqualTo(0));
             Assert.That(positions, Is.Ordered);
             Assert.That(markdown, Does.Contain("The position is solid\\.\n\nThe competitor is the main risk\\."));
             Assert.That(markdown, Does.EndWith("- **Moved the new competitor to the threats\\.** — It is external and negative\\."));
-        });
+        }
     }
 
     [Test]

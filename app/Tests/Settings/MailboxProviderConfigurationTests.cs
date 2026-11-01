@@ -42,7 +42,7 @@ public sealed class MailboxProviderConfigurationTests
         });
 
         Assert.That(provider, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(provider!.Id, Is.EqualTo(ID));
             Assert.That(provider.EnterpriseConfigurationPluginId, Is.EqualTo(PLUGIN_ID));
@@ -52,7 +52,7 @@ public sealed class MailboxProviderConfigurationTests
             Assert.That(provider.Port, Is.EqualTo(1143));
             Assert.That(provider.UsernameHint, Is.EqualTo(@"Your account as DOMAIN\username"));
             Assert.That(provider.HelpUrl, Is.EqualTo("https://intranet.example.org/mail/imap"));
-        });
+        }
     }
 
     [Test]
@@ -61,14 +61,14 @@ public sealed class MailboxProviderConfigurationTests
         var withoutEncryption = await ReadAsync(new Dictionary<string, string?>());
         var withStartTls = await ReadAsync(new Dictionary<string, string?> { ["TransportSecurity"] = "\"STARTTLS\"" });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutEncryption?.TransportSecurity, Is.EqualTo(MailboxTransportSecurity.SSL_ON_CONNECT), "TLS from the first byte on is the safer of the two ways.");
             Assert.That(withoutEncryption?.Port, Is.EqualTo(993));
             Assert.That(withStartTls?.Port, Is.EqualTo(143));
             Assert.That(withoutEncryption?.UsernameHint, Is.Empty);
             Assert.That(withoutEncryption?.HelpUrl, Is.Empty);
-        });
+        }
     }
 
     [Test]

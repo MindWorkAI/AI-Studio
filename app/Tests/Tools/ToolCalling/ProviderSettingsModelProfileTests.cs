@@ -41,10 +41,10 @@ public sealed class ProviderSettingsModelProfileTests : ToolRegistryTestBase
         var configured = new AIStudio.Settings.Provider(1, MACHINE, "A machine of my own", LLMProviders.SELF_HOSTED, MODEL, IsSelfHosted: true);
         var settings = configured.CreateProvider().CreateSettingsProvider(MODEL);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(settings.GetModelProfile().Context.DefaultTokens, Is.EqualTo(WHAT_THE_MACHINE_REPORTS));
             Assert.That(settings.GetModelProfile(), Is.EqualTo(configured.GetModelProfile()), "A request has to know the model as the configured provider does.");
-        });
+        }
     }
 }

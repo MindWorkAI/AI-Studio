@@ -27,11 +27,11 @@ public sealed class DataSourceUnreachableTests
     {
         var source = ERISource(DataSourceSecurity.SELF_HOSTED);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceService.MayBeNamedWhileUnreachable(source, usingTrustedProvider: true), Is.True);
             Assert.That(DataSourceService.MayBeNamedWhileUnreachable(source, usingTrustedProvider: false), Is.False, "The data source would be refused to this provider if its server answered.");
-        });
+        }
     }
 
     [Test]

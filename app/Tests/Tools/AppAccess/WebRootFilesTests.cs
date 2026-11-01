@@ -94,10 +94,10 @@ public sealed class WebRootFilesTests
 
         var copied = await new WebRootFiles().CopyToAsync("specs/eri/does-not-exist.json", destinationPath);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(copied, Is.False);
             Assert.That(File.Exists(destinationPath), Is.False);
-        });
+        }
     }
 }

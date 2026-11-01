@@ -51,11 +51,11 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
     {
         var request = CountMailsTool.ReadRequest(Arguments($$"""{"mailbox_ids":["{{PRIVATE.Id}}"],"is_unread":true,"from":"alice"}"""), [WORK, PRIVATE], TimeZoneInfo.Utc);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.Mailboxes.Select(mailbox => mailbox.Id), Is.EqualTo(new[] { PRIVATE.Id }));
             Assert.That(request.Conditions.Filter, Is.EqualTo(new MailFilter { IsUnread = true, From = "alice" }), "So the mails counted are the ones a search with the same conditions lists.");
-        });
+        }
     }
 
     [Test]
@@ -66,11 +66,11 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
         var all = CountMailsTool.GetServerCounts(folders, folderPaths: null);
         var someOfThem = CountMailsTool.GetServerCounts(folders, ["INBOX", "Projects"]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(all, Is.EqualTo((1_050L, 6L)));
             Assert.That(someOfThem, Is.EqualTo((150L, 6L)), "With a folder condition, only those folders count.");
-        });
+        }
     }
 
     [Test]
@@ -78,12 +78,12 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
     {
         IReadOnlyList<MailFolderRecord> folders = [Folder("INBOX", 120, 4), Folder("Archive", null, null)];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(CountMailsTool.GetServerCounts(folders, folderPaths: null), Is.Null, "A sum over some of the folders would be too low without saying so.");
             Assert.That(CountMailsTool.GetServerCounts(folders, ["INBOX"]), Is.EqualTo((120L, 4L)), "The folders which are known still count on their own.");
             Assert.That(CountMailsTool.GetServerCounts([], folderPaths: null), Is.Null, "Without a folder, there is nothing to add up.");
-        });
+        }
     }
 
     [Test]
@@ -95,13 +95,13 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
         var drafts = CountMailsTool.DescribeGroup(new MailCountGroup("Drafts", string.Empty, 3), "Drafts", MailCountGrouping.FOLDER, coverage);
         var inbox = CountMailsTool.DescribeGroup(new MailCountGroup("INBOX", string.Empty, 12), "INBOX", MailCountGrouping.FOLDER, coverage);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sent[MailToolArguments.SPECIAL_FOLDER_ARGUMENT]?.GetValue<string>(), Is.EqualTo("sent"));
             Assert.That(sent["server_message_count"]?.GetValue<long>(), Is.EqualTo(40), "The numbers of the server stay.");
             Assert.That(drafts[MailToolArguments.SPECIAL_FOLDER_ARGUMENT]?.GetValue<string>(), Is.EqualTo("drafts"));
             Assert.That(inbox.ContainsKey(MailToolArguments.SPECIAL_FOLDER_ARGUMENT), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -118,13 +118,13 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
         var function = CountMailsTool.DescribeMailboxes(this.Tool().GetDefinition().Function, [WORK, PRIVATE]);
         var properties = JsonNode.Parse(function.Parameters.GetRawText())!["properties"]!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(function.DescriptionForLLM, Does.Contain($"- id={WORK.Id}, name='Work'").And.Contain($"- id={PRIVATE.Id}, name='Private'"));
             Assert.That(properties[MailToolArguments.MAILBOX_IDS_ARGUMENT]!["items"]!["enum"]!.AsArray().Select(id => id!.GetValue<string>()), Is.EqualTo(new[] { WORK.Id, PRIVATE.Id }));
             Assert.That(properties["group_by"]!["enum"]!.AsArray().Select(value => value!.GetValue<string>()), Is.EqualTo(new[] { "folder", "sender" }));
             Assert.That(properties["query"], Is.Null, "A count needs no query.");
-        });
+        }
     }
 
     [Test]
@@ -142,13 +142,13 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
     {
         var tool = this.Tool();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tool.IsAvailable, Is.False, "Without the previews, the tool does not exist.");
             Assert.That(new MailboxToolCollection().GetDefinition().ToolIds, Does.Contain(ToolSelectionRules.COUNT_MAILS_TOOL_ID), "The mailbox collection states the confidence the tool needs.");
             Assert.That(tool.OutboundData, Is.EqualTo(ToolOutboundData.NONE), "Counting sends no query anywhere.");
             Assert.That(tool.ReturnsUntrustedExternalContent, Is.True, "The names of senders and folders were written by others.");
-        });
+        }
     }
 
     // Stating its definition and reading its arguments needs none of the services the tool counts with:

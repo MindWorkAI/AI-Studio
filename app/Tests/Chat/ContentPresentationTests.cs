@@ -15,11 +15,11 @@ public sealed class ContentPresentationTests
 
         presentation.Data = JsonSerializer.SerializeToElement(new { heading = "Second" });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(firstHashCode, Is.Not.Zero);
             Assert.That(presentation.GetDataHashCode(), Is.Not.EqualTo(firstHashCode));
-        });
+        }
     }
 
     [Test]

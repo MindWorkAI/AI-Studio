@@ -40,11 +40,11 @@ public sealed class ResponsesToolCallingAdapterTests
 
         var secondRound = await Usages(adapter);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(firstRound, Is.EqualTo(new[] { 1200 }), "The first round states the conversation up to the question.");
             Assert.That(secondRound, Is.EqualTo(new[] { 9800 }), "The second round states its own request.");
-        });
+        }
     }
 
     [Test]
@@ -70,11 +70,11 @@ public sealed class ResponsesToolCallingAdapterTests
                 written.Add(delta.Content);
         }
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(usages, Is.Empty, "What the search found is part of the number, and no later request carries it.");
             Assert.That(written, Is.EqualTo(new[] { "It is sunny." }), "The answer itself goes out as always.");
-        });
+        }
     }
 
     /// <summary>

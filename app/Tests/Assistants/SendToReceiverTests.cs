@@ -33,11 +33,11 @@ public sealed class SendToReceiverTests
     {
         var data = destination.GetData();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(data.Event, Is.Not.EqualTo(Event.NONE), "Without an event of its own, the text has nothing to travel with.");
             Assert.That(PagesOf(data.Route), Has.Count.EqualTo(1), "The text is taken by the page which opens under the route.");
-        });
+        }
     }
 
     [TestCaseSource(nameof(Destinations))]
@@ -49,22 +49,22 @@ public sealed class SendToReceiverTests
 
         var applyMethod = page.GetMethod("ApplyTextLaunchPayload", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(IsAssistant(page), Is.True, $"{page.Name} is expected to be an assistant.");
             Assert.That(applyMethod, Is.Not.Null);
             Assert.That(applyMethod!.DeclaringType, Is.Not.EqualTo(applyMethod.GetBaseDefinition().DeclaringType), $"{page.Name} allows sending to it, so it has to put the text sent to it into a field.");
-        });
+        }
     }
 
     [Test]
     public void TextForTheChatGoesIntoTheFieldForTheNextMessage()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(AssistantLaunchService.TextEventFor(AIStudio.Tools.Components.CHAT), Is.EqualTo(Event.SEND_TO_CHAT_INPUT));
             Assert.That(AssistantLaunchService.TextEventFor(AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT), Is.EqualTo(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT));
-        });
+        }
     }
 
     private static List<Type> PagesOf(string route) => APP.GetTypes()

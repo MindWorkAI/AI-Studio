@@ -24,12 +24,12 @@ public sealed class FileExclusionEditorStateTests
     {
         var state = Create(text);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.FolderText, Is.EqualTo("node_modules/; bin/"));
             Assert.That(state.FileText, Is.EqualTo("*.min.js; draft-*"));
             Assert.That(state.Text, Is.EqualTo(text));
-        });
+        }
     }
 
     [Test]
@@ -38,12 +38,12 @@ public sealed class FileExclusionEditorStateTests
         var state = Create("bin/;*.min.js;draft-*");
         state.EditFolders("obj/\nbuild/");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileExclusions.Parse(state.Text), Is.EqualTo(new[] { "obj/", "build/", "*.min.js", "draft-*" }));
             Assert.That(state.FileText, Is.EqualTo("*.min.js; draft-*"));
             Assert.That(state.Text, Is.EqualTo("obj/; build/; *.min.js; draft-*"));
-        });
+        }
     }
 
     [Test]
@@ -52,12 +52,12 @@ public sealed class FileExclusionEditorStateTests
         var state = Create("bin/;node_modules/;*.min.js");
         state.EditFiles("*.wav;*.md");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileExclusions.Parse(state.Text), Is.EqualTo(new[] { "bin/", "node_modules/", "*.wav", "*.md" }));
             Assert.That(state.FolderText, Is.EqualTo("bin/; node_modules/"));
             Assert.That(state.Text, Is.EqualTo("bin/; node_modules/; *.wav; *.md"));
-        });
+        }
     }
 
     [TestCase("")]
@@ -80,7 +80,7 @@ public sealed class FileExclusionEditorStateTests
         state.EditFolders("node_modules/;cmake-build-*/");
         var patterns = FileExclusions.Parse(state.Text);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(patterns, Is.EqualTo(new[] { "node_modules/", "cmake-build-*/" }));
             Assert.That(FileExclusions.IsValid(state.Text), Is.True);
@@ -88,7 +88,7 @@ public sealed class FileExclusionEditorStateTests
             Assert.That(FileExclusions.ExcludesFolder("node_modules", patterns), Is.True);
             Assert.That(FileExclusions.ExcludesFolder("cmake-build-debug", patterns), Is.True);
             Assert.That(FileExclusions.ExcludesFile("node_modules", patterns), Is.False);
-        });
+        }
     }
 
     [TestCase(":text:")]
@@ -103,11 +103,11 @@ public sealed class FileExclusionEditorStateTests
         else
             state.EditFolders("bin/");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileExclusions.Parse(state.Text), Does.Contain(invalidRule));
             Assert.That(FileExclusions.IsValid(state.Text), Is.False);
-        });
+        }
     }
 
     [TestCase(":text:")]
@@ -117,11 +117,11 @@ public sealed class FileExclusionEditorStateTests
         var state = Create(string.Empty);
         state.EditFolders(selector);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.Text, Is.EqualTo(selector));
             Assert.That(FileExclusions.IsValid(state.Text), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -156,12 +156,12 @@ public sealed class FileExclusionEditorStateTests
         else
             state.RestoreFiles(DEFAULTS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.FolderText, Is.EqualTo(folders ? "bin/; node_modules/" : "latest/; "));
             Assert.That(state.FileText, Is.EqualTo(folders ? "*.latest; " : "*.tmp; *.bak"));
             Assert.That(state.Text, Is.EqualTo(folders ? "bin/; node_modules/; *.latest" : "latest/; *.tmp; *.bak"));
-        });
+        }
     }
 
     [TestCase(true)]
@@ -187,11 +187,11 @@ public sealed class FileExclusionEditorStateTests
         else
             state.RestoreFiles(FileExclusions.DEFAULT_PATTERNS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileExclusions.Parse(state.Text), Does.Contain(invalidRule));
             Assert.That(FileExclusions.IsValid(state.Text), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -199,13 +199,13 @@ public sealed class FileExclusionEditorStateTests
     {
         var state = Create("bin/;*.min.js");
         state.EditFiles("obj/;*.wav;draft-*");
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.IsValid, Is.False);
             Assert.That(state.Text, Is.EqualTo("bin/; obj/; *.wav; draft-*"));
             Assert.That(state.FolderText, Is.EqualTo("bin/"));
             Assert.That(state.FileText, Is.EqualTo("obj/;*.wav;draft-*"));
-        });
+        }
     }
 
     [TestCase(true)]
@@ -230,12 +230,12 @@ public sealed class FileExclusionEditorStateTests
         state.Receive(earlierValue);
         state.Receive(state.Text);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.FolderText, Is.EqualTo("obj/; build/; "));
             Assert.That(state.FileText, Is.EqualTo("*.wav; draft-*; "));
             Assert.That(state.Text, Is.EqualTo("obj/; build/; *.wav; draft-*"));
-        });
+        }
     }
 
     [Test]
@@ -247,11 +247,11 @@ public sealed class FileExclusionEditorStateTests
         state.EditFiles("*.latest");
         state.Receive(earlierValue);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.Text, Is.EqualTo("*.latest"));
             Assert.That(state.FileText, Is.EqualTo("*.latest"));
-        });
+        }
     }
 
     [Test]
@@ -271,11 +271,11 @@ public sealed class FileExclusionEditorStateTests
         state.EditFiles("*.latest");
         state.Receive("policy/;*.secret");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.FolderText, Is.EqualTo("policy/"));
             Assert.That(state.FileText, Is.EqualTo("*.secret"));
-        });
+        }
     }
 
     [Test]
@@ -311,7 +311,7 @@ public sealed class FileExclusionEditorStateTests
         state.EditFolders(":text:");
         state.Reset(FileExclusions.DEFAULT_PATTERNS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.Text, Is.EqualTo(FileExclusions.DEFAULT_PATTERNS));
             Assert.That(FileExclusions.IsValid(state.Text), Is.True);
@@ -319,7 +319,7 @@ public sealed class FileExclusionEditorStateTests
             Assert.That(state.FileText, Does.Contain("*.exe"));
             Assert.That(state.FolderText, Does.Not.Contain("\n").And.Not.Contain("\r"));
             Assert.That(state.FileText, Does.Not.Contain("\n").And.Not.Contain("\r"));
-        });
+        }
     }
 
     [Test]
@@ -341,14 +341,14 @@ public sealed class FileExclusionEditorStateTests
         var state = Create("bin/;*.tmp");
         state.EditFolders(pattern);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.IsValid, Is.False);
             Assert.That(state.FolderText, Is.EqualTo(pattern));
             Assert.That(FileExclusions.Parse(state.Text), Does.Contain(pattern));
             Assert.That(FileExclusions.Parse(state.Text), Does.Not.Contain(pattern + "/"));
             Assert.That(state.FileText, Is.EqualTo("*.tmp"));
-        });
+        }
     }
 
     [Test]
@@ -360,12 +360,12 @@ public sealed class FileExclusionEditorStateTests
         state.EditFiles("*.bak;obj/");
         state.Receive(earlierValue);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(state.IsValid, Is.False);
             Assert.That(state.FileText, Is.EqualTo("*.bak;obj/"));
             Assert.That(state.FolderText, Is.EqualTo("bin/"));
-        });
+        }
     }
 
     private static FileExclusionEditorState Create(string text)

@@ -24,7 +24,7 @@ public sealed class ModelKindTests
     [Test]
     public void EveryExampleIsRecognizedAsWhatItIsMadeFor()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var example in ModelKindCorpus.ENTRIES)
             {
@@ -32,7 +32,7 @@ public sealed class ModelKindTests
 
                 Assert.That(profile.Kind, Is.EqualTo(example.Kind), $"{example.Provider} \"{example.ModelId}\"");
             }
-        });
+        }
     }
 
     [Test]
@@ -59,11 +59,11 @@ public sealed class ModelKindTests
         //
         var profile = ModelRegistry.Shared.Profile(LLMProviders.SELF_HOSTED, "llama-guard-3-8b");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Kind, Is.EqualTo(ModelKind.MODERATION));
             Assert.That(profile.Has(Capability.TEXT_INPUT), Is.True, "The family which chose the model still speaks for it.");
-        });
+        }
     }
 
     [Test]
@@ -71,10 +71,10 @@ public sealed class ModelKindTests
     {
         var resolution = ModelRegistry.Shared.Explain(LLMProviders.SELF_HOSTED, "bge-reranker-v2-m3");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(resolution.Profile.Kind, Is.EqualTo(ModelKind.RERANKING));
             Assert.That(resolution.Modifiers.Select(modifier => modifier.Pattern.Text), Does.Contain("bge"), "Both words match; the ranked one has to be the one which gets the last word.");
-        });
+        }
     }
 }

@@ -28,7 +28,7 @@ public sealed class ChatThreadReportedHistoryTests
 
         var history = thread.ReportedHistoryFor(MODEL);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(history.IsKnown, Is.True);
             Assert.That(history.PromptTokens, Is.EqualTo(1200));
@@ -38,7 +38,7 @@ public sealed class ChatThreadReportedHistoryTests
             // would include the reasoning the next request never carries:
             //
             Assert.That(history.LastAnswer, Is.EqualTo("Answer 2"));
-        });
+        }
     }
 
     [Test]
@@ -54,12 +54,12 @@ public sealed class ChatThreadReportedHistoryTests
         var thread = Thread(Question(1), Block(ChatRole.AI, reasoningOnly, 2));
 
         var history = thread.ReportedHistoryFor(MODEL);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(history.IsKnown, Is.True);
             Assert.That(history.PromptTokens, Is.EqualTo(1200));
             Assert.That(history.LastAnswer, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -135,12 +135,12 @@ public sealed class ChatThreadReportedHistoryTests
         thread.Remove(lastAnswer.Content!);
 
         var history = thread.ReportedHistoryFor(MODEL);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(history.IsKnown, Is.True, "The first answer is the last block again, with exactly the blocks it was reported for.");
             Assert.That(history.PromptTokens, Is.EqualTo(1200));
             Assert.That(history.LastAnswer, Is.EqualTo("Answer 2"));
-        });
+        }
     }
 
     [Test]
@@ -152,12 +152,12 @@ public sealed class ChatThreadReportedHistoryTests
         thread.RollBackTo(firstAnswer.Content!);
 
         var history = thread.ReportedHistoryFor(MODEL);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(history.IsKnown, Is.True);
             Assert.That(history.PromptTokens, Is.EqualTo(1200));
             Assert.That(history.LastAnswer, Is.EqualTo("Answer 2"));
-        });
+        }
     }
 
     private static ChatThread Thread(params ContentBlock[] blocks) => new()

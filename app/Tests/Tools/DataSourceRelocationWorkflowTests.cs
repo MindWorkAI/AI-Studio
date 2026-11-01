@@ -105,14 +105,14 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
 
         await this.AssertOriginalChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(this.vectors.RelocatedPaths, Is.Empty, "An upgrade is not a relocation.");
             Assert.That(this.vectors.DeletedStores, Is.Zero);
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.InsertedBatches, Is.Zero);
-        });
+        }
     }
 
     [TestCase(false)]
@@ -124,13 +124,13 @@ public sealed class DataSourceRelocationWorkflowTests
         var original = this.source;
         var edit = this.OpenEdit(newPath);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.settings.ConfigurationData.DataSources.Single(), Is.EqualTo(original));
             Assert.That(this.Queue.TryDequeue(out _), Is.False);
             Assert.That(this.vectors.RelocatedPaths, Is.Empty);
             Assert.That(edit.Warning.ShowCount, Is.Zero, "Typing a path must not open the save confirmation.");
-        });
+        }
 
         edit.Dialog.Instance.Cancel();
         await edit.ParentTask.WaitAsync(TEST_TIMEOUT);
@@ -141,14 +141,14 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
 
         await this.AssertOriginalChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(this.chunkIds.Count));
             Assert.That(this.vectors.DeletedStores, Is.Zero);
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.InsertedBatches, Is.Zero);
-        });
+        }
         var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
         Assert.That(manifest.Files.Keys, Is.EquivalentTo(this.vectors.Locations.Values));
     }
@@ -165,7 +165,7 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
 
         await this.AssertOriginalChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edit.Warning.ShowCount, Is.Zero);
             Assert.That(this.vectors.RelocatedPaths, Is.Empty);
@@ -173,7 +173,7 @@ public sealed class DataSourceRelocationWorkflowTests
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.InsertedBatches, Is.Zero);
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
-        });
+        }
     }
 
     [TestCase(false)]
@@ -185,7 +185,7 @@ public sealed class DataSourceRelocationWorkflowTests
         var edit = this.OpenEdit(this.MoveSource("moved"));
         var save = InvokeTask(edit.Component, "StoreValidatedDataSourceAsync");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edit.Warning.ShowCount, Is.EqualTo(1));
             Assert.That(save.IsCompleted, Is.False);
@@ -193,7 +193,7 @@ public sealed class DataSourceRelocationWorkflowTests
             Assert.That(this.settings.ConfigurationData.DataSources.Single(), Is.EqualTo(original));
             Assert.That(this.Queue.TryDequeue(out _), Is.False);
             Assert.That(this.vectors.RelocatedPaths, Is.Empty);
-        });
+        }
 
         edit.Warning.Complete(DialogResult.Ok(true));
         await save.WaitAsync(TEST_TIMEOUT);
@@ -213,14 +213,14 @@ public sealed class DataSourceRelocationWorkflowTests
         edit.Warning.Complete(DialogResult.Cancel());
         await InvokeTask(edit.Component, "StoreValidatedDataSourceAsync");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edit.Warning.ShowCount, Is.EqualTo(1));
             Assert.That(edit.ParentTask.IsCompleted, Is.False, "Rejecting the warning leaves the edit dialog open.");
             Assert.That(this.settings.ConfigurationData.DataSources.Single(), Is.EqualTo(original));
             Assert.That(this.Queue.TryDequeue(out _), Is.False);
             Assert.That(this.vectors.RelocatedPaths, Is.Empty);
-        });
+        }
         edit.Dialog.Instance.Cancel();
         await edit.ParentTask.WaitAsync(TEST_TIMEOUT);
     }
@@ -236,12 +236,12 @@ public sealed class DataSourceRelocationWorkflowTests
         await edit.ParentTask.WaitAsync(TEST_TIMEOUT);
 
         var saved = this.settings.ConfigurationData.DataSources.Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edit.Warning.ShowCount, Is.Zero, "Nothing was prepared for the data source, so nothing can be lost.");
             Assert.That(saved is DataSourceLocalDirectory folder ? folder.Path : ((DataSourceLocalFile)saved).FilePath, Is.EqualTo(newPath));
             Assert.That(saved.OutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.UNRESTRICTED), "The dialog creates the data source anew, so a value it does not carry over falls back to its default.");
-        });
+        }
     }
 
     [TestCase(false)]
@@ -257,11 +257,11 @@ public sealed class DataSourceRelocationWorkflowTests
         await InvokeTask(edit.Component, "StoreValidatedDataSourceAsync").WaitAsync(TEST_TIMEOUT);
         await edit.ParentTask.WaitAsync(TEST_TIMEOUT);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edit.Warning.ShowCount, Is.EqualTo(1), "Everything is prepared again anyway, so the location needs no question of its own.");
             Assert.That(edit.Warning.Title, Is.EqualTo("Documents Will Be Prepared Again"));
-        });
+        }
     }
 
     [TestCase(false)]
@@ -283,7 +283,7 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
 
         await this.AssertOriginalChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(this.vectors.RelocatedPaths.Skip(1).ToArray(), Has.Length.EqualTo(this.chunkIds.Count));
@@ -291,7 +291,7 @@ public sealed class DataSourceRelocationWorkflowTests
             Assert.That(this.vectors.DeletedStores, Is.Zero);
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.Queue.TryDequeue(out _), Is.False, "The obsolete destination must not leave another run behind.");
-        });
+        }
         var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
         Assert.That(manifest.Files.Keys, Is.EquivalentTo(this.vectors.Locations.Values));
     }
@@ -313,7 +313,7 @@ public sealed class DataSourceRelocationWorkflowTests
         await run.WaitAsync(TEST_TIMEOUT);
 
         var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.vectors.CanceledRelocations, Is.EqualTo(1));
             Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(1));
@@ -322,7 +322,7 @@ public sealed class DataSourceRelocationWorkflowTests
             Assert.That(manifest.Files, Is.Empty);
             Assert.That(this.service.GetStatuses(), Is.Empty);
             Assert.That(this.Queue.TryDequeue(out _), Is.False);
-        });
+        }
     }
 
     private DataSourceRunQueue Queue => Field<DataSourceRunQueue>(this.service, "runQueue");
@@ -368,7 +368,7 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.AssertOriginalChunksAsync();
         var manifest = await restored.GetManifestAsync(this.source.Id, CancellationToken.None);
         var hits = await restored.SearchChunksAsync(this.source.Id, "indexed", 10, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(this.chunkIds.Count));
@@ -378,7 +378,7 @@ public sealed class DataSourceRelocationWorkflowTests
             Assert.That(manifest.Files.Keys, Is.EquivalentTo(this.vectors.Locations.Values));
             Assert.That(hits.Select(hit => hit.AbsolutePath), Is.EquivalentTo(this.vectors.Locations.Values));
             Assert.That(hits.All(hit => PathTools.IsInsideDirectory(destination, hit.AbsolutePath)), Is.True);
-        });
+        }
 
         // A restart/hash check after relocation must not relocate or prepare everything a second time.
         await this.service.QueueDataSourceAsync(this.source);
@@ -398,13 +398,13 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.service.QueueDataSourceAsync(this.source);
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
         await this.AssertOriginalChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.InsertedBatches, Is.Zero);
             Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(this.chunkIds.Count));
-        });
+        }
     }
 
     private async Task StoreForeignPathsAsync(string oldRoot, char separator)
@@ -493,13 +493,13 @@ public sealed class DataSourceRelocationWorkflowTests
             await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
             await this.AssertOriginalChunksAsync();
             var state = await this.store.Client.GetDataSourceStateAsync(this.source.Id, CancellationToken.None);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.FAILED));
                 Assert.That(this.service.GetStatuses().Single().LastError, Does.Contain("appears empty"));
                 Assert.That(state!.SourceHash, Is.EqualTo(storedHash));
                 Assert.That(this.vectors.DeletedDocuments, Is.Zero);
-            });
+            }
             if (attempt == 0)
                 await this.service.QueueDataSourceAsync(this.source);
         }
@@ -509,13 +509,13 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.service.QueueDataSourceAsync(this.source);
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
         await this.AssertOriginalChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.InsertedBatches, Is.Zero);
             Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(relocated ? this.chunkIds.Count : 0));
-        });
+        }
     }
 
     [Test]
@@ -529,13 +529,13 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.service.QueueDataSourceAsync(this.source);
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
         var chunks = await this.store.Client.SearchChunksAsync(this.source.Id, "indexed", 10, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(chunks.Select(chunk => chunk.ChunkId), Is.EquivalentTo(this.chunkIds.Except([removedChunkId])));
             Assert.That(this.vectors.DeletedDocuments, Is.EqualTo(1));
             Assert.That(this.vectors.InsertedBatches, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -548,13 +548,13 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.service.QueueDataSourceAsync(this.source);
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
         var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(manifest.Files, Is.Empty);
             Assert.That(this.vectors.Locations, Is.Empty);
             Assert.That(this.vectors.DeletedDocuments, Is.EqualTo(2));
-        });
+        }
     }
 
     [Test]
@@ -573,14 +573,14 @@ public sealed class DataSourceRelocationWorkflowTests
 
         await this.AssertOriginalChunksAsync();
         var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(this.chunkIds.Count));
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.InsertedBatches, Is.Zero);
             Assert.That(manifest.Files.Keys.All(path => path.StartsWith(renamed + Path.DirectorySeparatorChar, StringComparison.Ordinal)), Is.True, "The index must store the new spelling of the folder.");
-        });
+        }
     }
 
     /// <summary>
@@ -601,14 +601,14 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.AssertOriginalChunksAsync();
         var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
         touched.Refresh();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(this.vectors.InsertedBatches, Is.Zero, "Nothing is embedded.");
             Assert.That(this.vectors.DeletedDocuments, Is.Zero, "Nothing is read either: without a runtime here, reading the file would fail and remove it.");
             Assert.That(this.vectors.RelocatedPaths, Is.EqualTo(new[] { touched.FullName }), "The new fingerprint reaches the vectors as well, under the same path.");
             Assert.That(manifest.Files[touched.FullName].Fingerprint, Is.EqualTo(LegacyFingerprint(touched)), "The next run finds the file unchanged.");
-        });
+        }
     }
 
     /// <remarks>
@@ -627,13 +627,13 @@ public sealed class DataSourceRelocationWorkflowTests
 
         await this.AssertOriginalChunksAsync();
         var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.vectors.DiscardedAttempts, Is.EqualTo(1), "Only the changed file was read.");
             Assert.That(this.vectors.DeletedDocuments, Is.Zero, "A failed attempt keeps the version the file had.");
             Assert.That(this.vectors.RelocatedPaths, Is.Empty);
             Assert.That(manifest.Files.Keys, Does.Contain(changed));
-        });
+        }
     }
 
     /// <remarks>
@@ -652,12 +652,12 @@ public sealed class DataSourceRelocationWorkflowTests
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
 
         await this.AssertOriginalChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.vectors.DiscardedAttempts, Is.EqualTo(1));
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.RelocatedPaths, Is.Empty);
-        });
+        }
     }
 
     /// <param name="singleFile">Whether the data source is a single file rather than a folder.</param>
@@ -735,13 +735,13 @@ public sealed class DataSourceRelocationWorkflowTests
         edit.Warning.Complete(DialogResult.Ok(true));
         await InvokeTask(edit.Component, "StoreValidatedDataSourceAsync").WaitAsync(TEST_TIMEOUT);
         await edit.ParentTask.WaitAsync(TEST_TIMEOUT);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edit.Warning.ShowCount, Is.EqualTo(1));
             Assert.That(edit.Warning.ComponentType, Is.EqualTo(typeof(ConfirmDialog)));
             Assert.That(edit.Warning.Title, Is.EqualTo("New Location for This Data Source"));
             Assert.That(edit.Warning.Parameters!.Get<string>(nameof(ConfirmDialog.MarkdownBody)), Does.Contain("unchanged at the new location").And.Contain("removed from the index").And.Contain("files on disk stay as they are").And.Contain("costs money"));
-        });
+        }
         this.source = (IInternalDataSource)this.settings.ConfigurationData.DataSources.Single();
     }
 
@@ -791,12 +791,12 @@ public sealed class DataSourceRelocationWorkflowTests
     {
         var index = await this.databases.GetIndexStoreAsync();
         var chunks = await index.SearchChunksAsync(this.source.Id, "indexed", 100, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chunks.Select(chunk => chunk.ChunkId), Is.EquivalentTo(this.chunkIds));
             Assert.That(chunks.All(chunk => chunk.ChunkText == "Already indexed report"), Is.True);
             Assert.That(chunks.All(chunk => chunk.EmbeddedAtUtc < DateTimeOffset.UtcNow.AddDays(-9)), Is.True, "Updating the app or its paths must not recreate existing chunks.");
-        });
+        }
     }
 
     private static string LegacyFingerprint(FileInfo file)

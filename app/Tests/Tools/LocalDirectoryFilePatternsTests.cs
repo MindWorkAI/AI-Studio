@@ -15,12 +15,12 @@ public sealed class LocalDirectoryFilePatternsTests
     {
         var dataSource = JsonSerializer.Deserialize<DataSourceLocalDirectory>("{}", SettingsManager.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(dataSource.FilePatterns, Is.EqualTo(FileNamePatterns.ALL_DOCUMENTS_PATTERN), "A data source from before file patterns has to keep indexing what it indexed.");
             Assert.That(dataSource.IncludeSubdirectories, Is.True);
             Assert.That(dataSource.IncludeHiddenFilesAndFolders, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -28,12 +28,12 @@ public sealed class LocalDirectoryFilePatternsTests
     {
         var settings = JsonSerializer.Deserialize<DataBatchProcessing>("{}", SettingsManager.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings!.IncludeSubdirectories, Is.EqualTo(DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES));
             Assert.That(settings.IncludeHiddenFilesAndFolders, Is.EqualTo(DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS));
-        });
+        }
     }
 
     [TestCase(null)]
@@ -75,7 +75,7 @@ public sealed class LocalDirectoryFilePatternsTests
         var selection = new FolderFileSelection(parsed, [], false, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
         var canonical = new FolderFileSelection(["*.txt"], [], false, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileNamePatterns.IsValid(patterns), Is.True);
             Assert.That(FileNamePatterns.Validate(patterns), Is.Null);
@@ -85,7 +85,7 @@ public sealed class LocalDirectoryFilePatternsTests
             Assert.That(selection.Selects("report.md"), Is.False);
             Assert.That(selection.Selects("recording.wav"), Is.False);
             Assert.That(selection.Describe(), Is.EqualTo(canonical.Describe()), "Empty entries must not change the indexing selection signature.");
-        });
+        }
     }
 
     [TestCase(null)]
@@ -95,12 +95,12 @@ public sealed class LocalDirectoryFilePatternsTests
     [TestCase(" ; ;; ")]
     public void IncludesStillRequireAtLeastOneNonEmptyPattern(string? patterns)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileNamePatterns.Parse(patterns), Is.Empty);
             Assert.That(FileNamePatterns.IsValid(patterns), Is.False);
             Assert.That(FileNamePatterns.Validate(patterns), Is.Not.Null);
-        });
+        }
     }
 
     [Test]
@@ -132,7 +132,7 @@ public sealed class LocalDirectoryFilePatternsTests
         var json = JsonSerializer.Serialize(written, SettingsManager.JSON_OPTIONS);
         var read = JsonSerializer.Deserialize<IDataSource>(json, SettingsManager.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(json, Does.Not.Contain(nameof(DataSourceLocalDirectory.EffectiveFilePatterns)));
             Assert.That(json, Does.Not.Contain(nameof(DataSourceLocalDirectory.EffectiveExcludePatterns)));
@@ -141,7 +141,7 @@ public sealed class LocalDirectoryFilePatternsTests
             Assert.That(((DataSourceLocalDirectory)read).ExcludePatterns, Is.EqualTo("secret-*;*.backup"));
             Assert.That(((DataSourceLocalDirectory)read).IncludeSubdirectories, Is.False);
             Assert.That(((DataSourceLocalDirectory)read).IncludeHiddenFilesAndFolders, Is.True);
-        });
+        }
     }
 
     [Test]
@@ -166,13 +166,13 @@ public sealed class LocalDirectoryFilePatternsTests
                 reportedFiles.Add,
                 selection: new FolderFileSelection(["*"], [], false, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES));
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(totalSize, Is.EqualTo(5));
                 Assert.That(fileCount, Is.EqualTo(1));
                 Assert.That(reportedFiles, Has.Count.EqualTo(1));
                 Assert.That(reportedFiles[0], Does.EndWith("included.txt"));
-            });
+            }
         }
         finally
         {
@@ -209,13 +209,13 @@ public sealed class LocalDirectoryFilePatternsTests
                 _ => { },
                 selection: new FolderFileSelection(["*"], [], true, true, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES));
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(visibleSize, Is.EqualTo(5));
                 Assert.That(visibleCount, Is.EqualTo(1));
                 Assert.That(completeSize, Is.EqualTo(35));
                 Assert.That(completeCount, Is.EqualTo(3));
-            });
+            }
         }
         finally
         {
@@ -259,11 +259,11 @@ public sealed class LocalDirectoryFilePatternsTests
             .ToArray();
         var path = Path.Combine([.. directorySegments, "Dockerfile.development"]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(path.Length, Is.GreaterThan(300));
             Assert.That(FileNamePatterns.Matches(path, FileNamePatterns.Parse("Dockerfile*")), Is.True);
-        });
+        }
     }
 
     [TestCase("image.png")]
@@ -295,13 +295,13 @@ public sealed class LocalDirectoryFilePatternsTests
         {
             await File.WriteAllTextAsync(filePath, "resource \"example\" \"main\" {}");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT), Is.True);
                 Assert.That(FileNamePatterns.Matches(filePath, FileNamePatterns.Parse("*.txt")), Is.False);
                 Assert.That(FileNamePatterns.Matches(filePath, FileNamePatterns.Parse(":text:")), Is.True);
                 Assert.That(FileNamePatterns.Matches(filePath, FileNamePatterns.Parse("*")), Is.True);
-            });
+            }
         }
         finally
         {
@@ -325,12 +325,12 @@ public sealed class LocalDirectoryFilePatternsTests
             await File.WriteAllTextAsync(imagePath, "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>");
             var patterns = FileNamePatterns.Parse(":text:");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(FileNamePatterns.Matches(binaryPath, patterns), Is.False);
                 Assert.That(FileNamePatterns.Matches(mediaPath, patterns), Is.False);
                 Assert.That(FileNamePatterns.Matches(imagePath, patterns), Is.False, "An image cannot be indexed, even when it is written as text.");
-            });
+            }
         }
         finally
         {
@@ -390,14 +390,14 @@ public sealed class LocalDirectoryFilePatternsTests
             await File.WriteAllBytesAsync(archivePath, [0x50, 0x4B, 0x03, 0x04, 0x00]);
             var patterns = FileNamePatterns.Parse(FileNamePatterns.ALL_DOCUMENTS_PATTERN);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(FileNamePatterns.Matches(terraformPath, patterns), Is.True, "Readable text is what the selector adds to the documents.");
                 Assert.That(FileNamePatterns.Matches(photoPath, patterns), Is.False);
                 Assert.That(FileNamePatterns.Matches(drawingPath, patterns), Is.False, "An image cannot be indexed, even when it is written as text.");
                 Assert.That(FileNamePatterns.Matches(recordingPath, patterns), Is.False);
                 Assert.That(FileNamePatterns.Matches(archivePath, patterns), Is.False);
-            });
+            }
         }
         finally
         {
@@ -416,11 +416,11 @@ public sealed class LocalDirectoryFilePatternsTests
         {
             await File.WriteAllBytesAsync(filePath, [0x50, 0x4B, 0x03, 0x04, 0x00]);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT), Is.False);
                 Assert.That(FileNamePatterns.Matches(filePath, FileNamePatterns.Parse("*.data")), Is.True);
-            });
+            }
         }
         finally
         {
@@ -450,13 +450,13 @@ public sealed class LocalDirectoryFilePatternsTests
                 reportedFiles.Add,
                 selection: selection);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(totalSize, Is.EqualTo(5));
                 Assert.That(fileCount, Is.EqualTo(1));
                 Assert.That(reportedFiles, Has.Count.EqualTo(1));
                 Assert.That(reportedFiles[0], Does.EndWith("included.tf"));
-            });
+            }
         }
         finally
         {

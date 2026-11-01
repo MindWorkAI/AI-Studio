@@ -78,10 +78,10 @@ public sealed class DataSourceERICancellationTests
     {
         var page = await UNREACHABLE.RetrieveDataAsync("query", 1, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(page.Contexts, Is.Empty);
             Assert.That(page.Gaps, Is.EqualTo(new[] { RetrievalGap.NOT_SEARCHED }), "Nobody cancelled, so the model learns that this data source is missing rather than empty.");
-        });
+        }
     }
 }

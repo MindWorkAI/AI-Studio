@@ -83,13 +83,13 @@ public sealed class SettingsStorageTests
         var settingsPath = Path.Combine(this.testDirectory, SETTINGS_FILENAME);
         var backupPath = Path.Combine(this.testDirectory, BACKUP_FILENAME);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(File.Exists(settingsPath), Is.True, "The settings file was never written.");
             Assert.That(File.Exists(backupPath), Is.True, "The settings backup file was never written.");
             Assert.That(ReadSettingsFile(settingsPath)?.Version, Is.EqualTo(Version.V6), "The settings file could not be read back.");
             Assert.That(ReadSettingsFile(backupPath)?.Version, Is.EqualTo(Version.V6), "The settings backup file could not be read back.");
-        });
+        }
     }
 
     [Test]
@@ -137,11 +137,11 @@ public sealed class SettingsStorageTests
         await Task.WhenAll(operations);
 
         using var settingsDocument = JsonDocument.Parse(await File.ReadAllTextAsync(settingsPath));
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(settingsDocument.RootElement.GetProperty("Version").GetString(), Is.EqualTo("V99"), "A store overwrote the newer settings file while a read was reconsidering the write block.");
             Assert.That(settingsManager.SettingsWriteBlockReason, Is.EqualTo(SettingsWriteBlockReason.VERSION_NEWER_THAN_APP), "The write block did not survive the reads which re-established it.");
-        });
+        }
     }
 
     /// <summary>

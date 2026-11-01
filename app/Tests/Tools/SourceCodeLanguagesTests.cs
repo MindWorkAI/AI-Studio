@@ -32,12 +32,12 @@ public sealed class SourceCodeLanguagesTests
     {
         var language = SourceCodeLanguages.FromCodeFenceLanguage("foo");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(language.Name, Is.EqualTo("foo"), "The user still has to recognize which block it is.");
             Assert.That(language.FileExtension, Is.EqualTo(".txt"));
             Assert.That(language.ToName(), Is.EqualTo("foo (.txt)"));
-        });
+        }
     }
 
     [TestCase(null, TestName = "A fence Markdig read no language for")]
@@ -55,13 +55,13 @@ public sealed class SourceCodeLanguagesTests
     {
         var python = SourceCodeLanguages.FromCodeFenceLanguage("python");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(python.ToSuggestedFileName("Sort: a list?"), Is.EqualTo("Sort a list.py"));
             Assert.That(python.ToSuggestedFileName(), Is.EqualTo("export.py"));
             Assert.That(python.ToFileExtensionOrName(), Is.EqualTo(".py"));
             Assert.That(python.ToFileTypeFilter().FlattenExtensions(), Is.EqualTo(new[] { "py" }), "The dialog offers the one extension we write, without its dot.");
-        });
+        }
     }
 
     [TestCase("dockerfile", "Dockerfile")]
@@ -71,24 +71,24 @@ public sealed class SourceCodeLanguagesTests
     {
         var fixedName = SourceCodeLanguages.FromCodeFenceLanguage(language);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(fixedName.ToSuggestedFileName("Backend"), Is.EqualTo(expectedFileName), "The tool finds no file under another name, whatever the heading above the block says.");
             Assert.That(fixedName.ToName(), Is.EqualTo(expectedFileName));
             Assert.That(fixedName.ToFileExtensionOrName(), Is.EqualTo(expectedFileName));
             Assert.That(FileTypes.ToFileDialogFilter(fixedName.ToFileTypeFilter()), Is.Null, "A file name is no extension, so the dialog shows every file.");
-        });
+        }
     }
 
     [Test]
     public void OnlyPowerShellNeedsAByteOrderMark()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SourceCodeLanguages.FromCodeFenceLanguage("powershell").ToFileEncoding().GetPreamble(), Is.Not.Empty, "Windows PowerShell 5.1 reads a script without one in the ANSI code page.");
             Assert.That(SourceCodeLanguages.FromCodeFenceLanguage("python").ToFileEncoding().GetPreamble(), Is.Empty, "An interpreter has no use for it, and a shebang line breaks behind one.");
             Assert.That(SourceCodeLanguages.Languages.Where(language => language.NeedsByteOrderMark).Select(language => language.Name), Is.EqualTo(new[] { "PowerShell" }));
-        });
+        }
     }
 
     [Test]
@@ -100,7 +100,7 @@ public sealed class SourceCodeLanguagesTests
     [Test]
     public void EveryLanguageHasAFile()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var language in SourceCodeLanguages.Languages)
             {
@@ -109,7 +109,7 @@ public sealed class SourceCodeLanguagesTests
                 if (language.FileExtension.Length > 0)
                     Assert.That(language.FileExtension, Does.StartWith(".").And.Length.GreaterThan(1), $"{language.Name} has a broken extension.");
             }
-        });
+        }
     }
 
     [Test]

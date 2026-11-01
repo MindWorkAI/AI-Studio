@@ -185,7 +185,7 @@ public sealed class EmbeddingSignatureTests
         var mailbox = new DataSourceMailbox { EmbeddingId = embeddingProvider.Id, MaxAttachmentSizeMegabytes = 10 };
         var signature = DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox, embeddingProvider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { MaxAttachmentSizeMegabytes = 20 }, embeddingProvider), Is.Not.EqualTo(signature), "The mails indexed before would never get their larger attachments.");
             Assert.That(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false }, embeddingProvider), Does.EndWith("|attachments:none"));
@@ -193,7 +193,7 @@ public sealed class EmbeddingSignatureTests
                 DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false, MaxAttachmentSizeMegabytes = 20 }, embeddingProvider),
                 Is.EqualTo(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false }, embeddingProvider)),
                 "A limit which reads nothing threw the index away for nothing.");
-        });
+        }
     }
 
     /// <summary>

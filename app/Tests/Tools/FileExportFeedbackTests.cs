@@ -57,11 +57,11 @@ public sealed class FileExportFeedbackTests
             await sent.RunningShown;
         }
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sent.Events, Is.EqualTo(new[] { Event.SHOW_FILE_EXPORT_RUNNING, Event.HIDE_FILE_EXPORT_RUNNING }));
             Assert.That(((DataFileExportRunningMessage)sent.Data[1]).Key, Is.EqualTo(((DataFileExportRunningMessage)sent.Data[0]).Key));
-        });
+        }
     }
 
     [Test]

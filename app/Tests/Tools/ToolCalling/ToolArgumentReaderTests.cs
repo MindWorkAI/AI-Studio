@@ -28,11 +28,11 @@ public sealed class ToolArgumentReaderTests
     {
         var message = Refusal(() => ToolArgumentReader.ReadRequiredString(Arguments(json), "query"));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("'query'").And.Contain("a non-empty string"), "The argument arrived, so calling it missing would make the model look for a typo in the name.");
             Assert.That(message, Does.Not.Contain("Leave it out"));
-        });
+        }
     }
 
     [TestCase("""{}""")]
@@ -56,12 +56,12 @@ public sealed class ToolArgumentReaderTests
     {
         var message = Refusal(() => ToolArgumentReader.ReadOptionalChoices(Arguments($$"""{"ids":{{value}}}"""), "ids", OFFERED, WHEN_LEFT_OUT));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("'ids'").And.Contain("a list of one or more of alpha, beta, gamma"));
             Assert.That(message, Does.Contain($"but was {value}."));
             Assert.That(message, Does.Contain($"Leave it out {WHEN_LEFT_OUT}."), "An empty list asks for nothing; what leaving it out does is the way the model wanted.");
-        });
+        }
     }
 
     [TestCase("\"delta\"")]
@@ -72,13 +72,13 @@ public sealed class ToolArgumentReaderTests
     {
         var message = Refusal(() => ToolArgumentReader.ReadOptionalChoices(Arguments($$"""{"ids":["alpha",{{value}}]}"""), "ids", OFFERED, WHEN_LEFT_OUT));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("'ids'").And.Contain("one of alpha, beta, gamma"));
             Assert.That(message, Does.Contain($"but one was {value}."), "The model has to find out which of its values the tool means.");
             Assert.That(message, Does.Not.Contain("\"alpha\""), "Only the wrong value comes back, not the whole list the model sent.");
             Assert.That(message, Does.Contain("Leave it out"));
-        });
+        }
     }
 
     [Test]
@@ -117,11 +117,11 @@ public sealed class ToolArgumentReaderTests
         var pointInTime = ToolArgumentReader.ReadOptionalDateTime(Arguments($$"""{"after":"{{value}}"}"""), "after", UserTimeZone(), WHEN_LEFT_OUT);
         var expectedPointInTime = DateTimeOffset.Parse(expected, CultureInfo.InvariantCulture);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(pointInTime, Is.EqualTo(expectedPointInTime));
             Assert.That(pointInTime?.Offset, Is.EqualTo(expectedPointInTime.Offset), "The same instant with another offset would hide which zone was assumed.");
-        });
+        }
     }
 
     [TestCase("\"yesterday\"")]

@@ -37,10 +37,10 @@ public sealed class ModelImageFormatTests
     [Test]
     public void ATifFileIsAnImage()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileAttachment.FromPath("/tmp/scan.tif").IsImage, Is.True);
             Assert.That(FileTypes.IsAllowedPath("/tmp/scan.tif", FileTypes.MODEL_IMAGE), Is.True);
-        });
+        }
     }
 }

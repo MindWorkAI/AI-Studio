@@ -81,12 +81,12 @@ public sealed class PreselectedTemplateSlideUsesTests
         await ProcessAsync("""{ [1] = "KEEP" }""");
 
         var isManaged = ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedTemplateSlideUses, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isManaged, Is.True);
             Assert.That(configMeta.IsLocked, Is.True);
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(PLUGIN_ID));
-        });
+        }
     }
 
     [Test]
@@ -95,13 +95,13 @@ public sealed class PreselectedTemplateSlideUsesTests
         await ProcessAsync("""{ [1] = "KEEP" }""", allowUserOverride: true);
 
         var isManaged = ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedTemplateSlideUses, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isManaged, Is.True);
             Assert.That(configMeta.IsLocked, Is.False, "With AllowUserOverride, users may change the choices.");
             Assert.That(configMeta.EditableDefaultByConfigPluginId, Is.EqualTo(PLUGIN_ID));
             Assert.That(this.PreselectedUses, Is.EquivalentTo(new Dictionary<int, TemplateSlideUse> { [1] = TemplateSlideUse.KEEP }), "The first time, the default of the organization applies.");
-        });
+        }
 
         this.PreselectedUses[1] = TemplateSlideUse.EDIT;
         await ProcessAsync("""{ [1] = "KEEP" }""", allowUserOverride: true);

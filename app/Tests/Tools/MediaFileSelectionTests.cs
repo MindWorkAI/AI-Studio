@@ -93,14 +93,14 @@ public sealed class MediaFileSelectionTests
             var result = await PersistentMediaTranscript.ReadOrCreateAsync(
                 location, mediaPath, null, Transcribe, NullLogger.Instance, CancellationToken.None);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.READY));
                 Assert.That(result.Reused, Is.True);
                 Assert.That(File.ReadAllText(result.TranscriptPath), Is.EqualTo(TRANSCRIPT_TEXT));
                 Assert.That(File.GetLastWriteTimeUtc(slot.Path), Is.EqualTo(originalWriteTime));
                 Assert.That(calls, Is.Zero);
-            });
+            }
         }
     }
 
@@ -122,12 +122,12 @@ public sealed class MediaFileSelectionTests
             (_, _, _) => throw new InvalidOperationException("No provider was configured."),
             NullLogger.Instance, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(changedSlot.Key, Is.Not.EqualTo(originalSlot.Key));
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.NO_PROVIDER));
             Assert.That(File.ReadAllText(originalSlot.Path), Is.EqualTo(TRANSCRIPT_TEXT));
-        });
+        }
     }
 
     [TestCase("*.wav", "*.md", false, false)]
@@ -143,7 +143,7 @@ public sealed class MediaFileSelectionTests
             FilePatterns: FileNamePatterns.Parse(includes),
             ExcludePatterns: FileExclusions.Parse(excludes));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(
                 FileSourceIndexer.IsRelevantWatcherPath(configuration, Path.Combine(this.userFolder, "notes.md"), WatcherChangeTypes.Changed),
@@ -151,7 +151,7 @@ public sealed class MediaFileSelectionTests
             Assert.That(
                 FileSourceIndexer.IsRelevantWatcherPath(configuration, MediaSidecarTranscripts.GetFilePath(mediaPath), WatcherChangeTypes.Changed),
                 Is.EqualTo(transcriptChangesMatter));
-        });
+        }
     }
 
     private async Task<string> CreateMediaAndDocumentsAsync()
@@ -178,11 +178,11 @@ public sealed class MediaFileSelectionTests
         }, new DataSourceEmbeddingManifest(),
             MediaTranscriptionAvailability.Allowed(new TranscriptionProvider { Id = "test-transcription-provider" }));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Failures, Is.Empty);
             Assert.That(result.IgnoredFiles, Is.Empty);
-        });
+        }
 
         return result.Files.Select(file => file.FullName).ToArray();
     }

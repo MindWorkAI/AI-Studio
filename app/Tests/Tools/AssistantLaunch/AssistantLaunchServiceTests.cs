@@ -19,12 +19,12 @@ public sealed class AssistantLaunchServiceTests
     {
         var destinations = AssistantLaunchService.SelectDestinations(AIStudio.Tools.Components.TRANSLATION_ASSISTANT, _ => true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(destinations, Does.Not.Contain(AIStudio.Tools.Components.TRANSLATION_ASSISTANT));
             Assert.That(destinations, Does.Contain(AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT));
             Assert.That(destinations, Does.Contain(AIStudio.Tools.Components.CHAT));
-        });
+        }
     }
 
     [Test]
@@ -39,13 +39,13 @@ public sealed class AssistantLaunchServiceTests
     {
         var destinations = AssistantLaunchService.SelectDestinations(AIStudio.Tools.Components.CHAT, _ => true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(destinations, Is.Not.Empty);
             Assert.That(destinations.All(destination => destination.AllowSendTo()), Is.True);
             Assert.That(destinations, Does.Not.Contain(AIStudio.Tools.Components.DYNAMIC_ASSISTANT), "Assistant plugins cannot take content yet.");
             Assert.That(destinations, Does.Not.Contain(AIStudio.Tools.Components.NONE));
-        });
+        }
     }
 
     [Test]

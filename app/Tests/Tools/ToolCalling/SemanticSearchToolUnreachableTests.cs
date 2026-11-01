@@ -26,11 +26,11 @@ public sealed class SemanticSearchToolUnreachableTests
     {
         var offered = SemanticSearchTool.SelectOffered(new DataSourceOptions { AutomaticDataSourceSelection = true }, Checked([HANDBOOK], [HANDBOOK], [WIKI, INTRANET]));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(offered.Searchable, Is.EqualTo(new[] { HANDBOOK }));
             Assert.That(offered.Unreachable, Is.EqualTo(new[] { INTRANET, WIKI }), "In the order they are offered, so that the function stays the same for the same data sources.");
-        });
+        }
     }
 
     [Test]
@@ -39,11 +39,11 @@ public sealed class SemanticSearchToolUnreachableTests
         var options = new DataSourceOptions { AutomaticDataSourceSelection = false, PreselectedDataSourceIds = [HANDBOOK.Id, INTRANET.Id] };
         var offered = SemanticSearchTool.SelectOffered(options, Checked([HANDBOOK, MINUTES], [HANDBOOK], [INTRANET, WIKI]));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(offered.Searchable, Is.EqualTo(new[] { HANDBOOK }));
             Assert.That(offered.Unreachable, Is.EqualTo(new[] { INTRANET }), "The model must not learn about a data source the user did not select for this chat.");
-        });
+        }
     }
 
     [Test]
@@ -61,11 +61,11 @@ public sealed class SemanticSearchToolUnreachableTests
         var options = new DataSourceOptions { AutomaticDataSourceSelection = false, PreselectedDataSourceIds = [INTRANET.Id] };
         var offered = SemanticSearchTool.SelectOffered(options, Checked([HANDBOOK], [], [INTRANET]));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(offered.IsSearchable, Is.False, "The model would search all the same, and every such call costs a round of the answer for nothing.");
             Assert.That(offered.Unreachable, Is.EqualTo(new[] { INTRANET }), "The model still has to learn what is missing, then through the system prompt.");
-        });
+        }
     }
 
     [Test]
@@ -109,13 +109,13 @@ public sealed class SemanticSearchToolUnreachableTests
     {
         var result = SemanticSearchTool.DescribeUnreachableResult(INTRANET);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ContainsKey("id"), Is.False, "The model cannot search it, so an ID would only invite a call which is refused.");
             Assert.That(result["name"]!.GetValue<string>(), Is.EqualTo("Intranet"));
             Assert.That(result["result_count"]!.GetValue<int>(), Is.Zero);
             Assert.That(result["issues"]!.AsArray(), Has.Count.EqualTo(1), "A result count of zero alone reads as finding nothing.");
-        });
+        }
     }
 
     private static AllowedSelectedDataSources Checked(IReadOnlyList<IDataSource> allowed, IReadOnlyList<IDataSource> selected, IReadOnlyList<IDataSource> unreachable) => new(allowed, selected, [], [], unreachable);

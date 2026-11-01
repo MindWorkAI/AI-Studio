@@ -92,11 +92,11 @@ public sealed class ListContentBlockExtensionsTests
         var messages = await BlocksWithAPicture(this.picturePath).BuildMessagesUsingDirectImageUrlAsync(PictureReadingProvider());
 
         var picture = (messages.Single() as MultimodalMessage)!.Content.OfType<SubContentImageUrl>().Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(picture.ImageUrl, Is.EqualTo($"data:image/jpeg;base64,{FakeImageRuntime.IMAGE_BASE64}"));
             Assert.That(this.runtime.RequestedPaths, Is.EqualTo(new[] { new FileInfo(this.picturePath).FullName }));
-        });
+        }
     }
 
     [Test]

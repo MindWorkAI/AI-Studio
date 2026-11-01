@@ -62,13 +62,13 @@ public sealed class ChatMessagePayloadTests
         var payload = await this.launchService.CreateTextPayloadAsync(chat, answer);
 
         Assert.That(payload, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(payload!.Text, Does.Not.Contain(SUSPICIOUS_PASSAGE), "The suspicious passage would reach the next model.");
             Assert.That(payload.Text, Does.Contain("The report:").And.Contain(FakeRuntime.REDACTION_MARKER));
             Assert.That(payload.Restrictions.WebAddressesWrittenByModels, Is.EquivalentTo(new[] { WebAddresses.CreateRequestKey(new Uri("https://example.org/report")) }), "The AI wrote the address, so it never counts as given by the user.");
             Assert.That(this.collector.Alerts, Is.EqualTo(new[] { new[] { this.chatName } }), "The user should hear once, naming the chat.");
-        });
+        }
     }
 
     [Test]
@@ -81,12 +81,12 @@ public sealed class ChatMessagePayloadTests
         var payload = await this.launchService.CreateTextPayloadAsync(chat, message);
 
         Assert.That(payload, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.runtime.FilteredTexts, Is.Empty, "The user wrote the message, which is theirs to send.");
             Assert.That(payload!.Text, Is.EqualTo(text));
             Assert.That(payload.Restrictions.WebAddressesWrittenByModels, Is.Empty, "The user wrote the address.");
-        });
+        }
     }
 
     [Test]
@@ -101,11 +101,11 @@ public sealed class ChatMessagePayloadTests
         var payload = await this.launchService.CreateTextPayloadAsync(chat, message);
 
         Assert.That(payload, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(payload!.Restrictions.ProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH));
             Assert.That(payload.Restrictions.OutboundData.Origin, Is.EqualTo(OutboundDataOrigin.MAILBOX), "A message written before the chat read the mailbox demands what the chat demands since, which is the safe side.");
-        });
+        }
     }
 
     [Test]
@@ -120,12 +120,12 @@ public sealed class ChatMessagePayloadTests
         var forSystemMessage = await this.launchService.CreateTextPayloadAsync(chat, systemMessage);
         var forForeignContent = await this.launchService.CreateTextPayloadAsync(chat, foreignContent);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(forEmptyAnswer, Is.Null, "There is nothing to send.");
             Assert.That(forSystemMessage, Is.Null, "Only messages of the user and of the AI offer sending.");
             Assert.That(forForeignContent, Is.Null, "The content belongs to no message of the chat.");
-        });
+        }
     }
 
     [Test]

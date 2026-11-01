@@ -29,11 +29,11 @@ public sealed class DataSourceReindexWarningTests
         settingsManager.ConfigurationData.Mailboxes.Add(new DataSourceMailbox { Id = Guid.NewGuid().ToString(), Name = "Private mail", EmbeddingId = Guid.NewGuid().ToString() });
 
         var description = DataSourceReindexWarning.DescribeDataSourcesLosingTheirProvider(settingsManager, embeddingProvider);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(description, Does.Contain("- Reports"), "The data source using the provider is not named.");
             Assert.That(description, Does.Contain("- Work mail"), "The mailbox using the provider is not named.");
             Assert.That(description, Does.Not.Contain("Private mail"), "A mailbox using another provider is named.");
-        });
+        }
     }
 }

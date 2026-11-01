@@ -36,11 +36,11 @@ public sealed class InterfaceScreenSizesTests
         app.RememberInterfaceScreenSize(new(MONITOR, InterfaceSize.SYSTEM_SCALING, null));
         app.RememberInterfaceScreenSize(new(LAPTOP, InterfaceSize.SYSTEM_SCALING, 120));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(app.InterfaceScreenSizes.Select(screen => screen.ScreenKey), Is.EqualTo(new[] { LAPTOP, MONITOR }));
             Assert.That(app.GetInterfaceScreenSize(LAPTOP), Is.EqualTo(new InterfaceScreenSize(LAPTOP, InterfaceSize.SYSTEM_SCALING, 120)));
-        });
+        }
     }
 
     [Test]
@@ -50,11 +50,11 @@ public sealed class InterfaceScreenSizesTests
         for (var screen = 0; screen <= DataApp.MAX_REMEMBERED_INTERFACE_SCREENS; screen++)
             app.RememberInterfaceScreenSize(new($"{screen}x1080", InterfaceSize.CUSTOM, 100));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(app.InterfaceScreenSizes, Has.Count.EqualTo(DataApp.MAX_REMEMBERED_INTERFACE_SCREENS));
             Assert.That(app.GetInterfaceScreenSize("0x1080"), Is.Null);
             Assert.That(app.GetInterfaceScreenSize("1x1080"), Is.Not.Null);
-        });
+        }
     }
 }

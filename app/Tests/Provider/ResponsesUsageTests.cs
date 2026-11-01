@@ -31,11 +31,11 @@ public sealed class ResponsesUsageTests
         //
         var line = Read(COMPLETED_PREFIX + MESSAGE_ITEM + "]" + USAGE_SUFFIX);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(line.GetUsage().IsKnown, Is.True);
             Assert.That(line.GetUsage().PromptTokens, Is.EqualTo(2006));
-        });
+        }
     }
 
     [Test]

@@ -86,7 +86,7 @@ public sealed class ExistingIndexMigrationTests
         await store.Client.DeleteFileAsync(DATA_SOURCE_ID, PATH, TOKEN);
         var foundAfterDeleting = (await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "quarterly", 10, TOKEN)).Concat(await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "budget", 10, TOKEN));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(manifest.Files[PATH].Fingerprint, Is.EqualTo(FINGERPRINT), "The file survives the migration as it was.");
             Assert.That(manifest.Files[PATH].ContentHash, Is.Null, "A file indexed before has no content hash until it is read again.");
@@ -97,7 +97,7 @@ public sealed class ExistingIndexMigrationTests
             Assert.That(foundNewChunk.Select(result => (result.ChunkText, result.StartLine, result.EndLine)), Is.EqualTo(new (string, int?, int?)[] { (NEW_TEXT, 12, 14) }), "A chunk stored after the migration reaches the full-text index, with where it is.");
             Assert.That(storedColumns, Is.EqualTo(new[] { (null, 0), (ChunkTextHash.Of(NEW_TEXT), 0) }), "The old chunk is left as it was, and a new one keeps its hash.");
             Assert.That(foundAfterDeleting, Is.Empty, "Deleting the document removes its chunks from the full-text index.");
-        });
+        }
     }
 
     /// <remarks>

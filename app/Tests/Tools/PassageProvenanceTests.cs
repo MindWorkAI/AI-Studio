@@ -34,7 +34,7 @@ public sealed class PassageProvenanceTests
         var entries = await store.Client.GetEntriesAsync([passage.ProvenanceId!.Value], TOKEN);
         var entry = entries[passage.ProvenanceId.Value];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(allStored, Is.True);
             Assert.That(passage.Text, Is.Empty, "The chat keeps only the reference.");
@@ -43,7 +43,7 @@ public sealed class PassageProvenanceTests
             Assert.That(entry.Content, Is.EqualTo("The mixing console."));
             Assert.That(entry.SurroundingContent, Is.EqualTo(new[] { "Before.", "After." }));
             Assert.That(entry.Kind, Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
-        });
+        }
     }
 
     [Test]
@@ -55,11 +55,11 @@ public sealed class PassageProvenanceTests
         await answer.StoreReceivedContentAsync(store.Client, Guid.NewGuid());
         var ids = answer.SourcePassages.Select(passage => passage.ProvenanceId).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ids, Has.None.Null);
             Assert.That(ids, Is.Unique);
-        });
+        }
     }
 
     [Test]
@@ -72,12 +72,12 @@ public sealed class PassageProvenanceTests
         var allStored = await answer.StoreReceivedContentAsync(store.Client, Guid.NewGuid());
         var chatsWithEntries = await store.Client.GetChatIdsAsync(TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(allStored, Is.True);
             Assert.That(answer.SourcePassages.Single().ProvenanceId, Is.Null, "The AI was only told about the image, so there is no text to keep.");
             Assert.That(chatsWithEntries, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -92,11 +92,11 @@ public sealed class PassageProvenanceTests
         await answer.StoreReceivedContentAsync(store.Client, chatId);
 
         await using var context = store.CreateContext();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answer.SourcePassages.Single().ProvenanceId, Is.EqualTo(firstId));
             Assert.That(context.Entries.Count(), Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -107,13 +107,13 @@ public sealed class PassageProvenanceTests
         var allStored = await answer.StoreReceivedContentAsync(new NoProvenanceStoreClient("SQLite", "not available"), Guid.NewGuid());
         var passage = answer.SourcePassages.Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(allStored, Is.False, "The caller tells the user, who should know why the chat file stays large.");
             Assert.That(passage.ProvenanceId, Is.Null);
             Assert.That(passage.Text, Is.EqualTo("The mixing console."), "The chat stays readable without the store.");
             Assert.That(passage.SurroundingContent, Is.EqualTo(new[] { "Before." }));
-        });
+        }
     }
 
     [Test]
@@ -137,12 +137,12 @@ public sealed class PassageProvenanceTests
         using var document = JsonDocument.Parse(json);
         var storedPassage = document.RootElement.GetProperty("source_passages")[0];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storedPassage.GetProperty("provenance_id").GetGuid(), Is.EqualTo(answer.SourcePassages.Single().ProvenanceId));
             Assert.That(storedPassage.GetProperty("text").GetString(), Is.Empty, "The text lies in the store.");
             Assert.That(loaded.SourcePassages.Single().ProvenanceId, Is.EqualTo(answer.SourcePassages.Single().ProvenanceId));
-        });
+        }
     }
 
     [Test]
@@ -160,13 +160,13 @@ public sealed class PassageProvenanceTests
     [Test]
     public void TheKindFollowsWhatThePassageIs()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Passage(HANDBOOK_URL, "text").GetProvenanceKind(), Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
             Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_TRANSCRIPT }).GetProvenanceKind(), Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
             Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_EMAIL }).GetProvenanceKind(), Is.EqualTo(ProvenanceKind.MAIL), "A mail is a mail, whether a mailbox data source or a tool handed it over.");
             Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_WEBSITE }).GetProvenanceKind(), Is.EqualTo(ProvenanceKind.WEB_PAGE));
-        });
+        }
     }
 
     private static SourcePassage Passage(string sourceUrl, string text, int? pageNumber = null) => new()

@@ -27,14 +27,14 @@ public sealed class ToolAvailabilityTests : ToolRegistryTestBase
         var forTheSettings = await registry.GetCatalogAsync(registry.GetAllDefinitions());
         var handedInDirectly = await registry.GetCatalogAsync([previewTool.GetDefinition()]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.GetDefinitionsForComponent(AIStudio.Tools.Components.CHAT).Select(definition => definition.Id), Is.EqualTo(new[] { TOOL_ID }));
             Assert.That(registry.GetAllDefinitions().Select(definition => definition.Id), Is.EqualTo(new[] { TOOL_ID }));
             Assert.That(forTheChat.Select(item => item.Id), Is.EqualTo(new[] { TOOL_ID }), "The selection below the message field.");
             Assert.That(forTheSettings.Select(item => item.Id), Is.EqualTo(new[] { TOOL_ID }), "The tool list of the app settings.");
             Assert.That(handedInDirectly, Is.Empty, "Whoever hands in the definition directly does not get it listed either.");
-        });
+        }
     }
 
     [Test]
@@ -58,11 +58,11 @@ public sealed class ToolAvailabilityTests : ToolRegistryTestBase
         previewTool.IsAvailable = true;
         var afterSwitchingOn = await registry.GetRunnableToolsAsync(this.ContextFor(ToolCapableProvider()), selection, mayRunTools: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(whileSwitchedOff, Is.Empty);
             Assert.That(afterSwitchingOn.Select(tool => tool.Definition.Id), Is.EqualTo(new[] { PREVIEW_TOOL_ID }), "The selection kept the tool all along.");
-        });
+        }
     }
 
     private static TestTool PreviewTool(bool isAvailable) => new(Definition(PREVIEW_TOOL_ID)) { IsAvailable = isAvailable };

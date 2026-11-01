@@ -34,11 +34,11 @@ public class FileTypesTests
     [TestCase("workspace")]
     public void FileNamesAreNoExtensions(string extension)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileTypes.IsAllowedExtension(extension, FileTypes.DOCUMENT), Is.False);
             Assert.That(FileTypes.IsAllowedExtension(extension, FileTypes.SOURCE_CODE), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -69,12 +69,12 @@ public class FileTypesTests
         var fileNames = FileTypes.SOURCE_LIKE_FILE_NAMES.FileNames.Concat(FileTypes.SOURCE_LIKE_FILE_NAME_PREFIXES.FileNamePrefixes);
 
         Assert.That(filter, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(filter!.FilterName, Is.EqualTo(FileTypes.DOCUMENT.FilterName));
             Assert.That(filter.FilterExtensions, Is.SupersetOf(new[] { "pdf", "docx", "xlsx", "cs", "csv", "txt", "tex" }));
             Assert.That(filter.FilterExtensions.Intersect(fileNames, StringComparer.OrdinalIgnoreCase), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -83,11 +83,11 @@ public class FileTypesTests
         var filter = FileTypes.ToFileDialogFilter(FileTypes.TEXT);
 
         Assert.That(filter, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(filter!.FilterName, Is.EqualTo(FileTypes.TEXT.FilterName));
             Assert.That(filter.FilterExtensions, Is.EquivalentTo(new[] { "txt", "md", "rtf" }));
-        });
+        }
     }
 
     [Test]
@@ -98,24 +98,24 @@ public class FileTypesTests
 
         Assert.That(filter, Is.Not.Null);
         Assert.That(combinedFilter, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(filter!.FilterName, Is.EqualTo("JSON"));
             Assert.That(filter.FilterExtensions, Is.EqualTo(new[] { "json" }));
             Assert.That(combinedFilter!.FilterExtensions, Is.EquivalentTo(new[] { "json", "csv" }));
-        });
+        }
     }
 
     [Test]
     public void TypesWithoutExtensionsGiveNoDialogFilter()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileTypes.ToFileDialogFilter(FileTypes.SOURCE_LIKE_FILE_NAMES), Is.Null);
             Assert.That(FileTypes.ToFileDialogFilter(FileTypes.SOURCE_LIKE_FILE_NAME_PREFIXES), Is.Null);
             Assert.That(FileTypes.ToFileDialogFilter(), Is.Null);
             Assert.That(FileTypes.ToFileDialogFilter(null), Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -149,25 +149,25 @@ public class FileTypesTests
     {
         var combinedFilter = FileTypes.ToFileDialogFilter(FileTypes.JSON, FileTypes.READABLE_TEXT);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileTypes.ToFileDialogFilter(FileTypes.READABLE_TEXT), Is.Null);
             Assert.That(combinedFilter, Is.Not.Null);
             Assert.That(combinedFilter!.FilterExtensions, Is.EqualTo(new[] { "json" }));
-        });
+        }
     }
 
     [Test]
     public void ReadableTextIsAUniqueChildOfText()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileTypes.READABLE_TEXT.FilterName, Is.Not.EqualTo(FileTypes.TEXT.FilterName));
             Assert.That(FileTypes.TEXT.ContainsType(FileTypes.READABLE_TEXT), Is.True);
             Assert.That(FileTypes.DOCUMENT.Children, Does.Not.Contain(FileTypes.READABLE_TEXT));
             Assert.That(FileTypes.DOCUMENT.ContainsType(FileTypes.READABLE_TEXT), Is.True);
             Assert.That(FileTypes.ToFileDialogFilter(FileTypes.DOCUMENT), Is.Not.Null);
-        });
+        }
 
         AssertPath("resource \"example\" \"main\" {}", "infrastructure.tf", Encoding.UTF8, true, FileTypes.DOCUMENT);
     }

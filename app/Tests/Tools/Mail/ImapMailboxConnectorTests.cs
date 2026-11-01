@@ -124,11 +124,11 @@ public sealed class ImapMailboxConnectorTests
     [Test]
     public void AFolderNameHasAMaximumLength()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ImapMailboxConnector.IsValidFolderName(new string('a', ImapMailboxConnector.MAX_FOLDER_NAME_LENGTH), '/'), Is.True);
             Assert.That(ImapMailboxConnector.IsValidFolderName(new string('a', ImapMailboxConnector.MAX_FOLDER_NAME_LENGTH + 1), '/'), Is.False);
-        });
+        }
     }
 
     [TestCase(FolderAttributes.None, ExpectedResult = MailFolderSpecialUse.NONE)]

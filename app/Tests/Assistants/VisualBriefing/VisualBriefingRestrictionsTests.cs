@@ -67,11 +67,11 @@ public sealed class VisualBriefingRestrictionsTests
         var loaded = await this.CreateStore().LoadAsync(created.BriefingId);
 
         Assert.That(loaded, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(loaded!.Settings.Instruction, Is.EqualTo("Summarize the minutes."), "The save did not happen.");
             AssertSame(loaded.Restrictions, FROM_MAILBOX);
-        });
+        }
     }
 
     [Test]
@@ -127,23 +127,26 @@ public sealed class VisualBriefingRestrictionsTests
 
         var exception = Assert.Throws<VisualBriefingBuildException>(() => VisualBriefingBuildOrchestrator.ValidateProviderMaySeeContent(restricted, cloudProvider));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(exception!.Code, Is.EqualTo(VisualBriefingFailureCode.PROVIDER_NOT_ALLOWED));
             Assert.DoesNotThrow(() => VisualBriefingBuildOrchestrator.ValidateProviderMaySeeContent(restricted, selfHostedProvider));
             Assert.DoesNotThrow(() => VisualBriefingBuildOrchestrator.ValidateProviderMaySeeContent(new VisualBriefingManifest(), cloudProvider), "A briefing nothing was sent to may use any provider.");
-        });
+        }
     }
 
     private VisualBriefingStore CreateStore() => new(null!, NullLogger<VisualBriefingStore>.Instance, new VisualBriefingStorageOptions { DataDirectory = this.dataDirectory });
 
-    private static void AssertSame(ChatRestrictions actual, ChatRestrictions expected) => Assert.Multiple(() =>
+    private static void AssertSame(ChatRestrictions actual, ChatRestrictions expected)
     {
-        Assert.That(actual.ProviderConfidence, Is.EqualTo(expected.ProviderConfidence));
-        Assert.That(actual.DataSecurity, Is.EqualTo(expected.DataSecurity));
-        Assert.That(actual.OutboundData, Is.EqualTo(expected.OutboundData));
-        Assert.That(actual.WebAddressesWrittenByModels, Is.EquivalentTo(expected.WebAddressesWrittenByModels));
-    });
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(actual.ProviderConfidence, Is.EqualTo(expected.ProviderConfidence));
+            Assert.That(actual.DataSecurity, Is.EqualTo(expected.DataSecurity));
+            Assert.That(actual.OutboundData, Is.EqualTo(expected.OutboundData));
+            Assert.That(actual.WebAddressesWrittenByModels, Is.EquivalentTo(expected.WebAddressesWrittenByModels));
+        }
+    }
 
     private AIStudio.Settings.Provider AddProvider(string id, LLMProviders llmProvider, bool isSelfHosted)
     {

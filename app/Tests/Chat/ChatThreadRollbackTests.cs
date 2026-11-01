@@ -41,11 +41,11 @@ public sealed class ChatThreadRollbackTests
 
         var rolledBack = thread.RollBackTo(answer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(rolledBack, Is.True, "Two blocks came after the answer, so the rollback removed something.");
             Assert.That(Texts(thread), Is.EqualTo(new[] { "First question", "First answer" }), "The hidden prompt goes with the answer to it, although the user never saw it.");
-        });
+        }
     }
 
     [Test]
@@ -117,7 +117,7 @@ public sealed class ChatThreadRollbackTests
 
         thread.RollBackTo(answer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.AugmentedData, Is.Empty, "Nobody knows whether the retrieved data belongs to a kept or to a removed message, so it must not reach the next system prompt.");
             Assert.That(thread.AISelectedDataSources, Is.Empty, "The data sources an agent picked belong to the same retrieval as the data.");
@@ -125,7 +125,7 @@ public sealed class ChatThreadRollbackTests
             Assert.That(options.DisableDataSources, Is.False);
             Assert.That(options.AutomaticDataSourceSelection, Is.True);
             Assert.That(options.PreselectedDataSourceIds, Is.EqualTo(new[] { "handbook" }));
-        });
+        }
     }
 
     [Test]
@@ -150,12 +150,12 @@ public sealed class ChatThreadRollbackTests
 
         thread.RollBackTo(answer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.DataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED), "The confidential data was seen by this chat, so no cloud provider may continue it.");
             Assert.That(thread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH), "The confidence the data demanded stays, although the message which brought it in is gone.");
             Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(restriction), "The mail content was read by this chat, so it may still carry it out no further than before.");
-        });
+        }
     }
 
     [Test]
@@ -194,13 +194,13 @@ public sealed class ChatThreadRollbackTests
 
     private static void AssertUnchanged(ChatThread thread, bool rolledBack, params string[] expectedTexts)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(rolledBack, Is.False, "Nothing came after the content, so there was nothing to roll back.");
             Assert.That(Texts(thread), Is.EqualTo(expectedTexts), "A rollback without anything to remove leaves the blocks alone.");
             Assert.That(thread.AugmentedData, Is.EqualTo("A chunk from the handbook"), "A rollback without anything to remove keeps the last retrieval, because it still belongs to the last message.");
             Assert.That(thread.AISelectedDataSources, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     private static ContentBlock Block(ChatRole role, string text, int minute, bool hidden = false) => new()

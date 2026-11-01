@@ -132,11 +132,11 @@ public sealed class ConfigurationFileExclusionsTests
             component.LockField = locked;
             await component.ReplaceAsync("bin/;*.tmp");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(component.Draft, Is.EqualTo("*.original"));
                 Assert.That(component.StoredText, Is.EqualTo("*.original"));
-            });
+            }
         }
         finally
         {
@@ -155,11 +155,11 @@ public sealed class ConfigurationFileExclusionsTests
             component.Edit("old/;:text:");
             await component.ReplaceAsync("bin/;:text:");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(component.Draft, Is.EqualTo("bin/;:text:"));
                 Assert.That(component.StoredText, Is.EqualTo("*.original"));
-            });
+            }
         }
         finally
         {
