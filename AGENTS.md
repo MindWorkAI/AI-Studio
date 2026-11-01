@@ -114,7 +114,7 @@ failures (for reference: https://github.com/openai/codex/issues/4915). This appl
 Instead, use the JetBrains IDE MCP servers. They execute in the IDE process, which runs outside the
 agent sandbox:
 
-- `rider` for the .NET solution at `app/MindWork AI Studio.sln`
+- `rider` for the .NET solution at `app/MindWork AI Studio.slnx`
 - `rustrover` for the Rust runtime at `runtime/`
 
 Pass the `rootFolder` parameter on every call, e.g. the absolute path of the `app` directory for Rider
@@ -169,7 +169,7 @@ again yourself when `metadata.txt` changes during the session, e.g., after a mer
 **Building and testing** happen in the shell:
 
 - The quality gate, the same as in the pipeline: `cd app/Build && dotnet run verify`. It compiles both
-  the .NET app and the Rust runtime on its way. Narrower checks: `dotnet build "app/MindWork AI Studio.sln"`,
+  the .NET app and the Rust runtime on its way. Narrower checks: `dotnet build "app/MindWork AI Studio.slnx"`,
   `dotnet test` in `app/Tests`, and `cargo test` or `cargo clippy --all-targets -- -D warnings` in `runtime/`.
 - A cold build of the Rust runtime takes several minutes: run the gate and cargo in the background, or
   give them the longest timeout available.
