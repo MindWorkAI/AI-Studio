@@ -23,7 +23,7 @@ public sealed record EmbeddingProvider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string TokenizerPath = "",
+    string TokenizerPath = "",
     string TokenizerFingerprint = "",
     int EmbeddingBatchSize = 0,
     int TokenLimit = 0,
@@ -32,6 +32,34 @@ public sealed record EmbeddingProvider(
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public override string Name { get; set; } = Name;
+    public LLMProviders UsedLLMProvider { get; set; } = UsedLLMProvider;
+    public Model Model { get; set; } = Model;
+    public bool IsSelfHosted { get; set; } = IsSelfHosted;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+    public string Hostname { get; set; } = Hostname;
+    public Host Host { get; set; } = Host;
+
+    [JsonConverter(typeof(DataDirectoryRelativePathConverter))]
+    public string TokenizerPath { get; set; } = TokenizerPath;
+
+    public string TokenizerFingerprint { get; set; } = TokenizerFingerprint;
+    public int EmbeddingBatchSize { get; set; } = EmbeddingBatchSize;
+    public int TokenLimit { get; set; } = TokenLimit;
+    public bool AllowUserProvidedAPIKey { get; set; } = AllowUserProvidedAPIKey;
+    public string CustomIconDataUrl { get; set; } = CustomIconDataUrl;
+    public HFInferenceProvider HFInferenceProvider { get; set; } = HFInferenceProvider;
+    public bool PromptForUserAPIKey { get; set; } = PromptForUserAPIKey;
+
     public const int DEFAULT_TOKEN_LIMIT = 8192;
     public const int DEFAULT_EMBEDDING_BATCH_SIZE = 1;
 

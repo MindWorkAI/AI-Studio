@@ -8,7 +8,7 @@ public interface IImageSource
     /// <remarks>
     /// Is the image source a URL, a local file path, a base64 string, etc.?
     /// </remarks>
-    public ContentImageSource SourceType { get; init; }
+    public ContentImageSource SourceType { get; set; }
 
     /// <summary>
     /// The image source.

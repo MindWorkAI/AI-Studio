@@ -18,7 +18,7 @@ public interface IDataSource : IDataSourceBase
     /// <summary>
     /// The maximum number of matches one retrieval returns. Searched page by page, it is the size of a page.
     /// </summary>
-    public ushort MaxMatches { get; init; }
+    public ushort MaxMatches { get; set; }
 
     /// <summary>
     /// Where a chat may still send data, once content of this data source reached it.
@@ -29,7 +29,7 @@ public interface IDataSource : IDataSourceBase
     /// DataSourceSecuritySettings.MinimumOutboundDataRestriction, and so does a data source which only
     /// self-hosted providers may see.
     /// </remarks>
-    public OutboundDataRestriction OutboundDataRestriction { get; init; }
+    public OutboundDataRestriction OutboundDataRestriction { get; set; }
 
     /// <summary>
     /// The last page which can be retrieved from this data source.

@@ -11,32 +11,32 @@ public sealed class Data
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; init; } = Version.V6;
+    public Version Version { get; set; } = Version.V6;
 
     /// <summary>
     /// List of configured providers.
     /// </summary>
-    public List<Provider> Providers { get; init; } = [];
+    public List<Provider> Providers { get; set; } = [];
     
     /// <summary>
     /// Settings concerning confidence levels.
     /// </summary>
-    public DataConfidence Confidence { get; init; } = new(x => x.Confidence);
+    public DataConfidence Confidence { get; set; } = new(x => x.Confidence);
 
     /// <summary>
     /// Settings concerning data source security checks.
     /// </summary>
-    public DataSourceSecuritySettings DataSourceSecurity { get; init; } = new(x => x.DataSourceSecurity);
+    public DataSourceSecuritySettings DataSourceSecurity { get; set; } = new(x => x.DataSourceSecurity);
 
     /// <summary>
     /// A collection of embedding providers configured.
     /// </summary>
-    public List<EmbeddingProvider> EmbeddingProviders { get; init; } = [];
+    public List<EmbeddingProvider> EmbeddingProviders { get; set; } = [];
     
     /// <summary>
     /// A collection of speech providers configured.
     /// </summary>
-    public List<TranscriptionProvider> TranscriptionProviders { get; init; } = [];
+    public List<TranscriptionProvider> TranscriptionProviders { get; set; } = [];
 
     /// <summary>
     /// A collection of data sources configured.
@@ -59,17 +59,17 @@ public sealed class Data
     /// <summary>
     /// Settings which apply to all mailboxes.
     /// </summary>
-    public DataMailboxes MailboxSettings { get; init; } = new(x => x.MailboxSettings);
+    public DataMailboxes MailboxSettings { get; set; } = new(x => x.MailboxSettings);
 
     /// <summary>
     /// List of configured profiles.
     /// </summary>
-    public List<Profile> Profiles { get; init; } = [];
+    public List<Profile> Profiles { get; set; } = [];
     
     /// <summary>
     /// List of configured chat templates.
     /// </summary>
-    public List<ChatTemplate> ChatTemplates { get; init; } = [];
+    public List<ChatTemplate> ChatTemplates { get; set; } = [];
 
     /// <summary>
     /// List of enabled plugins.
@@ -161,74 +161,74 @@ public sealed class Data
     /// </summary>
     public uint NextDocumentAnalysisPolicyNum { get; set; } = 1;
 
-    public DataApp App { get; init; } = new(x => x.App);
+    public DataApp App { get; set; } = new(x => x.App);
 
-    public DataChat Chat { get; init; } = new(x => x.Chat);
+    public DataChat Chat { get; set; } = new(x => x.Chat);
 
-    public DataWorkspace Workspace { get; init; } = new();
+    public DataWorkspace Workspace { get; set; } = new();
 
-    public DataIconFinder IconFinder { get; init; } = new();
+    public DataIconFinder IconFinder { get; set; } = new();
 
-    public DataTranslation Translation { get; init; } = new();
+    public DataTranslation Translation { get; set; } = new();
 
-    public DataCoding Coding { get; init; } = new();
+    public DataCoding Coding { get; set; } = new();
     
-    public DataERI ERI { get; init; } = new();
+    public DataERI ERI { get; set; } = new();
     
-    public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
+    public DataDocumentAnalysis DocumentAnalysis { get; set; } = new();
 
     /// <summary>
     /// Gets the managed Batch Processing Assistant defaults.
     /// </summary>
-    public DataBatchProcessing BatchProcessing { get; init; } = new(x => x.BatchProcessing);
+    public DataBatchProcessing BatchProcessing { get; set; } = new(x => x.BatchProcessing);
 
-    public DataMandatoryInformation MandatoryInformation { get; init; } = new();
+    public DataMandatoryInformation MandatoryInformation { get; set; } = new();
 
-    public DataTextSummarizer TextSummarizer { get; init; } = new();
+    public DataTextSummarizer TextSummarizer { get; set; } = new();
 
-    public DataSWOTAnalysis SWOTAnalysis { get; init; } = new();
+    public DataSWOTAnalysis SWOTAnalysis { get; set; } = new();
 
-    public DataTextContentCleaner TextContentCleaner { get; init; } = new();
+    public DataTextContentCleaner TextContentCleaner { get; set; } = new();
     
-    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new(x => x.AgentDataSourceSelection);
+    public DataAgentDataSourceSelection AgentDataSourceSelection { get; set; } = new(x => x.AgentDataSourceSelection);
     
-    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new(x => x.AgentRetrievalContextValidation);
+    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; set; } = new(x => x.AgentRetrievalContextValidation);
 
-    public DataAssistantPluginAudit AssistantPluginAudit { get; init; } = new(x => x.AssistantPluginAudit);
+    public DataAssistantPluginAudit AssistantPluginAudit { get; set; } = new(x => x.AssistantPluginAudit);
     
-    public DataAgenda Agenda { get; init; } = new();
+    public DataAgenda Agenda { get; set; } = new();
     
-    public DataGrammarSpelling GrammarSpelling { get; init; } = new();
+    public DataGrammarSpelling GrammarSpelling { get; set; } = new();
     
-    public DataRewriteImprove RewriteImprove { get; init; } = new();
+    public DataRewriteImprove RewriteImprove { get; set; } = new();
     
-    public DataPromptOptimizer PromptOptimizer { get; init; } = new();
+    public DataPromptOptimizer PromptOptimizer { get; set; } = new();
 
-    public DataEMail EMail { get; init; } = new();
+    public DataEMail EMail { get; set; } = new();
     
-    public DataSlideBuilder SlideBuilder { get; init; } = new(x => x.SlideBuilder);
+    public DataSlideBuilder SlideBuilder { get; set; } = new(x => x.SlideBuilder);
 
     /// <summary>
     /// Gets the managed Assistant Builder defaults.
     /// </summary>
-    public DataAssistantBuilder AssistantBuilder { get; init; } = new(x => x.AssistantBuilder);
+    public DataAssistantBuilder AssistantBuilder { get; set; } = new(x => x.AssistantBuilder);
 
     /// <summary>
     /// Gets the managed Visual Briefing Assistant defaults.
     /// </summary>
-    public DataVisualBriefing VisualBriefing { get; init; } = new(x => x.VisualBriefing);
+    public DataVisualBriefing VisualBriefing { get; set; } = new(x => x.VisualBriefing);
     
-    public DataLegalCheck LegalCheck { get; init; } = new();
+    public DataLegalCheck LegalCheck { get; set; } = new();
     
-    public DataSynonyms Synonyms { get; init; } = new();
+    public DataSynonyms Synonyms { get; set; } = new();
 
-    public DataMyTasks MyTasks { get; init; } = new();
+    public DataMyTasks MyTasks { get; set; } = new();
     
-    public DataJobPostings JobPostings { get; init; } = new();
+    public DataJobPostings JobPostings { get; set; } = new();
     
-    public DataBiasOfTheDay BiasOfTheDay { get; init; } = new();
+    public DataBiasOfTheDay BiasOfTheDay { get; set; } = new();
     
-    public DataI18N I18N { get; init; } = new();
+    public DataI18N I18N { get; set; } = new();
 
-    public DataTools Tools { get; init; } = new(x => x.Tools);
+    public DataTools Tools { get; set; } = new(x => x.Tools);
 }

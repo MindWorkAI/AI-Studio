@@ -15,21 +15,21 @@ public interface IIndexedDataSource : IDataSourceBase
     /// <summary>
     /// Which provider confidence level is required by this data source?
     /// </summary>
-    public ConfidenceLevel ConfidenceLevel { get; init; }
+    public ConfidenceLevel ConfidenceLevel { get; set; }
 
     /// <summary>
     /// The unique identifier of the embedding provider used by this data source.
     /// </summary>
-    public string EmbeddingId { get; init; }
+    public string EmbeddingId { get; set; }
 
     /// <summary>
     /// Optional maximum number of tokens per embedding chunk for this data source.
     /// A value of 0 means the embedding provider's setting is used.
     /// </summary>
-    public int MaxChunkTokenLength { get; init; }
+    public int MaxChunkTokenLength { get; set; }
 
     /// <summary>
     /// Optional number of tokens to overlap between consecutive chunks.
     /// </summary>
-    public int ChunkOverlapTokenLength { get; init; }
+    public int ChunkOverlapTokenLength { get; set; }
 }
