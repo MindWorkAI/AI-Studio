@@ -1,0 +1,71 @@
+{
+  "Version": "V1",
+  "Providers": [
+    {
+      "Num": 7,
+      "Id": "Id sample 1",
+      "InstanceName": "InstanceName sample 2",
+      "UsedProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 3",
+        "DisplayName": "DisplayName sample 4",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "Hostname": "Hostname sample 5",
+      "Host": "LM_STUDIO"
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 6",
+      "InstanceName": "InstanceName sample 7",
+      "UsedProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 8",
+        "DisplayName": "DisplayName sample 9",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "Hostname": "Hostname sample 10",
+      "Host": "LM_STUDIO"
+    }
+  ],
+  "NextProviderNum": 7,
+  "IsSavingEnergy": true,
+  "EnableSpellchecking": true,
+  "UpdateInterval": "DISABLE_UPDATES",
+  "NavigationBehavior": "NEVER_EXPAND_USE_TOOLTIPS",
+  "ShortcutSendBehavior": "MODIFER_ENTER_IS_SENDING",
+  "PreselectChatOptions": true,
+  "PreselectedChatProvider": "PreselectedChatProvider sample 11",
+  "WorkspaceStorageBehavior": "STORE_CHATS_AUTOMATICALLY",
+  "WorkspaceStorageTemporaryMaintenancePolicy": "DELETE_OLDER_THAN_7_DAYS",
+  "PreselectIconOptions": true,
+  "PreselectedIconSource": "ICONS8",
+  "PreselectedIconProvider": "PreselectedIconProvider sample 12",
+  "LiveTranslationDebounceIntervalMilliseconds": 53,
+  "PreselectTranslationOptions": true,
+  "PreselectLiveTranslation": true,
+  "HideWebContentReaderForTranslation": true,
+  "PreselectWebContentReaderForTranslation": true,
+  "PreselectContentCleanerAgentForTranslation": true,
+  "PreselectedTranslationTargetLanguage": "EN_US",
+  "PreselectTranslationOtherLanguage": "PreselectTranslationOtherLanguage sample 14",
+  "PreselectedTranslationProvider": "PreselectedTranslationProvider sample 15",
+  "PreselectCodingOptions": true,
+  "PreselectCodingCompilerMessages": true,
+  "PreselectedCodingLanguage": "BASH",
+  "PreselectedCodingOtherLanguage": "PreselectedCodingOtherLanguage sample 16",
+  "PreselectedCodingProvider": "PreselectedCodingProvider sample 17",
+  "PreselectTextSummarizerOptions": true,
+  "HideWebContentReaderForTextSummarizer": true,
+  "PreselectWebContentReaderForTextSummarizer": true,
+  "PreselectContentCleanerAgentForTextSummarizer": true,
+  "PreselectedTextSummarizerTargetLanguage": "EN_US",
+  "PreselectedTextSummarizerOtherLanguage": "PreselectedTextSummarizerOtherLanguage sample 18",
+  "PreselectedTextSummarizerComplexity": "SIMPLE_LANGUAGE",
+  "PreselectedTextSummarizerExpertInField": "PreselectedTextSummarizerExpertInField sample 19",
+  "PreselectedTextSummarizerProvider": "PreselectedTextSummarizerProvider sample 20",
+  "PreselectAgentTextContentCleanerOptions": true,
+  "PreselectedAgentTextContentCleanerProvider": "PreselectedAgentTextContentCleanerProvider sample 21"
+}

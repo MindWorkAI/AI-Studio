@@ -12,7 +12,16 @@ namespace AIStudio.Tests;
 public sealed class TestHost
 {
     [OneTimeSetUp]
-    public void PrepareStaticApplicationState()
+    public void PrepareStaticApplicationState() => PrepareStaticState();
+
+    /// <summary>
+    /// Fills the static state of the app which the tests need.
+    /// </summary>
+    /// <remarks>
+    /// NUnit builds the cases of a TestCaseSource while it discovers the tests, before this fixture runs.
+    /// A source which touches a type of the app with a static logger calls this first.
+    /// </remarks>
+    public static void PrepareStaticState()
     {
         //
         // A number of types in the app hold a static logger field that is initialized from

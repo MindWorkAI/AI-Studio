@@ -10,7 +10,7 @@ internal static class SwotAnalysisContentPresentation
     /// Fails the reading of stored data which holds a null where the result expects a value, so that
     /// the result view never meets one.
     /// </summary>
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         RespectNullableAnnotations = true,
     };

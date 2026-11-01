@@ -39,7 +39,7 @@ public sealed class SqliteProvenanceStoreClientImplementation(string name, strin
     /// Writes the content around a passage the way it reads: the default encoder would turn every
     /// character outside ASCII into an escape, cf. ToolExecutionResult.MODEL_CONTENT_OPTIONS.
     /// </summary>
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     private readonly string databasePath = databasePath;
     private readonly string lastCleanupPath = Path.Join(basePath, LAST_CLEANUP_FILENAME);
