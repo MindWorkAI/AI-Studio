@@ -31,8 +31,9 @@ Rust passes it to .NET as `AI_STUDIO_UI_TOKEN` through `ipc_environment` in `dot
 the window as an HttpOnly session cookie before the window opens the app (`change_location_to` in
 `app_window.rs`); .NET refuses every request without it. Therefore:
 
-- Never put the token into a URL, a log line, or `startup.env`. Only a development build writes a boot
-  link, to `dev-boot-link.txt` in the repository root, so that another browser can get the cookie.
+- Never put the token into a URL or a log line. Only a development build hands it out elsewhere:
+  `startup.env` carries it to the .NET server started from Rider, together with the other secrets of the
+  IPC, and the boot link in `dev-boot-link.txt` in the repository root lets another browser get the cookie.
 - Keep the cookie `Lax`. A release shows `tauri://localhost` before it opens the app, and WKWebView on
   macOS withholds a `Strict` cookie on that navigation. A development build starts from the dev server
   of the Tauri CLI on `127.0.0.1`, the same site as the app, which hides the problem; start it with
