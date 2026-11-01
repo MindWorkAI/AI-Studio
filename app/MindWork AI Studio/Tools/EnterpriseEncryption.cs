@@ -292,11 +292,11 @@ public sealed class EnterpriseEncryption
     /// </summary>
     private Aes CreateAesV1(byte[] salt)
     {
-        // Derive key and IV using PBKDF2:
-        using var keyDerivation = new Rfc2898DeriveBytes(this.secretKey!, salt, V1_ITERATIONS, HashAlgorithmName.SHA512);
+        // Derive key and IV using PBKDF2, the first 32 bytes for AES-256 and the last 16 for its block size:
+        var keyAndIv = Rfc2898DeriveBytes.Pbkdf2(this.secretKey!, salt, V1_ITERATIONS, HashAlgorithmName.SHA512, 48);
         var aes = Aes.Create();
-        aes.Key = keyDerivation.GetBytes(32); // AES-256
-        aes.IV = keyDerivation.GetBytes(16);  // AES block size
+        aes.Key = keyAndIv[..32];
+        aes.IV = keyAndIv[32..];
         aes.Mode = CipherMode.CBC;
         aes.Padding = PaddingMode.PKCS7;
         return aes;
