@@ -14,9 +14,9 @@
         <!--
             Held at the version the two analyzer projects build against, so that a test compiling a
             snippet uses the same Roslyn the analyzers themselves were written for. Raise all three
-            together, and never above the Roslyn of the .NET SDK in metadata.txt (4.12 for 9.0.1xx).
+            together, and never above the Roslyn of the .NET SDK in metadata.txt (5.0 for 10.0.1xx).
         -->
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
         <!--
             Pinned below 4.6.0 on purpose, verified by bisecting 4.4.0, 4.5.0, 4.5.1, 4.6.0 and 4.6.1
