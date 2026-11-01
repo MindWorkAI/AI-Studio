@@ -115,5 +115,5 @@ public sealed class SemanticSearchToolRequestTests
     /// <summary>
     /// Reads a search which has to be refused and returns what the refusal said.
     /// </summary>
-    private static string Refusal(TestDelegate read) => Assert.Throws<ArgumentException>(read)!.Message;
+    private static string Refusal(Action read) => Assert.Throws<ArgumentException>(read)!.Message;
 }

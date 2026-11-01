@@ -65,10 +65,10 @@ public sealed class FileExportFeedbackTests
     }
 
     [Test]
-    public void AnExceptionRemovesTheRunningNotification()
+    public async Task AnExceptionRemovesTheRunningNotification()
     {
         var sent = new SentNotifications();
-        Assert.ThrowsAsync<IOException>(async () =>
+        await Assert.ThrowsAsync<IOException>(async () =>
         {
             await using var feedback = new FileExportFeedback(sent.Send, _ => Task.CompletedTask);
             feedback.ShowRunning(FILE_PATH);

@@ -163,5 +163,5 @@ public sealed class ToolArgumentReaderTests
     /// <summary>
     /// Runs a reader which has to refuse its argument and returns what it said.
     /// </summary>
-    private static string Refusal(TestDelegate read) => Assert.Throws<ArgumentException>(read)!.Message;
+    private static string Refusal(Action read) => Assert.Throws<ArgumentException>(read)!.Message;
 }

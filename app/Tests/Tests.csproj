@@ -10,29 +10,26 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="10.0.1" />
+        <PackageReference Include="coverlet.collector" Version="10.1.0" />
         <!--
             Held at the version the two analyzer projects build against, so that a test compiling a
             snippet uses the same Roslyn the analyzers themselves were written for. Raise all three
             together, and never above the Roslyn of the .NET SDK in metadata.txt (5.0 for 10.0.1xx).
         -->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
         <!--
-            Pinned below 4.6.0 on purpose, verified by bisecting 4.4.0, 4.5.0, 4.5.1, 4.6.0 and 4.6.1
-            against the .NET 9 SDK (9.0.120, C# 13): from 4.6.0 on, the compiler no longer picks
-            Assert.That<TActual>(TActual, IResolveConstraint, ...) for a plain value. 4.6.0 added
-            Assert.That(Action, ...) and Assert.That<T>(Func<T>, ...) alongside it, and the value
-            overload drops out of the candidate set, so even Assert.That(1, Is.EqualTo(1)) fails with
-            "argument 1: cannot convert int to System.Action", a message that points nowhere near the
-            real cause. Re-test the newest version whenever the .NET SDK is raised.
+            NUnit 4.6 broke Assert.That for plain values under C# 13: with Assert.That(Action, ...) added,
+            even Assert.That(1, Is.EqualTo(1)) failed with "argument 1: cannot convert int to System.Action".
+            NUnit 5 with C# 14 picks the value overload again. Should that message come back after an update,
+            this is where it comes from.
         -->
-        <PackageReference Include="NUnit" Version="4.5.1" />
-        <PackageReference Include="NUnit.Analyzers" Version="4.14.0">
+        <PackageReference Include="NUnit" Version="5.0.0" />
+        <PackageReference Include="NUnit.Analyzers" Version="4.15.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="NUnit3TestAdapter" Version="6.3.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
     </ItemGroup>
 
     <ItemGroup>

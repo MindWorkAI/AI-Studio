@@ -163,11 +163,11 @@ public sealed class RetrievalPagingTests
     }
 
     [Test]
-    public void AnERIDataSourceRefusesAFurtherPage()
+    public async Task AnERIDataSourceRefusesAFurtherPage()
     {
         var source = new DataSourceERI_V1 { Id = "33333333-3333-3333-3333-333333333333", Name = "Intranet", MaxMatches = 10 };
 
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await source.RetrieveDataAsync("query", 2, new AIStudio.Chat.ChatThread()));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await source.RetrieveDataAsync("query", 2, new AIStudio.Chat.ChatThread()));
     }
 
     private static (IReadOnlyList<string> Matches, bool HasMore) Merge(string[] first, string[] second, int page)

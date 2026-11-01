@@ -117,12 +117,12 @@ public sealed class PassageProvenanceTests
     }
 
     [Test]
-    public void StoringNeverStopsTheAnswer()
+    public async Task StoringNeverStopsTheAnswer()
     {
         // A passage without its text, as an ERI server sent one before its fields were checked:
         var answer = new ContentText { SourcePassages = [Passage(HANDBOOK_URL, null!)] };
 
-        Assert.DoesNotThrowAsync(() => answer.StoreReceivedContentAsync(Guid.NewGuid()), "Completing the answer waits for this, and a throw left its chat running until the app restarted.");
+        await Assert.DoesNotThrowAsync(() => answer.StoreReceivedContentAsync(Guid.NewGuid()), "Completing the answer waits for this, and a throw left its chat running until the app restarted.");
     }
 
     [Test]

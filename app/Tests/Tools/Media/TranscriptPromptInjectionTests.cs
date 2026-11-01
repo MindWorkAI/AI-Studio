@@ -97,11 +97,11 @@ public sealed class TranscriptPromptInjectionTests
     }
 
     [Test]
-    public void OnlyAReadyTranscriptCanBeRead()
+    public async Task OnlyAReadyTranscriptCanBeRead()
     {
         var transcript = PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.NO_PROVIDER, null, "No provider.");
 
-        Assert.ThrowsAsync<ArgumentException>(() => PersistentMediaTranscript.ReadTranscriptAsync(this.rustService, transcript, this.mediaPath, reportingScope: null, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentException>(() => PersistentMediaTranscript.ReadTranscriptAsync(this.rustService, transcript, this.mediaPath, reportingScope: null, CancellationToken.None));
     }
 
     [Test]

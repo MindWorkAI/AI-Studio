@@ -233,13 +233,13 @@ public sealed class MailboxIndexStoreTests
     {
         var mailId = await this.StoreDocumentAsync(KEY_A);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.ThrowsAsync<ArgumentException>(() => this.Client.UpsertMailAsync(DATA_SOURCE_ID, Mail(mailId), TOKEN), "A mail which lies nowhere would be an orphan from the start.");
-            Assert.ThrowsAsync<ArgumentException>(() => this.Client.UpsertMailAsync(DATA_SOURCE_ID, Mail(mailId, At(INBOX, 7), At(INBOX, 7)), TOKEN));
-            Assert.ThrowsAsync<InvalidOperationException>(() => this.Client.UpsertMailAsync(DATA_SOURCE_ID, Mail(mailId, At("Unknown", 1)), TOKEN));
-            Assert.ThrowsAsync<ArgumentException>(() => this.Client.UpsertMailAsync(DATA_SOURCE_ID, Mail(mailId, At(INBOX, 7)) with { ReferenceMessageIds = ["one two@example.org"] }, TOKEN), "Stored separated by spaces, this one would come back as two.");
-        });
+            await Assert.ThrowsAsync<ArgumentException>(() => this.Client.UpsertMailAsync(DATA_SOURCE_ID, Mail(mailId), TOKEN), "A mail which lies nowhere would be an orphan from the start.");
+            await Assert.ThrowsAsync<ArgumentException>(() => this.Client.UpsertMailAsync(DATA_SOURCE_ID, Mail(mailId, At(INBOX, 7), At(INBOX, 7)), TOKEN));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => this.Client.UpsertMailAsync(DATA_SOURCE_ID, Mail(mailId, At("Unknown", 1)), TOKEN));
+            await Assert.ThrowsAsync<ArgumentException>(() => this.Client.UpsertMailAsync(DATA_SOURCE_ID, Mail(mailId, At(INBOX, 7)) with { ReferenceMessageIds = ["one two@example.org"] }, TOKEN), "Stored separated by spaces, this one would come back as two.");
+        }
     }
 
     /// <summary>

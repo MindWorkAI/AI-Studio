@@ -94,7 +94,7 @@ public sealed class ReadWebPageFreeAddressChoiceTests
     }
 
     [Test]
-    public void OffRefusesAMadeUpAddressWithoutRepeatingIt()
+    public async Task OffRefusesAMadeUpAddressWithoutRepeatingIt()
     {
         var tool = new ReadWebPageTool(null!, null!, null!, NullLogger<ReadWebPageTool>.Instance);
         using var arguments = JsonDocument.Parse("""{"url":"https://made-up.example/?question=budget"}""");
@@ -109,7 +109,7 @@ public sealed class ReadWebPageFreeAddressChoiceTests
             SettingsValues = new Dictionary<string, string>(),
         };
 
-        var exception = Assert.ThrowsAsync<ToolExecutionBlockedException>(() => tool.ExecuteAsync(arguments.RootElement, context));
+        var exception = await Assert.ThrowsAsync<ToolExecutionBlockedException>(() => tool.ExecuteAsync(arguments.RootElement, context));
 
         Assert.That(exception!.Message, Does.Contain("Free address choice is off").And.Not.Contain("made-up").And.Not.Contain("budget"), "Repeated in the result, the address would stand in the chat afterwards.");
     }

@@ -91,9 +91,9 @@ public sealed class MailboxStateStoreTests
     }
 
     [Test]
-    public void ARemovalOfNoMailIsNothingToHoldBack()
+    public async Task ARemovalOfNoMailIsNothingToHoldBack()
     {
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => this.Client.HoldBackMailRemovalAsync(DATA_SOURCE_ID, 0, TOKEN));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => this.Client.HoldBackMailRemovalAsync(DATA_SOURCE_ID, 0, TOKEN));
     }
 
     [Test]

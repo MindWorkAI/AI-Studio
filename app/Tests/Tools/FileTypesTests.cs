@@ -59,7 +59,7 @@ public class FileTypesTests
             .ToArray();
 
         Assert.That(extensions, Is.Not.Empty);
-        Assert.That(extensions, Has.All.Matches<string>(extension => extension == extension.ToLowerInvariant() && !extension.Contains('.')));
+        Assert.That(extensions, Has.All.Matches<string>(extension => extension is not null && extension == extension.ToLowerInvariant() && !extension.Contains('.')));
     }
 
     [Test]

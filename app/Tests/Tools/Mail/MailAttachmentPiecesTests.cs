@@ -61,22 +61,22 @@ public sealed class MailAttachmentPiecesTests
     }
 
     [Test]
-    public void AnUnknownEncodingFetchesNothing()
+    public async Task AnUnknownEncodingFetchesNothing()
     {
         var server = new PieceServer(Encoding.ASCII.GetBytes("Uryyb"));
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.ThrowsAsync<InvalidDataException>(async () => await WriteDecodedAsync(server, "x-rot13"));
+            await Assert.ThrowsAsync<InvalidDataException>(async () => await WriteDecodedAsync(server, "x-rot13"));
             Assert.That(server.RequestedOffsets, Is.Empty);
-        });
+        }
     }
 
     [Test]
-    public void APieceLargerThanAskedForIsRefused()
+    public async Task APieceLargerThanAskedForIsRefused()
     {
         // Taken as it came, the next piece would repeat what this one already delivered:
         var server = new PieceServer(new byte[100], deliveredBytes: PIECE_BYTES + 1);
-        Assert.ThrowsAsync<InvalidDataException>(async () => await WriteDecodedAsync(server, "binary"));
+        await Assert.ThrowsAsync<InvalidDataException>(async () => await WriteDecodedAsync(server, "binary"));
     }
 
     private static async Task<byte[]> WriteDecodedAsync(PieceServer server, string? transferEncoding)

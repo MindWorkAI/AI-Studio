@@ -223,7 +223,7 @@ public sealed class MailToolArgumentsTests
 
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);
 
-    private static string Refusal(TestDelegate read) => Assert.Throws<ArgumentException>(read)!.Message;
+    private static string Refusal(Action read) => Assert.Throws<ArgumentException>(read)!.Message;
 
     /// <summary>
     /// A time zone two hours ahead of UTC, all year round, so that no test depends on the computer or on daylight saving time.

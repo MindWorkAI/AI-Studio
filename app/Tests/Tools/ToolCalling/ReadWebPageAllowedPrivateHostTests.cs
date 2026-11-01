@@ -149,11 +149,11 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     }
 
     [Test]
-    public void AnAllowedNameWhichResolvesToAPublicAddressIsRefused()
+    public async Task AnAllowedNameWhichResolvesToAPublicAddressIsRefused()
     {
         var service = new WebPageRetrievalService(new HTMLParser());
 
-        var exception = Assert.ThrowsAsync<WebPageAccessBlockedException>(() => service.RetrieveAsync(new Uri(PUBLIC_ADDRESS), new WebPageRetrievalOptions
+        var exception = await Assert.ThrowsAsync<WebPageAccessBlockedException>(() => service.RetrieveAsync(new Uri(PUBLIC_ADDRESS), new WebPageRetrievalOptions
         {
             TimeoutSeconds = 10,
             ProviderConfidence = ConfidenceLevel.HIGH,
@@ -165,7 +165,7 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     }
 
     [Test]
-    public void ARedirectFromAnAllowedPrivateHostToAPublicAddressIsRefused()
+    public async Task ARedirectFromAnAllowedPrivateHostToAPublicAddressIsRefused()
     {
         using var server = new LoopbackWebServer(redirectLocation: PUBLIC_ADDRESS);
         var service = new WebPageRetrievalService(new HTMLParser());
@@ -175,7 +175,7 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
         // chose only, which the limit holds for all the same, because it guards what the address
         // may carry:
         //
-        var exception = Assert.ThrowsAsync<WebPageAccessBlockedException>(() => service.RetrieveAsync(server.Address("/redirect"), new WebPageRetrievalOptions
+        var exception = await Assert.ThrowsAsync<WebPageAccessBlockedException>(() => service.RetrieveAsync(server.Address("/redirect"), new WebPageRetrievalOptions
         {
             TimeoutSeconds = 10,
             TargetChosenByUser = true,

@@ -324,5 +324,5 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
 
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);
 
-    private static string Refusal(TestDelegate read) => Assert.Throws<ArgumentException>(read)!.Message;
+    private static string Refusal(Action read) => Assert.Throws<ArgumentException>(read)!.Message;
 }
