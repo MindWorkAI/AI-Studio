@@ -86,7 +86,7 @@ public sealed class AppAccessMiddleware(RequestDelegate next, AppAccessPolicy po
         context.Response.Cookies.Append(AppAccessPolicy.SESSION_COOKIE_NAME, token, new CookieOptions
         {
             HttpOnly = true,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,
             Path = "/",
             IsEssential = true
         });

@@ -708,10 +708,9 @@ pub async fn change_location_to(url: tauri::Url) {
 
     //
     // The window navigates by itself instead of through a script of the page it shows. That page
-    // comes from Tauri, which is another site than the app, so the app would count as opened by
-    // another site, and the window would withhold the session cookie. We take the window out of
-    // the lock first: the cookie and the navigation need the main thread, which may wait for this
-    // lock meanwhile.
+    // comes from Tauri, which is another site than the app; app_access::session_cookie explains
+    // why the session cookie goes along all the same. We take the window out of the lock first:
+    // the cookie and the navigation need the main thread, which may wait for this lock meanwhile.
     //
     // Handing over the cookie waits for the main thread. This function serves a request of the
     // runtime API, so the waiting happens outside the async runtime, see runtime/AGENTS.md.

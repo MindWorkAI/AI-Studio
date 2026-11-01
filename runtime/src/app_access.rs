@@ -25,12 +25,20 @@ const DEV_BOOT_LINK_FILE: &str = "dev-boot-link.txt";
 /// Builds the session cookie of the app window.
 ///
 /// The cookie is for the app host alone and lives as long as the window: it has no expiry date,
-/// scripts cannot read it, and the window never sends it with a request which another site
-/// started. We parse it from text because the `cookie` crate, whose builder would need its
+/// and scripts cannot read it. The window never sends it with a request which a page of another
+/// site makes, such as a script the page loads or a form it posts.
+///
+/// The cookie is `Lax`, not `Strict`. Before the window opens the app, it shows a page of Tauri,
+/// `tauri://localhost` on macOS, which is another site than the app. WKWebView counts that page
+/// as the one which opened the app, and it would withhold a `Strict` cookie. A `Lax` cookie goes
+/// along when a whole page of the app opens. Development builds show the page of the Tauri dev
+/// server on the app host instead, which hides the difference.
+///
+/// We parse the cookie from text because the `cookie` crate, whose builder would need its
 /// `SameSite` type, is no direct dependency of ours.
 pub fn session_cookie() -> Cookie<'static> {
     let token = UI_ACCESS_TOKEN.to_hex_text();
-    Cookie::parse(format!("{SESSION_COOKIE_NAME}={token}; Domain={APP_HOST}; Path=/; HttpOnly; SameSite=Strict"))
+    Cookie::parse(format!("{SESSION_COOKIE_NAME}={token}; Domain={APP_HOST}; Path=/; HttpOnly; SameSite=Lax"))
         .expect("The session cookie consists of fixed attributes and a hexadecimal token, which always parse.")
 }
 
@@ -132,7 +140,7 @@ mod tests {
         let cookie = session_cookie();
 
         assert_eq!(cookie.http_only(), Some(true));
-        assert!(cookie.same_site().is_some_and(|same_site| same_site.is_strict()));
+        assert!(cookie.same_site().is_some_and(|same_site| same_site.is_lax()));
     }
 
     #[test]

@@ -141,7 +141,7 @@ public sealed class AppAccessMiddlewareTests
             Assert.That(response.Headers.Location.ToString(), Is.EqualTo("/"));
             Assert.That(cookie, Does.StartWith($"{AppAccessPolicy.SESSION_COOKIE_NAME}={UI_TOKEN}"));
             Assert.That(cookie, Does.Contain("httponly"));
-            Assert.That(cookie, Does.Contain("samesite=strict"));
+            Assert.That(cookie, Does.Contain("samesite=lax"));
             Assert.That(cookie, Does.Contain("path=/"));
             Assert.That(cookie, Does.Not.Contain("expires"));
         });
