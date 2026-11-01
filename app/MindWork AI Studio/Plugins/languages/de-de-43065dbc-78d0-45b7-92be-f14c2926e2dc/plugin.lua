@@ -12303,9 +12303,6 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1069211263"] = "Die Anfrage 
 -- The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1133173666"] = "Der Anbieter „{0}“ hat die Anfrage abgelehnt. Möglicherweise ist Ihr Konto nicht für die Nutzung des ausgewählten Modells berechtigt, oder der Anbieter ist in Ihrer Region nicht verfügbar."
 
--- Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1487597412"] = "Beim Versuch, die Antwort des LLM-Anbieters „{0}“ zu streamen, sind Probleme aufgetreten. Die Meldung lautet: „{1}“"
-
 -- Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1856278860"] = "Der Versuch, die Antwort des LLM-Anbieters „{0}“ zu streamen, ist fehlgeschlagen. Der Stream konnte nicht gelesen werden. Die Meldung lautet: „{1}“"
 
