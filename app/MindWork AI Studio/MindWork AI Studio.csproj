@@ -5,7 +5,7 @@
     
     <PropertyGroup>
         <Authors>Thorsten Sommer</Authors>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>CS8600;CS8602;CS8603;CS9057</WarningsAsErrors> <!-- CS9057: fail instead of silently skipping an analyzer which needs a newer compiler than the SDK's -->
         <ImplicitUsings>enable</ImplicitUsings>
@@ -71,22 +71,20 @@
       <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
       <PackageReference Include="MailKit" Version="4.18.2" />
-      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.22" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.22" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.22" />
+      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.14" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
+
+      <!--
+          Its assembly ships with ASP.NET Core, but the package also brings the build logic which writes the
+          manifest of the embedded files. Without that manifest, the release serves no static files at all, and
+          WebRootFiles finds neither the changelogs nor the ERI specifications in any build.
+      -->
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.14" />
       <PackageReference Include="MudBlazor" Version="9.12.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="9.0.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
       <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
       <PackageReference Include="LuaCSharp" Version="0.5.8" />
-
-      <!--
-          Not used by AI Studio directly: MailKit pulls it in through MimeKit, which asks for 10.0.0. That
-          version is affected by CVE-2026-70162 and CVE-2026-84008 (GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx),
-          fixed in 10.0.13. The package wins over the older copy within the .NET runtime, so upgrading .NET
-          alone does not help. Remove this reference once MimeKit itself asks for 10.0.13 or newer.
-      -->
-      <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
     </ItemGroup>
 
     <ItemGroup>
@@ -169,6 +167,18 @@
             </AssemblyAttribute>
         </ItemGroup>
         
+    </Target>
+
+    <!--
+        Since .NET 10, NuGet prunes a package whose assemblies ship with the shared framework, and with it the
+        package's build logic. Microsoft.Extensions.FileProviders.Embedded must not go this way, see its reference
+        above. .NET 10.0.0 already leaves it out of the pruning (dotnet/aspnetcore#63719); this target keeps it
+        even if a later version of .NET prunes it again. It is the workaround Microsoft gives in that issue.
+    -->
+    <Target Name="_PreserveFileProvidersEmbeddedPackageReference" AfterTargets="AddPrunePackageReferences">
+        <ItemGroup>
+            <PrunePackageReference Remove="Microsoft.Extensions.FileProviders.Embedded" />
+        </ItemGroup>
     </Target>
 
     <!--
