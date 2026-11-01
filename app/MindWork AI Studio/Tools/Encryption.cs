@@ -39,12 +39,11 @@ public sealed class Encryption(ILogger<Encryption> logger, byte[] secretPassword
         // Derive key and iv vector: the operations take several seconds. Thus, using a task:
         await Task.Run(() =>
         {
-            using var keyVectorObj = new Rfc2898DeriveBytes(secretPassword, secretKeySalt, ITERATIONS, HashAlgorithmName.SHA512);
-            var keyBytes = keyVectorObj.GetBytes(32); // the max valid key length = 256 bit = 32 bytes
-            var ivBytes = keyVectorObj.GetBytes(16); // the only valid block size = 128 bit = 16 bytes
-            
-            Array.Copy(keyBytes, this.key, this.key.Length);
-            Array.Copy(ivBytes, this.iv, this.iv.Length);
+            // The max valid key length = 256 bit = 32 bytes, and the only valid block size = 128 bit = 16 bytes:
+            var keyVectorBytes = Rfc2898DeriveBytes.Pbkdf2(secretPassword, secretKeySalt, ITERATIONS, HashAlgorithmName.SHA512, this.key.Length + this.iv.Length);
+
+            Array.Copy(keyVectorBytes, 0, this.key, 0, this.key.Length);
+            Array.Copy(keyVectorBytes, this.key.Length, this.iv, 0, this.iv.Length);
         });
 
         var initDuration = stopwatch.Elapsed;

@@ -27,12 +27,12 @@ public sealed class IContentExtensionsTests
 
         var found = content.TryGetExportMarkdown(out var markdown);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.True);
             Assert.That(markdown, Does.EndWith(content.Sources.ToExportMarkdown()), "What the chat shows below the answer is what the file holds below it.");
             Assert.That(TopLevelBlocksOf(markdown), Is.EqualTo(new[] { "ParagraphBlock", "h1", "h2", "ListBlock" }), "The answer stays a paragraph of its own; the source list starts under its own heading.");
-        });
+        }
     }
 
     [Test]
@@ -47,11 +47,11 @@ public sealed class IContentExtensionsTests
 
         var found = content.TryGetExportMarkdown(out var markdown);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.True);
             Assert.That(TopLevelBlocksOf(markdown), Is.EqualTo(new[] { "ParagraphBlock", "Table", "h1", "h2", "ListBlock" }), "The table ends where it ended; the headings below it are not two more rows.");
-        });
+        }
     }
 
     [Test]
@@ -66,11 +66,11 @@ public sealed class IContentExtensionsTests
 
         var found = content.TryGetExportMarkdown(out var markdown);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.True);
             Assert.That(TopLevelBlocksOf(markdown), Is.EqualTo(new[] { "ParagraphBlock", "ListBlock", "h1", "h2", "ListBlock" }), "Two lists, not one: the sources do not become the fourth point of the answer.");
-        });
+        }
     }
 
     [Test]
@@ -86,11 +86,11 @@ public sealed class IContentExtensionsTests
 
         var found = content.TryGetExportMarkdown(out var markdown);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.True);
             Assert.That(TopLevelBlocksOf(markdown), Is.EqualTo(new[] { "ParagraphBlock", "FencedCodeBlock", "h1", "h2", "ListBlock" }), "The code block is closed for the model, so the sources stand below it instead of inside it.");
-        });
+        }
     }
 
     [Test]
@@ -101,11 +101,11 @@ public sealed class IContentExtensionsTests
 
         var found = content.TryGetExportMarkdown(out var markdown);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.True);
             Assert.That(markdown, Is.EqualTo(ANSWER.Trim()), "The everyday case: no heading, no empty line, nothing anybody has to explain.");
-        });
+        }
     }
 
     [Test]
@@ -115,11 +115,11 @@ public sealed class IContentExtensionsTests
 
         var found = content.TryGetExportMarkdown(out var markdown);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.True);
             Assert.That(markdown, Is.EqualTo(content.Sources.ToExportMarkdown()), "Nothing above the heading means no empty line above it either.");
-        });
+        }
     }
 
     [Test]
@@ -132,11 +132,11 @@ public sealed class IContentExtensionsTests
             Sources = [TOOL_SOURCE],
         };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(picture.TryGetExportMarkdown(out var markdown), Is.False, "There is no text document for a picture, so the caller hears no and says so.");
             Assert.That(markdown, Is.Empty, "A file writer must not put an excuse into the file it writes.");
-        });
+        }
     }
 
     [Test]
@@ -147,11 +147,11 @@ public sealed class IContentExtensionsTests
 
         var found = content.TryGetMarkdownText(out var markdown);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.True);
             Assert.That(markdown, Is.EqualTo(ANSWER), "Neither trimmed nor extended: whoever reads a table out of a message wants what the model wrote and nothing else.");
-        });
+        }
     }
 
     [Test]
@@ -164,11 +164,11 @@ public sealed class IContentExtensionsTests
 
         var tables = FilesOf(content);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tables, Has.Count.EqualTo(1), "One table in the message, one table offered for it.");
             Assert.That(content.ToExportContent(tables[0]), Is.EqualTo(tables[0].Content), "A data table has no column a link list would fit into.");
-        });
+        }
     }
 
     [Test]
@@ -201,12 +201,12 @@ public sealed class IContentExtensionsTests
         var exported = content.ToExportContent(file);
         var appended = exported[file.Content.Length..].Trim();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(exported, Does.StartWith(file.Content), "The page stays as the model wrote it.");
             Assert.That(appended, Does.StartWith("<!--").And.EndWith("-->"), "Below the page stands one comment and nothing a browser would show.");
             Assert.That(appended, Does.Contain(TOOL_SOURCE.URL));
-        });
+        }
     }
 
     [Test]
@@ -221,12 +221,12 @@ public sealed class IContentExtensionsTests
         var exported = content.ToExportContent(file);
         var appended = exported[file.Content.Length..].Trim();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(exported, Does.StartWith(file.Content), "The document stays as the model wrote it.");
             Assert.That(appended.Split(Environment.NewLine), Has.All.StartWith("%"), "A line LaTeX would read could stop the whole run.");
             Assert.That(appended, Does.Contain(TOOL_SOURCE.URL));
-        });
+        }
     }
 
     [Test]

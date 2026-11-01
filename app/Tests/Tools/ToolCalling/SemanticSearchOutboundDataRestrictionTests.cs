@@ -85,12 +85,12 @@ public sealed class SemanticSearchOutboundDataRestrictionTests : ToolRegistryTes
         var executor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance);
         var outcome = await executor.ExecuteAsync("call-1", TOOL_ID, "{}", [(webSearch.GetDefinition(), webSearch)], new NoProvider(), ChatAfterASearch(PROJECT_FILES), order: 1);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(hasRun, Is.False, "The content of the project files would already have left AI Studio.");
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
             Assert.That(outcome.Content, Does.Contain("Project files"), "The user learns which data source stands in the way.");
-        });
+        }
     }
 
     [TestCase(INTRANET_PAGE, true)]

@@ -71,12 +71,12 @@ public sealed class ManagedTokenizerStateTests
         var configObjects = await StartPluginAsync();
         var embeddingProvider = this.settingsManager.ConfigurationData.EmbeddingProviders.Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(embeddingProvider.TokenizerPath, Is.EqualTo(STORED_EMBEDDING_TOKENIZER_PATH), "Until the tokenizers are synchronized, the stored copy is the tokenizer this provider uses.");
             Assert.That(embeddingProvider.TokenizerFingerprint, Is.EqualTo(STORED_FINGERPRINT), "An empty fingerprint looks like another tokenizer and costs every data source of this provider its index.");
             Assert.That(configObjects.Single(x => x.Type == PluginConfigurationObjectType.EMBEDDING_PROVIDER).ConfiguredTokenizerPath, Is.EqualTo(CONFIGURED_TOKENIZER_PATH), "The synchronization learns from here which tokenizer the plugin wants.");
-        });
+        }
     }
 
     [Test]
@@ -100,11 +100,11 @@ public sealed class ManagedTokenizerStateTests
 
         var configObjects = await StartPluginAsync();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.settingsManager.ConfigurationData.Providers.Single().TokenizerPath, Is.EqualTo(STORED_CHAT_TOKENIZER_PATH), "The path inside the plugin is relative to the plugin, so no token could be counted with it.");
             Assert.That(configObjects.Single(x => x.Type == PluginConfigurationObjectType.LLM_PROVIDER).ConfiguredTokenizerPath, Is.EqualTo(CONFIGURED_TOKENIZER_PATH), "The synchronization learns from here which tokenizer the plugin wants.");
-        });
+        }
     }
 
     [Test]
@@ -113,14 +113,14 @@ public sealed class ManagedTokenizerStateTests
         var configObjects = await StartPluginAsync();
         var embeddingProvider = this.settingsManager.ConfigurationData.EmbeddingProviders.Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.settingsManager.ConfigurationData.Providers.Single().TokenizerPath, Is.Empty, "Nothing is stored yet, and the path inside the plugin is no tokenizer the app could load.");
             Assert.That(embeddingProvider.TokenizerPath, Is.Empty);
             Assert.That(embeddingProvider.TokenizerFingerprint, Is.Empty);
             Assert.That(configObjects, Has.Count.EqualTo(2));
             Assert.That(configObjects.Select(x => x.ConfiguredTokenizerPath), Is.All.EqualTo(CONFIGURED_TOKENIZER_PATH), "The synchronization still learns which tokenizer to store.");
-        });
+        }
     }
 
     /// <summary>

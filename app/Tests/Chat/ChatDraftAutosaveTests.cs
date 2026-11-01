@@ -62,11 +62,11 @@ public sealed class ChatDraftAutosaveTests
         storage.IsBusy = false;
         await storage.WaitForStoreAsync();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storedWhileBusy, Is.Zero, "The AI job changes the conversation meanwhile, so storing it from elsewhere could read it in the middle of a change.");
             Assert.That(storage.StoredChats, Is.EqualTo(new[] { chat }), "Once the answer is done, the change must still reach the disk.");
-        });
+        }
     }
 
     [Test]

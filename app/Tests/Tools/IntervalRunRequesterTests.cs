@@ -98,12 +98,12 @@ public sealed class IntervalRunRequesterTests
     public void OnlyAFailedSignInKeepsTheRoundsAway()
     {
         var status = new DataSourceEmbeddingStatus(WORK.Id, WORK.Name, DataSourceType.MAILBOX, DataSourceEmbeddingState.FAILED, 0, 0, 0, string.Empty, "Signing in failed.", []);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceEmbeddingService.IsWaitingForSignIn(status with { Attention = DataSourceAttention.AUTH_FAILED }), Is.True);
             Assert.That(DataSourceEmbeddingService.IsWaitingForSignIn(status with { Attention = DataSourceAttention.MASS_REMOVAL_PENDING }), Is.False, "New mails have to keep coming while a removal waits for the user.");
             Assert.That(DataSourceEmbeddingService.IsWaitingForSignIn(status), Is.False, "A server out of reach is no reason to stop syncing.");
-        });
+        }
     }
 
     private static IntervalRunRequester CreateRequester() => new(FAR_OFF, FAR_OFF, DataSourceEmbeddingRefreshMode.INTERVAL_CHECK, NullLogger.Instance);

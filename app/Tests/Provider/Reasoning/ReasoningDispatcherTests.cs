@@ -62,11 +62,11 @@ public sealed class ReasoningDispatcherTests
         //
         var llmman = ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.LLMMAN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(llmman, Is.SupersetOf(ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.LLAMA_CPP)));
             Assert.That(llmman, Is.SupersetOf(ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.VLLM)));
-        });
+        }
     }
 
     [Test]
@@ -77,12 +77,12 @@ public sealed class ReasoningDispatcherTests
         // switch into a Mistral provider says nothing -- and claiming it did would light an indicator
         // for a request which will never carry that parameter anywhere.
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ReasoningDispatcher.WhatTheParametersSay(LLMProviders.MISTRAL, Host.NONE, """ "enable_thinking": true """), Is.EqualTo(ReasoningConfigurationState.NOT_CONFIGURED));
             Assert.That(ReasoningDispatcher.WhatTheParametersSay(LLMProviders.ANTHROPIC, Host.NONE, """ "reasoning_effort": "high" """), Is.EqualTo(ReasoningConfigurationState.NOT_CONFIGURED));
             Assert.That(ReasoningDispatcher.WhatTheParametersSay(LLMProviders.MISTRAL, Host.NONE, """ "reasoning_effort": "high" """), Is.EqualTo(ReasoningConfigurationState.EXPLICITLY_ENABLED), "And the one it does speak still counts.");
-        });
+        }
     }
 
     [Test]
@@ -131,7 +131,7 @@ public sealed class ReasoningDispatcherTests
     {
         var known = ReasoningDispatcher.Dialects.Select(dialect => dialect.Dialect).ToHashSet();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var provider in Enum.GetValues<LLMProviders>())
             foreach (var host in Enum.GetValues<Host>())
@@ -141,6 +141,6 @@ public sealed class ReasoningDispatcherTests
                 Assert.That(named, Is.SubsetOf(known), $"{provider} on {host} names a dialect nothing answers to.");
                 Assert.That(named, Is.Unique, $"{provider} on {host} names a dialect twice.");
             }
-        });
+        }
     }
 }

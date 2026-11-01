@@ -24,12 +24,12 @@ public sealed class ChosenLayoutsTests
             [LayoutPurpose.CONTENT] = "title and content",
         });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chosen.For(LayoutPurpose.CHAPTER)?.Id, Is.EqualTo("L2"));
             Assert.That(chosen.For(LayoutPurpose.CONTENT), Is.Null, "Names are compared exactly, as the template's author wrote them.");
             Assert.That(chosen.For(LayoutPurpose.TITLE), Is.Null, "A kind of slide without a choice is left to the model.");
-        });
+        }
     }
 
     [Test]
@@ -41,11 +41,11 @@ public sealed class ChosenLayoutsTests
             [LayoutPurpose.TITLE] = string.Empty,
         });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chosen, Is.SameAs(ChosenLayouts.NONE));
             Assert.That(chosen.ToPromptRules(), Is.Empty, "Without choices, the system prompt gets no rules at all.");
-        });
+        }
     }
 
     [Test]
@@ -57,11 +57,11 @@ public sealed class ChosenLayoutsTests
 
         var chosen = ChosenLayouts.Of(template, new Dictionary<LayoutPurpose, string> { [LayoutPurpose.CONTENT] = "Content" });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Families.Select(family => family.Name), Is.EqualTo(new[] { "Content", "Content" }), "The test needs two families with the same name.");
             Assert.That(chosen.For(LayoutPurpose.CONTENT)?.Id, Is.EqualTo("L1"));
-        });
+        }
     }
 
     [Test]
@@ -73,13 +73,13 @@ public sealed class ChosenLayoutsTests
             [LayoutPurpose.CHAPTER] = "Section Header",
         }).ToPromptRules();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(rules, Does.Contain("\n        - L2 for each slide which starts a chapter;"));
             Assert.That(rules, Does.Contain("\n        - L4 for timelines, e.g., the course of a project."));
             Assert.That(rules.IndexOf("L2 for", StringComparison.Ordinal), Is.LessThan(rules.IndexOf("L4 for", StringComparison.Ordinal)), "The rules follow the course of a presentation.");
             Assert.That(rules, Does.Not.Contain("Section Header").And.Not.Contain("Two Content"), "No text of the template file reaches the system prompt.");
-        });
+        }
     }
 
     [Test]
@@ -92,11 +92,11 @@ public sealed class ChosenLayoutsTests
         });
 
         var rules = chosen.ToPromptRules();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chosen.AddedSlides, Is.EqualTo(new[] { LayoutPurpose.IMPRINT }), "A timeline comes only where the content has one.");
             Assert.That(rules, Does.Contain("\n    - The presentation has at least one slide of each of these kinds, on its layout:\n        - L3: the imprint, e.g., with the authors, the organization, and the date, as the very last slide;"));
             Assert.That(rules, Does.Contain("leaves a slot empty rather than inventing anything."), "The model must not invent the details of an imprint.");
-        });
+        }
     }
 }

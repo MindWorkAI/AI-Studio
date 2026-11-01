@@ -61,7 +61,7 @@ public sealed class WorkspaceChatCopyTests
         var copyDirectory = Path.Combine(this.testDirectory, "tempChats", copy.ChatId.ToString());
         var copiedTranscript = copy.Draft.MediaTranscripts.Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(copy.Draft, Is.Not.SameAs(original.Draft), "Writing in the copy must not change the message of the original.");
             Assert.That(copy.Draft.Text, Is.EqualTo("Summarize the meeting"), "The copy continues where the original stands, the message being written included.");
@@ -69,7 +69,7 @@ public sealed class WorkspaceChatCopyTests
             Assert.That(File.Exists(copiedTranscript.FilePath), Is.True, "Otherwise the transcript drops out of the message of the copy.");
             Assert.That(original.Draft.MediaTranscripts.Single(), Is.EqualTo(transcript), "The original keeps its transcript, with its path.");
             Assert.That(File.Exists(transcript.FilePath), Is.True, "Copying a chat must not take anything away from the original.");
-        });
+        }
     }
 
     /// <summary>

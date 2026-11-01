@@ -27,7 +27,7 @@ public sealed class DataBackupSettingsTests
 
         var copy = DataBackupSettings.CopyWithoutPluginObjects(settings);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(copy.Providers.Select(provider => provider.Id), Is.EqualTo(new[] { "user-provider" }));
             Assert.That(copy.TranscriptionProviders.Select(provider => provider.Id), Is.EqualTo(new[] { "user-transcription" }));
@@ -36,7 +36,7 @@ public sealed class DataBackupSettingsTests
             Assert.That(copy.DataSources.Select(dataSource => dataSource.Id), Is.EqualTo(new[] { "user-data-source" }));
             Assert.That(copy.Profiles.Select(profile => profile.Id), Is.EqualTo(new[] { "user-profile" }));
             Assert.That(copy.DocumentAnalysis.Policies.Select(policy => policy.Id), Is.EqualTo(new[] { "user-policy" }));
-        });
+        }
     }
 
     [Test]
@@ -46,12 +46,12 @@ public sealed class DataBackupSettingsTests
 
         DataBackupSettings.CopyWithoutPluginObjects(settings);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(settings.Providers, Has.Count.EqualTo(2));
             Assert.That(settings.DataSources, Has.Count.EqualTo(2));
             Assert.That(settings.DocumentAnalysis.Policies, Has.Count.EqualTo(2));
-        });
+        }
     }
 
     [Test]
@@ -63,11 +63,11 @@ public sealed class DataBackupSettingsTests
 
         var copy = DataBackupSettings.CopyWithoutPluginObjects(settings);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(copy.ManagedLockedConfigurations["App.UpdateInterval"], Is.EqualTo(PLUGIN_ID), "After a restore, the clean-up hands the setting back to the user unless the plugin locks it again.");
             Assert.That(copy.ManagedUserValueSnapshots["App.UpdateInterval"], Is.EqualTo("\"CHECK_EVERY_DAY\""), "That is the value the user gets back.");
-        });
+        }
     }
 
     private static Data CreateSettingsWithObjectsOfTheUserAndOfAPlugin()

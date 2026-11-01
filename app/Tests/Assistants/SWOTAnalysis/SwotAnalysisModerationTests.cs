@@ -13,7 +13,7 @@ public sealed class SwotAnalysisModerationTests
         var parsed = SwotAnalysisModerationResponseParser.TryParse(JsonSerializer.Serialize(CreateModeration()), out var moderation, out var issue);
         var result = SwotAnalysisModeration.Assemble(moderation);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parsed, Is.True);
             Assert.That(issue, Is.Empty);
@@ -23,7 +23,7 @@ public sealed class SwotAnalysisModerationTests
             Assert.That(result.OverallAssessment.Paragraphs, Is.EqualTo(new[] { "The position is solid.", "The competitor is the main risk." }));
             Assert.That(result.ModerationNotes.Items.Single().Change, Is.EqualTo("Merged two strengths about the team."));
             Assert.That(result.PrioritizedActions.Items.Single().AddressedFactors, Is.EqualTo(new[] { "Experienced team", "Growing market" }));
-        });
+        }
     }
 
     [Test]
@@ -34,11 +34,11 @@ public sealed class SwotAnalysisModerationTests
 
         var parsed = SwotAnalysisModerationResponseParser.TryParse(JsonSerializer.Serialize(moderation), out var parsedModeration, out _);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parsed, Is.True);
             Assert.That(SwotAnalysisModeration.Assemble(parsedModeration).PrioritizedActions.Items.Single().AddressedFactors, Is.EqualTo(new[] { "Experienced team", "Growing market" }));
-        });
+        }
     }
 
     [Test]
@@ -47,11 +47,11 @@ public sealed class SwotAnalysisModerationTests
         var moderation = CreateModeration();
         moderation.Strengths.Findings.Single().FactorId = "W2";
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SwotAnalysisModerationResponseParser.TryParse(JsonSerializer.Serialize(moderation), out _, out var issue), Is.False);
             Assert.That(issue, Is.EqualTo("Finding 1 of strengths has the factor_id \"W2\", which does not start with \"S\"."));
-        });
+        }
     }
 
     [Test]
@@ -60,11 +60,11 @@ public sealed class SwotAnalysisModerationTests
         var moderation = CreateModeration();
         moderation.Strengths.Findings.Add(Finding("s1", "Loyal customers", "The survey shows long customer relationships."));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SwotAnalysisModerationResponseParser.TryParse(JsonSerializer.Serialize(moderation), out _, out var issue), Is.False);
             Assert.That(issue, Does.Contain("\"s1\" is used more than once"));
-        });
+        }
     }
 
     [Test]
@@ -73,11 +73,11 @@ public sealed class SwotAnalysisModerationTests
         var moderation = CreateModeration();
         moderation.PrioritizedActions.Items.Single().AddressedFactorIds = ["S1", "X9"];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SwotAnalysisModerationResponseParser.TryParse(JsonSerializer.Serialize(moderation), out _, out var issue), Is.False);
             Assert.That(issue, Does.Contain("\"X9\""));
-        });
+        }
     }
 
     [Test]
@@ -86,11 +86,11 @@ public sealed class SwotAnalysisModerationTests
         var moderation = CreateModeration();
         moderation.OverallAssessment.Text = "  ";
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SwotAnalysisModerationResponseParser.TryParse(JsonSerializer.Serialize(moderation), out _, out var issue), Is.False);
             Assert.That(issue, Is.EqualTo("The field overall_assessment.text is empty."));
-        });
+        }
     }
 
     [Test]
@@ -102,22 +102,22 @@ public sealed class SwotAnalysisModerationTests
         withReason.ModerationNotes.Items.Clear();
         withReason.ModerationNotes.EmptyMessage = "The four categories needed no changes.";
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SwotAnalysisModerationResponseParser.TryParse(JsonSerializer.Serialize(withoutReason), out _, out var issue), Is.False);
             Assert.That(issue, Does.StartWith("moderation_notes has no items"));
             Assert.That(SwotAnalysisModerationResponseParser.TryParse(JsonSerializer.Serialize(withReason), out _, out _), Is.True);
-        });
+        }
     }
 
     [Test]
     public void AnAnswerWithoutJsonNamesTheProblemForTheModel()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SwotAnalysisModerationResponseParser.TryParse("Here is my assessment.", out _, out var issue), Is.False);
             Assert.That(issue, Does.Contain("no complete JSON object"));
-        });
+        }
     }
 
     [Test]
@@ -125,7 +125,7 @@ public sealed class SwotAnalysisModerationTests
     {
         var request = SwotAnalysisModeration.BuildUserRequest(CreateCategories(), "Support the investment decision", string.Empty, "A market report documents increasing demand.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var category in new[] { "strengths", "weaknesses", "opportunities", "threats" })
                 Assert.That(request, Does.Contain($"\"{category}\""));
@@ -137,7 +137,7 @@ public sealed class SwotAnalysisModerationTests
             Assert.That(request, Does.Match("(?s)<analysis-focus>\\s*No additional analysis focus was provided\\.\\s*</analysis-focus>"));
             Assert.That(request, Does.Match("(?s)<shared-research>\\s*A market report documents increasing demand\\.\\s*</shared-research>"));
             Assert.That(request, Does.Not.Contain("<analysis-subject>"), "The moderator works on the results, not on the material.");
-        });
+        }
     }
 
     [Test]
@@ -149,13 +149,13 @@ public sealed class SwotAnalysisModerationTests
     {
         var prompt = SwotAnalysisModeration.BuildSystemPrompt("Answer in German.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var key in new[] { "\"moderation_notes\"", "\"overall_assessment\"", "\"prioritized_actions\"", "\"addressed_factor_ids\"", "\"factor_id\"" })
                 Assert.That(prompt, Does.Contain(key));
 
             Assert.That(prompt, Does.EndWith("Answer in German."));
-        });
+        }
     }
 
     private static Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisResult> CreateCategories() => new()

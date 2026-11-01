@@ -120,12 +120,12 @@ public sealed class ManagedSettingsCoverageTests
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registeredSettings.Select(setting => setting.SettingName), Does.Contain("DataApp.UpdateInterval"), "No settings were registered, so this test would check nothing.");
             Assert.That(plugin.DeclaredSettingsCount, Is.EqualTo(registeredSettings.Count), "The plugin of this test does not declare every registered setting.");
             Assert.That(unmanagedSettingNames, Is.Empty, "These settings are registered with ManagedConfiguration.Register, but no configuration plugin can manage them. Read each one in PluginConfiguration.TryProcessConfiguration and document it in the example configuration plugin.lua, or add it to EXEMPT_SETTINGS with the reason it must stay out of reach of configuration plugins.");
-        });
+        }
     }
 
     [Test]
@@ -134,7 +134,7 @@ public sealed class ManagedSettingsCoverageTests
         using var plugin = await RunPluginWithEveryRegisteredSettingAsync(PLUGIN_ID);
         var registeredSettings = ManagedConfiguration.RegisteredSettings.ToDictionary(setting => setting.SettingName, StringComparer.Ordinal);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var exemptSettingName in EXEMPT_SETTINGS.Keys)
             {
@@ -142,7 +142,7 @@ public sealed class ManagedSettingsCoverageTests
                 if (exemptSetting is not null)
                     Assert.That(IsManagedByThePlugin(exemptSetting), Is.False, $"A configuration plugin can manage the exempt setting '{exemptSettingName}' by now. Remove it from EXEMPT_SETTINGS.");
             }
-        });
+        }
     }
 
     /// <summary>
@@ -169,11 +169,11 @@ public sealed class ManagedSettingsCoverageTests
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(settingsOfTheOrganization, Is.Not.Empty, "The organization manages no setting, so this test would check nothing.");
             Assert.That(takenOverSettingNames, Is.Empty, "A local configuration plugin took these settings over from the organization. Every way of reading a setting from a configuration plugin has to ask ManagedConfiguration.MayManageSetting before it changes anything.");
-        });
+        }
     }
 
     /// <summary>

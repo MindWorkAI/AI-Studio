@@ -41,11 +41,11 @@ public sealed class PluginLinksTests
     [Test]
     public void OnlyAMailtoLinkWritesAMail()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginLinks.TryParse("mailto:support@example.org", out var mail) && PluginLinks.IsMail(mail), Is.True);
             Assert.That(PluginLinks.TryParse("https://example.org", out var website) && PluginLinks.IsMail(website), Is.False);
-        });
+        }
     }
 
     [TestCase(AssistantPluginGenerationService.DEFAULT_SUPPORT_CONTACT, true)]
@@ -64,10 +64,10 @@ public sealed class PluginLinksTests
     [TestCase("https://example.org/plugins?id=1", "https://example.org/plugins?id=1")]
     public void AMailLinkShowsItsAddressAndAWebsiteShowsItself(string text, string displayText)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginLinks.TryParse(text, out var link), Is.True);
             Assert.That(PluginLinks.GetDisplayText(link!), Is.EqualTo(displayText));
-        });
+        }
     }
 }

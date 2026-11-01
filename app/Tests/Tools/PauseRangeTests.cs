@@ -60,13 +60,13 @@ public sealed class PauseRangeTests
     [Test]
     public void OnlyZeroForBothBoundsMeansNoPause()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PauseRange.GetEffective(0, false, 0, false).IsNone, Is.True);
             Assert.That(PauseRange.GetEffective(0, false, 5, false).IsNone, Is.False);
             Assert.That(PauseRange.GetEffective(30, false, 0, false), Is.EqualTo(new PauseRange(30, 30)));
             Assert.That(new DataDataSourceIndexing().MinimumPauseBetweenStepsSeconds, Is.Zero);
             Assert.That(new DataDataSourceIndexing().MaximumPauseBetweenStepsSeconds, Is.Zero);
-        });
+        }
     }
 }

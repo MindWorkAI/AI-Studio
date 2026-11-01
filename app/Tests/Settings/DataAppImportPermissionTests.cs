@@ -37,11 +37,11 @@ public sealed class DataAppImportPermissionTests
         var app = new DataApp();
         SwitchOff(app, type);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var other in IMPORTABLE_TYPES)
                 Assert.That(app.CanImportConfigurationSnippet(other), Is.EqualTo(other != type), $"Switched off: {type}, checked: {other}");
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -57,11 +57,11 @@ public sealed class DataAppImportPermissionTests
             AllowUserToAddTranscriptionProvider = type is not PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER,
         };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutAnyProvider.CanImportConfigurationSnippet(type), Is.False, "No provider may be added at all.");
             Assert.That(withoutThisProvider.CanImportConfigurationSnippet(type), Is.False, "This type of provider may not be added.");
-        });
+        }
     }
 
     [Test]
@@ -75,13 +75,13 @@ public sealed class DataAppImportPermissionTests
             AllowUserToAddTranscriptionProvider = false,
         };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(app.CanImportConfigurationSnippet(PluginConfigurationObjectType.PROFILE), Is.True);
             Assert.That(app.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE), Is.True);
             Assert.That(app.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE), Is.True);
             Assert.That(app.CanImportConfigurationSnippet(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY), Is.True);
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.NONE)]

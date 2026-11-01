@@ -22,11 +22,11 @@ public sealed class ProviderDataSourceTrustTests : ToolRegistryTestBase
     {
         var (instance, settings) = BothForms(ToolCapableProvider());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(instance.IsTrustedForDataSourceSecurityChecks(this.SettingsManager), Is.True);
             Assert.That(settings.IsTrustedForDataSourceSecurityChecks(this.SettingsManager), Is.True, "Semantic Search would otherwise not offer a data source for self-hosted providers.");
-        });
+        }
     }
 
     [Test]
@@ -36,11 +36,11 @@ public sealed class ProviderDataSourceTrustTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.DataSourceSecurity.TrustedProviderIds.Add(cloud.Id);
         var (instance, settings) = BothForms(cloud);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(instance.IsTrustedForDataSourceSecurityChecks(this.SettingsManager), Is.True);
             Assert.That(settings.IsTrustedForDataSourceSecurityChecks(this.SettingsManager), Is.True, "The organization trusts the provider by its ID, so the settings have to keep it.");
-        });
+        }
     }
 
     [Test]
@@ -48,11 +48,11 @@ public sealed class ProviderDataSourceTrustTests : ToolRegistryTestBase
     {
         var (instance, settings) = BothForms(LessTrustedProvider());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(instance.IsTrustedForDataSourceSecurityChecks(this.SettingsManager), Is.False);
             Assert.That(settings.IsTrustedForDataSourceSecurityChecks(this.SettingsManager), Is.False);
-        });
+        }
     }
 
     private static (IProvider Instance, AIStudio.Settings.Provider Settings) BothForms(AIStudio.Settings.Provider configured)

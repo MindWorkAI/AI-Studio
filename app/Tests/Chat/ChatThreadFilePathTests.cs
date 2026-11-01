@@ -38,12 +38,12 @@ public sealed class ChatThreadFilePathTests
         chat.RewriteFilePaths(Move);
 
         var message = (ContentText)chat.Blocks[0].Content!;
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message.FileAttachments.Select(attachment => attachment.FilePath), Is.EqualTo(new[] { New("report.pdf"), New("meeting.md"), New("chart.png") }));
             Assert.That(photo.Source, Is.EqualTo(New("photo.jpg")), "The model gets such an image from its path.");
             Assert.That(chat.Draft.FileAttachments.Select(attachment => attachment.FilePath), Is.EqualTo(new[] { New("call.md") }), "The draft is the one place every path rewrite once forgot.");
-        });
+        }
     }
 
     [Test]
@@ -60,11 +60,11 @@ public sealed class ChatThreadFilePathTests
 
         chat.RewriteFilePaths(Move);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(((ContentText)chat.Blocks[0].Content!).FileAttachments.Single(), Is.SameAs(elsewhere));
             Assert.That(linked.Source, Is.EqualTo("https://example.org/chart.png"), "Only an image held by a local path has a path to rewrite.");
-        });
+        }
     }
 
     [Test]
@@ -78,14 +78,14 @@ public sealed class ChatThreadFilePathTests
         var movedPicture = picture.WithFilePath(New("chart.png"));
         var movedDocument = document.WithFilePath(New("report.pdf"));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(movedTranscript, Is.EqualTo(new ManagedTranscriptAttachment("meeting.md", New("meeting.md"), 512, "meeting.mp3", true)), "A transcript has to stay a transcript, or deleting the chat leaves its file behind.");
             Assert.That(movedPicture, Is.TypeOf<FileAttachmentImage>());
             Assert.That(((FileAttachmentImage)movedPicture).Source, Is.EqualTo(New("chart.png")), "The model gets the image from its source, not from its path.");
             Assert.That(movedPicture.FilePathAsUrl, Is.EqualTo(new FileAttachmentImage("chart.png", New("chart.png"), 2048).FilePathAsUrl), "The preview of the image loads it from there.");
             Assert.That(movedDocument, Is.EqualTo(new FileAttachment(FileAttachmentType.DOCUMENT, "report.pdf", New("report.pdf"), 1024)));
-        });
+        }
     }
 
     private static string Old(string fileName) => Path.Combine(OLD_DIRECTORY, fileName);

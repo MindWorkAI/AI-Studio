@@ -32,11 +32,11 @@ public sealed class ERIServerFileListTests
 
         var isRead = ERIServerFileList.TryParse(ANSWER, out var files);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isRead, Is.True);
             Assert.That(files, Is.EqualTo(FILES));
-        });
+        }
     }
 
     [Test]
@@ -44,11 +44,11 @@ public sealed class ERIServerFileListTests
     {
         var isRead = ERIServerFileList.TryParse("""{ "files": [ "src\\main.py" ] }""", out var files);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isRead, Is.True);
             Assert.That(files, Is.EqualTo(PATH_WITH_BACKSLASH));
-        });
+        }
     }
 
     [Test]
@@ -56,11 +56,11 @@ public sealed class ERIServerFileListTests
     {
         var isRead = ERIServerFileList.TryParse("""{ "files": [ "main.py", "", " " ] }""", out var files);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isRead, Is.True);
             Assert.That(files, Is.EqualTo(MAIN_PY));
-        });
+        }
     }
 
     [TestCase("""[ "main.py" ]""", TestName = "A list without its object")]
@@ -73,10 +73,10 @@ public sealed class ERIServerFileListTests
     {
         var isRead = ERIServerFileList.TryParse(answer, out var files);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isRead, Is.False);
             Assert.That(files, Is.Empty);
-        });
+        }
     }
 }

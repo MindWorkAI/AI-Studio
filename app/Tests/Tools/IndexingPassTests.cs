@@ -26,11 +26,11 @@ public sealed class IndexingPassTests
         // A request during a step merges into the next step, which then runs for the reason of
         // that request:
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var refreshMode in new[] { DataSourceEmbeddingRefreshMode.CONTINUATION, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK, DataSourceEmbeddingRefreshMode.INTERVAL_CHECK })
                 Assert.That(IndexingPass.ContinueOrBegin(pass, refreshMode, SIGNATURE), Is.SameAs(pass), $"RefreshMode={refreshMode}");
-        });
+        }
     }
 
     [Test]
@@ -49,11 +49,11 @@ public sealed class IndexingPassTests
 
         var nextPass = IndexingPass.ContinueOrBegin(pass, DataSourceEmbeddingRefreshMode.CONTINUATION, otherSignature);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(nextPass, Is.Not.SameAs(pass), "What failed with the old embedding provider may well work with the new one.");
             Assert.That(nextPass.RunSignature, Is.EqualTo(otherSignature));
-        });
+        }
     }
 
     [Test]

@@ -28,12 +28,12 @@ public sealed class ClassicRagUnreachableTests
     {
         var augmentedData = AISrcSelWithRetCtxVal.WithUnreachableDataSources("# Retrieval context 1 of 1\n", [INTRANET]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(augmentedData, Does.StartWith("# Retrieval context 1 of 1"), "What was found stays first.");
             Assert.That(augmentedData, Does.Contain("could not be reached or signed in to right now"));
             Assert.That(augmentedData, Does.Contain("- name='Intranet'"), "The model has to know what is missing, so that it can tell the user.");
-        });
+        }
     }
 
     [Test]
@@ -49,11 +49,11 @@ public sealed class ClassicRagUnreachableTests
     {
         const string PASSAGES = "# Retrieval context 1 of 1\n";
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(AISrcSelWithRetCtxVal.WithUnreachableDataSources(PASSAGES, []), Is.EqualTo(PASSAGES));
             Assert.That(AISrcSelWithRetCtxVal.WithUnreachableDataSources(string.Empty, []), Is.Empty, "The system prompt stays as it was without data sources.");
-        });
+        }
     }
 
     [Test]

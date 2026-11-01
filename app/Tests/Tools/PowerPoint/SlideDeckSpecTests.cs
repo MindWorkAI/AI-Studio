@@ -21,14 +21,14 @@ public sealed class SlideDeckSpecTests
             """;
 
         Assert.That(SlideDeckSpec.TryParse(ANSWER, out var spec, out var issue), Is.True, issue);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(spec.Title, Is.EqualTo("Mars"));
             Assert.That(spec.Slides, Has.Count.EqualTo(1));
             Assert.That(spec.Slides[0].Layout, Is.EqualTo("L3"));
             Assert.That(spec.Slides[0].Title, Is.EqualTo("Why Mars"));
             Assert.That(spec.Slides[0].Texts[0].Paragraphs, Is.EqualTo(new[] { new SlideParagraph("Close to Earth", 0), new SlideParagraph("Two years per trip", 1) }));
-        });
+        }
     }
 
     [Test]
@@ -54,7 +54,7 @@ public sealed class SlideDeckSpecTests
 
         Assert.That(SlideDeckSpec.TryParse(ANSWER, out var spec, out var issue), Is.True, issue);
         var slide = spec.Slides[0];
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(slide.StartsChapter, Is.True);
             Assert.That(slide.Subtitle, Is.Empty, "A null is as good as a missing value.");
@@ -63,17 +63,17 @@ public sealed class SlideDeckSpecTests
             Assert.That(slide.Pictures, Is.EqualTo(new[] { 2 }));
             Assert.That(slide.Table?.Headers, Is.EqualTo(new[] { "Year", "Missions" }));
             Assert.That(slide.Table?.Rows, Is.EqualTo(new[] { new[] { "2024", "3" }, new[] { "2025", string.Empty } }), "Numbers in a table are text on a slide.");
-        });
+        }
     }
 
     [Test]
     public void AnAnswerWithoutJsonIsReported()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpec.TryParse("I cannot help with that.", out _, out var issue), Is.False);
             Assert.That(issue, Does.Contain("no complete JSON object"));
-        });
+        }
     }
 
     [Test]
@@ -81,11 +81,11 @@ public sealed class SlideDeckSpecTests
     {
         const string ANSWER = """{ "title": "Mars", "slides": [ { "layout": "L1",, "title": "Mars" } ] }""";
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpec.TryParse(ANSWER, out _, out var issue), Is.False);
             Assert.That(issue, Does.StartWith("The JSON object cannot be read"), "The reader's own message follows, which tells the model where the JSON breaks.");
-        });
+        }
     }
 
     [Test]
@@ -141,12 +141,12 @@ public sealed class SlideDeckSpecTests
             """;
 
         Assert.That(SlideDeckSpec.TryParse(ANSWER, out var spec, out var issue), Is.True, issue);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(spec.Slides.Select(slide => slide.TemplateSlide), Is.EqualTo(new int?[] { 1, 2, null }));
             Assert.That(spec.Slides.Select(slide => slide.HasContent), Is.EqualTo(new[] { false, true, true }), "Only content of its own makes a slide more than a reference.");
             Assert.That(spec.Slides[0].Layout, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -161,13 +161,13 @@ public sealed class SlideDeckSpecTests
             """;
 
         Assert.That(SlideDeckSpec.TryParse(ANSWER, out var spec, out var issue), Is.True, issue);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(spec.Slides[0].Removals, Is.EqualTo(new[] { "element 2", "label 1", "3" }), "Every name counts once, whatever its case.");
             Assert.That(spec.Slides[1].Removals, Is.EqualTo(new[] { "element 1" }), "A single name is as good as a list.");
             Assert.That(spec.Slides[2].Removals, Is.Empty);
             Assert.That(spec.Slides.Select(slide => slide.HasContent), Is.EqualTo(new[] { true, true, false }), "Removing something changes a template slide as well.");
-        });
+        }
     }
 
     [Test]

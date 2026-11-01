@@ -27,11 +27,11 @@ public sealed class ERIServerRulesTests
     {
         var requirements = new SecurityRequirements(ProviderType.SELF_HOSTED);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceService.ServerAllows(requirements, usingTrustedProvider: true), Is.True);
             Assert.That(DataSourceService.ServerAllows(requirements, usingTrustedProvider: false), Is.False);
-        });
+        }
     }
 
     [TestCase(true)]

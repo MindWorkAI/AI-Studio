@@ -59,12 +59,12 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Add(PreviewFeatures.PRE_MAILBOXES_2026);
         var withBoth = tool.IsAvailable;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutPreviews, Is.False);
             Assert.That(withLocalRagOnly, Is.False, "Mailboxes are a preview of their own, on top of local RAG.");
             Assert.That(withBoth, Is.True);
-        });
+        }
     }
 
     [Test]
@@ -84,11 +84,11 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.MailboxSettings.AllowOnlyOrganizationMailServers = true;
         var withRule = retrievalService.GetReadableMailboxes(ConfidenceLevel.HIGH);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutRule.Select(mailbox => mailbox.Id), Is.EqualTo(new[] { WORK.Id }));
             Assert.That(withRule, Is.Empty, "The organization offers no mail server here, so no mailbox is on one of them.");
-        });
+        }
     }
 
     [Test]
@@ -100,12 +100,12 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.Mailboxes.Add(WORK);
         var withMailbox = await tool.ValidateConfigurationAsync(tool.GetDefinition(), new Dictionary<string, string>());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutMailbox?.IsConfigured, Is.False, "The selection shows the tool as not set up, with what to do about it.");
             Assert.That(withoutMailbox?.Message, Is.Not.Empty);
             Assert.That(withMailbox, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -123,12 +123,12 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     {
         var tool = this.Tool();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new MailboxToolCollection().GetDefinition().ToolIds, Does.Contain(ToolSelectionRules.SEARCH_MAILS_TOOL_ID), "The mailbox collection states the confidence the tool needs.");
             Assert.That(tool.OutboundData, Is.EqualTo(ToolOutboundData.CONFIGURED_SERVICE), "The query goes to the embedding provider, so a restricted chat may still search.");
             Assert.That(tool.ReturnsUntrustedExternalContent, Is.True, "Mails are written by others.");
-        });
+        }
     }
 
     [Test]
@@ -137,14 +137,14 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         var function = SearchMailsTool.DescribeMailboxes(this.Tool().GetDefinition().Function, [WORK, PRIVATE]);
         var properties = JsonNode.Parse(function.Parameters.GetRawText())!["properties"]!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(function.DescriptionForLLM, Does.Contain($"- id={WORK.Id}, name='Work', results per page=10, last page=9"));
             Assert.That(function.DescriptionForLLM, Does.Contain($"- id={PRIVATE.Id}, name='Private', results per page=5, last page=19"));
             Assert.That(properties[MailToolArguments.MAILBOX_IDS_ARGUMENT]!["items"]!["enum"]!.AsArray().Select(id => id!.GetValue<string>()), Is.EqualTo(new[] { WORK.Id, PRIVATE.Id }));
             Assert.That(properties["query"], Is.Not.Null);
             Assert.That(properties["page"], Is.Not.Null);
-        });
+        }
     }
 
     [Test]
@@ -152,13 +152,13 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     {
         var request = SearchMailsTool.ReadRequest(Arguments("""{"is_unread":true}"""), [WORK, PRIVATE], TimeZoneInfo.Utc);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.Query, Is.Null);
             Assert.That(request.Mailboxes.Select(mailbox => mailbox.Id), Is.EqualTo(new[] { WORK.Id, PRIVATE.Id }));
             Assert.That(request.Conditions.Filter.IsUnread, Is.True);
             Assert.That(request.Page, Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -175,11 +175,11 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         var message = Refusal(() => SearchMailsTool.ReadRequest(Arguments("""{"page":2}"""), [WORK, PRIVATE], TimeZoneInfo.Utc));
         var request = SearchMailsTool.ReadRequest(Arguments($$"""{"page":2,"mailbox_ids":["{{WORK.Id}}"]}"""), [WORK, PRIVATE], TimeZoneInfo.Utc);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("exactly one mailbox"), "The mailboxes have pages of different sizes.");
             Assert.That(request.Page, Is.EqualTo(2));
-        });
+        }
     }
 
     [Test]
@@ -195,11 +195,11 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     {
         var (confidence, outboundData) = MailToolResults.GetRequirements([], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(confidence, Is.EqualTo(ConfidenceLevel.NONE));
             Assert.That(outboundData, Is.EqualTo(OutboundDataRequirement.NONE));
-        });
+        }
     }
 
     [Test]
@@ -207,11 +207,11 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     {
         var (confidence, outboundData) = MailToolResults.GetRequirements([WORK, PRIVATE], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(confidence, Is.EqualTo(ConfidenceLevel.HIGH), "The private mail is in the chat now, so a provider has to be trusted as much as that mailbox asks.");
             Assert.That(outboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE.Id)));
-        });
+        }
     }
 
     [Test]
@@ -234,13 +234,13 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
 
         var description = MailToolResults.DescribeConditions(conditions, timeZone);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(description["received_at_or_after"]!.GetValue<string>(), Is.EqualTo("2026-09-01T00:00+02:00"), "In the time zone of the user, as the model wrote it.");
             Assert.That(description[MailToolArguments.IMPORTANCE_ARGUMENT]!.GetValue<string>(), Is.EqualTo("high"), "Named as the argument takes it.");
             Assert.That(description[MailToolArguments.FOLDER_ARGUMENT]!.GetValue<string>(), Is.EqualTo("INBOX"));
             Assert.That(description.ContainsKey(MailToolArguments.FROM_ARGUMENT), Is.False, "A condition left out is not shown.");
-        });
+        }
     }
 
     [Test]
@@ -248,11 +248,11 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     {
         var description = MailToolResults.DescribeConditions(new MailConditions(new MailFilter(), null, MailFolderSpecialUse.DRAFTS), TimeZoneInfo.Utc);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(description[MailToolArguments.SPECIAL_FOLDER_ARGUMENT]!.GetValue<string>(), Is.EqualTo("drafts"));
             Assert.That(description.ContainsKey(MailToolArguments.FOLDER_ARGUMENT), Is.False);
-        });
+        }
     }
 
     [TestCase(new[] { "INBOX" }, null)]
@@ -275,11 +275,11 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
 
         MailToolResults.DescribeMissingFolder(description, issues, MailFolderSpecialUse.SENT, ["INBOX", "Gesendet"], 2);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(issues.Single()!.GetValue<string>(), Does.Contain("no folder for sent mails").And.Contain("either because the user left it out or because the server does not mark it").And.Contain("pass its path in 'folder' instead of 'special_folder'"));
             Assert.That(description["folders"]!.AsArray().Select(folder => folder!.GetValue<string>()), Is.EqualTo(new[] { "INBOX", "Gesendet" }));
-        });
+        }
     }
 
     [Test]
@@ -303,12 +303,12 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         var mail = MailToolResults.CreateSource(WORK, "mail-id", "Budget", "Anna", receivedAtUtc, TimeZoneInfo.Utc);
         var attachment = MailToolResults.CreateSource(WORK, "mail-id", "Budget", "Anna", receivedAtUtc, TimeZoneInfo.Utc, "board-report.pdf, page 3");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(mail.Title, Is.EqualTo("Mail: Budget — Anna, 2026-10-23"));
             Assert.That(attachment.Title, Is.EqualTo("Mail: Budget — Anna, 2026-10-23 (board-report.pdf, page 3)"));
             Assert.That(attachment.URL, Is.EqualTo(mail.URL));
-        });
+        }
     }
 
     [Test]
@@ -324,5 +324,5 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
 
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);
 
-    private static string Refusal(TestDelegate read) => Assert.Throws<ArgumentException>(read)!.Message;
+    private static string Refusal(Action read) => Assert.Throws<ArgumentException>(read)!.Message;
 }

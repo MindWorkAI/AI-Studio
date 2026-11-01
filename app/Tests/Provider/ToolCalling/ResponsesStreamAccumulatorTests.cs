@@ -38,12 +38,12 @@ public sealed class ResponsesStreamAccumulatorTests
                             """{"type":"function_call","call_id":"call_1","name":"web_search","arguments":"{\"query\":\"weather\"}"}""" +
                             "]}}");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response!.GetTextOutput(), Is.EqualTo("Here is the answer."), "The text of the round is read out of the completed response.");
             Assert.That(response.GetFunctionCalls().Single().CallId, Is.EqualTo("call_1"), "And so are the calls it asked for.");
             Assert.That(response.Output, Has.Count.EqualTo(3), "Every output item is kept, because every one of them goes back.");
-        });
+        }
     }
     
     [Test]
@@ -65,12 +65,12 @@ public sealed class ResponsesStreamAccumulatorTests
     {
         var accumulator = new ResponsesStreamAccumulator();
         var part = accumulator.Process(Event("""{"type":"response.output_text.annotation.added","annotation_index":0,"annotation":{"type":"url_citation","title":"Example","url":"https://example.org/"}}"""));
-        
-        Assert.Multiple(() =>
+
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(part.Sources.Select(x => x.URL), Is.EqualTo(new[] { "https://example.org/" }), "A citation reaches the user as soon as the model makes it.");
             Assert.That(part.TextDelta, Is.Empty, "A line which only announces a source carries no text.");
-        });
+        }
     }
     
     [Test]
@@ -84,12 +84,12 @@ public sealed class ResponsesStreamAccumulatorTests
             """{"type":"response.output_item.done","output_index":0,"item":""" + REASONING_ITEM + "}",
             """{"type":"response.output_item.done","output_index":1,"item":{"type":"function_call","call_id":"call_1","name":"web_search","arguments":"{}"}}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response, Is.Not.Null, "A round built from its items is still a round.");
             Assert.That(response!.Output.First().GetRawText(), Is.EqualTo(REASONING_ITEM), "And the reasoning item is as untouched as it would be in the completed event.");
             Assert.That(response.GetFunctionCalls().Single().Name, Is.EqualTo("web_search"), "The call is there to be executed.");
-        });
+        }
     }
     
     [Test]
@@ -111,13 +111,13 @@ public sealed class ResponsesStreamAccumulatorTests
         var accumulator = new ResponsesStreamAccumulator();
         var part = accumulator.Process(Event(COMPLETED_PREFIX + REASONING_ITEM + """],"usage":{"input_tokens":2679,"input_tokens_details":{"cached_tokens":0},"output_tokens":510}}}"""));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(part.Usage.IsKnown, Is.True, "The closing event is the one line which states what the request cost.");
             Assert.That(part.Usage.PromptTokens, Is.EqualTo(2679));
             Assert.That(part.HasContent, Is.False, "And there is nothing on it to show.");
             Assert.That(accumulator.Build()!.Output, Has.Count.EqualTo(1), "Reading the usage leaves the round as it was.");
-        });
+        }
     }
 
     [Test]

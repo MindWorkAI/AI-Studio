@@ -43,12 +43,12 @@ public sealed class PersistentMediaTranscriptTests
 
         var result = await this.ReadOrCreateAsync(transcriber, this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.READY));
             Assert.That(result.Reused, Is.True);
             Assert.That(transcriber.Calls, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -66,11 +66,11 @@ public sealed class PersistentMediaTranscriptTests
 
         var result = await this.ReadOrCreateAsync(transcriber, null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.NO_PROVIDER));
             Assert.That(transcriber.Calls, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -81,7 +81,7 @@ public sealed class PersistentMediaTranscriptTests
         var first = await this.ReadOrCreateAsync(transcriber, this.provider);
         var second = await this.ReadOrCreateAsync(transcriber, this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(first.Status, Is.EqualTo(PersistentMediaTranscriptStatus.READY));
             Assert.That(first.Reused, Is.False);
@@ -89,7 +89,7 @@ public sealed class PersistentMediaTranscriptTests
             Assert.That(second.Reused, Is.True);
             Assert.That(transcriber.Calls, Is.EqualTo(1));
             Assert.That(Directory.GetFiles(this.directoryPath, "*.tmp"), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -97,11 +97,11 @@ public sealed class PersistentMediaTranscriptTests
     {
         var result = await this.ReadOrCreateAsync(new CountingTranscriber(() => MediaTranscriptionResult.Succeeded(" \n ")), this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.EMPTY));
             Assert.That(File.Exists(MediaSidecarTranscripts.GetFilePath(this.mediaPath)), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -112,12 +112,12 @@ public sealed class PersistentMediaTranscriptTests
 
         var result = await this.ReadOrCreateAsync(transcriber, this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.READY));
             Assert.That(transcriber.Calls, Is.EqualTo(1));
             Assert.That(File.ReadAllText(result.TranscriptPath), Is.EqualTo("Transcript"));
-        });
+        }
     }
 
     [Test]
@@ -131,11 +131,11 @@ public sealed class PersistentMediaTranscriptTests
 
         var result = await this.ReadOrCreateAsync(transcriber, this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.SOURCE_CHANGED));
             Assert.That(File.Exists(MediaSidecarTranscripts.GetFilePath(this.mediaPath)), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -146,11 +146,11 @@ public sealed class PersistentMediaTranscriptTests
 
         var result = await PersistentMediaTranscript.ReadOrCreateAsync(MediaSidecarTranscripts.INSTANCE, this.mediaPath, this.provider, transcriber.TranscribeAsync, NullLogger.Instance, cancellation.Token);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.READY));
             Assert.That(File.ReadAllText(MediaSidecarTranscripts.GetFilePath(this.mediaPath)), Is.EqualTo("Paid transcript"));
-        });
+        }
     }
 
     [Test]
@@ -158,11 +158,11 @@ public sealed class PersistentMediaTranscriptTests
     {
         var result = await this.ReadOrCreateAsync(new CountingTranscriber(MediaTranscriptionResult.Cancelled), this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.CANCELLED));
             Assert.That(File.Exists(MediaSidecarTranscripts.GetFilePath(this.mediaPath)), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -170,12 +170,12 @@ public sealed class PersistentMediaTranscriptTests
     {
         var result = await this.ReadOrCreateAsync(new CountingTranscriber(() => MediaTranscriptionResult.Failed("The container is damaged.", MediaJobErrorCode.DAMAGED_CONTAINER)), this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.TRANSCRIPTION_FAILED));
             Assert.That(result.ErrorCode, Is.EqualTo(MediaJobErrorCode.DAMAGED_CONTAINER));
             Assert.That(result.UserMessage, Is.EqualTo("The container is damaged."));
-        });
+        }
     }
 
     [Test]
@@ -183,12 +183,12 @@ public sealed class PersistentMediaTranscriptTests
     {
         var result = await this.ReadOrCreateAsync(new CountingTranscriber(() => MediaTranscriptionResult.Rejected("The file is too large.")), this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.REJECTED));
             Assert.That(result.UserMessage, Is.EqualTo("The file is too large."));
             Assert.That(File.Exists(MediaSidecarTranscripts.GetFilePath(this.mediaPath)), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -204,11 +204,11 @@ public sealed class PersistentMediaTranscriptTests
 
         var result = await PersistentMediaTranscript.ReadOrCreateAsync(location, this.mediaPath, this.provider, new CountingTranscriber(() => MediaTranscriptionResult.Succeeded("Transcript")).TranscribeAsync, NullLogger.Instance, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.STORE_FAILED));
             Assert.That(Directory.GetFiles(this.directoryPath, "*.tmp", SearchOption.AllDirectories), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -219,11 +219,11 @@ public sealed class PersistentMediaTranscriptTests
 
         var result = await this.ReadOrCreateAsync(transcriber, this.provider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.SOURCE_UNREADABLE));
             Assert.That(transcriber.Calls, Is.Zero);
-        });
+        }
     }
 
     private Task<PersistentMediaTranscriptResult> ReadOrCreateAsync(CountingTranscriber transcriber, TranscriptionProvider? transcriptionProvider) => PersistentMediaTranscript.ReadOrCreateAsync(MediaSidecarTranscripts.INSTANCE, this.mediaPath, transcriptionProvider, transcriber.TranscribeAsync, NullLogger.Instance, CancellationToken.None);

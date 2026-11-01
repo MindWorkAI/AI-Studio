@@ -21,13 +21,13 @@ public sealed class ToolParameterSchemaBuilderTests
         var schema = Built(ToolParameterSchemaBuilder.Create().OptionalStringArray("data_source_ids", "The data sources.", "first", "second"));
         var property = schema["properties"]!["data_source_ids"]!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(property["type"]!.GetValue<string>(), Is.EqualTo("array"));
             Assert.That(property["description"]!.GetValue<string>(), Is.EqualTo("The data sources."));
             Assert.That(property["items"]!["type"]!.GetValue<string>(), Is.EqualTo("string"));
             Assert.That(property["items"]!["enum"]!.AsArray().Select(value => value!.GetValue<string>()), Is.EqualTo(new[] { "first", "second" }));
-        });
+        }
     }
 
     [Test]
@@ -35,11 +35,11 @@ public sealed class ToolParameterSchemaBuilderTests
     {
         var schema = Built(ToolParameterSchemaBuilder.Create().OptionalBoolean("is_unread", "Unread mails only."));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(schema["properties"]!["is_unread"]!["type"]!.GetValue<string>(), Is.EqualTo("boolean"));
             Assert.That(schema["required"]!.AsArray(), Is.Empty);
-        });
+        }
     }
 
     [Test]

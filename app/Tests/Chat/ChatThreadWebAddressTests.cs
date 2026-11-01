@@ -29,12 +29,12 @@ public sealed class ChatThreadWebAddressTests
     {
         var thread = Thread(Block(ChatRole.USER, "Please summarize https://example.org/report for me.", 1));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/report")), Is.True);
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://EXAMPLE.org/report#summary")), Is.True, "The server gets the same request.");
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/report?budget=2026")), Is.False, "The query would carry something the user never wrote.");
-        });
+        }
     }
 
     [Test]
@@ -43,12 +43,12 @@ public sealed class ChatThreadWebAddressTests
         // An internal service such as a simple Python web server for the results of a data science run:
         var thread = Thread(Block(ChatRole.USER, "The results of run 17 are on http://10.20.30.40:8000/run-17/, please compare them with run 16.", 1));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("http://10.20.30.40:8000/run-17/")), Is.True);
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("http://10.20.30.40:8000/run-16/")), Is.False, "The user named run 16, but not its address.");
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://10.20.30.40:8000/run-17/")), Is.False, "Another scheme is another request.");
-        });
+        }
     }
 
     [Test]
@@ -89,11 +89,11 @@ public sealed class ChatThreadWebAddressTests
         using var rustService = new RustService("1", "unused");
         thread.PrepareSystemPrompt(new SettingsManager(NullLogger<SettingsManager>.Instance, rustService));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://handbook.example.org/")), Is.True);
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://intranet.example.org/travel")), Is.True, "The RAG process found it in a data source, the model did not choose it.");
-        });
+        }
     }
 
     [Test]
@@ -131,11 +131,11 @@ public sealed class ChatThreadWebAddressTests
         var thread = Thread(Block(ChatRole.USER, "Make slides of this: the details are on https://example.org/chosen, and our handbook is on https://example.org/handbook.", 1));
         thread.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("The details are on https://example.org/chosen."));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False, "A model wrote it, so it could carry anything of the chat it came from.");
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/handbook")), Is.True, "Another address in the same message still counts.");
-        });
+        }
     }
 
     [Test]
@@ -151,11 +151,11 @@ public sealed class ChatThreadWebAddressTests
         thread.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("See https://example.org/chosen and https://example.org/sources/2026."));
         thread.RuntimeWebAddressesFromTools.Add(WebAddresses.CreateRequestKey(new Uri("https://example.org/chosen")));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.True, "A tool returned it in this chat, so it was not only a model which wrote it.");
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/sources/2026")), Is.True, "A document the user attached holds it.");
-        });
+        }
     }
 
     [Test]
@@ -177,11 +177,11 @@ public sealed class ChatThreadWebAddressTests
 
         copy.RequireRestrictions(ChatRestrictions.NONE.WithWebAddressesWrittenByModelIn("See https://example.org/chosen."));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(copy.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False);
             Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.True, "What the copy took over must not reach the chat it was copied from.");
-        });
+        }
     }
 
     private static ChatThread Thread(params ContentBlock[] blocks) => new() { Blocks = [..blocks] };

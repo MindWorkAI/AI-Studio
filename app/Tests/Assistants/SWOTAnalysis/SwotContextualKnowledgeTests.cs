@@ -22,11 +22,11 @@ public sealed class SwotContextualKnowledgeTests
         var oneImage = new SwotContextualKnowledge(string.Empty, [Image("chart.png")]);
         var twoImages = new SwotContextualKnowledge(string.Empty, [Image("chart.png"), Image("photo.jpg")]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(oneImage.Describe(), Is.EqualTo("The image attached to this message belongs to the contextual knowledge."));
             Assert.That(twoImages.Describe(), Is.EqualTo("The 2 images attached to this message belong to the contextual knowledge."));
-        });
+        }
     }
 
     [Test]
@@ -34,11 +34,11 @@ public sealed class SwotContextualKnowledgeTests
     {
         var description = new SwotContextualKnowledge(DOCUMENTS, [Image("chart.png")]).Describe();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(description, Does.StartWith(DOCUMENTS));
             Assert.That(description, Does.EndWith("The image attached to this message belongs to the contextual knowledge."));
-        });
+        }
     }
 
     private static FileAttachmentImage Image(string fileName) => new(fileName, $"/tmp/{fileName}", 1024);

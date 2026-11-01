@@ -19,11 +19,11 @@ public sealed class IndexedDocumentIdsTests
     [Test]
     public void TheChunkIdOfAKnownChunkIsPinned()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, "3F9A0C", 0), Is.EqualTo("7c9d2822-f9d1-a94e-8d83-30cea4f0856f"));
             Assert.That(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, "3F9A0C", 1), Is.EqualTo("5830c96c-7c3c-2f47-8d54-6eadf04cddf3"), "Each chunk of a document has an id of its own.");
-        });
+        }
     }
 
     [Test]
@@ -51,11 +51,11 @@ public sealed class IndexedDocumentIdsTests
         const string KEY = "/tmp/test-data/report.pdf";
         var parentId = IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, KEY);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(IndexedDocumentIds.CreateChunkIdSource(DATA_SOURCE_ID, KEY, parentId, "3F9A0C"), Is.EqualTo("3F9A0C"), "The first generation gives the ids documents got before generations existed.");
             Assert.That(IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, IndexedDocumentIds.CreateChunkIdSource(DATA_SOURCE_ID, KEY, parentId, "3F9A0C", 1), 0), Is.EqualTo("10e9f029-bc45-a048-9db1-e5ac74777ddb"));
-        });
+        }
     }
 
     [Test]

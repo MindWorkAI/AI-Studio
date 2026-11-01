@@ -30,12 +30,12 @@ public sealed class DataBackupContentsTests
     {
         var paths = DataBackupContents.ENTRIES.Where(entry => entry.IsIncluded).Select(entry => entry.RelativePath).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(paths.Where(path => path.Contains('*')), Is.Empty, "A restore replaces exactly what the backup holds, so it has to know the names.");
             Assert.That(paths.Where(path => path.Contains('\\')), Is.Empty, "Paths use forward slashes on every OS.");
             Assert.That(paths.Where(path => path.StartsWith(DataBackupContents.SEPARATOR)), Is.Empty, "Paths are relative to their folder.");
-        });
+        }
     }
 
     [Test]

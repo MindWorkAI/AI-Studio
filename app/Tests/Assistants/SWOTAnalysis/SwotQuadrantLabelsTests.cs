@@ -13,10 +13,10 @@ public sealed class SwotQuadrantLabelsTests
     [TestCase(SwotAnalysisCategory.THREATS, "Risiken", "Extern · Negativ")]
     public void EveryQuadrantNamesItselfAndWhereItLies(SwotAnalysisCategory category, string expectedName, string expectedAxes)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(LABELS.NameOf(category), Is.EqualTo(expectedName));
             Assert.That(LABELS.AxesOf(category), Is.EqualTo(expectedAxes));
-        });
+        }
     }
 }

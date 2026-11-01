@@ -26,12 +26,12 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
     {
         var registry = this.CreateCollection(ConfidenceLevel.MEDIUM);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.GetMinimumProviderConfidence(SEARCH_TOOL_ID), Is.EqualTo(ConfidenceLevel.MEDIUM), "The search asks for HIGH itself, which the collection overrules.");
             Assert.That(registry.GetMinimumProviderConfidence(READ_TOOL_ID), Is.EqualTo(ConfidenceLevel.MEDIUM), "The reader asks for nothing itself, which the collection overrules.");
             Assert.That(registry.GetMinimumProviderConfidence(COLLECTION_ID), Is.EqualTo(ConfidenceLevel.MEDIUM));
-        });
+        }
     }
 
     [Test]
@@ -39,13 +39,13 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
     {
         var registry = this.CreateRegistry([new TestCollection(COLLECTION_ID, ConfidenceLevel.LOW, SEARCH_TOOL_ID)], new TestTool(Definition(SEARCH_TOOL_ID)), new TestTool(Definition(minimumConfidence: ConfidenceLevel.HIGH)));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.GetCollectionId(TOOL_ID), Is.EqualTo(TOOL_ID));
             Assert.That(registry.GetMinimumProviderConfidence(TOOL_ID), Is.EqualTo(ConfidenceLevel.HIGH), "Without a collection, the tool's own minimum counts.");
             Assert.That(registry.GetCollectionId(SEARCH_TOOL_ID), Is.EqualTo(COLLECTION_ID));
             Assert.That(registry.GetCollectionId(COLLECTION_ID), Is.EqualTo(COLLECTION_ID), "The ID of a collection stands for itself.");
-        });
+        }
     }
 
     [Test]
@@ -54,11 +54,11 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
         var registry = this.CreateCollection(ConfidenceLevel.LOW);
         registry.SetMinimumProviderConfidence(READ_TOOL_ID, ConfidenceLevel.HIGH);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.GetMinimumProviderConfidence(SEARCH_TOOL_ID), Is.EqualTo(ConfidenceLevel.HIGH));
             Assert.That(this.StoredLevels, Is.EquivalentTo(new Dictionary<string, string> { [COLLECTION_ID] = nameof(ConfidenceLevel.HIGH) }), "The level belongs to the collection, not to the tool it was chosen for.");
-        });
+        }
     }
 
     [Test]
@@ -87,11 +87,11 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
         this.StoredLevels[READ_TOOL_ID] = nameof(ConfidenceLevel.HIGH);
         registry.SetMinimumProviderConfidence(COLLECTION_ID, ConfidenceLevel.LOW);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.GetMinimumProviderConfidence(READ_TOOL_ID), Is.EqualTo(ConfidenceLevel.LOW), "The old, stricter entry of the reader would outvote the level just chosen.");
             Assert.That(this.StoredLevels.Keys, Is.EquivalentTo(new[] { COLLECTION_ID }));
-        });
+        }
     }
 
     [Test]
@@ -122,12 +122,12 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
         var reason = await registry.GetOfferBlockReasonAsync(SEARCH_TOOL_ID, ToolCapableProvider(), AIStudio.Tools.Components.CHAT);
         var runnableTools = await registry.GetRunnableToolsAsync(this.ContextFor(ToolCapableProvider()), [SEARCH_TOOL_ID, READ_TOOL_ID], mayRunTools: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reason, Is.EqualTo(ToolOfferBlockReason.TOOL_SWITCHED_OFF));
             Assert.That(runnableTools, Is.Empty, "An administrator who names one tool would rather lose the collection than keep the others.");
             Assert.That(registry.IsToolActive(COLLECTION_ID), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -135,11 +135,11 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
     {
         var registry = this.CreateRegistry([new TestCollection(TOOL_ID, ConfidenceLevel.HIGH, SEARCH_TOOL_ID)], new TestTool(Definition()), new TestTool(Definition(SEARCH_TOOL_ID)));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.GetCollectionId(SEARCH_TOOL_ID), Is.EqualTo(SEARCH_TOOL_ID), "Settings for the tool and for the collection would share their key.");
             Assert.That(registry.GetMinimumProviderConfidence(TOOL_ID), Is.EqualTo(ConfidenceLevel.NONE));
-        });
+        }
     }
 
     [Test]
@@ -147,11 +147,11 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
     {
         var registry = this.CreateRegistry([new TestCollection(COLLECTION_ID, ConfidenceLevel.LOW, READ_TOOL_ID), new TestCollection("other_collection", ConfidenceLevel.HIGH, SEARCH_TOOL_ID, READ_TOOL_ID)], new TestTool(Definition(SEARCH_TOOL_ID)), new TestTool(Definition(READ_TOOL_ID)));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.GetCollectionId(READ_TOOL_ID), Is.EqualTo(COLLECTION_ID), "Switching off one collection would otherwise take a tool of another one along.");
             Assert.That(registry.GetCollectionId(SEARCH_TOOL_ID), Is.EqualTo("other_collection"), "The second collection keeps its other tools.");
-        });
+        }
     }
 
     [Test]
@@ -168,11 +168,11 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
         var registry = this.CreateRegistry([new TestCollection(COLLECTION_ID, ConfidenceLevel.NONE, "unknown_tool", SEARCH_TOOL_ID)], new TestTool(Definition(SEARCH_TOOL_ID)));
         this.SettingsManager.ConfigurationData.Tools.DisabledToolIds.Add("unknown_tool");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.GetCollectionId(SEARCH_TOOL_ID), Is.EqualTo(COLLECTION_ID), "The known tool still forms the collection.");
             Assert.That(registry.IsToolActive(SEARCH_TOOL_ID), Is.True, "A tool which is not part of the collection cannot switch it off.");
-        });
+        }
     }
 
     [Test]
@@ -180,12 +180,12 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
     {
         var definition = new MailboxToolCollection().GetDefinition();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(definition.Id, Is.EqualTo(ToolSelectionRules.MAILBOXES_COLLECTION_ID));
             Assert.That(definition.ToolIds, Is.EqualTo(new[] { ToolSelectionRules.SEARCH_MAILS_TOOL_ID, ToolSelectionRules.READ_MAIL_TOOL_ID, ToolSelectionRules.COUNT_MAILS_TOOL_ID }));
             Assert.That(definition.MinimumProviderConfidence, Is.EqualTo(ConfidenceLevel.VERY_LOW), "Each mailbox asks for its own level, and none may ask for less.");
-        });
+        }
     }
 
     private Dictionary<string, string> StoredLevels => this.SettingsManager.ConfigurationData.Tools.MinimumProviderConfidenceByToolId;

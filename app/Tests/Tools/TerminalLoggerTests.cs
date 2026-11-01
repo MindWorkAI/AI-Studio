@@ -34,11 +34,11 @@ public sealed class TerminalLoggerTests
         try
         {
             CultureInfo.CurrentCulture = culture;
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(EVENT_TIME.ToString("yyyy-MM-dd HH:mm:ss.fff"), Is.EqualTo("2026-10-09 17.53.54.562"), "The format sent before followed the time separator of the current culture.");
                 Assert.That(TerminalLogger.FormatTransportTimestamp(EVENT_TIME), Is.EqualTo(TRANSPORT_TIMESTAMP));
-            });
+            }
         }
         finally
         {
@@ -57,11 +57,11 @@ public sealed class TerminalLoggerTests
     [Test]
     public void AnExceptionWithoutCauseKeepsItsMessage()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(TerminalLogger.DescribeException(new InvalidOperationException("Something failed.")), Is.EqualTo("Something failed."));
             Assert.That(TerminalLogger.DescribeException(null), Is.Null);
-        });
+        }
     }
 
     [Test]

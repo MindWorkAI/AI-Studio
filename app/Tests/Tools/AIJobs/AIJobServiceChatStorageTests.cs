@@ -87,11 +87,11 @@ public sealed class AIJobServiceChatStorageTests
         var temporaryChats = Path.Combine(this.testDirectory, "tempChats");
         var temporaryChatEntries = Directory.Exists(temporaryChats) ? Directory.EnumerateFileSystemEntries(temporaryChats).ToList() : [];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(WorkspaceBehaviour.IsChatExisting(new LoadChat(chat.WorkspaceId, chat.ChatId)), Is.False, "Sending a message is no reason to store a chat the user did not save, or which they want kept nowhere.");
             Assert.That(temporaryChatEntries, Is.Empty, "A chat outside the workspaces would end up among the temporary chats, where nobody sees it while the workspaces are disabled.");
-        });
+        }
     }
 
     [Test]

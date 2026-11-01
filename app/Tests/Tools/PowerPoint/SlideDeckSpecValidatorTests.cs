@@ -49,13 +49,13 @@ public sealed class SlideDeckSpecValidatorTests
         ]);
 
         var issues = SlideDeckSpecValidator.Validate(deck, TEMPLATE, 1, 0);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(issues, Has.Some.Contains("Slide 1 has 2 texts, but layout L3 has only 1"));
             Assert.That(issues, Has.Some.Contains("Slide 2 has a subtitle, but layout L3 has none"));
             Assert.That(issues, Has.Some.Contains("Slide 3 has 1 picture, but layout L3 has no picture"));
             Assert.That(issues, Has.Some.Contains("Slide 4 has a table, but layout L3 has none"));
-        });
+        }
     }
 
     [Test]
@@ -78,11 +78,11 @@ public sealed class SlideDeckSpecValidatorTests
         var fitting = Slide("L3", texts: [Text(Enumerable.Range(1, 10).Select(number => $"Point {number}").ToArray())]);
         var tooLong = Slide("L3", texts: [Text(Enumerable.Range(1, 11).Select(number => $"Point {number}").ToArray())]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [fitting]), TEMPLATE, 0, 0), Is.Empty);
             Assert.That(SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [tooLong]), TEMPLATE, 0, 0), Has.Some.Contains("Slide 1: text 1 needs about 11 lines, but only about 9 fit"));
-        });
+        }
     }
 
     [Test]
@@ -90,11 +90,11 @@ public sealed class SlideDeckSpecValidatorTests
     {
         var deck = new SlideDeckSpec("Mars", [Slide("L5", texts: [Text("Reusable")], pictures: [2])]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 1, 0), Has.Some.Contains("only pictures 1 to 1 are attached"));
             Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0), Has.Some.Contains("no pictures are attached"));
-        });
+        }
     }
 
     [Test]
@@ -110,11 +110,11 @@ public sealed class SlideDeckSpecValidatorTests
     {
         var deck = new SlideDeckSpec("Mars", [Slide("L3", texts: [Text("One")])]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 3), Has.Some.Contains("exactly 3 were asked for"));
             Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0), Is.Empty, "0 leaves the number to the model.");
-        });
+        }
     }
 
     [Test]
@@ -129,11 +129,11 @@ public sealed class SlideDeckSpecValidatorTests
             Edit(4, texts: [Text("Thema:\tWeekly", "Datum:\t2026-10-19")]),
         ]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 5, USES), Is.Empty, "Every template slide counts as a slide of the presentation, an imprint included.");
             Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 4, USES), Has.Some.Contains("has 5 slides, but exactly 4 were asked for"));
-        });
+        }
     }
 
     [Test]
@@ -142,13 +142,13 @@ public sealed class SlideDeckSpecValidatorTests
         var deck = new SlideDeckSpec("Weekly", [Keep(1), Keep(1), Keep(5), Edit(4, texts: [Text("Thema:\tWeekly")])]);
 
         var issues = SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 0, USES);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(issues, Has.Some.Contains("Slide 3 refers to template slide 5, which is not offered. Refer only to template slides 1, 2, 3, 4."));
             Assert.That(issues, Has.Some.Contains("Template slide 1 appears 2 times."));
             Assert.That(issues, Has.Some.Contains("Template slide 2 is missing. Add it at its place with \"template_slide\": 2 and its new content."));
             Assert.That(issues, Has.Some.Contains("Template slide 3 is missing. Add it at its place as { \"template_slide\": 3 }."));
-        });
+        }
     }
 
     [Test]
@@ -163,12 +163,12 @@ public sealed class SlideDeckSpecValidatorTests
         ]);
 
         var issues = SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 0, USES);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(issues, Has.Some.Contains("Slide 1 keeps template slide 1 unchanged, so it takes no content."));
             Assert.That(issues, Has.Some.Contains("Slide 2 is to edit template slide 2, but writes no content."));
             Assert.That(issues, Has.Some.Contains("Slide 3 keeps template slide 3 unchanged"), "Slide 3 of the template is to be kept, so the edit is sent back.");
-        });
+        }
 
         var editedDeck = new SlideDeckSpec("Weekly", [Keep(1), Edit(2, "News", subtitle: "This week"), Keep(3), Edit(4, texts: [Text("Thema:\tWeekly")])]);
         Assert.That(SlideDeckSpecValidator.Validate(editedDeck, TemplateWithSlides(), 0, 0, USES), Has.Some.Contains("Slide 2 has a subtitle, but layout L2 has none"), "An edited slide has the slots of its template slide.");
@@ -180,11 +180,11 @@ public sealed class SlideDeckSpecValidatorTests
         var unordered = new SlideDeckSpec("Weekly", [Keep(3), Edit(2, "News", texts: [Text("New")]), Keep(1), Edit(4, texts: [Text("Thema:\tWeekly")])]);
         var imprintInBetween = new SlideDeckSpec("Weekly", [Keep(1), Edit(2, "News", texts: [Text("New")]), Keep(3), Edit(4, texts: [Text("Thema:\tWeekly")]), Slide("L2", "Thanks")]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.Validate(unordered, TemplateWithSlides(), 0, 0, USES), Has.Some.Contains("The template slides are out of order. Keep them in the order 1, 2, 3, 4"));
             Assert.That(SlideDeckSpecValidator.Validate(imprintInBetween, TemplateWithSlides(), 0, 0, USES), Is.Empty, "An imprint is a template slide like any other, so a new slide may follow it.");
-        });
+        }
     }
 
     [Test]
@@ -193,7 +193,7 @@ public sealed class SlideDeckSpecValidatorTests
         var template = TemplateWithSlides();
         TemplateSlideUse[] uses = [TemplateSlideUse.KEEP, TemplateSlideUse.EDIT, TemplateSlideUse.OMIT, TemplateSlideUse.KEEP, TemplateSlideUse.KEEP];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.CanWrite(Slide("L2"), template, uses), Is.True);
             Assert.That(SlideDeckSpecValidator.CanWrite(Slide("L9"), template, uses), Is.False);
@@ -201,7 +201,7 @@ public sealed class SlideDeckSpecValidatorTests
             Assert.That(SlideDeckSpecValidator.CanWrite(Edit(5, "Thanks"), template, uses), Is.False, "Such a slide has no slots to write content into.");
             Assert.That(SlideDeckSpecValidator.CanWrite(Keep(3), template, uses), Is.False, "The user left this slide out.");
             Assert.That(SlideDeckSpecValidator.CanWrite(Keep(9), template, uses), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -218,11 +218,11 @@ public sealed class SlideDeckSpecValidatorTests
         var edited = SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [Edit(1, texts: [points])]), template, 0, 0, [TemplateSlideUse.EDIT]);
         var written = SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [Slide("L1", texts: [points])]), template, 0, 0, [TemplateSlideUse.OMIT]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edited, Has.Some.Contains("Slide 1: text 1 needs about 8 lines, but only about 5 fit."), "Four points of two lines each overfill the half the slide leaves.");
             Assert.That(written, Is.Empty, "On a slide written anew, the same points fit the whole slot.");
-        });
+        }
     }
 
     [Test]
@@ -243,7 +243,7 @@ public sealed class SlideDeckSpecValidatorTests
         TemplateSlideUse[] uses = [TemplateSlideUse.EDIT, TemplateSlideUse.KEEP];
         IReadOnlyList<string> IssuesOf(SlideSpec first, SlideSpec? added = null) => SlideDeckSpecValidator.Validate(new SlideDeckSpec("Weekly", added is null ? [first, Keep(2)] : [first, Keep(2), added]), template, 0, 0, uses);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(IssuesOf(Edit(1) with { Removals = ["element 1", "label 1"] }), Is.Empty, "Removing alone edits a slide.");
             Assert.That(IssuesOf(Edit(1) with { Removals = ["element 2"] }), Has.Some.Contains("Slide 1 removes \"element 2\", which template slide 1 does not have."));
@@ -252,7 +252,7 @@ public sealed class SlideDeckSpecValidatorTests
             Assert.That(IssuesOf(Edit(1, texts: [Text("New news")]) with { Removals = ["text 1"] }), Has.Some.Contains("Slide 1 fills text 1 and removes it as well."));
             Assert.That(IssuesOf(Edit(1) with { Removals = ["element 1"] }, Slide("L1") with { Removals = ["element 1"] }), Has.Some.Contains("Slide 3 is a new slide, which has nothing to remove."));
             Assert.That(SlideDeckSpecValidator.Validate(new SlideDeckSpec("Weekly", [Edit(1) with { Removals = ["element 1"] }, Keep(2) with { Removals = ["element 1"] }]), template, 0, 0, uses), Has.Some.Contains("Slide 2 keeps template slide 2 unchanged, so it takes no content."));
-        });
+        }
     }
 
     [Test]
@@ -263,7 +263,7 @@ public sealed class SlideDeckSpecValidatorTests
         var template = PresentationTemplate.Read(file);
         IReadOnlyList<string> IssuesOf(SlideSpec slide) => SlideDeckSpecValidator.Validate(new SlideDeckSpec("Missions", [slide]), template, 0, 0, [TemplateSlideUse.EDIT]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(IssuesOf(Edit(1, texts: [Text("Mars"), Text("Moon"), Text("Venus")], labels: ["Near", "Far", "Farther"])), Is.Empty, "Every copy takes content like a slot.");
             Assert.That(IssuesOf(Edit(1, texts: [Text("Mars"), Text("Moon"), Text("Venus"), Text("Jupiter")])), Has.Some.Contains("Slide 1 has 4 texts, but layout L1 has only 3."));
@@ -271,7 +271,7 @@ public sealed class SlideDeckSpecValidatorTests
             Assert.That(IssuesOf(Edit(1, labels: ["Near", "Far"]) with { Removals = ["label 3", "text 3"] }), Is.Empty);
             Assert.That(IssuesOf(Edit(1, labels: ["Near"]) with { Removals = ["label 4"] }), Has.Some.Contains("Slide 1 removes \"label 4\", which template slide 1 does not have."));
             Assert.That(IssuesOf(Edit(1, texts: [Text("Mars"), Text("Moon")]) with { Removals = ["text 2"] }), Has.Some.Contains("Slide 1 fills text 2 and removes it as well."));
-        });
+        }
     }
 
     [Test]
@@ -287,13 +287,13 @@ public sealed class SlideDeckSpecValidatorTests
         var deviating = new SlideDeckSpec("Mars", [Slide("L3", "Mars"), Slide("L3", "Why Mars", texts: [Text("Close to Earth")], startsChapter: true)]);
 
         var issues = SlideDeckSpecValidator.Validate(deviating, TEMPLATE, 0, 0, chosenLayouts: chosen);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.Validate(fitting, TEMPLATE, 0, 0, chosenLayouts: chosen), Is.Empty);
             Assert.That(issues, Has.Some.Contains("Slide 1 is the title slide, but uses layout L3. The title slide uses layout L1."));
             Assert.That(issues, Has.Some.Contains("Slide 2 starts a chapter, but uses layout L3. Chapters start with a slide on layout L2; put their content on the slides that follow."));
             Assert.That(SlideDeckSpecValidator.Validate(deviating, TEMPLATE, 0, 0), Is.Empty, "Without choices, the model decides every layout.");
-        });
+        }
     }
 
     [Test]
@@ -311,13 +311,13 @@ public sealed class SlideDeckSpecValidatorTests
         var content = Slide("L3", "Why Mars", texts: [Text("Close to Earth")]);
 
         var missing = SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [title, content]), TEMPLATE, 0, 0, chosenLayouts: chosen);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [title, contents, content, imprint]), TEMPLATE, 0, 0, chosenLayouts: chosen), Is.Empty);
             Assert.That(missing, Has.Some.Contains("The presentation has no slide on layout L4 for the table of contents, which lists the topics or chapters of the presentation without times. Add one right after the title slide."));
             Assert.That(missing, Has.Some.Contains("The presentation has no slide on layout L6 for the imprint"));
             Assert.That(SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [title, contents, imprint, content]), TEMPLATE, 0, 0, chosenLayouts: chosen), Has.Some.Contains("The imprint on layout L6 is not the last slide."));
-        });
+        }
     }
 
     [Test]
@@ -327,12 +327,12 @@ public sealed class SlideDeckSpecValidatorTests
         var morePoints = new SlideTextBlock([new SlideParagraph("Has a day of 24.6 hours", 0), new SlideParagraph("Close to the day on Earth", 1)]);
         var deck = new SlideDeckSpec("Mars", [Slide("L1", "Mars"), Slide("L4", "Why Mars", texts: [points, morePoints])]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0, maxMainPointsPerSlide: 3), Is.Empty, "A sub-point belongs to its main point.");
             Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0, maxMainPointsPerSlide: 2), Has.Some.Contains("Slide 2 has 3 main points, but at most 2 per slide were asked for, all its texts together."), "The texts of a slide count together.");
             Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0), Is.Empty, "Without a maximum, the model chooses.");
-        });
+        }
     }
 
     [Test]
@@ -366,11 +366,11 @@ public sealed class SlideDeckSpecValidatorTests
         ]);
 
         var issues = SlideDeckSpecValidator.Validate(deck, TEMPLATE, 2, 0);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(issues, Has.Some.Contains("Picture 1 is on slides 1, 2. Place it on exactly one of them."));
             Assert.That(issues, Has.Some.Contains("Picture 2 is on no slide. Place every picture of PICTURES on exactly one slide with a picture slot."));
-        });
+        }
     }
 
     [Test]
@@ -397,13 +397,13 @@ public sealed class SlideDeckSpecValidatorTests
         ]);
 
         var issues = SlideDeckSpecValidator.Validate(deck, TEMPLATE, 1, 0, libraryPictures: library);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(issues, Has.Some.Contains("Picture 2 of PICTURE_LIBRARY is on slides 2, 3. Use a picture of the library at most once; only icons may repeat."));
             Assert.That(issues, Has.None.Contains("Picture 3 of PICTURE_LIBRARY"), "An icon may mark several slides.");
             Assert.That(issues, Has.None.Contains("refers to picture"), "The numbers of the library follow those of the pictures for the slides.");
             Assert.That(issues, Has.None.Contains("is on no slide"), "Only the pictures for the slides have to be used.");
-        });
+        }
     }
 
     [Test]
@@ -423,12 +423,12 @@ public sealed class SlideDeckSpecValidatorTests
         ]);
 
         var issues = SlideDeckSpecValidator.Validate(deck, template, 0, 0, libraryPictures: library);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(issues, Has.Some.Contains("Slide 1 puts icon 1 into picture 1, which is a backdrop."));
             Assert.That(issues, Has.None.Contains("Slide 2 puts icon"), "A smaller picture slot is the place for an icon.");
             Assert.That(issues, Has.None.Contains("Slide 3 puts icon"), "A photo fills a backdrop well.");
-        });
+        }
     }
 
     [Test]
@@ -437,12 +437,12 @@ public sealed class SlideDeckSpecValidatorTests
         var deck = new SlideDeckSpec("Weekly", [Keep(1), Slide("L2", texts: [Text("Close to Earth")]), Edit(4, texts: [Text("Thema:\tWeekly")])]);
         var basis = TemplateWithSlides().DescribeBasisOf(deck);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(basis.Keys, Is.EquivalentTo(new[] { "template slide 1", "L2", "template slide 4" }), "An edited template slide fills the slots of its layout, a kept one does not.");
             Assert.That(SlideDeckSpecValidator.StillFits(deck, TemplateWithSlides(), basis), Is.True, "The same file, read once more.");
             Assert.That(SlideDeckSpecValidator.StillFits(deck, ChangedTemplateWithSlides(newLayoutAt: 3), basis), Is.True, "A new layout at the end of the slide master leaves the IDs of the others alone.");
-        });
+        }
     }
 
     [Test]
@@ -451,12 +451,12 @@ public sealed class SlideDeckSpecValidatorTests
         var deck = new SlideDeckSpec("Weekly", [Keep(1), Slide("L2", texts: [Text("Close to Earth")]), Keep(3)]);
         var basis = TemplateWithSlides().DescribeBasisOf(deck);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SlideDeckSpecValidator.StillFits(deck, ChangedTemplateWithSlides(newLayoutAt: 1), basis), Is.False, "L2 is another layout now.");
             Assert.That(SlideDeckSpecValidator.StillFits(deck, ChangedTemplateWithSlides(deletedSlide: 3), basis), Is.False, "Template slide 3 is the imprint now.");
             Assert.That(SlideDeckSpecValidator.StillFits(deck, ChangedTemplateWithSlides(deletedSlide: 3), new Dictionary<string, string>()), Is.False, "Without a basis, nothing is known to fit.");
-        });
+        }
     }
 
     /// <summary>

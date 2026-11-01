@@ -43,12 +43,12 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
 
         var outcome = await this.Execute(tool, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome.RequiredDataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED));
             Assert.That(outcome.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH));
             Assert.That(outcome.RequiredOutboundDataRestriction, Is.EqualTo(restriction));
-        });
+        }
     }
 
     [Test]
@@ -74,11 +74,11 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
 
         var outcome = await this.Execute(tool, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
             AssertDemandsNothing(outcome);
-        });
+        }
     }
 
     [Test]
@@ -88,11 +88,11 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
 
         var outcome = await this.Execute(tool, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.ERROR));
             AssertDemandsNothing(outcome);
-        });
+        }
     }
 
     [Test]
@@ -113,13 +113,13 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         {
         }
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(adapter.RecordedResults, Is.EqualTo(new[] { "A mail about the budget." }), "The tool ran, so what it demands came from a real result.");
             Assert.That(thread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.MEDIUM));
             Assert.That(thread.DataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED));
             Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(restriction), "A web search running next in this chat would otherwise carry the mail out.");
-        });
+        }
     }
 
     [Test]
@@ -172,11 +172,11 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         await foreach (var chunk in new ToolCallingLoop(NullLogger<ToolCallingLoop>.Instance).RunAsync(new OneToolCallAdapter(), this.LoopContext(tool, new ChatThread())))
             answer.ApplyStreamChunk(chunk, "test-model", blockCount: 2);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answer.SourcePassages, Is.EqualTo(new[] { passage }), "The result of a tool call is not stored with the chat, but what the model received of the sources is.");
             Assert.That(answer.Sources.Select(source => source.URL), Is.EqualTo(new[] { passage.SourceUrl }));
-        });
+        }
     }
 
     [TestCase("web_search", ExpectedResult = true)]
@@ -192,11 +192,11 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     [Test]
     public void AFunctionNameHasAtMost64Characters()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ToolExecutor.IsValidFunctionName(new string('a', 64)), Is.True);
             Assert.That(ToolExecutor.IsValidFunctionName(new string('a', 65)), Is.False);
-        });
+        }
     }
 
     private static void AssertDemandsNothing(ToolCallOutcome outcome)

@@ -30,11 +30,11 @@ public sealed class CloudProcessingTests
     {
         var validation = new DataSourceValidation { GetSelectedCloudTranscription = () => true };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(validation.ValidateUserAcknowledgedCloudEmbedding(false), Is.Not.Null);
             Assert.That(validation.ValidateUserAcknowledgedCloudEmbedding(true), Is.Null);
-        });
+        }
     }
 
     [Test]

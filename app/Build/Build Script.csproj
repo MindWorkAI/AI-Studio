@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>Build</RootNamespace>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -14,7 +14,7 @@
       <PackageReference Include="Cocona" Version="2.2.0" />
 
       <!-- Pins Cocona's transitive Microsoft.Extensions.Hosting 6.0.0, which pulled in the vulnerable System.Text.Json 6.0.0 (GHSA-8g4q-xg66-9fp4) -->
-      <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.22" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
     </ItemGroup>
 
     <ItemGroup>

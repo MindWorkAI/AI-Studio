@@ -37,12 +37,12 @@ public sealed class ImageLimitRuleTests
     {
         var limits = provider.GetModelProfile(new Model(modelId, null)).Images;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(limits.IsKnown, Is.True);
             Assert.That(limits.MaxPerRequest, Is.EqualTo(perRequest));
             Assert.That(limits.MaxPerMessage, Is.Null, "Neither vendor states a per-message limit, and inventing one would be a ceiling nobody wrote.");
-        });
+        }
     }
 
     [Test]
@@ -57,13 +57,13 @@ public sealed class ImageLimitRuleTests
         var smallWindow = ModelRegistry.Shared.Profile(LLMProviders.ANTHROPIC, "claude-opus-4-1");
         var largeWindow = ModelRegistry.Shared.Profile(LLMProviders.ANTHROPIC, "claude-opus-4-6");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(smallWindow.Context.DefaultTokens, Is.EqualTo(200_000));
             Assert.That(smallWindow.Images.MaxPerRequest, Is.EqualTo(100));
             Assert.That(largeWindow.Context.DefaultTokens, Is.EqualTo(1_000_000));
             Assert.That(largeWindow.Images.MaxPerRequest, Is.EqualTo(600));
-        });
+        }
     }
 
     [Test]
@@ -76,11 +76,11 @@ public sealed class ImageLimitRuleTests
         //
         var profile = ModelRegistry.Shared.Profile(LLMProviders.SELF_HOSTED, "some-model-nobody-wrote-a-rule-for");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Images.IsKnown, Is.False);
             Assert.That(profile.Images.MaxInOneMessage, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -93,11 +93,11 @@ public sealed class ImageLimitRuleTests
         //
         var profile = ModelRegistry.Shared.Profile(LLMProviders.OPEN_AI, "gpt-5.1");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True, "It does read several images.");
             Assert.That(profile.Images.IsKnown, Is.False, "How many, nobody said.");
-        });
+        }
     }
 
     [Test]

@@ -39,11 +39,11 @@ public sealed class FileSizeLimitTests
         var dataSource = JsonSerializer.Deserialize<DataSourceLocalDirectory>("{}", SettingsManager.JSON_OPTIONS);
         var batchSettings = JsonSerializer.Deserialize<DataBatchProcessing>("{}", SettingsManager.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(dataSource.MaxFileSizeMegabytes, Is.EqualTo(FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES));
             Assert.That(batchSettings!.MaxFileSizeMegabytes, Is.EqualTo(FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES));
-        });
+        }
     }
 
     [TestCase(0)]
@@ -63,11 +63,11 @@ public sealed class FileSizeLimitTests
         var aboveTheLimit = this.CreateFile("above-the-limit.txt", limitBytes + 1);
         var selection = new FolderFileSelection(["*"], [], true, false, LIMIT_MEGABYTES);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(selection.IsTooLarge(new FileInfo(atTheLimit)), Is.False);
             Assert.That(selection.IsTooLarge(new FileInfo(aboveTheLimit)), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -85,11 +85,11 @@ public sealed class FileSizeLimitTests
 
         var result = CreateIndexer().GetInputFiles(dataSource);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Files.Select(file => file.FullName), Is.EqualTo(new[] { smallFile }));
             Assert.That(result.IgnoredFiles, Is.EqualTo(new[] { new DataSourceEmbeddingIgnoredFile(largeFile, DataSourceEmbeddingIgnoreReason.TOO_LARGE) }), "The user selected the file, so the embedding page has to say why it is missing.");
-        });
+        }
     }
 
     [Test]
@@ -104,11 +104,11 @@ public sealed class FileSizeLimitTests
 
         var result = CreateIndexer().GetInputFiles(dataSource);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Files.Select(file => file.FullName), Is.EqualTo(new[] { largeFile }), "The user chose this very file.");
             Assert.That(result.IgnoredFiles, Is.Empty);
-        });
+        }
     }
 
     [Test]

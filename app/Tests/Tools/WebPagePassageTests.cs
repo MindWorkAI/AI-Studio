@@ -27,13 +27,13 @@ public sealed class WebPagePassageTests
 
         var found = new[] { passage }.SortBySource().GetPassagesOf(PAGE_SOURCE);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.EqualTo(new[] { passage }), "Only a passage under its source gets the eye next to it.");
             Assert.That(passage.DataSourceName, Is.EqualTo("Budget 2026"), "The dialog of the passage is named after the page.");
             Assert.That(passage.Text, Is.EqualTo("# Budget 2026\nThe budget grows by 4 %."));
             Assert.That(passage.Type, Is.EqualTo(RetrievalContentType.TEXT_WEBSITE));
-        });
+        }
     }
 
     [Test]
@@ -66,10 +66,10 @@ public sealed class WebPagePassageTests
         var provenanceId = answer.SourcePassages.Single().ProvenanceId!.Value;
         var entries = await store.Client.GetEntriesAsync([provenanceId], CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries[provenanceId].Kind, Is.EqualTo(ProvenanceKind.WEB_PAGE), "The information page counts it among the web pages.");
             Assert.That(entries[provenanceId].Content, Is.EqualTo("The budget grows by 4 %."));
-        });
+        }
     }
 }

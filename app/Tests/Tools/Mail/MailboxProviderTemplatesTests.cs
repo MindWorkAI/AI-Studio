@@ -19,12 +19,12 @@ public sealed class MailboxProviderTemplatesTests
     [TestCaseSource(nameof(Templates))]
     public void ATemplateMakesAValidConnection(MailboxProviderTemplate template)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Port, Is.InRange(1, 65535), "The port is out of range.");
             Assert.That(template.TransportSecurity, Is.Not.EqualTo(MailboxTransportSecurity.UNKNOWN), "The template does not say how the connection is encrypted.");
             Assert.That(Uri.TryCreate(template.HelpUrl, UriKind.Absolute, out var helpUrl) && helpUrl.Scheme == Uri.UriSchemeHttps, Is.True, "The help page is no HTTPS address.");
-        });
+        }
     }
 
     [TestCaseSource(nameof(Templates))]
@@ -39,11 +39,11 @@ public sealed class MailboxProviderTemplatesTests
     [Test]
     public void EveryProviderIsListedOnce()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailboxProviderTemplates.ALL.Select(template => template.Name), Is.Unique);
             Assert.That(MailboxProviderTemplates.ALL.Where(template => template.Host.Length > 0).Select(template => template.Host), Is.Unique);
-        });
+        }
     }
 
     [Test]
@@ -52,12 +52,12 @@ public sealed class MailboxProviderTemplatesTests
         var requirements = Enum.GetValues<MailboxProviderRequirements>().Where(requirement => requirement is not MailboxProviderRequirements.NONE).ToList();
         var descriptions = requirements.Select(requirement => requirement.GetDescriptions().ToList()).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailboxProviderRequirements.NONE.GetDescriptions(), Is.Empty, "A provider without requirements got a description.");
             Assert.That(descriptions, Has.All.Count.EqualTo(1), "A requirement does not have exactly one description.");
             Assert.That(descriptions.Select(texts => texts.FirstOrDefault()), Is.Unique, "Two requirements share a description.");
-        });
+        }
     }
 
     [Test]
@@ -66,10 +66,10 @@ public sealed class MailboxProviderTemplatesTests
         var descriptions = Enum.GetValues<MailboxUsernameFormat>().Select(format => format.GetDescription()).ToList();
         var fallback = ((MailboxUsernameFormat)int.MaxValue).GetDescription();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(descriptions, Is.Unique, "Two username formats share a description.");
             Assert.That(descriptions, Has.None.EqualTo(fallback), "A username format falls back to the description of an unknown one.");
-        });
+        }
     }
 }

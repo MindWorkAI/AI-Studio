@@ -68,11 +68,11 @@ public sealed class FileExclusionEditorTests
         await editor.EditAsync(folders ? "*.keep;wrong/" : "*.wrong", folders: !folders);
         await editor.ResetAsync(folders);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(published, Is.Empty);
             Assert.That(resets, Is.Empty);
-        });
+        }
 
         await editor.EditAsync(folders ? "*.keep" : "keep/", folders: !folders);
         Assert.That(published, Is.EqualTo(new[] { folders ? "bin/; *.keep" : "keep/; *.tmp" }));
@@ -90,11 +90,11 @@ public sealed class FileExclusionEditorTests
         await editor.EditAsync(folders ? "*.wrong" : "wrong/", folders);
         await editor.ResetAsync(folders);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(published, Is.Empty);
             Assert.That(resets, Is.EqualTo(new[] { folders ? "bin/; *.custom" : "custom/; *.tmp" }));
-        });
+        }
     }
 
     [Test]
@@ -114,11 +114,11 @@ public sealed class FileExclusionEditorTests
         await editor.ResetAsync(folders: true);
         await editor.ResetAsync(folders: false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(published, Is.Empty);
             Assert.That(resets, Is.Empty);
-        });
+        }
 
         editor.SetParameters(new() { [nameof(FileExclusionEditor.ResetRequested)] = default(EventCallback<string>) });
         await editor.ResetAsync(folders: true);
@@ -140,11 +140,11 @@ public sealed class FileExclusionEditorTests
 
         await editor.EditAsync("*.wrong", folders: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(editor.IsValid, Is.False);
             Assert.That(published, Is.Empty);
-        });
+        }
 
         await editor.EditAsync("custom/", folders: true);
         Assert.That(editor.IsValid, Is.True);

@@ -59,11 +59,11 @@ public sealed class DependentFieldValidationTests
         var untouchedField = new FakeFormComponent();
 
         await DependentFieldValidation.RevalidateAsync(null, touchedField, untouchedField, null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(touchedField.ValidationCount, Is.EqualTo(1), "The touched field is not checked again.");
             Assert.That(untouchedField.ValidationCount, Is.Zero, "The untouched field is checked.");
-        });
+        }
     }
 
     private sealed class FakeFormComponent : IFormComponent

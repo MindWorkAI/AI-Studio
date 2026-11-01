@@ -51,12 +51,12 @@ public sealed class PresentationWriterTests
         var (file, _) = await WriteAsync(DECK, OPTIONS, new TestTemplateOptions(ExampleSlides: 2), new FakePictureSource(WIDE_PICTURE, WIDE_PICTURE));
         using var document = PresentationDocument.Open(file, false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(5), "The sample slides of the template are gone, parts included.");
             Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Mars", "Why Mars", "The rocket", "Landing", "Costs" }), "The presentation holds the slides of the deck, nothing more.");
-        });
+        }
     }
 
     [Test]
@@ -66,11 +66,11 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
 
         var sections = document.PresentationPart!.Presentation!.Descendants<P14.Section>().ToList();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sections.Select(section => section.Name?.Value), Is.EqualTo(new[] { "Mars", "Why Mars", "Landing" }), "The section of the template's samples is gone, and the title slide forms a section named after the presentation.");
             Assert.That(sections.Select(section => section.Descendants<P14.SectionSlideIdListEntry>().Count()), Is.EqualTo(new[] { 1, 2, 2 }));
-        });
+        }
     }
 
     [Test]
@@ -83,14 +83,14 @@ public sealed class PresentationWriterTests
         var slide = SlidesOf(document)[1].Slide!;
         var placeholders = slide.Descendants<P.PlaceholderShape>().Select(placeholder => (placeholder.Type?.InnerText ?? "obj", placeholder.Index?.Value)).ToList();
         var textBody = slide.Descendants<P.Shape>().Single(shape => shape.Descendants<P.PlaceholderShape>().Single().Index?.Value == 1).TextBody!;
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(placeholders, Is.EqualTo(new (string, uint?)[] { ("title", null), ("obj", 1), ("ftr", 10), ("sldNum", 11) }));
             Assert.That(textBody.Elements<A.Paragraph>().Select(paragraph => paragraph.ParagraphProperties?.Level?.Value ?? 0), Is.EqualTo(new[] { 0, 1 }));
             Assert.That(textBody.InnerText, Is.EqualTo("Close to EarthTwo years per trip"));
             Assert.That(slide.Descendants<P.Shape>().Any(shape => shape.InnerText == "Mission team"), Is.True, "The footer carries the text the user chose.");
             Assert.That(slide.Descendants<A.Field>().Single().Type?.Value, Is.EqualTo("slidenum"), "PowerPoint fills in the number itself.");
-        });
+        }
     }
 
     [Test]
@@ -107,11 +107,11 @@ public sealed class PresentationWriterTests
         var (chosen, _) = await WriteAsync(deck, OPTIONS with { VariantLabel = "B" });
         var (unknown, _) = await WriteAsync(deck, OPTIONS with { VariantLabel = "Z" });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(LayoutNamesOf(chosen), Is.EqualTo(new[] { "B Title", "B Content", "B Content", "B Content" }), "Chapters keep the variant.");
             Assert.That(LayoutNamesOf(unknown), Is.EqualTo(new[] { "A Title", "A Content", "A Content", "A Content" }), "A variant the template lacks falls back to its first one.");
-        });
+        }
     }
 
     [Test]
@@ -129,7 +129,7 @@ public sealed class PresentationWriterTests
         var backdrop = slides[3].Slide!.Descendants<P.Picture>().Single();
         var crop = backdrop.BlipFill!.GetFirstChild<A.SourceRectangle>()!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(transform.Extents!.Cx!.Value, Is.EqualTo(RIGHT_PICTURE.Width));
             Assert.That(transform.Extents.Cy!.Value, Is.EqualTo(RIGHT_PICTURE.Width / 4));
@@ -138,7 +138,7 @@ public sealed class PresentationWriterTests
             Assert.That(crop.Right?.Value, Is.EqualTo(27_778));
             Assert.That(crop.Top, Is.Null);
             Assert.That(slides[2].ImageParts.Count(), Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -149,13 +149,13 @@ public sealed class PresentationWriterTests
 
         // The icon lands in the backdrop, which the validator advises against, and keeps its edges anyway:
         var icon = SlidesOf(document)[3].Slide!.Descendants<P.Picture>().Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(icon.BlipFill!.GetFirstChild<A.SourceRectangle>(), Is.Null);
             Assert.That(icon.ShapeProperties!.Transform2D!.Extents!.Cx!.Value, Is.EqualTo(WHOLE_SLIDE.Width));
             Assert.That(icon.ShapeProperties.Transform2D.Extents.Cy!.Value, Is.EqualTo(WHOLE_SLIDE.Width / 4));
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -164,12 +164,12 @@ public sealed class PresentationWriterTests
         var (file, result) = await WriteAsync(DECK, OPTIONS, pictures: new FakePictureSource(WIDE_PICTURE with { ContentType = "image/webp" }, WIDE_PICTURE));
         using var document = PresentationDocument.Open(file, false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.SkippedPictures, Is.EqualTo(new[] { 1 }));
             Assert.That(SlidesOf(document)[2].Slide!.Descendants<P.Picture>(), Is.Empty, "The slot stays empty rather than holding a picture nobody can see.");
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -186,14 +186,14 @@ public sealed class PresentationWriterTests
         using var keptDocument = PresentationDocument.Open(kept, false);
         var keptSlide = SlidesOf(keptDocument)[0];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PicturePlaceholdersOf(SlidesOf(leftDocument)[0]), Is.Empty, "By default, no prompt text stays behind.");
             Assert.That(PicturePlaceholdersOf(keptSlide), Has.Count.EqualTo(1));
             Assert.That(PlaceholderShapeOf(keptSlide, "pic", 20).TextBody, Is.Null, "Without a text of its own, the placeholder shows the prompt text of the layout.");
             Assert.That(keptSlide.ImageParts, Is.Empty);
             Assert.That(ValidationErrorsOf(keptDocument), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -203,13 +203,13 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var slide = SlidesOf(document)[2];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.SkippedPictures, Is.EqualTo(new[] { 1 }));
             Assert.That(slide.Slide!.Descendants<P.Picture>(), Is.Empty);
             Assert.That(PicturePlaceholdersOf(slide), Has.Count.EqualTo(1), "The user can insert the picture there themselves.");
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -219,13 +219,13 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
 
         var table = SlidesOf(document)[4].Slide!.Descendants<A.Table>().Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(table.TableProperties!.GetFirstChild<A.TableStyleId>()?.Text, Is.EqualTo(TestTemplate.DEFAULT_TABLE_STYLE_ID));
             Assert.That(table.TableProperties.FirstRow?.Value, Is.True, "The headers are the first row.");
             Assert.That(table.Elements<A.TableRow>().Select(row => row.InnerText), Is.EqualTo(new[] { "ItemCost", "Fuel10" }));
             Assert.That(table.TableGrid!.Elements<A.GridColumn>().Sum(column => column.Width!.Value), Is.EqualTo(TestTemplate.MASTER_BODY_BOUNDS.Width), "The columns span the slot exactly.");
-        });
+        }
     }
 
     [Test]
@@ -234,11 +234,11 @@ public sealed class PresentationWriterTests
         var (file, _) = await WriteAsync(DECK, OPTIONS, new TestTemplateOptions(AsTemplate: true));
         using var document = PresentationDocument.Open(file, false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(document.DocumentType, Is.EqualTo(PresentationDocumentType.Presentation));
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -257,7 +257,7 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var slides = SlidesOf(document);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(slides.Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Agenda", "News", "Questions", "Impressum" }));
@@ -265,7 +265,7 @@ public sealed class PresentationWriterTests
             Assert.That(BodyParagraphsOf(slides[2]).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "AI Studio:", "EINSTEIN:" }));
             Assert.That(slides[3].Slide!.Show, Is.Null, "The user chose the slide, so it shows although the template hides it.");
             Assert.That(document.PresentationPart.Presentation!.SlideIdList!.Elements<P.SlideId>().Select(slideId => slideId.Id!.Value), Is.Unique);
-        });
+        }
     }
 
     [Test]
@@ -283,13 +283,13 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var sections = document.PresentationPart!.Presentation!.Descendants<P14.Section>().ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Impressum", "Agenda", "News" }), "An imprint is a slide like any other: nothing moves it to the end.");
             Assert.That(sections.Select(section => section.Name?.Value), Is.EqualTo(new[] { "Weekly", "Agenda" }));
             Assert.That(sections.Select(section => section.Descendants<P14.SectionSlideIdListEntry>().Count()), Is.EqualTo(new[] { 2, 2 }));
-        });
+        }
     }
 
     [Test]
@@ -302,7 +302,7 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(withFooter, false);
         var slides = SlidesOf(document);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(slides.Select(slide => slide.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value), Is.EqualTo(new[] { "B Title", "B Content" }));
@@ -310,7 +310,7 @@ public sealed class PresentationWriterTests
             Assert.That(FootersOf(slides[0]), Is.EqualTo(new[] { "Mission team" }));
             Assert.That(FootersOf(slides[1]), Is.EqualTo(new[] { "Mission team" }));
             Assert.That(FootersOfSlide(withoutFooter, 1), Is.EqualTo(new[] { "Old footer" }), "Without a footer of the presentation, a kept slide keeps its own.");
-        });
+        }
     }
 
     [Test]
@@ -332,13 +332,13 @@ public sealed class PresentationWriterTests
 
         using var document = PresentationDocument.Open(output, false);
         var slide = SlidesOf(document)[0];
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(slide.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value, Is.EqualTo("B Content"));
             Assert.That(slide.Slide!.Descendants<P.PlaceholderShape>().Select(placeholder => (placeholder.Type?.InnerText ?? "obj", placeholder.Index?.Value)), Is.EqualTo(new (string, uint?)[] { ("title", null), ("obj", 2), ("ftr", 12) }));
             Assert.That(FootersOf(slide), Is.EqualTo(new[] { "Mission team" }));
-        });
+        }
     }
 
     [Test]
@@ -364,7 +364,7 @@ public sealed class PresentationWriterTests
         var slide = SlidesOf(document)[0];
         var paragraphs = BodyParagraphsOf(slide);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(TitleOf(slide), Is.EqualTo("News of the week"));
@@ -376,7 +376,7 @@ public sealed class PresentationWriterTests
             Assert.That(paragraphs[0].Elements<A.Run>().Single().RunProperties?.FontSize, Is.Null, "A main point keeps what the author chose for main points.");
             Assert.That(PlaceholderShapeOf(slide, "body", 17).TextBody!.InnerText, Is.EqualTo("This week"), "A slot the template slide left out gets its placeholder from the layout.");
             Assert.That(slide.Slide!.Descendants<P.NonVisualDrawingProperties>().Select(properties => properties.Id!.Value), Is.Unique);
-        });
+        }
     }
 
     [Test]
@@ -388,11 +388,11 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var slide = SlidesOf(document)[0];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(TitleOf(slide), Is.EqualTo("News"));
             Assert.That(BodyParagraphsOf(slide).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "AI Studio:", "EINSTEIN:" }));
-        });
+        }
     }
 
     [Test]
@@ -410,7 +410,7 @@ public sealed class PresentationWriterTests
         using (var stream = slide.ImageParts.Single().GetStream(FileMode.Open, FileAccess.Read))
             stream.CopyTo(pictureData);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(TitleOf(slide), Is.EqualTo("The rocket"));
@@ -418,7 +418,7 @@ public sealed class PresentationWriterTests
             Assert.That(slide.Slide!.Descendants<P.Picture>().Count(), Is.EqualTo(1));
             Assert.That(pictureData.ToArray(), Is.EqualTo(new byte[] { 4, 5, 6 }), "The old picture leaves the file along with its shape.");
             Assert.That(slide.Slide!.Descendants<P.Picture>().Single().ShapeProperties!.Transform2D!.Extents!.Cy!.Value, Is.EqualTo(RIGHT_PICTURE.Height), "The old picture was fit into its slot, which therefore stays as large as the layout makes it.");
-        });
+        }
     }
 
     [Test]
@@ -433,12 +433,12 @@ public sealed class PresentationWriterTests
         var transform = SlidesOf(document)[0].Slide!.Descendants<P.Picture>().Single().ShapeProperties!.Transform2D!;
         var bounds = new SlotBounds(transform.Offset!.X!.Value, transform.Offset.Y!.Value, transform.Extents!.Cx!.Value, transform.Extents.Cy!.Value);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(moved.Contains(bounds, 0, 0), Is.True, $"The picture fits into the slot where the slide put it, but lies at {bounds}.");
             Assert.That(bounds.Width, Is.EqualTo(moved.Width), "The wide picture takes the whole width of the moved slot.");
-        });
+        }
     }
 
     [Test]
@@ -457,7 +457,7 @@ public sealed class PresentationWriterTests
         var table = shapeTree.Elements<P.GraphicFrame>().Single();
         var note = shapeTree.Elements<P.Shape>().Single(shape => shape.TextBody?.InnerText == "Source: last year");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(RowsOf(table), Is.EqualTo(new[] { "Item | Cost", "Fuel | 10", "Food | 5" }), "No row of the old table is left below the shorter new one.");
@@ -465,7 +465,7 @@ public sealed class PresentationWriterTests
             Assert.That(shapeTree.Elements().ToList().IndexOf(table), Is.LessThan(shapeTree.Elements().ToList().IndexOf(note)), "The new table lies where the old one did, behind what lay in front of it.");
             Assert.That(RowsOf(slides[1].Slide!.Descendants<P.GraphicFrame>().Single()), Is.EqualTo(new[] { "Step | Date", "Launch | 2030" }));
             Assert.That(slides[1].Slide!.Descendants<P.PlaceholderShape>().Count(placeholder => placeholder.Type?.InnerText == "tbl"), Is.EqualTo(1), "The empty placeholder the free table stood in for is gone.");
-        });
+        }
     }
 
     [Test]
@@ -477,11 +477,11 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var slide = SlidesOf(document)[0];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(TitleOf(slide), Is.EqualTo("New costs"));
             Assert.That(RowsOf(slide.Slide!.Descendants<P.GraphicFrame>().Single()), Has.Count.EqualTo(6));
-        });
+        }
     }
 
     [Test]
@@ -493,7 +493,7 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var slide = SlidesOf(document)[0];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(BodyParagraphsOf(slide).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "A new release" }));
@@ -503,7 +503,7 @@ public sealed class PresentationWriterTests
             Assert.That(slide.Slide.Descendants<P.PlaceholderShape>().Where(placeholder => placeholder.Index?.Value == 17), Is.Empty, "The label of the template is gone, with its sample text.");
             Assert.That(slide.Slide.Descendants<A.SolidFill>().Count(), Is.EqualTo(1), "What the model does not remove stays.");
             Assert.That(slide.ChartParts.Count(), Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -517,7 +517,7 @@ public sealed class PresentationWriterTests
         var slide = SlidesOf(document)[0];
         var secondHeading = ShapeWithIdOf(slide, 5);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(PlaceholderShapeOf(slide, "body", 17).TextBody!.InnerText, Is.EqualTo("Mars"));
@@ -528,7 +528,7 @@ public sealed class PresentationWriterTests
             Assert.That(slide.Slide!.Descendants<P.NonVisualDrawingProperties>().Select(properties => properties.Id!.Value), Has.None.EqualTo(7U).And.None.EqualTo(8U), "The third heading and its text are removed.");
             Assert.That(slide.Slide.Descendants<P.Shape>().Select(shape => shape.TextBody?.InnerText), Has.Some.EqualTo("Bildquelle hier angeben"), "What the model does not remove stays.");
             Assert.That(slide.Slide.Descendants<P.Picture>().Count(), Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -541,7 +541,7 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var slide = SlidesOf(document)[0];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(slide.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value, Is.EqualTo("B Content"));
@@ -549,7 +549,7 @@ public sealed class PresentationWriterTests
             Assert.That(ShapeWithIdOf(slide, 5).TextBody!.InnerText, Is.EqualTo("Moon"));
             Assert.That(ShapeWithIdOf(slide, 7).TextBody!.InnerText, Is.EqualTo("Venus"));
             Assert.That(ShapeWithIdOf(slide, 6).TextBody!.InnerText, Is.EqualTo("Duis autem"), "A copy the slide leaves empty keeps the content of the template.");
-        });
+        }
     }
 
     [Test]
@@ -561,13 +561,13 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var slide = SlidesOf(document)[0];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(slide.Slide!.Descendants<P.GraphicFrame>(), Is.Empty);
             Assert.That(slide.ChartParts, Is.Empty);
             Assert.That(slide.ImageParts.Count(), Is.EqualTo(1), "The picture nobody removed keeps its part.");
-        });
+        }
     }
 
     [Test]
@@ -586,12 +586,12 @@ public sealed class PresentationWriterTests
         using var document = PresentationDocument.Open(file, false);
         var slides = SlidesOf(document);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(slides[0].Slide!.Timing, Is.Null, "An animation of a shape which is gone would break the slide.");
             Assert.That(slides[1].Slide!.Timing, Is.Not.Null, "The animated shape is still there.");
-        });
+        }
     }
 
     /// <summary>

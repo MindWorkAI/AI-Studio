@@ -81,13 +81,13 @@ public sealed class AttachmentProvenanceTests
         var firstRequest = await this.PrepareAsync(message);
         var secondRequest = await this.PrepareAsync(message);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message.FileAttachments.Single().ProvenanceId, Is.Not.Null);
             Assert.That(firstRequest, Does.Contain("The board met on Monday."));
             Assert.That(secondRequest, Is.EqualTo(firstRequest));
             Assert.That(this.runtime.ReadFiles, Has.Count.EqualTo(1), "Every request read every document anew, which a long chat with large documents paid for with every message.");
-        });
+        }
     }
 
     [Test]
@@ -100,11 +100,11 @@ public sealed class AttachmentProvenanceTests
         await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
         var prepared = await this.PrepareAsync(message);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prepared, Does.Contain("The board met on Monday."), "Every request of the chat sends the same text, which is what the user can look at.");
             Assert.That(prepared, Does.Not.Contain("never met"));
-        });
+        }
     }
 
     [Test]
@@ -119,13 +119,13 @@ public sealed class AttachmentProvenanceTests
         await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: true);
         var prepared = await this.PrepareAsync(message);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prepared, Does.Contain("and on Tuesday"), "The user chose that the AI works with the files as they are now.");
             Assert.That(message.FileAttachments.Single().ProvenanceId, Is.Not.EqualTo(firstId), "The text sent before belongs to what the AI received then.");
             Assert.That(message.FileAttachments.Single().Version, Is.EqualTo(FileVersion.Of(this.documentPath)));
             Assert.That(this.runtime.ReadFiles, Has.Count.EqualTo(2));
-        });
+        }
     }
 
     [Test]
@@ -138,12 +138,12 @@ public sealed class AttachmentProvenanceTests
 
         await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message.HasDocumentsToStore(readChangedAgain: true), Is.False);
             Assert.That(message.FileAttachments.Single().ProvenanceId, Is.EqualTo(firstId));
             Assert.That(this.runtime.ReadFiles, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -155,11 +155,11 @@ public sealed class AttachmentProvenanceTests
         File.Delete(this.documentPath);
         var prepared = await this.PrepareAsync(message);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message.HasDocumentsToStore(readChangedAgain: true), Is.False, "A file which is gone did not change: its stored text is all there is.");
             Assert.That(prepared, Does.Contain("The board met on Monday."));
-        });
+        }
     }
 
     [Test]
@@ -184,12 +184,12 @@ public sealed class AttachmentProvenanceTests
         var provenanceId = message.FileAttachments.Single().ProvenanceId!.Value;
         var entries = await this.store.Client.GetEntriesAsync([provenanceId], CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries[provenanceId].Content, Does.Contain(FakeRuntime.REDACTION_MARKER), "The store keeps what the AI received, not what the file holds.");
             Assert.That(entries[provenanceId].Content, Does.Not.Contain(SUSPICIOUS_PASSAGE));
             Assert.That(entries[provenanceId].Kind, Is.EqualTo(ProvenanceKind.ATTACHMENT));
-        });
+        }
     }
 
     [Test]
@@ -202,13 +202,13 @@ public sealed class AttachmentProvenanceTests
 
         var prepared = await this.PrepareAsync(message);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prepared, Does.Contain("The board met on Monday."));
             Assert.That(prepared, Does.Not.Contain(SUSPICIOUS_PASSAGE), "Every way of content to the AI goes through the filter, with the rules of today.");
             Assert.That(prepared, Does.Contain(FakeRuntime.REDACTION_MARKER));
             Assert.That(this.runtime.ReadFiles, Is.Empty, "The stored text is filtered, not the file read again.");
-        });
+        }
     }
 
     [Test]
@@ -222,13 +222,13 @@ public sealed class AttachmentProvenanceTests
         await message.StoreAttachedDocumentsAsync(this.store.Client, chatId, this.rustService, null, readChangedAgain: false);
 
         await using var context = this.store.CreateContext();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message.HasDocumentsToStore(readChangedAgain: false), Is.False);
             Assert.That(message.FileAttachments.Single().ProvenanceId, Is.EqualTo(firstId));
             Assert.That(context.Entries.Count(), Is.EqualTo(1));
             Assert.That(this.runtime.ReadFiles, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -239,11 +239,11 @@ public sealed class AttachmentProvenanceTests
         await message.StoreAttachedDocumentsAsync(new NoProvenanceStoreClient("SQLite", "not available"), Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
         var prepared = await this.PrepareAsync(message);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message.FileAttachments.Single().ProvenanceId, Is.Null);
             Assert.That(prepared, Does.Contain("The board met on Monday."), "Without the store, a chat works as it always did.");
-        });
+        }
     }
 
     [Test]
@@ -253,11 +253,11 @@ public sealed class AttachmentProvenanceTests
 
         var prepared = await this.PrepareAsync(message);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prepared, Does.Contain("The board met on Monday."), "A store which lost the entry, e.g., one restored from an older backup, must not cost the document.");
             Assert.That(this.runtime.ReadFiles, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -270,12 +270,12 @@ public sealed class AttachmentProvenanceTests
         await message.StoreAttachedDocumentsAsync(this.store.Client, Guid.NewGuid(), this.rustService, null, readChangedAgain: false);
         var chatsWithEntries = await this.store.Client.GetChatIdsAsync(CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message.HasDocumentsToStore(readChangedAgain: false), Is.False, "An image goes to the AI as an image, not as a text to keep.");
             Assert.That(message.FileAttachments.Single().ProvenanceId, Is.Null);
             Assert.That(chatsWithEntries, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -289,7 +289,7 @@ public sealed class AttachmentProvenanceTests
         using var document = JsonDocument.Parse(json);
         var storedAttachments = document.RootElement.GetProperty("file_attachments");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(attachment.Normalize().ProvenanceId, Is.EqualTo(attachment.ProvenanceId), "Every request normalizes its attachments first.");
             Assert.That(attachment.Normalize().Version, Is.EqualTo(attachment.Version), "Otherwise, a chat which reads changed files again would read every file again.");
@@ -300,7 +300,7 @@ public sealed class AttachmentProvenanceTests
             Assert.That(transcript.WithFilePath(Path.Combine(this.directoryPath, "moved.md")).ProvenanceId, Is.EqualTo(transcript.ProvenanceId));
             Assert.That(loaded.FileAttachments[0].ProvenanceId, Is.EqualTo(attachment.ProvenanceId));
             Assert.That(storedAttachments[1].TryGetProperty("provenance_id", out _), Is.False, "An attachment never sent is stored as before, also in a chat template.");
-        });
+        }
     }
 
     private ContentText MessageWithDocument() => new() { Text = "Summarize the minutes.", FileAttachments = [FileAttachment.FromPath(this.documentPath)] };

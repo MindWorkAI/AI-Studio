@@ -47,11 +47,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.OPEN_ROUTER, "anthropic/claude-opus-5", out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo("claude-opus-5"));
             Assert.That(vendor, Is.EqualTo(ModelVendor.ANTHROPIC));
-        });
+        }
     }
 
     [Test]
@@ -59,11 +59,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.HUGGINGFACE, "openai/gpt-oss-120b:fireworks-ai", out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo("gpt-oss-120b"));
             Assert.That(vendor, Is.EqualTo(ModelVendor.OPEN_AI), "OpenAI published the weights, whoever is serving them today.");
-        });
+        }
     }
 
     [Test]
@@ -71,11 +71,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.HUGGINGFACE, "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B", out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo("DeepSeek-R1-Distill-Qwen-32B"));
             Assert.That(vendor, Is.EqualTo(ModelVendor.DEEP_SEEK));
-        });
+        }
     }
 
     [Test]
@@ -83,11 +83,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.REQUESTY, "bedrock/claude-opus-5@eu-central-1", out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo("claude-opus-5"));
             Assert.That(vendor, Is.Null, "Bedrock runs the model; it did not build it.");
-        });
+        }
     }
 
     [Test]
@@ -95,11 +95,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.REQUESTY, "claude-opus-5@eu", out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo("claude-opus-5"));
             Assert.That(vendor, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -107,11 +107,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.REQUESTY, "openai/gpt-6-sol:flex", out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo("gpt-6-sol"));
             Assert.That(vendor, Is.EqualTo(ModelVendor.OPEN_AI));
-        });
+        }
     }
 
     [TestCase("novita/qwen/qwen3.8-max", "qwen3.8-max", ModelVendor.ALIBABA, TestName = "Behind the cloud, the organization from the hub names the vendor")]
@@ -120,11 +120,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.REQUESTY, modelId, out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo(expectedModel));
             Assert.That(vendor, Is.EqualTo(expectedVendor));
-        });
+        }
     }
 
     [Test]
@@ -132,11 +132,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.FIREWORKS, "accounts/fireworks/models/llama-v3p1-405b-instruct", out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo("llama-v3p1-405b-instruct"));
             Assert.That(vendor, Is.Null, "None of the three path segments names a vendor.");
-        });
+        }
     }
 
     [Test]
@@ -152,11 +152,11 @@ public sealed class ModelHostTests
     {
         var unwrapped = Unwrap(LLMProviders.SELF_HOSTED, "meta-llama/Llama-3.3-70B-Instruct", out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo("Llama-3.3-70B-Instruct"));
             Assert.That(vendor, Is.EqualTo(ModelVendor.META));
-        });
+        }
     }
 
     [Test]
@@ -184,11 +184,11 @@ public sealed class ModelHostTests
         //
         var unwrapped = Unwrap(LLMProviders.SELF_HOSTED, modelId, out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unwrapped.Original, Is.EqualTo(expectedModel));
             Assert.That(vendor, Is.EqualTo(expectedVendor));
-        });
+        }
     }
 
     [Test]
@@ -203,13 +203,13 @@ public sealed class ModelHostTests
         var atItsVendor = new ModelProfile { Capabilities = Capability.TEXT_INPUT | Capability.FUNCTION_CALLING | Capability.RESPONSES_API };
         var throughTheReseller = Transport(LLMProviders.GWDG, atItsVendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Unwrap(LLMProviders.GWDG, "claude-sonnet-5", out _).Original, Is.EqualTo("claude-sonnet-5"));
             Assert.That(throughTheReseller.Has(Capability.FUNCTION_CALLING), Is.True);
             Assert.That(throughTheReseller.Has(Capability.RESPONSES_API), Is.False);
             Assert.That(throughTheReseller.Has(Capability.CHAT_COMPLETION_API), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -221,11 +221,11 @@ public sealed class ModelHostTests
             .Where(host => host.ApplyTransport(withBothApis).Has(Capability.RESPONSES_API))
             .Select(host => host.GetType().Name);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Transport(LLMProviders.OPEN_AI, withBothApis).Has(Capability.RESPONSES_API), Is.True);
             Assert.That(elsewhere, Is.Empty, "The app sends a Responses API request from exactly one place.");
-        });
+        }
     }
 
     [Test]
@@ -238,22 +238,22 @@ public sealed class ModelHostTests
         var embedding = new ModelProfile { Capabilities = Capability.EMBEDDING };
         var throughAGateway = Transport(LLMProviders.OPEN_ROUTER, embedding);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(throughAGateway.Has(Capability.EMBEDDING), Is.True);
             Assert.That(throughAGateway.HasAny(Capability.CHAT_COMPLETION_API | Capability.RESPONSES_API), Is.False);
-        });
+        }
     }
 
     [Test]
     public void ANameWithoutAWrappingComesBackAsItWas()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Unwrap(LLMProviders.OPEN_AI, "gpt-5.6", out _).Original, Is.EqualTo("gpt-5.6"));
             Assert.That(Unwrap(LLMProviders.GROQ, "llama-3.3-70b-versatile", out _).Original, Is.EqualTo("llama-3.3-70b-versatile"));
             Assert.That(Unwrap(LLMProviders.LITE_LLM, "the-fast-one", out _).Original, Is.EqualTo("the-fast-one"));
-        });
+        }
     }
 
     private static ModelId Unwrap(LLMProviders provider, string modelId, out ModelVendor? declaredVendor) => INDEX.Unwrap(new ModelId(modelId), provider, out declaredVendor);

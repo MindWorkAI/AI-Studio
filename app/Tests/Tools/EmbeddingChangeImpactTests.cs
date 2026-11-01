@@ -26,13 +26,13 @@ public sealed class EmbeddingChangeImpactTests
         var dataSource = StoredDataSource();
         var stored = StoredEmbeddingProvider();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Name = "Another name" }), Is.False, "The name of an embedding provider reaches no vector.");
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Num = 42 }), Is.False, "The number is there to sort the list with.");
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { EmbeddingBatchSize = 16 }), Is.False, "How many chunks travel in one request says nothing about the vectors which come back.");
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { CustomIconDataUrl = "data:image/png;base64,AAAA" }), Is.False, "An icon is an icon.");
-        });
+        }
     }
 
     [Test]
@@ -63,7 +63,7 @@ public sealed class EmbeddingChangeImpactTests
         var dataSource = StoredDataSource();
         var stored = StoredEmbeddingProvider() with { Model = new("nomic-embed-text", null) };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(
                 EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Model = new("nomic-embed-text:latest", null) }),
@@ -79,7 +79,7 @@ public sealed class EmbeddingChangeImpactTests
                 EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Model = new("nomic-embed-text", "Nomic Embed Text") }),
                 Is.False,
                 "The display name is decoration and reaches no vector, so loading the list may fill it in.");
-        });
+        }
     }
 
     [Test]
@@ -100,12 +100,12 @@ public sealed class EmbeddingChangeImpactTests
         var dataSource = StoredDataSource();
         var stored = StoredEmbeddingProvider();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Hostname = "http://localhost:9999" }), Is.True, "Another server can serve another model under the same name.");
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Host = Host.LM_STUDIO }), Is.True, "Another kind of host speaks another API.");
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { HFInferenceProvider = HFInferenceProvider.GROQ }), Is.True, "The same model name served by another backend is another vector source.");
-        });
+        }
     }
 
     [Test]
@@ -114,11 +114,11 @@ public sealed class EmbeddingChangeImpactTests
         var dataSource = StoredDataSource();
         var stored = StoredEmbeddingProvider() with { TokenizerPath = "/data/tokenizers/embeddings/tokenizer.json", TokenizerFingerprint = "AAAA" };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { TokenizerFingerprint = "BBBB" }), Is.True, "Another tokenizer counts tokens differently, so the text is cut elsewhere.");
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { TokenizerPath = "/somewhere/else/tokenizer.json" }), Is.False, "It is the same tokenizer under another path.");
-        });
+        }
     }
 
     [Test]
@@ -127,11 +127,11 @@ public sealed class EmbeddingChangeImpactTests
         var embeddingProvider = StoredEmbeddingProvider();
         var stored = StoredDataSource();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { MaxChunkTokenLength = 256 }), Is.True, "Other chunk boundaries mean other vectors.");
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { ChunkOverlapTokenLength = 50 }), Is.True, "Another overlap changes what every chunk starts with.");
-        });
+        }
     }
 
     /// <summary>
@@ -149,7 +149,7 @@ public sealed class EmbeddingChangeImpactTests
         var embeddingProvider = StoredEmbeddingProvider() with { TokenLimit = 8192 };
         var followingTheProvider = StoredDataSource() with { MaxChunkTokenLength = 0 };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(
                 EditKeepingTheProvider(embeddingProvider, followingTheProvider, followingTheProvider with { MaxChunkTokenLength = 8192 }),
@@ -160,7 +160,7 @@ public sealed class EmbeddingChangeImpactTests
                 EditKeepingTheProvider(embeddingProvider, followingTheProvider, followingTheProvider with { MaxChunkTokenLength = 4096 }),
                 Is.True,
                 "Anything below the provider limit really does cut the text elsewhere.");
-        });
+        }
     }
 
     /// <summary>
@@ -188,13 +188,13 @@ public sealed class EmbeddingChangeImpactTests
         var embeddingProvider = StoredEmbeddingProvider();
         var stored = StoredDataSource();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { Name = "Another name" }), Is.False, "The name is how the data source is offered, not how it was read.");
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { Description = "Another description" }), Is.False, "The description is there for the agent which picks data sources.");
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { MaxMatches = 42 }), Is.False, "How many matches an answer may use is decided per query.");
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { ConfidenceLevel = ConfidenceLevel.HIGH }), Is.False, "The confidence level is enforced live on every request and changes no vector.");
-        });
+        }
     }
 
     /// <summary>

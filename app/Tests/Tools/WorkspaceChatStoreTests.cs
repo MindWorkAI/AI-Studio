@@ -78,13 +78,13 @@ public sealed class WorkspaceChatStoreTests
         var transcript = chat.Draft.MediaTranscripts.Single();
         var stored = JsonSerializer.Deserialize<ChatThread>(await File.ReadAllTextAsync(Path.Combine(chatDirectory, "thread.json")), WorkspaceBehaviour.JSON_OPTIONS)!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(transcript.FilePath, Does.StartWith(chatDirectory), "The next start empties the staging area, but leaves the chat directory alone.");
             Assert.That(File.Exists(transcript.FilePath), Is.True, "Otherwise the transcript drops out of the message which is still being written.");
             Assert.That(transcript.IsStaged, Is.False, "The chat owns the transcript now, so deleting the chat deletes its file as well.");
             Assert.That(File.Exists(staged.FilePath), Is.False, "The transcript moves, so there is only one file to own.");
             Assert.That(stored.Draft.MediaTranscripts.Single().FilePath, Is.EqualTo(transcript.FilePath), "Opening the chat again brings the draft back from the stored chat, so that has to know the new path as well.");
-        });
+        }
     }
 }

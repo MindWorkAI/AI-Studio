@@ -82,10 +82,10 @@ public sealed class RuleSpecificityTests
         var winner = RuleSpecificity.Of(expectedWinner);
         var loser = RuleSpecificity.Of(expectedLoser);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(winner.CompareTo(loser), Is.GreaterThan(0));
             Assert.That(loser.CompareTo(winner), Is.LessThan(0), "The comparison has to say the same thing in both directions.");
-        });
+        }
     }
 }

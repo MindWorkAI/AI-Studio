@@ -67,13 +67,13 @@ public sealed class WorkspaceDeleteTests
         var deleted = await WorkspaceBehaviour.DeleteWorkspaceAsync(workspaceId, chatId => chatId == busyChat.ChatId);
 
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deleted, Is.False, "The caller has to learn that the workspace is still there.");
             Assert.That(WorkspaceBehaviour.IsChatExisting(new LoadChat(workspaceId, busyChat.ChatId)), Is.True, "The answer or the transcript still needs the chat it is made for.");
             Assert.That(WorkspaceBehaviour.IsChatExisting(new LoadChat(workspaceId, idleChat.ChatId)), Is.True, "The user asked for the whole workspace to go, not for some of its chats.");
             Assert.That(snapshot.Workspaces.Select(workspace => workspace.WorkspaceId), Does.Contain(workspaceId), "The workspace list keeps showing the workspace, which still exists.");
-        });
+        }
     }
 
     [Test]
@@ -85,13 +85,13 @@ public sealed class WorkspaceDeleteTests
         var deleted = await WorkspaceBehaviour.DeleteWorkspaceAsync(workspaceId, _ => false);
 
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deleted, Is.True);
             Assert.That(WorkspaceBehaviour.IsWorkspaceExisting(workspaceId), Is.False, "The workspace has to be gone from the disk, its chats included.");
             Assert.That(WorkspaceBehaviour.IsChatExisting(new LoadChat(workspaceId, chat.ChatId)), Is.False);
             Assert.That(snapshot.Workspaces.Select(workspace => workspace.WorkspaceId), Does.Not.Contain(workspaceId), "The workspace list must not show a workspace which is gone.");
-        });
+        }
     }
 
     [Test]
@@ -104,12 +104,12 @@ public sealed class WorkspaceDeleteTests
 
         var deleted = await WorkspaceBehaviour.DeleteWorkspaceAsync(workspaceId, chatId => chatId == busyChat.ChatId);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deleted, Is.True, "Only the chats of the workspace being deleted count.");
             Assert.That(WorkspaceBehaviour.IsWorkspaceExisting(workspaceId), Is.False);
             Assert.That(WorkspaceBehaviour.IsChatExisting(new LoadChat(otherId, busyChat.ChatId)), Is.True, "The other workspace has nothing to do with it and stays as it is.");
-        });
+        }
     }
 
     [Test]

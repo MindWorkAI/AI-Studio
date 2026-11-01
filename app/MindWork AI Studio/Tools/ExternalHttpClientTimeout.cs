@@ -440,7 +440,7 @@ public static class ExternalHttpClientTimeout
             customChain.ChainPolicy.CustomTrustStore.AddRange(customRootCertificateCache.Certificates);
             customChain.ChainPolicy.ApplicationPolicy.Add(new Oid(TLS_SERVER_AUTHENTICATION_EKU_OID));
 
-            // Match the .NET 9 HttpClient default used for the initial system-trust validation.
+            // Match the HttpClient default used for the initial system-trust validation, which .NET 10 kept.
             // Hostname, signature, validity, EKU, and root trust checks remain enabled.
             customChain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
 

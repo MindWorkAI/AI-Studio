@@ -159,11 +159,11 @@ public sealed class ConfigurationSnippetParserTests
     private static void AssertRefused(string snippet, PluginConfigurationObjectType type = PluginConfigurationObjectType.PROFILE)
     {
         var accepted = ConfigurationSnippetParser.TryParse(snippet, type, out _, out var issue);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(accepted, Is.False);
             Assert.That(issue, Is.Not.Empty, "A refused snippet needs a reason the user can read.");
-        });
+        }
     }
 
     /// <summary>

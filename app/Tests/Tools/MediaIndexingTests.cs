@@ -43,11 +43,11 @@ public sealed class MediaIndexingTests
 
         var result = CreateIndexer().GetInputFiles(this.Folder("*"), new DataSourceEmbeddingManifest(), Allowed());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Files.Select(file => file.FullName), Is.EqualTo(new[] { recording }));
             Assert.That(result.IgnoredFiles, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -57,11 +57,11 @@ public sealed class MediaIndexingTests
 
         var result = CreateIndexer().GetInputFiles(this.Folder("*"), new DataSourceEmbeddingManifest(), MediaTranscriptionAvailability.MISSING);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Files, Is.Empty);
             Assert.That(result.IgnoredFiles, Is.EqualTo(new[] { new DataSourceEmbeddingIgnoredFile(recording, DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING) }));
-        });
+        }
     }
 
     [Test]
@@ -71,11 +71,11 @@ public sealed class MediaIndexingTests
 
         var result = CreateIndexer().GetInputFiles(this.Folder("*"), new DataSourceEmbeddingManifest(), MediaTranscriptionAvailability.NOT_ALLOWED);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Files, Is.Empty, "The recording would have gone to a provider the data source does not allow.");
             Assert.That(result.IgnoredFiles, Is.EqualTo(new[] { new DataSourceEmbeddingIgnoredFile(recording, DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_NOT_ALLOWED) }));
-        });
+        }
     }
 
     [Test]
@@ -145,11 +145,11 @@ public sealed class MediaIndexingTests
 
         var result = CreateIndexer().GetInputFiles(this.Folder(DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS), new DataSourceEmbeddingManifest(), Allowed());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Files, Is.Empty, "Existing data sources must not start transcribing, and paying for it, after an update.");
             Assert.That(FileNamePatterns.Matches(recording, FileNamePatterns.Parse(":text:")), Is.False);
-        });
+        }
     }
 
     [TestCase("*")]
@@ -173,11 +173,11 @@ public sealed class MediaIndexingTests
         var everything = CreateIndexer().GetInputFiles(this.Folder("*"), new DataSourceEmbeddingManifest(), Allowed());
         var markdownOnly = CreateIndexer().GetInputFiles(this.Folder("*.md"), new DataSourceEmbeddingManifest(), Allowed());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(everything.Files.Select(file => file.FullName), Is.EqualTo(new[] { recording }), "The transcript would duplicate the text of the recording.");
             Assert.That(markdownOnly.Files.Select(file => file.FullName), Is.EqualTo(new[] { transcript }), "Without the recording, the transcript is a document like every other.");
-        });
+        }
     }
 
     [Test]

@@ -20,12 +20,12 @@ public sealed class HostNamingTests
     {
         var taken = HostNaming.TrySplitOrganization(new ModelId("anthropic/claude-opus-5"), out var inner, out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.True);
             Assert.That(inner.Original, Is.EqualTo("claude-opus-5"));
             Assert.That(vendor, Is.EqualTo(ModelVendor.ANTHROPIC));
-        });
+        }
     }
 
     [Test]
@@ -37,18 +37,18 @@ public sealed class HostNamingTests
         //
         var taken = HostNaming.TrySplitOrganization(new ModelId("azure/gpt-5.6"), out var inner, out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.True);
             Assert.That(inner.Original, Is.EqualTo("gpt-5.6"));
             Assert.That(vendor, Is.Null);
-        });
+        }
     }
 
     [Test]
     public void AnOrganizationIsRecognizedWhicheverWayTheHostSpellsIt()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(HostNaming.VendorOfOrganization("meta-llama"), Is.EqualTo(ModelVendor.META));
             Assert.That(HostNaming.VendorOfOrganization("Qwen"), Is.EqualTo(ModelVendor.ALIBABA));
@@ -57,7 +57,7 @@ public sealed class HostNamingTests
             Assert.That(HostNaming.VendorOfOrganization("zai"), Is.EqualTo(ModelVendor.Z_AI));
             Assert.That(HostNaming.VendorOfOrganization("minimaxi"), Is.EqualTo(ModelVendor.MINIMAX));
             Assert.That(HostNaming.VendorOfOrganization("somebody-else"), Is.EqualTo(ModelVendor.UNKNOWN));
-        });
+        }
     }
 
     [Test]
@@ -65,12 +65,12 @@ public sealed class HostNamingTests
     {
         var taken = HostNaming.TrySplitOrganization(new ModelId("llama-3.3-70b-versatile"), out var inner, out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.False);
             Assert.That(inner.Original, Is.EqualTo("llama-3.3-70b-versatile"));
             Assert.That(vendor, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -82,11 +82,11 @@ public sealed class HostNamingTests
         //
         var taken = HostNaming.TrySplitOrganization(new ModelId("accounts/fireworks/models/llama-v3p1-405b-instruct"), out var inner, out _);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.True);
             Assert.That(inner.Original, Is.EqualTo("fireworks/models/llama-v3p1-405b-instruct"));
-        });
+        }
     }
 
     [Test]
@@ -94,11 +94,11 @@ public sealed class HostNamingTests
     {
         var taken = HostNaming.TrySplitOrganization(new ModelId("openai/"), out var inner, out _);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.False);
             Assert.That(inner.Original, Is.EqualTo("openai/"));
-        });
+        }
     }
 
     [Test]
@@ -106,11 +106,11 @@ public sealed class HostNamingTests
     {
         var taken = HostNaming.TryStripRoutingSuffix(new ModelId("google/gemma-4-31B-it:novita"), out var inner);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.True);
             Assert.That(inner.Original, Is.EqualTo("google/gemma-4-31B-it"));
-        });
+        }
     }
 
     [Test]
@@ -118,11 +118,11 @@ public sealed class HostNamingTests
     {
         var taken = HostNaming.TryStripRegionSuffix(new ModelId("bedrock/claude-opus-5@eu-central-1"), out var inner);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.True);
             Assert.That(inner.Original, Is.EqualTo("bedrock/claude-opus-5"));
-        });
+        }
     }
 
     [TestCase("bedrock/claude-opus-5", TestName = "A name without an at sign has no region to take off")]
@@ -131,11 +131,11 @@ public sealed class HostNamingTests
     {
         var taken = HostNaming.TryStripRegionSuffix(new ModelId(modelId), out var inner);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.False);
             Assert.That(inner.Original, Is.EqualTo(modelId));
-        });
+        }
     }
 
     [Test]
@@ -143,11 +143,11 @@ public sealed class HostNamingTests
     {
         var taken = HostNaming.TryStripMenuPosition(new ModelId("10 - Muse Glimmer 30b - the newest META model"), out var inner);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.True);
             Assert.That(inner.Original, Is.EqualTo("Muse Glimmer 30b - the newest META model"));
-        });
+        }
     }
 
     [TestCase("70b-instruct", TestName = "A number the model is named after is not a menu position")]
@@ -158,10 +158,10 @@ public sealed class HostNamingTests
     {
         var taken = HostNaming.TryStripMenuPosition(new ModelId(modelId), out var inner);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(taken, Is.False);
             Assert.That(inner.Original, Is.EqualTo(modelId));
-        });
+        }
     }
 }

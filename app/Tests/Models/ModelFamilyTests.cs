@@ -21,11 +21,11 @@ public sealed class ModelFamilyTests
     {
         var family = new SampleFamily();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(family.Name, Is.EqualTo(nameof(SampleFamily)));
             Assert.That(family.Rules.Select(rule => rule.Origin), Is.All.EqualTo(nameof(SampleFamily)));
-        });
+        }
     }
 
     [Test]
@@ -52,7 +52,7 @@ public sealed class ModelFamilyTests
         var index = ModelFamilyIndex.Build(new SampleFamily().Rules);
         var codex = index.Resolve(new ModelId("gpt-5.1-codex-max"), LLMProviders.OPEN_AI, ModelVendor.OPEN_AI);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(codex.Has(Capability.WEB_SEARCH), Is.False, "This is the one thing the variant takes away.");
             Assert.That(codex.Has(Capability.TEXT_INPUT | Capability.MULTIPLE_IMAGE_INPUT | Capability.FUNCTION_CALLING), Is.True);
@@ -60,7 +60,7 @@ public sealed class ModelFamilyTests
             Assert.That(codex.Context.DefaultTokens, Is.EqualTo(400_000));
             Assert.That(codex.Tokenizer.Id, Is.EqualTo("o200k_base"));
             Assert.That(codex.SystemPromptRole, Is.EqualTo(SystemPromptRole.DEVELOPER));
-        });
+        }
     }
 
     [Test]
@@ -69,11 +69,11 @@ public sealed class ModelFamilyTests
         var index = ModelFamilyIndex.Build(new SampleFamily().Rules.Concat(new FamilyWithAModifier().Rules));
         var adjusted = index.Resolve(new ModelId("gpt-5.1-base"), LLMProviders.OPEN_AI, ModelVendor.OPEN_AI);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(adjusted.Has(Capability.FUNCTION_CALLING), Is.False, "The modifier did apply.");
             Assert.That(adjusted.SystemPromptRole, Is.EqualTo(SystemPromptRole.DEVELOPER));
-        });
+        }
     }
 
     [Test]
@@ -99,11 +99,11 @@ public sealed class ModelFamilyTests
     {
         var index = ModelFamilyIndex.Build(new FamilyWithTwoGenerations().Rules);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(index.Resolve(new ModelId("thing3-mini"), LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN).Reasoning, Is.EqualTo(ReasoningSupport.ALWAYS));
             Assert.That(index.Resolve(new ModelId("thing4"), LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN).Reasoning, Is.EqualTo(ReasoningSupport.NONE));
-        });
+        }
     }
 
     [Test]
@@ -174,12 +174,12 @@ public sealed class ModelFamilyTests
     [Test]
     public void ASourceWithoutAPageOrADayIsNotAStatement()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new SampleFamily().Source.IsStated, Is.True);
             Assert.That(new ModelSource(string.Empty, new DateOnly(2026, 9, 11), "a note").IsStated, Is.False);
             Assert.That(new ModelSource("https://example.invalid", default, "a note").IsStated, Is.False);
-        });
+        }
     }
 
     /// <summary>

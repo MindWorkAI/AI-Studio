@@ -549,12 +549,22 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        // Changes to the embedding settings which do not pass through the queue, cf. ProcessMessage:
+        //
+        // Changes to the embedding settings which do not pass through the queue, cf. ProcessMessage.
+        // We listen for them while the app starts: since .NET 10, ExecuteAsync runs as a task of its
+        // own from its very first line, and a message sent before that task got its turn would go
+        // unnoticed.
+        //
         MessageBus.INSTANCE.RegisterComponent(this);
         this.ApplyFilters([], [Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED]);
 
+        return base.StartAsync(cancellationToken);
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
         await this.WaitForInitialSettingsAndBootstrapAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)

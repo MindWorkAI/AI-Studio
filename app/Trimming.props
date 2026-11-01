@@ -24,4 +24,15 @@
         <TrimmerRootAssembly Include="System.Collections.Immutable" />
     </ItemGroup>
 
+    <!--
+        Since .NET 10, Blazor carries some state of its own from the page into the circuit as JSON, the antiforgery
+        token among it. It reads that state by reflection, too, and the trimmer removes the properties of the token,
+        since nothing else reads them. The circuit then closes right after it started, and the window stays empty.
+        Microsoft keeps these properties for Blazor WebAssembly only (dotnet/aspnetcore#64819), since it does not
+        support trimming a Blazor Server app. Hence, we keep the whole assembly which holds the token.
+    -->
+    <ItemGroup>
+        <TrimmerRootAssembly Include="Microsoft.AspNetCore.Components.Web" />
+    </ItemGroup>
+
 </Project>

@@ -27,7 +27,7 @@ public sealed class MailEncryptionDetectionTests
     [Test]
     public void TheStructureFromTheServerTellsTheEncryption()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailEncryptionDetection.Detect(Part("application", "pkcs7-mime", smimeType: "enveloped-data")), Is.EqualTo(MailEncryptionKind.SMIME));
             Assert.That(MailEncryptionDetection.Detect(Part("application", "x-pkcs7-mime")), Is.EqualTo(MailEncryptionKind.SMIME), "An S/MIME part without smime-type is readable.");
@@ -36,7 +36,7 @@ public sealed class MailEncryptionDetectionTests
             Assert.That(MailEncryptionDetection.Detect(Multipart("encrypted", Part("application", "pgp-encrypted"), Part("application", "octet-stream"))), Is.EqualTo(MailEncryptionKind.PGP_MIME));
             Assert.That(MailEncryptionDetection.Detect(Multipart("mixed", PLAIN_TEXT, Part("application", "x-microsoft-rpmsg-message"))), Is.EqualTo(MailEncryptionKind.MICROSOFT_IRM));
             Assert.That(MailEncryptionDetection.Detect(Multipart("mixed", PLAIN_TEXT, Part("application", "octet-stream", name: "message.rpmsg"))), Is.EqualTo(MailEncryptionKind.MICROSOFT_IRM), "The IRM attachment is only known by its type.");
-        });
+        }
     }
 
     [Test]
@@ -47,13 +47,13 @@ public sealed class MailEncryptionDetectionTests
             Body = Part("application", "pkcs7-mime", smimeType: "enveloped-data"),
         };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailEncryptionDetection.Detect((BodyPart?)null), Is.EqualTo(MailEncryptionKind.NONE));
             Assert.That(MailEncryptionDetection.Detect(Multipart("alternative", PLAIN_TEXT, Part("text", "html"))), Is.EqualTo(MailEncryptionKind.NONE));
             Assert.That(MailEncryptionDetection.Detect(Multipart("signed", PLAIN_TEXT, Part("application", "pkcs7-signature", name: "smime.p7s"))), Is.EqualTo(MailEncryptionKind.NONE), "A mail signed in the clear counts as encrypted.");
             Assert.That(MailEncryptionDetection.Detect(Multipart("mixed", PLAIN_TEXT, attachedEncryptedMail)), Is.EqualTo(MailEncryptionKind.NONE), "An attached encrypted mail makes the mail around it unreadable.");
-        });
+        }
     }
 
     [TestCase("-----BEGIN PGP MESSAGE-----\n\nhQEMA\n-----END PGP MESSAGE-----", ExpectedResult = true)]

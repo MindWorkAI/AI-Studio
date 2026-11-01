@@ -51,11 +51,11 @@ public sealed class ERIServerPromptTests
     {
         var lines = Lines(new ERIServerPrompt { AuthenticationMethods = [Auth.NONE, Auth.USERNAME_PASSWORD], AuthDescription = AUTH_DESCRIPTION });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(lines, Does.Contain("The authentication process is planned as follows:"));
             Assert.That(lines, Does.Contain(AUTH_DESCRIPTION));
-        });
+        }
     }
 
     [Test]

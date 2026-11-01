@@ -22,11 +22,11 @@ public sealed class PauseBetweenStepsTests
         var random = new LargestRandom();
         var pause = new PauseBetweenSteps().GetPauseBeforeNextStep(STEP_ENDED, THIRTY_TO_SIXTY_SECONDS, random);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(pause, Is.EqualTo(PauseBeforeStep.NONE));
             Assert.That(random.Draws, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -83,12 +83,12 @@ public sealed class PauseBetweenStepsTests
         var withoutPause = pauses.GetPauseBeforeNextStep(STEP_ENDED, PauseRange.NONE, random);
         var withPause = pauses.GetPauseBeforeNextStep(STEP_ENDED + TimeSpan.FromSeconds(10), THIRTY_TO_SIXTY_SECONDS, random);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutPause, Is.EqualTo(PauseBeforeStep.NONE));
             Assert.That(withPause, Is.EqualTo(new PauseBeforeStep(TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(50))));
             Assert.That(random.Draws, Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -101,11 +101,11 @@ public sealed class PauseBetweenStepsTests
         pauses.GetPauseBeforeNextStep(STEP_ENDED, THIRTY_TO_SIXTY_SECONDS, random);
         var nextPause = pauses.GetPauseBeforeNextStep(STEP_ENDED + TimeSpan.FromSeconds(20), new PauseRange(1, 1), random);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(nextPause, Is.EqualTo(new PauseBeforeStep(TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(40))));
             Assert.That(random.Draws, Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -120,11 +120,11 @@ public sealed class PauseBetweenStepsTests
         pauses.RecordStepEnded(nextStepEnded);
         var pause = pauses.GetPauseBeforeNextStep(nextStepEnded + TimeSpan.FromSeconds(5), new PauseRange(10, 10), random);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(pause, Is.EqualTo(new PauseBeforeStep(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(5))));
             Assert.That(random.Draws, Is.EqualTo(2));
-        });
+        }
     }
 
     /// <summary>

@@ -6,7 +6,7 @@ namespace Build.Tools;
 
 public static class Environment
 {
-    public const string DOTNET_VERSION = "net9.0";
+    public const string DOTNET_VERSION = "net10.0";
     public const string BUILD_OFFLINE_ENVIRONMENT_VARIABLE = "AI_STUDIO_BUILD_OFFLINE";
     public static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
     

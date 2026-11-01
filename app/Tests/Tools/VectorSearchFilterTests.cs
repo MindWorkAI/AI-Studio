@@ -23,11 +23,11 @@ public sealed class VectorSearchFilterTests
     {
         var filter = new VectorSearchFilter([]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(filter.MatchesNothing, Is.True, "Conditions which matched nothing must not turn into a search of the whole store.");
             Assert.That(filter.Apply([Match(POINT_X)], 10), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -35,12 +35,12 @@ public sealed class VectorSearchFilterTests
     {
         var filter = new VectorSearchFilter([POINT_X, POINT_Y]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(filter.MatchesNothing, Is.False);
             Assert.That(filter.GetRequestPointIds(), Is.EquivalentTo(new[] { POINT_X, POINT_Y }));
             Assert.That(filter.GetCandidateCount(10), Is.EqualTo(10), "The vector store already looks at these points only, so asking for more would buy nothing.");
-        });
+        }
     }
 
     [Test]
@@ -49,13 +49,13 @@ public sealed class VectorSearchFilterTests
         var longest = new VectorSearchFilter(PointIds(VectorSearchFilter.MAX_POINT_IDS_PER_REQUEST));
         var tooLong = new VectorSearchFilter(PointIds(VectorSearchFilter.MAX_POINT_IDS_PER_REQUEST + 1));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(longest.GetRequestPointIds(), Has.Count.EqualTo(VectorSearchFilter.MAX_POINT_IDS_PER_REQUEST));
             Assert.That(tooLong.GetRequestPointIds(), Is.Null);
             Assert.That(tooLong.GetCandidateCount(10), Is.EqualTo(10 * VectorSearchFilter.OVERSAMPLING_FACTOR), "Some of the matches will be dropped afterward, so the search has to ask for more.");
             Assert.That(tooLong.GetCandidateCount(int.MaxValue), Is.EqualTo(int.MaxValue));
-        });
+        }
     }
 
     [Test]
@@ -64,11 +64,11 @@ public sealed class VectorSearchFilterTests
         var filter = new VectorSearchFilter([POINT_Y.ToUpperInvariant(), POINT_Z]);
         var candidates = new[] { Match(POINT_X), Match(POINT_Z), Match(POINT_Y) };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(filter.Apply(candidates, 10).Select(match => match.PointId), Is.EqualTo(new[] { POINT_Z, POINT_Y }), "The closest match lies outside the filter, whatever the vector store returned.");
             Assert.That(filter.Apply(candidates, 1).Select(match => match.PointId), Is.EqualTo(new[] { POINT_Z }));
-        });
+        }
     }
 
     [Test]

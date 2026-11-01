@@ -50,13 +50,13 @@ public sealed class ModelImageServiceTests
         var first = await this.service.PrepareAsync(this.Image, ProviderOf(LLMProviders.ANTHROPIC));
         var second = await this.service.PrepareAsync(this.Image, ProviderOf(LLMProviders.ANTHROPIC));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(first.IsPrepared, Is.True);
             Assert.That(first.MimeType, Is.EqualTo("image/jpeg"));
             Assert.That(second, Is.SameAs(first));
             Assert.That(this.runtime.RequestedPaths, Has.Count.EqualTo(1), "The second message decoded the photo again.");
-        });
+        }
     }
 
     [Test]
@@ -75,11 +75,11 @@ public sealed class ModelImageServiceTests
         await this.service.PrepareAsync(this.Image, ProviderOf(LLMProviders.ANTHROPIC));
         await this.service.PrepareAsync(this.Image, ProviderOf(LLMProviders.OPEN_AI));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.runtime.RequestedBudgets, Is.EqualTo(new[] { 3_932_160, IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES }));
             Assert.That(this.runtime.RequestedPaths, Is.All.EqualTo(new FileInfo(this.imagePath).FullName));
-        });
+        }
     }
 
     [Test]
@@ -91,13 +91,13 @@ public sealed class ModelImageServiceTests
         this.runtime.ErrorCode = "NONE";
         var prepared = await this.service.PrepareAsync(this.Image, ProviderOf(LLMProviders.ANTHROPIC));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(failed.ErrorCode, Is.EqualTo(ModelImageErrorCode.NOT_DECODABLE));
             Assert.That(failed.IsPrepared, Is.False);
             Assert.That(prepared.IsPrepared, Is.True);
             Assert.That(this.runtime.RequestedPaths, Has.Count.EqualTo(2), "A failure must not stick to the image.");
-        });
+        }
     }
 
     [Test]
@@ -106,11 +106,11 @@ public sealed class ModelImageServiceTests
         this.runtime.ErrorCode = "SOMETHING_NEW";
         var image = await this.service.PrepareAsync(this.Image, ProviderOf(LLMProviders.ANTHROPIC));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(image.ErrorCode, Is.EqualTo(ModelImageErrorCode.UNKNOWN));
             Assert.That(image.IsPrepared, Is.False, "The base64 of the answer must not go to the model when the code says nothing we know.");
-        });
+        }
     }
 
     [Test]
@@ -119,11 +119,11 @@ public sealed class ModelImageServiceTests
         File.Delete(this.imagePath);
         var image = await this.service.PrepareAsync(this.Image, ProviderOf(LLMProviders.ANTHROPIC));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(image.ErrorCode, Is.EqualTo(ModelImageErrorCode.FILE_NOT_FOUND));
             Assert.That(this.runtime.RequestedPaths, Is.Empty);
-        });
+        }
     }
 
     private FileAttachmentImage Image => new("picture.png", this.imagePath, 3);

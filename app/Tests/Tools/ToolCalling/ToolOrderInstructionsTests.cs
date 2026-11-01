@@ -31,11 +31,11 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
     {
         var instructions = new WebSearchTool([], null!, null!, NullLogger<WebSearchTool>.Instance).GetDefinition().SystemPromptInstructions;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var toolId in new[] { ToolSelectionRules.SEARCH_MAILS_TOOL_ID, ToolSelectionRules.READ_MAIL_TOOL_ID, ToolSelectionRules.COUNT_MAILS_TOOL_ID, ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID, ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID })
                 Assert.That(instructions, Does.Not.Contain($"`{toolId}`"), "The web search would name tools the request may not offer, and each of these words the rule itself.");
-        });
+        }
     }
 
     [TestCase(true)]
@@ -53,11 +53,11 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
     [Test]
     public void TheMailSearchSpeaksForTheWholeMailboxCollection()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new SearchMailsTool(null!, null!, null!, null!, NullLogger<SearchMailsTool>.Instance).GetDefinition().SystemPromptInstructions, Does.Contain("search the web before you use the mail tools"), "The token count assumes a request which offers the web search.");
             Assert.That(new CountMailsTool(null!, null!, null!, null!, NullLogger<CountMailsTool>.Instance).GetDefinition().SystemPromptInstructions, Does.Not.Contain("web_search"), "The collection is always offered together, so the rule would stand twice in the same request.");
-        });
+        }
     }
 
     [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, true)]
@@ -109,11 +109,11 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
         var selected = new ChatThread { DataSourceOptions = new() { PreselectedDataSourceIds = [open.Id] } };
         var automatic = new ChatThread { DataSourceOptions = new() { AutomaticDataSourceSelection = true } };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(SemanticSearchTool.EndsWebSearch(this.ResolutionContext(selected), settings), Is.False, "The project files are not selected, so the model cannot find anything in them.");
             Assert.That(SemanticSearchTool.EndsWebSearch(this.ResolutionContext(automatic), settings), Is.True, "With the automatic selection, the model may search the project files as well.");
-        });
+        }
     }
 
     [Test]
@@ -170,11 +170,11 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
         await registry.GetRunnableToolsAsync(this.ResolutionContext(restrictedChat), ["web_search_test", "wiki_search_test"], mayRunTools: true);
         var restricted = wiki.LastInstructionsContext?.CandidateToolIds;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unrestricted, Is.EquivalentTo(new[] { "web_search_test", "wiki_search_test" }));
             Assert.That(restricted, Is.EquivalentTo(new[] { "wiki_search_test" }), "The chat may no longer search the web, so no tool may tell the model to search it first.");
-        });
+        }
     }
 
     [Test]
@@ -190,12 +190,12 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
         var configuredServices = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.ON, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, WIKI, ["intranet.example.org", "*.corp.example.org"]);
         var linksFromChat = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.ON, OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, wiki: null, ["intranet.example.org"]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(configuredServices, Does.Contain($"only reads pages of the wiki at {WIKI} or on the internal hosts intranet.example.org, *.corp.example.org, whatever the rules above allow"));
             Assert.That(linksFromChat, Does.Contain("or a page on the internal hosts intranet.example.org, whatever the rules above allow"), "Without a wiki, the allowed hosts are the addresses the model may still choose.");
             Assert.That(configuredServices, Does.Contain("This chat holds internal content").And.Not.Contain("content of e-mails"), "The restriction may come from the wiki or an internal page as well.");
-        });
+        }
     }
 
     [Test]
@@ -217,12 +217,12 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
         var withoutWiki = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.OFF, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, wiki: null, ["intranet.example.org"]);
         var withWiki = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.OFF, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, WIKI, ["intranet.example.org"]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutWiki, Does.Contain("only reads pages on the internal hosts intranet.example.org whose URL appears word for word in this conversation, and refuses every other URL."));
             Assert.That(withoutWiki, Does.Not.Contain("wiki search"), "There is no wiki whose hits could be meant.");
             Assert.That(withWiki, Does.Contain("whose URL appears word for word in this conversation, such as the hits of a wiki search, and refuses every other URL."));
-        });
+        }
     }
 
     /// <param name="thread">The chat the request continues.</param>

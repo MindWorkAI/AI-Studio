@@ -14,11 +14,11 @@ public sealed class SwotRepairRoundTests
     {
         var request = SwotModelAnswer.RepairRequestOf("Finding 1 has no explanation.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request, Does.Contain("Finding 1 has no explanation."));
             Assert.That(request, Does.Contain("complete corrected JSON object"));
-        });
+        }
     }
 
     [Test]
@@ -28,12 +28,12 @@ public sealed class SwotRepairRoundTests
 
         var read = await ReadAsync(VALID_ANSWER, repairRequests, ANSWER_WITHOUT_JSON);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.Result?.Findings.Single().Summary, Is.EqualTo("Experienced team"));
             Assert.That(read.Issue, Is.Empty);
             Assert.That(repairRequests, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -43,12 +43,12 @@ public sealed class SwotRepairRoundTests
 
         var read = await ReadAsync(ANSWER_WITHOUT_EXPLANATION, repairRequests, VALID_ANSWER);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.Result?.Findings.Single().Explanation, Is.EqualTo("The documents describe long employee tenure."));
             Assert.That(read.Issue, Is.Empty);
             Assert.That(repairRequests.Single(), Is.EqualTo("Finding 1 has no explanation."));
-        });
+        }
     }
 
     [Test]
@@ -58,12 +58,12 @@ public sealed class SwotRepairRoundTests
 
         var read = await ReadAsync(ANSWER_WITHOUT_EXPLANATION, repairRequests, ANSWER_WITHOUT_JSON);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.Result, Is.Null);
             Assert.That(read.Issue, Does.Contain("no complete JSON object"));
             Assert.That(repairRequests, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -74,12 +74,12 @@ public sealed class SwotRepairRoundTests
         // The provider failed, so the repair round brought no answer:
         var read = await ReadAsync(ANSWER_WITHOUT_EXPLANATION, repairRequests, string.Empty);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.Result, Is.Null);
             Assert.That(read.Issue, Is.EqualTo("Finding 1 has no explanation."));
             Assert.That(repairRequests, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     private static Task<SwotReadAnswer<SwotCategoryAnalysisResult>> ReadAsync(string answer, List<string> repairRequests, string repairedAnswer) =>

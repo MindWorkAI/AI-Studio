@@ -7,7 +7,7 @@ Unfortunately, we have to provide a note regarding development on Linux systems.
 Therefore, we cannot provide a static list here that is valid for all Linux systems. Unfortunately, the situation is even more complex: Tauri requires dependencies that are not available in current Linux distributions because they already include newer versions. **For these reasons, we currently advise against developing AI Studio on Linux.** In case you still want to try, you will need a lot of patience and willingness to experiment. We ask for your understanding. Thank you very much.
 
 ## Prerequisites
-1. Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
+1. Install the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest stable version.
 3. Meet the prerequisites for building [Tauri](https://v2.tauri.app/start/prerequisites/). Node.js is **not** required, though.
 4. The core team uses [JetBrains](https://www.jetbrains.com/) [Rider](https://www.jetbrains.com/rider/) and [RustRover](https://www.jetbrains.com/rust/) for development. Both IDEs are free to use for open-source projects for non-commercial use. They are available for macOS, Linux, and Windows systems. Profiles are provided for these IDEs, so you can get started right away. However, you can also use a different IDE.

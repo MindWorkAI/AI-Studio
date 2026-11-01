@@ -35,13 +35,13 @@ public sealed class IndexStoreDisplayInfoTests
         await AddFailureAsync(store, MAILBOX_ID, MailKey('b'));
 
         var lines = await ReadDisplayInfoAsync(store);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(lines["Indexed files"], Is.EqualTo("2"));
             Assert.That(lines["Permanently skipped files"], Is.EqualTo("1"));
             Assert.That(lines["Indexed mails"], Is.EqualTo("1"));
             Assert.That(lines["Permanently skipped mails"], Is.EqualTo("1"));
-        });
+        }
     }
 
     [Test]
@@ -52,12 +52,12 @@ public sealed class IndexStoreDisplayInfoTests
         await AddDocumentAsync(store, FOLDER_ID, "/tmp/test-data/minutes.md");
 
         var lines = await ReadDisplayInfoAsync(store);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(lines["Indexed files"], Is.EqualTo("1"));
             Assert.That(lines, Does.Not.ContainKey("Indexed mails"));
             Assert.That(lines, Does.Not.ContainKey("Permanently skipped mails"));
-        });
+        }
     }
 
     private static string MailKey(char filler) => MailContentKey.PREFIX + new string(filler, 64);

@@ -114,10 +114,10 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
         var reason = await registry.GetOfferBlockReasonAsync(TOOL_ID, provider, AIStudio.Tools.Components.CHAT);
         var runnableTools = await registry.GetRunnableToolsAsync(this.ContextFor(provider), [TOOL_ID], mayRunTools: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reason, Is.EqualTo(expected), situation);
             Assert.That(runnableTools.Any(x => x.Definition.Id == TOOL_ID), Is.EqualTo(expected is ToolOfferBlockReason.NONE), "Preparing the request has to come to the same answer as asking beforehand.");
-        });
+        }
     }
 }

@@ -36,12 +36,12 @@ public sealed class AttachingAFileAgainTests
         File.WriteAllText(path, "The board met on Monday and on Tuesday.");
         attachments.AttachInPlaceOfSameFile(FileAttachment.FromPath(path));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(attachments.Count(attachment => attachment.FilePath == path), Is.EqualTo(1), "The message would go with the old and the new text of the file.");
             Assert.That(attachments.Single(attachment => attachment.FilePath == path).ProvenanceId, Is.Null, "Attaching a file again means the file as it is now.");
             Assert.That(attachments, Does.Contain(otherFile));
-        });
+        }
     }
 
     [Test]

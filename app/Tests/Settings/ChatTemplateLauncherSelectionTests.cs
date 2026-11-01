@@ -41,12 +41,12 @@ public sealed class ChatTemplateLauncherSelectionTests : ToolRegistryTestBase
         var providerResult = service.ResolveProvider(PLUGIN_NAME, template, LAUNCHER_PROVIDER_ID);
         var profileResult = service.ResolveProfile(PLUGIN_NAME, template, LAUNCHER_PROFILE_ID);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(providerResult.Provider, Is.EqualTo(templateProvider));
             Assert.That(providerResult.IsExplicit, Is.True);
             Assert.That(profileResult.Profile, Is.EqualTo(templateProfile));
-        });
+        }
     }
 
     [Test]
@@ -61,13 +61,13 @@ public sealed class ChatTemplateLauncherSelectionTests : ToolRegistryTestBase
         var providerResult = service.ResolveProvider(PLUGIN_NAME, template, LAUNCHER_PROVIDER_ID);
         var profileResult = service.ResolveProfile(PLUGIN_NAME, template, LAUNCHER_PROFILE_ID);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(providerResult.Provider, Is.EqualTo(launcherProvider));
             Assert.That(providerResult.ErrorMessage, Is.Empty);
             Assert.That(profileResult.Profile, Is.EqualTo(launcherProfile));
             Assert.That(profileResult.ErrorMessage, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -81,12 +81,12 @@ public sealed class ChatTemplateLauncherSelectionTests : ToolRegistryTestBase
         var template = NewTemplate() with { ProviderId = templateProvider.Id };
         var providerResult = this.CreateService().ResolveProvider(PLUGIN_NAME, template, null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(providerResult.Provider, Is.Not.EqualTo(templateProvider), "A template must not open the way to a provider the user could not pick by hand.");
             Assert.That(providerResult.IsExplicit, Is.False, "The launcher names no provider, so the chat starts with its defaults instead of failing.");
             Assert.That(providerResult.ErrorMessage, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -107,11 +107,11 @@ public sealed class ChatTemplateLauncherSelectionTests : ToolRegistryTestBase
         var options = new DataSourceOptions { DisableDataSources = false, PreselectedDataSourceIds = ["99999999-9999-9999-9999-999999999999"] };
         var result = await this.CreateService().CheckChosenDataSourcesAsync(ToolCapableProvider(), options, originChatTemplate: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Options, Is.SameAs(options), "The chat uses no data sources without RAG, so the options travel along unchecked and count once RAG is back.");
             Assert.That(result.ErrorMessage, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -121,11 +121,11 @@ public sealed class ChatTemplateLauncherSelectionTests : ToolRegistryTestBase
         var options = new DataSourceOptions { DisableDataSources = false, PreselectedDataSourceIds = ["99999999-9999-9999-9999-999999999999"] };
         var result = await this.CreateService().CheckChosenDataSourcesAsync(ToolCapableProvider(), options, originChatTemplate: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Options, Is.Null, "Opening a launcher is one click, so a missing source has to be said out loud.");
             Assert.That(result.ErrorMessage, Is.Not.Empty);
-        });
+        }
     }
 
     // Data sources are not resolved by these tests beyond their lookup, so the service needs no data source service:
