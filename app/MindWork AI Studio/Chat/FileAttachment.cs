@@ -15,8 +15,22 @@ namespace AIStudio.Chat;
 [JsonDerivedType(typeof(FileAttachment), typeDiscriminator: "file")]
 [JsonDerivedType(typeof(FileAttachmentImage), typeDiscriminator: "image")]
 [JsonDerivedType(typeof(ManagedTranscriptAttachment), typeDiscriminator: "managed_transcript")]
-public record FileAttachment(FileAttachmentType Type, string FileName, [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string FilePath, long FileSizeBytes)
+public record FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
 {
+    //
+    // The properties of the parameters, declared again to be settable. A derived attachment gets the type from
+    // its own constructor, and the source generation of System.Text.Json sets every init-only property while it
+    // creates the object, also one missing in the JSON, which would lose that type. Keep them first and in the
+    // order of the parameters, which is the order they get stored in:
+    //
+    public FileAttachmentType Type { get; set; } = Type;
+    public string FileName { get; set; } = FileName;
+
+    [JsonConverter(typeof(DataDirectoryRelativePathConverter))]
+    public string FilePath { get; set; } = FilePath;
+
+    public long FileSizeBytes { get; set; } = FileSizeBytes;
+
     /// <summary>
     /// Gets a value indicating whether the file type is forbidden and should not be attached.
     /// </summary>
@@ -69,7 +83,7 @@ public record FileAttachment(FileAttachmentType Type, string FileName, [property
     /// of chat templates, while null.
     /// </remarks>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Guid? ProvenanceId { get; init; }
+    public Guid? ProvenanceId { get; set; }
 
     /// <summary>
     /// The state of the file which the stored text was read from, see ProvenanceId, or null while
@@ -80,7 +94,7 @@ public record FileAttachment(FileAttachmentType Type, string FileName, [property
     /// DataChat.ReadChangedAttachmentsAgain. Left out of the chat file while null.
     /// </remarks>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public FileVersion? Version { get; init; }
+    public FileVersion? Version { get; set; }
 
     /// <summary>
     /// Whether the file changed since its text was stored.

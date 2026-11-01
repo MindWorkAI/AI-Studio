@@ -10,7 +10,7 @@ public sealed class ContentPresentationTests
     [Test]
     public void TheDataHashCodeFollowsNewData()
     {
-        var presentation = ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, new { heading = "First" });
+        var presentation = ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, new { heading = "First" }, JsonSerializerOptions.Default);
         var firstHashCode = presentation.GetDataHashCode();
 
         presentation.Data = JsonSerializer.SerializeToElement(new { heading = "Second" });
@@ -33,7 +33,7 @@ public sealed class ContentPresentationTests
     [Test]
     public void ACloneHasTheSameDataHashCode()
     {
-        var presentation = ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, new { heading = "First" });
+        var presentation = ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, new { heading = "First" }, JsonSerializerOptions.Default);
 
         Assert.That(presentation.DeepClone().GetDataHashCode(), Is.EqualTo(presentation.GetDataHashCode()));
     }

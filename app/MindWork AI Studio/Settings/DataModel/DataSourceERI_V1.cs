@@ -20,7 +20,7 @@ namespace AIStudio.Settings.DataModel;
 /// <summary>
 /// An external data source, accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.
 /// </summary>
-public readonly record struct DataSourceERI_V1 : IERIDataSource
+public record struct DataSourceERI_V1: IERIDataSource
 {
     private static readonly ILogger<DataSourceERI_V1> LOGGER = Program.LOGGER_FACTORY.CreateLogger<DataSourceERI_V1>();
 
@@ -34,52 +34,52 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     }
     
     /// <inheritdoc />
-    public uint Num { get; init; }
+    public uint Num { get; set; }
 
     /// <inheritdoc />
-    public string Id { get; init; } = Guid.Empty.ToString();
+    public string Id { get; set; } = Guid.Empty.ToString();
     
     /// <inheritdoc />
-    public string Name { get; init; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public DataSourceType Type { get; init; } = DataSourceType.NONE;
+    public DataSourceType Type { get; set; } = DataSourceType.NONE;
     
     /// <inheritdoc />
-    public string Hostname { get; init; } = string.Empty;
+    public string Hostname { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public int Port { get; init; }
+    public int Port { get; set; }
 
     /// <inheritdoc />
-    public AuthMethod AuthMethod { get; init; } = AuthMethod.NONE;
+    public AuthMethod AuthMethod { get; set; } = AuthMethod.NONE;
 
     /// <inheritdoc />
-    public string Username { get; init; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public DataSourceERIUsernamePasswordMode UsernamePasswordMode { get; init; } = DataSourceERIUsernamePasswordMode.USER_MANAGED;
+    public DataSourceERIUsernamePasswordMode UsernamePasswordMode { get; set; } = DataSourceERIUsernamePasswordMode.USER_MANAGED;
 
     /// <inheritdoc />
-    public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+    public DataSourceSecurity SecurityPolicy { get; set; } = DataSourceSecurity.NOT_SPECIFIED;
 
     /// <inheritdoc />
-    public OutboundDataRestriction OutboundDataRestriction { get; init; } = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
+    public OutboundDataRestriction OutboundDataRestriction { get; set; } = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
 
     /// <inheritdoc />
-    public bool IsEnterpriseConfiguration { get; init; }
+    public bool IsEnterpriseConfiguration { get; set; }
 
     /// <inheritdoc />
-    public Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+    public Guid EnterpriseConfigurationPluginId { get; set; } = Guid.Empty;
     
     /// <inheritdoc />
-    public ERIVersion Version { get; init; } = ERIVersion.V1;
+    public ERIVersion Version { get; set; } = ERIVersion.V1;
     
     /// <inheritdoc />
-    public string SelectedRetrievalId { get; init; } = string.Empty;
+    public string SelectedRetrievalId { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public ushort MaxMatches { get; init; } = 10;
+    public ushort MaxMatches { get; set; } = 10;
     
     /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)

@@ -15,6 +15,20 @@ public record Profile(
     bool IsEnterpriseConfiguration = false, 
     Guid EnterpriseConfigurationPluginId = default): ConfigurationBaseObject
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public override string Name { get; set; } = Name;
+    public string NeedToKnow { get; set; } = NeedToKnow;
+    public string Actions { get; set; } = Actions;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+
     public Profile() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty)
     {
     }

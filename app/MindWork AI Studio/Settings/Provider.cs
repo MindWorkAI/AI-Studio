@@ -38,12 +38,39 @@ public sealed record Provider(
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     string AdditionalJsonApiParameters = "",
-    [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string TokenizerPath = "",
+    string TokenizerPath = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "",
     bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public string InstanceName { get; set; } = InstanceName;
+    public LLMProviders UsedLLMProvider { get; set; } = UsedLLMProvider;
+    public Model Model { get; set; } = Model;
+    public bool IsSelfHosted { get; set; } = IsSelfHosted;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+    public string Hostname { get; set; } = Hostname;
+    public Host Host { get; set; } = Host;
+    public HFInferenceProvider HFInferenceProvider { get; set; } = HFInferenceProvider;
+    public string AdditionalJsonApiParameters { get; set; } = AdditionalJsonApiParameters;
+
+    [JsonConverter(typeof(DataDirectoryRelativePathConverter))]
+    public string TokenizerPath { get; set; } = TokenizerPath;
+
+    public ProviderCapabilityOverrides? CapabilityOverrides { get; set; } = CapabilityOverrides;
+    public bool AllowUserProvidedAPIKey { get; set; } = AllowUserProvidedAPIKey;
+    public string CustomIconDataUrl { get; set; } = CustomIconDataUrl;
+    public bool PromptForUserAPIKey { get; set; } = PromptForUserAPIKey;
+
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
     public static readonly Provider NONE = new();
@@ -86,7 +113,7 @@ public sealed record Provider(
     public override string Name
     {
         get => this.InstanceName;
-        init => this.InstanceName = value;
+        set => this.InstanceName = value;
     }
 
     #endregion

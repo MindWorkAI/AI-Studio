@@ -234,7 +234,7 @@ public sealed class EmbeddingSignatureTests
     /// <summary>
     /// A data source which is embedded but not kept in DataSources, the way mailboxes are.
     /// </summary>
-    private readonly record struct IndexedElsewhere() : IIndexedDataSource
+    private record struct IndexedElsewhere() : IIndexedDataSource
     {
         public string Id => "0c3f9b52-7d4e-4a1b-9e6f-2b8c5d7a1e40";
 
@@ -246,14 +246,14 @@ public sealed class EmbeddingSignatureTests
 
         public Guid EnterpriseConfigurationPluginId => Guid.Empty;
 
-        public DataSourceType Type { get; init; } = DataSourceType.NONE;
+        public DataSourceType Type { get; set; } = DataSourceType.NONE;
 
-        public ConfidenceLevel ConfidenceLevel { get; init; } = ConfidenceLevel.LOW;
+        public ConfidenceLevel ConfidenceLevel { get; set; } = ConfidenceLevel.LOW;
 
-        public string EmbeddingId { get; init; } = Guid.Empty.ToString();
+        public string EmbeddingId { get; set; } = Guid.Empty.ToString();
 
-        public int MaxChunkTokenLength { get; init; }
+        public int MaxChunkTokenLength { get; set; }
 
-        public int ChunkOverlapTokenLength { get; init; }
+        public int ChunkOverlapTokenLength { get; set; }
     }
 }

@@ -22,6 +22,23 @@ public record ChatTemplate(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default) : ConfigurationBaseObject
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public override string Name { get; set; } = Name;
+    public string SystemPrompt { get; set; } = SystemPrompt;
+    public string PredefinedUserPrompt { get; set; } = PredefinedUserPrompt;
+    public List<ContentBlock> ExampleConversation { get; set; } = ExampleConversation;
+    public List<FileAttachment> FileAttachments { get; set; } = FileAttachments;
+    public bool AllowProfileUsage { get; set; } = AllowProfileUsage;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+
     private const string ATTACHMENTS_DIRECTORY = "attachments";
 
     public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], [], false)
@@ -38,7 +55,7 @@ public record ChatTemplate(
     /// A preselection, not a limit: the user changes the selection in the chat as usual, and a
     /// tool still has to meet the confidence requirements of the provider in use.
     /// </remarks>
-    public HashSet<string>? ToolIds { get; init; }
+    public HashSet<string>? ToolIds { get; set; }
 
     /// <summary>
     /// The data source options a chat started with this template begins with.
@@ -49,7 +66,7 @@ public record ChatTemplate(
     /// list of sources: whether data sources are used at all, whether an agent picks them, and
     /// whether the retrieved data is validated.
     /// </remarks>
-    public DataSourceOptions? DataSourceOptions { get; init; }
+    public DataSourceOptions? DataSourceOptions { get; set; }
 
     /// <summary>
     /// The profile this template preselects for a chat started with it.
@@ -63,7 +80,7 @@ public record ChatTemplate(
     /// nothing for a template which does not allow profiles, and a profile which is gone leaves the
     /// chat default in place.
     /// </remarks>
-    public string? ProfileId { get; init; }
+    public string? ProfileId { get; set; }
 
     /// <summary>
     /// The provider, and with it the model, this template preselects for a chat started with it.
@@ -74,7 +91,7 @@ public record ChatTemplate(
     /// provider which is gone, or which may not be used for chats, leaves the chat to start as if
     /// the template said nothing.
     /// </remarks>
-    public string? ProviderId { get; init; }
+    public string? ProviderId { get; set; }
 
     /// <summary>
     /// The name of the workspace a chat started with this template is kept in.
@@ -89,7 +106,7 @@ public record ChatTemplate(
     /// workspace on purpose, for example from the workspace list, stays there, and so does every
     /// chat while workspaces are switched off.
     /// </remarks>
-    public string? WorkspaceName { get; init; }
+    public string? WorkspaceName { get; set; }
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
