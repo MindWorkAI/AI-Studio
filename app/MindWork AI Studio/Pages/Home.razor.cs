@@ -13,7 +13,7 @@ namespace AIStudio.Pages;
 public partial class Home : MSGComponentBase
 {
     [Inject]
-    private HttpClient HttpClient { get; init; } = null!;
+    private WebRootFiles WebRootFiles { get; init; } = null!;
 
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
@@ -222,8 +222,7 @@ public partial class Home : MSGComponentBase
     private async Task ReadLastChangeAsync()
     {
         var latest = Changelog.LOGS.MaxBy(n => n.Build);
-        using var response = await this.HttpClient.GetAsync($"changelog/{latest.Filename}");
-        this.LastChangeContent = await response.Content.ReadAsStringAsync();
+        this.LastChangeContent = await this.WebRootFiles.ReadTextAsync($"changelog/{latest.Filename}");
         
         await this.InvokeAsync(this.StateHasChanged);
     }

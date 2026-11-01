@@ -1539,11 +1539,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2205711729"] = "Opera
 -- You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2241311898"] = "You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected."
 
+-- The ERI specification was saved.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2258857117"] = "The ERI specification was saved."
+
+-- Save the ERI specification
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2260814268"] = "Save the ERI specification"
+
 -- The ERI specification could not be loaded. Please try again later.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2265640084"] = "The ERI specification could not be loaded. Please try again later."
 
 -- You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2299793803"] = "You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions."
+
+-- The ERI specification could not be saved.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2361742875"] = "The ERI specification could not be saved."
 
 -- Are you sure you want to delete the ERI server preset '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2417944396"] = "Are you sure you want to delete the ERI server preset '{0}'?"
@@ -1674,9 +1683,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3709185824"] = "Yes, 
 -- Common ERI server settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T371718034"] = "Common ERI server settings"
 
--- Download specification
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3770339156"] = "Download specification"
-
 -- Are you sure you want to delete the embedding '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3792084967"] = "Are you sure you want to delete the embedding '{0}'?"
 
@@ -1742,6 +1748,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T746826190"] = "ERI se
 
 -- Are you sure you want to delete the retrieval process '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T748762927"] = "Are you sure you want to delete the retrieval process '{0}'?"
+
+-- Save specification
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T756799053"] = "Save specification"
 
 -- Data source: hostname
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T761552889"] = "Data source: hostname"

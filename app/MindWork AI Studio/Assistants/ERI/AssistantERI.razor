@@ -116,8 +116,8 @@ else
             </MudSelectItem>
         }
     </MudSelect>
-    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@this.IsSpecificationDownloadDisabled" Href="@this.selectedERIVersion.SpecificationURL()" Target="_blank">
-        <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-2"/> @T("Download specification")
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@this.IsSpecificationSavingDisabled" OnClick="@this.SaveSpecificationAsync">
+        <MudIcon Icon="@Icons.Material.Filled.Save" Class="mr-2"/> @T("Save specification")
     </MudButton>
 </MudStack>
 

@@ -4,6 +4,7 @@ pub mod environment;
 pub mod dotnet;
 pub mod network;
 pub mod api_token;
+pub mod app_access;
 pub mod app_window;
 pub mod secret;
 pub mod clipboard;

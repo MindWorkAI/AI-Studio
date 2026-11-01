@@ -21,6 +21,7 @@ use tauri_plugin_updater::{UpdaterExt, Update};
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
+use crate::app_access::hand_over_session_cookie;
 use crate::clipboard::shutdown_clipboard;
 use crate::data_restore::apply_pending_restore;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
@@ -312,7 +313,7 @@ fn is_tauri_asset_url(url: &tauri::Url) -> bool {
     matches!(url.scheme(), "http" | "https") && is_tauri_asset_host(url.host_str())
 }
 
-fn is_local_http_url(url: &tauri::Url) -> bool {
+pub(crate) fn is_local_http_url(url: &tauri::Url) -> bool {
     matches!(url.scheme(), "http" | "https") && is_local_host(url.host_str())
 }
 
@@ -677,8 +678,9 @@ pub fn send_event(event: Event) {
     }
 }
 
-/// Changes the location of the main window to the given URL.
-pub async fn change_location_to(url: &str) {
+/// Changes the location of the main window to the given URL. The window gets its session cookie
+/// first, so that the .NET server lets it in.
+pub async fn change_location_to(url: tauri::Url) {
     // Try to get the main window. If it is not available yet, wait for it:
     let mut main_window_ready = false;
     let mut main_window_status_reported = false;
@@ -700,16 +702,30 @@ pub async fn change_location_to(url: &str) {
         }
     }
 
-    if let Ok(parsed_url) = tauri::Url::parse(url) && is_local_http_url(&parsed_url) {
-        *APPROVED_APP_URL.lock().unwrap() = Some(parsed_url);
+    if is_local_http_url(&url) {
+        *APPROVED_APP_URL.lock().unwrap() = Some(url.clone());
     }
 
-    let js_location_change = format!("window.location = '{url}';");
-    let main_window = main_window_spawn_clone.lock().unwrap();
-    let location_change_result = main_window.as_ref().unwrap().eval(js_location_change.as_str());
-    match location_change_result {
-        Ok(_) => info!("The app location was changed to {url}."),
-        Err(e) => error!("Failed to change the app location to {url}: {e}."),
+    //
+    // The window navigates by itself instead of through a script of the page it shows. That page
+    // comes from Tauri, which is another site than the app; app_access::session_cookie explains
+    // why the session cookie goes along all the same. We take the window out of the lock first:
+    // the cookie and the navigation need the main thread, which may wait for this lock meanwhile.
+    //
+    // Handing over the cookie waits for the main thread. This function serves a request of the
+    // runtime API, so the waiting happens outside the async runtime, see runtime/AGENTS.md.
+    //
+    let main_window = main_window_spawn_clone.lock().unwrap().clone().unwrap();
+    let navigation = tokio::task::spawn_blocking(move || {
+        hand_over_session_cookie(&main_window, &url);
+        match main_window.navigate(url.clone()) {
+            Ok(_) => info!("The app location was changed to {url}."),
+            Err(e) => error!("Failed to change the app location to {url}: {e}."),
+        }
+    });
+
+    if let Err(error) = navigation.await {
+        error!("Failed to open the app in the main window: {error}");
     }
 }
 

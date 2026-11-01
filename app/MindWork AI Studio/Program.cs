@@ -25,17 +25,13 @@ using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
 
 using MudBlazor.Services;
 
 using MudExtensions.Services;
-
-#if !DEBUG
-using System.Reflection;
-using Microsoft.Extensions.FileProviders;
-#endif
 
 namespace AIStudio;
 
@@ -96,7 +92,14 @@ internal sealed class Program
         }
         
         API_TOKEN = apiToken;
-        
+
+        var uiToken = Environment.GetEnvironmentVariable(AppAccessPolicy.UI_TOKEN_ENVIRONMENT_VARIABLE);
+        if(string.IsNullOrWhiteSpace(uiToken))
+        {
+            Console.WriteLine($"Error: The {AppAccessPolicy.UI_TOKEN_ENVIRONMENT_VARIABLE} environment variable is not set.");
+            return;
+        }
+
         using var rust = new RustService(rustApiPort, certificateFingerprint);
         var appPort = await rust.GetAppPort();
         if(appPort == 0)
@@ -283,12 +286,18 @@ internal sealed class Program
                 options.KeepAliveInterval = TimeSpan.FromSeconds(30);
             });
 
-        builder.Services.AddSingleton(new HttpClient
-        {
-            BaseAddress = new Uri($"http://localhost:{appPort}")
-        });
+        // For absolute URLs only. The app reads its own files through WebRootFiles:
+        builder.Services.AddSingleton(new HttpClient());
+        builder.Services.AddSingleton<WebRootFiles>();
 
-        builder.WebHost.UseUrls($"http://localhost:{appPort}");
+        //
+        // We listen on the IPv4 loopback address only, where the app window goes. With localhost, the
+        // server would listen on the IPv6 loopback address as well, and a client which resolves
+        // localhost could end up with another process holding that port there.
+        //
+        builder.WebHost.UseUrls($"http://127.0.0.1:{appPort}");
+        builder.Services.Configure<HostFilteringOptions>(AppAccessPolicy.ConfigureHostFiltering);
+        builder.Services.AddSingleton(new AppAccessPolicy(appPort, uiToken));
 
         #if DEBUG
         builder.WebHost.UseWebRoot("wwwroot");
@@ -343,6 +352,13 @@ internal sealed class Program
         
         DATABASE_CLIENT_PROVIDER = app.Services.GetRequiredService<DatabaseClientProvider>();
 
+        //
+        // These two come first, so that no request reaches anything else without passing them. We add
+        // the host filtering ourselves instead of relying on the defaults of ASP.NET Core to do so:
+        //
+        app.UseHostFiltering();
+        app.UseMiddleware<AppAccessMiddleware>();
+
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
         app.Use(FileHandler.HandlerAsync);
@@ -351,10 +367,9 @@ internal sealed class Program
         app.UseStaticFiles();
         app.UseDeveloperExceptionPage();
 #else
-        var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
         app.UseStaticFiles(new StaticFileOptions
         {
-            FileProvider = fileProvider,
+            FileProvider = app.Services.GetRequiredService<WebRootFiles>().FileProvider,
             RequestPath = string.Empty,
         });
 #endif

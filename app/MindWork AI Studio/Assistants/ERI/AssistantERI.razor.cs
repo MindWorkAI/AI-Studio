@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
 
@@ -13,7 +14,7 @@ namespace AIStudio.Assistants.ERI;
 public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 {
     [Inject]
-    private HttpClient HttpClient { get; set; } = null!;
+    private WebRootFiles WebRootFiles { get; set; } = null!;
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -375,9 +376,43 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private bool IsERIInputDisabled => this.IsNoneERIServerSelected || this.IsProcessing;
 
     /// <summary>
-    /// Gets whether the selected ERI specification cannot be downloaded.
+    /// Gets whether the selected ERI specification cannot be saved.
     /// </summary>
-    private bool IsSpecificationDownloadDisabled => !this.selectedERIVersion.WasSpecificationSelected() || this.IsERIInputDisabled;
+    private bool IsSpecificationSavingDisabled => !this.selectedERIVersion.WasSpecificationSelected() || this.IsERIInputDisabled;
+
+    /// <summary>
+    /// Lets the user save the selected ERI specification, a copy of the one the app carries.
+    /// </summary>
+    /// <remarks>
+    /// The app server answers the app window only, so a link to the file would fail in the browser
+    /// of the system. The copy also matches the installed version of AI Studio.
+    /// </remarks>
+    private async Task SaveSpecificationAsync()
+    {
+        var specificationPath = this.selectedERIVersion.SpecificationURL();
+        var response = await this.RustService.SaveFile(T("Save the ERI specification"), [FileTypes.JSON], Path.GetFileName(specificationPath));
+        if (response.UserCancelled)
+            return;
+
+        await using var feedback = new FileExportFeedback();
+        feedback.ShowRunning(response.SaveFilePath);
+        try
+        {
+            if (await this.WebRootFiles.CopyToAsync(specificationPath, response.SaveFilePath))
+            {
+                await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, T("The ERI specification was saved."), response.SaveFilePath, true);
+                return;
+            }
+
+            this.Logger.LogError("The app carries no ERI specification at '{SpecificationPath}'.", specificationPath);
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogError(exception, "Failed to save the ERI specification {ERIVersion}.", this.selectedERIVersion);
+        }
+
+        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, T("The ERI specification could not be saved.")));
+    }
 
     /// <summary>
     /// Gets whether the generated-code target directory selection should be disabled.
@@ -843,7 +878,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         var baseDirectorySnapshot = this.baseDirectory;
         var previouslyGeneratedFilesSnapshot = this.previouslyGeneratedFiles.ToArray();
         
-        this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
+        this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.WebRootFiles);
         if (string.IsNullOrWhiteSpace(this.eriSpecification))
         {
             this.AddInputIssue(T("The ERI specification could not be loaded. Please try again later."));
