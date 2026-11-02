@@ -217,6 +217,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             config.HideTransitionDuration = 600;
             config.Action = T("Check for updates");
             config.ActionVariant = Variant.Filled;
+
+            // MudBlazor keeps a snackbar with an action until the user closes it; this one disappears after its time:
+            config.RequireInteraction = false;
             config.OnClick = async _ =>
             {
                 await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
@@ -268,6 +271,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             };
                             config.Action = T("Show details");
                             config.ActionVariant = Variant.Filled;
+
+                            // MudBlazor keeps a snackbar with an action until the user closes it; this one disappears after its time:
+                            config.RequireInteraction = false;
                         });
                     }
 

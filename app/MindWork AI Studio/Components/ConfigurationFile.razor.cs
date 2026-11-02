@@ -85,10 +85,10 @@ public partial class ConfigurationFile : ConfigurationBaseCore
 
     #endregion
 
-    private void InternalUpdate(string text)
+    private void InternalUpdate(string? text)
     {
         this.timer.Stop();
-        this.internalText = text;
+        this.internalText = text ?? string.Empty;
         this.timer.Start();
     }
 

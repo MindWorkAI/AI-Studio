@@ -50,12 +50,12 @@ public sealed class ProvenanceCleanupTests
         var result = await CleanUpAsync(store, Locations(keptChatId), LoaderOf(chat), DateTimeOffset.UtcNow.AddMinutes(1));
         var entries = await store.Client.GetEntriesAsync([referenced.Value, ofRemovedMessage!.Value, ofDeletedChat!.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { referenced.Value }));
             Assert.That(result.Orphaned, Is.EqualTo(1));
             Assert.That(result.Unreferenced, Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -83,11 +83,11 @@ public sealed class ProvenanceCleanupTests
         var result = await CleanUpAsync(store, Locations(Guid.NewGuid()), UNREADABLE, DateTimeOffset.UtcNow.AddMinutes(1));
         var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries, Is.Empty, "No chat on the disk has no id, so nothing would ever remove such an entry.");
             Assert.That(result.Orphaned, Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -100,11 +100,11 @@ public sealed class ProvenanceCleanupTests
         var result = await CleanUpAsync(store, Locations(chatId), UNREADABLE, DateTimeOffset.UtcNow.AddMinutes(1));
         var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { entry.Value }), "Nothing tells what an unreadable chat refers to, e.g., one written by a newer version.");
             Assert.That(result.Unreadable, Is.EqualTo(1), "The next start has to read it again.");
-        });
+        }
     }
 
     [Test]
@@ -119,12 +119,12 @@ public sealed class ProvenanceCleanupTests
         var result = await CleanUpAsync(store, Locations(chatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, chatId), reads), lastCleanup.AddMinutes(1), lastCleanup, writtenAt: lastCleanup.AddHours(-1));
         var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reads, Is.Empty, "Reading every chat at every start costs much on a small computer.");
             Assert.That(result.Skipped, Is.EqualTo(1));
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { entry.Value }), "Skipping a chat never removes anything.");
-        });
+        }
     }
 
     [Test]
@@ -139,11 +139,11 @@ public sealed class ProvenanceCleanupTests
         await CleanUpAsync(store, Locations(chatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, chatId), reads), DateTimeOffset.UtcNow.AddMinutes(1), lastCleanup, writtenAt: lastCleanup.AddHours(-1));
         var entries = await store.Client.GetEntriesAsync([previewed!.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reads, Is.EquivalentTo(new[] { chatId }), "The last cleanup had to leave alone what was stored after it began.");
             Assert.That(entries, Is.Empty);
-        });
+        }
     }
 
     [TestCase(60, TestName = "AChatWrittenSinceTheLastCleanupIsRead")]
@@ -160,11 +160,11 @@ public sealed class ProvenanceCleanupTests
         await CleanUpAsync(store, Locations(chatId), LoaderOf(ChatWith(passageId: null, attachmentId: null, chatId), reads), lastCleanup.AddMinutes(1), lastCleanup, writtenAt: lastCleanup.AddSeconds(secondsAfterTheLastCleanup));
         var entries = await store.Client.GetEntriesAsync([ofRemovedMessage!.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reads, Is.EquivalentTo(new[] { chatId }));
             Assert.That(entries, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -192,12 +192,12 @@ public sealed class ProvenanceCleanupTests
         var result = await CleanUpAsync(store, Locations(), LoaderOf(ChatWith(passageId: null, attachmentId: null), reads), lastCleanup.AddMinutes(1), lastCleanup, writtenAt: lastCleanup.AddHours(-1));
         var entries = await store.Client.GetEntriesAsync([entry!.Value], TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries, Is.Empty, "Telling that a chat no longer exists costs no reading.");
             Assert.That(result.Orphaned, Is.EqualTo(1));
             Assert.That(reads, Is.Empty);
-        });
+        }
     }
 
     private static ChatThread ChatWith(Guid? passageId, Guid? attachmentId, Guid? chatId = null) => new()

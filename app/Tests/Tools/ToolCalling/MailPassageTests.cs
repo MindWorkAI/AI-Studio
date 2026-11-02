@@ -23,7 +23,7 @@ public sealed class MailPassageTests
     {
         var content = MailToolResults.ComposePassage("Anna Muster <anna@example.org>", ["Ben <ben@example.org>", "Cleo <cleo@example.org>"], "Budget 2026", "2026-10-20T14:03+02:00", ["report.pdf"], null, "The budget grows by 4 %.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(content, Does.Contain("Anna Muster <anna@example.org>"));
             Assert.That(content, Does.Contain("Ben <ben@example.org>, Cleo <cleo@example.org>"));
@@ -31,7 +31,7 @@ public sealed class MailPassageTests
             Assert.That(content, Does.Contain("2026-10-20T14:03+02:00"), "The time as the model got it.");
             Assert.That(content, Does.Contain("report.pdf"));
             Assert.That(content, Does.EndWith("The budget grows by 4 %."), "The text follows the header.");
-        });
+        }
     }
 
     [Test]
@@ -39,12 +39,12 @@ public sealed class MailPassageTests
     {
         var content = MailToolResults.ComposePassage("Anna Muster <anna@example.org>", [], "Budget 2026", "2026-10-20T14:03+02:00", [], null, null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(content, Does.Contain("Budget 2026"), "A mail listed by sender or date is still something the model received.");
             Assert.That(content, Does.Not.Contain("---"), "There is no text to set apart.");
             Assert.That(content.Split('\n'), Has.Length.EqualTo(3), "Empty fields are left out: sender, subject, and time remain.");
-        });
+        }
     }
 
     [Test]
@@ -60,12 +60,12 @@ public sealed class MailPassageTests
     {
         var passage = MAIL_SOURCE.ToMailPassage("The budget grows by 4 %.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new[] { passage }.GetPassagesOf(MAIL_SOURCE), Is.EqualTo(new[] { passage }), "Only a passage under its source gets the eye next to it.");
             Assert.That(passage.Path, Is.Empty, "The address of a mail names it for AI Studio only, so there is nothing to copy or open.");
             Assert.That(passage.DataSourceName, Is.EqualTo(MAIL_SOURCE.Title));
             Assert.That(passage.GetProvenanceKind(), Is.EqualTo(ProvenanceKind.MAIL));
-        });
+        }
     }
 }

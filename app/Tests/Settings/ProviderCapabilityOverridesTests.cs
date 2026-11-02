@@ -55,12 +55,12 @@ public sealed class ProviderCapabilityOverridesTests
         // also what makes these four the cheapest guard there is against somebody rearranging the
         // resolution below them.
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var (overrides, means) in WHAT_THE_DIALOG_WRITES)
             foreach (var stated in EVERY_STATE)
                 Assert.That(overrides.ApplyTo(ProfileWhichReasons(stated)).Reasoning, Is.EqualTo(means), $"A model which reasons {stated}, with {Describe(overrides)}.");
-        });
+        }
     }
 
     [Test]
@@ -109,14 +109,14 @@ public sealed class ProviderCapabilityOverridesTests
         var overrides = new ProviderCapabilityOverrides { FunctionCalling = false, AudioInput = true };
         var after = overrides.ApplyTo(profile);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Has(Capability.FUNCTION_CALLING), Is.False);
             Assert.That(after.Has(Capability.AUDIO_INPUT), Is.True);
             Assert.That(after.Has(Capability.TEXT_INPUT), Is.True);
             Assert.That(after.Has(Capability.SINGLE_IMAGE_INPUT), Is.True, "Turning several images off is what removes several images; one image is a statement of its own.");
             Assert.That(after.Context, Is.EqualTo(profile.Context));
-        });
+        }
     }
 
     /// <summary>

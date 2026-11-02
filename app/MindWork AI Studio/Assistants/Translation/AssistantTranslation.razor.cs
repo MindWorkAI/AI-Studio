@@ -1,6 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Glossaries;
 
@@ -63,7 +64,6 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         this.inputText = string.Empty;
         this.inputTextLastTranslation = string.Empty;
         this.webContentURL = string.Empty;
-        this.PreselectGlossaries();
         if (!this.MightPreselectValues())
         {
             this.showWebContentReader = false;
@@ -140,17 +140,18 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         state.RestoreHashSet(SELECTED_GLOSSARY_IDS_STATE_KEY, this.selectedGlossaryIds);
     }
 
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputText = payload.Text;
+
+    //
+    // Runs once the defaults are applied, at the start as well as after a reset, and before the base
+    // class restores a session, whose choice of glossaries then takes precedence:
+    //
+    protected override async Task OnDefaultsAppliedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_TRANSLATION_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputText = deferredContent;
-
-        // Before the base class restores a session, which then takes precedence:
         this.PreselectGlossaries();
-        await base.OnInitializedAsync();
+        await base.OnDefaultsAppliedAsync();
     }
 
     #endregion
@@ -311,7 +312,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 
     private async Task TranslateText(bool force)
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

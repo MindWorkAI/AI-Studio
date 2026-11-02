@@ -72,11 +72,11 @@ public sealed class IndexStoreChunkLocationTests
         var ofAnotherDataSource = await store.Client.GetChunkLocationsAsync("0e2f4c6a-8b1d-4e3f-a5c7-9d1b3f5e7a90", [chunkId], TOKEN);
 
         var expected = new ChunkLocation(SheetName: "Budget", StartRow: 3, EndRow: 7);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found.Location, Is.EqualTo(expected));
             Assert.That(locations, Is.EquivalentTo(new Dictionary<string, ChunkLocation> { [chunkId] = expected }), "A chunk the index does not know is left out.");
             Assert.That(ofAnotherDataSource, Is.Empty, "A chunk is looked up within its own data source only.");
-        });
+        }
     }
 }

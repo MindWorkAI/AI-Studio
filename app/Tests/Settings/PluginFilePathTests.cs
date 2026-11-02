@@ -26,13 +26,13 @@ public sealed class PluginFilePathTests
     [Test]
     public void AFileOfThePluginIsFoundByItsRelativePath()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginFilePath.TryResolve("Corporate.pptx", this.pluginDirectory, out var nextToPlugin, out var issue), Is.True, issue);
             Assert.That(nextToPlugin, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "Corporate.pptx")));
             Assert.That(PluginFilePath.TryResolve("templates/Corporate.potx", this.pluginDirectory, out var inFolder, out issue), Is.True, issue);
             Assert.That(inFolder, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates", "Corporate.potx")), "Both kinds of slashes work on every system.");
-        });
+        }
     }
 
     [Test]
@@ -40,37 +40,37 @@ public sealed class PluginFilePathTests
     {
         var absolutePath = Path.Combine(Path.GetTempPath(), "somewhere", "Corporate.potx");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginFilePath.TryResolve(string.Empty, this.pluginDirectory, out var empty, out _), Is.True, "An organization may decide on no file at all.");
             Assert.That(empty, Is.Empty);
             Assert.That(PluginFilePath.TryResolve(absolutePath, this.pluginDirectory, out var absolute, out _), Is.True, "A file on a network share is the organization's business.");
             Assert.That(absolute, Is.EqualTo(absolutePath));
-        });
+        }
     }
 
     [Test]
     public void APathLeavingThePluginDirectoryIsRejected()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginFilePath.TryResolve("../Corporate.pptx", this.pluginDirectory, out var resolved, out var issue), Is.False);
             Assert.That(issue, Does.Contain(".."));
             Assert.That(resolved, Is.Empty);
             Assert.That(PluginFilePath.TryResolve("templates/../../Corporate.pptx", this.pluginDirectory, out _, out _), Is.False);
-        });
+        }
     }
 
     [Test]
     public void AMissingFileIsRejected()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginFilePath.TryResolve("Missing.pptx", this.pluginDirectory, out var resolved, out var issue), Is.False);
             Assert.That(issue, Does.Contain("does not exist"));
             Assert.That(resolved, Is.Empty);
             Assert.That(PluginFilePath.TryResolve("Corporate.pptx", string.Empty, out _, out _), Is.False, "Without the plugin directory, a relative path means nothing.");
-        });
+        }
     }
 
     [Test]
@@ -78,7 +78,7 @@ public sealed class PluginFilePathTests
     {
         var absolutePath = Path.Combine(Path.GetTempPath(), "somewhere", "Corporate.potx");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginFilePath.TryResolveInside("templates\\Corporate.potx", this.pluginDirectory, out var inFolder, out var issue), Is.True, issue);
             Assert.That(inFolder, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates", "Corporate.potx")));
@@ -86,7 +86,7 @@ public sealed class PluginFilePathTests
             Assert.That(issue, Does.Contain("outside"));
             Assert.That(absolute, Is.Empty);
             Assert.That(PluginFilePath.TryResolveInside(string.Empty, this.pluginDirectory, out _, out _), Is.False, "An empty path names no file.");
-        });
+        }
     }
 
     [Test]
@@ -94,7 +94,7 @@ public sealed class PluginFilePathTests
     {
         var absolutePath = Path.Combine(Path.GetTempPath(), "somewhere", "Pictures");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginFilePath.TryResolveDirectory("templates", this.pluginDirectory, out var inPlugin, out var issue), Is.True, issue);
             Assert.That(inPlugin, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates")));
@@ -102,13 +102,13 @@ public sealed class PluginFilePathTests
             Assert.That(empty, Is.Empty);
             Assert.That(PluginFilePath.TryResolveDirectory(absolutePath, this.pluginDirectory, out var absolute, out _), Is.True, "A folder on a network share is the organization's business.");
             Assert.That(absolute, Is.EqualTo(absolutePath));
-        });
+        }
     }
 
     [Test]
     public void AFolderFollowsTheRulesOfAFile()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(PluginFilePath.TryResolveDirectory("templates/../..", this.pluginDirectory, out var resolved, out var issue), Is.False);
             Assert.That(issue, Does.Contain(".."));
@@ -116,6 +116,6 @@ public sealed class PluginFilePathTests
             Assert.That(PluginFilePath.TryResolveDirectory("Corporate.pptx", this.pluginDirectory, out _, out issue), Is.False, "A file is no folder.");
             Assert.That(issue, Does.Contain("does not exist"));
             Assert.That(PluginFilePath.TryResolve("templates", this.pluginDirectory, out _, out _), Is.False, "A folder is no file.");
-        });
+        }
     }
 }

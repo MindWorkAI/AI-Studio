@@ -69,7 +69,7 @@ public partial class SlideAssistant
         this.pictureLibraryPath = path;
         await this.ReadPictureLibraryOverviewAsync();
         if (this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
     }
 
     private async Task UseNoPictureLibrary() => await this.OnPictureLibraryChanged(string.Empty);

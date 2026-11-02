@@ -147,7 +147,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                 {
                     this.dataSecret = string.Empty;
                     this.dataSecretStorageIssue = string.Format(T("Failed to load the auth. secret from the operating system. The message was: {0}. You might ignore this message and provide the secret again."), requestedSecret.Issue);
-                    await this.form.Validate();
+                    await this.form.ValidateAsync();
                 }
             }
             
@@ -172,7 +172,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -249,7 +249,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             using var client = ERIClientFactory.Get(ERIVersion.V1, this.DataSource);
             if(client is null)
             {
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 
                 Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
                 this.dataIssues[^1] = T("Failed to connect to the ERI v1 server. The server is not supported.");
@@ -259,7 +259,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             var authSchemes = await client.GetAuthMethodsAsync(cts.Token);
             if (!authSchemes.Successful)
             {
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 
                 Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
                 this.dataIssues[^1] = authSchemes.Message;
@@ -271,7 +271,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             var loginResult = await client.AuthenticateAsync(this.RustService, this.dataSecret, cts.Token);
             if (!loginResult.Successful)
             {
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 
                 Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
                 this.dataIssues[^1] = loginResult.Message;
@@ -281,7 +281,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             var securityRequirementsRequest = await client.GetSecurityRequirementsAsync(cts.Token);
             if (!securityRequirementsRequest.Successful)
             {
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 
                 Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
                 this.dataIssues[^1] = securityRequirementsRequest.Message;
@@ -293,7 +293,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             var retrievalInfoRequest = await client.GetRetrievalInfoAsync(cts.Token);
             if (!retrievalInfoRequest.Successful)
             {
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 
                 Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
                 this.dataIssues[^1] = retrievalInfoRequest.Message;
@@ -324,7 +324,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         }
         catch (Exception e)
         {
-            await this.form.Validate();
+            await this.form.ValidateAsync();
             
             Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
             this.dataIssues[^1] = string.Format(T("Failed to connect to the ERI v1 server. The message was: {0}"), e.Message);
@@ -370,7 +370,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 
     private async Task Store()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         
         var testConnectionValidation = this.dataSourceValidation.ValidateTestedConnection();
         if(testConnectionValidation is not null)
@@ -394,7 +394,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             if (!storeResponse.Success)
             {
                 this.dataSecretStorageIssue = string.Format(T("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 

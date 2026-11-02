@@ -49,14 +49,14 @@ public sealed class MailDraftSyncTests : ToolRegistryTestBase
     [Test]
     public void TheDraftsAreAskedForByTheSpecialFolderOrByTheirPath()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(AsksForDrafts(new MailConditions(new MailFilter(), null, MailFolderSpecialUse.DRAFTS), FOLDERS), Is.True);
             Assert.That(AsksForDrafts(new MailConditions(new MailFilter(), "entwürfe", null), FOLDERS), Is.True, "A model which took the path over from a result asks for the drafts as well.");
             Assert.That(AsksForDrafts(new MailConditions(new MailFilter(), null, MailFolderSpecialUse.SENT), FOLDERS), Is.False);
             Assert.That(AsksForDrafts(new MailConditions(new MailFilter(), "INBOX", null), FOLDERS), Is.False);
             Assert.That(AsksForDrafts(new MailConditions(new MailFilter { IsUnread = true }, null, null), FOLDERS), Is.False, "A search across all folders keeps to the interval.");
-        });
+        }
     }
 
     [Test]
@@ -71,11 +71,11 @@ public sealed class MailDraftSyncTests : ToolRegistryTestBase
 
         var requested = await service.RequestMailboxSyncAsync(WORK.Id);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(requested, Is.True);
             Assert.That(service.GetStatuses().Single(status => status.DataSourceId == WORK.Id).State, Is.EqualTo(DataSourceEmbeddingState.QUEUED));
-        });
+        }
     }
 
     [Test]
@@ -87,11 +87,11 @@ public sealed class MailDraftSyncTests : ToolRegistryTestBase
 
         var requested = await service.RequestMailboxSyncAsync(WORK.Id);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(requested, Is.False, "Only the user starts a sync then.");
             Assert.That(service.GetStatuses(), Is.Empty);
-        });
+        }
     }
 
     [Test]

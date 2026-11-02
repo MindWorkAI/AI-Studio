@@ -11,7 +11,7 @@ public sealed class LayoutPurposeTests
     [Test]
     public void EveryKindOfSlideIsDescribedForTheUserAndTheModel()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var purpose in Enum.GetValues<LayoutPurpose>())
             {
@@ -19,7 +19,7 @@ public sealed class LayoutPurposeTests
                 Assert.That(purpose.Question(), Does.EndWith("?"), $"The kind of slide {purpose} has no question.");
                 Assert.That(purpose.PromptDescription(), Is.Not.Empty.And.Not.EndWith("."), $"The kind of slide {purpose} has no description, or one which ends where the rule for the model goes on.");
             }
-        });
+        }
     }
 
     /// <summary>
@@ -43,10 +43,10 @@ public sealed class LayoutPurposeTests
     public void TheKindsOfSlidesFollowTheOrderOfTheAreas()
     {
         var areas = Enum.GetValues<LayoutPurpose>().Select(purpose => purpose.Area()).ToList();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(areas, Is.Ordered, "The kinds of an area stand together, and the areas follow their own order.");
             Assert.That(areas.Distinct(), Is.EquivalentTo(Enum.GetValues<LayoutPurposeArea>()), "Every area has kinds of slides.");
-        });
+        }
     }
 }

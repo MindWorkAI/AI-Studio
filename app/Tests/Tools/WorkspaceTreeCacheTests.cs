@@ -64,18 +64,18 @@ public sealed class WorkspaceTreeCacheTests
         var targetId = await CreateLoadedWorkspaceAsync("Projects");
         var chat = await StoreChatAsync(Guid.Empty, "Meeting notes");
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
         var target = snapshot.Workspaces.Single(workspace => workspace.WorkspaceId == targetId);
         var expectedPath = Path.Combine(this.testDirectory, "workspaces", targetId.ToString(), chat.ChatId.ToString());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(snapshot.TemporaryChats.Select(entry => entry.ChatId), Does.Not.Contain(chat.ChatId), "The chat lives in a workspace now, so the disappearing chats must not list it any longer.");
             Assert.That(target.ChatsLoaded, Is.True, "The chats of the target workspace were loaded before the move, and they still are.");
             Assert.That(target.Chats.Select(entry => entry.ChatPath), Does.Contain(expectedPath), "The target workspace lists the chat with the directory it lives in now.");
-        });
+        }
     }
 
     [Test]
@@ -86,14 +86,14 @@ public sealed class WorkspaceTreeCacheTests
         var targetId = await CreateLoadedWorkspaceAsync("Projects");
         var chat = await StoreChatAsync(Guid.Empty, "Meeting notes");
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var other = await GetWorkspaceAsync(otherId);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(other.ChatsLoaded, Is.True, "A move must not make the cache forget the chats of a workspace which has nothing to do with it. The list would show that workspace empty.");
             Assert.That(other.Chats.Select(entry => entry.ChatId), Does.Contain(otherChat.ChatId));
-        });
+        }
     }
 
     [Test]
@@ -103,15 +103,15 @@ public sealed class WorkspaceTreeCacheTests
         var targetId = await CreateLoadedWorkspaceAsync("Projects");
         var chat = await StoreChatAsync(sourceId, "Meeting notes");
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var source = await GetWorkspaceAsync(sourceId);
         var target = await GetWorkspaceAsync(targetId);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(source.Chats.Select(entry => entry.ChatId), Does.Not.Contain(chat.ChatId), "The chat left this workspace.");
             Assert.That(target.Chats.Select(entry => entry.ChatId), Does.Contain(chat.ChatId), "The chat arrived in this workspace.");
-        });
+        }
     }
 
     [Test]
@@ -124,7 +124,7 @@ public sealed class WorkspaceTreeCacheTests
         await WorkspaceBehaviour.ForceReloadWorkspaceTreeAsync();
         var chat = await StoreChatAsync(Guid.Empty, "Meeting notes");
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var chats = await WorkspaceBehaviour.GetWorkspaceChatsAsync(targetId);
         Assert.That(chats.Select(entry => entry.ChatId), Does.Contain(chat.ChatId), "Loading the chats of the workspace later reads them from the disk, the moved one included.");
@@ -137,14 +137,14 @@ public sealed class WorkspaceTreeCacheTests
 
         // As in the dialog for moving a chat, which can create the workspace it moves the chat into:
         var targetResult = await WorkspaceBehaviour.TryCreateWorkspaceAsync("Projects");
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetResult.Workspace.WorkspaceId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetResult.Workspace.WorkspaceId, storeUnsavedChanges: true);
 
         var target = await GetWorkspaceAsync(targetResult.Workspace.WorkspaceId);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(target.ChatsLoaded, Is.True, "A workspace created just now has no chats on the disk, so there is nothing left to load.");
             Assert.That(target.Chats.Select(entry => entry.ChatId), Does.Contain(chat.ChatId), "Otherwise, the user has to click the new workspace before the chat shows up.");
-        });
+        }
     }
 
     [Test]
@@ -153,15 +153,15 @@ public sealed class WorkspaceTreeCacheTests
         var chat = await StoreChatAsync(Guid.Empty, "Meeting notes");
         var targetId = Guid.NewGuid();
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetId, storeUnsavedChanges: true);
 
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
         var chats = await WorkspaceBehaviour.GetWorkspaceChatsAsync(targetId);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(snapshot.Workspaces.Select(workspace => workspace.WorkspaceId), Does.Contain(targetId), "The move created the workspace directory, so the list has to show it.");
             Assert.That(chats.Select(entry => entry.ChatId), Does.Contain(chat.ChatId));
-        });
+        }
     }
 
     /// <summary>

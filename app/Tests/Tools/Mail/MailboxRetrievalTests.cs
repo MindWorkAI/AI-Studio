@@ -94,12 +94,12 @@ public sealed class MailboxRetrievalTests
     [Test]
     public void AChannelWhichFilledItsWindowMayHoldMoreMails()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailboxRetrievalService.MayHoldMoreMails(1, 10, 44, 44, 3), Is.True, "Its chunks may belong to fewer mails than the page needed.");
             Assert.That(MailboxRetrievalService.MayHoldMoreMails(1, 10, 44, 43, 3), Is.False, "Both channels found less than they were asked for, so they found everything.");
             Assert.That(MailboxRetrievalService.MayHoldMoreMails(9, 10, 364, 364, 364), Is.False, "Paging ends at the last page.");
-        });
+        }
     }
 
     [Test]
@@ -108,14 +108,14 @@ public sealed class MailboxRetrievalTests
         var first = await MailboxRetrievalService.ListNewestFirstAsync(this.store.Client, MAILBOX, new MailFilter(), 1, 2, TOKEN);
         var second = await MailboxRetrievalService.ListNewestFirstAsync(this.store.Client, MAILBOX, new MailFilter(), 2, 2, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(first.Hits.Select(hit => hit.Summary.MailId), Is.EqualTo(new[] { this.answer, this.question }));
             Assert.That(first.HasMore, Is.True);
             Assert.That(second.Hits.Select(hit => hit.Summary.MailId), Is.EqualTo(new[] { this.newsletter }), "Neither the mail gone from the server nor the one of another mailbox shows up.");
             Assert.That(second.HasMore, Is.False);
             Assert.That(first.Hits.Concat(second.Hits).Select(hit => hit.Passage), Is.All.Null, "Without a query, no passage matched anything.");
-        });
+        }
     }
 
     [Test]
@@ -132,13 +132,13 @@ public sealed class MailboxRetrievalTests
         var reading = await MailboxRetrievalService.ReadMailAsync(this.store.Client, [WORK, PRIVATE], this.answer, TOKEN);
 
         Assert.That(reading, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reading!.Mailbox.Id, Is.EqualTo(MAILBOX));
             Assert.That(reading.Summary.Subject, Is.EqualTo("Re: Question"));
             Assert.That(reading.Mail.MessageId, Is.EqualTo("answer@example.org"));
             Assert.That(reading.InReplyToMailId, Is.EqualTo(this.question));
-        });
+        }
     }
 
     [Test]
@@ -149,11 +149,11 @@ public sealed class MailboxRetrievalTests
 
         var reading = await MailboxRetrievalService.ReadMailAsync(this.store.Client, [WORK], sent, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reading?.Summary.FolderPaths, Is.EqualTo(new[] { "Sent" }));
             Assert.That(reading?.MailboxFolders.Select(folder => (folder.Path, folder.SpecialUse)), Is.EquivalentTo(new[] { (INBOX, MailFolderSpecialUse.NONE), ("Sent", MailFolderSpecialUse.SENT) }), "So Read Mail can tell a mail the user sent from one the user received.");
-        });
+        }
     }
 
     [Test]
@@ -162,12 +162,12 @@ public sealed class MailboxRetrievalTests
         var fromAnotherMailbox = await MailboxRetrievalService.ReadMailAsync(this.store.Client, [WORK], this.elsewhere, TOKEN);
         var fromItsOwnMailbox = await MailboxRetrievalService.ReadMailAsync(this.store.Client, [WORK, PRIVATE], this.elsewhere, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(fromAnotherMailbox, Is.Null, "The provider may not read the mailbox which holds it.");
             Assert.That(fromItsOwnMailbox?.Mailbox.Id, Is.EqualTo(OTHER_MAILBOX));
             Assert.That(fromItsOwnMailbox?.InReplyToMailId, Is.Null, "It answers no mail.");
-        });
+        }
     }
 
     [Test]
@@ -176,11 +176,11 @@ public sealed class MailboxRetrievalTests
         var goneFromTheServer = await MailboxRetrievalService.ReadMailAsync(this.store.Client, [WORK], this.deleted, TOKEN);
         var neverIndexed = await MailboxRetrievalService.ReadMailAsync(this.store.Client, [WORK], "4f1c9e2a-7b3d-4e8f-9a6c-2d5b8e1f3a70", TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(goneFromTheServer, Is.Null, "It lost its last place on the server.");
             Assert.That(neverIndexed, Is.Null, "Nobody ever indexed it.");
-        });
+        }
     }
 
     [Test]
@@ -190,14 +190,14 @@ public sealed class MailboxRetrievalTests
 
         var coverage = await MailboxRetrievalService.ReadCoverageAsync(this.store.Client, WORK, now, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(coverage.ReceivedSinceUtc, Is.EqualTo(now.AddMonths(-6)));
             Assert.That(coverage.LastCompleteSyncUtc, Is.Null, "The first sync is still running.");
             Assert.That(coverage.SignInRefusedAtUtc, Is.Null);
             Assert.That(coverage.PendingRemovalCount, Is.Null);
             Assert.That(coverage.Folders.Select(folder => folder.Path), Is.EqualTo(new[] { INBOX }));
-        });
+        }
     }
 
     [Test]
@@ -211,13 +211,13 @@ public sealed class MailboxRetrievalTests
 
         var coverage = await MailboxRetrievalService.ReadCoverageAsync(this.store.Client, PRIVATE, refused, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(coverage.ReceivedSinceUtc, Is.Null, "The whole mailbox is indexed.");
             Assert.That(coverage.LastCompleteSyncUtc, Is.EqualTo(completed));
             Assert.That(coverage.SignInRefusedAtUtc, Is.EqualTo(refused), "No new mail arrives until the user deals with it.");
             Assert.That(coverage.PendingRemovalCount, Is.EqualTo(250));
-        });
+        }
     }
 
     private static MailLocationRecord At(long uid, bool isSeen) => new(INBOX, uid, new MailFlags(isSeen, false, false));

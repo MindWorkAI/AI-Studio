@@ -39,7 +39,7 @@ public sealed class ChatCompletionUsageTests
     {
         var line = JsonSerializer.Deserialize<ChatCompletionDeltaStreamLine>(USAGE_LINE, ProviderJsonOptions.OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(line!.GetUsage().IsKnown, Is.True);
             Assert.That(line.GetUsage().PromptTokens, Is.EqualTo(1200));
@@ -49,7 +49,7 @@ public sealed class ChatCompletionUsageTests
             // before the content check drops it:
             //
             Assert.That(line.ContainsContent(), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -57,11 +57,11 @@ public sealed class ChatCompletionUsageTests
     {
         var line = JsonSerializer.Deserialize<ChatCompletionDeltaStreamLine>(CONTENT_LINE, ProviderJsonOptions.OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(line!.GetUsage().IsKnown, Is.False);
             Assert.That(line.ContainsContent(), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -120,10 +120,10 @@ public sealed class ChatCompletionUsageTests
             {"id":"chatcmpl-xb8mn282eff3tiu46xz8t3","object":"chat.completion.chunk","created":1789917744,"model":"google/gemma-4-12b-qat","system_fingerprint":"google/gemma-4-12b-qat","choices":[],"usage":{"prompt_tokens":17,"completion_tokens":116,"total_tokens":133,"completion_tokens_details":{"reasoning_tokens":102}}}
             """, ProviderJsonOptions.OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(line!.GetUsage().IsKnown, Is.True);
             Assert.That(line.GetUsage().PromptTokens, Is.EqualTo(17));
-        });
+        }
     }
 }

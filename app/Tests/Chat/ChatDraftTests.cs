@@ -46,12 +46,12 @@ public sealed class ChatDraftTests
         var added = draft.AddAttachments([TRANSCRIPT]);
         var addedAgain = draft.AddAttachments([TRANSCRIPT with { FileSizeBytes = 1024 }]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(added, Is.True);
             Assert.That(addedAgain, Is.False, "The same file counts once, even in a newer state.");
             Assert.That(draft.FileAttachments, Is.EqualTo(new FileAttachment[] { TRANSCRIPT }), "The composer would show the transcript twice otherwise.");
-        });
+        }
     }
 
     [Test]
@@ -74,11 +74,11 @@ public sealed class ChatDraftTests
 
         draft.ReplaceAttachments(attachment => attachment with { FilePath = $"/moved{attachment.FilePath}" });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(draft.FileAttachments.Select(attachment => attachment.FilePath), Is.EqualTo(new[] { "/moved/documents/agenda.pdf", "/moved/data/tempChats/meeting-transcript-0001.md" }));
             Assert.That(draft.MediaTranscripts, Has.Count.EqualTo(1), "A transcript stays a transcript, so removing it from the composer still deletes its file.");
-        });
+        }
     }
 
     [Test]
@@ -90,11 +90,11 @@ public sealed class ChatDraftTests
 
         draft.RestoreFromMessage(new ContentText { Text = "Summarize the minutes", FileAttachments = [MINUTES] });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(draft.Text, Is.EqualTo("Summarize the minutes"), "The message to edit replaces the older draft.");
             Assert.That(draft.FileAttachments, Is.EqualTo(new[] { MINUTES, TRANSCRIPT }), "The draft is the only owner of its transcripts, so dropping them would leave their files behind.");
-        });
+        }
     }
 
     [Test]
@@ -107,11 +107,11 @@ public sealed class ChatDraftTests
 
         draft.Clear();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(draft.IsEmpty, Is.True, "The attachments belong to the sent message now, and a transcript has only one owner.");
             Assert.That(draft.PreviewedTexts, Is.Empty, "A text the preview read went with the message, or is of no use to the next one.");
-        });
+        }
     }
 
     [Test]
@@ -126,13 +126,13 @@ public sealed class ChatDraftTests
         draft.NotePreviewedText(otherFile);
         var replacedBySecond = draft.NotePreviewedText(secondPreview);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(replacedByFirst, Is.Null);
             Assert.That(replacedBySecond, Is.EqualTo(firstPreview.ProvenanceId), "Nothing refers to the text of the first preview any longer, so the caller removes it from the store.");
             Assert.That(draft.PreviewedTexts, Is.EquivalentTo(new[] { otherFile, secondPreview }));
             Assert.That(draft.GetPreviewedText(AGENDA.FilePath), Is.EqualTo(secondPreview));
-        });
+        }
     }
 
     [Test]
@@ -148,12 +148,12 @@ public sealed class ChatDraftTests
         draft.MirrorAttachments([MINUTES]);
         var forgotten = draft.ForgetPreviewsOfDetachedFiles();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(forgotten, Is.EqualTo(new[] { agendaPreview.ProvenanceId }), "Nothing refers to the text any longer, so the caller removes it from the store.");
             Assert.That(draft.PreviewedTexts, Is.EqualTo(new[] { minutesPreview }));
             Assert.That(draft.ForgetPreviewsOfDetachedFiles(), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -178,12 +178,12 @@ public sealed class ChatDraftTests
 
         var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS)!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(loaded.Draft.Text, Is.EqualTo("Summarize the meeting"));
             Assert.That(loaded.Draft.FileAttachments, Is.EqualTo(new[] { AGENDA, CHART, STAGED_TRANSCRIPT }), "A transcript loaded as a plain document would no longer be managed, and its file would never be deleted.");
             Assert.That(loaded.Draft.MediaTranscripts.Single().IsStaged, Is.True, "A staged transcript has to move into the chat directory once the chat is stored.");
-        });
+        }
     }
 
     [Test]
@@ -216,12 +216,12 @@ public sealed class ChatDraftTests
         var loaded = JsonSerializer.Deserialize<ChatThread>(CHAT_WITH_PENDING_TRANSCRIPTS, WorkspaceBehaviour.JSON_OPTIONS)!;
         var stored = JsonSerializer.Serialize(loaded, WorkspaceBehaviour.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(loaded.Draft.FileAttachments, Is.EqualTo(new FileAttachment[] { TRANSCRIPT }), "Opening the chat has to bring the transcript back into the composer.");
             Assert.That(stored, Does.Not.Contain("pending_media_transcripts"), "The draft holds the transcript now, so storing the chat must not write the former list again.");
             Assert.That(stored, Does.Contain("\"draft\""));
-        });
+        }
     }
 
     [Test]

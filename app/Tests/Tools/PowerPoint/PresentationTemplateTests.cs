@@ -28,13 +28,13 @@ public sealed class PresentationTemplateTests
             new TestLayout("B Content 1", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)),
             new TestLayout("C Content 1", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Families.Select(family => family.Id), Is.EqualTo(new[] { "L1", "L2" }));
             Assert.That(template.Families.Select(family => family.Name), Is.EqualTo(new[] { "Title 1", "Content 1" }), "The model reads the name the variants share, without the word which tells them apart.");
             Assert.That(template.Families[1].Variants.Select(variant => variant.Label), Is.EqualTo(new[] { "A", "B", "C" }));
             Assert.That(template.VariantLabels, Is.EqualTo(new[] { "A", "B", "C" }));
-        });
+        }
     }
 
     [Test]
@@ -49,12 +49,12 @@ public sealed class PresentationTemplateTests
             new TestLayout("B Table 2", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)),
             new TestLayout("C Table 1", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Families.Select(family => family.Name), Is.EqualTo(new[] { "Table 1", "Table 2" }));
             Assert.That(template.Families[0].Variants.Select(variant => variant.Label), Is.EqualTo(new[] { "A", "B", "C" }));
             Assert.That(template.Families[1].Variants.Select(variant => variant.Label), Is.EqualTo(new[] { "A", "B" }));
-        });
+        }
     }
 
     [Test]
@@ -66,11 +66,11 @@ public sealed class PresentationTemplateTests
             new TestLayout("Content blue", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)),
             new TestLayout("Content green", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Families.Select(family => family.Name), Is.EqualTo(new[] { "Title", "Content" }));
             Assert.That(template.VariantLabels, Is.EqualTo(new[] { "blue", "green" }));
-        });
+        }
     }
 
     [Test]
@@ -80,12 +80,12 @@ public sealed class PresentationTemplateTests
             new TestLayout("Title Slide", TestPlaceholder.Title(), TestPlaceholder.Subtitle(SUBTITLE)),
             new TestLayout("Two Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, LEFT_TEXT), TestPlaceholder.Text(2, RIGHT_TEXT)));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Families.Select(family => family.Name), Is.EqualTo(new[] { "Title Slide", "Two Content" }));
             Assert.That(template.Families.SelectMany(family => family.Variants).Select(variant => variant.Label), Is.All.Null);
             Assert.That(template.VariantLabels, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -115,11 +115,11 @@ public sealed class PresentationTemplateTests
             new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)));
 
         var title = template.Families[0].Slots[0];
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(title.Role, Is.EqualTo(PlaceholderRole.TITLE));
             Assert.That(title.Bounds, Is.EqualTo(TestTemplate.MASTER_TITLE_BOUNDS));
-        });
+        }
     }
 
     [Test]
@@ -130,11 +130,11 @@ public sealed class PresentationTemplateTests
             new TestLayout("Two Content", TestPlaceholder.Title(), TestPlaceholder.Text(2, RIGHT_TEXT), TestPlaceholder.Text(1, LEFT_TEXT)));
 
         var texts = template.Families[0].Slots.Where(slot => slot.Role is PlaceholderRole.TEXT).ToList();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(texts.Select(slot => slot.Ordinal), Is.EqualTo(new[] { 1, 2 }));
             Assert.That(texts.Select(slot => slot.Bounds), Is.EqualTo(new[] { LEFT_TEXT, RIGHT_TEXT }));
-        });
+        }
     }
 
     [Test]
@@ -171,11 +171,11 @@ public sealed class PresentationTemplateTests
             new TestLayout("Picture with text", TestPlaceholder.Title(), TestPlaceholder.Text(1, LEFT_TEXT, 2000), TestPlaceholder.Picture(20, RIGHT_PICTURE)));
 
         var catalog = template.ToCatalogPrompt();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(catalog, Does.Contain("landscape, backdrop)"), "The model learns where an icon must not go.");
             Assert.That(catalog, Does.Contain("picture 1 (right, middle, landscape)"));
-        });
+        }
     }
 
     [Test]
@@ -183,12 +183,12 @@ public sealed class PresentationTemplateTests
     {
         var template = PresentationTemplate.CreateDefault();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Families.Select(family => family.Name), Is.EqualTo(new[] { "Title Slide", "Section Header", "Title and Content", "Two Content", "Content with Picture", "Table" }));
             Assert.That(template.VariantLabels, Is.Empty);
             Assert.That(template.ToCatalogPrompt(), Does.Contain("""- L3 "Title and Content": title (up to 1 line of about 36 characters); text 1 (full width, middle, up to 9 lines of about 58 characters)"""));
-        });
+        }
     }
 
     [Test]
@@ -199,13 +199,13 @@ public sealed class PresentationTemplateTests
             new TestLayout("B Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)));
 
         var family = template.FindFamily(" l1 ");
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(family, Is.Not.Null, "Models write IDs in whatever case they like.");
             Assert.That(family?.GetLayout("B").Name, Is.EqualTo("B Content"));
             Assert.That(family?.GetLayout("Z").Name, Is.EqualTo("A Content"), "A variant the family lacks falls back to its first one.");
             Assert.That(template.FindFamily("L9"), Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -222,7 +222,7 @@ public sealed class PresentationTemplateTests
             new TestLayout("B Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT), TestPlaceholder.Footer(12, LABEL_BELOW_RIGHT_PICTURE)));
 
         var template = PresentationTemplate.Read(file);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Slides.Select(slide => slide.Number), Is.EqualTo(new[] { 1, 2 }));
             Assert.That(template.Slides.Select(slide => slide.Title), Is.EqualTo(new[] { "Consultation hour", "News" }));
@@ -233,7 +233,7 @@ public sealed class PresentationTemplateTests
             Assert.That(template.FindSlide(2), Is.SameAs(template.Slides[1]));
             Assert.That(template.FindSlide(0), Is.Null);
             Assert.That(template.FindSlide(3), Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -262,7 +262,7 @@ public sealed class PresentationTemplateTests
             new TestLayout("Table", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)));
 
         var template = PresentationTemplate.Read(file);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Slides[0].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "Costs"), (PlaceholderRole.TABLE, "Item | Cost\nFuel | 10") }), "A table pasted onto the slide is the table of the slide.");
             Assert.That(template.Slides[1].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "Costs"), (PlaceholderRole.TABLE, "Item | Cost\nFood | 5") }), "An empty table placeholder makes way for the table the slide shows.");
@@ -271,7 +271,7 @@ public sealed class PresentationTemplateTests
                 - Template slide 1, to edit, with the slots of layout L1: title "Costs"; table 1 "Item | Cost / Fuel | 10"
                 - Template slide 2, to keep unchanged: title "Costs"; table 1 "Item | Cost / Food | 5"
                 """.ReplaceLineEndings("\n")), "The model learns that the slide has a table.");
-        });
+        }
     }
 
     [Test]
@@ -306,7 +306,7 @@ public sealed class PresentationTemplateTests
 
         var template = PresentationTemplate.Read(file);
         var slots = template.Families[0].Slots;
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Slides[0].MovedSlots.Select(slot => (slot.Role, slot.Ordinal, slot.Bounds, slot.Capacity)), Is.EqualTo(new[] { (PlaceholderRole.TEXT, 1, half, (TextCapacity?)new TextCapacity(5, 25)) }), "Half the size holds half the lines of half the characters.");
             Assert.That(template.Slides[0].OnSlide(slots[1]).Capacity, Is.EqualTo(new TextCapacity(5, 25)));
@@ -319,7 +319,7 @@ public sealed class PresentationTemplateTests
                 - Template slide 3, to edit, with the slots of layout L1: title "Crew"; text 1 (left, middle, up to 5 lines of about 25 characters, on this slide, empty)
                 """.ReplaceLineEndings("\n")));
             Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.KEEP]), Is.EqualTo("- Template slide 1, to keep unchanged: title \"Rocket\"; text 1 \"Reusable\""), "A slide to keep needs no sizes.");
-        });
+        }
     }
 
     [Test]
@@ -335,11 +335,11 @@ public sealed class PresentationTemplateTests
             new TestLayout("Table", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)));
 
         var template = PresentationTemplate.Read(file);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Slides[0].MovedSlots, Is.Empty, "A table grows with its rows, so a short one at the place of its slot does not shrink the slot.");
             Assert.That(template.Slides[1].MovedSlots.Select(slot => slot.Bounds), Is.EqualTo(new[] { lower with { Height = FULL_TEXT.Bottom - lower.Y } }), "A table placed lower leaves less room, down to the bottom of its slot.");
-        });
+        }
     }
 
     [Test]
@@ -368,7 +368,7 @@ public sealed class PresentationTemplateTests
             new TestLayout("Table", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)));
 
         var elements = PresentationTemplate.Read(file).Slides[0].Elements;
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(elements.Select(element => (element.Number, element.ShapeId, element.Kind, element.Text)), Is.EqualTo(new[]
             {
@@ -382,7 +382,7 @@ public sealed class PresentationTemplateTests
             }), "The footer belongs to the presentation, the empty text box shows nothing, and the first table is the content of the table slot.");
             Assert.That(elements.Select(element => element.Bounds), Is.EqualTo(new SlotBounds?[] { RIGHT_PICTURE, LABEL_BELOW_RIGHT_PICTURE, RIGHT_TEXT, line, LEFT_TEXT, RIGHT_TEXT with { Height = 2 * 370_840 }, LEFT_TEXT }));
             Assert.That(elements.Select(element => element.Name), Has.Exactly(1).EqualTo("element 3"));
-        });
+        }
     }
 
     [Test]
@@ -406,7 +406,7 @@ public sealed class PresentationTemplateTests
             new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, LEFT_TEXT)));
 
         var template = PresentationTemplate.Read(file);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.EDIT, TemplateSlideUse.EDIT]), Is.EqualTo(
                 """
@@ -414,7 +414,7 @@ public sealed class PresentationTemplateTests
                 - Template slide 2, to edit, with the slots of layout L1: title "Chart"; element 1 (chart, left, middle, overlaps text 1)
                 """.ReplaceLineEndings("\n")), "A slot the slide leaves out takes the place of the layout, where filling it would cover the chart.");
             Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.KEEP]), Is.EqualTo("- Template slide 1, to keep unchanged: title \"Rocket\"; text 1 \"Reusable\""), "A slide to keep has nothing to remove.");
-        });
+        }
     }
 
     [Test]
@@ -423,7 +423,7 @@ public sealed class PresentationTemplateTests
         using var file = TestTemplate.Create(new TestTemplateOptions(Slides: [StackedHeadings.Slide()]), StackedHeadings.Layout());
 
         var slide = PresentationTemplate.Read(file).Slides[0];
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(slide.SlotCopies.Select(copy => (copy.Slot.Role, copy.Slot.Ordinal, copy.Slot.Bounds, copy.ShapeId)), Is.EqualTo(new[]
             {
@@ -445,7 +445,7 @@ public sealed class PresentationTemplateTests
                 (PlaceholderRole.TEXT, "Consectetuer"),
             }));
             Assert.That(slide.Elements.Select(element => (element.Kind, element.Text)), Is.EqualTo(new[] { (TemplateSlideElementKind.PICTURE, string.Empty), (TemplateSlideElementKind.TEXT_BOX, "Bildquelle hier angeben") }), "The source of the picture has the height of a heading, yet lines up with none.");
-        });
+        }
     }
 
     [Test]
@@ -472,11 +472,11 @@ public sealed class PresentationTemplateTests
             StackedHeadings.Layout());
 
         var slide = PresentationTemplate.Read(file).Slides[0];
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(slide.SlotCopies.Select(copy => (copy.Slot.Role, copy.Slot.Ordinal, copy.Slot.Bounds)), Is.EqualTo(new[] { (PlaceholderRole.TEXT, 2, twin) }), "Of two copies in one place, the first counts.");
             Assert.That(slide.Elements.Select(element => element.Text), Is.EqualTo(new[] { "On text 1", "Other width", "Twin", "Bildquelle hier angeben" }), "A box lying on a slot, a text of another width, the second twin and a box in no line with a slot stay elements; one whose ID the title shares and an empty one are neither.");
-        });
+        }
     }
 
     [Test]
@@ -497,11 +497,11 @@ public sealed class PresentationTemplateTests
             StackedHeadings.Layout());
 
         var slide = PresentationTemplate.Read(file).Slides[0];
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(slide.SlotCopies.Select(copy => (copy.Slot.Ordinal, copy.Slot.Bounds)), Is.EqualTo(new[] { (2, upperRight), (3, lowerRight) }));
             Assert.That(slide.Slots.Select(slot => $"{slot.Role.CatalogName()} {slot.Ordinal}"), Is.EqualTo(new[] { "title 1", "label 1", "text 2", "text 1", "text 3" }), "The slots of the layout keep their numbers; a copy goes where a reader comes across it.");
-        });
+        }
     }
 
     [Test]
@@ -521,14 +521,14 @@ public sealed class PresentationTemplateTests
         using var file = TestTemplate.Create(new TestTemplateOptions(Slides: [StackedHeadings.Slide()]), StackedHeadings.Layout());
 
         var template = PresentationTemplate.Read(file);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.EDIT]), Is.EqualTo(
                 """
                 - Template slide 1, to edit, with the slots of layout L1: title "Missions"; label 1 "Lorem ipsum"; text 1 (left, middle, up to 3 lines of about 25 characters, on this slide) "Ut wisi enim"; label 2 (above text 2, up to 1 line of about 14 characters, on this slide) "Lorem"; text 2 (left, middle, up to 3 lines of about 25 characters, on this slide) "Duis autem"; label 3 (above text 3, up to 1 line of about 18 characters, on this slide) "Nam liber"; text 3 (left, bottom, up to 3 lines of about 25 characters, on this slide) "Consectetuer"; element 1 (picture, right, middle); element 2 (text box, right, bottom) "Bildquelle hier angeben"
                 """));
             Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.KEEP]), Is.EqualTo("- Template slide 1, to keep unchanged: title \"Missions\"; label 1 \"Lorem ipsum\"; text 1 \"Ut wisi enim\"; label 2 \"Lorem\"; text 2 \"Duis autem\"; label 3 \"Nam liber\"; text 3 \"Consectetuer\""), "A slide to keep says what its copies hold, so that no new slide repeats it.");
-        });
+        }
     }
 
     [Test]
@@ -540,10 +540,10 @@ public sealed class PresentationTemplateTests
             new TestLayout("Title Only", TestPlaceholder.Title()));
 
         var template = PresentationTemplate.Read(file);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Slides[0].FamilyId, Is.Null);
             Assert.That(template.Slides[0].Title, Is.EqualTo("Thank you"), "What the slide holds is read all the same, so the user knows which slide it is.");
-        });
+        }
     }
 }

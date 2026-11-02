@@ -59,11 +59,11 @@ public sealed class ChatCompletionToolCallingAdapterTests
 
         var secondRound = await Usages(adapter);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(firstRound, Is.EqualTo(new[] { 1200 }), "The first round reports the conversation up to the question.");
             Assert.That(secondRound, Is.EqualTo(new[] { 9800 }), "The second round reports its own request, tool result included, and leaves it to the loop to drop.");
-        });
+        }
     }
 
     [Test]
@@ -116,12 +116,12 @@ public sealed class ChatCompletionToolCallingAdapterTests
 
         var (call, nextRequest) = await AnswerOneCall(MALFORMED_NAME, "{}", "The tool call was invalid.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(call.IsValid, Is.False, "The call is answered as invalid instead of being run.");
             Assert.That(nextRequest, Does.Not.Contain(MALFORMED_NAME), "The provider would reject the whole request over this name.");
             Assert.That(nextRequest, Does.Contain("\"name\":\"invalid_tool_call\""), "The call itself still goes back, or its result would answer a call the provider does not know.");
-        });
+        }
     }
 
     [Test]
@@ -134,12 +134,12 @@ public sealed class ChatCompletionToolCallingAdapterTests
         //
         var (call, nextRequest) = await AnswerOneCall("web_lookup", "{}", "Tool 'web_lookup' is not available.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(call.IsValid, Is.True);
             Assert.That(call.ToolName, Is.EqualTo("web_lookup"));
             Assert.That(nextRequest, Does.Contain("\"name\":\"web_lookup\""));
-        });
+        }
     }
 
     [Test]
@@ -153,13 +153,13 @@ public sealed class ChatCompletionToolCallingAdapterTests
 
         var (call, nextRequest) = await AnswerOneCall("web_search", BROKEN_ARGUMENTS, "The tool call was invalid.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(call.IsValid, Is.False, "The call is answered as invalid instead of being run.");
             Assert.That(nextRequest, Does.Not.Contain("weather in Berl"), "The provider would reject the whole request over these arguments.");
             Assert.That(nextRequest, Does.Contain("\"arguments\":\"{}\""), "The call itself still goes back, with arguments the provider can read.");
             Assert.That(nextRequest, Does.Contain("\"name\":\"web_search\""), "A valid name goes back as it came, even when the arguments next to it are broken.");
-        });
+        }
     }
 
     /// <summary>

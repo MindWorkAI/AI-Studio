@@ -74,7 +74,7 @@ public sealed class DataDirectoryRelativePathTests
         var json = JsonSerializer.Serialize(chat, WorkspaceBehaviour.JSON_OPTIONS);
         var attachments = ((ContentText)JsonSerializer.Deserialize<ChatThread>(json, WorkspaceBehaviour.JSON_OPTIONS)!.Blocks.Single().Content!).FileAttachments;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(json, Does.Contain($"\"workspaces/{WORKSPACE_ID}/{CHAT_ID}/attachments/transcripts/meeting-transcript-0001.md\""), "Forward slashes, so that every OS reads the path.");
             Assert.That(json, Does.Not.Contain(JsonEncodedText.Encode(this.dataDirectory).ToString()), "Not a single path may name the data directory of this computer.");
@@ -82,7 +82,7 @@ public sealed class DataDirectoryRelativePathTests
             Assert.That(attachments.Select(attachment => attachment.FilePath), Is.EqualTo(new[] { transcriptPath, picturePath, documentPath }), "In memory, every path is absolute again.");
             Assert.That(attachments[0], Is.TypeOf<ManagedTranscriptAttachment>(), "A transcript has to stay a transcript, or deleting the chat leaves its file behind.");
             Assert.That(((FileAttachmentImage)attachments[1]).Source, Is.EqualTo(picturePath), "The model gets the image from its source, which has to follow the path.");
-        });
+        }
     }
 
     [Test]
@@ -95,13 +95,13 @@ public sealed class DataDirectoryRelativePathTests
         var providerJson = JsonSerializer.Serialize(provider, SettingsManager.JSON_OPTIONS);
         var embeddingProviderJson = JsonSerializer.Serialize(embeddingProvider, SettingsManager.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(providerJson, Does.Contain("\"tokenizers/openai-gpt-6/tokenizer.json\""));
             Assert.That(embeddingProviderJson, Does.Contain("\"tokenizers/openai-gpt-6/tokenizer.json\""));
             Assert.That(JsonSerializer.Deserialize<AIStudio.Settings.Provider>(providerJson, SettingsManager.JSON_OPTIONS)!.TokenizerPath, Is.EqualTo(tokenizerPath));
             Assert.That(JsonSerializer.Deserialize<EmbeddingProvider>(embeddingProviderJson, SettingsManager.JSON_OPTIONS)!.TokenizerPath, Is.EqualTo(tokenizerPath));
-        });
+        }
     }
 
     [Test]
@@ -111,11 +111,11 @@ public sealed class DataDirectoryRelativePathTests
         var transcriptPath = Path.Combine(this.dataDirectory, "tempChats", CHAT_ID.ToString(), "attachments", "transcripts", "call-transcript-0001.md");
         var documentPath = Path.Combine(ELSEWHERE, "notes.txt");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataDirectoryRelativePathConverter.ToAbsolute(transcriptPath, this.dataDirectory), Is.EqualTo(transcriptPath), "On this computer, the path still names the transcript.");
             Assert.That(DataDirectoryRelativePathConverter.ToAbsolute(documentPath, this.dataDirectory), Is.EqualTo(documentPath));
-        });
+        }
     }
 
     [Test]
@@ -129,10 +129,10 @@ public sealed class DataDirectoryRelativePathTests
     {
         var transcriptPath = Path.Combine(this.dataDirectory, "tempChats", CHAT_ID.ToString(), "attachments", "transcripts", "call-transcript-0001.md");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataDirectoryRelativePathConverter.ToStored(transcriptPath, null), Is.EqualTo(transcriptPath));
             Assert.That(DataDirectoryRelativePathConverter.ToAbsolute("tokenizers/openai-gpt-6/tokenizer.json", null), Is.EqualTo("tokenizers/openai-gpt-6/tokenizer.json"));
-        });
+        }
     }
 }

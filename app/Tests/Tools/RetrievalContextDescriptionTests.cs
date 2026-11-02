@@ -28,11 +28,11 @@ public sealed class RetrievalContextDescriptionTests
     [Test]
     public void APassageOverSeveralPagesNamesThemAll()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Describe(TextContext(pageNumber: 12, endPageNumber: 14)), Does.Contain("Content location: pages 12 to 14"), "The AI can say on which pages an answer stands.");
             Assert.That(Describe(TextContext(pageNumber: 12, endPageNumber: 12)), Does.Contain("Content location: page 12").And.Not.Contain("pages"), "A passage on one page names one page.");
-        });
+        }
     }
 
     [Test]
@@ -50,13 +50,13 @@ public sealed class RetrievalContextDescriptionTests
     [Test]
     public void APassageWithoutPagesNamesItsRowsOrItsLines()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Describe(TableContext(sheetName: "Budget", startRow: 3, endRow: 9)), Does.Contain("Content location: sheet \"Budget\", rows 3 to 9"));
             Assert.That(Describe(TableContext(startRow: 12)), Does.Contain("Content location: row 12"));
             Assert.That(Describe(TableContext(startLine: 40, endLine: 85)), Does.Contain("Content location: lines 40 to 85"));
             Assert.That(Describe(TableContext(startLine: 40, endLine: 40)), Does.Contain("Content location: line 40").And.Not.Contain("lines"), "A passage on one line names one line.");
-        });
+        }
     }
 
     /// <remarks>
@@ -84,11 +84,11 @@ public sealed class RetrievalContextDescriptionTests
     {
         var description = Describe(TextContext(pageNumber: 12, links: ["https://example.com/handbook"]));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(description, Does.Contain("Additional links:"), "The links a data source delivers are still passed on.");
             Assert.That(description.IndexOf("Content location", StringComparison.Ordinal), Is.LessThan(description.IndexOf("Additional links", StringComparison.Ordinal)), "The place inside the document is stated before links pointing elsewhere.");
-        });
+        }
     }
 
     [Test]
@@ -148,14 +148,14 @@ public sealed class RetrievalContextDescriptionTests
         IRetrievalContextExtensions.AppendImageMatch(builder);
         var description = builder.ToString();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(description, Does.Contain("Content path: https://intranet.example.com/plans/floor-2.png"), "The model can point the user to the image.");
             Assert.That(description, Does.Contain("https://intranet.example.com/plans"));
             Assert.That(description, Does.Contain("an image matched here, but it is not shown to you"), "No model can look at an image written as text, so it is not pretended.");
             Assert.That(description, Does.Not.Contain(image.Source[..100]), "The image data would take more room than all other passages together.");
             Assert.That(description.Length, Is.LessThan(1_000));
-        });
+        }
     }
 
     private static string Describe(IRetrievalContext retrievalContext)

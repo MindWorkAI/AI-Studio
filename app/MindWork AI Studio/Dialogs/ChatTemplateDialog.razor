@@ -50,7 +50,7 @@
                 Variant="Variant.Outlined"
                 Lines="6"
                 MaxLines="12"
-                AutoGrow="@true"
+                Sizing="InputSizing.Auto"
                 Class="mb-3"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI your system prompt.")"
@@ -81,7 +81,7 @@
                 Variant="Variant.Outlined"
                 Lines="4"
                 MaxLines="12"
-                AutoGrow="@true"
+                Sizing="InputSizing.Auto"
                 Class="mb-3"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI your predefined user input.")"
@@ -259,7 +259,7 @@
                         @switch(context.Content)
                         {
                             case ContentText textContent:
-                                <MudTextField AutoGrow="true" Value="@textContent.Text" Placeholder="@T("Enter a message")" ReadOnly="true" Variant="Variant.Text" Validation="@this.ValidateExampleTextMessage"/>
+                                <MudTextField Sizing="InputSizing.Auto" Value="@textContent.Text" Placeholder="@T("Enter a message")" ReadOnly="true" Variant="Variant.Text" Validation="@this.ValidateExampleTextMessage"/>
                                 break;
 
                             case ContentImage { SourceType: ContentImageSource.URL or ContentImageSource.LOCAL_PATH } imageContent:
@@ -305,7 +305,7 @@
                         @switch(context.Content)
                         {
                             case ContentText textContent:
-                                <MudTextField AutoGrow="true" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Immediate="true" Placeholder="@T("Enter a message")" ReadOnly="@this.IsReadOnly"/>
+                                <MudTextField Sizing="InputSizing.Auto" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Immediate="true" Placeholder="@T("Enter a message")" ReadOnly="@this.IsReadOnly"/>
                                 break;
 
                             default:

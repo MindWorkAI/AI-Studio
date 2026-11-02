@@ -349,7 +349,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     private async Task LocalizeTextContent()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

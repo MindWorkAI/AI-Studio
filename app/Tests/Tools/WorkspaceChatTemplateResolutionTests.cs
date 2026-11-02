@@ -65,11 +65,11 @@ public sealed class WorkspaceChatTemplateResolutionTests
         var workspaceId = await WorkspaceBehaviour.ResolveOrCreateChatTemplateWorkspaceAsync("  mails ", CHAT_TEMPLATE_NAME);
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(workspaceId, Is.EqualTo(created.Workspace.WorkspaceId), "The template names the workspace the user sees in the list under that name.");
             Assert.That(snapshot.Workspaces, Has.Count.EqualTo(1), "A second workspace of the same name would split the chats of the template.");
-        });
+        }
     }
 
     [Test]
@@ -78,11 +78,11 @@ public sealed class WorkspaceChatTemplateResolutionTests
         var workspaceId = await WorkspaceBehaviour.ResolveOrCreateChatTemplateWorkspaceAsync("Contracts", CHAT_TEMPLATE_NAME);
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(workspaceId, Is.Not.EqualTo(Guid.Empty));
             Assert.That(snapshot.Workspaces.Single(workspace => workspace.WorkspaceId == workspaceId).Name, Is.EqualTo("Contracts"));
-        });
+        }
     }
 
     [Test]
@@ -91,10 +91,10 @@ public sealed class WorkspaceChatTemplateResolutionTests
         var workspaceId = await WorkspaceBehaviour.ResolveOrCreateChatTemplateWorkspaceAsync("   ", CHAT_TEMPLATE_NAME);
         var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(workspaceId, Is.EqualTo(Guid.Empty), "The chat then starts without a workspace, as it would without the template.");
             Assert.That(snapshot.Workspaces, Is.Empty, "A workspace without a name would only show up as an unnamed one in the list.");
-        });
+        }
     }
 }

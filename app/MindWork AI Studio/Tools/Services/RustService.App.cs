@@ -193,4 +193,63 @@ public sealed partial class RustService
             return false;
         }
     }
+
+    /// <summary>
+    /// Asks the runtime to show AI Studio in the given size, which it reaches by zooming the webview.
+    /// </summary>
+    /// <param name="request">The size, and the scale of the custom size.</param>
+    /// <returns>What the size comes to on the screen AI Studio shows on, or null when the runtime could not apply it.</returns>
+    public async Task<InterfaceSizeResponse?> SetInterfaceSize(SetInterfaceSizeRequest request)
+    {
+        try
+        {
+            var response = await this.http.PostAsJsonAsync("/app/interface-size", request, this.jsonRustSerializerOptions);
+            var result = await this.ReadInterfaceSizeResponse(response, "set the interface size");
+            if (result is not null)
+                this.logger?.LogInformation("Set the interface sizes of {ScreenCount} screens. AI Studio shows with the size '{Size}' at {CurrentPercent} % and a zoom of {Zoom:0.###} on the screen '{ScreenKey}'.", request.Screens.Count, result.Size, result.CurrentPercent, result.Zoom, result.ScreenKey);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Exception while setting the interface size.");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Asks the runtime what the interface size comes to on the screen AI Studio shows on, e.g., which custom scales it allows.
+    /// </summary>
+    /// <returns>The report of the runtime, or null when it could not measure the screen.</returns>
+    public async Task<InterfaceSizeResponse?> GetInterfaceSize()
+    {
+        try
+        {
+            var response = await this.http.GetAsync("/app/interface-size");
+            return await this.ReadInterfaceSizeResponse(response, "read the interface size");
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Exception while reading the interface size.");
+            return null;
+        }
+    }
+
+    private async Task<InterfaceSizeResponse?> ReadInterfaceSizeResponse(HttpResponseMessage response, string action)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            this.logger?.LogError("Failed to {Action} due to network error: {StatusCode}.", action, response.StatusCode);
+            return null;
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<InterfaceSizeResponse>(this.jsonRustSerializerOptions);
+        if (result is null || !result.Success)
+        {
+            this.logger?.LogError("Failed to {Action}: {Error}", action, result?.ErrorMessage ?? "Unknown error");
+            return null;
+        }
+
+        return result;
+    }
 }

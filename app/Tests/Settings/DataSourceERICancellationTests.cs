@@ -65,12 +65,12 @@ public sealed class DataSourceERICancellationTests
     }
 
     [Test]
-    public void ACancelledSearchStops()
+    public async Task ACancelledSearchStops()
     {
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
-        Assert.CatchAsync<OperationCanceledException>(async () => await UNREACHABLE.RetrieveDataAsync("query", 1, new ChatThread(), cancellation.Token), "Reporting the data source as not searched would carry on after the user cancelled.");
+        await Assert.CatchAsync<OperationCanceledException>(async () => await UNREACHABLE.RetrieveDataAsync("query", 1, new ChatThread(), cancellation.Token), "Reporting the data source as not searched would carry on after the user cancelled.");
     }
 
     [Test]
@@ -78,10 +78,10 @@ public sealed class DataSourceERICancellationTests
     {
         var page = await UNREACHABLE.RetrieveDataAsync("query", 1, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(page.Contexts, Is.Empty);
             Assert.That(page.Gaps, Is.EqualTo(new[] { RetrievalGap.NOT_SEARCHED }), "Nobody cancelled, so the model learns that this data source is missing rather than empty.");
-        });
+        }
     }
 }

@@ -207,7 +207,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if (!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
 
         // A check asked for in code waits until the fields hold their new values, cf. ToggleExpertSettings:
         if (this.revalidateAfterRender)
@@ -469,7 +469,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.SelectProvider(GetProviderKey(this.organizationProviders[0]));
     }
 
-    private void SelectProvider(string providerKey)
+    private void SelectProvider(string? providerKey)
     {
         this.selectedOrganizationProvider = this.organizationProviders.FirstOrDefault(candidate => GetProviderKey(candidate) == providerKey);
         this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(candidate => GetProviderKey(candidate) == providerKey);
@@ -538,7 +538,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         }
 
         await this.RecordSignInOutcomeAsync(settings, this.testFailure, serverAnswer);
-        await this.form.Validate();
+        await this.form.ValidateAsync();
     }
 
     private async Task<MailServerFolder?> CreateFolder(string parentFullName, string name)
@@ -618,7 +618,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         if (this.IsAddingNotAllowed)
             return;
 
-        await this.form.Validate();
+        await this.form.ValidateAsync();
 
         if (this.RequiresConnectionTest && this.dataSourceValidation.ValidateTestedConnection() is { } testIssue)
         {
@@ -654,7 +654,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             if (!storeResponse.Success)
             {
                 this.dataSecretStorageIssue = string.Format(T("Failed to store the password in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
         }

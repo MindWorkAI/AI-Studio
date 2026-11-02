@@ -91,7 +91,7 @@ public partial class WorkspaceNameField : MSGComponentBase
     // Picking an existing workspace fills the name field. Clearing the select must not wipe a name
     // the user typed, though, so an empty selection is ignored:
     //
-    private async Task SelectExistingWorkspace(string workspaceName)
+    private async Task SelectExistingWorkspace(string? workspaceName)
     {
         if (string.IsNullOrWhiteSpace(workspaceName))
             return;
@@ -99,9 +99,9 @@ public partial class WorkspaceNameField : MSGComponentBase
         await this.SetWorkspaceName(workspaceName);
     }
 
-    private async Task SetWorkspaceName(string workspaceName)
+    private async Task SetWorkspaceName(string? workspaceName)
     {
-        this.WorkspaceName = workspaceName;
-        await this.WorkspaceNameChanged.InvokeAsync(workspaceName);
+        this.WorkspaceName = workspaceName ?? string.Empty;
+        await this.WorkspaceNameChanged.InvokeAsync(this.WorkspaceName);
     }
 }

@@ -89,7 +89,7 @@ public partial class Information : MSGComponentBase
 
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
-    private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
+    private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{DotnetRuntimeVersion.Current}";
     
     private string VersionDotnetSdk => $"{T("Used .NET SDK")}: v{META_DATA.DotnetSdkVersion}";
     

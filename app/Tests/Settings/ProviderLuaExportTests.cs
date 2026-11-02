@@ -51,12 +51,12 @@ public sealed class ProviderLuaExportTests
         var modelId = ModelIdOf(type);
         var (luaCode, readBack) = await ExportAndReadBackAsync(type, $@"C:\Users\Jane Doe\AppData\Roaming\com.github.mindwork-ai.ai-studio\data\tokenizers\{modelId}\tokenizer.json");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(readBack, Is.EqualTo($"tokenizers/{modelId}/tokenizer.json"), "A configuration plugin reads the path relative to its own folder.");
             Assert.That(luaCode, Does.Not.Contain("Jane"));
             Assert.That(luaCode, Does.Not.Contain("C:"));
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -75,11 +75,11 @@ public sealed class ProviderLuaExportTests
     {
         var (luaCode, readBack) = await ExportAndReadBackAsync(type, string.Empty);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(readBack, Is.Empty);
             Assert.That(luaCode, Does.Contain("""["TokenizerPath"] = "",""").And.Not.Contain("tokenizer of its own"));
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -98,11 +98,11 @@ public sealed class ProviderLuaExportTests
         var synced = await PluginConfigurationObject.SyncTokenizerAsync(storage, exportedPath, string.Empty, pluginDirectory, modelId, "the exported provider");
         var syncedWithTheAbsolutePath = await PluginConfigurationObject.SyncTokenizerAsync(storage, copyInTheDataDirectory, string.Empty, pluginDirectory, modelId, "the exported provider");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(synced.Path, Is.EqualTo(fileInThePlugin), "The administrator copies the file to the same place in the plugin, where the plugin looks for it.");
             Assert.That(syncedWithTheAbsolutePath, Is.EqualTo(StoredTokenizer.NONE), "What the export wrote before lies outside of the plugin, so the plugin ignored it.");
-        });
+        }
     }
 
     private static string ModelIdOf(PluginConfigurationObjectType type) => type switch

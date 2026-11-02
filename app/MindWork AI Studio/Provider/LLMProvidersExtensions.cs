@@ -188,7 +188,7 @@ public static class LLMProvidersExtensions
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
-        LLMProviders.GWDG => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://docs.hpc.gwdg.de/services/chat-ai/data-privacy/index.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        LLMProviders.GWDG => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://docs.hpc.gwdg.de/services/ai-services/chat-ai/data-privacy/index.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         _ => Confidence.UNKNOWN.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
     };
@@ -428,7 +428,7 @@ public static class LLMProvidersExtensions
         LLMProviders.HUGGINGFACE => "https://huggingface.co/login",
         
         LLMProviders.HELMHOLTZ => "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/#step-1-register-on-gitlab",
-        LLMProviders.GWDG => "https://docs.hpc.gwdg.de/services/saia/index.html#api-request",
+        LLMProviders.GWDG => "https://saia.gwdg.de",
         
         _ => string.Empty,
     };
@@ -451,6 +451,8 @@ public static class LLMProvidersExtensions
         LLMProviders.IONOS => "https://dcd.ionos.com/latest/?page=dcd-ai-model-hub",
         LLMProviders.REQUESTY => "https://app.requesty.ai/",
 
+        LLMProviders.GWDG => "https://saia.gwdg.de/keys",
+
         _ => string.Empty,
     };
 
@@ -471,6 +473,8 @@ public static class LLMProvidersExtensions
         LLMProviders.HETZNER => true,
         LLMProviders.IONOS => true,
         LLMProviders.REQUESTY => true,
+
+        LLMProviders.GWDG => true,
 
         _ => false,
     };

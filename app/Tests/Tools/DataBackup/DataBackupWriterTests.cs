@@ -98,14 +98,14 @@ public sealed class DataBackupWriterTests
             DataBackupFormat.MANIFEST_ENTRY_NAME,
         }));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(archive["config/settings.json"], Is.EqualTo(SETTINGS_JSON), "The settings come from memory, without the objects of configuration plugins.");
             Assert.That(archive["data/databases/provenance/provenance.sqlite3"], Is.EqualTo("the copy of the provenance store"), "The chats write to the store at any time, so it comes from its copy, without the write-ahead log of the live one.");
             Assert.That(archive["data/databases/sqlite/rag-index.sqlite3"], Is.EqualTo("the copy of the index"));
             Assert.That(archive["data/databases/vector_database/stores/store_1/segments/segment"], Is.EqualTo("the copy of the store"));
             Assert.That(archive[$"data/{MEDIA_TRANSCRIPT}"], Is.EqualTo("the copy of the transcript"), "The transcripts are copied together with the index they belong to.");
-        });
+        }
     }
 
     [Test]
@@ -130,11 +130,11 @@ public sealed class DataBackupWriterTests
     {
         var archive = await this.WriteBackupAsync(this.IndexCopiesDirectory, _ => Task.FromResult(string.Empty));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(archive["data/databases/provenance/provenance.sqlite3"], Is.EqualTo("the provenance store while AI Studio writes to it"), "A store AI Studio could not open is written by nothing, and the backup keeps whatever there is.");
             Assert.That(archive["data/databases/provenance/provenance.sqlite3-wal"], Is.EqualTo("the write-ahead log of the provenance store"), "Its write-ahead log may hold what the store itself lacks yet.");
-        });
+        }
     }
 
     [Test]
@@ -173,11 +173,11 @@ public sealed class DataBackupWriterTests
             var hash = Convert.ToHexStringLower(await SHA256.HashDataAsync(stream));
             var listed = manifest.Entries.Single(listedEntry => listedEntry.Name == entry.FullName);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(listed.Sha256, Is.EqualTo(hash), $"The hash of '{entry.FullName}' lets a restore notice a damaged backup.");
                 Assert.That(listed.Size, Is.EqualTo(entry.Length));
-            });
+            }
         }
     }
 
@@ -214,14 +214,14 @@ public sealed class DataBackupWriterTests
         await using (var entryStream = largeEntry.Open())
             hash = Convert.ToHexStringLower(await SHA256.HashDataAsync(entryStream));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new FileInfo(archivePath).Length, Is.GreaterThan(FOUR_GIBIBYTES), "Only then do positions need ZIP64 as well.");
             Assert.That(largeEntry.Length, Is.EqualTo(LARGE_FILE_SIZE));
             Assert.That(listed.Size, Is.EqualTo(LARGE_FILE_SIZE));
             Assert.That(listed.Sha256, Is.EqualTo(hash), "The large file comes back as it was.");
             Assert.That(manifest.Entries, Has.Count.EqualTo(zip.Entries.Count - 1), "The manifest lies behind the large file, beyond 4 GiB, and is still found.");
-        });
+        }
     }
 
     private async Task<Dictionary<string, string>> WriteBackupAsync(string indexCopiesDirectory, Func<CancellationToken, Task<string>>? copyProvenanceStoreAsync = null)

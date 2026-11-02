@@ -1116,7 +1116,19 @@ public static partial class WorkspaceBehaviour
         }
     }
 
-    public static async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
+    /// <summary>
+    /// Moves a chat, together with its directory, into another workspace.
+    /// </summary>
+    /// <param name="chat">The chat to move, as it stands in memory. It gets the new workspace and the new paths of its attachments.</param>
+    /// <param name="targetWorkspaceId">The workspace to move the chat into.</param>
+    /// <param name="storeUnsavedChanges">True stores the chat as it stands in memory in its new place, the way chats are stored automatically. False moves the chat as it was stored last, and the chat in memory only follows.</param>
+    /// <remarks>
+    /// Whoever stores chats manually decides with the save button what reaches the disk. Moving such a
+    /// chat therefore must neither store what the user did not save nor throw it away: the stored chat
+    /// moves, and what the user did not save stays in memory, unsaved as before, until they save it in
+    /// its new place.
+    /// </remarks>
+    public static async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId, bool storeUnsavedChanges)
     {
         if (chat.WorkspaceId == targetWorkspaceId)
             return;
@@ -1136,6 +1148,9 @@ public static partial class WorkspaceBehaviour
         await orderedSemaphores[1].WaitAsync();
         
         var moved = false;
+
+        // What is written in the new place: the chat in memory, or the one stored last.
+        ChatThread? movedChat = null;
         try
         {
             if (!Directory.Exists(sourceDirectory))
@@ -1151,14 +1166,22 @@ public static partial class WorkspaceBehaviour
             Directory.Move(sourceDirectory, targetDirectory);
             moved = true;
             
-            UpdateAttachmentPathsAfterMove(chat, sourceDirectory, targetDirectory);
-            chat.WorkspaceId = targetWorkspaceId;
+            movedChat = storeUnsavedChanges ? chat : await ReadMovedChatAsync(targetDirectory);
+            UpdateAttachmentPathsAfterMove(movedChat, sourceDirectory, targetDirectory);
+            movedChat.WorkspaceId = targetWorkspaceId;
             
-            FinalizeStagedTranscripts(chat, targetDirectory);
-            await StoreMovedChatFilesAsync(chat, targetDirectory);
+            FinalizeStagedTranscripts(movedChat, targetDirectory);
+            await StoreMovedChatFilesAsync(movedChat, targetDirectory);
 
             var lastEditTime = File.GetLastWriteTimeUtc(Path.Join(targetDirectory, "thread.json"));
-            await UpdateCacheAfterChatMoved(sourceWorkspaceId, targetWorkspaceId, chat.ChatId, targetDirectory, chat.Name, lastEditTime);
+            await UpdateCacheAfterChatMoved(sourceWorkspaceId, targetWorkspaceId, chat.ChatId, targetDirectory, movedChat.Name, lastEditTime);
+
+            // The chat in memory follows, with whatever the user did not save, which stays unsaved:
+            if (!ReferenceEquals(movedChat, chat))
+            {
+                UpdateAttachmentPathsAfterMove(chat, sourceDirectory, targetDirectory);
+                chat.WorkspaceId = targetWorkspaceId;
+            }
         }
         catch
         {
@@ -1166,14 +1189,17 @@ public static partial class WorkspaceBehaviour
             {
                 try
                 {
-                    UpdateAttachmentPathsAfterMove(chat, targetDirectory, sourceDirectory);
-                    chat.WorkspaceId = sourceWorkspaceId;
+                    if (movedChat is not null)
+                    {
+                        UpdateAttachmentPathsAfterMove(movedChat, targetDirectory, sourceDirectory);
+                        movedChat.WorkspaceId = sourceWorkspaceId;
+                    }
 
                     if (Directory.Exists(targetDirectory) && !Directory.Exists(sourceDirectory))
                         Directory.Move(targetDirectory, sourceDirectory);
 
-                    if (Directory.Exists(sourceDirectory))
-                        await StoreMovedChatFilesAsync(chat, sourceDirectory);
+                    if (movedChat is not null && Directory.Exists(sourceDirectory))
+                        await StoreMovedChatFilesAsync(movedChat, sourceDirectory);
                 }
                 catch (Exception rollbackError)
                 {
@@ -1190,6 +1216,14 @@ public static partial class WorkspaceBehaviour
             orderedSemaphores[1].Release();
             orderedSemaphores[0].Release();
         }
+    }
+
+    /// <summary>Reads the chat as it was stored last, from the directory it was just moved to.</summary>
+    /// <remarks>Its paths still point to where the chat was before the move.</remarks>
+    private static async Task<ChatThread> ReadMovedChatAsync(string chatDirectory)
+    {
+        var chatData = await File.ReadAllTextAsync(Path.Join(chatDirectory, "thread.json"), Encoding.UTF8);
+        return JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS) ?? throw new InvalidDataException($"The stored chat could not be read: '{chatDirectory}'.");
     }
 
     /// <summary>Atomically stores the name and thread after a directory move.</summary>

@@ -50,7 +50,7 @@ public sealed class DataRestorePreparerTests
         var threadPath = Path.Combine(dataPending, "workspaces", WORKSPACE_ID.ToString(), CHAT_ID.ToString(), "thread.json");
         var plan = JsonSerializer.Deserialize<DataRestorePlan>(await File.ReadAllTextAsync(Path.Combine(dataPending, DataRestoreFormat.PLAN_FILE_NAME)), DataBackupFormat.JSON_OPTIONS)!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Success, Is.True, result.Issue);
             Assert.That(DataRestorePreparer.IsPrepared(this.Target), Is.True);
@@ -61,7 +61,7 @@ public sealed class DataRestorePreparerTests
 
             Assert.That(plan.Elements.Select(element => $"{element.Location}:{element.RelativePath}"), Is.EquivalentTo((string[])["CONFIG_DIRECTORY:settings.json", "DATA_DIRECTORY:workspaces/", "DATA_DIRECTORY:plugins/"]), "An element the backup holds nothing for, such as the tokenizers here, stays as it is.");
             Assert.That(plan.Elements.Single(element => element.RelativePath == "plugins/").Keep, Is.SupersetOf((string[])["plugins/.internal/", "plugins/.config/", "plugins/.config-tests/", "plugins/company-assistant/"]), "AI Studio and the organization bring their plugins themselves.");
-        });
+        }
     }
 
     [Test]
@@ -73,12 +73,12 @@ public sealed class DataRestorePreparerTests
         var dataPending = Path.Combine(this.Target.DataDirectory, ".restore-pending");
         var plan = JsonSerializer.Deserialize<DataRestorePlan>(await File.ReadAllTextAsync(Path.Combine(dataPending, DataRestoreFormat.PLAN_FILE_NAME)), DataBackupFormat.JSON_OPTIONS)!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Success, Is.True, result.Issue);
             Assert.That(plan.Elements.Select(element => element.RelativePath), Does.Contain("databases/provenance/"), "The chats of the backup refer to the contents in its store, so both are replaced together, whether the backup holds the indexes or not.");
             Assert.That(File.ReadAllText(Path.Combine(dataPending, "databases", "provenance", "provenance.sqlite3")), Is.EqualTo("the provenance store"));
-        });
+        }
     }
 
     [Test]
@@ -88,13 +88,13 @@ public sealed class DataRestorePreparerTests
 
         var result = await DataRestorePreparer.PrepareAsync(this.ArchivePath, this.Target, null, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Success, Is.False);
             Assert.That(result.Issue, Does.Contain("thread.json"));
             Assert.That(Directory.Exists(Path.Combine(this.Target.DataDirectory, ".restore-pending")), Is.False, "The next start must find nothing to apply.");
             Assert.That(Directory.Exists(Path.Combine(this.Target.ConfigDirectory, ".restore-pending")), Is.False);
-        });
+        }
     }
 
     [TestCase("27.1.0", "V6")]
@@ -105,11 +105,11 @@ public sealed class DataRestorePreparerTests
 
         var result = await DataRestorePreparer.PrepareAsync(this.ArchivePath, this.Target, null, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Success, Is.False, "Its settings or its index may have a form this version cannot read.");
             Assert.That(DataRestorePreparer.IsPrepared(this.Target), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -120,11 +120,11 @@ public sealed class DataRestorePreparerTests
 
         DataRestorePreparer.Discard(this.Target);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataRestorePreparer.IsPrepared(this.Target), Is.False);
             Assert.That(Directory.Exists(Path.Combine(this.Target.ConfigDirectory, ".restore-pending")), Is.False);
-        });
+        }
     }
 
     [Test]

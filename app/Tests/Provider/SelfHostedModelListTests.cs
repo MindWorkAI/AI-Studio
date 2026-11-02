@@ -79,12 +79,12 @@ public sealed class SelfHostedModelListTests
             .Select(model => model.Id)
             .ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(embeddingModels, Does.Contain("bge-m3:latest"), "Named after the family which built it, with no word about what it does.");
             Assert.That(embeddingModels, Does.Contain("all-minilm:latest"), "The same, and without the organization which used to be the only marker.");
             Assert.That(embeddingModels, Has.Count.EqualTo(5), "The three Qwen embedding tags belong here as well, and nothing else does.");
-        });
+        }
     }
 
     [Test]

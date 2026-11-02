@@ -84,12 +84,12 @@ public sealed class TemporaryChatMaintenanceTests
         await new TemporaryChatService(NullLogger<TemporaryChatService>.Instance, settings).StartMaintenanceAsync();
 
         var entries = await this.store.Client.GetEntriesAsync([expiredEntry!.Value, recentEntry!.Value], TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Directory.Exists(WorkspaceBehaviour.GetChatDirectory(Guid.Empty, expiredChat.ChatId)), Is.False, "The expired chat should be gone.");
             Assert.That(Directory.Exists(WorkspaceBehaviour.GetChatDirectory(Guid.Empty, recentChat.ChatId)), Is.True, "The recent chat should stay.");
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { recentEntry.Value }), "What the expired chat received should go with it, right away.");
-        });
+        }
     }
 
     /// <summary>

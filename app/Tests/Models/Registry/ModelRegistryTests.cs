@@ -114,12 +114,12 @@ public sealed class ModelRegistryTests
         var atOpenAI = ModelRegistry.Shared.Profile(LLMProviders.OPEN_AI, "gpt-5.1");
         var throughAGateway = ModelRegistry.Shared.Profile(LLMProviders.OPEN_ROUTER, "openai/gpt-5.1");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(atOpenAI.Has(Capability.RESPONSES_API), Is.True);
             Assert.That(throughAGateway.Has(Capability.RESPONSES_API), Is.False);
             Assert.That(throughAGateway.Has(Capability.FUNCTION_CALLING), Is.True, "Everything but the API survives the trip through a gateway.");
-        });
+        }
     }
 
     [Test]

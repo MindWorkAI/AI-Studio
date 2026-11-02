@@ -206,7 +206,7 @@ public partial class DataSourceManagement : MSGComponentBase
 
         if (eriDataSource.AuthMethod is AuthMethod.KERBEROS)
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
                 T("Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."),
                 T("Close"));
@@ -226,7 +226,7 @@ public partial class DataSourceManagement : MSGComponentBase
         var secretResponse = await this.RustService.GetSecret(eriDataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
         if (!secretResponse.Success)
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
                 string.Format(T("Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"), secretResponse.Issue),
                 T("Close"));
@@ -236,7 +236,7 @@ public partial class DataSourceManagement : MSGComponentBase
         var encryption = PluginFactory.EnterpriseEncryption;
         if (encryption?.IsAvailable != true)
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
                 T("Cannot export this ERI data source because no enterprise encryption secret is configured."),
                 T("Close"));
@@ -274,7 +274,7 @@ public partial class DataSourceManagement : MSGComponentBase
         var decryptedSecret = await secretResponse.Secret.Decrypt(Program.ENCRYPTION);
         if (!encryption.TryEncrypt(decryptedSecret, this.SettingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, out var encryptedSecret))
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
                 T("Cannot export this ERI data source because the authentication secret could not be encrypted."),
                 T("Close"));
@@ -353,7 +353,7 @@ public partial class DataSourceManagement : MSGComponentBase
         if (!this.DataSourceEmbeddingService.IsIndexingPaused)
             return false;
 
-        await this.DialogService.ShowMessageBox(title, T("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), T("Close"));
+        await this.DialogService.ShowMessageBoxAsync(title, T("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), T("Close"));
         return true;
     }
 
@@ -413,7 +413,7 @@ public partial class DataSourceManagement : MSGComponentBase
         var deleteSecretResponse = await this.RustService.DeleteSecret(mailbox, SecretStoreType.DATA_SOURCE);
         if (!deleteSecretResponse.Success)
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Delete Mailbox"),
                 string.Format(T("The password of this mailbox could not be deleted from the operating system, so the mailbox was kept. The issue was: {0}"), deleteSecretResponse.Issue),
                 T("Close"));

@@ -43,12 +43,12 @@ public sealed class WebAddressesTests
     [Test]
     public void TextWithoutAddressesHasNone()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(WebAddresses.Find("No address here, not even example.org."), Is.Empty, "Without a scheme, nobody can tell an address from a word.");
             Assert.That(WebAddresses.Find("ftp://example.org/report"), Is.Empty);
             Assert.That(WebAddresses.Find(null), Is.Empty);
-        });
+        }
     }
 
     [TestCase("https://example.org/report", "https://EXAMPLE.org/report")]
@@ -65,12 +65,12 @@ public sealed class WebAddressesTests
     [TestCase("http://[fd00::5]:8000/run-17/", "http://[FD00:0:0:0:0:0:0:5]:8000/run-17/")]
     public void AddressesAskingForTheSameCountAsTheSame(string inChat, string fromModel)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(WebAddresses.TryCreateRequestKey(inChat, out var expected), Is.True);
             Assert.That(WebAddresses.TryCreateRequestKey(fromModel, out var actual), Is.True);
             Assert.That(actual, Is.EqualTo(expected), "The server gets the same request, so nothing more of the chat leaves AI Studio.");
-        });
+        }
     }
 
     [TestCase("https://example.org/report?year=2026", "https://example.org/report?year=2026&note=budget")]
@@ -91,12 +91,12 @@ public sealed class WebAddressesTests
     [TestCase("http://[fd00::5]:8000/run-17/", "http://[fd00::5]:8001/run-17/")]
     public void AddressesAskingForSomethingElseDoNotCount(string inChat, string fromModel)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(WebAddresses.TryCreateRequestKey(inChat, out var expected), Is.True);
             Assert.That(WebAddresses.TryCreateRequestKey(fromModel, out var actual), Is.True);
             Assert.That(actual, Is.Not.EqualTo(expected), "The difference reaches the server, and it may be a piece of a mail.");
-        });
+        }
     }
 
     [TestCase("mailto:someone@example.org")]

@@ -216,11 +216,11 @@ public sealed class ModelAnswerJsonTests
     [Test]
     public void AListWithItsBracketsOnLinesOfTheirOwnIsRead()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ModelAnswerJson.ExtractObjectList(SELECTION).ToString(), Is.EqualTo(SELECTION));
             Assert.That(ModelAnswerJson.ExtractObjectList($"```json\n{SELECTION}\n```").ToString(), Is.EqualTo(SELECTION));
-        });
+        }
     }
 
     [Test]

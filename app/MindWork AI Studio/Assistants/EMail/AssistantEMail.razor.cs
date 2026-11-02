@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.EMail;
@@ -73,7 +74,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string inputGreeting = string.Empty;
     private string inputBulletPoints = string.Empty;
     private readonly List<string> bulletPointsLines = [];
-    private IEnumerable<string> selectedFoci = new HashSet<string>();
+    private IReadOnlyCollection<string> selectedFoci = new HashSet<string>();
     private string inputName = string.Empty;
     private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
     private string customTargetLanguage = string.Empty;
@@ -120,16 +121,9 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
         state.Restore(INPUT_HISTORY_STATE_KEY, value => this.inputHistory = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_EMAIL_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputBulletPoints = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputBulletPoints = payload.Text;
 
     #endregion
     
@@ -265,7 +259,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
 
     private async Task CreateMail()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

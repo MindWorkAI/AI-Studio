@@ -146,6 +146,19 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Settings"), StartPage.SETTINGS);
     }
 
+    /// <summary>
+    /// The interface sizes a screen offers.
+    /// </summary>
+    /// <param name="offerAppDefault">Whether to offer the app default, which only differs from the system scaling on the screen of a laptop.</param>
+    public static IEnumerable<ConfigurationSelectData<InterfaceSize>> GetInterfaceSizeData(bool offerAppDefault)
+    {
+        yield return new(TB("System scaling"), InterfaceSize.SYSTEM_SCALING);
+        if (offerAppDefault)
+            yield return new(TB("App default"), InterfaceSize.APP_DEFAULT);
+
+        yield return new(TB("Custom"), InterfaceSize.CUSTOM);
+    }
+
     public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
     {
         foreach (var source in Enum.GetValues<IconSources>())

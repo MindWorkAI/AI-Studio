@@ -44,11 +44,11 @@ public sealed class ModelListMetadataTests
                                                                            """, AS_THE_PROVIDERS_READ_IT);
 
         Assert.That(response.Data, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response.Data![0].ContextWindowTokens, Is.EqualTo(32_768));
             Assert.That(response.Data[0].OwnedBy, Is.EqualTo("vllm"), "Read with the shared options, this one arrives too -- it did not before.");
-        });
+        }
     }
 
     [Test]
@@ -86,11 +86,11 @@ public sealed class ModelListMetadataTests
                                                                            }
                                                                            """, AS_THE_PROVIDERS_READ_IT);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response.Data[0].ContextWindowTokens, Is.EqualTo(1_000_000));
             Assert.That(response.Data[0].Name, Is.EqualTo("Anthropic: Claude Sonnet 4.5"), "The fields we do read keep working next to the fields we deliberately do not.");
-        });
+        }
     }
 
     [Test]

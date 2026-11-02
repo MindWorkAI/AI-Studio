@@ -9,6 +9,7 @@ use tauri::{Manager, Url};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent, TerminatedPayload};
 use tauri_plugin_shell::ShellExt;
 use crate::runtime_api_token::API_TOKEN;
+use crate::app_access::{APP_HOST, DOTNET_ENV_UI_TOKEN, UI_ACCESS_TOKEN};
 use crate::app_window::change_location_to;
 use crate::runtime_certificate::CERTIFICATE_FINGERPRINT;
 use crate::encryption::ENCRYPTION;
@@ -177,46 +178,43 @@ fn dotnet_bundle_extraction_directory<R: tauri::Runtime>(app_handle: &tauri::App
 /// but also remove that code from any production build.
 #[cfg(debug_assertions)]
 pub fn create_startup_env_file() {
-
-    // Get the secret password & salt and convert it to a base64 string:
-    let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
-    let secret_key_salt = BASE64_STANDARD.encode(ENCRYPTION.secret_key_salt);
-    let api_port = *API_SERVER_PORT;
-
     warn!(Source = "Bootloader .NET"; "Development environment detected; create the startup env file at '../startup.env'.");
     let env_file_path = std::path::PathBuf::from("..").join("startup.env");
     let mut env_file = std::fs::File::create(env_file_path).unwrap();
-    let mut env_file_lines = vec![
-        format!("AI_STUDIO_SECRET_PASSWORD={secret_password}"),
-        format!("AI_STUDIO_SECRET_KEY_SALT={secret_key_salt}"),
-        format!("AI_STUDIO_CERTIFICATE_FINGERPRINT={}", CERTIFICATE_FINGERPRINT.get().unwrap()),
-        format!("AI_STUDIO_API_PORT={api_port}"),
-        format!("AI_STUDIO_API_TOKEN={}", API_TOKEN.to_hex_text()),
-    ];
-    for (key, value) in external_http_custom_root_certificate_policy_environment() {
-        env_file_lines.push(format!("{key}={value}"));
-    }
+    let env_file_lines: Vec<String> = ipc_environment()
+        .into_iter()
+        .map(|(key, value)| format!("{key}={value}"))
+        .collect();
 
     std::io::Write::write_all(&mut env_file, env_file_lines.join("\n").as_bytes()).unwrap();
     info!(Source = "Bootloader .NET"; "The startup env file was created successfully.");
 }
 
-/// Starts the .NET server in a separate process.
-pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
+/// Returns the environment which the .NET server needs to talk to this runtime and to let only
+/// the app window in. The sidecar gets it, and so does the startup env file in the development
+/// environment, so neither of them can miss a variable.
+fn ipc_environment() -> Vec<(String, String)> {
 
     // Get the secret password & salt and convert it to a base64 string:
     let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
     let secret_key_salt = BASE64_STANDARD.encode(ENCRYPTION.secret_key_salt);
     let api_port = *API_SERVER_PORT;
 
-    let mut dotnet_server_environment: HashMap<String, String> = HashMap::from_iter([
+    let mut environment = vec![
         (String::from("AI_STUDIO_SECRET_PASSWORD"), secret_password),
         (String::from("AI_STUDIO_SECRET_KEY_SALT"), secret_key_salt),
         (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), CERTIFICATE_FINGERPRINT.get().unwrap().to_string()),
         (String::from("AI_STUDIO_API_PORT"), format!("{api_port}")),
         (String::from("AI_STUDIO_API_TOKEN"), API_TOKEN.to_hex_text().to_string()),
-    ]);
-    dotnet_server_environment.extend(external_http_custom_root_certificate_policy_environment());
+        (String::from(DOTNET_ENV_UI_TOKEN), UI_ACCESS_TOKEN.to_hex_text().to_string()),
+    ];
+    environment.extend(external_http_custom_root_certificate_policy_environment());
+    environment
+}
+
+/// Starts the .NET server in a separate process.
+pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
+    let mut dotnet_server_environment: HashMap<String, String> = HashMap::from_iter(ipc_environment());
     if let Some(extraction_directory) = dotnet_bundle_extraction_directory(&app_handle) {
         dotnet_server_environment.insert(String::from(DOTNET_ENV_BUNDLE_EXTRACT_BASE_DIR), extraction_directory);
     }
@@ -303,7 +301,12 @@ pub async fn dotnet_ready() {
     }
 
     let dotnet_server_port = *DOTNET_SERVER_PORT;
-    let url = match Url::parse(format!("http://localhost:{dotnet_server_port}").as_str())
+
+    // A development build lets other browsers in, too, such as the one of an agent:
+    #[cfg(debug_assertions)]
+    tokio::task::spawn_blocking(move || crate::app_access::write_dev_boot_link(dotnet_server_port));
+
+    let url = match Url::parse(app_address(dotnet_server_port).as_str())
     {
         Ok(url) => url,
         Err(msg) => {
@@ -312,7 +315,14 @@ pub async fn dotnet_ready() {
         }
     };
 
-    change_location_to(url.as_str()).await;
+    change_location_to(url).await;
+}
+
+/// Returns the address of the app on the .NET server. The server listens on the IPv4 loopback
+/// address only, so the window goes there directly instead of resolving `localhost`, which may
+/// answer with the IPv6 loopback address first.
+fn app_address(port: u16) -> String {
+    format!("http://{APP_HOST}:{port}/")
 }
 
 /// Stops the .NET server process.
@@ -335,5 +345,48 @@ pub fn cleanup_dotnet_server() {
     let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME);
     if let Err(e) = kill_stale_process(pid_path, SIDECAR_TYPE) {
         warn!(Source = ".NET"; "Error during the cleanup of .NET: {}", e);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_window::is_local_http_url;
+
+    #[test]
+    fn the_app_address_is_the_ipv4_loopback_address() {
+        let url = Url::parse(app_address(61153).as_str()).unwrap();
+
+        assert_eq!(url.host_str(), Some("127.0.0.1"));
+        assert_eq!(url.port(), Some(61153));
+        assert_eq!(url.path(), "/");
+    }
+
+    #[test]
+    fn the_app_address_counts_as_local() {
+        let url = Url::parse(app_address(61153).as_str()).unwrap();
+        assert!(is_local_http_url(&url));
+    }
+
+    #[test]
+    fn the_ipc_environment_carries_every_variable_the_dotnet_server_needs() {
+        // Only the start of the app generates the certificate this fingerprint belongs to:
+        let _ = CERTIFICATE_FINGERPRINT.set(String::from("test-fingerprint"));
+
+        let environment = ipc_environment();
+        let keys: Vec<&str> = environment.iter().map(|(key, _)| key.as_str()).collect();
+        for expected in [
+            "AI_STUDIO_SECRET_PASSWORD",
+            "AI_STUDIO_SECRET_KEY_SALT",
+            "AI_STUDIO_CERTIFICATE_FINGERPRINT",
+            "AI_STUDIO_API_PORT",
+            "AI_STUDIO_API_TOKEN",
+            DOTNET_ENV_UI_TOKEN,
+        ] {
+            assert!(keys.contains(&expected), "The environment lacks {expected}.");
+        }
+
+        let ui_token = environment.iter().find(|(key, _)| key == DOTNET_ENV_UI_TOKEN).map(|(_, value)| value.as_str());
+        assert_eq!(ui_token, Some(UI_ACCESS_TOKEN.to_hex_text()));
     }
 }

@@ -8,7 +8,7 @@
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("You can enter text, use one or more documents or images, or use both. At least one of these options is required.")
 </MudJustifiedText>
-<MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" Sizing="InputSizing.Fixed" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 @* Side by side where the window is wide enough; each column ends with its zone, so both zones line up below explanations of different length: *@
 <MudGrid Class="mt-1">
@@ -60,7 +60,7 @@
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.")
 </MudJustifiedText>
-<MudTextField T="string" AutoGrow="true" Lines="3" @bind-Text="@this.importantAspects" class="mb-1" Label="@T("(Optional) Important Aspects")" ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" Sizing="InputSizing.Auto" Lines="3" @bind-Text="@this.importantAspects" class="mb-1" Label="@T("(Optional) Important Aspects")" ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Extent of the planned presentation")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">

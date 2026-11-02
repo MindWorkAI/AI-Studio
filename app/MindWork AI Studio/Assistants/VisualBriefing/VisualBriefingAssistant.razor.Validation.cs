@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Rust;
@@ -109,10 +110,21 @@ public partial class VisualBriefingAssistant
     private string? ValidateProjectName(string name) => string.IsNullOrWhiteSpace(name) ? T("Please provide a briefing name.") : null;
 
     /// <summary>Validates the selected generation provider.</summary>
-    private string? ValidateProvider(ProviderSettings value) =>
-        value == ProviderSettings.NONE || value.UsedLLMProvider is LLMProviders.NONE
-            ? T("Please select a provider.")
-            : null;
+    /// <remarks>
+    /// A provider which may not see a text sent to this briefing is reported here, before the build starts. A provider the
+    /// organization prohibited is not: it fails for every briefing alike, and the build reports it.
+    /// </remarks>
+    private string? ValidateProvider(ProviderSettings value)
+    {
+        if (value == ProviderSettings.NONE || value.UsedLLMProvider is LLMProviders.NONE)
+            return T("Please select a provider.");
+
+        var restrictions = this.selectedBriefing?.Restrictions ?? ChatRestrictions.NONE;
+        if (!restrictions.IsLLMProviderAllowed(value) && ChatRestrictions.NONE.IsLLMProviderAllowed(value))
+            return T("This provider may not see the text sent to this briefing, because of where the text came from. Please select another provider.");
+
+        return null;
+    }
 
     /// <summary>Validates the free-form target language when Other is selected.</summary>
     private string? ValidateCustomTargetLanguage(string language) =>

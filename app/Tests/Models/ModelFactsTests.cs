@@ -20,11 +20,11 @@ public sealed class ModelFactsTests
     {
         ContextWindow untouched = default;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(untouched.IsKnown, Is.False);
             Assert.That(untouched, Is.EqualTo(ContextWindow.UNKNOWN));
-        });
+        }
     }
 
     [Test]
@@ -32,12 +32,12 @@ public sealed class ModelFactsTests
     {
         var window = ContextWindow.Of(128_000, 1_000_000);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(window.IsKnown, Is.True);
             Assert.That(window.DefaultTokens, Is.EqualTo(128_000));
             Assert.That(window.RaisableToTokens, Is.EqualTo(1_000_000));
-        });
+        }
     }
 
     [Test]
@@ -59,11 +59,11 @@ public sealed class ModelFactsTests
     {
         TokenizerRef untouched = default;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(untouched.IsKnown, Is.False);
             Assert.That(untouched.Kind, Is.EqualTo(TokenizerKind.UNKNOWN));
-        });
+        }
     }
 
     [Test]
@@ -79,12 +79,12 @@ public sealed class ModelFactsTests
     {
         ImageLimits untouched = default;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(untouched.IsKnown, Is.False);
             Assert.That(untouched.MaxPerMessage, Is.Null);
             Assert.That(untouched.MaxPerRequest, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -92,11 +92,11 @@ public sealed class ModelFactsTests
     {
         var noImages = new ImageLimits(MaxPerMessage: 0, MaxPerRequest: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(noImages.IsKnown, Is.True, "Zero images is a statement an operator can make.");
             Assert.That(noImages.MaxPerMessage, Is.EqualTo(0));
-        });
+        }
     }
 
     [Test]

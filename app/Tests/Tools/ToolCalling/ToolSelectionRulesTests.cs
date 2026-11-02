@@ -32,11 +32,11 @@ public sealed class ToolSelectionRulesTests : ToolRegistryTestBase
     {
         var registry = this.CreateAppRegistry();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.NormalizeSelection([toolId]), Is.EquivalentTo(new[] { MAILBOXES }), "A selection stored before the tool joined its collection selects the whole collection.");
             Assert.That(registry.ExpandSelection([toolId]), Is.EquivalentTo(new[] { SEARCH_MAILS, READ_MAIL, COUNT_MAILS }), "The model sees each tool of the collection on its own.");
-        });
+        }
     }
 
     [Test]
@@ -63,13 +63,13 @@ public sealed class ToolSelectionRulesTests : ToolRegistryTestBase
     {
         var registry = this.CreateAppRegistry();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.NormalizeSelection(["tool_of_a_plugin"]), Is.EquivalentTo(new[] { "tool_of_a_plugin" }), "The tool may arrive with a plugin installed later.");
             Assert.That(registry.ExpandSelection(["tool_of_a_plugin"]), Is.EquivalentTo(new[] { "tool_of_a_plugin" }));
             Assert.That(registry.IsKnown("tool_of_a_plugin"), Is.False);
             Assert.That(registry.IsKnown(MAILBOXES), Is.True, "An assistant may name a collection.");
-        });
+        }
     }
 
     [Test]
@@ -86,11 +86,11 @@ public sealed class ToolSelectionRulesTests : ToolRegistryTestBase
     {
         var registry = this.CreateAppRegistry();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.NormalizeSelection([WEB_SEARCH, WEB_SEARCH]), Has.Count.EqualTo(1));
             Assert.That(registry.NormalizeSelection([MAILBOXES, SEARCH_MAILS, READ_MAIL]), Has.Count.EqualTo(1), "The collection and two of its tools are the same selection.");
-        });
+        }
     }
 
     [Test]
@@ -108,11 +108,11 @@ public sealed class ToolSelectionRulesTests : ToolRegistryTestBase
         var catalog = await this.CreateAppRegistry().GetCatalogAsync(AIStudio.Tools.Components.CHAT);
         var mailboxes = catalog.Single(item => item.Id == MAILBOXES);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(catalog.Select(item => item.Id), Is.EquivalentTo(new[] { MAILBOXES, WEB_SEARCH, READ_WEB_PAGE, SEARCH_CONFLUENCE }), "Semantic Search is nobody's to select, and the mail tools are one entry.");
             Assert.That(mailboxes.Tools.Select(tool => tool.Definition.Id), Is.EqualTo(new[] { SEARCH_MAILS, READ_MAIL, COUNT_MAILS }), "In the order the collection lists them.");
-        });
+        }
     }
 
     [Test]

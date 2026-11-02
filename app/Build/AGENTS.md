@@ -17,6 +17,11 @@ changelog entries.
 6. After PR merge, maintainer creates git tag: `vX.Y.Z`
 7. GitHub Actions builds release binaries for all platforms
 8. Binaries uploaded to GitHub Releases
+9. Once the release is published, update the wiki (`MindWorkAI/AI-Studio.wiki`): carry the "Wiki" sections
+   of the pull requests merged since the last release into it, mark what needs the new version with
+   "Requires AI Studio vX.Y.Z or newer", and raise the version in `_Footer.md` and `de/_Footer.md`. The
+   pull requests are listed by the command of step 2 with `--json number,title,body` and without `--jq`.
+   The release command reminds you of this step when it is done.
 
 ## Crediting contributors
 

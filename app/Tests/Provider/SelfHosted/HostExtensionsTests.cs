@@ -58,12 +58,12 @@ public sealed class HostExtensionsTests
     [Test]
     public void TheHostNoneLoadsNoModels()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Host.NONE.IsModelListSupported(), Is.False);
             Assert.That(Host.NONE.IsEmbeddingSupported(), Is.False);
             Assert.That(Host.NONE.IsTranscriptionSupported(), Is.False);
             Assert.That(LLMProviders.SELF_HOSTED.CanLoadModels(Host.NONE, "a key"), Is.False);
-        });
+        }
     }
 }

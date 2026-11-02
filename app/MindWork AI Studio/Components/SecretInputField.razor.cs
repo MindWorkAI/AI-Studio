@@ -44,10 +44,10 @@ public partial class SecretInputField : MSGComponentBase
 
     private string ToggleVisibilityTooltip => this.isSecretVisible ? T("Hide content") : T("Show content");
 
-    private Task OnSecretChanged(string arg)
+    private Task OnSecretChanged(string? arg)
     {
-        this.Secret = arg;
-        return this.SecretChanged.InvokeAsync(arg);
+        this.Secret = arg ?? string.Empty;
+        return this.SecretChanged.InvokeAsync(this.Secret);
     }
 
     private void ToggleVisibility() => this.isSecretVisible = !this.isSecretVisible;

@@ -82,11 +82,11 @@ public sealed class TranscriptCleanupTests
 
         FileSourceIndexer.DeleteUnusedTranscripts(this.store, manifest, NullLogger.Instance);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.store.ListKeys(), Is.EqualTo(new[] { KEY_A }));
             Assert.That(File.Exists(temporaryPath), Is.False, "A temporary file of an interrupted write is no transcript of anything.");
-        });
+        }
     }
 
     [Test]

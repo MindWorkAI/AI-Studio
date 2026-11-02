@@ -67,14 +67,14 @@ public sealed class MailboxStateStoreTests
         await this.Client.HoldBackMailRemovalAsync(DATA_SOURCE_ID, 800, TOKEN);
         var stateAfterMoreMails = await this.Client.GetMailboxSyncStateAsync(DATA_SOURCE_ID, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(approvedAnotherCount, Is.False, "A sync changed the count while the user looked at the old one.");
             Assert.That(stateAfterAnotherCount.PendingRemovalApprovedUtc, Is.Null);
             Assert.That(approvedTheCount, Is.True);
             Assert.That(stateAfterTheSameCountAgain.PendingRemovalApprovedUtc, Is.Not.Null, "The next sync finds the same count and may go ahead.");
             Assert.That(stateAfterMoreMails, Is.EqualTo(new MailboxSyncState(null, 800, null)), "The user agreed to 500 mails, not to whatever comes.");
-        });
+        }
     }
 
     [Test]
@@ -83,17 +83,17 @@ public sealed class MailboxStateStoreTests
         var approved = await this.Client.ApprovePendingMailRemovalAsync(DATA_SOURCE_ID, 500, TOKEN);
         var state = await this.Client.GetMailboxSyncStateAsync(DATA_SOURCE_ID, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(approved, Is.False);
             Assert.That(state, Is.EqualTo(new MailboxSyncState(null, null, null)));
-        });
+        }
     }
 
     [Test]
-    public void ARemovalOfNoMailIsNothingToHoldBack()
+    public async Task ARemovalOfNoMailIsNothingToHoldBack()
     {
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => this.Client.HoldBackMailRemovalAsync(DATA_SOURCE_ID, 0, TOKEN));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => this.Client.HoldBackMailRemovalAsync(DATA_SOURCE_ID, 0, TOKEN));
     }
 
     [Test]
@@ -111,12 +111,12 @@ public sealed class MailboxStateStoreTests
         await this.Client.ClearMailboxAuthFailureAsync(DATA_SOURCE_ID, TOKEN);
         var afterClearing = await this.Client.GetMailboxAuthFailureAsync(DATA_SOURCE_ID, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(afterFirst, Is.EqualTo(first));
             Assert.That(afterSecond, Is.EqualTo(second), "The one try the user asked for failed again.");
             Assert.That(afterClearing, Is.Null);
-        });
+        }
     }
 
     [Test]

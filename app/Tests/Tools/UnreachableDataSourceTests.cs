@@ -82,11 +82,11 @@ public sealed class UnreachableDataSourceTests
         var (outcome, statuses, manifest) = await RunAsync(Folder(folder), [Path.Combine(folder, "report.pdf")], [unfinishedFile]);
 
         AssertTheIndexWasKept(outcome, statuses, manifest, 1, folder);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(manifest.UnfinishedFiles, Does.Contain(unfinishedFile), "An unmounted drive must not discard interrupted work either.");
             Assert.That(statuses[^1].LastError, Does.Contain("appears empty").And.Contain("remove this data source"));
-        });
+        }
     }
 
     [Test]
@@ -97,12 +97,12 @@ public sealed class UnreachableDataSourceTests
 
         var (outcome, statuses, manifest) = await RunAsync(Folder(folder));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.DONE));
             Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
             Assert.That(manifest.Files, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -149,13 +149,13 @@ public sealed class UnreachableDataSourceTests
 
         var (outcome, statuses, manifest) = await RunAsync(Folder(folder), [fileInSubfolder], [unfinishedFileInSubfolder]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.DONE));
             Assert.That(manifest.Files.Keys, Is.EquivalentTo([fileInSubfolder]), "The file is out of reach, not gone. Once the subfolder can be read again, it is still indexed.");
             Assert.That(manifest.UnfinishedFiles, Is.EquivalentTo([unfinishedFileInSubfolder]), "A file whose indexing never came to an end is out of reach as well. Once the subfolder can be read again, indexing it replaces its leftovers.");
             Assert.That(statuses[^1].Failures.Select(failure => failure.DocumentKey), Has.Member(subfolder), "The user has to learn which subfolder could not be read.");
-        });
+        }
     }
 
     [Test]
@@ -195,7 +195,7 @@ public sealed class UnreachableDataSourceTests
 
     private static void AssertTheIndexWasKept(IndexedRunOutcome outcome, List<DataSourceEmbeddingStatus> statuses, DataSourceEmbeddingManifest manifest, int indexedFiles, string unreachablePath)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.DONE), "Nothing can be done until the file or the folder is back.");
             Assert.That(manifest.Files, Has.Count.EqualTo(indexedFiles), "Embedding everything again once the file or the folder is back costs hours.");
@@ -205,7 +205,7 @@ public sealed class UnreachableDataSourceTests
             Assert.That(statuses[^1].IndexedDocuments, Is.EqualTo(indexedFiles), "The index still holds these files, and the page has to say so.");
             Assert.That(statuses[^1].LastError, Does.Contain(unreachablePath));
             Assert.That(statuses[^1].Attention, Is.EqualTo(DataSourceAttention.LOCATION_UNREACHABLE), "The embeddings page offers to edit the data source, e.g. to select the new location of a moved folder.");
-        });
+        }
     }
 
     private void TakeAwayTheRightToRead(string directory)

@@ -311,7 +311,7 @@
                         <MudJustifiedText Typo="Typo.body2" Class="mb-4">
                             @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
                         </MudJustifiedText>
-                        <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
+                        <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" Sizing="InputSizing.Auto" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
                         @if (this.ShowTokenizerSettings)
                         {
                             <MudJustifiedText Typo="Typo.body1" Class="mt-4 mb-3">

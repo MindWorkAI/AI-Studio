@@ -64,11 +64,11 @@ public sealed class ConversationTokensTests
             ImageLimits = new ImageLimits(8, 100),
         };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(counted.TooManyImages, Is.True);
             Assert.That(counted.ImageLimits.MaxInOneMessage, Is.EqualTo(8));
-        });
+        }
     }
 
     [Test]
@@ -111,11 +111,11 @@ public sealed class ConversationTokensTests
 
         var estimated = reported with { HistoryIsReported = false };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reported.UncountedImages, Is.EqualTo(1), "The provider counted the two which were sent.");
             Assert.That(estimated.UncountedImages, Is.EqualTo(3), "Without a report, nobody counted any of them.");
-        });
+        }
     }
 
     [Test]
@@ -133,11 +133,11 @@ public sealed class ConversationTokensTests
             ImageLimits = new ImageLimits(8, null),
         };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(counted.UncountedImages, Is.Zero);
             Assert.That(counted.TooManyImages, Is.True);
-        });
+        }
     }
 
     [Test]

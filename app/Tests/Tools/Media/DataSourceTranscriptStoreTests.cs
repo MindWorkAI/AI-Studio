@@ -42,11 +42,11 @@ public sealed class DataSourceTranscriptStoreTests
         var mediaPath = await this.CreateMediaAsync("recording.mp3", [1, 2, 3]);
         var slot = await this.Store().ResolveAsync(mediaPath, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceTranscriptStore.IsKey(slot.Key), Is.True);
             Assert.That(slot.Path, Is.EqualTo(Path.Join(this.dataDirectory, DataSourceTranscriptStore.FOLDER_NAME, DATA_SOURCE_ID, slot.Key + ".md")));
-        });
+        }
     }
 
     [Test]
@@ -62,11 +62,11 @@ public sealed class DataSourceTranscriptStoreTests
         var copySlot = await store.ResolveAsync(copy, CancellationToken.None);
         var otherSlot = await store.ResolveAsync(other, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(copySlot, Is.EqualTo(originalSlot));
             Assert.That(otherSlot.Key, Is.Not.EqualTo(originalSlot.Key));
-        });
+        }
     }
 
     [Test]
@@ -81,12 +81,12 @@ public sealed class DataSourceTranscriptStoreTests
         var slotWhileUnchanged = await store.WithKnownContentHash(unrelatedHash, _ => true).ResolveAsync(mediaPath, CancellationToken.None);
         var slotOnceChanged = await store.WithKnownContentHash(unrelatedHash, _ => false).ResolveAsync(mediaPath, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(slotWhileUnchanged.Key, Is.EqualTo(unrelatedHash), "Hashing a video reads all of it, which the indexer did already.");
             Assert.That(slotWhileUnchanged.Path, Is.EqualTo(store.GetPath(unrelatedHash)));
             Assert.That(slotOnceChanged.Key, Is.EqualTo(knownHash), "A file which changed since it was hashed must not get the transcript of its content before.");
-        });
+        }
     }
 
     [Test]
@@ -108,14 +108,14 @@ public sealed class DataSourceTranscriptStoreTests
         File.SetLastWriteTimeUtc(renamedPath, DateTime.UtcNow.AddMinutes(5));
         var second = await PersistentMediaTranscript.ReadOrCreateAsync(this.Store(), renamedPath, provider, Transcribe, NullLogger.Instance, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(first.Status, Is.EqualTo(PersistentMediaTranscriptStatus.READY));
             Assert.That(second.Status, Is.EqualTo(PersistentMediaTranscriptStatus.READY));
             Assert.That(second.Reused, Is.True);
             Assert.That(calls, Is.EqualTo(1));
             Assert.That(Directory.GetFiles(this.userFolder), Has.Length.EqualTo(1), "The data source wrote into the folder of the user.");
-        });
+        }
     }
 
     [Test]
@@ -134,12 +134,12 @@ public sealed class DataSourceTranscriptStoreTests
 
         store.DeleteAll();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(File.Exists(transcriptPath), Is.False);
             Assert.That(Directory.GetFiles(folder, "*.tmp"), Is.Empty);
             Assert.That(File.Exists(Path.Combine(folder, "notes.md")), Is.True, "A file which the store did not write was deleted.");
-        });
+        }
     }
 
     [Test]
@@ -183,11 +183,11 @@ public sealed class DataSourceTranscriptStoreTests
         var deleted = store.Delete(key);
         store.DeleteAll();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deleted, Is.False);
             Assert.That(File.ReadAllText(targetPath), Is.EqualTo("Precious"));
-        });
+        }
     }
 
     [Test]
@@ -208,7 +208,7 @@ public sealed class DataSourceTranscriptStoreTests
         var copied = await DataSourceTranscriptStore.CopyAllAsync(this.dataDirectory, targetDirectory, CancellationToken.None);
 
         var copiedFiles = Directory.GetFiles(targetDirectory, "*", SearchOption.AllDirectories).Select(path => Path.GetRelativePath(targetDirectory, path).Replace('\\', '/'));
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(copied, Is.EqualTo(2));
             Assert.That(copiedFiles, Is.EquivalentTo(new[]
@@ -216,7 +216,7 @@ public sealed class DataSourceTranscriptStoreTests
                 $"{DataSourceTranscriptStore.FOLDER_NAME}/{DATA_SOURCE_ID}/{new string('d', 64)}.md",
                 $"{DataSourceTranscriptStore.FOLDER_NAME}/{secondId}/{new string('e', 64)}.md",
             }));
-        });
+        }
     }
 
     [Test]

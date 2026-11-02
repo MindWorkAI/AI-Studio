@@ -25,13 +25,13 @@ public sealed class PlainFileExportTests
     {
         var files = PlainFileExport.ExtractFiles(Lines("```html", PAGE, "```"), ',');
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(files, Has.Count.EqualTo(1));
             Assert.That(files[0].Format, Is.EqualTo(FileExportFormat.HTML));
             Assert.That(files[0].Content, Is.EqualTo(PAGE), "The page leaves the answer exactly as the model wrote it, without the fence around it.");
             Assert.That(files[0].Caption, Is.Empty, "Without a heading above it, a code block has nothing to be named after.");
-        });
+        }
     }
 
     [Test]
@@ -41,11 +41,11 @@ public sealed class PlainFileExportTests
 
         var files = PlainFileExport.ExtractFiles(answer, ',');
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(files, Has.Count.EqualTo(1), "Models rarely answer with the block alone, so the text around it must not hide it.");
             Assert.That(files[0].Content, Is.EqualTo(PAGE));
-        });
+        }
     }
 
     [TestCase("HTML", FileExportFormat.HTML)]
@@ -56,12 +56,12 @@ public sealed class PlainFileExportTests
     {
         var files = PlainFileExport.ExtractFiles(Lines($"```{infoString}", "The content.", "```"), ',');
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(files, Has.Count.EqualTo(1));
             Assert.That(files[0].Format, Is.EqualTo(expectedFormat));
             Assert.That(files[0].Content, Is.EqualTo("The content."));
-        });
+        }
     }
 
     [Test]
@@ -82,13 +82,13 @@ public sealed class PlainFileExportTests
     {
         var files = PlainFileExport.ExtractFiles(Lines(openingFence, "print(42)", openingFence[..3]), ',');
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(files, Has.Count.EqualTo(1));
             Assert.That(files[0].Format, Is.EqualTo(FileExportFormat.SOURCE_CODE));
             Assert.That(files[0].ToName(), Is.EqualTo(expectedName));
             Assert.That(files[0].Content, Is.EqualTo("print(42)"), "The code leaves the answer exactly as the model wrote it, without the fence around it.");
-        });
+        }
     }
 
     [Test]
@@ -217,12 +217,12 @@ public sealed class PlainFileExportTests
         var part = Markdig.Markdown.Parse(answer[partStart..], Markdown.CHAT_MARKDOWN_PIPELINE);
         var blockOfThePart = part.Descendants<FencedCodeBlock>().Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(files, Has.Count.EqualTo(2));
             Assert.That(partStart + blockOfThePart.Span.Start, Is.EqualTo(files[1].Position));
             Assert.That(files[1].ToName(), Is.EqualTo("Rust (.rs)"));
-        });
+        }
     }
 
     private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);

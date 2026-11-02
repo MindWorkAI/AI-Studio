@@ -293,7 +293,7 @@ window.localShortcut = {
 }
 
 // What floats above the page without ever being a drop target. Two of these take part in hit testing as
-// MudBlazor 8.15 stands: an open .mud-popover -- a closed one already declines pointer events through
+// MudBlazor 9.12 stands: an open .mud-popover -- a closed one already declines pointer events through
 // .mud-popover:not(.mud-popover-open) -- and .mud-snackbar, which asks for them explicitly with
 // pointer-events: auto even though its container declines them, and snackbars appear constantly in this
 // app. Without this list, a drag would be answered by whatever happens to float on screen rather than by
@@ -306,12 +306,12 @@ const skippedDropOverlays = '.mud-popover, .mud-tooltip, .mud-snackbar, #mud-sna
 
 // The drop zones of the app, addressed by the cursor position of a native drag and drop event.
 //
-// The arbitration between overlapping zones is left to the browser, and it can be: MudBlazor 8.15 gives
+// The arbitration between overlapping zones is left to the browser, and it can be: MudBlazor 9.12 gives
 // neither .mud-dialog-container nor .mud-overlay a pointer-events: none. Both fill the viewport while a
 // dialog is open, so a point beside the dialog box hits the container, and nothing there is a drop zone. A
 //  drop, therefore, cannot reach through an open dialog into the page behind it -- the very thing the app
 // used to enforce by counting layers in C#. That single CSS property carries this whole design, so it
-// belongs on the checklist for every MudBlazor major version, starting with the move to 9.
+// belongs on the checklist for every MudBlazor major version.
 window.dropZones = {
 
     // Names the drop zone at the given viewport position, or null when there is none.

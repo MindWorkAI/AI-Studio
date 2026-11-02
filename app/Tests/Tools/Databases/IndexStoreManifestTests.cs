@@ -33,11 +33,11 @@ public sealed class IndexStoreManifestTests
 
         var manifest = await store.Client.GetManifestAsync(DATA_SOURCE_ID, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(manifest.Files.Keys, Is.EquivalentTo([indexedFile]), "A file whose indexing never came to an end has to be indexed again.");
             Assert.That(manifest.UnfinishedFiles, Is.EquivalentTo([unfinishedFile]), "Without this, nothing removes its leftovers once the file is gone or no longer selected.");
-        });
+        }
     }
 
     [Test]
@@ -54,11 +54,11 @@ public sealed class IndexStoreManifestTests
 
         var manifest = await store.Client.GetManifestAsync(DATA_SOURCE_ID, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(manifest.Files[recording].TranscriptKey, Is.EqualTo(transcriptKey), "Without the key, AI Studio cannot remove the transcript once the recording is gone.");
             Assert.That(manifest.Files[document].TranscriptKey, Is.Null);
-        });
+        }
     }
 
     /// <remarks>
@@ -79,11 +79,11 @@ public sealed class IndexStoreManifestTests
 
         var manifest = await store.Client.GetManifestAsync(DATA_SOURCE_ID, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(manifest.Files[hashedFile].ContentHash, Is.EqualTo(contentHash));
             Assert.That(manifest.Files[olderFile].ContentHash, Is.Null, "A file indexed before the hash was kept is read again the next time it looks changed.");
-        });
+        }
     }
 
     private static EmbeddingStateFile Row(string filePath, int chunkCount)

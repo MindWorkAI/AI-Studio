@@ -23,13 +23,13 @@ public sealed class MailRemovalGuardTests
     public void AMassRemovalIsHeldBackUntilExactlyItWasApproved()
     {
         var approvedNow = DateTimeOffset.UtcNow;
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailRemovalGuard.Decide(1_000, 500, NOTHING_PENDING), Is.EqualTo(MailRemovalDecision.HOLD_BACK));
             Assert.That(MailRemovalGuard.Decide(1_000, 500, new(null, 500, null)), Is.EqualTo(MailRemovalDecision.HOLD_BACK), "A removal nobody approved went ahead.");
             Assert.That(MailRemovalGuard.Decide(1_000, 500, new(null, 500, approvedNow)), Is.EqualTo(MailRemovalDecision.PROCEED));
             Assert.That(MailRemovalGuard.Decide(1_000, 600, new(null, 500, approvedNow)), Is.EqualTo(MailRemovalDecision.HOLD_BACK), "The approval counted for another number.");
             Assert.That(MailRemovalGuard.Decide(1_000, 10, NOTHING_PENDING), Is.EqualTo(MailRemovalDecision.PROCEED));
-        });
+        }
     }
 }

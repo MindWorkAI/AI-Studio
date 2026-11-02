@@ -36,12 +36,12 @@ public sealed class ToolSwitchedOffByUserTests : ToolRegistryTestBase
         var forTheSettings = await registry.GetCatalogAsync(registry.GetAllDefinitions());
         var forItsDialog = await registry.GetCatalogItemAsync(TOOL_ID);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(forTheChat.Select(item => item.Id), Is.EqualTo(new[] { OTHER_TOOL_ID }), "Every selection is built from this list.");
             Assert.That(forTheSettings.Single(item => item.Id == TOOL_ID).SwitchOffReason, Is.EqualTo(ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER), "Otherwise, the user could never switch it on again.");
             Assert.That(forItsDialog?.IsActive, Is.False, "The settings dialog of the tool still opens.");
-        });
+        }
     }
 
     [Test]
@@ -64,11 +64,11 @@ public sealed class ToolSwitchedOffByUserTests : ToolRegistryTestBase
         var counted = registry.FilterToolIdsForProvider(ToolCapableProvider(), [TOOL_ID, OTHER_TOOL_ID], OutboundDataRestriction.UNRESTRICTED);
         var preselected = await registry.FilterSelectableToolIdsAsync(AIStudio.Tools.Components.CHAT, [TOOL_ID, OTHER_TOOL_ID]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(counted, Is.EquivalentTo(new[] { OTHER_TOOL_ID }), "The token count below the message field.");
             Assert.That(preselected, Is.EquivalentTo(new[] { OTHER_TOOL_ID }), "A chat template or a launcher which names the tool.");
-        });
+        }
     }
 
     [Test]
@@ -88,12 +88,12 @@ public sealed class ToolSwitchedOffByUserTests : ToolRegistryTestBase
         var executor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance);
         var outcome = await executor.ExecuteAsync("call-1", TOOL_ID, "{}", runnableTools, new NoProvider(), new ChatThread(), order: 1);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(runnableTools, Is.Empty, "The request does not offer the tool.");
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
             Assert.That(wasCalled, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -107,12 +107,12 @@ public sealed class ToolSwitchedOffByUserTests : ToolRegistryTestBase
         registry.SetSwitchedOffByUser(TOOL_ID, false);
         var afterSwitchingOn = await registry.GetRunnableToolsAsync(this.ContextFor(ToolCapableProvider()), selection, mayRunTools: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(whileSwitchedOff, Is.Empty);
             Assert.That(afterSwitchingOn.Select(tool => tool.Definition.Id), Is.EqualTo(new[] { TOOL_ID }), "The selection kept the tool all along.");
             Assert.That(this.StoredIds, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -123,12 +123,12 @@ public sealed class ToolSwitchedOffByUserTests : ToolRegistryTestBase
 
         var reason = await registry.GetOfferBlockReasonAsync(SEARCH_TOOL_ID, ToolCapableProvider(), AIStudio.Tools.Components.CHAT);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.StoredIds, Is.EquivalentTo(new[] { COLLECTION_ID }), "The choice belongs to the collection, not to the tool it was made for.");
             Assert.That(registry.IsSwitchedOffByUser(SEARCH_TOOL_ID), Is.True);
             Assert.That(reason, Is.EqualTo(ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER));
-        });
+        }
     }
 
     [Test]
@@ -140,12 +140,12 @@ public sealed class ToolSwitchedOffByUserTests : ToolRegistryTestBase
         var whileSwitchedOff = registry.IsToolActive(SEARCH_TOOL_ID);
         registry.SetSwitchedOffByUser(COLLECTION_ID, false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(whileSwitchedOff, Is.False, "An entry for one tool counts for its whole collection.");
             Assert.That(registry.IsToolActive(SEARCH_TOOL_ID), Is.True, "The old entry of the reader would keep the collection switched off.");
             Assert.That(this.StoredIds, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -158,11 +158,11 @@ public sealed class ToolSwitchedOffByUserTests : ToolRegistryTestBase
         var whileBothApply = registry.IsSwitchedOffByUser(TOOL_ID);
         this.SettingsManager.ConfigurationData.Tools.DisabledToolIds.Remove(TOOL_ID);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(whileBothApply, Is.True);
             Assert.That(registry.IsToolActive(TOOL_ID), Is.False);
-        });
+        }
     }
 
     [Test]

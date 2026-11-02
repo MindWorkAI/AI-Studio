@@ -49,12 +49,12 @@ public sealed class ModelHostIndexTests
     {
         var index = ModelHostIndex.Build([new SplittingHost()]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(index.ProvidersWithoutAHost, Does.Contain(LLMProviders.ANTHROPIC));
             Assert.That(index.ProvidersWithoutAHost, Does.Not.Contain(LLMProviders.OPEN_ROUTER));
             Assert.That(index.ProvidersWithoutAHost, Does.Not.Contain(LLMProviders.NONE), "Nobody can configure it, so nobody has to write a host for it.");
-        });
+        }
     }
 
     [Test]
@@ -63,12 +63,12 @@ public sealed class ModelHostIndexTests
         var index = ModelHostIndex.Build([new SplittingHost()]);
         var unwrapped = index.Unwrap(new ModelId("anthropic/claude-opus-5"), LLMProviders.ANTHROPIC, out var vendor);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(index.Of(LLMProviders.ANTHROPIC), Is.Null);
             Assert.That(unwrapped.Original, Is.EqualTo("anthropic/claude-opus-5"));
             Assert.That(vendor, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -82,11 +82,11 @@ public sealed class ModelHostIndexTests
         var profile = new ModelProfile { Capabilities = Capability.TEXT_INPUT | Capability.RESPONSES_API };
         var throughTheProvider = index.ApplyTransport(profile, LLMProviders.ANTHROPIC);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(throughTheProvider.Has(Capability.RESPONSES_API), Is.False);
             Assert.That(throughTheProvider.Has(Capability.CHAT_COMPLETION_API), Is.True);
-        });
+        }
     }
 
     [Test]

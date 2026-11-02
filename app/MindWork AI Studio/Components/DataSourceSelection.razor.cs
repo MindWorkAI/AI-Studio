@@ -17,9 +17,6 @@ public partial class DataSourceSelection : MSGComponentBase
     public DataSourceSelectionMode SelectionMode { get; set; } = DataSourceSelectionMode.SELECTION_MODE;
     
     [Parameter]
-    public PopoverTriggerMode PopoverTriggerMode { get; set; } = PopoverTriggerMode.BUTTON;
-    
-    [Parameter]
     public string PopoverButtonClasses { get; set; } = string.Empty;
     
     [Parameter]

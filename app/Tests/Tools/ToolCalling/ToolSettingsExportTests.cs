@@ -25,12 +25,12 @@ public sealed class ToolSettingsExportTests : ToolRegistryTestBase
         var item = await this.CreateCollectionItemAsync();
         var areas = ToolSettingsService.GetExportAreas(item.Tools);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(areas.Select(area => area.Id), Is.EqualTo(new[] { $"{SEARCH_TOOL_ID}/", $"{READ_TOOL_ID}/" }), "Both tools put their settings into the nameless area, which only the tool tells apart; the order is the collection's.");
             Assert.That(areas[0].Label, Does.StartWith($"{SEARCH_TOOL_ID}: "), "With two tools to choose from, each area names its tool.");
             Assert.That(areas[1].Label, Does.StartWith($"{READ_TOOL_ID}: "));
-        });
+        }
     }
 
     [Test]
@@ -50,13 +50,13 @@ public sealed class ToolSettingsExportTests : ToolRegistryTestBase
 
         var result = await this.CreateToolSettingsService().ExportAsync(item.Tools, new() { SelectedAreaIds = areas.Select(area => area.Id).ToHashSet() }, COLLECTION_ID, ConfidenceLevel.HIGH);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Success, Is.True, result.ErrorMessage);
             Assert.That(result.LuaCode, Does.Contain($"[\"{SEARCH_TOOL_ID}.{REQUIRED_SETTING}\"] = \"https://search.example.org\""));
             Assert.That(result.LuaCode, Does.Contain($"[\"{READ_TOOL_ID}.{REQUIRED_SETTING}\"] = \"https://read.example.org\""));
             Assert.That(result.LuaCode, Does.Contain($"[\"{COLLECTION_ID}\"] = \"HIGH\""), "The confidence belongs to the collection.");
-        });
+        }
     }
 
     [Test]
@@ -66,11 +66,11 @@ public sealed class ToolSettingsExportTests : ToolRegistryTestBase
 
         var result = await this.CreateToolSettingsService().ExportAsync(item.Tools, new() { SelectedAreaIds = new HashSet<string> { $"{READ_TOOL_ID}/" }, IncludeMinimumProviderConfidence = false }, COLLECTION_ID, ConfidenceLevel.HIGH);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.LuaCode, Does.Contain(READ_TOOL_ID));
             Assert.That(result.LuaCode, Does.Not.Contain(SEARCH_TOOL_ID), "The area of the search was not selected.");
-        });
+        }
     }
 
     /// <summary>
