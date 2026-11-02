@@ -59,7 +59,7 @@ public static class OpenAIStrictToolSchema
         // schema stays stable across requests, which prompt caching depends on.
         //
         schema["required"] = new JsonArray([..properties.Select(property => JsonValue.Create(property.Key))]);
-        return JsonSerializer.Deserialize<JsonElement>(schema.ToJsonString());
+        return JsonSerializer.Deserialize<JsonElement>(schema.ToJsonString(), ProviderJsonOptions.OPTIONS);
     }
 
     private static void AllowNullType(JsonObject property)

@@ -14,6 +14,8 @@ namespace AIStudio.Tests.Serialization;
 public sealed class JsonCoverageTests
 {
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.Stored))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ProviderRequests))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ProviderAnswers))]
     public void EveryContractComesFromSourceGeneration(JsonTestRoot root)
     {
         var typesWithoutGeneratedContract = JsonTypeGraph.Collect(root.Type, root.Options)
