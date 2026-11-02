@@ -22,6 +22,30 @@ internal static class TestWordTemplate
     public const string NORMAL_STYLE_ID = "Standard";
     public const string HEADING_1_STYLE_ID = "berschrift1";
     public const string HYPERLINK_STYLE_ID = "Link";
+    public const string LIST_PARAGRAPH_STYLE_ID = "Listenabsatz";
+    public const string LIST_NUMBER_STYLE_ID = "Listennummer";
+
+    /// <summary>
+    /// The numbering instance of the dashes which "List Paragraph" of the template brings along.
+    /// </summary>
+    public const int BULLET_INSTANCE_ID = 7;
+
+    /// <summary>
+    /// The numbering instance of the numbers which "List Number" of the template brings along.
+    /// </summary>
+    public const int NUMBER_INSTANCE_ID = 8;
+
+    /// <summary>
+    /// The definition of the numbers which "List Number" of the template brings along.
+    /// </summary>
+    public const int NUMBER_DEFINITION_ID = 4;
+
+    /// <summary>
+    /// How far each level of a list of the template moves in, half a centimeter.
+    /// </summary>
+    public const int LIST_INDENTATION = 284;
+
+    private const int BULLET_DEFINITION_ID = 3;
 
     public const string HEADER_TEXT = "Header of the organization";
     public const string COVER_HEADER_TEXT = "Header of the cover page";
@@ -51,8 +75,9 @@ internal static class TestWordTemplate
         using (var document = WordprocessingDocument.Create(stream, options.AsTemplate ? WordprocessingDocumentType.Template : WordprocessingDocumentType.Document))
         {
             var mainPart = document.AddMainDocumentPart();
-            mainPart.AddNewPart<StyleDefinitionsPart>().Styles = new W.Styles(
-                new W.Style
+            var styles = new List<W.Style>
+            {
+                new()
                 {
                     Type = W.StyleValues.Paragraph,
                     StyleId = NORMAL_STYLE_ID,
@@ -60,7 +85,7 @@ internal static class TestWordTemplate
                     StyleName = new W.StyleName { Val = "Normal" },
                     PrimaryStyle = new W.PrimaryStyle(),
                 },
-                new W.Style
+                new()
                 {
                     Type = W.StyleValues.Paragraph,
                     StyleId = HEADING_1_STYLE_ID,
@@ -69,12 +94,26 @@ internal static class TestWordTemplate
                     PrimaryStyle = new W.PrimaryStyle(),
                     StyleParagraphProperties = new W.StyleParagraphProperties { OutlineLevel = new W.OutlineLevel { Val = 0 } },
                 },
-                new W.Style
+                new()
                 {
                     Type = W.StyleValues.Character,
                     StyleId = HYPERLINK_STYLE_ID,
                     StyleName = new W.StyleName { Val = "Hyperlink" },
-                });
+                },
+            };
+
+            if (options.ListNumbering)
+            {
+                styles.Add(ListStyleOf(LIST_PARAGRAPH_STYLE_ID, "List Paragraph", BULLET_INSTANCE_ID));
+                styles.Add(ListStyleOf(LIST_NUMBER_STYLE_ID, "List Number", NUMBER_INSTANCE_ID));
+                mainPart.AddNewPart<NumberingDefinitionsPart>().Numbering = new W.Numbering(
+                    ListDefinitionOf(BULLET_DEFINITION_ID, W.NumberFormatValues.Bullet, _ => "-"),
+                    ListDefinitionOf(NUMBER_DEFINITION_ID, W.NumberFormatValues.Decimal, level => $"%{level + 1})"),
+                    new W.NumberingInstance(new W.AbstractNumId { Val = BULLET_DEFINITION_ID }) { NumberID = BULLET_INSTANCE_ID },
+                    new W.NumberingInstance(new W.AbstractNumId { Val = NUMBER_DEFINITION_ID }) { NumberID = NUMBER_INSTANCE_ID });
+            }
+
+            mainPart.AddNewPart<StyleDefinitionsPart>().Styles = new W.Styles(styles);
 
             var headerPart = mainPart.AddNewPart<HeaderPart>();
             headerPart.Header = new W.Header(new W.Paragraph(new W.Run(new W.Text(HEADER_TEXT))));
@@ -143,6 +182,45 @@ internal static class TestWordTemplate
             PageSize(),
             PageMarginOf(COVER_TOP_MARGIN),
             new W.TitlePage());
+    }
+
+    /// <summary>
+    /// A paragraph style for the items of a list, which brings its numbering along.
+    /// </summary>
+    private static W.Style ListStyleOf(string styleId, string name, int numberingInstance) => new()
+    {
+        Type = W.StyleValues.Paragraph,
+        StyleId = styleId,
+        StyleName = new W.StyleName { Val = name },
+        BasedOn = new W.BasedOn { Val = NORMAL_STYLE_ID },
+        StyleParagraphProperties = new W.StyleParagraphProperties
+        {
+            NumberingProperties = new W.NumberingProperties { NumberingId = new W.NumberingId { Val = numberingInstance } },
+            ContextualSpacing = new W.ContextualSpacing(),
+        },
+    };
+
+    /// <summary>
+    /// A definition of a numbering, nine levels deep, which moves in by LIST_INDENTATION per level.
+    /// </summary>
+    private static W.AbstractNum ListDefinitionOf(int definitionId, W.NumberFormatValues format, Func<int, string> textOf)
+    {
+        var definition = new W.AbstractNum(new W.MultiLevelType { Val = W.MultiLevelValues.HybridMultilevel }) { AbstractNumberId = definitionId };
+        for (var level = 0; level < 9; level++)
+            definition.Append(new W.Level
+            {
+                LevelIndex = level,
+                StartNumberingValue = new W.StartNumberingValue { Val = 1 },
+                NumberingFormat = new W.NumberingFormat { Val = format },
+                LevelText = new W.LevelText { Val = textOf(level) },
+                LevelJustification = new W.LevelJustification { Val = W.LevelJustificationValues.Left },
+                PreviousParagraphProperties = new W.PreviousParagraphProperties
+                {
+                    Indentation = new W.Indentation { Left = (LIST_INDENTATION * (level + 1)).ToString(), Hanging = LIST_INDENTATION.ToString() },
+                },
+            });
+
+        return definition;
     }
 
     /// <summary>

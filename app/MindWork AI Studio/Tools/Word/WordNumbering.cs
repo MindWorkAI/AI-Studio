@@ -9,11 +9,13 @@ namespace AIStudio.Tools.Word;
 /// Numbers the lists of the converted content.
 /// </summary>
 /// <remarks>
-/// The lists get definitions of their own, next to those of the template: one for bullets and one
-/// for numbers, each nine levels deep. Every numbered list gets an instance of its own, which
-/// starts the count anew; Word would otherwise go on counting where the list before stopped.
-/// Bullets have nothing to count, so all bulleted lists share one instance. The part which holds
-/// the numbering comes about with the first list, so a document without lists gets none.
+/// A list takes the numbering of the template when the template has one of its kind, e.g., the
+/// bullets of the organization; see MarkdownWordConverter.ListLookOf. Otherwise, the lists get
+/// definitions of their own, next to those of the template: one for bullets and one for numbers,
+/// each nine levels deep. Every numbered list gets an instance of its own, which starts the count
+/// anew; Word would otherwise go on counting where the list before stopped. Bullets have nothing to
+/// count, so all bulleted lists share one instance. The part which holds the numbering comes about
+/// with the first list which needs a numbering of its own, so a document without one gets none.
 /// </remarks>
 /// <param name="mainPart">The main part of the document.</param>
 internal sealed class WordNumbering(MainDocumentPart mainPart)
@@ -53,11 +55,13 @@ internal sealed class WordNumbering(MainDocumentPart mainPart)
     /// <param name="isOrdered">Whether the list counts its items rather than marking them with bullets.</param>
     /// <param name="start">The number of the first item of a numbered list.</param>
     /// <param name="level">The level of the list, 0 for a list which no other list holds.</param>
+    /// <param name="templateInstance">The numbering instance of the template which the list takes,
+    /// see IsOfKind; null for a numbering of its own.</param>
     /// <returns>The ID of the numbering instance, which the items of the list refer to.</returns>
-    public int InstanceFor(bool isOrdered, int start, int level)
+    public int InstanceFor(bool isOrdered, int start, int level, int? templateInstance)
     {
         if (!isOrdered)
-            return this.bulletInstanceId ??= this.AddInstance(this.bulletDefinitionId ??= this.AddDefinition(false), null);
+            return templateInstance ?? (this.bulletInstanceId ??= this.AddInstance(this.bulletDefinitionId ??= this.AddDefinition(false), null));
 
         var restart = new W.LevelOverride
         {
@@ -65,7 +69,60 @@ internal sealed class WordNumbering(MainDocumentPart mainPart)
             StartOverrideNumberingValue = new W.StartOverrideNumberingValue { Val = start },
         };
 
-        return this.AddInstance(this.numberDefinitionId ??= this.AddDefinition(true), restart);
+        // A numbered list of the template counts anew as well, with an instance of the same definition:
+        var definitionId = templateInstance is { } instance && this.DefinitionOf(instance) is { } templateDefinition
+            ? templateDefinition
+            : this.numberDefinitionId ??= this.AddDefinition(true);
+
+        return this.AddInstance(definitionId, restart);
+    }
+
+    /// <summary>
+    /// Determines whether a numbering instance of the template marks its items the way a list of the given kind does.
+    /// </summary>
+    /// <param name="instanceId">The ID of the numbering instance.</param>
+    /// <param name="isOrdered">Whether the list counts its items rather than marking them with bullets.</param>
+    /// <returns>True for bullets and an unordered list, and for numbers or letters and an ordered one.</returns>
+    public bool IsOfKind(int instanceId, bool isOrdered)
+    {
+        var format = this.LevelOf(instanceId, 0)?.NumberingFormat?.Val?.InnerText;
+        return format is not null and not "none" && (format is "bullet") != isOrdered;
+    }
+
+    /// <summary>
+    /// Returns where the text of a list item at the given level starts, as its numbering states it.
+    /// </summary>
+    /// <remarks>
+    /// The paragraphs of an item after the first one carry no bullet or number, but start where
+    /// the text of the first one does.
+    /// </remarks>
+    /// <param name="instanceId">The ID of the numbering instance of the list.</param>
+    /// <param name="level">The level of the list, starting with 0.</param>
+    /// <returns>The indentation from the left margin, in twentieths of a point.</returns>
+    public int TextIndentationOf(int instanceId, int level)
+    {
+        var indentation = this.LevelOf(instanceId, level)?.PreviousParagraphProperties?.Indentation;
+        return int.TryParse(indentation?.Left?.Value ?? indentation?.Start?.Value, out var left) ? left : IndentationOf(level);
+    }
+
+    /// <summary>
+    /// The numbering of the document as it is, without adding a part for it.
+    /// </summary>
+    private W.Numbering? ExistingNumbering => this.numbering ?? mainPart.NumberingDefinitionsPart?.Numbering;
+
+    private int? DefinitionOf(int instanceId)
+    {
+        var instance = this.ExistingNumbering?.Elements<W.NumberingInstance>().FirstOrDefault(candidate => candidate.NumberID?.Value == instanceId);
+        return instance?.AbstractNumId?.Val?.Value;
+    }
+
+    private W.Level? LevelOf(int instanceId, int level)
+    {
+        if (this.DefinitionOf(instanceId) is not { } definitionId)
+            return null;
+
+        var definition = this.ExistingNumbering?.Elements<W.AbstractNum>().FirstOrDefault(candidate => candidate.AbstractNumberId?.Value == definitionId);
+        return definition?.Elements<W.Level>().FirstOrDefault(candidate => candidate.LevelIndex?.Value == level);
     }
 
     private W.Numbering Numbering

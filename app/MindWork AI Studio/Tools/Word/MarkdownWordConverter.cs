@@ -209,12 +209,33 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
     }
 
     /// <summary>
+    /// Returns the paragraph style and the numbering of the template which a list takes.
+    /// </summary>
+    /// <remarks>
+    /// Word keeps dedicated styles for lists, "List Bullet" and "List Number", and many templates
+    /// give "List Paragraph" the bullets of the organization. A list takes the first of these styles
+    /// whose numbering is of its kind, together with that numbering. Without one, it takes "List
+    /// Paragraph" and a numbering of its own.
+    /// </remarks>
+    /// <param name="isOrdered">Whether the list counts its items rather than marking them with bullets.</param>
+    /// <returns>The ID of the paragraph style, and the numbering instance of the template; null for a numbering of its own.</returns>
+    private (string StyleId, int? TemplateInstance) ListLookOf(bool isOrdered)
+    {
+        if (styles.DedicatedListStyleOf(isOrdered) is { } dedicatedStyle && styles.NumberingOf(dedicatedStyle) is { } dedicatedInstance && numbering.IsOfKind(dedicatedInstance, isOrdered))
+            return (dedicatedStyle, dedicatedInstance);
+
+        var listParagraph = styles.ListParagraph;
+        int? templateInstance = styles.NumberingOf(listParagraph) is { } instance && numbering.IsOfKind(instance, isOrdered) ? instance : null;
+        return (listParagraph, templateInstance);
+    }
+
+    /// <summary>
     /// Adds a list, and the lists its items hold one level further in.
     /// </summary>
     /// <remarks>
     /// The first paragraph of an item carries the bullet or number. Further paragraphs of the item
-    /// start where the text of the first one does, and other blocks, such as code, stand as they would
-    /// outside the list.
+    /// carry none, even when their style brings one along, and start where the text of the first one
+    /// does. Other blocks, such as code, stand as they would outside the list.
     /// </remarks>
     /// <param name="list">The list.</param>
     /// <param name="elements">The paragraphs and tables of the document so far.</param>
@@ -222,7 +243,9 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
     private void AddList(ListBlock list, List<OpenXmlElement> elements, int level)
     {
         level = Math.Min(level, WordNumbering.LEVELS - 1);
-        var instance = numbering.InstanceFor(list.IsOrdered, int.TryParse(list.OrderedStart, out var start) ? start : 1, level);
+        var (styleId, templateInstance) = this.ListLookOf(list.IsOrdered);
+        var instance = numbering.InstanceFor(list.IsOrdered, int.TryParse(list.OrderedStart, out var start) ? start : 1, level, templateInstance);
+        var textIndentation = numbering.TextIndentationOf(instance, level);
         foreach (var item in list.OfType<ListItemBlock>())
         {
             var isFirstBlock = true;
@@ -235,7 +258,7 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
                         break;
 
                     case ParagraphBlock paragraphBlock:
-                        var paragraph = this.ParagraphOf(paragraphBlock.Inline, styles.ListParagraph);
+                        var paragraph = this.ParagraphOf(paragraphBlock.Inline, styleId);
                         var properties = paragraph.ParagraphProperties!;
                         if (isFirstBlock)
                             properties.NumberingProperties = new W.NumberingProperties
@@ -244,7 +267,11 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
                                 NumberingId = new W.NumberingId { Val = instance },
                             };
                         else
-                            properties.Indentation = new W.Indentation { Left = WordNumbering.IndentationOf(level).ToString() };
+                        {
+                            // The instance 0 stands for no numbering at all:
+                            properties.NumberingProperties = new W.NumberingProperties { NumberingId = new W.NumberingId { Val = 0 } };
+                            properties.Indentation = new W.Indentation { Left = textIndentation.ToString() };
+                        }
 
                         elements.Add(paragraph);
                         break;

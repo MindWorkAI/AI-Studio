@@ -181,6 +181,25 @@ internal sealed class WordStyles
     });
 
     /// <summary>
+    /// Returns the ID of the style Word keeps for the items of a list of the given kind.
+    /// </summary>
+    /// <param name="isOrdered">Whether the list counts its items rather than marking them with bullets.</param>
+    /// <returns>The ID of "List Number" or "List Bullet"; null when the template has none.</returns>
+    public string? DedicatedListStyleOf(bool isOrdered) => this.FindId("paragraph", isOrdered ? "List Number" : "List Bullet");
+
+    /// <summary>
+    /// Returns the numbering a paragraph style carries, e.g., the bullets of the organization which a
+    /// template gives "List Paragraph".
+    /// </summary>
+    /// <param name="styleId">The ID of the paragraph style.</param>
+    /// <returns>The ID of the numbering instance; null when the style carries none.</returns>
+    public int? NumberingOf(string styleId)
+    {
+        var style = this.styles.Elements<W.Style>().FirstOrDefault(candidate => candidate.StyleId?.Value == styleId && IsOfType(candidate, "paragraph"));
+        return style?.StyleParagraphProperties?.NumberingProperties?.NumberingId?.Val?.Value is > 0 and var id ? id : null;
+    }
+
+    /// <summary>
     /// The ID of the paragraph style of a quotation.
     /// </summary>
     public string Quote => this.IdOf("paragraph", "Quote", () => new W.Style

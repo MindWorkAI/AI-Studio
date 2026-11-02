@@ -37,9 +37,13 @@ numbers raised, rather than going to the foot of the page.
 - **New content carries no formatting of its own.** Paragraphs, lists, and tables take their look from
   the styles of the template; a table takes the style the template names for new tables. Only what
   Markdown itself marks, such as bold text or the alignment of a column, is formatted directly.
+- **Lists take the numbering of the template.** "List Bullet", "List Number", or "List Paragraph" of a
+  template often bring the bullets or numbers of the organization along. `MarkdownWordConverter.ListLookOf`
+  picks the first one whose numbering is of the kind of the list; only without one does a list get a
+  numbering of its own. The further paragraphs of an item switch the numbering of their style off.
 - **Every numbered list counts on its own.** Word goes on counting across all lists which share a
   numbering instance, so `WordNumbering` gives each numbered list an instance of its own, which restarts
-  the count.
+  the count, also when it takes the numbering definition of the template.
 - **A body and a table cell end with a paragraph,** and two tables never follow each other directly,
   or Word joins them. `MarkdownWordConverter.EndWithParagraph` and the case for tables see to it.
 - **No copy of a file in memory.** Templates of organizations carry pictures and easily reach a hundred

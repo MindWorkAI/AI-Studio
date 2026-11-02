@@ -268,6 +268,46 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
+    public void ListsTakeTheNumberingOfTheTemplate()
+    {
+        using var file = Write("- Earth\n- Mars\n  - Phobos\n\n1. Launch\n2. Land\n\nBetween the lists.\n\n1. Return", new TestWordTemplateOptions(ListNumbering: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var items = ParagraphsOf(document).Where(paragraph => paragraph.ParagraphProperties?.NumberingProperties is not null).ToList();
+        var instances = items.Select(item => item.ParagraphProperties!.NumberingProperties!.NumberingId!.Val!.Value).ToList();
+        var styleIds = items.Select(item => item.ParagraphProperties!.ParagraphStyleId?.Val?.Value).ToList();
+        var numbering = document.MainDocumentPart!.NumberingDefinitionsPart!.Numbering!;
+        var numberedDefinitions = new[] { instances[3], instances[5] }.Select(id => numbering.Elements<W.NumberingInstance>().Single(candidate => candidate.NumberID?.Value == id).AbstractNumId?.Val?.Value);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(items.Select(item => item.InnerText), Is.EqualTo(new[] { "Earth", "Mars", "Phobos", "Launch", "Land", "Return" }));
+            Assert.That(instances.Take(3), Is.All.EqualTo(TestWordTemplate.BULLET_INSTANCE_ID), "Bulleted lists, the inner one included, take the dashes of the template.");
+            Assert.That(styleIds.Take(3), Is.All.EqualTo(TestWordTemplate.LIST_PARAGRAPH_STYLE_ID));
+            Assert.That(styleIds.Skip(3), Is.All.EqualTo(TestWordTemplate.LIST_NUMBER_STYLE_ID), "Word keeps a style of its own for numbered lists, which the template has.");
+            Assert.That(instances[4], Is.EqualTo(instances[3]));
+            Assert.That(instances[5], Is.Not.EqualTo(instances[3]), "Each numbered list counts anew.");
+            Assert.That(numberedDefinitions, Is.All.EqualTo(TestWordTemplate.NUMBER_DEFINITION_ID), "Both numbered lists take the numbers of the template.");
+            Assert.That(new[] { instances[3], instances[5] }, Is.All.Not.EqualTo(TestWordTemplate.NUMBER_INSTANCE_ID), "The instance of the template itself would go on counting.");
+        });
+    }
+
+    [Test]
+    public void FurtherParagraphsOfAnItemCarryNoBullet()
+    {
+        using var file = Write("- Earth\n\n  Close to the sun.\n- Mars", new TestWordTemplateOptions(ListNumbering: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var further = ParagraphsOf(document).Single(paragraph => paragraph.InnerText == "Close to the sun.");
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(further.ParagraphProperties?.NumberingProperties?.NumberingId?.Val?.Value, Is.Zero, "Its style brings the dashes along, which only the first paragraph of an item shows.");
+            Assert.That(further.ParagraphProperties?.Indentation?.Left?.Value, Is.EqualTo(TestWordTemplate.LIST_INDENTATION.ToString()), "It starts where the text of the item does, as the numbering of the template states it.");
+        });
+    }
+
+    [Test]
     public void ATaskListShowsItsBoxes()
     {
         using var file = Write("- [ ] Launch\n- [x] Land");
