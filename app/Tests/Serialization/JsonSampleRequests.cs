@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Provider.Anthropic;
+using AIStudio.Provider.Google;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Tools.ToolCallingSystem;
 
@@ -90,6 +91,16 @@ public static class JsonSampleRequests
         Tools = [ProviderToolAdapters.ToAnthropicTool(Tool())],
         AdditionalApiParameters = ApiParameters(),
     };
+
+    /// <summary>
+    /// A request for embeddings in the shape of the OpenAI API.
+    /// </summary>
+    public static EmbeddingRequest Embedding() => new("embedding-model", ["The first text.", "The second text."]);
+
+    /// <summary>
+    /// A request for an embedding to the Gemini API.
+    /// </summary>
+    public static GoogleEmbeddingRequest GoogleEmbedding() => GoogleEmbeddingRequest.Of(["The first text.", "The second text."]);
 
     private static List<IMessageBase> Messages() =>
     [

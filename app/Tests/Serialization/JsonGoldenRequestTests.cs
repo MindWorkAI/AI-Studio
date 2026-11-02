@@ -22,6 +22,8 @@ public sealed class JsonGoldenRequestTests
         yield return new("chat-completion-request.json", JsonSampleRequests.ChatCompletion, ProviderJsonOptions.OPTIONS);
         yield return new("responses-request.json", JsonSampleRequests.Responses, ProviderJsonOptions.OPTIONS);
         yield return new("anthropic-messages-request.json", () => JsonSampleRequests.Anthropic(), ProviderJsonOptions.OPTIONS);
+        yield return new("embedding-request.json", JsonSampleRequests.Embedding, ProviderJsonOptions.OPTIONS);
+        yield return new("google-embedding-request.json", JsonSampleRequests.GoogleEmbedding, ProviderJsonOptions.OPTIONS);
     }
 
     [TestCaseSource(nameof(GoldenRequests))]

@@ -28,6 +28,8 @@ public static partial class JsonTestRoots
         yield return CaseWithNamespace(typeof(ChatCompletionAPIRequest), options);
         yield return CaseWithNamespace(typeof(ResponsesAPIRequest), options);
         yield return CaseWithNamespace(typeof(ChatRequest), options);
+        yield return CaseWithNamespace(typeof(EmbeddingRequest), options);
+        yield return CaseWithNamespace(typeof(GoogleEmbeddingRequest), options);
 
         //
         // The messages and their parts, which converters write as the type they are of:
@@ -43,7 +45,7 @@ public static partial class JsonTestRoots
         foreach (var type in new[] { typeof(string), typeof(int), typeof(long), typeof(double), typeof(decimal), typeof(bool), typeof(Dictionary<string, object>), typeof(List<object>), typeof(JsonElement) })
             yield return Case(new(type, options), "value of a request");
 
-        yield return Case(new(ProviderToolAdapters.ToChatCompletionTool(JsonSampleRequests.Tool(), hostEnforcesStrict: true).GetType(), options), "tool of a Chat Completions API");
+        yield return CaseWithNamespace(typeof(ChatCompletionFunctionTool), options);
         yield return CaseWithNamespace(typeof(ResponsesFunctionTool), options);
         yield return CaseWithNamespace(typeof(ResponsesFunctionCallOutputItem), options);
     }
