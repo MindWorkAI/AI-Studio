@@ -235,12 +235,17 @@ public sealed record PluginConfigurationObject
     /// <param name="configObjects">The configuration objects the plugin defined while it started. They carry the entries of each glossary.</param>
     public static async Task SyncManagedGlossariesAsync(Guid configPluginId, IList<PluginConfigurationObject> configObjects)
     {
-        var glossaryStore = Program.SERVICE_PROVIDER.GetRequiredService<GlossaryStore>();
-        var glossaries = SettingsManagerAccess.ConfigurationData.Glossaries;
+        //
+        // The services are looked up only once a glossary needs them, as the synchronization of the
+        // tokenizers does: a plugin without glossaries must not depend on them.
+        //
+        GlossaryStore? glossaryStore = null;
         foreach (var configObject in configObjects)
         {
             if (configObject.ConfigPluginId != configPluginId || configObject.GlossarySource is not { } source)
                 continue;
+
+            var glossaries = SettingsManagerAccess.ConfigurationData.Glossaries;
 
             //
             // A plugin may declare the ID of a glossary which belongs to somebody else, e.g. a local
@@ -256,6 +261,7 @@ public sealed record PluginConfigurationObject
             }
 
             var entries = source.File is { } file ? await ReadGlossaryFileAsync(configObject.Name, file) : source.Entries;
+            glossaryStore ??= Program.SERVICE_PROVIDER.GetRequiredService<GlossaryStore>();
             glossaryStore.SetProvidedEntries(configObject.Id.ToString(), entries);
         }
     }

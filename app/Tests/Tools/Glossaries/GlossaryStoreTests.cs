@@ -85,11 +85,11 @@ public sealed class GlossaryStoreTests
     }
 
     [Test]
-    public void DeletingAGlossaryWithoutAFileSucceeds()
+    public async Task DeletingAGlossaryWithoutAFileSucceeds()
     {
         var store = this.CreateStore();
 
-        Assert.DoesNotThrowAsync(async () => await store.DeleteEntriesAsync(Guid.NewGuid().ToString()), "A glossary whose entries were never saved has no file, and maybe not even the folder of the glossaries.");
+        await Assert.DoesNotThrowAsync(async () => await store.DeleteEntriesAsync(Guid.NewGuid().ToString()), "A glossary whose entries were never saved has no file, and maybe not even the folder of the glossaries.");
     }
 
     [Test]
@@ -122,13 +122,13 @@ public sealed class GlossaryStoreTests
 
         var loaded = await store.LoadEntriesAsync(glossaryId);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(loaded.Select(entry => entry.Term), Is.EqualTo(new[] { "Arbeitszeit" }));
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await store.SaveEntriesAsync(glossaryId, []), "The plugin is the source of these entries.");
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await store.DeleteEntriesAsync(glossaryId));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await store.SaveEntriesAsync(glossaryId, []), "The plugin is the source of these entries.");
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await store.DeleteEntriesAsync(glossaryId));
             Assert.That(Directory.Exists(this.GlossaryFolder), Is.False, "A glossary of a plugin leaves no file behind.");
-        });
+        }
     }
 
     [Test]
@@ -155,11 +155,11 @@ public sealed class GlossaryStoreTests
     [TestCase("../settings")]
     [TestCase("..\\..\\settings")]
     [TestCase("")]
-    public void AnIdWhichIsNoGuidIsRefused(string glossaryId)
+    public async Task AnIdWhichIsNoGuidIsRefused(string glossaryId)
     {
         var store = this.CreateStore();
 
-        Assert.ThrowsAsync<ArgumentException>(async () => await store.SaveEntriesAsync(glossaryId, []));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await store.SaveEntriesAsync(glossaryId, []));
     }
 
     private string GlossaryFolder => Path.Combine(this.dataDirectory, GlossaryStore.FOLDER_NAME);
