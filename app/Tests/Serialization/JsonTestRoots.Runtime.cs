@@ -31,6 +31,12 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(SetInterfaceSizeRequest), options));
         yield return Case(new(typeof(CreateMediaJobRequest), options));
         yield return Case(new(typeof(LogEventRequest), options));
+        yield return Case(new(typeof(ValidateTokenizerRequest), options));
+        yield return Case(new(typeof(StoreTokenizerRequest), options));
+        yield return Case(new(typeof(DeleteTokenizerRequest), options));
+        yield return Case(new(typeof(CountTokensRequest), options));
+        yield return Case(new(typeof(PrepareImageRequest), options));
+        yield return Case(new(typeof(PrepareImageForModelRequest), options));
 
         // Every request of the vector store:
         foreach (var type in typeof(QdrantEdgeClientImplementation).GetNestedTypes(BindingFlags.NonPublic).Where(type => type.Name.EndsWith("Request", StringComparison.Ordinal)).OrderBy(type => type.Name, StringComparer.Ordinal))

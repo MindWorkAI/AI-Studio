@@ -15,9 +15,7 @@ public sealed partial class RustService : ITokenizerStorage
 
     public async Task<TokenizerResponse> ValidateTokenizer(string filePath)
     {
-        var result = await this.http.PostAsJsonAsync("/tokenizer/validate", new {
-            file_path = filePath,
-        }, JSON_OPTIONS);
+        var result = await this.http.PostAsJsonAsync("/tokenizer/validate", new ValidateTokenizerRequest(filePath), JSON_OPTIONS);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -33,10 +31,7 @@ public sealed partial class RustService : ITokenizerStorage
     public async Task<TokenizerResponse> StoreTokenizer(string modelId, string filePath)
     {
         this.logger!.LogInformation($"Storing tokenizer for model '{modelId}' from file '{filePath}'");
-        var result = await this.http.PostAsJsonAsync("/tokenizer/store", new {
-            model_id = modelId,
-            file_path = filePath,
-        }, JSON_OPTIONS);
+        var result = await this.http.PostAsJsonAsync("/tokenizer/store", new StoreTokenizerRequest(modelId, filePath), JSON_OPTIONS);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -50,9 +45,7 @@ public sealed partial class RustService : ITokenizerStorage
     public async Task<TokenizerResponse> DeleteTokenizer(string modelId)
     {
         this.logger!.LogInformation($"Deleting tokenizer for model '{modelId}'");
-        var result = await this.http.PostAsJsonAsync("/tokenizer/delete", new {
-            model_id = modelId,
-        }, JSON_OPTIONS);
+        var result = await this.http.PostAsJsonAsync("/tokenizer/delete", new DeleteTokenizerRequest(modelId), JSON_OPTIONS);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -71,10 +64,7 @@ public sealed partial class RustService : ITokenizerStorage
 
     private async Task<TokenizerResponse?> GetTokenCount(string providerName, string tokenizerPath, string text, CancellationToken cancellationToken)
     {
-        var result = await this.http.PostAsJsonAsync("/tokenizer/count", new {
-            text,
-            tokenizer_path = tokenizerPath,
-        }, JSON_OPTIONS, cancellationToken);
+        var result = await this.http.PostAsJsonAsync("/tokenizer/count", new CountTokensRequest(text, tokenizerPath), JSON_OPTIONS, cancellationToken);
 
         if (!result.IsSuccessStatusCode)
         {

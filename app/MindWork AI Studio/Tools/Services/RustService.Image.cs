@@ -20,7 +20,7 @@ public sealed partial class RustService
         bool optimize,
         CancellationToken token = default)
     {
-        using var response = await this.http.PostAsJsonAsync("/image/prepare", new { path, optimize }, JSON_OPTIONS, token);
+        using var response = await this.http.PostAsJsonAsync("/image/prepare", new PrepareImageRequest(path, optimize), JSON_OPTIONS, token);
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<ImagePrepareResponse>(JSON_OPTIONS, token)
@@ -44,7 +44,7 @@ public sealed partial class RustService
     {
         try
         {
-            using var response = await this.http.PostAsJsonAsync("/image/prepare-for-model", new { path, maxBytes }, JSON_OPTIONS, token);
+            using var response = await this.http.PostAsJsonAsync("/image/prepare-for-model", new PrepareImageForModelRequest(path, maxBytes), JSON_OPTIONS, token);
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadFromJsonAsync<PreparedModelImage>(JSON_OPTIONS, token)
