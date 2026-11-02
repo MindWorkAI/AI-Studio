@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text.Json;
 
 using AIStudio.Tools;
 using AIStudio.Tools.Databases.VectorStore;
@@ -42,9 +41,9 @@ public static partial class JsonTestRoots
         foreach (var type in typeof(QdrantEdgeClientImplementation).GetNestedTypes(BindingFlags.NonPublic).Where(type => type.Name.EndsWith("Request", StringComparison.Ordinal)).OrderBy(type => type.Name, StringComparer.Ordinal))
             yield return Case(new(type, options));
 
-        // The prompt injection filter, which gets called with the defaults of HttpClient, i.e., with camel case:
-        yield return Case(new(typeof(SanitizePromptInjectionsRequest), JsonSerializerOptions.Web));
-        yield return Case(new(typeof(SanitizePromptInjectionsBatchRequest), JsonSerializerOptions.Web));
+        // The prompt injection filter, which names its fields in camel case:
+        yield return Case(new(typeof(SanitizePromptInjectionsRequest), RustService.PROMPT_INJECTION_JSON_OPTIONS));
+        yield return Case(new(typeof(SanitizePromptInjectionsBatchRequest), RustService.PROMPT_INJECTION_JSON_OPTIONS));
     }
 
     /// <summary>
@@ -94,16 +93,16 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(RustService.DatabaseQueryResponse<long?>), options));
 
         //
-        // The events of a file extraction, which get read with the defaults of System.Text.Json. A converter reads
-        // their metadata as the type the JSON tells:
+        // The events of a file extraction, which name their fields themselves. A converter reads their metadata as
+        // the type the JSON tells:
         //
-        yield return Case(new(typeof(ContentStreamSseEvent), JsonSerializerOptions.Default));
-        yield return Case(new(typeof(string), JsonSerializerOptions.Default), "error of a file extraction");
+        yield return Case(new(typeof(ContentStreamSseEvent), RustService.CONTENT_STREAM_JSON_OPTIONS));
+        yield return Case(new(typeof(string), RustService.CONTENT_STREAM_JSON_OPTIONS), "error of a file extraction");
         foreach (var type in ImplementationsOf(typeof(ContentStreamSseMetadata)))
-            yield return Case(new(type, JsonSerializerOptions.Default));
+            yield return Case(new(type, RustService.CONTENT_STREAM_JSON_OPTIONS));
 
-        // The prompt injection filter, which gets called with the defaults of HttpClient, i.e., with camel case:
-        yield return Case(new(typeof(SanitizePromptInjectionsResponse), JsonSerializerOptions.Web));
-        yield return Case(new(typeof(SanitizePromptInjectionsBatchResponse), JsonSerializerOptions.Web));
+        // The prompt injection filter, which names its fields in camel case:
+        yield return Case(new(typeof(SanitizePromptInjectionsResponse), RustService.PROMPT_INJECTION_JSON_OPTIONS));
+        yield return Case(new(typeof(SanitizePromptInjectionsBatchResponse), RustService.PROMPT_INJECTION_JSON_OPTIONS));
     }
 }
