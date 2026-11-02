@@ -4989,6 +4989,36 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T913168756"] = "Stan
 -- Saving '{0}'...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] = "„{0}“ wird gespeichert …"
 
+-- Exclude folders ending in build, such as build or app-build
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1241240542"] = "Ordner ausschließen, die auf „build“ enden, z. B. „build“ oder „app-build“"
+
+-- Include readable text files, even those without an extension
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1482113736"] = "Lesbare Textdateien einbeziehen, auch solche ohne Dateiendung"
+
+-- File names starting with draft-
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1676890987"] = "Dateinamen, die mit „draft-“ beginnen"
+
+-- Pattern examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2430822600"] = "Beispiele für Dateimuster"
+
+-- Include all files, even audio and video
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2681459563"] = "Alle Dateien einbeziehen, auch Audio- und Videodateien"
+
+-- Separate patterns with semicolons. Exclusions take priority over included files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2728429336"] = "Trennen Sie Muster durch Semikolons. Ausschlüsse haben Vorrang vor einbezogenen Dateien."
+
+-- PDF and Word files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3467839719"] = "PDF- und Word-Dateien"
+
+-- Patterns match file names regardless of letter case. Folder paths are not supported.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3691425703"] = "Muster gelten für Dateinamen, unabhängig von Groß- und Kleinschreibung. Ordnerpfade werden nicht unterstützt."
+
+-- Include all documents and readable text files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T967949655"] = "Alle Dokumente und lesbaren Textdateien einbeziehen"
+
+-- Pattern help and examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1369669520"] = "Hilfe und Beispiele zu Dateimustern"
+
 -- AI Studio could not read the entries of this glossary.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1173179019"] = "AI Studio konnte die Einträge dieses Glossars nicht lesen."
 
@@ -5060,36 +5090,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T613888204"] = "Über
 
 -- Import Glossary
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T99577620"] = "Glossar importieren"
-
--- Exclude folders ending in build, such as build or app-build
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1241240542"] = "Ordner ausschließen, die auf „build“ enden, z. B. „build“ oder „app-build“"
-
--- Include readable text files, even those without an extension
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1482113736"] = "Lesbare Textdateien einbeziehen, auch solche ohne Dateiendung"
-
--- File names starting with draft-
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1676890987"] = "Dateinamen, die mit „draft-“ beginnen"
-
--- Pattern examples
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2430822600"] = "Beispiele für Dateimuster"
-
--- Include all files, even audio and video
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2681459563"] = "Alle Dateien einbeziehen, auch Audio- und Videodateien"
-
--- Separate patterns with semicolons. Exclusions take priority over included files.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2728429336"] = "Trennen Sie Muster durch Semikolons. Ausschlüsse haben Vorrang vor einbezogenen Dateien."
-
--- PDF and Word files
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3467839719"] = "PDF- und Word-Dateien"
-
--- Patterns match file names regardless of letter case. Folder paths are not supported.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3691425703"] = "Muster gelten für Dateinamen, unabhängig von Groß- und Kleinschreibung. Ordnerpfade werden nicht unterstützt."
-
--- Include all documents and readable text files
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T967949655"] = "Alle Dokumente und lesbaren Textdateien einbeziehen"
-
--- Pattern help and examples
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1369669520"] = "Hilfe und Beispiele zu Dateimustern"
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs können Fehler machen. Überprüfen Sie wichtige Informationen."

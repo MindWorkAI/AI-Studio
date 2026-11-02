@@ -4987,6 +4987,36 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T913168756"] = "Rest
 -- Saving '{0}'...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXPORTRUNNINGMESSAGE::T1063135893"] = "Saving '{0}'..."
 
+-- Exclude folders ending in build, such as build or app-build
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1241240542"] = "Exclude folders ending in build, such as build or app-build"
+
+-- Include readable text files, even those without an extension
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1482113736"] = "Include readable text files, even those without an extension"
+
+-- File names starting with draft-
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1676890987"] = "File names starting with draft-"
+
+-- Pattern examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2430822600"] = "Pattern examples"
+
+-- Include all files, even audio and video
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2681459563"] = "Include all files, even audio and video"
+
+-- Separate patterns with semicolons. Exclusions take priority over included files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2728429336"] = "Separate patterns with semicolons. Exclusions take priority over included files."
+
+-- PDF and Word files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3467839719"] = "PDF and Word files"
+
+-- Patterns match file names regardless of letter case. Folder paths are not supported.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3691425703"] = "Patterns match file names regardless of letter case. Folder paths are not supported."
+
+-- Include all documents and readable text files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T967949655"] = "Include all documents and readable text files"
+
+-- Pattern help and examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1369669520"] = "Pattern help and examples"
+
 -- AI Studio could not read the entries of this glossary.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1173179019"] = "AI Studio could not read the entries of this glossary."
 
@@ -5058,36 +5088,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T613888204"] = "Trans
 
 -- Import Glossary
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T99577620"] = "Import Glossary"
-
--- Exclude folders ending in build, such as build or app-build
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1241240542"] = "Exclude folders ending in build, such as build or app-build"
-
--- Include readable text files, even those without an extension
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1482113736"] = "Include readable text files, even those without an extension"
-
--- File names starting with draft-
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T1676890987"] = "File names starting with draft-"
-
--- Pattern examples
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2430822600"] = "Pattern examples"
-
--- Include all files, even audio and video
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2681459563"] = "Include all files, even audio and video"
-
--- Separate patterns with semicolons. Exclusions take priority over included files.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T2728429336"] = "Separate patterns with semicolons. Exclusions take priority over included files."
-
--- PDF and Word files
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3467839719"] = "PDF and Word files"
-
--- Patterns match file names regardless of letter case. Folder paths are not supported.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T3691425703"] = "Patterns match file names regardless of letter case. Folder paths are not supported."
-
--- Include all documents and readable text files
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T967949655"] = "Include all documents and readable text files"
-
--- Pattern help and examples
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1369669520"] = "Pattern help and examples"
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
