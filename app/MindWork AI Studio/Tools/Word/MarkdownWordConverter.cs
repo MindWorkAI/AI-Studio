@@ -82,12 +82,27 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
     /// <param name="topHeadingLevel">The heading level which becomes the first heading level of the template,
     /// see TopHeadingLevelOf. A heading above it becomes one of the first level as well.</param>
     /// <returns>The paragraphs and tables, in the order the document lists them. The last one is a paragraph.</returns>
+    /// <remarks>
+    /// When the default style of the template leaves no space after a paragraph, an empty paragraph
+    /// separates the blocks, the way such a template separates its own text. Lists, quotations, and
+    /// tables count as one block each, and a heading brings its own space along.
+    /// </remarks>
     public List<OpenXmlElement> Convert(string markdown, int topHeadingLevel = 1)
     {
         this.headingShift = Math.Max(0, topHeadingLevel - 1);
         var elements = new List<OpenXmlElement>();
+        W.Paragraph? lastSeparator = null;
         foreach (var block in Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE))
+        {
+            var elementsBefore = elements.Count;
             this.AddBlock(block, elements);
+            if (styles.LeavesNoSpaceAfterParagraphs && block is not HeadingBlock && elements.Count > elementsBefore)
+                elements.Add(lastSeparator = new W.Paragraph());
+        }
+
+        // Nothing follows the last block to separate it from:
+        if (lastSeparator is not null && elements[^1] == lastSeparator)
+            elements.RemoveAt(elements.Count - 1);
 
         EndWithParagraph(elements);
         return elements;

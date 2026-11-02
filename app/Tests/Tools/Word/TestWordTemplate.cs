@@ -84,6 +84,7 @@ internal static class TestWordTemplate
                     Default = true,
                     StyleName = new W.StyleName { Val = "Normal" },
                     PrimaryStyle = new W.PrimaryStyle(),
+                    StyleParagraphProperties = new W.StyleParagraphProperties { SpacingBetweenLines = new W.SpacingBetweenLines { After = options.NormalSpacingAfter.ToString() } },
                 },
                 new()
                 {

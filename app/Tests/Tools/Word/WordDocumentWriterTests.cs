@@ -308,6 +308,27 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
+    public void EmptyParagraphsSeparateTheBlocksWhenTheTemplateLeavesNoSpace()
+    {
+        using var file = Write("## Mars\n\nClose to Earth.\n\n- Phobos\n- Deimos\n\n| Moon |\n|---|\n| Phobos |\n\nThe end.", new TestWordTemplateOptions(NormalSpacingAfter: 0), topHeadingLevel: 2);
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var blocks = document.MainDocumentPart!.Document!.Body!.ChildElements.Select(element => element switch
+        {
+            W.Table => "table",
+            W.SectionProperties => "section",
+
+            _ => element.InnerText,
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(blocks, Is.EqualTo(new[] { "Mars", "Close to Earth.", string.Empty, "Phobos", "Deimos", string.Empty, "table", string.Empty, "The end.", "section" }), "The template separates its own text this way. A heading brings its own space along, and nothing follows the last block.");
+        });
+    }
+
+    [Test]
     public void ATaskListShowsItsBoxes()
     {
         using var file = Write("- [ ] Launch\n- [x] Land");

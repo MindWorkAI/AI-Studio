@@ -40,7 +40,17 @@ internal sealed class WordStyles
         this.defaultTableStyleId = defaultTableStyleId;
         var defaultParagraphStyle = styles.Elements<W.Style>().FirstOrDefault(style => IsOfType(style, "paragraph") && style.Default?.Value is true);
         this.defaultParagraphStyleId = defaultParagraphStyle?.StyleId?.Value;
+        this.LeavesNoSpaceAfterParagraphs = LeavesNoSpaceAfter(defaultParagraphStyle?.StyleParagraphProperties?.SpacingBetweenLines, styles.DocDefaults?.ParagraphPropertiesDefault?.ParagraphPropertiesBaseStyle?.SpacingBetweenLines);
     }
+
+    /// <summary>
+    /// Whether a paragraph of the default style leaves no space below itself.
+    /// </summary>
+    /// <remarks>
+    /// Templates which set their text tightly, e.g., with an exact line height, separate their
+    /// paragraphs with empty ones instead; MarkdownWordConverter does the same then.
+    /// </remarks>
+    public bool LeavesNoSpaceAfterParagraphs { get; }
 
     /// <summary>
     /// Reads the styles of a document, and adds a part for them when it has none.
@@ -306,6 +316,24 @@ internal sealed class WordStyles
         id = found.StyleId!.Value!;
         this.idsByName[key] = id;
         return id;
+    }
+
+    /// <summary>
+    /// Determines whether spacing leaves no space after a paragraph.
+    /// </summary>
+    /// <remarks>
+    /// The default style states only what differs from the defaults of the document, so each
+    /// value it lacks comes from there. Without any value, Word leaves no space.
+    /// </remarks>
+    /// <param name="own">The spacing of the default paragraph style; null when it states none.</param>
+    /// <param name="defaults">The spacing of the defaults of the document; null when they state none.</param>
+    /// <returns>True, when a paragraph of the default style leaves no space below itself.</returns>
+    private static bool LeavesNoSpaceAfter(W.SpacingBetweenLines? own, W.SpacingBetweenLines? defaults)
+    {
+        var after = own?.After?.Value ?? defaults?.After?.Value;
+        var afterLines = own?.AfterLines?.Value ?? defaults?.AfterLines?.Value;
+        var afterAutomatically = own?.AfterAutoSpacing?.Value ?? defaults?.AfterAutoSpacing?.Value;
+        return afterAutomatically is not true && afterLines is null or <= 0 && (!int.TryParse(after, out var twips) || twips <= 0);
     }
 
     /// <summary>

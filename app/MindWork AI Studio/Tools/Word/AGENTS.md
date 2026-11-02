@@ -44,6 +44,10 @@ numbers raised, rather than going to the foot of the page.
 - **Every numbered list counts on its own.** Word goes on counting across all lists which share a
   numbering instance, so `WordNumbering` gives each numbered list an instance of its own, which restarts
   the count, also when it takes the numbering definition of the template.
+- **The blocks are spaced the way the template spaces its own text.** When the default paragraph style
+  leaves no space after a paragraph (`WordStyles.LeavesNoSpaceAfterParagraphs`), the template separates
+  its paragraphs with empty ones, and `MarkdownWordConverter.Convert` does the same between the blocks
+  of the answer. A heading brings its own space along.
 - **A body and a table cell end with a paragraph,** and two tables never follow each other directly,
   or Word joins them. `MarkdownWordConverter.EndWithParagraph` and the case for tables see to it.
 - **No copy of a file in memory.** Templates of organizations carry pictures and easily reach a hundred
