@@ -65,14 +65,14 @@ public sealed partial class RustService
         var secretKey = SecretKey(secretId, storeType);
         var encryptedSecret = await this.encryptor!.Encrypt(secretData);
         var request = new StoreSecretRequest(secretKey, Environment.UserName, encryptedSecret);
-        var result = await this.http.PostAsJsonAsync("/secrets/store", request, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/secrets/store", request, JSON_OPTIONS);
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to store the secret data for '{secretKey}' due to an API issue: '{result.StatusCode}'");
             return new StoreSecretResponse(false, TB("Failed to store the secret data due to an API issue."));
         }
         
-        var state = await result.Content.ReadFromJsonAsync<StoreSecretResponse>(this.jsonRustSerializerOptions);
+        var state = await result.Content.ReadFromJsonAsync<StoreSecretResponse>(JSON_OPTIONS);
         if (!state.Success)
             this.logger!.LogError($"Failed to store the secret data for '{secretKey}': '{state.Issue}'");
 
@@ -104,7 +104,7 @@ public sealed partial class RustService
     private async Task<RequestedSecret> GetSecretByKey(string secretKey, bool isTrying)
     {
         var secretRequest = new SelectSecretRequest(secretKey, Environment.UserName, isTrying);
-        var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, JSON_OPTIONS);
         if (!result.IsSuccessStatusCode)
         {
             if(isTrying)
@@ -114,7 +114,7 @@ public sealed partial class RustService
             return new RequestedSecret(false, new EncryptedText(string.Empty), TB("Failed to get the secret data due to an API issue."));
         }
 
-        var state = await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
+        var state = await result.Content.ReadFromJsonAsync<RequestedSecret>(JSON_OPTIONS);
         if (!state.Success)
         {
             //
@@ -138,14 +138,14 @@ public sealed partial class RustService
     private async Task<DeleteSecretResponse> DeleteSecretByKey(string secretKey)
     {
         var request = new SelectSecretRequest(secretKey, Environment.UserName, false);
-        var result = await this.http.PostAsJsonAsync("/secrets/delete", request, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/secrets/delete", request, JSON_OPTIONS);
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to delete the secret data for '{secretKey}' due to an API issue: '{result.StatusCode}'");
             return new DeleteSecretResponse{Success = false, WasEntryFound = false, Issue = TB("Failed to delete the secret data due to an API issue.")};
         }
         
-        var state = await result.Content.ReadFromJsonAsync<DeleteSecretResponse>(this.jsonRustSerializerOptions);
+        var state = await result.Content.ReadFromJsonAsync<DeleteSecretResponse>(JSON_OPTIONS);
         if (!state.Success)
             this.logger!.LogError($"Failed to delete the secret data for '{secretKey}': '{state.Issue}'");
         

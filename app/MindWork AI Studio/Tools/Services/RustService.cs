@@ -34,7 +34,10 @@ public sealed partial class RustService : BackgroundService
     private readonly SemaphoreSlim userLanguageLock = new(1, 1);
     private readonly SemaphoreSlim userNameLock = new(1, 1);
 
-    private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
+    /// <summary>
+    /// The JSON options of nearly every call to the runtime, which names its fields in snake case.
+    /// </summary>
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Converters =

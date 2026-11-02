@@ -85,5 +85,5 @@ public sealed class JsonGoldenFileTests
     /// <remarks>
     /// Read from the source tree, the way the other fixtures are, so the file needs no entry in the project file.
     /// </remarks>
-    private static string ReadFixture(string fileName, [CallerFilePath] string sourceFilePath = "") => File.ReadAllText(Path.Combine(Path.GetDirectoryName(sourceFilePath)!, "Fixtures", fileName));
+    internal static string ReadFixture(string fileName, [CallerFilePath] string sourceFilePath = "") => File.ReadAllText(Path.Combine(Path.GetDirectoryName(sourceFilePath)!, "Fixtures", fileName));
 }

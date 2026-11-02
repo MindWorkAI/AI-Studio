@@ -9,7 +9,7 @@ public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
 {
     protected readonly IERIDataSource DataSource = dataSource;
     
-    protected static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
         AllowTrailingCommas = true,
