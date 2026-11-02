@@ -15,5 +15,5 @@ public interface ISubContentImageUrl
     /// <summary>
     /// The URL or base64-encoded data URI of the image.
     /// </summary>
-    public string Url { get; init; }
+    public string Url { get; set; }
 }

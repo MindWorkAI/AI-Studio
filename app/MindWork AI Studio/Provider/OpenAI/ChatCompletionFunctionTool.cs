@@ -5,7 +5,7 @@ namespace AIStudio.Provider.OpenAI;
 /// </summary>
 public sealed record ChatCompletionFunctionTool
 {
-    public string Type { get; init; } = "function";
+    public string Type { get; set; } = "function";
 
-    public ChatCompletionFunctionDeclaration Function { get; init; } = new();
+    public ChatCompletionFunctionDeclaration Function { get; set; } = new();
 }
