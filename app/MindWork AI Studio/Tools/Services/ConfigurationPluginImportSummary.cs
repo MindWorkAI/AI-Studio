@@ -12,6 +12,7 @@ namespace AIStudio.Tools.Services;
 /// <param name="ChatTemplates">How many chat templates the configuration adds.</param>
 /// <param name="Profiles">How many profiles the configuration adds.</param>
 /// <param name="DocumentAnalysisPolicies">How many document analysis policies the configuration adds.</param>
+/// <param name="Glossaries">How many glossaries the configuration adds.</param>
 /// <param name="DeclaredSettings">How many settings the configuration takes over.</param>
 /// <param name="MandatoryInfos">How many mandatory information texts users must accept.</param>
 /// <param name="Introductions">How many introductions the configuration adds to the welcome page.</param>
@@ -21,6 +22,7 @@ public sealed record ConfigurationPluginImportSummary(
     int ChatTemplates,
     int Profiles,
     int DocumentAnalysisPolicies,
+    int Glossaries,
     int DeclaredSettings,
     int MandatoryInfos,
     int Introductions,
@@ -34,6 +36,7 @@ public sealed record ConfigurationPluginImportSummary(
         this.ChatTemplates > 0 ||
         this.Profiles > 0 ||
         this.DocumentAnalysisPolicies > 0 ||
+        this.Glossaries > 0 ||
         this.DeclaredSettings > 0 ||
         this.MandatoryInfos > 0 ||
         this.Introductions > 0 ||

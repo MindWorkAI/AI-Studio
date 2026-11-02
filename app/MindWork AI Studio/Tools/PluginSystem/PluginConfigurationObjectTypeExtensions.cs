@@ -16,6 +16,7 @@ public static class PluginConfigurationObjectTypeExtensions
         PluginConfigurationObjectType.CHAT_TEMPLATE => TB("Chat Template"),
         PluginConfigurationObjectType.DATA_SOURCE => TB("Data Source"),
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => TB("Document Analysis Policy"),
+        PluginConfigurationObjectType.GLOSSARY => TB("Glossary"),
 
         _ => TB("Unknown configuration"),
     };

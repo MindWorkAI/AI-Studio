@@ -1,0 +1,90 @@
+@using AIStudio.Settings
+@using AIStudio.Tools.PluginSystem
+@inherits MSGComponentBase
+
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @T("Glossaries hold terms together with a fixed translation or an explanation. A translation glossary makes the AI always translate its terms the same way, for example the names of your departments. A reference glossary explains terms the AI cannot know, such as the technical terms of your organization or invented words.")
+</MudJustifiedText>
+
+<MudTable T="Glossary" Items="@this.SettingsManager.ConfigurationData.Glossaries" Hover="@true" Class="border-dashed border rounded-lg">
+    <ColGroup>
+        <col style="width: 3em;"/>
+        <col/>
+        <col style="width: 10em;"/>
+        <col/>
+        <col style="width: 7em;"/>
+        <col style="width: 10em;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>#</MudTh>
+        <MudTh>@T("Name")</MudTh>
+        <MudTh>@T("Type")</MudTh>
+        <MudTh>@T("Languages")</MudTh>
+        <MudTh>@T("Entries")</MudTh>
+        <MudTh>@T("Actions")</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Num</MudTd>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@this.DescribeType(context.Type)</MudTd>
+        <MudTd>@this.DescribeLanguages(context)</MudTd>
+        <MudTd>
+            @if (!this.entryCounts.TryGetValue(context.Id, out var count))
+            {
+                @("…")
+            }
+            else if (count is { } entryCount)
+            {
+                @entryCount.CompactCount()
+            }
+            else
+            {
+                <MudTooltip Text="@T("AI Studio could not read the entries of this glossary.")">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small"/>
+                </MudTooltip>
+            }
+        </MudTd>
+        <MudTd>
+            <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                @if (context.IsEnterpriseConfiguration)
+                {
+                    <MudTooltip Text="@T("This glossary is managed by your organization.")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("View")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Visibility" OnClick="@(() => this.ViewGlossary(context))"/>
+                    </MudTooltip>
+                }
+                else
+                {
+                    <MudTooltip Text="@T("Edit")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditGlossary(context))"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Delete")">
+                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteGlossary(context))"/>
+                    </MudTooltip>
+                    <AdminExportButton OnClick="@(() => this.ExportGlossary(context))" />
+                }
+            </MudStack>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if(this.SettingsManager.ConfigurationData.Glossaries.Count == 0)
+{
+    <MudText Typo="Typo.h6" Class="mt-3">
+        @T("No glossaries configured yet.")
+    </MudText>
+}
+
+<MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+    <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddGlossary">
+        @T("Add Glossary")
+    </MudButton>
+    @*
+    Two imports exist for glossaries: this one takes the configuration of a whole glossary which
+    somebody exported, the one in the glossary dialog takes entries from a spreadsheet. This one is
+    for experts, so its button is a quiet one, and its name says what it takes.
+*@
+<LockableButton Text="@T("Import Glossary")" Tooltip="@T("For experts: paste the configuration of a glossary which somebody exported from AI Studio, e.g. a colleague or your IT department.")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.GLOSSARY))" Icon="@Icons.Material.Filled.Code" OnClickAsync="@this.ImportGlossary" ButtonVariant="Variant.Outlined" NoMargin="true" />
+</MudStack>

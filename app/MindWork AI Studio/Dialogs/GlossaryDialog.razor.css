@@ -1,0 +1,33 @@
+/*
+ * Every cell of the entry table is an input, but without an underline it looks like plain text.
+ * Hovering a cell therefore tints it and shows a pencil, and a cell being edited keeps an outline,
+ * so it is clear that the entries can be changed right in the table. All cells are text areas of
+ * the same kind, so their boxes come out the same in every column.
+ */
+.glossary-entries ::deep .glossary-cell .mud-input {
+    box-sizing: border-box;
+    width: 100%;
+    border-radius: var(--mud-default-borderradius);
+    padding: 0 0.5rem;
+    cursor: text;
+    transition: background-color 0.15s;
+}
+
+.glossary-entries ::deep .glossary-cell .mud-input:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.glossary-entries ::deep .glossary-cell .mud-input:focus-within {
+    outline: 1px solid var(--mud-palette-primary);
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.glossary-entries ::deep .glossary-cell .mud-input-adornment {
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.glossary-entries ::deep .glossary-cell .mud-input:hover .mud-input-adornment,
+.glossary-entries ::deep .glossary-cell .mud-input:focus-within .mud-input-adornment {
+    opacity: 0.6;
+}

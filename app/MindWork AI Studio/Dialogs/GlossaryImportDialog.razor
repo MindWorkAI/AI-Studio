@@ -1,0 +1,125 @@
+@using AIStudio.Tools.Glossaries
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Choose a spreadsheet or a CSV file. Its first row names the columns, and every further row becomes one entry. Afterward, choose which column holds the terms and which one their translations or explanations.")
+        </MudJustifiedText>
+
+        <SelectFile File="@this.filePath" FileChanged="@this.FilePathChanged" Label="@T("File to import")" FileDialogTitle="@T("Select the file to import")" Filter="@FILE_FILTER" EnableDragDrop="@true" CatchAllDocuments="@true"/>
+
+        @if (this.isReadingFile)
+        {
+            <MudProgressLinear Indeterminate="@true" Color="Color.Primary" Class="mt-3 mb-3"/>
+        }
+
+        @if (this.importFile is { Success: false } failedFile)
+        {
+            <MudAlert Severity="Severity.Error" Dense="@true" Class="mt-3 mb-3">
+                @this.DescribeIssue(failedFile.Issue)
+            </MudAlert>
+        }
+
+        @if (this.SelectedTable is { } table)
+        {
+            @if (this.importFile!.Tables.Count > 1)
+            {
+                <MudSelect T="int" Value="@this.selectedTableIndex" ValueChanged="@this.SelectedTableChanged" Label="@T("Table")" Variant="Variant.Outlined" Class="mt-3 mb-3">
+                    @for (var index = 0; index < this.importFile.Tables.Count; index++)
+                    {
+                        var tableIndex = index;
+                        <MudSelectItem T="int" Value="@tableIndex">@string.Format(T("Table {0}: {1}"), tableIndex + 1, string.Join(", ", this.importFile.Tables[tableIndex].Columns))</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+
+            <MudGrid Spacing="2" Class="mt-3 mb-3">
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="@this.termColumn" Label="@T("Column of the terms")" Variant="Variant.Outlined">
+                        @for (var index = 0; index < table.Columns.Count; index++)
+                        {
+                            var columnIndex = index;
+                            <MudSelectItem T="int" Value="@columnIndex">@table.Columns[columnIndex]</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="@this.valueColumn" Label="@T("Column of the translations or explanations")" Variant="Variant.Outlined">
+                        @for (var index = 0; index < table.Columns.Count; index++)
+                        {
+                            var columnIndex = index;
+                            <MudSelectItem T="int" Value="@columnIndex">@table.Columns[columnIndex]</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="@this.aliasesColumn" Label="@T("Column of other forms (optional)")" HelperText="@T("Further spellings or forms of the terms, such as plurals, separated by semicolons.")" Variant="Variant.Outlined">
+                        <MudSelectItem T="int" Value="@NO_COLUMN">@T("None")</MudSelectItem>
+                        @for (var index = 0; index < table.Columns.Count; index++)
+                        {
+                            var columnIndex = index;
+                            <MudSelectItem T="int" Value="@columnIndex">@table.Columns[columnIndex]</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="@this.noteColumn" Label="@T("Column of notes (optional)")" HelperText="@T("Remarks which the AI reads along with the entries.")" Variant="Variant.Outlined">
+                        <MudSelectItem T="int" Value="@NO_COLUMN">@T("None")</MudSelectItem>
+                        @for (var index = 0; index < table.Columns.Count; index++)
+                        {
+                            var columnIndex = index;
+                            <MudSelectItem T="int" Value="@columnIndex">@table.Columns[columnIndex]</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            @if (this.ExistingEntries.Count > 0)
+            {
+                <MudRadioGroup T="GlossaryImportMode" @bind-Value="@this.mode" Class="mb-3">
+                    <MudRadio Value="@GlossaryImportMode.MERGE" Color="Color.Primary">@T("Add the entries; replace entries with the same term")</MudRadio>
+                    <MudRadio Value="@GlossaryImportMode.REPLACE" Color="Color.Primary">@T("Replace all entries of the glossary")</MudRadio>
+                </MudRadioGroup>
+            }
+
+            @if (this.termColumn == this.valueColumn)
+            {
+                <MudAlert Severity="Severity.Error" Dense="@true" Class="mb-3">
+                    @T("The terms and their translations or explanations must come from different columns.")
+                </MudAlert>
+            }
+            else if (this.Preview is { } preview)
+            {
+                <MudAlert Severity="Severity.Info" Dense="@true" Class="mb-3">
+                    @string.Format(T("The import adds {0} entries, replaces {1}, and removes {2}. It leaves out {3} rows without a term or a value."), preview.Added, preview.Replaced, preview.Removed, preview.SkippedRows)
+                </MudAlert>
+
+                <MudSimpleTable Dense="@true" Hover="@true" Class="border-dashed border rounded-lg mb-3">
+                    <thead>
+                    <tr>
+                        <th>@table.Columns[this.termColumn]</th>
+                        <th>@table.Columns[this.valueColumn]</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var row in table.Rows.Take(PREVIEW_ROWS))
+                    {
+                        <tr>
+                            <td>@row[this.termColumn]</td>
+                            <td>@row[this.valueColumn]</td>
+                        </tr>
+                    }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Import" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(this.Preview is null)">
+            @T("Import")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

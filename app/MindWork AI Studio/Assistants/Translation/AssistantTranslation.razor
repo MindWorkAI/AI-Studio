@@ -19,4 +19,20 @@ else
 }
 
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
+
+<MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
+    @{ var availableGlossaries = this.AvailableGlossaries; }
+    <MudSelect T="string" Label="@T("(Optional) Which glossaries should the translation follow?")" HelperText="@this.GlossarySelectionHelperText(availableGlossaries.Count)" MultiSelection="@true" SelectedValues="@this.SelectedAvailableGlossaryIds" SelectedValuesChanged="@this.SelectedGlossariesChanged" ToStringFunc="@this.GetGlossaryName" Disabled="@(this.isAgentRunning || availableGlossaries.Count == 0)" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.MenuBook" Style="flex: 1 1 20em;">
+        @foreach (var glossary in availableGlossaries)
+        {
+            <MudSelectItem T="string" Value="@glossary.Id">
+                @this.GetGlossaryName(glossary.Id)
+            </MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton StartIcon="@Icons.Material.Filled.MenuBook" Variant="Variant.Text" Color="Color.Primary" OnClick="@this.OpenGlossaryManagement">
+        @T("Manage glossaries")
+    </MudButton>
+</MudStack>
+
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

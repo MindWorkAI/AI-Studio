@@ -20,7 +20,8 @@ public sealed record DataBackupEntry(DataBackupLocation Location, string Relativ
         or DataBackupEntryKind.VISUAL_BRIEFINGS
         or DataBackupEntryKind.DATA_SOURCE_INDEX
         or DataBackupEntryKind.VECTOR_STORES
-        or DataBackupEntryKind.MEDIA_TRANSCRIPTS;
+        or DataBackupEntryKind.MEDIA_TRANSCRIPTS
+        or DataBackupEntryKind.GLOSSARIES;
 
     /// <summary>
     /// Whether a backup takes the entry from the copies it makes while the indexing pauses, rather than from the data folder.

@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tests.Tools.ToolCalling;
 using AIStudio.Tools;
+using AIStudio.Tools.Glossaries;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -42,6 +43,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         PluginConfigurationObjectType.CHAT_TEMPLATE,
         PluginConfigurationObjectType.DATA_SOURCE,
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY,
+        PluginConfigurationObjectType.GLOSSARY,
     ];
 
     private string temporaryDirectory = string.Empty;
@@ -606,6 +608,56 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         return encryptedSecret;
     }
 
+    private static readonly GlossaryEntry[] GLOSSARY_ENTRIES =
+    [
+        new("Arbeitszeit", "working time", ["Arbeitszeiten"], "HR only"),
+        new("Urlaub", "vacation"),
+    ];
+
+    private static Glossary GlossaryWithEntries() => new()
+    {
+        Num = 1,
+        Id = Guid.NewGuid().ToString(),
+        Name = "HR terms",
+        Type = GlossaryType.TRANSLATION,
+        Description = "Terms of our HR department.",
+        SourceLanguage = CommonLanguages.DE_DE,
+        TargetLanguage = CommonLanguages.EN_US,
+        PreselectInTranslation = false,
+    };
+
+    [Test]
+    public void AnImportedGlossaryKeepsItsDescriptionAndBringsItsEntries()
+    {
+        var (original, snippet) = Export(PluginConfigurationObjectType.GLOSSARY);
+        var imported = (Glossary)Import(snippet, PluginConfigurationObjectType.GLOSSARY).ConfigurationObject;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(imported with { Id = original.Id, Num = original.Num, PluginSource = null }, Is.EqualTo(original));
+
+            var entries = imported.PluginSource!.Entries;
+            Assert.That(entries.Select(entry => (entry.Term, entry.Value, entry.Note)), Is.EqualTo(GLOSSARY_ENTRIES.Select(entry => (entry.Term, entry.Value, entry.Note))));
+            Assert.That(entries[0].Aliases, Is.EqualTo(new[] { "Arbeitszeiten" }));
+        });
+    }
+
+    [Test]
+    public void AGlossaryWhichTakesItsEntriesFromAFileIsRefused()
+    {
+        var snippet = $$"""
+                        CONFIG["GLOSSARIES"][#CONFIG["GLOSSARIES"]+1] = {
+                            ["Id"] = "{{Guid.NewGuid()}}",
+                            ["Name"] = "HR terms",
+                            ["Type"] = "REFERENCE",
+                            ["File"] = { ["Path"] = "glossaries/hr.xlsx", ["TermColumn"] = "Begriff", ["ValueColumn"] = "Erklärung" },
+                        }
+                        """;
+
+        Assert.That(ConfigurationSnippetImport.TryImport(snippet, PluginConfigurationObjectType.GLOSSARY, out _, out var issue), Is.False, "The file belongs to a plugin which is not on this computer.");
+        Assert.That(issue, Is.Not.Empty);
+    }
+
     private static string ExportedId(string snippet, PluginConfigurationObjectType type)
     {
         Assert.That(ConfigurationSnippetParser.TryParse(snippet, type, out var table, out var issue), Is.True, issue);
@@ -690,6 +742,10 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             case PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY:
                 var policy = PolicyWith(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), ["web_search", "read_web_page"]);
                 return (policy, policy.ExportAsConfigurationSection());
+
+            case PluginConfigurationObjectType.GLOSSARY:
+                var glossary = GlossaryWithEntries();
+                return (glossary, glossary.ExportAsConfigurationSection(GLOSSARY_ENTRIES));
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, "This test knows no export for this type.");
