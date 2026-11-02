@@ -9,7 +9,7 @@ public interface IExternalDataSource : IDataSource, ISecretId
     /// <summary>
     /// Which data security policy is applied to this external data source?
     /// </summary>
-    public DataSourceSecurity SecurityPolicy { get; init; }
+    public DataSourceSecurity SecurityPolicy { get; set; }
 
     #region Implementation of ISecretId
 

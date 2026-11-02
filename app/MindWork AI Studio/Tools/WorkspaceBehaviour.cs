@@ -63,7 +63,7 @@ public static partial class WorkspaceBehaviour
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WorkspaceBehaviour).Namespace, nameof(WorkspaceBehaviour));
 
-    public static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    public static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
         AllowTrailingCommas = true,
@@ -73,8 +73,9 @@ public static partial class WorkspaceBehaviour
         Converters =
         {
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper),
-        }
-    };
+        },
+        TypeInfoResolver = ChatJsonContext.Default,
+    }.AsReadOnly();
 
     private static readonly TimeSpan PREFETCH_DELAY_DURATION = TimeSpan.FromMilliseconds(45);
 

@@ -5,11 +5,11 @@ namespace AIStudio.Settings.DataModel;
 /// </summary>
 public sealed class DataAssistantPluginEnterpriseApproval
 {
-    public string PluginHash { get; init; } = string.Empty;
-    public string DisplayName { get; init; } = string.Empty;
-    public string Comment { get; init; } = string.Empty;
-    public string ApprovedBy { get; init; } = string.Empty;
-    public DateTimeOffset? ApprovedAtUtc { get; init; }
+    public string PluginHash { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string Comment { get; set; } = string.Empty;
+    public string ApprovedBy { get; set; } = string.Empty;
+    public DateTimeOffset? ApprovedAtUtc { get; set; }
 
     /// <summary>
     /// Whether the organization wants this assistant plugin to be enabled, instead of leaving that
@@ -21,7 +21,7 @@ public sealed class DataAssistantPluginEnterpriseApproval
     /// colleague still has to switch it on. This field is how an organization makes that decision
     /// instead.
     /// </remarks>
-    public bool Activate { get; init; }
+    public bool Activate { get; set; }
 
     /// <summary>
     /// Whether the user may switch an assistant plugin the organization activated off again.
@@ -32,5 +32,5 @@ public sealed class DataAssistantPluginEnterpriseApproval
     /// change. It has no meaning of its own while Activate is false, because there is nothing to
     /// override then.
     /// </remarks>
-    public bool AllowUserOverride { get; init; }
+    public bool AllowUserOverride { get; set; }
 }
