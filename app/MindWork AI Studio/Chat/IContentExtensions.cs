@@ -118,13 +118,16 @@ public static class IContentExtensions
     /// <remarks>
     /// Markdig hands us the lines of a block without a line break after the last one. Compilers
     /// and shells read such a file, but Git marks it, and some tools drop the last line altogether.
-    /// The lines end with LF as the model wrote them, except where the language needs CR LF.
+    /// The lines end with LF as models write them, except where the language needs CR LF. Should the
+    /// code hold CR LF anyway, it becomes LF as well, so that the file never mixes both. Nothing else
+    /// counts as a line break here, since a form feed or a U+2028 may stand inside a string of the code.
     /// </remarks>
     /// <param name="file">The code block.</param>
     /// <returns>The content of the file to write.</returns>
     private static string ToSourceCodeFile(MessageFile file)
     {
-        var code = file.Content.EndsWith('\n') ? file.Content : $"{file.Content}\n";
+        var lines = file.Content.Replace("\r\n", "\n");
+        var code = lines.EndsWith('\n') ? lines : $"{lines}\n";
         return file.Language.NeedsWindowsLineEndings ? code.ReplaceLineEndings("\r\n") : code;
     }
 

@@ -251,6 +251,15 @@ public sealed class IContentExtensionsTests
         Assert.That(TextWith(string.Empty).ToExportContent(file), Is.EqualTo("print(42)\n"));
     }
 
+    [TestCase("import sys\r\nprint(sys.argv)")]
+    [TestCase("import sys\r\nprint(sys.argv)\r\n")]
+    public void CodeNeverMixesLineEndings(string code)
+    {
+        var file = new MessageFile(1, Position: 0, string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage("python"), code);
+
+        Assert.That(TextWith(string.Empty).ToExportContent(file), Is.EqualTo("import sys\nprint(sys.argv)\n"), "The line break added at the end matches the others, whatever line breaks the code came with.");
+    }
+
     [Test]
     public void ABatchFileEndsItsLinesTheWindowsWay()
     {
