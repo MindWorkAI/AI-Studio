@@ -91,7 +91,7 @@ public static class DocumentExport
         feedback.ShowRunning(response.SaveFilePath);
         var isWritten = formatTemplate is null
             ? await PandocExport.ConvertAsync(rustService, markdownText, response.SaveFilePath, format)
-            : await WriteIntoTemplateAsync(formatTemplate, markdownText, response.SaveFilePath);
+            : await WriteIntoTemplateAsync(formatTemplate, markdownContent, markdownText, response.SaveFilePath);
 
         if (!isWritten)
         {
@@ -114,12 +114,16 @@ public static class DocumentExport
     /// Only Word templates serve an export so far, cf. FileExportFormatExtensions.ToFormatTemplateFilter,
     /// so the Word writer takes every template. Like PandocExport.ConvertAsync, this says nothing to
     /// the user and reports only whether the document was written.
+    ///
+    /// The top heading level of the answer becomes the first heading level of the template. It is
+    /// read from the answer alone: the sources below it always start with a heading of the first level.
     /// </remarks>
-    private static async Task<bool> WriteIntoTemplateAsync(FormatTemplate formatTemplate, string markdownText, string targetPath)
+    private static async Task<bool> WriteIntoTemplateAsync(FormatTemplate formatTemplate, IContent content, string markdownText, string targetPath)
     {
         try
         {
-            await WordDocumentFile.CreateAsync(formatTemplate.FilePath, targetPath, markdownText, LOGGER, CancellationToken.None);
+            var topHeadingLevel = content.TryGetMarkdownText(out var answer) ? MarkdownWordConverter.TopHeadingLevelOf(answer) : 1;
+            await WordDocumentFile.CreateAsync(formatTemplate.FilePath, targetPath, markdownText, topHeadingLevel, LOGGER, CancellationToken.None);
             LOGGER.LogInformation("Exporting into the format template '{FormatTemplateName}' succeeded.", formatTemplate.Name);
             return true;
         }

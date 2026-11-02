@@ -28,7 +28,9 @@ internal static class WordDocumentWriter
     /// </remarks>
     /// <param name="documentFile">A copy of the template, a .docx or a .dotx, positioned at its start; readable, writable, and seekable.</param>
     /// <param name="markdown">The Markdown text to write.</param>
-    public static void Write(Stream documentFile, string markdown)
+    /// <param name="topHeadingLevel">The heading level of the Markdown which becomes the first heading
+    /// level of the template, see MarkdownWordConverter.TopHeadingLevelOf.</param>
+    public static void Write(Stream documentFile, string markdown, int topHeadingLevel = 1)
     {
         using var document = WordprocessingDocument.Open(documentFile, true);
 
@@ -43,7 +45,7 @@ internal static class WordDocumentWriter
         var sectionProperties = ClearBody(body);
         RemoveWhatOnlyTheBodyUsed(mainPart);
 
-        var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), new WordNumbering(mainPart)).Convert(markdown);
+        var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), new WordNumbering(mainPart)).Convert(markdown, topHeadingLevel);
         if (firstPageSpace > 0)
             content.Insert(0, SpaceOf(firstPageSpace));
 

@@ -53,12 +53,38 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
     private const int GRID_WIDTH = 9000;
 
     /// <summary>
+    /// How many levels each heading moves up, so that the top level of the answer becomes the first
+    /// heading level of the template.
+    /// </summary>
+    private int headingShift;
+
+    /// <summary>
+    /// Returns the top level of the headings in a Markdown text.
+    /// </summary>
+    /// <remarks>
+    /// Models mostly start their answers with headings of the second level, keeping the first for
+    /// a title. A template, however, often styles the first level only, or numbers its chapters
+    /// from there, so that a document starting with the second level would get chapters such as
+    /// "0.1".
+    /// </remarks>
+    /// <param name="markdown">The Markdown text, e.g., the answer without the sources AI Studio adds below it.</param>
+    /// <returns>The lowest level of a heading in the text; 1 when it has none.</returns>
+    public static int TopHeadingLevelOf(string markdown)
+    {
+        var levels = Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE).Descendants<HeadingBlock>().Select(heading => heading.Level).ToList();
+        return levels.Count is 0 ? 1 : levels.Min();
+    }
+
+    /// <summary>
     /// Converts the given Markdown.
     /// </summary>
     /// <param name="markdown">The Markdown text.</param>
+    /// <param name="topHeadingLevel">The heading level which becomes the first heading level of the template,
+    /// see TopHeadingLevelOf. A heading above it becomes one of the first level as well.</param>
     /// <returns>The paragraphs and tables, in the order the document lists them. The last one is a paragraph.</returns>
-    public List<OpenXmlElement> Convert(string markdown)
+    public List<OpenXmlElement> Convert(string markdown, int topHeadingLevel = 1)
     {
+        this.headingShift = Math.Max(0, topHeadingLevel - 1);
         var elements = new List<OpenXmlElement>();
         foreach (var block in Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE))
             this.AddBlock(block, elements);
@@ -78,7 +104,7 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
         switch (block)
         {
             case HeadingBlock heading:
-                elements.Add(this.ParagraphOf(heading.Inline, styles.HeadingOf(heading.Level)));
+                elements.Add(this.ParagraphOf(heading.Inline, styles.HeadingOf(Math.Max(1, heading.Level - this.headingShift))));
                 break;
 
             case ThematicBreakBlock:

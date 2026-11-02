@@ -29,6 +29,11 @@ internal sealed class WordStyles
     private readonly string? defaultTableStyleId;
     private readonly Dictionary<string, string> idsByName = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// The IDs of the styles added because the template lacks them.
+    /// </summary>
+    private readonly HashSet<string> addedIds = new(StringComparer.OrdinalIgnoreCase);
+
     private WordStyles(W.Styles styles, string? defaultTableStyleId)
     {
         this.styles = styles;
@@ -52,16 +57,33 @@ internal sealed class WordStyles
     /// <summary>
     /// Returns the ID of the paragraph style of a heading.
     /// </summary>
+    /// <remarks>
+    /// A heading level the template lacks looks like the nearest one above it which the template
+    /// has, so that it fits the design: a template with a first level in 11 pt would look odd with a
+    /// second level in 14 pt. Only a template without any heading gets plain definitions which step
+    /// down in size.
+    /// </remarks>
     /// <param name="level">The level of the heading, from 1 to 6.</param>
     /// <returns>The ID of the style.</returns>
     public string HeadingOf(int level)
     {
         level = Math.Clamp(level, 1, HEADING_FONT_SIZES.Length);
-        return this.IdOf("paragraph", $"heading {level}", () => new W.Style
+        return this.IdOf("paragraph", $"heading {level}", () => this.TemplateHeadingAbove(level) is { } headingAbove ? new W.Style
+        {
+            StyleName = new W.StyleName { Val = $"heading {level}" },
+            BasedOn = new W.BasedOn { Val = headingAbove },
+            NextParagraphStyle = this.DefaultParagraphNext(),
+            UIPriority = new W.UIPriority { Val = 9 },
+            PrimaryStyle = new W.PrimaryStyle(),
+            StyleParagraphProperties = new W.StyleParagraphProperties
+            {
+                OutlineLevel = new W.OutlineLevel { Val = level - 1 },
+            },
+        } : new W.Style
         {
             StyleName = new W.StyleName { Val = $"heading {level}" },
             BasedOn = this.defaultParagraphStyleId is { } basedOn ? new W.BasedOn { Val = basedOn } : null,
-            NextParagraphStyle = this.defaultParagraphStyleId is { } next ? new W.NextParagraphStyle { Val = next } : null,
+            NextParagraphStyle = this.DefaultParagraphNext(),
             UIPriority = new W.UIPriority { Val = 9 },
             PrimaryStyle = new W.PrimaryStyle(),
             StyleParagraphProperties = new W.StyleParagraphProperties
@@ -78,6 +100,26 @@ internal sealed class WordStyles
                 FontSizeComplexScript = new W.FontSizeComplexScript { Val = HEADING_FONT_SIZES[level - 1] },
             },
         });
+    }
+
+    /// <summary>
+    /// Makes a paragraph after a heading or a quotation take the default style of the template again.
+    /// </summary>
+    /// <returns>The reference to the default paragraph style; null when the template has none.</returns>
+    private W.NextParagraphStyle? DefaultParagraphNext() => this.defaultParagraphStyleId is { } id ? new W.NextParagraphStyle { Val = id } : null;
+
+    /// <summary>
+    /// Returns the ID of the nearest heading above the given level which the template itself defines.
+    /// </summary>
+    /// <param name="level">The level of the heading.</param>
+    /// <returns>The ID of the style; null when the template defines no heading above the level.</returns>
+    private string? TemplateHeadingAbove(int level)
+    {
+        for (var above = level - 1; above >= 1; above--)
+            if (this.FindId("paragraph", $"heading {above}") is { } id && !this.addedIds.Contains(id))
+                return id;
+
+        return null;
     }
 
     /// <summary>
@@ -145,7 +187,7 @@ internal sealed class WordStyles
     {
         StyleName = new W.StyleName { Val = "Quote" },
         BasedOn = this.defaultParagraphStyleId is { } basedOn ? new W.BasedOn { Val = basedOn } : null,
-        NextParagraphStyle = this.defaultParagraphStyleId is { } next ? new W.NextParagraphStyle { Val = next } : null,
+        NextParagraphStyle = this.DefaultParagraphNext(),
         UIPriority = new W.UIPriority { Val = 29 },
         PrimaryStyle = new W.PrimaryStyle(),
         StyleParagraphProperties = new W.StyleParagraphProperties
@@ -202,6 +244,34 @@ internal sealed class WordStyles
     /// <returns>The ID of the style.</returns>
     private string IdOf(string type, string name, Func<W.Style> createStyle)
     {
+        if (this.FindId(type, name) is { } existingId)
+            return existingId;
+
+        var style = createStyle();
+        style.Type = type switch
+        {
+            "character" => W.StyleValues.Character,
+            "table" => W.StyleValues.Table,
+
+            _ => W.StyleValues.Paragraph,
+        };
+
+        var addedId = this.UnusedId(IdFrom(name));
+        style.StyleId = addedId;
+        this.styles.Append(style);
+        this.addedIds.Add(addedId);
+        this.idsByName[$"{type}:{name}"] = addedId;
+        return addedId;
+    }
+
+    /// <summary>
+    /// Finds a style by its name.
+    /// </summary>
+    /// <param name="type">The type of the style as the file states it: "paragraph", "character", or "table".</param>
+    /// <param name="name">The name of the built-in style, as Word stores it.</param>
+    /// <returns>The ID of the style; null when the document has no such style.</returns>
+    private string? FindId(string type, string name)
+    {
         var key = $"{type}:{name}";
         if (this.idsByName.TryGetValue(key, out var id))
             return id;
@@ -212,18 +282,7 @@ internal sealed class WordStyles
                     ?? candidates.FirstOrDefault(candidate => string.Equals(candidate.StyleId!.Value, guessedId, StringComparison.OrdinalIgnoreCase));
 
         if (found is null)
-        {
-            found = createStyle();
-            found.Type = type switch
-            {
-                "character" => W.StyleValues.Character,
-                "table" => W.StyleValues.Table,
-
-                _ => W.StyleValues.Paragraph,
-            };
-            found.StyleId = this.UnusedId(guessedId);
-            this.styles.Append(found);
-        }
+            return null;
 
         id = found.StyleId!.Value!;
         this.idsByName[key] = id;

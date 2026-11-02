@@ -26,13 +26,15 @@ internal static class WordDocumentFile
     /// <param name="templatePath">The path of the template, a .docx or a .dotx.</param>
     /// <param name="targetPath">The path of the file the user chose. It may exist; the save dialog asked about overwriting it.</param>
     /// <param name="markdown">The Markdown text to write.</param>
+    /// <param name="topHeadingLevel">The heading level of the Markdown which becomes the first heading
+    /// level of the template, see MarkdownWordConverter.TopHeadingLevelOf.</param>
     /// <param name="logger">Where to report a temporary file which cannot be removed.</param>
     /// <param name="token">The cancellation token.</param>
-    public static async Task CreateAsync(string templatePath, string targetPath, string markdown, ILogger logger, CancellationToken token)
+    public static async Task CreateAsync(string templatePath, string targetPath, string markdown, int topHeadingLevel, ILogger logger, CancellationToken token)
     {
         using var copy = await TemplateCopy.CreateAsync(templatePath, TEMPORARY_DIRECTORY, ".docx", logger, token);
         await using (var documentFile = copy.OpenForEditing())
-            WordDocumentWriter.Write(documentFile, markdown);
+            WordDocumentWriter.Write(documentFile, markdown, topHeadingLevel);
 
         await copy.WriteIntoAsync(targetPath, token);
     }

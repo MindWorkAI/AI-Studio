@@ -28,7 +28,12 @@ numbers raised, rather than going to the foot of the page.
 - **Styles are found by name, never by ID.** Word stores the built-in styles under their English name,
   e.g., "heading 1", in every language, while the ID follows the language of the Word which saved the
   file: a German Word stores the first heading as "berschrift1". `WordStyles` looks up the name and adds
-  a plain definition when the template lacks a style.
+  a plain definition when the template lacks a style; a heading level it lacks looks like the nearest
+  one above it which the template defines.
+- **The top heading level of the answer becomes the first one of the template.** Models start with
+  `##`, and templates often style or number their chapters from the first level on. The level is read
+  from the answer alone (`MarkdownWordConverter.TopHeadingLevelOf`), because the sources AI Studio
+  adds below it always start with `#`.
 - **New content carries no formatting of its own.** Paragraphs, lists, and tables take their look from
   the styles of the template; a table takes the style the template names for new tables. Only what
   Markdown itself marks, such as bold text or the alignment of a column, is formatted directly.

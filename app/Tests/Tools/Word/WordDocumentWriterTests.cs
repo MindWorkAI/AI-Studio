@@ -113,9 +113,38 @@ public sealed class WordDocumentWriterTests
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(styleIds[0], Is.EqualTo(TestWordTemplate.HEADING_1_STYLE_ID), "A German Word stores the first heading under an ID of its own, and the name finds it.");
             Assert.That(addedStyle?.StyleName?.Val?.Value, Is.EqualTo("heading 2"), "The template lacks the second heading level, which is added under the name Word knows.");
-            Assert.That(addedStyle?.BasedOn?.Val?.Value, Is.EqualTo(TestWordTemplate.NORMAL_STYLE_ID), "The added heading looks like the text of the template, except for its size.");
+            Assert.That(addedStyle?.BasedOn?.Val?.Value, Is.EqualTo(TestWordTemplate.HEADING_1_STYLE_ID), "The added heading looks like the heading above it, which fits the design of the template.");
+            Assert.That(addedStyle?.StyleRunProperties?.FontSize, Is.Null, "A size of its own could make it bigger than the heading above it.");
             Assert.That(styleIds[2], Is.Null, "A paragraph takes the default style of the template.");
         });
+    }
+
+    [Test]
+    public void TheTopHeadingOfTheAnswerTakesTheFirstHeadingOfTheTemplate()
+    {
+        // Models start with the second level; the sources AI Studio adds below the answer start with the first:
+        using var file = Write("## Mars\n\n### Orbit\n\nClose to Earth.\n\n# Sources", topHeadingLevel: 2);
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var styleIds = ParagraphsOf(document).Select(paragraph => paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value).ToList();
+        var styleNames = styleIds.Select(id => StylesOf(document).SingleOrDefault(style => style.StyleId?.Value == id)?.StyleName?.Val?.Value).ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(styleIds[0], Is.EqualTo(TestWordTemplate.HEADING_1_STYLE_ID), "Otherwise a template which numbers its chapters would start with chapter 0.1.");
+            Assert.That(styleNames[1], Is.EqualTo("heading 2"));
+            Assert.That(styleIds[3], Is.EqualTo(TestWordTemplate.HEADING_1_STYLE_ID), "A heading above the top level of the answer stays at the first level.");
+        });
+    }
+
+    [TestCase("", 1, Description = "Without headings, nothing moves.")]
+    [TestCase("Mars is close.\n\n- Earth\n- Moon", 1)]
+    [TestCase("## Mars\n\n### Orbit", 2, Description = "What models mostly write.")]
+    [TestCase("### Mars\n\n## Orbit", 2, Description = "The top level counts, not the first heading.")]
+    [TestCase("# Mars\n\n## Orbit", 1)]
+    public void TheTopHeadingLevelIsTheLowestOne(string markdown, int expectedLevel)
+    {
+        Assert.That(MarkdownWordConverter.TopHeadingLevelOf(markdown), Is.EqualTo(expectedLevel));
     }
 
     [Test]
@@ -363,11 +392,11 @@ public sealed class WordDocumentWriterTests
             .NumberingFormat?.Val?.InnerText;
     }
 
-    private static MemoryStream Write(string markdown, TestWordTemplateOptions? options = null)
+    private static MemoryStream Write(string markdown, TestWordTemplateOptions? options = null, int topHeadingLevel = 1)
     {
         // The writer edits a copy of the template, as WordDocumentFile does with one on disk:
         var file = TestWordTemplate.Create(options);
-        WordDocumentWriter.Write(file, markdown);
+        WordDocumentWriter.Write(file, markdown, topHeadingLevel);
         file.Position = 0;
         return file;
     }
