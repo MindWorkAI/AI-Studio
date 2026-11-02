@@ -9,7 +9,7 @@ public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
 {
     protected readonly IERIDataSource DataSource = dataSource;
     
-    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
         AllowTrailingCommas = true,
@@ -20,8 +20,9 @@ public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
         Converters =
         {
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper),
-        }
-    };
+        },
+        TypeInfoResolver = ERIClientJsonContext.Default,
+    }.AsReadOnly();
     
     protected readonly HttpClient HttpClient = ExternalHttpClientTimeout.CreateHttpClient(new Uri($"{dataSource.Hostname}:{dataSource.Port}"), ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED);
     

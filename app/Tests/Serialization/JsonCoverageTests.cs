@@ -18,6 +18,8 @@ public sealed class JsonCoverageTests
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ProviderAnswers))]
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.RuntimeRequests))]
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.RuntimeAnswers))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ServiceRequests))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ServiceAnswers))]
     public void EveryContractComesFromSourceGeneration(JsonTestRoot root)
     {
         var typesWithoutGeneratedContract = JsonTypeGraph.Collect(root.Type, root.Options)
