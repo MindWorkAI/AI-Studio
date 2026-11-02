@@ -15,7 +15,7 @@ namespace AIStudio.Tests.Tools.Word;
 /// names Word gives its built-in styles. It has no second heading level. Its body holds what a
 /// corporate template brings along: a cover page in a section with a header of its own, sample text
 /// with a comment and a footnote, a picture, and a link. The last section has the header which the
-/// document keeps.
+/// document keeps. TestWordTemplateOptions tells what else the template holds.
 /// </remarks>
 internal static class TestWordTemplate
 {
@@ -25,18 +25,30 @@ internal static class TestWordTemplate
 
     public const string HEADER_TEXT = "Header of the organization";
     public const string COVER_HEADER_TEXT = "Header of the cover page";
+    public const string FOOTER_TEXT = "Address of the organization";
+
+    /// <summary>
+    /// The top margin of the pages, 2.2 cm, in twentieths of a point.
+    /// </summary>
+    public const int TOP_MARGIN = 1247;
+
+    /// <summary>
+    /// The top margin of a cover page, 9.8 cm, which leaves room for a big picture in its header.
+    /// </summary>
+    public const int COVER_TOP_MARGIN = 5568;
 
     private const long PICTURE_SIZE = 952_500;
 
     /// <summary>
     /// Writes the template.
     /// </summary>
-    /// <param name="asTemplate">Whether the file is a template (.dotx) rather than a document (.docx).</param>
+    /// <param name="options">What else the template holds; null for nothing.</param>
     /// <returns>The file, positioned at its start.</returns>
-    public static MemoryStream Create(bool asTemplate = false)
+    public static MemoryStream Create(TestWordTemplateOptions? options = null)
     {
+        options ??= new TestWordTemplateOptions();
         var stream = new MemoryStream();
-        using (var document = WordprocessingDocument.Create(stream, asTemplate ? WordprocessingDocumentType.Template : WordprocessingDocumentType.Document))
+        using (var document = WordprocessingDocument.Create(stream, options.AsTemplate ? WordprocessingDocumentType.Template : WordprocessingDocumentType.Document))
         {
             var mainPart = document.AddMainDocumentPart();
             mainPart.AddNewPart<StyleDefinitionsPart>().Styles = new W.Styles(
@@ -89,7 +101,9 @@ internal static class TestWordTemplate
                 new W.Paragraph(new W.Run(new W.Text("Cover page"))),
                 new W.Paragraph(new W.ParagraphProperties
                 {
-                    SectionProperties = new W.SectionProperties(new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(coverHeaderPart) }),
+                    SectionProperties = options.CoverPage
+                        ? CoverSectionOf(mainPart, headerPart, coverHeaderPart)
+                        : new W.SectionProperties(new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(coverHeaderPart) }),
                 }),
                 new W.Paragraph(
                     new W.CommentRangeStart { Id = "0" },
@@ -99,14 +113,44 @@ internal static class TestWordTemplate
                     new W.Run(new W.FootnoteReference { Id = 1 })),
                 new W.Paragraph(new W.Run(PictureOf(mainPart.GetIdOfPart(imagePart)))),
                 new W.Paragraph(new W.Hyperlink(new W.Run(new W.Text("A sample link"))) { Id = link.Id }),
-                new W.SectionProperties(
-                    new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(headerPart) },
-                    new W.PageSize { Width = 11_906U, Height = 16_838U })));
+                options.CoverPage
+                    ? new W.SectionProperties(PageSize(), PageMarginOf(TOP_MARGIN))
+                    : new W.SectionProperties(
+                        new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(headerPart) },
+                        PageSize())));
         }
 
         stream.Position = 0;
         return stream;
     }
+
+    /// <summary>
+    /// The first section of a corporate template, which states the headers and footers for every
+    /// section after it, and a header of its own for its first page.
+    /// </summary>
+    private static W.SectionProperties CoverSectionOf(MainDocumentPart mainPart, HeaderPart headerPart, HeaderPart coverHeaderPart)
+    {
+        var footerPart = mainPart.AddNewPart<FooterPart>();
+        var logoPart = footerPart.AddImagePart(ImagePartType.Png);
+        using (var logo = new MemoryStream([137, 80, 78, 71]))
+            logoPart.FeedData(logo);
+
+        footerPart.Footer = new W.Footer(new W.Paragraph(new W.Run(PictureOf(footerPart.GetIdOfPart(logoPart))), new W.Run(new W.Text(FOOTER_TEXT))));
+        return new W.SectionProperties(
+            new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(headerPart) },
+            new W.HeaderReference { Type = W.HeaderFooterValues.First, Id = mainPart.GetIdOfPart(coverHeaderPart) },
+            new W.FooterReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(footerPart) },
+            PageSize(),
+            PageMarginOf(COVER_TOP_MARGIN),
+            new W.TitlePage());
+    }
+
+    /// <summary>
+    /// A page of DIN A4.
+    /// </summary>
+    private static W.PageSize PageSize() => new() { Width = 11_906U, Height = 16_838U };
+
+    private static W.PageMargin PageMarginOf(int top) => new() { Top = top, Right = 851U, Bottom = 709, Left = 851U, Header = 709U, Footer = 709U, Gutter = 0U };
 
     /// <summary>
     /// A picture in the line of text, the way Word inserts one.

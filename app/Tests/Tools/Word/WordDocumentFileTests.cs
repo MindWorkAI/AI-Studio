@@ -87,7 +87,7 @@ public sealed class WordDocumentFileTests
     private async Task<string> CreateTemplateAsync()
     {
         var templatePath = Path.Join(this.templateFolder, "template.dotx");
-        using var template = TestWordTemplate.Create(asTemplate: true);
+        using var template = TestWordTemplate.Create(new TestWordTemplateOptions(AsTemplate: true));
         await File.WriteAllBytesAsync(templatePath, template.ToArray());
         return templatePath;
     }

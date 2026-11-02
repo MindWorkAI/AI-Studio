@@ -51,9 +51,46 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
+    public void TheHeadersAndFootersOfTheCoverPageStay()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(CoverPage: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var mainPart = document.MainDocumentPart!;
+        var section = mainPart.Document!.Body!.Elements<W.SectionProperties>().Single();
+        var parts = section.Elements<W.HeaderFooterReferenceType>().ToDictionary(reference => $"{reference.LocalName} {reference.Type?.InnerText}", reference => mainPart.GetPartById(reference.Id!.Value!));
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(parts.Keys, Is.EquivalentTo(new[] { "headerReference default", "headerReference first", "footerReference default" }), "The last section inherits the header and footer of the cover page, which the template states only there.");
+            Assert.That(((HeaderPart)parts["headerReference default"]).Header!.InnerText, Is.EqualTo(TestWordTemplate.HEADER_TEXT));
+            Assert.That(((HeaderPart)parts["headerReference first"]).Header!.InnerText, Is.EqualTo(TestWordTemplate.COVER_HEADER_TEXT), "The first page of the document is the first page of the template.");
+            Assert.That(((FooterPart)parts["footerReference default"]).Footer!.InnerText, Is.EqualTo(TestWordTemplate.FOOTER_TEXT));
+            Assert.That(((FooterPart)parts["footerReference default"]).ImageParts, Is.Not.Empty, "The logo in the footer stays.");
+            Assert.That(section.GetFirstChild<W.TitlePage>(), Is.Not.Null, "Only with this switch does the first page show its own header.");
+        });
+    }
+
+    [Test]
+    public void TheTextOfTheFirstPageStartsBelowTheHeaderOfTheCoverPage()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(CoverPage: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var paragraphs = ParagraphsOf(document);
+        var spacing = paragraphs[0].ParagraphProperties?.SpacingBetweenLines;
+        Assert.Multiple(() =>
+        {
+            Assert.That(paragraphs.Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { string.Empty, "Mars is close to Earth." }));
+            Assert.That(spacing?.Line?.Value, Is.EqualTo((TestWordTemplate.COVER_TOP_MARGIN - TestWordTemplate.TOP_MARGIN).ToString()), "The empty paragraph makes up for the larger top margin of the cover page.");
+            Assert.That(spacing?.LineRule?.InnerText, Is.EqualTo("exact"));
+        });
+    }
+
+    [Test]
     public void ATemplateBecomesADocument()
     {
-        using var file = Write("Mars is close to Earth.", asTemplate: true);
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(AsTemplate: true));
         using var document = WordprocessingDocument.Open(file, false);
 
         Assert.Multiple(() =>
@@ -326,10 +363,10 @@ public sealed class WordDocumentWriterTests
             .NumberingFormat?.Val?.InnerText;
     }
 
-    private static MemoryStream Write(string markdown, bool asTemplate = false)
+    private static MemoryStream Write(string markdown, TestWordTemplateOptions? options = null)
     {
         // The writer edits a copy of the template, as WordDocumentFile does with one on disk:
-        var file = TestWordTemplate.Create(asTemplate);
+        var file = TestWordTemplate.Create(options);
         WordDocumentWriter.Write(file, markdown);
         file.Position = 0;
         return file;

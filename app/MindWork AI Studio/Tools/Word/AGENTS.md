@@ -11,7 +11,8 @@ path does not run through here.
    `app/MindWork AI Studio/Tools/OpenXml/`, and streams the result into the target once it is complete.
 2. `WordDocumentWriter.Write` opens the copy with the Open XML SDK (`DocumentFormat.OpenXml`), turns a
    template (.dotx) into a document, and replaces the body: everything but the properties of the last
-   section goes, together with whatever only the body used.
+   section goes, together with whatever only the body used. Before, `MergeSections` hands the last
+   section what the document keeps of the sections before it.
 3. `MarkdownWordConverter` reads the Markdown with Markdig, through `Markdown.SAFE_MARKDOWN_PIPELINE`,
    and turns its blocks into paragraphs and tables. `WordStyles` finds the styles they use in the
    template, and `WordNumbering` adds the numbering of the lists.
@@ -41,6 +42,12 @@ numbers raised, rather than going to the foot of the page.
   the Open XML SDK holds anyway.
 - **Write only into the file the user chose.** Inside the Flatpak, the save dialog grants access to
   exactly that file. `TemplateCopy` keeps this rule; use it rather than a `FileStream` of your own.
+- **The last section inherits what the removed sections state.** Corporate templates state their headers
+  and footers once, in the first section, e.g., a cover page, and the sections after it inherit them, as
+  Word lets a section without a header or footer of a kind do. `WordDocumentWriter.MergeSections` hands
+  them to the last section before the others go. The first page of the document is the first page of
+  the template: its own header and footer come from the first section, and an empty paragraph makes up
+  for a larger top margin there, so that the text starts below a picture in that header.
 - **Removing the body removes what only it used:** pictures, charts, embedded objects, the headers of
   removed sections, the targets of links, comments, and notes, see
   `WordDocumentWriter.RemoveWhatOnlyTheBodyUsed`. Otherwise Word offers to repair the file, or the

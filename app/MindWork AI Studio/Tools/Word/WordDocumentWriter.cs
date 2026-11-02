@@ -12,7 +12,8 @@ namespace AIStudio.Tools.Word;
 /// The document is the template itself, with the text of its body replaced: styles, page layout,
 /// headers and footers, and the theme stay exactly as their author made them. A cover page or
 /// sample text of the template goes along with the rest of the body, so that nothing of it ends
-/// up between the content.
+/// up between the content; the first page keeps the header and footer of the cover page, see
+/// MergeSections.
 /// </remarks>
 internal static class WordDocumentWriter
 {
@@ -38,10 +39,14 @@ internal static class WordDocumentWriter
         var mainPart = document.MainDocumentPart ?? throw new InvalidDataException("The file contains no Word document.");
         var body = mainPart.Document?.Body ?? throw new InvalidDataException("The file contains no Word document.");
 
+        var firstPageSpace = MergeSections(body);
         var sectionProperties = ClearBody(body);
         RemoveWhatOnlyTheBodyUsed(mainPart);
 
         var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), new WordNumbering(mainPart)).Convert(markdown);
+        if (firstPageSpace > 0)
+            content.Insert(0, SpaceOf(firstPageSpace));
+
         foreach (var element in content)
             if (sectionProperties is null)
                 body.Append(element);
@@ -50,11 +55,98 @@ internal static class WordDocumentWriter
     }
 
     /// <summary>
+    /// Gives the last section what the document keeps of the sections before it, which go with the body.
+    /// </summary>
+    /// <remarks>
+    /// Templates of organizations often start with a section of their own, e.g., a cover page. Its
+    /// headers and footers carry the logos and the address, and the sections after it state none:
+    /// Word lets a section without a header or footer of a kind inherit the one of the section
+    /// before. So the last section takes the headers and footers for regular and even pages which it
+    /// inherits. The first page of the document is the first page of the template, so its header and
+    /// footer, and whether it has ones of its own at all, come from the first section, e.g., a big
+    /// picture above the title. The template leaves room below such a header with a larger top margin
+    /// on the first page, which the space this returns stands in for.
+    /// </remarks>
+    /// <param name="body">The body of the template, not cleared yet.</param>
+    /// <returns>How much further down the text of the first page starts than on the other pages, in twentieths of a point; 0 when it does not.</returns>
+    private static int MergeSections(W.Body body)
+    {
+        var lastSection = body.Elements<W.SectionProperties>().LastOrDefault();
+        var sections = body.Descendants<W.SectionProperties>().ToList();
+        if (lastSection is null || sections.Count < 2)
+            return 0;
+
+        var firstSection = sections[0];
+        var references = new Dictionary<(Type Kind, string Pages), W.HeaderFooterReferenceType>();
+        foreach (var reference in sections.SelectMany(section => section.Elements<W.HeaderFooterReferenceType>()).Where(reference => TypeOf(reference) is not "first"))
+            references[(reference.GetType(), TypeOf(reference))] = reference;
+
+        foreach (var reference in firstSection.Elements<W.HeaderFooterReferenceType>().Where(reference => TypeOf(reference) is "first"))
+            references[(reference.GetType(), "first")] = reference;
+
+        //
+        // The references go first in the properties of a section. Cloned before the old ones are
+        // removed, since some of them are among those, and kept in the order of the template:
+        //
+        var mergedReferences = references.Values.Select(reference => (W.HeaderFooterReferenceType)reference.CloneNode(true)).ToList();
+        foreach (var reference in lastSection.Elements<W.HeaderFooterReferenceType>().ToList())
+            reference.Remove();
+
+        for (var index = mergedReferences.Count - 1; index >= 0; index--)
+            lastSection.PrependChild(mergedReferences[index]);
+
+        lastSection.RemoveAllChildren<W.TitlePage>();
+        if (firstSection.GetFirstChild<W.TitlePage>() is { } titlePage && titlePage.Val?.Value is not false)
+            InsertTitlePage(lastSection);
+
+        return Math.Max(0, TopMarginOf(firstSection) - TopMarginOf(lastSection));
+    }
+
+    /// <summary>
+    /// The type of a header or footer reference: "default", "first", or "even". A reference which states none is the default one.
+    /// </summary>
+    private static string TypeOf(W.HeaderFooterReferenceType reference) => reference.Type?.InnerText ?? "default";
+
+    /// <summary>
+    /// The space between the top edge of the page and the text, in twentieths of a point.
+    /// </summary>
+    /// <remarks>
+    /// A negative margin keeps its size even when the header grows, which makes no difference here.
+    /// Without a margin, Word uses one inch.
+    /// </remarks>
+    private static int TopMarginOf(W.SectionProperties section) => Math.Abs(section.GetFirstChild<W.PageMargin>()?.Top?.Value ?? 1440);
+
+    /// <summary>
+    /// Switches on a header and footer of their own for the first page of a section.
+    /// </summary>
+    /// <remarks>
+    /// The schema wants the switch after the layout of the page and before the direction of its text.
+    /// </remarks>
+    private static void InsertTitlePage(W.SectionProperties section)
+    {
+        string[] followers = ["textDirection", "bidi", "rtlGutter", "docGrid", "printerSettings", "footnoteColumns", "sectPrChange"];
+        var follower = section.ChildElements.FirstOrDefault(element => followers.Contains(element.LocalName));
+        if (follower is null)
+            section.Append(new W.TitlePage());
+        else
+            section.InsertBefore(new W.TitlePage(), follower);
+    }
+
+    /// <summary>
+    /// An empty paragraph of the given height, which moves the text down.
+    /// </summary>
+    private static W.Paragraph SpaceOf(int height) => new(new W.ParagraphProperties
+    {
+        SpacingBetweenLines = new W.SpacingBetweenLines { Before = "0", After = "0", Line = height.ToString(), LineRule = W.LineSpacingRuleValues.Exact },
+    });
+
+    /// <summary>
     /// Removes everything from the body but the properties of its last section.
     /// </summary>
     /// <remarks>
     /// These properties hold the page size and margins, and they refer to the headers and footers.
-    /// The sections before, e.g., a cover page with a header of its own, go with their paragraphs.
+    /// The sections before, e.g., a cover page with a header of its own, go with their paragraphs,
+    /// once MergeSections took over what the document keeps of them.
     /// </remarks>
     /// <param name="body">The body of the document.</param>
     /// <returns>The properties of the last section, before which the content goes; null when the body states none.</returns>
