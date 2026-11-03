@@ -44,7 +44,7 @@ public sealed class WordDocumentFileTests
         await File.WriteAllBytesAsync(targetPath, PREVIOUS_CONTENT);
         var temporaryFiles = TemporaryFiles();
 
-        await WordDocumentFile.CreateAsync(templatePath, targetPath, MARKDOWN, 1, NullLogger.Instance, CancellationToken.None);
+        await WordDocumentFile.CreateAsync(templatePath, targetPath, MARKDOWN, WordHeadingLevels.AS_THEY_ARE, NullLogger.Instance, CancellationToken.None);
 
         using var document = WordprocessingDocument.Open(targetPath, false);
         Assert.Multiple(() =>
@@ -65,7 +65,7 @@ public sealed class WordDocumentFileTests
         await File.WriteAllBytesAsync(targetPath, PREVIOUS_CONTENT);
         var temporaryFiles = TemporaryFiles();
 
-        Assert.CatchAsync(() => WordDocumentFile.CreateAsync(templatePath, targetPath, MARKDOWN, 1, NullLogger.Instance, CancellationToken.None));
+        Assert.CatchAsync(() => WordDocumentFile.CreateAsync(templatePath, targetPath, MARKDOWN, WordHeadingLevels.AS_THEY_ARE, NullLogger.Instance, CancellationToken.None));
         Assert.Multiple(() =>
         {
             Assert.That(File.ReadAllBytes(targetPath), Is.EqualTo(PREVIOUS_CONTENT));
@@ -78,7 +78,7 @@ public sealed class WordDocumentFileTests
     {
         var templatePath = await this.CreateTemplateAsync();
 
-        await WordDocumentFile.CreateAsync(templatePath, templatePath, MARKDOWN, 1, NullLogger.Instance, CancellationToken.None);
+        await WordDocumentFile.CreateAsync(templatePath, templatePath, MARKDOWN, WordHeadingLevels.AS_THEY_ARE, NullLogger.Instance, CancellationToken.None);
 
         using var document = WordprocessingDocument.Open(templatePath, false);
         Assert.That(document.MainDocumentPart!.Document!.Body!.InnerText, Is.EqualTo("MarsClose to Earth."), "The template was copied before it was written over.");

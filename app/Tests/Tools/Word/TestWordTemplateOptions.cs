@@ -21,4 +21,6 @@ namespace AIStudio.Tests.Tools.Word;
 /// <param name="Shapes">Whether shapes float around the text: on the first page a picture with a
 /// caption in the left margin, a picture behind the whole page, and a sample picture within the text,
 /// and on the first page of the last section a picture in the right margin.</param>
-internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false, bool SidebarLayout = false, bool Shapes = false);
+/// <param name="TitleBox">Whether a text box above the text of the first page holds a sample title of
+/// two lines in white letters, in the style "Title", and a subtitle.</param>
+internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false, bool SidebarLayout = false, bool Shapes = false, bool TitleBox = false);

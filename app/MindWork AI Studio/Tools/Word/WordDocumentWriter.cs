@@ -31,9 +31,9 @@ internal static class WordDocumentWriter
     /// </remarks>
     /// <param name="documentFile">A copy of the template, a .docx or a .dotx, positioned at its start; readable, writable, and seekable.</param>
     /// <param name="markdown">The Markdown text to write.</param>
-    /// <param name="topHeadingLevel">The heading level of the Markdown which becomes the first heading
-    /// level of the template, see MarkdownWordConverter.TopHeadingLevelOf.</param>
-    public static void Write(Stream documentFile, string markdown, int topHeadingLevel = 1)
+    /// <param name="headingLevels">The heading levels of the Markdown which become the first heading
+    /// level of the template, see MarkdownWordConverter.HeadingLevelsOf.</param>
+    public static void Write(Stream documentFile, string markdown, WordHeadingLevels headingLevels)
     {
         using var document = WordprocessingDocument.Open(documentFile, true);
 
@@ -50,7 +50,16 @@ internal static class WordDocumentWriter
         var firstPageSpace = MergeSections(body, firstPageSection is not null);
         var sectionProperties = ClearBody(body);
 
-        var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), numbering).Convert(markdown, topHeadingLevel);
+        // A title box of the template takes the heading the answer starts with:
+        var styles = WordStyles.Of(mainPart);
+        var converter = new MarkdownWordConverter(mainPart, styles, numbering);
+        var titleBox = WordShapes.TitleBoxOf(pages.FirstPageShapes, styles);
+        var text = markdown;
+        var title = titleBox is null ? null : converter.TitleOf(markdown, out text);
+        if (titleBox is not null && title is not null)
+            WordShapes.FillTitleBox(titleBox, title, styles);
+
+        var content = converter.Convert(text, title is null ? headingLevels.TopLevel : headingLevels.TopLevelBelowTitle);
         content.InsertRange(0, pages.LeadingEmptyParagraphs);
         if (firstPageSpace > 0)
             content.Insert(0, SpaceOf(firstPageSpace));

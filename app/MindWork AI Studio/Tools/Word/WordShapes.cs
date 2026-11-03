@@ -58,6 +58,56 @@ internal static class WordShapes
     }
 
     /// <summary>
+    /// Returns the text box among the shapes of a page which holds the title of the document, e.g.,
+    /// a coloured box on a picture at the top of the first page.
+    /// </summary>
+    /// <param name="shapes">The shapes, see DesignOf.</param>
+    /// <param name="styles">The styles of the template.</param>
+    /// <returns>The content of the first text box with a paragraph in the style of a title; null when there is none.</returns>
+    public static W.TextBoxContent? TitleBoxOf(IEnumerable<W.Run> shapes, WordStyles styles) => styles.Title is { } titleStyleId
+        ? shapes.SelectMany(shape => shape.Descendants<W.TextBoxContent>()).FirstOrDefault(box => ParagraphsOf(box, titleStyleId).Any())
+        : null;
+
+    /// <summary>
+    /// Writes the title into a title box, in place of the sample text of the template.
+    /// </summary>
+    /// <remarks>
+    /// The first paragraph in the style of a title takes the title, with the look of its first run,
+    /// e.g., white letters in capitals. Further ones go, since templates show a title of two lines
+    /// as two paragraphs. A subtitle stays empty, as the answer has none.
+    /// </remarks>
+    /// <param name="box">The content of the title box, see TitleBoxOf.</param>
+    /// <param name="title">The title, e.g., the text of the heading the answer starts with.</param>
+    /// <param name="styles">The styles of the template.</param>
+    public static void FillTitleBox(W.TextBoxContent box, string title, WordStyles styles)
+    {
+        var titles = ParagraphsOf(box, styles.Title).ToList();
+        if (titles.Count is 0)
+            return;
+
+        var look = (W.RunProperties?)titles[0].Descendants<W.RunProperties>().FirstOrDefault()?.CloneNode(true);
+        foreach (var paragraph in titles.Skip(1))
+            paragraph.Remove();
+
+        foreach (var paragraph in ParagraphsOf(box, styles.Subtitle).Prepend(titles[0]).ToList())
+            foreach (var content in paragraph.ChildElements.Where(element => element is not W.ParagraphProperties).ToList())
+                content.Remove();
+
+        var run = new W.Run(new W.Text(title) { Space = SpaceProcessingModeValues.Preserve });
+        if (look is not null)
+            run.PrependChild(look);
+
+        titles[0].Append(run);
+    }
+
+    /// <summary>
+    /// Returns the paragraphs of a text box in the given style.
+    /// </summary>
+    private static IEnumerable<W.Paragraph> ParagraphsOf(W.TextBoxContent box, string? styleId) => styleId is null
+        ? Enumerable.Empty<W.Paragraph>()
+        : box.Descendants<W.Paragraph>().Where(paragraph => paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value == styleId);
+
+    /// <summary>
     /// Returns a copy of a shape with its position in relation to the page, when it belongs to the design.
     /// </summary>
     /// <param name="anchor">The shape, as the template anchors it.</param>

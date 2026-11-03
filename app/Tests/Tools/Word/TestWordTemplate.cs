@@ -90,6 +90,18 @@ internal static class TestWordTemplate
     public const string NEXT_PAGE_PICTURE = "Picture in the margin of the next page";
     public const string CAPTION_TEXT = "A picture of the organization.";
 
+    public const string TITLE_STYLE_ID = "Titel";
+    public const string SUBTITLE_STYLE_ID = "Untertitel";
+    public const string TITLE_BOX = "Title box";
+    public const string SAMPLE_TITLE = "24 PT TITLE";
+    public const string SAMPLE_TITLE_SECOND_LINE = "OF TWO LINES AT MOST";
+    public const string SAMPLE_SUBTITLE = "A subtitle of one line.";
+
+    /// <summary>
+    /// The color of the letters of the sample title: white, on a box of the color of the organization.
+    /// </summary>
+    public const string TITLE_COLOR = "FFFFFF";
+
     /// <summary>
     /// How far the picture and the caption in the margin of the first page are from the left edge of the page, in EMU: ten points.
     /// </summary>
@@ -152,6 +164,12 @@ internal static class TestWordTemplate
                     new W.NumberingInstance(new W.AbstractNumId { Val = NUMBER_DEFINITION_ID }) { NumberID = NUMBER_INSTANCE_ID });
             }
 
+            if (options.TitleBox)
+            {
+                styles.Add(new W.Style { Type = W.StyleValues.Paragraph, StyleId = TITLE_STYLE_ID, StyleName = new W.StyleName { Val = "Title" }, BasedOn = new W.BasedOn { Val = NORMAL_STYLE_ID } });
+                styles.Add(new W.Style { Type = W.StyleValues.Paragraph, StyleId = SUBTITLE_STYLE_ID, StyleName = new W.StyleName { Val = "Subtitle" }, BasedOn = new W.BasedOn { Val = NORMAL_STYLE_ID } });
+            }
+
             mainPart.AddNewPart<StyleDefinitionsPart>().Styles = new W.Styles(styles);
 
             var headerPart = mainPart.AddNewPart<HeaderPart>();
@@ -193,6 +211,9 @@ internal static class TestWordTemplate
                 coverParagraph.Append(FirstPageShapesOf(mainPart, firstPageLeft));
                 sampleParagraph.Append(NextPageShapesOf(mainPart, otherPagesRight));
             }
+
+            if (options.TitleBox)
+                coverParagraph.Append(TitleBox());
 
             body.Append(
                 coverParagraph,
@@ -322,7 +343,7 @@ internal static class TestWordTemplate
                 11, MARGIN_CAPTION,
                 HorizontalOf(DW.HorizontalRelativePositionValues.Column, MARGIN_PICTURE_LEFT - columnStart),
                 VerticalOf(DW.VerticalRelativePositionValues.Page, 3_000_000),
-                marginWidth, PICTURE_SIZE, false, square(), TextBoxGraphicOf(CAPTION_TEXT, marginWidth, PICTURE_SIZE)))) { Requires = "wps" },
+                marginWidth, PICTURE_SIZE, false, square(), TextBoxGraphicOf(marginWidth, PICTURE_SIZE, new W.Paragraph(new W.Run(new W.Text(CAPTION_TEXT))))))) { Requires = "wps" },
             new AlternateContentFallback(new W.Picture())));
 
         var pageWidth = PAGE_WIDTH * WordTextArea.EMU_PER_TWIP;
@@ -353,6 +374,29 @@ internal static class TestWordTemplate
             HorizontalOf(DW.HorizontalRelativePositionValues.Page, (PAGE_WIDTH - right + 200) * WordTextArea.EMU_PER_TWIP),
             VerticalOf(DW.VerticalRelativePositionValues.Paragraph, 0),
             marginWidth, marginWidth, false, new DW.WrapSquare { WrapText = DW.WrapTextValues.BothSides }, PictureGraphicOf(PictureIdOf(mainPart), marginWidth, marginWidth))));
+    }
+
+    /// <summary>
+    /// A text box with a sample title above the text of the first page, below the top edge of the page.
+    /// </summary>
+    private static W.Run TitleBox()
+    {
+        const long WIDTH = 3_000_000;
+        const long HEIGHT = 600_000;
+        W.Paragraph TitleOf(string text) => new(
+            new W.ParagraphProperties { ParagraphStyleId = new W.ParagraphStyleId { Val = TITLE_STYLE_ID } },
+            new W.Run(new W.RunProperties(new W.Color { Val = TITLE_COLOR }), new W.Text(text)));
+
+        return new W.Run(new W.Drawing(AnchorOf(
+            15, TITLE_BOX,
+            HorizontalOf(DW.HorizontalRelativePositionValues.Column, 0),
+            VerticalOf(DW.VerticalRelativePositionValues.Page, 100_000),
+            WIDTH, HEIGHT, false, new DW.WrapNone(),
+            TextBoxGraphicOf(
+                WIDTH, HEIGHT,
+                TitleOf(SAMPLE_TITLE),
+                TitleOf(SAMPLE_TITLE_SECOND_LINE),
+                new W.Paragraph(new W.ParagraphProperties { ParagraphStyleId = new W.ParagraphStyleId { Val = SUBTITLE_STYLE_ID } }, new W.Run(new W.Text(SAMPLE_SUBTITLE)))))));
     }
 
     /// <summary>
@@ -430,16 +474,16 @@ internal static class TestWordTemplate
         });
 
     /// <summary>
-    /// A text box with a line of text, the way Word 2010 and later store one.
+    /// A text box, the way Word 2010 and later store one.
     /// </summary>
-    private static A.Graphic TextBoxGraphicOf(string text, long width, long height) => new(
+    private static A.Graphic TextBoxGraphicOf(long width, long height, params W.Paragraph[] paragraphs) => new(
         new A.GraphicData(
             new WPS.WordprocessingShape(
                 new WPS.NonVisualDrawingShapeProperties { TextBox = true },
                 new WPS.ShapeProperties(
                     new A.Transform2D(new A.Offset { X = 0L, Y = 0L }, new A.Extents { Cx = width, Cy = height }),
                     new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }),
-                new WPS.TextBoxInfo2(new W.TextBoxContent(new W.Paragraph(new W.Run(new W.Text(text))))),
+                new WPS.TextBoxInfo2(new W.TextBoxContent(paragraphs)),
                 new WPS.TextBodyProperties()))
         {
             Uri = WORDPROCESSING_SHAPE_NAMESPACE,

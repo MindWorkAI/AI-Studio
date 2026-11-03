@@ -115,15 +115,17 @@ public static class DocumentExport
     /// so the Word writer takes every template. Like PandocExport.ConvertAsync, this says nothing to
     /// the user and reports only whether the document was written.
     ///
-    /// The top heading level of the answer becomes the first heading level of the template. It is
-    /// read from the answer alone: the sources below it always start with a heading of the first level.
+    /// The top heading level of the answer becomes the first heading level of the template, or the
+    /// one below the heading it starts with, when that one fills the title box of the template, see
+    /// WordHeadingLevels. They are read from the answer alone: the sources below it always start
+    /// with a heading of the first level.
     /// </remarks>
     private static async Task<bool> WriteIntoTemplateAsync(FormatTemplate formatTemplate, IContent content, string markdownText, string targetPath)
     {
         try
         {
-            var topHeadingLevel = content.TryGetMarkdownText(out var answer) ? MarkdownWordConverter.TopHeadingLevelOf(answer) : 1;
-            await WordDocumentFile.CreateAsync(formatTemplate.FilePath, targetPath, markdownText, topHeadingLevel, LOGGER, CancellationToken.None);
+            var headingLevels = content.TryGetMarkdownText(out var answer) ? MarkdownWordConverter.HeadingLevelsOf(answer) : WordHeadingLevels.AS_THEY_ARE;
+            await WordDocumentFile.CreateAsync(formatTemplate.FilePath, targetPath, markdownText, headingLevels, LOGGER, CancellationToken.None);
             LOGGER.LogInformation("Exporting into the format template '{FormatTemplateName}' succeeded.", formatTemplate.Name);
             return true;
         }

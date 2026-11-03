@@ -32,9 +32,15 @@ numbers raised, rather than going to the foot of the page.
   a plain definition when the template lacks a style; a heading level it lacks looks like the nearest
   one above it which the template defines.
 - **The top heading level of the answer becomes the first one of the template.** Models start with
-  `##`, and templates often style or number their chapters from the first level on. The level is read
-  from the answer alone (`MarkdownWordConverter.TopHeadingLevelOf`), because the sources AI Studio
+  `##`, and templates often style or number their chapters from the first level on. The levels are
+  read from the answer alone (`MarkdownWordConverter.HeadingLevelsOf`), because the sources AI Studio
   adds below it always start with `#`.
+- **A title box of the template takes the heading the answer starts with.** A text box on the first
+  page with a paragraph in the style "Title", found by its name, is the title box (`WordShapes.TitleBoxOf`).
+  Its first title paragraph takes the text of that heading, with the look of its first run, e.g.,
+  white letters; further title paragraphs go, and subtitles stay empty. The heading goes from the
+  text then, and the top level of the headings after it becomes the first one of the template
+  (`WordHeadingLevels.TopLevelBelowTitle`). Without a heading at the start, the box keeps its sample text.
 - **New content carries no formatting of its own.** Paragraphs, lists, and tables take their look from
   the styles of the template; a table takes the style the template names for new tables. Only what
   Markdown itself marks, such as bold text or the alignment of a column, is formatted directly.

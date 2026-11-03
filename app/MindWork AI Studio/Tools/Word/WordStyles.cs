@@ -216,6 +216,16 @@ internal sealed class WordStyles
     private W.Style? ParagraphStyleOf(string styleId) => this.styles.Elements<W.Style>().FirstOrDefault(candidate => candidate.StyleId?.Value == styleId && IsOfType(candidate, "paragraph"));
 
     /// <summary>
+    /// The ID of the paragraph style of a title, e.g., in a box on the first page; null when the template has none.
+    /// </summary>
+    public string? Title => this.FindId("paragraph", "Title");
+
+    /// <summary>
+    /// The ID of the paragraph style of a subtitle; null when the template has none.
+    /// </summary>
+    public string? Subtitle => this.FindId("paragraph", "Subtitle");
+
+    /// <summary>
     /// The ID of the paragraph style of a quotation.
     /// </summary>
     public string Quote => this.IdOf("paragraph", "Quote", () => new W.Style

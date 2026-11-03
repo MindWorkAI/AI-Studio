@@ -272,7 +272,7 @@ public sealed class WordDocumentWriterTests
     public void TheTopHeadingOfTheAnswerTakesTheFirstHeadingOfTheTemplate()
     {
         // Models start with the second level; the sources AI Studio adds below the answer start with the first:
-        using var file = Write("## Mars\n\n### Orbit\n\nClose to Earth.\n\n# Sources", topHeadingLevel: 2);
+        using var file = Write("## Mars\n\n### Orbit\n\nClose to Earth.\n\n# Sources", headingLevels: new WordHeadingLevels(2, 3));
         using var document = WordprocessingDocument.Open(file, false);
 
         var styleIds = ParagraphsOf(document).Select(paragraph => paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value).ToList();
@@ -286,14 +286,66 @@ public sealed class WordDocumentWriterTests
         });
     }
 
-    [TestCase("", 1, Description = "Without headings, nothing moves.")]
-    [TestCase("Mars is close.\n\n- Earth\n- Moon", 1)]
-    [TestCase("## Mars\n\n### Orbit", 2, Description = "What models mostly write.")]
-    [TestCase("### Mars\n\n## Orbit", 2, Description = "The top level counts, not the first heading.")]
-    [TestCase("# Mars\n\n## Orbit", 1)]
-    public void TheTopHeadingLevelIsTheLowestOne(string markdown, int expectedLevel)
+    [TestCase("", 1, 1, Description = "Without headings, nothing moves.")]
+    [TestCase("Mars is close.\n\n- Earth\n- Moon", 1, 1)]
+    [TestCase("## Mars\n\n### Orbit", 2, 3, Description = "What models mostly write.")]
+    [TestCase("### Mars\n\n## Orbit", 2, 2, Description = "The top level counts, not the first heading.")]
+    [TestCase("# Mars\n\n## Orbit", 1, 2)]
+    [TestCase("# Mars\n\nClose to Earth.", 1, 1, Description = "No heading follows the title.")]
+    [TestCase("Close to Earth.\n\n## Mars", 2, 2, Description = "The answer starts with no heading which could become the title.")]
+    public void TheHeadingLevelsAreTheLowestOnes(string markdown, int expectedTopLevel, int expectedTopLevelBelowTitle)
     {
-        Assert.That(MarkdownWordConverter.TopHeadingLevelOf(markdown), Is.EqualTo(expectedLevel));
+        Assert.That(MarkdownWordConverter.HeadingLevelsOf(markdown), Is.EqualTo(new WordHeadingLevels(expectedTopLevel, expectedTopLevelBelowTitle)));
+    }
+
+    [Test]
+    public void TheTitleOfTheAnswerFillsTheTitleBox()
+    {
+        using var file = Write("# Mars\n\n## Orbit\n\nClose to Earth.", new TestWordTemplateOptions(TitleBox: true), new WordHeadingLevels(1, 2));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var box = document.MainDocumentPart!.Document!.Body!.Descendants<W.TextBoxContent>().Single();
+        var titles = box.Elements<W.Paragraph>().Where(paragraph => paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value == TestWordTemplate.TITLE_STYLE_ID).ToList();
+        var subtitle = box.Elements<W.Paragraph>().Single(paragraph => paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value == TestWordTemplate.SUBTITLE_STYLE_ID);
+        var paragraphs = ParagraphsOf(document);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(titles.Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "Mars" }), "The title replaces both lines of the sample title.");
+            Assert.That(titles[0].Descendants<W.Color>().Single().Val?.Value, Is.EqualTo(TestWordTemplate.TITLE_COLOR), "The title keeps the look of the sample title, e.g., white letters on a coloured box.");
+            Assert.That(subtitle.InnerText, Is.Empty, "The answer has no subtitle.");
+            Assert.That(paragraphs.Select(TextOf), Is.EqualTo(new[] { "Orbit", "Close to Earth." }), "The title is in the box only.");
+            Assert.That(paragraphs[0].ParagraphProperties?.ParagraphStyleId?.Val?.Value, Is.EqualTo(TestWordTemplate.HEADING_1_STYLE_ID), "The headings below the title take the first heading level of the template.");
+        });
+    }
+
+    [Test]
+    public void TheTitleBoxKeepsItsSampleTextWhenTheAnswerStartsWithNoHeading()
+    {
+        using var file = Write("Close to Earth.\n\n# Mars", new TestWordTemplateOptions(TitleBox: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var box = document.MainDocumentPart!.Document!.Body!.Descendants<W.TextBoxContent>().Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(box.InnerText, Is.EqualTo(TestWordTemplate.SAMPLE_TITLE + TestWordTemplate.SAMPLE_TITLE_SECOND_LINE + TestWordTemplate.SAMPLE_SUBTITLE), "Somebody fills it in Word.");
+            Assert.That(ParagraphsOf(document).Select(TextOf), Is.EqualTo(new[] { "Close to Earth.", "Mars" }));
+        });
+    }
+
+    [Test]
+    public void WithoutATitleBoxTheHeadingStaysInTheText()
+    {
+        using var file = Write("# Mars\n\n## Orbit", headingLevels: new WordHeadingLevels(1, 2));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var paragraphs = ParagraphsOf(document);
+        Assert.Multiple(() =>
+        {
+            Assert.That(paragraphs.Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "Mars", "Orbit" }));
+            Assert.That(paragraphs[0].ParagraphProperties?.ParagraphStyleId?.Val?.Value, Is.EqualTo(TestWordTemplate.HEADING_1_STYLE_ID));
+        });
     }
 
     [Test]
@@ -479,7 +531,7 @@ public sealed class WordDocumentWriterTests
     [Test]
     public void EmptyParagraphsSeparateTheBlocksWhenTheTemplateLeavesNoSpace()
     {
-        using var file = Write("## Mars\n\nClose to Earth.\n\n- Phobos\n- Deimos\n\n| Moon |\n|---|\n| Phobos |\n\nThe end.", new TestWordTemplateOptions(NormalSpacingAfter: 0), topHeadingLevel: 2);
+        using var file = Write("## Mars\n\nClose to Earth.\n\n- Phobos\n- Deimos\n\n| Moon |\n|---|\n| Phobos |\n\nThe end.", new TestWordTemplateOptions(NormalSpacingAfter: 0), headingLevels: new WordHeadingLevels(2, 2));
         using var document = WordprocessingDocument.Open(file, false);
 
         var blocks = document.MainDocumentPart!.Document!.Body!.ChildElements.Select(element => element switch
@@ -622,11 +674,11 @@ public sealed class WordDocumentWriterTests
             .NumberingFormat?.Val?.InnerText;
     }
 
-    private static MemoryStream Write(string markdown, TestWordTemplateOptions? options = null, int topHeadingLevel = 1)
+    private static MemoryStream Write(string markdown, TestWordTemplateOptions? options = null, WordHeadingLevels? headingLevels = null)
     {
         // The writer edits a copy of the template, as WordDocumentFile does with one on disk:
         var file = TestWordTemplate.Create(options);
-        WordDocumentWriter.Write(file, markdown, topHeadingLevel);
+        WordDocumentWriter.Write(file, markdown, headingLevels ?? WordHeadingLevels.AS_THEY_ARE);
         file.Position = 0;
         return file;
     }
@@ -634,6 +686,11 @@ public sealed class WordDocumentWriterTests
     private static List<W.Paragraph> ParagraphsOf(WordprocessingDocument document) => document.MainDocumentPart!.Document!.Body!.Elements<W.Paragraph>().ToList();
 
     private static string? ShapeNameOf(DW.Anchor shape) => shape.GetFirstChild<DW.DocProperties>()?.Name?.Value;
+
+    /// <summary>
+    /// The text of a paragraph without the text of the text boxes it anchors.
+    /// </summary>
+    private static string TextOf(W.Paragraph paragraph) => string.Concat(paragraph.OwnDescendants<W.Text>().Select(text => text.Text));
 
     private static List<W.Style> StylesOf(WordprocessingDocument document) => document.MainDocumentPart!.StyleDefinitionsPart!.Styles!.Elements<W.Style>().ToList();
 

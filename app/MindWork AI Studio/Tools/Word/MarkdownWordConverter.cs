@@ -59,20 +59,40 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
     private int headingShift;
 
     /// <summary>
-    /// Returns the top level of the headings in a Markdown text.
+    /// Returns the levels of the headings in a Markdown text which become the first heading level of a template.
     /// </summary>
-    /// <remarks>
-    /// Models mostly start their answers with headings of the second level, keeping the first for
-    /// a title. A template, however, often styles the first level only, or numbers its chapters
-    /// from there, so that a document starting with the second level would get chapters such as
-    /// "0.1".
-    /// </remarks>
     /// <param name="markdown">The Markdown text, e.g., the answer without the sources AI Studio adds below it.</param>
-    /// <returns>The lowest level of a heading in the text; 1 when it has none.</returns>
-    public static int TopHeadingLevelOf(string markdown)
+    /// <returns>The top level of all headings, and the one of those after the heading the text starts with.</returns>
+    public static WordHeadingLevels HeadingLevelsOf(string markdown)
     {
-        var levels = Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE).Descendants<HeadingBlock>().Select(heading => heading.Level).ToList();
-        return levels.Count is 0 ? 1 : levels.Min();
+        var document = Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE);
+        var headings = document.Descendants<HeadingBlock>().ToList();
+        if (headings.Count is 0)
+            return WordHeadingLevels.AS_THEY_ARE;
+
+        var topLevel = headings.Min(heading => heading.Level);
+        var headingsBelowTitle = document.FirstOrDefault() is HeadingBlock title ? headings.Where(heading => heading != title).ToList() : headings;
+        return new(topLevel, headingsBelowTitle.Count is 0 ? topLevel : headingsBelowTitle.Min(heading => heading.Level));
+    }
+
+    /// <summary>
+    /// Splits off the heading a Markdown text starts with, which becomes the title of the document.
+    /// </summary>
+    /// <param name="markdown">The Markdown text.</param>
+    /// <param name="rest">The Markdown text after the heading; all of it when it starts with none.</param>
+    /// <returns>The text of the heading, as the document shows it; null when the Markdown text starts with no heading.</returns>
+    public string? TitleOf(string markdown, out string rest)
+    {
+        rest = markdown;
+        if (Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE).FirstOrDefault() is not HeadingBlock heading)
+            return null;
+
+        var title = this.ParagraphOf(heading.Inline, null).InnerText;
+        if (string.IsNullOrWhiteSpace(title))
+            return null;
+
+        rest = markdown[Math.Min(heading.Span.End + 1, markdown.Length)..];
+        return title;
     }
 
     /// <summary>
@@ -80,7 +100,7 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
     /// </summary>
     /// <param name="markdown">The Markdown text.</param>
     /// <param name="topHeadingLevel">The heading level which becomes the first heading level of the template,
-    /// see TopHeadingLevelOf. A heading above it becomes one of the first level as well.</param>
+    /// see WordHeadingLevels. A heading above it becomes one of the first level as well.</param>
     /// <returns>The paragraphs and tables, in the order the document lists them. The last one is a paragraph.</returns>
     /// <remarks>
     /// When the default style of the template leaves no space after a paragraph, an empty paragraph
