@@ -18,13 +18,17 @@ public static class CodeHighlighters
 {
     private static readonly FrozenDictionary<string, CodeLanguageRules> RULES_BY_LANGUAGE = new Dictionary<string, CodeLanguageRules>(StringComparer.Ordinal)
     {
+        ["C"] = CppCodeRules.RULES,
+        ["C++"] = CppCodeRules.RULES,
         ["CSS"] = CssCodeRules.RULES,
+        ["Java"] = JavaCodeRules.RULES,
         ["JavaScript"] = JavaScriptCodeRules.RULES,
         ["JSX"] = JavaScriptCodeRules.RULES,
         ["Lua"] = LuaCodeRules.RULES,
         ["PowerShell"] = PowerShellCodeRules.RULES,
         ["Python"] = PythonCodeRules.RULES,
         ["Shell"] = ShellCodeRules.RULES,
+        ["SQL"] = SqlCodeRules.RULES,
         ["TSX"] = TypeScriptCodeRules.RULES,
         ["TypeScript"] = TypeScriptCodeRules.RULES,
     }.ToFrozenDictionary(StringComparer.Ordinal);

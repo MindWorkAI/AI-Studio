@@ -23,6 +23,13 @@ public sealed class CodeHighlightersTests
     [TestCase("ts")]
     [TestCase("tsx")]
     [TestCase("css")]
+    [TestCase("java")]
+    [TestCase("c")]
+    [TestCase("cpp")]
+    [TestCase("C++")]
+    [TestCase("sql")]
+    [TestCase("postgresql")]
+    [TestCase("tsql")]
     public void AnAliasFindsItsLanguage(string fenceLanguage)
     {
         Assert.That(CodeHighlighters.TryGetRules(fenceLanguage, out _), Is.True);
