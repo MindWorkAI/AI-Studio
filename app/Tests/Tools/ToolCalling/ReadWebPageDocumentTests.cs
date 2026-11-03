@@ -50,21 +50,19 @@ public sealed class ReadWebPageDocumentTests
         Assert.That(ReadWebPageTool.IsInternalAddress(new Uri(address), reachedNonPublicAddress, WIKI), Is.EqualTo(expected));
     }
 
-    [TestCase("https://wiki.example.org/confluence/download/attachments/42/guideline.pdf")]
-    [TestCase("https://intranet.example.org/sites/hr/form.docx")]
-    public void AnInternalDocumentOnAPublicAddressNeedsAHighConfidenceProvider(string address)
+    [Test]
+    public void AnInternalDocumentOnAPublicAddressNeedsAHighConfidenceProvider()
     {
-        var url = new Uri(address);
-        var intranet = new Uri("https://intranet.example.org/");
+        var url = new Uri("https://wiki.example.org/confluence/download/attachments/42/guideline.pdf");
 
-        var exception = Assert.Throws<WebPageAccessBlockedException>(() => ReadWebPageTool.MayReadDocument(DocumentAccess.INTERNAL_ONLY, url, false, WIKI, intranet, ConfidenceLevel.MEDIUM));
-        var exceptionForAllAddresses = Assert.Throws<WebPageAccessBlockedException>(() => ReadWebPageTool.MayReadDocument(DocumentAccess.ALL_ADDRESSES, url, false, WIKI, intranet, ConfidenceLevel.MEDIUM));
+        var exception = Assert.Throws<WebPageAccessBlockedException>(() => ReadWebPageTool.MayReadDocument(DocumentAccess.INTERNAL_ONLY, url, false, WIKI, ConfidenceLevel.MEDIUM));
+        var exceptionForAllAddresses = Assert.Throws<WebPageAccessBlockedException>(() => ReadWebPageTool.MayReadDocument(DocumentAccess.ALL_ADDRESSES, url, false, WIKI, ConfidenceLevel.MEDIUM));
 
         Assert.Multiple(() =>
         {
-            Assert.That(exception!.Reason, Is.EqualTo(WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE), "The wiki and the intranet are internal even on a public address.");
+            Assert.That(exception!.Reason, Is.EqualTo(WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE), "The wiki is internal even on a public address.");
             Assert.That(exceptionForAllAddresses!.Reason, Is.EqualTo(WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE), "Allowing every address does not lift the confidence check.");
-            Assert.That(ReadWebPageTool.MayReadDocument(DocumentAccess.INTERNAL_ONLY, url, false, WIKI, intranet, ConfidenceLevel.HIGH), Is.True);
+            Assert.That(ReadWebPageTool.MayReadDocument(DocumentAccess.INTERNAL_ONLY, url, false, WIKI, ConfidenceLevel.HIGH), Is.True);
         });
     }
 
@@ -74,8 +72,8 @@ public sealed class ReadWebPageDocumentTests
         var url = new Uri("https://example.org/report.pdf");
         Assert.Multiple(() =>
         {
-            Assert.That(ReadWebPageTool.MayReadDocument(DocumentAccess.ALL_ADDRESSES, url, false, WIKI, null, ConfidenceLevel.LOW), Is.True);
-            Assert.That(ReadWebPageTool.MayReadDocument(DocumentAccess.INTERNAL_ONLY, url, false, WIKI, null, ConfidenceLevel.HIGH), Is.False, "Refused by the setting, whatever the provider.");
+            Assert.That(ReadWebPageTool.MayReadDocument(DocumentAccess.ALL_ADDRESSES, url, false, WIKI, ConfidenceLevel.LOW), Is.True);
+            Assert.That(ReadWebPageTool.MayReadDocument(DocumentAccess.INTERNAL_ONLY, url, false, WIKI, ConfidenceLevel.HIGH), Is.False, "Refused by the setting, whatever the provider.");
         });
     }
 

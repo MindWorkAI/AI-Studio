@@ -18,8 +18,8 @@ public enum DocumentAccess
     OFF,
 
     /// <summary>
-    /// Read internal documents only: those of the configured wiki and intranet, whatever their
-    /// address, and those from a non-public address, which only the allowed private hosts reach.
+    /// Read internal documents only: those of the configured wiki, whatever its address, and those
+    /// from a non-public address, which only the allowed private hosts reach.
     /// See ReadWebPageTool.IsInternalAddress.
     /// </summary>
     INTERNAL_ONLY,
