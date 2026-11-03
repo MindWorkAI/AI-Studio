@@ -133,11 +133,11 @@ public sealed class WebDocumentRetrievalTests
     }
 
     [Test]
-    public void ARefusedDocumentIsNeitherDownloadedNorRead()
+    public async Task ARefusedDocumentIsNeitherDownloadedNorRead()
     {
         using var server = new LoopbackWebServer(document: Pdf(DOCUMENT_TEXT));
 
-        var exception = Assert.ThrowsAsync<WebPageAccessBlockedException>(() => this.service.RetrieveAsync(server.Address("/document"), Options((_, _) => false)));
+        var exception = await Assert.ThrowsAsync<WebPageAccessBlockedException>(() => this.service.RetrieveAsync(server.Address("/document"), Options((_, _) => false)));
 
         Assert.Multiple(() =>
         {
@@ -151,12 +151,12 @@ public sealed class WebDocumentRetrievalTests
     [TestCase("image/png")]
     [TestCase("audio/mpeg")]
     [TestCase("video/mp4")]
-    public void AnImageOrARecordingIsRefusedBeforeItIsDownloaded(string mediaType)
+    public async Task AnImageOrARecordingIsRefusedBeforeItIsDownloaded(string mediaType)
     {
         using var server = new LoopbackWebServer(document: new(mediaType, Encoding.UTF8.GetBytes(DOCUMENT_TEXT)));
         var asked = false;
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => this.service.RetrieveAsync(server.Address("/document"), Options((_, _) => asked = true)));
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => this.service.RetrieveAsync(server.Address("/document"), Options((_, _) => asked = true)));
 
         Assert.Multiple(() =>
         {
@@ -168,11 +168,11 @@ public sealed class WebDocumentRetrievalTests
     }
 
     [Test]
-    public void WithoutDocumentOptionsADocumentIsRefusedAsBefore()
+    public async Task WithoutDocumentOptionsADocumentIsRefusedAsBefore()
     {
         using var server = new LoopbackWebServer(document: Pdf(DOCUMENT_TEXT));
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => this.service.RetrieveAsync(server.Address("/document"), new WebPageRetrievalOptions
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => this.service.RetrieveAsync(server.Address("/document"), new WebPageRetrievalOptions
         {
             TimeoutSeconds = 10,
             TargetChosenByUser = true,
@@ -186,11 +186,11 @@ public sealed class WebDocumentRetrievalTests
     }
 
     [Test]
-    public void ADocumentAboveTheLimitIsRefusedAndDeleted()
+    public async Task ADocumentAboveTheLimitIsRefusedAndDeleted()
     {
         using var server = new LoopbackWebServer(document: Pdf(new string('x', 2048)));
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => this.service.RetrieveAsync(server.Address("/document"), Options(maxBytes: 1024)));
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => this.service.RetrieveAsync(server.Address("/document"), Options(maxBytes: 1024)));
 
         Assert.Multiple(() =>
         {
