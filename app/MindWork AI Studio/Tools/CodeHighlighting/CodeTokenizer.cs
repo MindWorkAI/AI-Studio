@@ -176,6 +176,13 @@ public sealed class CodeTokenizer
         if (this.literals.Contains(word))
             return CodeTokenKind.LITERAL;
 
+        //
+        // In function M.greet, the function is greet, and M is the table or object it belongs to. The
+        // parenthesis after greet makes it a function then:
+        //
+        if (expected is CodeTokenKind.FUNCTION && end < this.code.Length && this.code[end] is '.' or ':')
+            return null;
+
         if (expected is not null)
             return expected;
 
