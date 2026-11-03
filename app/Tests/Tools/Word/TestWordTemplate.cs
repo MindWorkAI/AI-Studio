@@ -143,8 +143,12 @@ internal static class TestWordTemplate
 
             var link = mainPart.AddHyperlinkRelationship(new Uri("https://example.org/sample"), true);
 
-            mainPart.Document = new W.Document(new W.Body(
-                new W.Paragraph(new W.Run(new W.Text("Cover page"))),
+            var body = new W.Body();
+            for (var index = 0; index < options.LeadingEmptyParagraphs; index++)
+                body.Append(new W.Paragraph(new W.ParagraphProperties { ParagraphStyleId = new W.ParagraphStyleId { Val = HEADING_1_STYLE_ID } }));
+
+            body.Append(
+                options.EmptyCoverPage ? new W.Paragraph() : new W.Paragraph(new W.Run(new W.Text("Cover page"))),
                 new W.Paragraph(new W.ParagraphProperties
                 {
                     SectionProperties = options.CoverPage
@@ -163,7 +167,9 @@ internal static class TestWordTemplate
                     ? new W.SectionProperties(PageSize(), PageMarginOf(TOP_MARGIN))
                     : new W.SectionProperties(
                         new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(headerPart) },
-                        PageSize())));
+                        PageSize()));
+
+            mainPart.Document = new W.Document(body);
         }
 
         stream.Position = 0;

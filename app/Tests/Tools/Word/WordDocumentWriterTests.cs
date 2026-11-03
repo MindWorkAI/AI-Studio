@@ -88,6 +88,31 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
+    public void TheTextStartsBelowTheEmptyParagraphsOfTheFirstPage()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(CoverPage: true, LeadingEmptyParagraphs: 2));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var paragraphs = ParagraphsOf(document);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(paragraphs.Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { string.Empty, string.Empty, string.Empty, "Mars is close to Earth." }));
+            Assert.That(paragraphs[0].ParagraphProperties?.SpacingBetweenLines?.LineRule?.InnerText, Is.EqualTo("exact"), "The space for the larger top margin of the cover page comes first, as the margin does.");
+            Assert.That(paragraphs.Skip(1).Take(2).Select(paragraph => paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value), Is.All.EqualTo(TestWordTemplate.HEADING_1_STYLE_ID), "The empty paragraphs move the text down as far as in the template, with the height of their style.");
+        });
+    }
+
+    [Test]
+    public void ACoverPageWithoutTextLeavesNoEmptyParagraphs()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(LeadingEmptyParagraphs: 2, EmptyCoverPage: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        Assert.That(ParagraphsOf(document).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "Mars is close to Earth." }), "Otherwise the text would start where the cover page ends.");
+    }
+
+    [Test]
     public void ATemplateBecomesADocument()
     {
         using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(AsTemplate: true));

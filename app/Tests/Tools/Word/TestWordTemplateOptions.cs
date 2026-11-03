@@ -12,4 +12,8 @@ namespace AIStudio.Tests.Tools.Word;
 /// own, and numbers followed by a parenthesis for "List Number".</param>
 /// <param name="NormalSpacingAfter">The space below a paragraph of the default style, in twentieths of
 /// a point; by default, what Word itself leaves.</param>
-internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160);
+/// <param name="LeadingEmptyParagraphs">How many empty paragraphs of the first heading style the first
+/// page starts with, the way templates move their text below a picture.</param>
+/// <param name="EmptyCoverPage">Whether the first page holds no text of its own, like a cover page
+/// with nothing but pictures and shapes on it.</param>
+internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false);

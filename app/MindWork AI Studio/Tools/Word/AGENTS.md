@@ -11,8 +11,9 @@ path does not run through here.
    `app/MindWork AI Studio/Tools/OpenXml/`, and streams the result into the target once it is complete.
 2. `WordDocumentWriter.Write` opens the copy with the Open XML SDK (`DocumentFormat.OpenXml`), turns a
    template (.dotx) into a document, and replaces the body: everything but the properties of the last
-   section goes, together with whatever only the body used. Before, `MergeSections` hands the last
-   section what the document keeps of the sections before it.
+   section goes, together with whatever only the body used. Before, `WordTemplatePages` reads what the
+   first page keeps, and `MergeSections` hands the last section what the document keeps of the
+   sections before it.
 3. `MarkdownWordConverter` reads the Markdown with Markdig, through `Markdown.SAFE_MARKDOWN_PIPELINE`,
    and turns its blocks into paragraphs and tables. `WordStyles` finds the styles they use in the
    template, and `WordNumbering` adds the numbering of the lists.
@@ -66,6 +67,12 @@ numbers raised, rather than going to the foot of the page.
   them to the last section before the others go. The first page of the document is the first page of
   the template: its own header and footer come from the first section, and an empty paragraph makes up
   for a larger top margin there, so that the text starts below a picture in that header.
+- **The text of the first page starts where the one of the template does.** Templates also move it
+  down with empty paragraphs, e.g., below a picture and a title. `WordTemplatePages` keeps the empty
+  paragraphs before the first text of the first page, without their content. A first page without
+  any text of its own is a cover page, which keeps none: the text would start where it ends. The
+  first page ends with the first page break the file states; where Word breaks a page because its
+  text fills it, the file states nothing reliable.
 - **Removing the body removes what only it used:** pictures, charts, embedded objects, the headers of
   removed sections, the targets of links, comments, and notes, see
   `WordDocumentWriter.RemoveWhatOnlyTheBodyUsed`. Otherwise Word offers to repair the file, or the

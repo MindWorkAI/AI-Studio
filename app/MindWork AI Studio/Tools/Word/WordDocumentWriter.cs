@@ -13,7 +13,7 @@ namespace AIStudio.Tools.Word;
 /// headers and footers, and the theme stay exactly as their author made them. A cover page or
 /// sample text of the template goes along with the rest of the body, so that nothing of it ends
 /// up between the content; the first page keeps the header and footer of the cover page, see
-/// MergeSections.
+/// MergeSections, and the text starts where the one of the template does, see WordTemplatePages.
 /// </remarks>
 internal static class WordDocumentWriter
 {
@@ -41,11 +41,13 @@ internal static class WordDocumentWriter
         var mainPart = document.MainDocumentPart ?? throw new InvalidDataException("The file contains no Word document.");
         var body = mainPart.Document?.Body ?? throw new InvalidDataException("The file contains no Word document.");
 
+        var pages = WordTemplatePages.Of(body);
         var firstPageSpace = MergeSections(body);
         var sectionProperties = ClearBody(body);
         RemoveWhatOnlyTheBodyUsed(mainPart);
 
         var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), new WordNumbering(mainPart)).Convert(markdown, topHeadingLevel);
+        content.InsertRange(0, pages.LeadingEmptyParagraphs);
         if (firstPageSpace > 0)
             content.Insert(0, SpaceOf(firstPageSpace));
 
