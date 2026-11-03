@@ -21,6 +21,16 @@
 
     <Import Project="..\Trimming.props" />
 
+    <!--
+        AI Studio reaches nearly all of its code from its start, and with it the assemblies it depends on. This
+        program starts nowhere near that, so the trimmer would remove, e.g., the Blazor server and SQLite, and the
+        types of the app which use them could not even be loaded, let alone their options be read. Rooting the
+        app keeps what the app itself keeps, while code of .NET which only reflection reaches is still removed.
+    -->
+    <ItemGroup>
+        <TrimmerRootAssembly Include="mindworkAIStudio" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\MindWork AI Studio\MindWork AI Studio.csproj" />
     </ItemGroup>
