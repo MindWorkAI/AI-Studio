@@ -8,13 +8,14 @@ namespace AIStudio.Assistants.SWOTAnalysis;
 /// </summary>
 internal static class SwotModelAnswer
 {
-    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true,
         AllowTrailingCommas = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
         RespectNullableAnnotations = true,
-    };
+        TypeInfoResolver = SwotModelAnswerJsonContext.Default,
+    }.AsReadOnly();
 
     /// <summary>
     /// Reads the JSON object of a model answer into the given type, without checking its content.

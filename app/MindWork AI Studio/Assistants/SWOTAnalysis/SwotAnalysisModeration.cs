@@ -16,10 +16,11 @@ namespace AIStudio.Assistants.SWOTAnalysis;
 internal static class SwotAnalysisModeration
 {
     // Internal rather than private, so that a test can check the JSON the moderator gets:
-    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
-    };
+        TypeInfoResolver = SwotModerationJsonContext.Default,
+    }.AsReadOnly();
 
     public static string BuildSystemPrompt(string outputLanguageInstruction) =>
         $"""

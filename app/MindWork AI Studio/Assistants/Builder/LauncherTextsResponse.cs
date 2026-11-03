@@ -14,13 +14,14 @@ internal sealed class LauncherTextsResponse
 {
     public const string SCHEMA_VERSION_VALUE = "assistant_builder_launcher_texts_v1";
 
-    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         AllowTrailingCommas = false,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         MaxDepth = 8,
-    };
+        TypeInfoResolver = LauncherTextsResponseJsonContext.Default,
+    }.AsReadOnly();
 
     public string SchemaVersion { get; set; } = string.Empty;
 

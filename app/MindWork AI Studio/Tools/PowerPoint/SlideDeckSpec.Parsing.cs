@@ -7,7 +7,7 @@ namespace AIStudio.Tools.PowerPoint;
 
 internal sealed partial record SlideDeckSpec
 {
-    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true,
@@ -15,7 +15,8 @@ internal sealed partial record SlideDeckSpec
         AllowTrailingCommas = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
         MaxDepth = 16,
-    };
+        TypeInfoResolver = SlideDeckJsonContext.Default,
+    }.AsReadOnly();
 
     /// <summary>
     /// The deepest list level a paragraph may have; PowerPoint knows nine, starting at 0.

@@ -5,6 +5,7 @@ using AIStudio.Assistants.ERI;
 using AIStudio.Assistants.PromptOptimizer;
 using AIStudio.Assistants.SWOTAnalysis;
 using AIStudio.Tools.PowerPoint;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Tests.Serialization;
 
@@ -32,5 +33,21 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(SwotModerationResult), SwotModelAnswer.JSON_OPTIONS));
         yield return Case(new(typeof(ERIServerFileList), ERIServerFileList.JSON_OPTIONS));
         yield return Case(new(typeof(SlideDeckSpec.DeckDto), SlideDeckSpec.JSON_OPTIONS));
+    }
+
+    /// <summary>
+    /// The JSON which the Assistant Builder and the moderation of a SWOT analysis put into their prompts.
+    /// </summary>
+    public static IEnumerable<TestCaseData> ModelPrompts()
+    {
+        TestHost.PrepareStaticState();
+
+        var untrusted = AssistantPluginGenerationService.UNTRUSTED_PROMPT_JSON_OPTIONS;
+        yield return Case(new(typeof(AssistantBuilderDraftPromptData), untrusted));
+        yield return Case(new(typeof(AssistantBuilderGenerationPromptData), untrusted));
+        yield return Case(new(typeof(AssistantBuilderLauncherPromptData), untrusted));
+        yield return Case(new(typeof(AssistantBuilderRevisionPromptData), untrusted));
+
+        yield return Case(new(typeof(Dictionary<string, SwotModerationCategoryInput>), SwotAnalysisModeration.JSON_OPTIONS));
     }
 }

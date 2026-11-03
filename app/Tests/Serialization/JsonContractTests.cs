@@ -22,6 +22,7 @@ public sealed class JsonContractTests
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.VisualBriefingHashed))]
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.VisualBriefingAnswers))]
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ModelAnswers))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ModelPrompts))]
     public void TheContractsMatchThoseOfReflection(JsonTestRoot root)
     {
         var baseline = JsonReflectionBaseline.Of(root.Options);

@@ -19,11 +19,12 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginGenerationService).Namespace, nameof(AssistantPluginGenerationService));
 
     // Internal rather than private, so that a test can check the JSON the models get:
-    internal static readonly JsonSerializerOptions UNTRUSTED_PROMPT_JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions UNTRUSTED_PROMPT_JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         WriteIndented = true,
-    };
+        TypeInfoResolver = AssistantBuilderPromptJsonContext.Default,
+    }.AsReadOnly();
 
     private const string LUA_RESPONSE_SCHEMA_PATH = "Assistants/Builder/AssistantBuilderLuaResponse.schema.json";
     private const string DEFAULT_VERSION = "1.0.0";

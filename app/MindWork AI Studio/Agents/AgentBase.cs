@@ -19,10 +19,11 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         Time = DateTimeOffset.UtcNow,
     };
     
-    internal static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
+        TypeInfoResolver = AgentJsonContext.Default,
+    }.AsReadOnly();
     
     protected DataSourceService DataSourceService { get; init; } = dataSourceService;
     
