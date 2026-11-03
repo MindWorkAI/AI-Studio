@@ -16,9 +16,11 @@
 
     <!--
         System.Text.Json builds an immutable collection, e.g., the ImmutableHashSet of a chat, through a factory method
-        like ImmutableHashSet.CreateRange, which it finds by reflection at runtime. Nothing calls that method directly,
-        so the trimmer removes it, and every type which holds such a collection fails to load and to save. Only a
-        published build shows this: debug builds and the tests are not trimmed. Hence, we keep the whole assembly.
+        like ImmutableHashSet.CreateRange. The contracts which AI Studio generates for its own options call that method
+        directly, so the trimmer keeps it, and the trim smoke test passes without the line below. A contract which
+        System.Text.Json builds by reflection, as it still does for the JSON of Blazor, finds the method at runtime
+        only, and nothing would keep it then. The whole assembly costs about 70 KB more than its trimmed part, so we
+        keep it, in case such a contract ever meets an immutable collection.
     -->
     <ItemGroup>
         <TrimmerRootAssembly Include="System.Collections.Immutable" />
