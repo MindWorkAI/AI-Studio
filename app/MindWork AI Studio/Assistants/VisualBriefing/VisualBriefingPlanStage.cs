@@ -112,6 +112,6 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
         $"""
          Audience: {manifest.Settings.AudienceProfile}; {manifest.Settings.AudienceAgeGroup}; {manifest.Settings.AudienceOrganizationalLevel}; {manifest.Settings.AudienceExpertise}
          Scope instruction: {manifest.Settings.Instruction}
-         Evidence: {JsonSerializer.Serialize(new { evidence.Facts, evidence.Metrics, evidence.Tables, evidence.AssetPlan }, VisualBriefingJson.Canonical)}
+         Evidence: {JsonSerializer.Serialize(VisualBriefingEvidencePrompt.Of(evidence), VisualBriefingJson.Canonical)}
          """;
 }
