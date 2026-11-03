@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using AIStudio.Assistants.VisualBriefing;
 
@@ -22,8 +23,8 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(VisualBriefingPresentationArtifact), options));
         yield return Case(new(typeof(VisualBriefingBuildRecord), options));
 
-        // The briefing selected last, which gets written without options of its own:
-        yield return Case(new(typeof(Guid?), JsonSerializerOptions.Default), "selected briefing");
+        // The briefing selected last:
+        yield return Case(new(typeof(Guid?), options), "selected briefing");
 
         //
         // The canonical JSON which gets read back: the header and the data of an exported briefing, the version
@@ -60,12 +61,28 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(Dictionary<string, List<string>>), options));
         yield return Case(new(typeof(VisualBriefingLayoutNode), options));
 
-        // The data of a briefing, and the IDs the prompts list:
+        // The data of a briefing, with what the compilers and the stages put into it:
         yield return Case(new(typeof(JsonElement), options));
-        yield return Case(new(typeof(string[]), options));
+        yield return Case(new(typeof(JsonObject), options));
+        yield return Case(new(typeof(VisualBriefingCompiledData), options));
+        yield return Case(new(typeof(VisualBriefingContentData), options));
+        yield return Case(new(typeof(VisualBriefingInteractionData), options));
+        yield return Case(new(typeof(VisualBriefingProtectedData), options));
+        yield return Case(new(typeof(string), options), "value of a control");
 
-        // The position inside a repeated element, which the data bindings write without options of their own:
-        yield return Case(new(typeof(int), JsonSerializerOptions.Default), "index");
+        // The position inside a repeated element, which the data bindings write:
+        yield return Case(new(typeof(int), options), "index");
+
+        // What the prompts of the stages carry:
+        yield return Case(new(typeof(IEnumerable<VisualBriefingSourcePrompt>), options));
+        yield return Case(new(typeof(string[]), options));
+        yield return Case(new(typeof(VisualBriefingRequiredSlot[]), options));
+        yield return Case(new(typeof(VisualBriefingControlRequirement[]), options));
+        yield return Case(new(typeof(VisualBriefingEvidencePrompt), options));
+        yield return Case(new(typeof(VisualBriefingParentDesign), options));
+
+        // The fingerprint which decides whether the editor holds unsaved changes:
+        yield return Case(new(typeof(VisualBriefingPersistenceFingerprint), options));
 
         // The diagnostics a user copies to the clipboard:
         yield return Case(new(typeof(VisualBriefingOperationDiagnostics), VisualBriefingJson.Persistence));
