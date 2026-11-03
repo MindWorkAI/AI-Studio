@@ -17,6 +17,12 @@ public sealed class CodeHighlightersTests
     [TestCase("sh")]
     [TestCase("pwsh")]
     [TestCase("lua")]
+    [TestCase("js")]
+    [TestCase("node")]
+    [TestCase("jsx")]
+    [TestCase("ts")]
+    [TestCase("tsx")]
+    [TestCase("css")]
     public void AnAliasFindsItsLanguage(string fenceLanguage)
     {
         Assert.That(CodeHighlighters.TryGetRules(fenceLanguage, out _), Is.True);
