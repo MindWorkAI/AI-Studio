@@ -16,4 +16,6 @@ namespace AIStudio.Tests.Tools.Word;
 /// page starts with, the way templates move their text below a picture.</param>
 /// <param name="EmptyCoverPage">Whether the first page holds no text of its own, like a cover page
 /// with nothing but pictures and shapes on it.</param>
-internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false);
+/// <param name="SidebarLayout">Whether the text runs next to a wide margin for pictures, which is on
+/// the left on the first page and on the right on the pages after it.</param>
+internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false, bool SidebarLayout = false);

@@ -73,10 +73,20 @@ numbers raised, rather than going to the foot of the page.
   any text of its own is a cover page, which keeps none: the text would start where it ends. The
   first page ends with the first page break the file states; where Word breaks a page because its
   text fills it, the file states nothing reliable.
+- **A first page with columns of its own stays a section of its own.** Some templates run the text
+  of their first page in other columns than on the pages after it, e.g., next to a wide margin for
+  pictures, which is on the left on the first page and on the right on the others.
+  `WordDocumentWriter.FirstPageSectionOf` keeps a copy of the first section then, and `EndFirstPage`
+  ends it where `WordLayoutEstimate` finds the page well filled. Only Word knows where it breaks a
+  page, so the estimate errs on the safe side: it counts the characters with a generous width and
+  fills only part of the page. A first page with room to spare looks better than one which
+  overflows into a second page in its layout. A heading never ends the page, and when everything
+  fits, the document has only the section of the first page.
 - **Removing the body removes what only it used:** pictures, charts, embedded objects, the headers of
   removed sections, the targets of links, comments, and notes, see
   `WordDocumentWriter.RemoveWhatOnlyTheBodyUsed`. Otherwise Word offers to repair the file, or the
-  document carries hidden remains of the template.
+  document carries hidden remains of the template. It runs last, once the content is in place, so
+  that whatever the document still refers to stays, e.g., the header of a first page of its own.
 
 ## Tests
 

@@ -67,6 +67,16 @@ internal static class TestWordTemplate
     /// </summary>
     public const int COVER_TOP_MARGIN = 5568;
 
+    /// <summary>
+    /// The left and right margins of the pages, 1.5 cm.
+    /// </summary>
+    public const int SIDE_MARGIN = 851;
+
+    /// <summary>
+    /// A margin wide enough for a column of pictures next to the text, 7.65 cm.
+    /// </summary>
+    public const int SIDEBAR_MARGIN = 4338;
+
     private const long PICTURE_SIZE = 952_500;
 
     /// <summary>
@@ -99,7 +109,7 @@ internal static class TestWordTemplate
                     StyleName = new W.StyleName { Val = "heading 1" },
                     BasedOn = new W.BasedOn { Val = NORMAL_STYLE_ID },
                     PrimaryStyle = new W.PrimaryStyle(),
-                    StyleParagraphProperties = new W.StyleParagraphProperties { OutlineLevel = new W.OutlineLevel { Val = 0 } },
+                    StyleParagraphProperties = new W.StyleParagraphProperties { KeepNext = new W.KeepNext(), OutlineLevel = new W.OutlineLevel { Val = 0 } },
                 },
                 new()
                 {
@@ -143,6 +153,7 @@ internal static class TestWordTemplate
 
             var link = mainPart.AddHyperlinkRelationship(new Uri("https://example.org/sample"), true);
 
+            var (firstPageLeft, otherPagesRight) = options.SidebarLayout ? (SIDEBAR_MARGIN, SIDEBAR_MARGIN) : (SIDE_MARGIN, SIDE_MARGIN);
             var body = new W.Body();
             for (var index = 0; index < options.LeadingEmptyParagraphs; index++)
                 body.Append(new W.Paragraph(new W.ParagraphProperties { ParagraphStyleId = new W.ParagraphStyleId { Val = HEADING_1_STYLE_ID } }));
@@ -152,8 +163,11 @@ internal static class TestWordTemplate
                 new W.Paragraph(new W.ParagraphProperties
                 {
                     SectionProperties = options.CoverPage
-                        ? CoverSectionOf(mainPart, headerPart, coverHeaderPart)
-                        : new W.SectionProperties(new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(coverHeaderPart) }),
+                        ? CoverSectionOf(mainPart, headerPart, coverHeaderPart, firstPageLeft)
+                        : new W.SectionProperties(
+                            new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(coverHeaderPart) },
+                            PageSize(),
+                            PageMarginOf(TOP_MARGIN, left: firstPageLeft)),
                 }),
                 new W.Paragraph(
                     new W.CommentRangeStart { Id = "0" },
@@ -164,10 +178,11 @@ internal static class TestWordTemplate
                 new W.Paragraph(new W.Run(PictureOf(mainPart.GetIdOfPart(imagePart)))),
                 new W.Paragraph(new W.Hyperlink(new W.Run(new W.Text("A sample link"))) { Id = link.Id }),
                 options.CoverPage
-                    ? new W.SectionProperties(PageSize(), PageMarginOf(TOP_MARGIN))
+                    ? new W.SectionProperties(PageSize(), PageMarginOf(TOP_MARGIN, right: otherPagesRight))
                     : new W.SectionProperties(
                         new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(headerPart) },
-                        PageSize()));
+                        PageSize(),
+                        PageMarginOf(TOP_MARGIN, right: otherPagesRight)));
 
             mainPart.Document = new W.Document(body);
         }
@@ -180,7 +195,7 @@ internal static class TestWordTemplate
     /// The first section of a corporate template, which states the headers and footers for every
     /// section after it, and a header of its own for its first page.
     /// </summary>
-    private static W.SectionProperties CoverSectionOf(MainDocumentPart mainPart, HeaderPart headerPart, HeaderPart coverHeaderPart)
+    private static W.SectionProperties CoverSectionOf(MainDocumentPart mainPart, HeaderPart headerPart, HeaderPart coverHeaderPart, int left)
     {
         var footerPart = mainPart.AddNewPart<FooterPart>();
         var logoPart = footerPart.AddImagePart(ImagePartType.Png);
@@ -193,7 +208,7 @@ internal static class TestWordTemplate
             new W.HeaderReference { Type = W.HeaderFooterValues.First, Id = mainPart.GetIdOfPart(coverHeaderPart) },
             new W.FooterReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(footerPart) },
             PageSize(),
-            PageMarginOf(COVER_TOP_MARGIN),
+            PageMarginOf(COVER_TOP_MARGIN, left: left),
             new W.TitlePage());
     }
 
@@ -247,7 +262,7 @@ internal static class TestWordTemplate
     /// </summary>
     private static W.PageSize PageSize() => new() { Width = 11_906U, Height = 16_838U };
 
-    private static W.PageMargin PageMarginOf(int top) => new() { Top = top, Right = 851U, Bottom = 709, Left = 851U, Header = 709U, Footer = 709U, Gutter = 0U };
+    private static W.PageMargin PageMarginOf(int top, int left = SIDE_MARGIN, int right = SIDE_MARGIN) => new() { Top = top, Right = (uint)right, Bottom = 709, Left = (uint)left, Header = 709U, Footer = 709U, Gutter = 0U };
 
     /// <summary>
     /// A picture in the line of text, the way Word inserts one.

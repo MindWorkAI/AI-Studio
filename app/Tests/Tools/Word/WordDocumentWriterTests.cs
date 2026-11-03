@@ -113,6 +113,61 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
+    public void TheFirstPageKeepsItsOwnColumns()
+    {
+        var markdown = string.Join("\n\n", Enumerable.Range(1, 200).Select(number => $"Paragraph {number}."));
+        using var file = Write(markdown, new TestWordTemplateOptions(SidebarLayout: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var mainPart = document.MainDocumentPart!;
+        var body = mainPart.Document!.Body!;
+        var endsOfSections = ParagraphsOf(document).Where(paragraph => paragraph.ParagraphProperties?.SectionProperties is not null).ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(ParagraphsOf(document), Has.Count.EqualTo(200), "No paragraph comes in addition to the text.");
+            Assert.That(endsOfSections, Has.Count.EqualTo(1), "The first page is a section of its own.");
+            Assert.That(endsOfSections.Single().InnerText, Does.StartWith("Paragraph "), "The section ends with a paragraph of the text, where the first page is well filled.");
+            Assert.That(endsOfSections.Single().ParagraphProperties!.SectionProperties!.GetFirstChild<W.PageMargin>()!.Left!.Value, Is.EqualTo((uint)TestWordTemplate.SIDEBAR_MARGIN), "On the first page, the text runs next to the wide margin on the left.");
+            Assert.That(body.Elements<W.SectionProperties>().Single().GetFirstChild<W.PageMargin>()!.Right!.Value, Is.EqualTo((uint)TestWordTemplate.SIDEBAR_MARGIN), "On the pages after it, the text runs next to the wide margin on the right.");
+            Assert.That(mainPart.HeaderParts.Select(part => part.Header!.InnerText), Is.EquivalentTo(new[] { TestWordTemplate.HEADER_TEXT, TestWordTemplate.COVER_HEADER_TEXT }), "Each section keeps its header.");
+        });
+    }
+
+    [Test]
+    public void AShortTextKeepsTheColumnsOfTheFirstPage()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(SidebarLayout: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var mainPart = document.MainDocumentPart!;
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(ParagraphsOf(document).Where(paragraph => paragraph.ParagraphProperties?.SectionProperties is not null), Is.Empty, "A second section would start with an empty page.");
+            Assert.That(mainPart.Document!.Body!.Elements<W.SectionProperties>().Single().GetFirstChild<W.PageMargin>()!.Left!.Value, Is.EqualTo((uint)TestWordTemplate.SIDEBAR_MARGIN), "The text fits on the first page, which keeps its layout.");
+            Assert.That(mainPart.HeaderParts.Select(part => part.Header!.InnerText), Is.EqualTo(new[] { TestWordTemplate.COVER_HEADER_TEXT }), "Only the header of the first page is left.");
+        });
+    }
+
+    [Test]
+    public void AHeadingDoesNotEndTheFirstPage()
+    {
+        var markdown = string.Join("\n\n", Enumerable.Range(1, 100).Select(number => $"# Chapter {number}\n\nParagraph {number}."));
+        using var file = Write(markdown, new TestWordTemplateOptions(SidebarLayout: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var paragraphs = ParagraphsOf(document);
+        var end = paragraphs.FindIndex(paragraph => paragraph.ParagraphProperties?.SectionProperties is not null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(paragraphs[end].InnerText, Does.StartWith("Paragraph "), "A heading keeps with the paragraph after it.");
+            Assert.That(paragraphs[end + 1].InnerText, Does.StartWith("Chapter "), "The next page starts with the heading.");
+        });
+    }
+
+    [Test]
     public void ATemplateBecomesADocument()
     {
         using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(AsTemplate: true));

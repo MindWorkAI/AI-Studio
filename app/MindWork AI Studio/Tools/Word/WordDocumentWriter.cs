@@ -12,8 +12,10 @@ namespace AIStudio.Tools.Word;
 /// The document is the template itself, with the text of its body replaced: styles, page layout,
 /// headers and footers, and the theme stay exactly as their author made them. A cover page or
 /// sample text of the template goes along with the rest of the body, so that nothing of it ends
-/// up between the content; the first page keeps the header and footer of the cover page, see
-/// MergeSections, and the text starts where the one of the template does, see WordTemplatePages.
+/// up between the content. The first page keeps the header and footer of the first page of the
+/// template, see MergeSections, and the text starts where the one of the template does, see
+/// WordTemplatePages. When the text runs in other columns there, the first page keeps them as
+/// well, see FirstPageSectionOf.
 /// </remarks>
 internal static class WordDocumentWriter
 {
@@ -42,20 +44,84 @@ internal static class WordDocumentWriter
         var body = mainPart.Document?.Body ?? throw new InvalidDataException("The file contains no Word document.");
 
         var pages = WordTemplatePages.Of(body);
-        var firstPageSpace = MergeSections(body);
+        var firstPageSection = FirstPageSectionOf(body, pages);
+        var firstPageSpace = MergeSections(body, firstPageSection is not null);
         var sectionProperties = ClearBody(body);
-        RemoveWhatOnlyTheBodyUsed(mainPart);
 
-        var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), new WordNumbering(mainPart)).Convert(markdown, topHeadingLevel);
+        var numbering = new WordNumbering(mainPart);
+        var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), numbering).Convert(markdown, topHeadingLevel);
         content.InsertRange(0, pages.LeadingEmptyParagraphs);
         if (firstPageSpace > 0)
             content.Insert(0, SpaceOf(firstPageSpace));
+
+        if (firstPageSection is not null && sectionProperties is not null)
+            sectionProperties = EndFirstPage(content, firstPageSection, sectionProperties, new WordLayoutEstimate(mainPart.StyleDefinitionsPart?.Styles, numbering));
 
         foreach (var element in content)
             if (sectionProperties is null)
                 body.Append(element);
             else
                 body.InsertBefore(element, sectionProperties);
+
+        // Only now does the document refer to everything it keeps, e.g., the header of the first page:
+        RemoveWhatOnlyTheBodyUsed(mainPart);
+    }
+
+    /// <summary>
+    /// Returns the properties of the first section, when the first page keeps a layout of its own.
+    /// </summary>
+    /// <remarks>
+    /// Some templates run the text of their first page in other columns than the one of the pages
+    /// after it, e.g., next to a wide margin for pictures, which is on the left on the first page and
+    /// on the right on the others. Then the first page stays a section of its own. A cover page keeps
+    /// no text, so the document takes the layout of the pages after it throughout, as it does when
+    /// the text of the first page only starts further down.
+    /// </remarks>
+    /// <param name="body">The body of the template, not cleared yet.</param>
+    /// <param name="pages">What the pages of the template hold.</param>
+    /// <returns>A copy of the properties; null when the first page takes the layout of the last section.</returns>
+    private static W.SectionProperties? FirstPageSectionOf(W.Body body, WordTemplatePages pages)
+    {
+        var sections = body.Descendants<W.SectionProperties>().ToList();
+        if (pages.FirstPageIsCover || sections.Count < 2 || body.Elements<W.SectionProperties>().LastOrDefault() is not { } lastSection)
+            return null;
+
+        return WordTextArea.Of(sections[0]).HasSameColumnsAs(WordTextArea.Of(lastSection)) ? null : (W.SectionProperties)sections[0].CloneNode(true);
+    }
+
+    /// <summary>
+    /// Ends the first page after the blocks which fit on it, with the properties of its own section.
+    /// </summary>
+    /// <remarks>
+    /// Where Word breaks the page is up to the fonts at hand, so the section ends where an estimate
+    /// finds the page well filled, see WordLayoutEstimate. When everything fits, the document has a
+    /// single section, the one of the first page.
+    /// </remarks>
+    /// <param name="content">The paragraphs and tables of the document.</param>
+    /// <param name="firstPageSection">The properties of the section of the first page.</param>
+    /// <param name="lastSection">The properties of the last section, which the body ends with.</param>
+    /// <param name="estimate">Estimates how much room the content takes up.</param>
+    /// <returns>The properties of the section which the body ends with.</returns>
+    private static W.SectionProperties EndFirstPage(List<OpenXmlElement> content, W.SectionProperties firstPageSection, W.SectionProperties lastSection, WordLayoutEstimate estimate)
+    {
+        var count = estimate.CountFittingOnFirstPage(content, WordTextArea.Of(firstPageSection));
+        if (count == content.Count)
+        {
+            lastSection.Parent!.ReplaceChild(firstPageSection, lastSection);
+            return firstPageSection;
+        }
+
+        // The last paragraph of a section carries its properties:
+        if (content[count - 1] is W.Paragraph lastParagraph)
+            (lastParagraph.ParagraphProperties ??= new W.ParagraphProperties()).SectionProperties = firstPageSection;
+        else
+            content.Insert(count++, new W.Paragraph(new W.ParagraphProperties { SectionProperties = firstPageSection }));
+
+        // An empty paragraph which separates two blocks would start the next page with a gap:
+        if (count < content.Count && content[count] is W.Paragraph { HasChildren: false })
+            content.RemoveAt(count);
+
+        return lastSection;
     }
 
     /// <summary>
@@ -70,10 +136,15 @@ internal static class WordDocumentWriter
     /// footer, and whether it has ones of its own at all, come from the first section, e.g., a big
     /// picture above the title. The template leaves room below such a header with a larger top margin
     /// on the first page, which the space this returns stands in for.
+    ///
+    /// When the first page stays a section of its own, see FirstPageSectionOf, it brings its header
+    /// and footer along. The last section then inherits all kinds of them, as in Word, and starts on
+    /// a new page, whatever the section before it in the template did.
     /// </remarks>
     /// <param name="body">The body of the template, not cleared yet.</param>
+    /// <param name="keepsFirstPage">Whether the first page stays a section of its own.</param>
     /// <returns>How much further down the text of the first page starts than on the other pages, in twentieths of a point; 0 when it does not.</returns>
-    private static int MergeSections(W.Body body)
+    private static int MergeSections(W.Body body, bool keepsFirstPage)
     {
         var lastSection = body.Elements<W.SectionProperties>().LastOrDefault();
         var sections = body.Descendants<W.SectionProperties>().ToList();
@@ -82,11 +153,12 @@ internal static class WordDocumentWriter
 
         var firstSection = sections[0];
         var references = new Dictionary<(Type Kind, string Pages), W.HeaderFooterReferenceType>();
-        foreach (var reference in sections.SelectMany(section => section.Elements<W.HeaderFooterReferenceType>()).Where(reference => TypeOf(reference) is not "first"))
+        foreach (var reference in sections.SelectMany(section => section.Elements<W.HeaderFooterReferenceType>()).Where(reference => keepsFirstPage || TypeOf(reference) is not "first"))
             references[(reference.GetType(), TypeOf(reference))] = reference;
 
-        foreach (var reference in firstSection.Elements<W.HeaderFooterReferenceType>().Where(reference => TypeOf(reference) is "first"))
-            references[(reference.GetType(), "first")] = reference;
+        if (!keepsFirstPage)
+            foreach (var reference in firstSection.Elements<W.HeaderFooterReferenceType>().Where(reference => TypeOf(reference) is "first"))
+                references[(reference.GetType(), "first")] = reference;
 
         //
         // The references go first in the properties of a section. Cloned before the old ones are
@@ -99,26 +171,23 @@ internal static class WordDocumentWriter
         for (var index = mergedReferences.Count - 1; index >= 0; index--)
             lastSection.PrependChild(mergedReferences[index]);
 
+        if (keepsFirstPage)
+        {
+            lastSection.RemoveAllChildren<W.SectionType>();
+            return 0;
+        }
+
         lastSection.RemoveAllChildren<W.TitlePage>();
         if (firstSection.GetFirstChild<W.TitlePage>() is { } titlePage && titlePage.Val?.Value is not false)
             InsertTitlePage(lastSection);
 
-        return Math.Max(0, TopMarginOf(firstSection) - TopMarginOf(lastSection));
+        return Math.Max(0, WordTextArea.Of(firstSection).Top - WordTextArea.Of(lastSection).Top);
     }
 
     /// <summary>
     /// The type of a header or footer reference: "default", "first", or "even". A reference which states none is the default one.
     /// </summary>
     private static string TypeOf(W.HeaderFooterReferenceType reference) => reference.Type?.InnerText ?? "default";
-
-    /// <summary>
-    /// The space between the top edge of the page and the text, in twentieths of a point.
-    /// </summary>
-    /// <remarks>
-    /// A negative margin keeps its size even when the header grows, which makes no difference here.
-    /// Without a margin, Word uses one inch.
-    /// </remarks>
-    private static int TopMarginOf(W.SectionProperties section) => Math.Abs(section.GetFirstChild<W.PageMargin>()?.Top?.Value ?? 1440);
 
     /// <summary>
     /// Switches on a header and footer of their own for the first page of a section.
