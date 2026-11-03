@@ -117,7 +117,8 @@ public sealed class SwotCategoryAnalysisResponseTests
     public void TheSystemPromptAssignsExactlyOneCategory(string categoryName, string expectedDescription)
     {
         var category = Enum.Parse<SwotAnalysisCategory>(categoryName);
-        var prompt = SwotCategoryAnalysis.BuildSystemPrompt(category, "Answer in German.");
+        // The prompt takes the line breaks of its source file, which depend on the checkout:
+        var prompt = SwotCategoryAnalysis.BuildSystemPrompt(category, "Answer in German.").ReplaceLineEndings("\n");
 
         using (Assert.EnterMultipleScope())
         {
