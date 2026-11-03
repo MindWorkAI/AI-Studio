@@ -1783,6 +1783,11 @@ CONFIG["GLOSSARIES"] = {}
 -- assistant, and in chats which use the tool glossary_lookup. A term also counts inside a
 -- longer word, e.g. "Arbeitszeit" in "Arbeitszeitregelung", and regardless of its case.
 --
+-- Describe each glossary precisely: what it is about and when it applies. The AI relies on the
+-- description to tell your glossaries apart, e.g. when a term means something different in
+-- another glossary. Once there are more than 20 glossaries, the tool glossary_lookup no longer
+-- lists them for the AI; it then sees the description only along with the entries it found.
+--
 -- PreselectInTranslation (default: true) chooses the glossary in the translation assistant
 -- whenever it suits the target language; users can still deselect it for a translation.
 -- Users can view a glossary of your organization, but neither change nor delete it.

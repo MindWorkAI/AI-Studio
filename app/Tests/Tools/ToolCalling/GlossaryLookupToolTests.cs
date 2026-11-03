@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using AIStudio.Settings;
 using AIStudio.Tools;
 using AIStudio.Tools.Glossaries;
@@ -45,6 +47,77 @@ public sealed class GlossaryLookupToolTests
             Assert.That(function.DescriptionForLLM, Does.Contain($"- `{TRANSLATION_GLOSSARY.Id}`: HR terms (translation, de-DE -> en-US)"));
             Assert.That(function.DescriptionForLLM, Does.Contain($"- `{REFERENCE_GLOSSARY.Id}`: Harry Potter (reference): Invented words of the books."));
             Assert.That(OfferedIds(function), Is.EqualTo(new[] { TRANSLATION_GLOSSARY.Id, REFERENCE_GLOSSARY.Id }));
+        });
+    }
+
+    [Test]
+    public void ManyGlossariesAreNotListedButNamedByTheirLanguages()
+    {
+        var glossaries = Enumerable.Range(1, GlossaryLookupTool.MAX_LISTED_GLOSSARIES)
+            .Select(index => REFERENCE_GLOSSARY with { Id = Guid.NewGuid().ToString(), Name = $"Reference {index}" })
+            .Append(TRANSLATION_GLOSSARY)
+            .ToList();
+
+        var function = GlossaryLookupTool.DescribeGlossaries(new GlossaryLookupTool(null!, null!).GetDefinition().Function, glossaries);
+        var properties = function.Parameters.GetProperty("properties");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(function.DescriptionForLLM, Does.Not.Contain(TRANSLATION_GLOSSARY.Id));
+            Assert.That(function.DescriptionForLLM, Does.Not.Contain("Reference 1"));
+            Assert.That(function.DescriptionForLLM, Does.Contain("- translation, de-DE -> en-US"));
+            Assert.That(properties.TryGetProperty("glossary_ids", out _), Is.False, "Without a list, there are no IDs to choose from.");
+            Assert.That(EnumValues(properties.GetProperty("source_language")), Is.EqualTo(new[] { "de-DE" }));
+            Assert.That(EnumValues(properties.GetProperty("target_language")), Is.EqualTo(new[] { "en-US" }));
+        });
+    }
+
+    [Test]
+    public void UpToTheLimitTheGlossariesAreListed()
+    {
+        var glossaries = Enumerable.Range(1, GlossaryLookupTool.MAX_LISTED_GLOSSARIES - 1)
+            .Select(index => REFERENCE_GLOSSARY with { Id = Guid.NewGuid().ToString(), Name = $"Reference {index}" })
+            .Append(TRANSLATION_GLOSSARY)
+            .ToList();
+
+        var function = GlossaryLookupTool.DescribeGlossaries(new GlossaryLookupTool(null!, null!).GetDefinition().Function, glossaries);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(function.DescriptionForLLM, Does.Contain(TRANSLATION_GLOSSARY.Id));
+            Assert.That(OfferedIds(function), Has.Count.EqualTo(GlossaryLookupTool.MAX_LISTED_GLOSSARIES));
+            Assert.That(function.Parameters.GetProperty("properties").TryGetProperty("target_language", out _), Is.False);
+        });
+    }
+
+    [Test]
+    public void TheLanguagesNeverLeaveOutAReferenceGlossary()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(GlossaryLookupTool.SuitsLanguages(TRANSLATION_GLOSSARY, "de-DE", "en-US"), Is.True);
+            Assert.That(GlossaryLookupTool.SuitsLanguages(TRANSLATION_GLOSSARY, null, "en-GB"), Is.True, "Regional variants count as the same language.");
+            Assert.That(GlossaryLookupTool.SuitsLanguages(TRANSLATION_GLOSSARY, "en-US", "de-DE"), Is.False);
+            Assert.That(GlossaryLookupTool.SuitsLanguages(REFERENCE_GLOSSARY, "en-US", "de-DE"), Is.True);
+        });
+    }
+
+    [Test]
+    public void TheResultDescribesEachGlossaryOfAPageOnce()
+    {
+        var result = GlossaryLookupTool.BuildResult(
+        [
+            new(TRANSLATION_GLOSSARY, [new GlossaryEntry("Arbeitszeit", "working time"), new GlossaryEntry("Urlaub", "annual leave")]),
+            new(REFERENCE_GLOSSARY, [new GlossaryEntry("Muggel", "A person without magical abilities.")]),
+        ], page: 1);
+
+        var glossaries = result["glossaries"]!.AsArray();
+        Assert.Multiple(() =>
+        {
+            Assert.That(glossaries, Has.Count.EqualTo(2));
+            Assert.That(glossaries[0]!["glossary_id"]!.GetValue<string>(), Is.EqualTo(TRANSLATION_GLOSSARY.Id));
+            Assert.That(glossaries[0]!.AsObject().ContainsKey("description"), Is.False, "A glossary without a description gets none.");
+            Assert.That(glossaries[1]!["description"]!.GetValue<string>(), Is.EqualTo("Invented words of the books."));
         });
     }
 
@@ -131,6 +204,12 @@ public sealed class GlossaryLookupToolTests
 
         Assert.That(result["message"]!.GetValue<string>(), Does.Not.Contain("No glossary term occurs"));
     }
+
+    private static IReadOnlyList<string?> EnumValues(JsonElement property) => property
+        .GetProperty("enum")
+        .EnumerateArray()
+        .Select(value => value.GetString())
+        .ToList();
 
     private static IReadOnlyList<string?> OfferedIds(ToolFunctionDefinition function) => function.Parameters
         .GetProperty("properties")
