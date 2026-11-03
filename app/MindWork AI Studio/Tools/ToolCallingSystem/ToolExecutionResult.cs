@@ -21,7 +21,11 @@ public sealed class ToolExecutionResult
     /// with every umlaut as six characters. The relaxed encoder escapes only what JSON requires.
     /// </remarks>
     // Internal, so a tool which keeps its result within a budget measures exactly what the model gets:
-    internal static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    internal static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new JsonSerializerOptions
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        TypeInfoResolver = ToolExecutionResultJsonContext.Default,
+    }.AsReadOnly();
 
     public string? TextContent { get; init; }
 

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Microsoft.AspNetCore.Components;
@@ -37,7 +36,7 @@ public partial class JsonTreeView : ComponentBase
     private static List<TreeItemData<JsonTreeNode>> CreateChildren(JsonNode? value) => value switch
     {
         JsonObject jsonObject => jsonObject
-            .Select(property => CreateTreeItem(JsonSerializer.Serialize(property.Key), property.Value))
+            .Select(property => CreateTreeItem(JsonValue.Create(property.Key).ToJsonString(), property.Value))
             .ToList(),
         JsonArray jsonArray => jsonArray
             .Select((item, index) => CreateTreeItem($"[{index}]", item))
