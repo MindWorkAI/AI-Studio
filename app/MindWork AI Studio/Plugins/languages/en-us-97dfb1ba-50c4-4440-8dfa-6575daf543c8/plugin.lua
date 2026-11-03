@@ -5094,20 +5094,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T99577620"] = "Import
 -- {0} (reference)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1495175485"] = "{0} (reference)"
 
--- Glossary entries sent to the AI: {0} from {1} glossaries
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1531033282"] = "Glossary entries sent to the AI: {0} from {1} glossaries"
-
 -- None of the chosen glossaries contains a term of your text.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1804170386"] = "None of the chosen glossaries contains a term of your text."
 
 -- Variants
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1918801359"] = "Variants"
 
+-- Glossary entries for this translation: {0} from 1 glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2015588230"] = "Glossary entries for this translation: {0} from 1 glossary"
+
 -- Explanation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2840582448"] = "Explanation"
 
 -- Note
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T339788125"] = "Note"
+
+-- Glossary entries for this translation: {0} from {1} glossaries
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T424767458"] = "Glossary entries for this translation: {0} from {1} glossaries"
 
 -- Term
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T586836727"] = "Term"
@@ -8652,6 +8655,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T44665345"] = "Preselect in 
 -- Custom language of the terms
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T467022713"] = "Custom language of the terms"
 
+-- What the glossary is about and when it applies. The AI relies on this description to tell your glossaries apart, e.g. when a term means something different in another glossary, so describe the subject and the purpose precisely.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T485793022"] = "What the glossary is about and when it applies. The AI relies on this description to tell your glossaries apart, e.g. when a term means something different in another glossary, so describe the subject and the purpose precisely."
+
 -- Please select a language.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T493326490"] = "Please select a language."
 
@@ -8681,9 +8687,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T797339941"] = "Show other f
 
 -- Description (optional)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T837228388"] = "Description (optional)"
-
--- What the glossary is about and when it applies. The AI reads it, too.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T881080170"] = "What the glossary is about and when it applies. The AI reads it, too."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T900713019"] = "Cancel"

@@ -8653,6 +8653,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T44665345"] = "Preselect in 
 -- Custom language of the terms
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T467022713"] = "Custom language of the terms"
 
+-- What the glossary is about and when it applies. The AI relies on this description to tell your glossaries apart, e.g. when a term means something different in another glossary, so describe the subject and the purpose precisely.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T485793022"] = "What the glossary is about and when it applies. The AI relies on this description to tell your glossaries apart, e.g. when a term means something different in another glossary, so describe the subject and the purpose precisely."
+
 -- Please select a language.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T493326490"] = "Please select a language."
 
@@ -8682,9 +8685,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T797339941"] = "Show other f
 
 -- Description (optional)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T837228388"] = "Description (optional)"
-
--- What the glossary is about and when it applies. The AI reads it, too.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T881080170"] = "What the glossary is about and when it applies. The AI reads it, too."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T900713019"] = "Cancel"

@@ -5098,7 +5098,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1495175485"] = "{0
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1804170386"] = "Keines der ausgewählten Glossare enthält einen Begriff aus Ihrem Text."
 
 -- Variants
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1918801359"] = "Varianten"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1918801359"] = "Andere Formen"
 
 -- Glossary entries for this translation: {0} from 1 glossary
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2015588230"] = "Glossareinträge für diese Übersetzung: {0} aus 1 Glossar"
@@ -5107,7 +5107,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2015588230"] = "Gl
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2840582448"] = "Erklärung"
 
 -- Note
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T339788125"] = "Hinweis"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T339788125"] = "Anmerkung"
 
 -- Glossary entries for this translation: {0} from {1} glossaries
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T424767458"] = "Glossareinträge für diese Übersetzung: {0} aus {1} Glossaren"
@@ -8655,6 +8655,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T44665345"] = "Im Übersetzu
 -- Custom language of the terms
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T467022713"] = "Benutzerdefinierte Sprache der Begriffe"
 
+-- What the glossary is about and when it applies. The AI relies on this description to tell your glossaries apart, e.g. when a term means something different in another glossary, so describe the subject and the purpose precisely.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T485793022"] = "Worum es im Glossar geht und wann es verwendet werden soll. Die KI nutzt diese Beschreibung, um Ihre Glossare voneinander zu unterscheiden, z. B. wenn ein Begriff in einem anderen Glossar eine andere Bedeutung hat. Beschreiben Sie daher Thema und Zweck genau."
+
 -- Please select a language.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T493326490"] = "Bitte wählen Sie eine Sprache aus."
 
@@ -8684,9 +8687,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T797339941"] = "Andere Forme
 
 -- Description (optional)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T837228388"] = "Beschreibung (optional)"
-
--- What the glossary is about and when it applies. The AI reads it, too.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T881080170"] = "Worum es im Glossar geht und wann es gilt. Die KI liest es ebenfalls."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T900713019"] = "Abbrechen"
