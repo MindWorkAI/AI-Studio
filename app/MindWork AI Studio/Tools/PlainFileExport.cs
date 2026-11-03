@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Tools.CodeHighlighting;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -124,7 +125,9 @@ public static class PlainFileExport
 
     /// <summary>
     /// Turns a fenced code block into a file: in the format the model marked it as, when we write
-    /// that format, and as code in its language otherwise.
+    /// that format, and as code in its language otherwise. A block which names no language is saved in
+    /// the one its code is written in, see CodeLanguageDetector, so that it gets the same language as
+    /// its highlighting.
     /// </summary>
     /// <remarks>
     /// A block the model never closed is left out. That happens when an answer broke off, at the
@@ -137,8 +140,9 @@ public static class PlainFileExport
             return null;
 
         var content = block.Lines.ToString();
-        if (!FileExportFormatExtensions.TryFromCodeFenceLanguage(block.Info, out var format))
-            return new(string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage(block.Info), content);
+        var language = CodeLanguageDetector.FenceLanguageOf(block.Info, content);
+        if (!FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format))
+            return new(string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage(language), content);
 
         if (!format.IsTabular())
             return new(string.Empty, format, SourceCodeLanguage.NONE, content);

@@ -12,7 +12,8 @@ namespace AIStudio.Components;
 /// MudBlazor.Markdown highlights only a few languages itself, and its highlighter is internal.
 /// MudMarkdown renders every code block through RenderCodeBlock, though, and lets us override that.
 /// A block in one of the languages of CodeHighlighters becomes a HighlightedCodeBlock; any other block
-/// stays as the library renders it.
+/// stays as the library renders it. A block which names no language gets the one its code is written in,
+/// see CodeLanguageDetector, the same as when it is saved as a file.
 /// </remarks>
 public class HighlightedMarkdown : MudMarkdown
 {
@@ -28,13 +29,15 @@ public class HighlightedMarkdown : MudMarkdown
     /// <inheritdoc />
     protected override void RenderCodeBlock(in RenderTreeBuilder builder, ref int elementIndex, in Markdig.Syntax.CodeBlock code, in string? info)
     {
-        if (!CodeHighlighters.TryGetRules(info, out _))
+        var text = TextOf(code);
+        var language = CodeLanguageDetector.FenceLanguageOf(info, text);
+        if (!CodeHighlighters.TryGetRules(language, out _))
         {
             //
             // The copy button of the library confirms in the language of the app, as ours does:
             //
             this.Styling.CodeBlock.CopyButtonText = CodeBlockCopyButton.ConfirmationText;
-            base.RenderCodeBlock(builder, ref elementIndex, code, info);
+            base.RenderCodeBlock(builder, ref elementIndex, code, language);
             return;
         }
 
@@ -43,8 +46,8 @@ public class HighlightedMarkdown : MudMarkdown
         // the library keep the running count it hands through every render method instead:
         //
         builder.OpenComponent<HighlightedCodeBlock>(0);
-        builder.AddComponentParameter(1, nameof(HighlightedCodeBlock.Code), TextOf(code));
-        builder.AddComponentParameter(2, nameof(HighlightedCodeBlock.Language), info);
+        builder.AddComponentParameter(1, nameof(HighlightedCodeBlock.Code), text);
+        builder.AddComponentParameter(2, nameof(HighlightedCodeBlock.Language), language);
         builder.CloseComponent();
     }
 
