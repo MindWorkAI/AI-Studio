@@ -18,6 +18,11 @@ public sealed class JsonContractTests
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.RuntimeAnswers))]
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ServiceRequests))]
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ServiceAnswers))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.VisualBriefingStored))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.VisualBriefingHashed))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.VisualBriefingAnswers))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ModelAnswers))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ModelPrompts))]
     public void TheContractsMatchThoseOfReflection(JsonTestRoot root)
     {
         var baseline = JsonReflectionBaseline.Of(root.Options);

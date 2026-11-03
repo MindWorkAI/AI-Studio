@@ -17,10 +17,11 @@ namespace AIStudio.Assistants.PromptOptimizer;
 
 public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialogPromptOptimizer>
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true,
-    };
+        TypeInfoResolver = PromptOptimizationJsonContext.Default,
+    }.AsReadOnly();
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;

@@ -1,0 +1,13 @@
+{
+  "assistant_description": "Summarizes \u003Cmeeting notes\u003E of any Gr\u00F6\u00DFe.",
+  "category": null,
+  "assistant_title": "Meeting \u0022Notes\u0022 Summary",
+  "typical_input": null,
+  "expected_output": "A short summary \u0026 a list of decisions.",
+  "requested_ui_input_components": null,
+  "output_language": "German",
+  "allow_ai_studio_profiles": true,
+  "extra_rules": null,
+  "example_request": "Summarize the notes of Monday\u0027s meeting.",
+  "chat_launch": null
+}
