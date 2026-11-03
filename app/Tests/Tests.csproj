@@ -45,6 +45,13 @@
         <ProjectReference Include="..\SourceGeneratedMappings\SourceGeneratedMappings.csproj" />
     </ItemGroup>
 
+    <!--
+        Compiled here as well, so that the tests check the same options of the app which the trim smoke test finds.
+    -->
+    <ItemGroup>
+        <Compile Include="..\TrimSmokeTest\AppJsonOptions.cs" Link="Serialization\AppJsonOptions.cs" />
+    </ItemGroup>
+
     <ItemGroup>
         <Using Include="NUnit.Framework" />
     </ItemGroup>
