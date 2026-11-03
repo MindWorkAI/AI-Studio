@@ -5097,9 +5097,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1495175485"] = "{0
 -- None of the chosen glossaries contains a term of your text.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1804170386"] = "None of the chosen glossaries contains a term of your text."
 
--- Variants
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1918801359"] = "Variants"
-
 -- Glossary entries for this translation: {0} from 1 glossary
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2015588230"] = "Glossary entries for this translation: {0} from 1 glossary"
 
@@ -5108,6 +5105,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2840582448"] = "Ex
 
 -- Note
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T339788125"] = "Note"
+
+-- Other forms
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T374506898"] = "Other forms"
 
 -- Glossary entries for this translation: {0} from {1} glossaries
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T424767458"] = "Glossary entries for this translation: {0} from {1} glossaries"
