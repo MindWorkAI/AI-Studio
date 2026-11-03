@@ -181,7 +181,8 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
           MindWork AI Studio owns all colors, typography, surfaces, and chart styling.
           """;
 
-    private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingPresentationArtifact? parent)
+    // Internal, so that a test can check the JSON this prompt carries:
+    internal static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingPresentationArtifact? parent)
     {
         var parentJson = parent is null ? "none" : JsonSerializer.Serialize(new { parent.Layout, parent.Profile }, VisualBriefingJson.Canonical);
         return $"""

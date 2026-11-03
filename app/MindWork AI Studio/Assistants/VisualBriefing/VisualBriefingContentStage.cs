@@ -107,7 +107,8 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
           Do not return source references, reset controls, filter controls, or entries for ASSET components; AI Studio creates all of them deterministically.
           """;
 
-    private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan)
+    // Internal, so that a test can check the JSON this prompt carries:
+    internal static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan)
     {
         var components = plan.Sections.SelectMany(section => section.Components).ToArray();
         var componentIds = components.Select(component => component.ComponentId).ToArray();

@@ -145,6 +145,45 @@ internal static class VisualBriefingSamples
         Kind = VisualBriefingLayoutNodeKind.STACK,
     };
 
+    /// <summary>
+    /// The prepared sources of a briefing, with a transcript for its first source.
+    /// </summary>
+    internal static VisualBriefingPreparedSources PreparedSources(VisualBriefingManifest manifest) => new()
+    {
+        Transcripts = new Dictionary<Guid, string>
+        {
+            [manifest.Sources[0].SourceId] = "The transcript of a recording, with Größe and €.",
+        },
+    };
+
+    /// <summary>
+    /// A new revision of a briefing, with an embedded picture and two models which contributed to it.
+    /// </summary>
+    internal static VisualBriefingRevisionRequest RevisionRequest(VisualBriefingManifest manifest) => new(
+        BriefingId: manifest.BriefingId,
+        ParentRevisionId: null,
+        EditMode: VisualBriefingEditMode.INITIAL,
+        Instruction: "Summarize the quarter.",
+        Data: Json("""{"slots":{"title":"Größe"},"assets":{"old":"x"},"footerTemplates":{},"protectionLabel":"x","_mwai":{}}"""),
+        TemplateHtml: "<main></main>",
+        Css: "main {}",
+        ModelDisplayName: "Model A",
+        Origin: "test",
+        ModelContributions:
+        [
+            new(VisualBriefingModelRole.CONTENT, "Model A"),
+            new(VisualBriefingModelRole.DESIGN, "Model B"),
+        ],
+        CreatedAtUtc: new DateTimeOffset(2026, 11, 3, 9, 30, 0, TimeSpan.Zero),
+        EmbeddedAssets: new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["asset-1"] = "data:image/png;base64,AA==",
+        },
+        AssetPlan:
+        [
+            new() { AssetId = "asset-1", Description = "A chart of the quarter", AltText = "Revenue per quarter, with Größe" },
+        ]);
+
     private static string ChartId(VisualBriefingChartKind kind) => $"chart-{kind.ToString().ToLowerInvariant()}";
 
     private static JsonElement Json(string json)

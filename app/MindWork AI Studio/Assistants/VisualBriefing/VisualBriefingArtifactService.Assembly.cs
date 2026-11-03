@@ -370,7 +370,10 @@ public sealed partial class VisualBriefingArtifactService
     /// <summary>
     /// Defines <c>AddProtectedArtifactData</c> for the visual briefing feature.
     /// </summary>
-    private static JsonElement AddProtectedArtifactData(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request)
+    /// <remarks>
+    /// Internal, so that a test can check the JSON it writes.
+    /// </remarks>
+    internal static JsonElement AddProtectedArtifactData(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request)
     {
         var source = request.Data;
         var dictionary = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(source.GetRawText(), JSON_OPTIONS) ?? [];
