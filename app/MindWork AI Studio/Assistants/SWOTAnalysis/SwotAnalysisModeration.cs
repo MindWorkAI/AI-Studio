@@ -15,7 +15,8 @@ namespace AIStudio.Assistants.SWOTAnalysis;
 /// </remarks>
 internal static class SwotAnalysisModeration
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    // Internal rather than private, so that a test can check the JSON the moderator gets:
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
     };
@@ -138,16 +139,9 @@ internal static class SwotAnalysisModeration
         };
     }
 
-    private static object CreateCategoryPayload(SwotCategoryAnalysisResult analysis, string factorIdPrefix) => new
-    {
-        empty_message = analysis.EmptyMessage,
-        findings = analysis.Findings.Select((finding, index) => new
-        {
-            factor_id = $"{factorIdPrefix}{index + 1}",
-            summary = finding.Summary,
-            explanation = finding.Explanation,
-        }),
-    };
+    private static SwotModerationCategoryInput CreateCategoryPayload(SwotCategoryAnalysisResult analysis, string factorIdPrefix) => new(
+        analysis.EmptyMessage,
+        [.. analysis.Findings.Select((finding, index) => new SwotModerationFindingInput($"{factorIdPrefix}{index + 1}", finding.Summary, finding.Explanation))]);
 
     private static SwotCategory CreateCategory(SwotModeratedCategory category) => new()
     {
