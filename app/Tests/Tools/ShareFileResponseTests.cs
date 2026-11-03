@@ -11,27 +11,18 @@ namespace AIStudio.Tests.Tools;
 /// <remarks>
 /// ShareFileResponse in runtime/src/share_sheet.rs names the outcome in snake case. A name which the
 /// app does not know would not fail anywhere: the enum converter falls back to the first member, and
-/// a share sheet which did not respond would go unnoticed again. The options mirror what RustService
-/// deserializes with.
+/// a share sheet which did not respond would go unnoticed again. The answers are read with the options
+/// of RustService itself.
 /// </remarks>
 [TestFixture]
 public sealed class ShareFileResponseTests
 {
-    private static readonly JsonSerializerOptions AS_THE_RUST_SERVICE_READS_IT = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters =
-        {
-            new RustEnumConverter(),
-        },
-    };
-
     [TestCase("opened", ShareSheetOutcome.OPENED)]
     [TestCase("failed", ShareSheetOutcome.FAILED)]
     [TestCase("unresponsive", ShareSheetOutcome.UNRESPONSIVE)]
     public void TheAppReadsEveryOutcomeOfTheRuntime(string outcome, ShareSheetOutcome expectedOutcome)
     {
-        var response = JsonSerializer.Deserialize<ShareFileResponse>($$"""{"outcome":"{{outcome}}","issue":"The main window is not available."}""", AS_THE_RUST_SERVICE_READS_IT);
+        var response = JsonSerializer.Deserialize<ShareFileResponse>($$"""{"outcome":"{{outcome}}","issue":"The main window is not available."}""", RustService.JSON_OPTIONS);
 
         Assert.That(response, Is.Not.Null);
         using (Assert.EnterMultipleScope())
@@ -44,7 +35,7 @@ public sealed class ShareFileResponseTests
     [Test]
     public void AnUnknownOutcomeNeverCountsAsAnOpenedShareSheet()
     {
-        var response = JsonSerializer.Deserialize<ShareFileResponse>("""{"outcome":"vanished","issue":""}""", AS_THE_RUST_SERVICE_READS_IT);
+        var response = JsonSerializer.Deserialize<ShareFileResponse>("""{"outcome":"vanished","issue":""}""", RustService.JSON_OPTIONS);
 
         Assert.That(response?.Outcome, Is.EqualTo(ShareSheetOutcome.UNKNOWN));
     }

@@ -15,14 +15,22 @@ public static class Program
         //
         AIStudio.Program.LOGGER_FACTORY = NullLoggerFactory.Instance;
 
+        var roots = JsonRoots.FindAll();
         var failures = new List<string>();
-        foreach (var root in JsonRoots.ALL)
+
+        //
+        // Finding no options at all means looking in the wrong place, not a build without JSON:
+        //
+        if (roots.Count is 0)
+            failures.Add("Found no JSON options of AI Studio, see AppJsonOptions.FindAll, so nothing got checked.");
+
+        foreach (var root in roots)
             failures.AddRange(JsonContractWalker.FindBrokenContracts(root));
 
         failures.AddRange(JsonRoundTrips.FindLosses());
         if (failures.Count is 0)
         {
-            Console.WriteLine($"- All {JsonRoots.ALL.Count} JSON roots can be read and written.");
+            Console.WriteLine($"- All {roots.Count} JSON roots can be read and written.");
             return 0;
         }
 

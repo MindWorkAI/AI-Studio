@@ -94,6 +94,15 @@ public sealed class VerifyCommand
 
         var directory = Environment.GetTrimSmokeTestDirectory();
         var publishDirectory = Path.Combine(directory, "bin", "verify");
+
+        //
+        // Publishing leaves the files of an earlier run in place, among them copies of assemblies which the trimmer
+        // now removes completely. The dependency manifest still lists such an assembly, so a leftover copy can be
+        // loaded in its place and hide exactly what the smoke test is there to find:
+        //
+        if (Directory.Exists(publishDirectory))
+            Directory.Delete(publishDirectory, recursive: true);
+
         var publishExitCode = await CommandRunner.RunAsync(directory, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --output \"{publishDirectory}\" --nologo");
         if (publishExitCode is not 0)
             return publishExitCode;
