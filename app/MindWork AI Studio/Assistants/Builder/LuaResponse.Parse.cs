@@ -4,7 +4,7 @@ namespace AIStudio.Assistants.Builder;
 
 internal sealed partial class LuaResponse
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         AllowTrailingCommas = false,

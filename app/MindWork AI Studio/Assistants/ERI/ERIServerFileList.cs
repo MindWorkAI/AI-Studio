@@ -13,7 +13,7 @@ namespace AIStudio.Assistants.ERI;
 /// </remarks>
 internal sealed class ERIServerFileList
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         AllowTrailingCommas = false,

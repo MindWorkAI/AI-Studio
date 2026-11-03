@@ -1,0 +1,188 @@
+{
+  "artifactVersion": 41,
+  "contractVersion": 42,
+  "artifactId": "00000000-0000-4000-8000-000000000003",
+  "createdAtUtc": "2026-10-29T12:34:15+01:00",
+  "payloadHash": "payloadHash sample 5",
+  "data": {
+    "sample": 6,
+    "text": "Gr\u00F6\u00DFe"
+  },
+  "slots": [
+    {
+      "slotId": "slotId sample 7",
+      "value": {
+        "sample": 8,
+        "text": "Gr\u00F6\u00DFe"
+      }
+    },
+    {
+      "slotId": "slotId sample 9",
+      "value": {
+        "sample": 10,
+        "text": "Gr\u00F6\u00DFe"
+      }
+    }
+  ],
+  "charts": [
+    {
+      "componentId": "componentId sample 11",
+      "kind": "AREA",
+      "categories": [
+        "categories sample 12",
+        "categories sample 13"
+      ],
+      "series": [
+        {
+          "name": "name sample 14",
+          "values": [
+            3.75,
+            4.75
+          ]
+        },
+        {
+          "name": "name sample 15",
+          "values": [
+            3.75,
+            4.75
+          ]
+        }
+      ]
+    },
+    {
+      "componentId": "componentId sample 16",
+      "kind": "AREA",
+      "categories": [
+        "categories sample 17",
+        "categories sample 18"
+      ],
+      "series": [
+        {
+          "name": "name sample 19",
+          "values": [
+            3.75,
+            4.75
+          ]
+        },
+        {
+          "name": "name sample 20",
+          "values": [
+            3.75,
+            4.75
+          ]
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "controlId": "controlId sample 21",
+      "componentId": "componentId sample 22",
+      "kind": "FILTER",
+      "initialValue": {
+        "sample": 23,
+        "text": "Gr\u00F6\u00DFe"
+      },
+      "options": [
+        {
+          "value": "value sample 24",
+          "label": "label sample 25"
+        },
+        {
+          "value": "value sample 26",
+          "label": "label sample 27"
+        }
+      ]
+    },
+    {
+      "controlId": "controlId sample 28",
+      "componentId": "componentId sample 29",
+      "kind": "FILTER",
+      "initialValue": {
+        "sample": 30,
+        "text": "Gr\u00F6\u00DFe"
+      },
+      "options": [
+        {
+          "value": "value sample 31",
+          "label": "label sample 32"
+        },
+        {
+          "value": "value sample 33",
+          "label": "label sample 34"
+        }
+      ]
+    }
+  ],
+  "formulas": [
+    {
+      "componentId": "componentId sample 35",
+      "outputSlotId": "outputSlotId sample 36",
+      "formula": {
+        "formulaVersion": 77,
+        "op": "op sample 38",
+        "path": "/samples/path-39.txt",
+        "value": {
+          "sample": 40,
+          "text": "Gr\u00F6\u00DFe"
+        },
+        "args": []
+      }
+    },
+    {
+      "componentId": "componentId sample 41",
+      "outputSlotId": "outputSlotId sample 42",
+      "formula": {
+        "formulaVersion": 83,
+        "op": "op sample 44",
+        "path": "/samples/path-45.txt",
+        "value": {
+          "sample": 46,
+          "text": "Gr\u00F6\u00DFe"
+        },
+        "args": []
+      }
+    }
+  ],
+  "accessibilityTexts": {
+    "accessibilityTextsKey sample 47": "accessibilityTexts sample 48",
+    "accessibilityTextsKey sample 49": "accessibilityTexts sample 50"
+  },
+  "sourceReferences": {
+    "sourceReferencesKey sample 51": [
+      "sourceReferences sample 52",
+      "sourceReferences sample 53"
+    ],
+    "sourceReferencesKey sample 54": [
+      "sourceReferences sample 55",
+      "sourceReferences sample 56"
+    ]
+  },
+  "resetLabel": "resetLabel sample 57",
+  "sourceCoverage": [
+    {
+      "sourceId": "sourceId sample 58",
+      "coverage": "CONTEXTUAL",
+      "reason": "reason sample 59"
+    },
+    {
+      "sourceId": "sourceId sample 60",
+      "coverage": "CONTEXTUAL",
+      "reason": "reason sample 61"
+    }
+  ],
+  "assetPlan": [
+    {
+      "assetId": "assetId sample 62",
+      "description": "description sample 63",
+      "altText": "altText sample 64"
+    },
+    {
+      "assetId": "assetId sample 65",
+      "description": "description sample 66",
+      "altText": "altText sample 67"
+    }
+  ],
+  "structuralSignature": "structuralSignature sample 68",
+  "model": "model sample 69"
+}

@@ -14,7 +14,7 @@ internal sealed class LauncherTextsResponse
 {
     public const string SCHEMA_VERSION_VALUE = "assistant_builder_launcher_texts_v1";
 
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         AllowTrailingCommas = false,

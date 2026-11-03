@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using AIStudio.Assistants.SWOTAnalysis;
+using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
@@ -42,6 +43,15 @@ public sealed class JsonGoldenFileTests
         yield return new("data-restore-plan.json", typeof(DataRestorePlan), DataBackupFormat.JSON_OPTIONS);
         yield return new("data-restore-report.json", typeof(DataRestoreReport), DataBackupFormat.JSON_OPTIONS);
         yield return new("provenance-surrounding-content.json", typeof(List<string>), SqliteProvenanceStoreClientImplementation.JSON_OPTIONS);
+
+        // A visual briefing, with the artifacts of its stages, a build, and the header of an exported briefing:
+        yield return new("visual-briefing-manifest.json", typeof(VisualBriefingManifest), VisualBriefingJson.Persistence);
+        yield return new("visual-briefing-evidence-artifact.json", typeof(VisualBriefingEvidenceArtifact), VisualBriefingJson.Persistence);
+        yield return new("visual-briefing-plan-artifact.json", typeof(VisualBriefingPlanArtifact), VisualBriefingJson.Persistence);
+        yield return new("visual-briefing-content-artifact.json", typeof(VisualBriefingContentArtifact), VisualBriefingJson.Persistence);
+        yield return new("visual-briefing-presentation-artifact.json", typeof(VisualBriefingPresentationArtifact), VisualBriefingJson.Persistence);
+        yield return new("visual-briefing-build.json", typeof(VisualBriefingBuildRecord), VisualBriefingJson.Persistence);
+        yield return new("visual-briefing-export-manifest.json", typeof(VisualBriefingExportManifest), VisualBriefingJson.Canonical);
     }
 
     [TestCaseSource(nameof(GoldenFiles))]

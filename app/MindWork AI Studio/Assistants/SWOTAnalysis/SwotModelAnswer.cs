@@ -8,7 +8,7 @@ namespace AIStudio.Assistants.SWOTAnalysis;
 /// </summary>
 internal static class SwotModelAnswer
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         PropertyNameCaseInsensitive = true,
         AllowTrailingCommas = true,

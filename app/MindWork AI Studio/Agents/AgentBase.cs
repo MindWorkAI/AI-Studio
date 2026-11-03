@@ -19,7 +19,7 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         Time = DateTimeOffset.UtcNow,
     };
     
-    protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
     };
