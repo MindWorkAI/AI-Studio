@@ -4,6 +4,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
 
+using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace AIStudio.Tests.Tools.Word;
@@ -135,6 +136,25 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
+    public void TheSectionsShareNoHeaderOrFooter()
+    {
+        var markdown = string.Join("\n\n", Enumerable.Range(1, 200).Select(number => $"Paragraph {number}."));
+        using var file = Write(markdown, new TestWordTemplateOptions(CoverPage: true, SidebarLayout: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var sections = document.MainDocumentPart!.Document!.Body!.Descendants<W.SectionProperties>().ToList();
+        var parts = sections.SelectMany(section => section.Elements<W.HeaderFooterReferenceType>()).Select(reference => reference.Id?.Value).ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(sections, Has.Count.EqualTo(2));
+            Assert.That(parts, Has.Count.EqualTo(3), "The first page keeps the headers and the footer of the cover page.");
+            Assert.That(parts, Is.Unique, "Word refuses a document in which two sections refer to the same header or footer, which the validator does not notice.");
+            Assert.That(sections[1].Elements<W.HeaderFooterReferenceType>(), Is.Empty, "The pages after the first one inherit the headers and footers, which the template states for the cover page only.");
+        });
+    }
+
+    [Test]
     public void AShortTextKeepsTheColumnsOfTheFirstPage()
     {
         using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(SidebarLayout: true));
@@ -165,6 +185,55 @@ public sealed class WordDocumentWriterTests
             Assert.That(paragraphs[end].InnerText, Does.StartWith("Paragraph "), "A heading keeps with the paragraph after it.");
             Assert.That(paragraphs[end + 1].InnerText, Does.StartWith("Chapter "), "The next page starts with the heading.");
         });
+    }
+
+    [Test]
+    public void TheShapesOfTheDesignStayOnTheirPage()
+    {
+        var markdown = string.Join("\n\n", Enumerable.Range(1, 200).Select(number => $"Paragraph {number}."));
+        using var file = Write(markdown, new TestWordTemplateOptions(SidebarLayout: true, Shapes: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var mainPart = document.MainDocumentPart!;
+        var body = mainPart.Document!.Body!;
+        var paragraphs = ParagraphsOf(document);
+        var nextPageStart = paragraphs.FindIndex(paragraph => paragraph.ParagraphProperties?.SectionProperties is not null) + 1;
+        var marginPicture = body.Descendants<DW.Anchor>().Single(shape => ShapeNameOf(shape) == TestWordTemplate.MARGIN_PICTURE);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(paragraphs[0].Descendants<DW.Anchor>().Select(ShapeNameOf), Is.EquivalentTo(new[] { TestWordTemplate.MARGIN_PICTURE, TestWordTemplate.MARGIN_CAPTION, TestWordTemplate.BACKGROUND_PICTURE }), "The sample picture within the text goes with it.");
+            Assert.That(paragraphs[nextPageStart].Descendants<DW.Anchor>().Select(ShapeNameOf), Is.EqualTo(new[] { TestWordTemplate.NEXT_PAGE_PICTURE }), "The page after the first one keeps the shapes of the first page of the last section.");
+            Assert.That(body.Descendants<DW.Anchor>().Count(), Is.EqualTo(4));
+            Assert.That(body.Descendants<DW.Anchor>().Select(shape => $"{shape.GetFirstChild<DW.HorizontalPosition>()?.RelativeFrom?.InnerText} {shape.GetFirstChild<DW.VerticalPosition>()?.RelativeFrom?.InnerText}"), Is.All.EqualTo("page page"), "The shapes no longer depend on the paragraphs which anchored them in the template.");
+            Assert.That(marginPicture.GetFirstChild<DW.HorizontalPosition>()?.GetFirstChild<DW.PositionOffset>()?.Text, Is.EqualTo(TestWordTemplate.MARGIN_PICTURE_LEFT.ToString()), "The picture stays in the margin, where the template put it next to the text.");
+            Assert.That(marginPicture.GetFirstChild<DW.VerticalPosition>()?.GetFirstChild<DW.PositionOffset>()?.Text, Is.EqualTo((TestWordTemplate.TOP_MARGIN * WordTextArea.EMU_PER_TWIP).ToString()), "Its paragraph started where the text of the page does.");
+            Assert.That(body.Descendants<AlternateContent>(), Is.Empty, "Word 2010 and later read the text box itself, without the alternative for older versions.");
+            Assert.That(body.Descendants<W.TextBoxContent>().Single().InnerText, Is.EqualTo(TestWordTemplate.CAPTION_TEXT));
+            Assert.That(mainPart.ImageParts.Count(), Is.EqualTo(3), "The pictures of the shapes stay, the one of the sample picture goes.");
+        });
+    }
+
+    [Test]
+    public void ShapesOfTheNextPageNeedAPageOfItsOwn()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(Shapes: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(document.MainDocumentPart!.Document!.Body!.Descendants<DW.Anchor>().Select(ShapeNameOf), Is.EquivalentTo(new[] { TestWordTemplate.MARGIN_PICTURE, TestWordTemplate.MARGIN_CAPTION, TestWordTemplate.BACKGROUND_PICTURE }), "Without a section of its own, nothing tells where the page after the first one starts.");
+        });
+    }
+
+    [Test]
+    public void ACoverPageWithoutTextLeavesNoShapes()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(EmptyCoverPage: true, Shapes: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        Assert.That(document.MainDocumentPart!.Document!.Body!.Descendants<DW.Anchor>(), Is.Empty, "A cover page without text goes as a whole, apart from its header and footer.");
     }
 
     [Test]
@@ -563,6 +632,8 @@ public sealed class WordDocumentWriterTests
     }
 
     private static List<W.Paragraph> ParagraphsOf(WordprocessingDocument document) => document.MainDocumentPart!.Document!.Body!.Elements<W.Paragraph>().ToList();
+
+    private static string? ShapeNameOf(DW.Anchor shape) => shape.GetFirstChild<DW.DocProperties>()?.Name?.Value;
 
     private static List<W.Style> StylesOf(WordprocessingDocument document) => document.MainDocumentPart!.StyleDefinitionsPart!.Styles!.Elements<W.Style>().ToList();
 

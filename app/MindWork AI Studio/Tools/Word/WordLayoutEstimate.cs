@@ -1,5 +1,6 @@
 using DocumentFormat.OpenXml;
 
+using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace AIStudio.Tools.Word;
@@ -10,9 +11,10 @@ namespace AIStudio.Tools.Word;
 /// <remarks>
 /// Only Word knows where it breaks a page, once it has laid the text out with the fonts at hand.
 /// The file states nothing of it. The estimate counts the lines of each paragraph from the number
-/// of its characters, with a width per character which is rather too large than too small for
-/// common fonts, and from the font size, line spacing, and spacing its styles state. So the text
-/// tends to take less room than estimated, and a page filled by the estimate has room to spare.
+/// of its characters, with the width of a character in a common font, and from the font size, line
+/// spacing, and spacing its styles state; a picture in a line adds its height. It serves to find
+/// where the paragraphs of a template start, so it aims at the room they take up. A page filled by
+/// the estimate keeps some room to spare, see FILL, for fonts with wider characters.
 /// </remarks>
 /// <param name="styles">The styles of the document; null when it has none.</param>
 /// <param name="numbering">The numbering of the lists, which states how far their items move in.</param>
@@ -25,9 +27,10 @@ internal sealed class WordLayoutEstimate(W.Styles? styles, WordNumbering numberi
 
     /// <summary>
     /// The width of a character, as a share of the font size. It includes the room which is lost where
-    /// a line breaks between two words; common fonts need less.
+    /// a line breaks between two words. Measured in Word, text in a sans-serif font such as Calibri
+    /// needs about 0.4.
     /// </summary>
-    public const double CHARACTER_WIDTH = 0.5;
+    public const double CHARACTER_WIDTH = 0.45;
 
     /// <summary>
     /// The height of a line with single spacing, as a share of the font size.
@@ -103,7 +106,7 @@ internal sealed class WordLayoutEstimate(W.Styles? styles, WordNumbering numberi
     /// <summary>
     /// Determines whether a block is a paragraph without any text, which takes up the height of an empty line.
     /// </summary>
-    public static bool IsEmptyParagraph(OpenXmlElement block) => block is W.Paragraph paragraph && !paragraph.Descendants<W.Text>().Any();
+    public static bool IsEmptyParagraph(OpenXmlElement block) => block is W.Paragraph paragraph && !paragraph.OwnDescendants<W.Text>().Any();
 
     /// <summary>
     /// Determines whether a block keeps with the next one on its page, as a heading does.
@@ -126,7 +129,8 @@ internal sealed class WordLayoutEstimate(W.Styles? styles, WordNumbering numberi
             _ => singleLine * look.Line / 240,
         };
 
-        return (int)(look.SpaceBefore + lines * lineHeight + look.SpaceAfter);
+        var pictures = paragraph.OwnDescendants<DW.Inline>().Sum(picture => (picture.Extent?.Cy?.Value ?? 0) / WordTextArea.EMU_PER_TWIP);
+        return (int)(look.SpaceBefore + lines * lineHeight + pictures + look.SpaceAfter);
     }
 
     private int HeightOf(W.TableRow row, int width)
@@ -141,11 +145,12 @@ internal sealed class WordLayoutEstimate(W.Styles? styles, WordNumbering numberi
 
     /// <summary>
     /// Returns the number of characters of each line which the paragraph breaks itself, e.g., code.
+    /// The text of text boxes, which float elsewhere, does not count.
     /// </summary>
     private static List<int> LineLengthsOf(W.Paragraph paragraph)
     {
         var lengths = new List<int> { 0 };
-        foreach (var element in paragraph.Descendants())
+        foreach (var element in paragraph.OwnDescendants<OpenXmlElement>())
             switch (element)
             {
                 case W.Text text:

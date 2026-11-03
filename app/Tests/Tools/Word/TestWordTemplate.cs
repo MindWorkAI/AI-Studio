@@ -1,9 +1,15 @@
+using System.Globalization;
+
+using AIStudio.Tools.Word;
+
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
 using A = DocumentFormat.OpenXml.Drawing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 using W = DocumentFormat.OpenXml.Wordprocessing;
+using WPS = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
 
 namespace AIStudio.Tests.Tools.Word;
 
@@ -76,6 +82,22 @@ internal static class TestWordTemplate
     /// A margin wide enough for a column of pictures next to the text, 7.65 cm.
     /// </summary>
     public const int SIDEBAR_MARGIN = 4338;
+
+    public const string MARGIN_PICTURE = "Picture in the margin";
+    public const string MARGIN_CAPTION = "Caption in the margin";
+    public const string BACKGROUND_PICTURE = "Picture behind the page";
+    public const string SAMPLE_PICTURE = "Sample picture in the text";
+    public const string NEXT_PAGE_PICTURE = "Picture in the margin of the next page";
+    public const string CAPTION_TEXT = "A picture of the organization.";
+
+    /// <summary>
+    /// How far the picture and the caption in the margin of the first page are from the left edge of the page, in EMU: ten points.
+    /// </summary>
+    public const long MARGIN_PICTURE_LEFT = 127_000;
+
+    private const int PAGE_WIDTH = 11_906;
+    private const int PAGE_HEIGHT = 16_838;
+    private const string WORDPROCESSING_SHAPE_NAMESPACE = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape";
 
     private const long PICTURE_SIZE = 952_500;
 
@@ -158,8 +180,22 @@ internal static class TestWordTemplate
             for (var index = 0; index < options.LeadingEmptyParagraphs; index++)
                 body.Append(new W.Paragraph(new W.ParagraphProperties { ParagraphStyleId = new W.ParagraphStyleId { Val = HEADING_1_STYLE_ID } }));
 
+            var coverParagraph = options.EmptyCoverPage ? new W.Paragraph() : new W.Paragraph(new W.Run(new W.Text("Cover page")));
+            var sampleParagraph = new W.Paragraph(
+                new W.CommentRangeStart { Id = "0" },
+                new W.Run(new W.Text("Replace this text with yours.")),
+                new W.CommentRangeEnd { Id = "0" },
+                new W.Run(new W.CommentReference { Id = "0" }),
+                new W.Run(new W.FootnoteReference { Id = 1 }));
+
+            if (options.Shapes)
+            {
+                coverParagraph.Append(FirstPageShapesOf(mainPart, firstPageLeft));
+                sampleParagraph.Append(NextPageShapesOf(mainPart, otherPagesRight));
+            }
+
             body.Append(
-                options.EmptyCoverPage ? new W.Paragraph() : new W.Paragraph(new W.Run(new W.Text("Cover page"))),
+                coverParagraph,
                 new W.Paragraph(new W.ParagraphProperties
                 {
                     SectionProperties = options.CoverPage
@@ -169,12 +205,7 @@ internal static class TestWordTemplate
                             PageSize(),
                             PageMarginOf(TOP_MARGIN, left: firstPageLeft)),
                 }),
-                new W.Paragraph(
-                    new W.CommentRangeStart { Id = "0" },
-                    new W.Run(new W.Text("Replace this text with yours.")),
-                    new W.CommentRangeEnd { Id = "0" },
-                    new W.Run(new W.CommentReference { Id = "0" }),
-                    new W.Run(new W.FootnoteReference { Id = 1 })),
+                sampleParagraph,
                 new W.Paragraph(new W.Run(PictureOf(mainPart.GetIdOfPart(imagePart)))),
                 new W.Paragraph(new W.Hyperlink(new W.Run(new W.Text("A sample link"))) { Id = link.Id }),
                 options.CoverPage
@@ -185,6 +216,9 @@ internal static class TestWordTemplate
                         PageMarginOf(TOP_MARGIN, right: otherPagesRight)));
 
             mainPart.Document = new W.Document(body);
+
+            // The alternatives for older versions of Word name what they require by this prefix:
+            mainPart.Document.AddNamespaceDeclaration("wps", WORDPROCESSING_SHAPE_NAMESPACE);
         }
 
         stream.Position = 0;
@@ -260,9 +294,109 @@ internal static class TestWordTemplate
     /// <summary>
     /// A page of DIN A4.
     /// </summary>
-    private static W.PageSize PageSize() => new() { Width = 11_906U, Height = 16_838U };
+    private static W.PageSize PageSize() => new() { Width = (uint)PAGE_WIDTH, Height = (uint)PAGE_HEIGHT };
 
     private static W.PageMargin PageMarginOf(int top, int left = SIDE_MARGIN, int right = SIDE_MARGIN) => new() { Top = top, Right = (uint)right, Bottom = 709, Left = (uint)left, Header = 709U, Footer = 709U, Gutter = 0U };
+
+    /// <summary>
+    /// The shapes which float around the text of the first page: a picture with a caption in the
+    /// left margin, a picture behind the whole page, and a sample picture within the text. The
+    /// caption is a text box, which Word stores together with an alternative for older versions.
+    /// </summary>
+    /// <param name="mainPart">The main part of the template, which keeps the pictures.</param>
+    /// <param name="left">The left margin of the first page, in twentieths of a point.</param>
+    private static IEnumerable<W.Run> FirstPageShapesOf(MainDocumentPart mainPart, int left)
+    {
+        var columnStart = left * WordTextArea.EMU_PER_TWIP;
+        var marginWidth = (left - 400) * WordTextArea.EMU_PER_TWIP;
+        var square = () => new DW.WrapSquare { WrapText = DW.WrapTextValues.BothSides };
+
+        yield return new W.Run(new W.Drawing(AnchorOf(
+            10, MARGIN_PICTURE,
+            HorizontalOf(DW.HorizontalRelativePositionValues.Column, MARGIN_PICTURE_LEFT - columnStart),
+            VerticalOf(DW.VerticalRelativePositionValues.Paragraph, 0),
+            marginWidth, marginWidth, false, square(), PictureGraphicOf(PictureIdOf(mainPart), marginWidth, marginWidth))));
+
+        yield return new W.Run(new AlternateContent(
+            new AlternateContentChoice(new W.Drawing(AnchorOf(
+                11, MARGIN_CAPTION,
+                HorizontalOf(DW.HorizontalRelativePositionValues.Column, MARGIN_PICTURE_LEFT - columnStart),
+                VerticalOf(DW.VerticalRelativePositionValues.Page, 3_000_000),
+                marginWidth, PICTURE_SIZE, false, square(), TextBoxGraphicOf(CAPTION_TEXT, marginWidth, PICTURE_SIZE)))) { Requires = "wps" },
+            new AlternateContentFallback(new W.Picture())));
+
+        var pageWidth = PAGE_WIDTH * WordTextArea.EMU_PER_TWIP;
+        var pageHeight = PAGE_HEIGHT * WordTextArea.EMU_PER_TWIP;
+        yield return new W.Run(new W.Drawing(AnchorOf(
+            12, BACKGROUND_PICTURE,
+            HorizontalOf(DW.HorizontalRelativePositionValues.Page, 0),
+            VerticalOf(DW.VerticalRelativePositionValues.Page, 0),
+            pageWidth, pageHeight, true, new DW.WrapNone(), PictureGraphicOf(PictureIdOf(mainPart), pageWidth, pageHeight))));
+
+        yield return new W.Run(new W.Drawing(AnchorOf(
+            13, SAMPLE_PICTURE,
+            HorizontalOf(DW.HorizontalRelativePositionValues.Column, 0),
+            VerticalOf(DW.VerticalRelativePositionValues.Paragraph, 0),
+            PICTURE_SIZE, PICTURE_SIZE, false, square(), PictureGraphicOf(PictureIdOf(mainPart), PICTURE_SIZE, PICTURE_SIZE))));
+    }
+
+    /// <summary>
+    /// The shape which floats around the text of the first page of the last section: a picture in the right margin.
+    /// </summary>
+    /// <param name="mainPart">The main part of the template, which keeps the picture.</param>
+    /// <param name="right">The right margin of the last section, in twentieths of a point.</param>
+    private static IEnumerable<W.Run> NextPageShapesOf(MainDocumentPart mainPart, int right)
+    {
+        var marginWidth = (right - 400) * WordTextArea.EMU_PER_TWIP;
+        yield return new W.Run(new W.Drawing(AnchorOf(
+            14, NEXT_PAGE_PICTURE,
+            HorizontalOf(DW.HorizontalRelativePositionValues.Page, (PAGE_WIDTH - right + 200) * WordTextArea.EMU_PER_TWIP),
+            VerticalOf(DW.VerticalRelativePositionValues.Paragraph, 0),
+            marginWidth, marginWidth, false, new DW.WrapSquare { WrapText = DW.WrapTextValues.BothSides }, PictureGraphicOf(PictureIdOf(mainPart), marginWidth, marginWidth))));
+    }
+
+    /// <summary>
+    /// A shape which floats around the text, the way Word anchors one at a paragraph.
+    /// </summary>
+    private static DW.Anchor AnchorOf(uint id, string name, DW.HorizontalPosition horizontal, DW.VerticalPosition vertical, long width, long height, bool behindText, OpenXmlElement wrap, A.Graphic graphic) => new(
+        new DW.SimplePosition { X = 0L, Y = 0L },
+        horizontal,
+        vertical,
+        new DW.Extent { Cx = width, Cy = height },
+        new DW.EffectExtent { LeftEdge = 0L, TopEdge = 0L, RightEdge = 0L, BottomEdge = 0L },
+        wrap,
+        new DW.DocProperties { Id = id, Name = name },
+        new DW.NonVisualGraphicFrameDrawingProperties(),
+        graphic)
+    {
+        DistanceFromTop = 0U,
+        DistanceFromBottom = 0U,
+        DistanceFromLeft = 0U,
+        DistanceFromRight = 0U,
+        SimplePos = false,
+        RelativeHeight = id,
+        BehindDoc = behindText,
+        Locked = false,
+        LayoutInCell = true,
+        AllowOverlap = true,
+    };
+
+    private static DW.HorizontalPosition HorizontalOf(DW.HorizontalRelativePositionValues relativeFrom, long offset) => new(new DW.PositionOffset(offset.ToString(CultureInfo.InvariantCulture))) { RelativeFrom = relativeFrom };
+
+    private static DW.VerticalPosition VerticalOf(DW.VerticalRelativePositionValues relativeFrom, long offset) => new(new DW.PositionOffset(offset.ToString(CultureInfo.InvariantCulture))) { RelativeFrom = relativeFrom };
+
+    /// <summary>
+    /// Adds a picture to the template.
+    /// </summary>
+    /// <returns>The ID of the relationship to the picture.</returns>
+    private static string PictureIdOf(MainDocumentPart mainPart)
+    {
+        var imagePart = mainPart.AddImagePart(ImagePartType.Png);
+        using (var picture = new MemoryStream([137, 80, 78, 71]))
+            imagePart.FeedData(picture);
+
+        return mainPart.GetIdOfPart(imagePart);
+    }
 
     /// <summary>
     /// A picture in the line of text, the way Word inserts one.
@@ -271,25 +405,43 @@ internal static class TestWordTemplate
         new DW.Inline(
             new DW.Extent { Cx = PICTURE_SIZE, Cy = PICTURE_SIZE },
             new DW.DocProperties { Id = 1U, Name = "Logo" },
-            new A.Graphic(
-                new A.GraphicData(
-                    new PIC.Picture(
-                        new PIC.NonVisualPictureProperties(
-                            new PIC.NonVisualDrawingProperties { Id = 0U, Name = "logo.png" },
-                            new PIC.NonVisualPictureDrawingProperties()),
-                        new PIC.BlipFill(
-                            new A.Blip { Embed = relationshipId },
-                            new A.Stretch(new A.FillRectangle())),
-                        new PIC.ShapeProperties(
-                            new A.Transform2D(new A.Offset { X = 0L, Y = 0L }, new A.Extents { Cx = PICTURE_SIZE, Cy = PICTURE_SIZE }),
-                            new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle })))
-                {
-                    Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture",
-                }))
+            PictureGraphicOf(relationshipId, PICTURE_SIZE, PICTURE_SIZE))
         {
             DistanceFromTop = 0U,
             DistanceFromBottom = 0U,
             DistanceFromLeft = 0U,
             DistanceFromRight = 0U,
+        });
+
+    private static A.Graphic PictureGraphicOf(string relationshipId, long width, long height) => new(
+        new A.GraphicData(
+            new PIC.Picture(
+                new PIC.NonVisualPictureProperties(
+                    new PIC.NonVisualDrawingProperties { Id = 0U, Name = "logo.png" },
+                    new PIC.NonVisualPictureDrawingProperties()),
+                new PIC.BlipFill(
+                    new A.Blip { Embed = relationshipId },
+                    new A.Stretch(new A.FillRectangle())),
+                new PIC.ShapeProperties(
+                    new A.Transform2D(new A.Offset { X = 0L, Y = 0L }, new A.Extents { Cx = width, Cy = height }),
+                    new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle })))
+        {
+            Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture",
+        });
+
+    /// <summary>
+    /// A text box with a line of text, the way Word 2010 and later store one.
+    /// </summary>
+    private static A.Graphic TextBoxGraphicOf(string text, long width, long height) => new(
+        new A.GraphicData(
+            new WPS.WordprocessingShape(
+                new WPS.NonVisualDrawingShapeProperties { TextBox = true },
+                new WPS.ShapeProperties(
+                    new A.Transform2D(new A.Offset { X = 0L, Y = 0L }, new A.Extents { Cx = width, Cy = height }),
+                    new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }),
+                new WPS.TextBoxInfo2(new W.TextBoxContent(new W.Paragraph(new W.Run(new W.Text(text))))),
+                new WPS.TextBodyProperties()))
+        {
+            Uri = WORDPROCESSING_SHAPE_NAMESPACE,
         });
 }

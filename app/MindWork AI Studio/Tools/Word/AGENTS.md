@@ -72,16 +72,31 @@ numbers raised, rather than going to the foot of the page.
   paragraphs before the first text of the first page, without their content. A first page without
   any text of its own is a cover page, which keeps none: the text would start where it ends. The
   first page ends with the first page break the file states; where Word breaks a page because its
-  text fills it, the file states nothing reliable.
+  text fills it, the file marks this only as far as Word laid the text out when it saved the file.
 - **A first page with columns of its own stays a section of its own.** Some templates run the text
   of their first page in other columns than on the pages after it, e.g., next to a wide margin for
   pictures, which is on the left on the first page and on the right on the others.
   `WordDocumentWriter.FirstPageSectionOf` keeps a copy of the first section then, and `EndFirstPage`
   ends it where `WordLayoutEstimate` finds the page well filled. Only Word knows where it breaks a
-  page, so the estimate errs on the safe side: it counts the characters with a generous width and
-  fills only part of the page. A first page with room to spare looks better than one which
+  page, so the estimate errs on the safe side: it counts the characters with the width of a common
+  font, but fills only part of the page, for fonts with wider characters. A first page with room to
+  spare looks better than one which
   overflows into a second page in its layout. A heading never ends the page, and when everything
   fits, the document has only the section of the first page.
+- **Shapes of the design stay, shapes of the sample text go.** Templates float pictures, text boxes,
+  and lines around their text, e.g., pictures with captions in a wide margin, a box for the title
+  above the text, or a picture behind the whole page. `WordShapes` tells them from the sample content
+  by where they lie, never by what they show: a shape outside the area in which the text of its page
+  runs, or one behind the text which the text does not flow around, belongs to the design. The first
+  page keeps those of the first page of the template, a cover page without text none; a next page
+  of its own keeps those of the first page of the last section. Their paragraphs go with the body,
+  so the shapes move to the first paragraph of their page, with positions in relation to the page.
+  A position in relation to a paragraph is only as exact as `WordLayoutEstimate` finds the paragraph.
+  The shapes keep their markup for Word 2010 and later, without the alternative for older versions.
+  Shapes only in the older markup (VML), frames, and embedded objects are not taken over.
+- **No header or footer belongs to two sections.** Word refuses such a document as damaged, although
+  the validator of the Open XML SDK lets it pass. When the first page stays a section of its own, the
+  last section inherits its headers and footers, as Word lets it, rather than referring to them as well.
 - **Removing the body removes what only it used:** pictures, charts, embedded objects, the headers of
   removed sections, the targets of links, comments, and notes, see
   `WordDocumentWriter.RemoveWhatOnlyTheBodyUsed`. Otherwise Word offers to repair the file, or the

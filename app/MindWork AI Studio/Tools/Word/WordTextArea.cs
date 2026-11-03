@@ -17,6 +17,11 @@ namespace AIStudio.Tools.Word;
 internal readonly record struct WordTextArea(int PageWidth, int PageHeight, int Top, int Right, int Bottom, int Left, int Gutter, int Columns, int ColumnSpace)
 {
     /// <summary>
+    /// How many EMU, the unit of positions and sizes of drawings, make a twentieth of a point.
+    /// </summary>
+    public const long EMU_PER_TWIP = 635;
+
+    /// <summary>
     /// Reads the page and the text area of a section.
     /// </summary>
     /// <remarks>

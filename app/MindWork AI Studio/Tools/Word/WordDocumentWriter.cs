@@ -15,7 +15,8 @@ namespace AIStudio.Tools.Word;
 /// up between the content. The first page keeps the header and footer of the first page of the
 /// template, see MergeSections, and the text starts where the one of the template does, see
 /// WordTemplatePages. When the text runs in other columns there, the first page keeps them as
-/// well, see FirstPageSectionOf.
+/// well, see FirstPageSectionOf. The pictures, boxes, and lines of the design around the text stay
+/// on their page, see WordShapes.
 /// </remarks>
 internal static class WordDocumentWriter
 {
@@ -43,20 +44,25 @@ internal static class WordDocumentWriter
         var mainPart = document.MainDocumentPart ?? throw new InvalidDataException("The file contains no Word document.");
         var body = mainPart.Document?.Body ?? throw new InvalidDataException("The file contains no Word document.");
 
-        var pages = WordTemplatePages.Of(body);
+        var numbering = new WordNumbering(mainPart);
+        var pages = WordTemplatePages.Of(body, new WordLayoutEstimate(mainPart.StyleDefinitionsPart?.Styles, numbering));
         var firstPageSection = FirstPageSectionOf(body, pages);
         var firstPageSpace = MergeSections(body, firstPageSection is not null);
         var sectionProperties = ClearBody(body);
 
-        var numbering = new WordNumbering(mainPart);
         var content = new MarkdownWordConverter(mainPart, WordStyles.Of(mainPart), numbering).Convert(markdown, topHeadingLevel);
         content.InsertRange(0, pages.LeadingEmptyParagraphs);
         if (firstPageSpace > 0)
             content.Insert(0, SpaceOf(firstPageSpace));
 
         if (firstPageSection is not null && sectionProperties is not null)
-            sectionProperties = EndFirstPage(content, firstPageSection, sectionProperties, new WordLayoutEstimate(mainPart.StyleDefinitionsPart?.Styles, numbering));
+        {
+            // The estimate knows the styles the content added by now:
+            (sectionProperties, var nextPageStart) = EndFirstPage(content, firstPageSection, sectionProperties, new WordLayoutEstimate(mainPart.StyleDefinitionsPart?.Styles, numbering));
+            PlaceShapes(content, nextPageStart, pages.NextPageShapes);
+        }
 
+        PlaceShapes(content, 0, pages.FirstPageShapes);
         foreach (var element in content)
             if (sectionProperties is null)
                 body.Append(element);
@@ -101,14 +107,15 @@ internal static class WordDocumentWriter
     /// <param name="firstPageSection">The properties of the section of the first page.</param>
     /// <param name="lastSection">The properties of the last section, which the body ends with.</param>
     /// <param name="estimate">Estimates how much room the content takes up.</param>
-    /// <returns>The properties of the section which the body ends with.</returns>
-    private static W.SectionProperties EndFirstPage(List<OpenXmlElement> content, W.SectionProperties firstPageSection, W.SectionProperties lastSection, WordLayoutEstimate estimate)
+    /// <returns>The properties of the section which the body ends with, and the index of the first
+    /// block of the next page in the content; its count when everything fits on the first page.</returns>
+    private static (W.SectionProperties LastSection, int NextPageStart) EndFirstPage(List<OpenXmlElement> content, W.SectionProperties firstPageSection, W.SectionProperties lastSection, WordLayoutEstimate estimate)
     {
         var count = estimate.CountFittingOnFirstPage(content, WordTextArea.Of(firstPageSection));
         if (count == content.Count)
         {
             lastSection.Parent!.ReplaceChild(firstPageSection, lastSection);
-            return firstPageSection;
+            return (firstPageSection, count);
         }
 
         // The last paragraph of a section carries its properties:
@@ -121,7 +128,30 @@ internal static class WordDocumentWriter
         if (count < content.Count && content[count] is W.Paragraph { HasChildren: false })
             content.RemoveAt(count);
 
-        return lastSection;
+        return (lastSection, count);
+    }
+
+    /// <summary>
+    /// Puts the shapes of the design of a page into the first paragraph of the page.
+    /// </summary>
+    /// <remarks>
+    /// The shapes state their positions in relation to the page, so it matters only on which page
+    /// their paragraph is. A page which starts with a table gets a paragraph of a single point for them.
+    /// </remarks>
+    /// <param name="content">The paragraphs and tables of the document.</param>
+    /// <param name="pageStart">The index of the first block of the page in the content.</param>
+    /// <param name="shapes">The shapes, each in a run of its own, see WordTemplatePages.</param>
+    private static void PlaceShapes(List<OpenXmlElement> content, int pageStart, IReadOnlyList<W.Run> shapes)
+    {
+        if (shapes.Count is 0 || pageStart >= content.Count)
+            return;
+
+        if (content[pageStart] is not W.Paragraph paragraph)
+            content.Insert(pageStart, paragraph = SpaceOf(20));
+
+        OpenXmlElement? previous = paragraph.ParagraphProperties;
+        foreach (var shape in shapes)
+            previous = previous is null ? paragraph.PrependChild(shape) : paragraph.InsertAfter(shape, previous);
     }
 
     /// <summary>
@@ -137,9 +167,12 @@ internal static class WordDocumentWriter
     /// picture above the title. The template leaves room below such a header with a larger top margin
     /// on the first page, which the space this returns stands in for.
     ///
-    /// When the first page stays a section of its own, see FirstPageSectionOf, it brings its header
-    /// and footer along. The last section then inherits all kinds of them, as in Word, and starts on
-    /// a new page, whatever the section before it in the template did.
+    /// When the first page stays a section of its own, see FirstPageSectionOf, it brings its headers
+    /// and footers along, and the last section inherits them, as in Word. It takes only those which
+    /// the sections between them state, and none the first section refers to as well: Word refuses
+    /// a document in which two sections refer to the same header or footer, which the validator of
+    /// the Open XML SDK does not notice. The last section starts on a new page then, whatever the
+    /// section before it in the template did.
     /// </remarks>
     /// <param name="body">The body of the template, not cleared yet.</param>
     /// <param name="keepsFirstPage">Whether the first page stays a section of its own.</param>
@@ -152,9 +185,11 @@ internal static class WordDocumentWriter
             return 0;
 
         var firstSection = sections[0];
+        var partsOfTheFirstPage = keepsFirstPage ? firstSection.Elements<W.HeaderFooterReferenceType>().Select(reference => reference.Id?.Value).ToHashSet() : new HashSet<string?>();
         var references = new Dictionary<(Type Kind, string Pages), W.HeaderFooterReferenceType>();
-        foreach (var reference in sections.SelectMany(section => section.Elements<W.HeaderFooterReferenceType>()).Where(reference => keepsFirstPage || TypeOf(reference) is not "first"))
-            references[(reference.GetType(), TypeOf(reference))] = reference;
+        foreach (var reference in sections.Skip(keepsFirstPage ? 1 : 0).SelectMany(section => section.Elements<W.HeaderFooterReferenceType>()))
+            if (keepsFirstPage ? !partsOfTheFirstPage.Contains(reference.Id?.Value) : TypeOf(reference) is not "first")
+                references[(reference.GetType(), TypeOf(reference))] = reference;
 
         if (!keepsFirstPage)
             foreach (var reference in firstSection.Elements<W.HeaderFooterReferenceType>().Where(reference => TypeOf(reference) is "first"))
