@@ -1,6 +1,10 @@
 using System.Web;
 
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.Tools.ToolCalling;
 
@@ -193,6 +197,19 @@ public sealed class ConfluenceSearchToolTests
     public void ASearchPageWithoutResultsHasNoHits()
     {
         Assert.That(ConfluenceSearchTool.FindHitUrls("<html><body><p>No results</p><a href=\"/confluence/display/HELP\">Help</a></body></html>", WIKI, WIKI), Is.Empty);
+    }
+
+    [TestCase("readTopHits", "maxResults")]
+    [TestCase("maxHitContentCharacters", "maxTotalContentCharacters")]
+    public void TheResultsReadAlongDefaultToWhatWebSearchReads(string confluenceSetting, string webSearchSetting)
+    {
+        IToolImplementation confluence = new ConfluenceSearchTool(null!, null!, null!, null!);
+        IToolImplementation webSearch = new WebSearchTool([], null!, null!, NullLogger<WebSearchTool>.Instance);
+
+        var confluenceDefault = confluence.GetSettingsFieldDefaultValue(confluenceSetting, confluence.GetDefinition().SettingsSchema.Properties[confluenceSetting]);
+        var webSearchDefault = webSearch.GetSettingsFieldDefaultValue(webSearchSetting, webSearch.GetDefinition().SettingsSchema.Properties[webSearchSetting]);
+
+        Assert.That(confluenceDefault, Is.Not.Null.And.EqualTo(webSearchDefault), "Both searches read their best hits themselves, so they bring about as much content into a chat.");
     }
 
     private static Uri ParseBaseUrl(string value) => ConfluenceSearchTool.TryParseBaseUrl(value, out var baseUrl)

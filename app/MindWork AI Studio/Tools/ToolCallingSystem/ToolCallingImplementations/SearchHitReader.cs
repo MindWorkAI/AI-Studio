@@ -26,10 +26,11 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 /// </remarks>
 public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalService, PromptInjectionGuardService promptInjectionGuardService, ToolSettingsService toolSettingsService, ILogger<SearchHitReader> logger)
 {
-    public const int DEFAULT_HITS_TO_READ = 3;
+    // The defaults and the budget limit of web search, so a search of the wiki brings about as much as one of the web:
+    public const int DEFAULT_HITS_TO_READ = 5;
     public const int MAX_HITS_TO_READ = 10;
-    public const int DEFAULT_CONTENT_CHARACTERS = 30_000;
-    public const int MAX_CONTENT_CHARACTERS = 100_000;
+    public const int DEFAULT_CONTENT_CHARACTERS = 100_000;
+    public const int MAX_CONTENT_CHARACTERS = 200_000;
 
     // As many as web search reads at once:
     private const int MAX_PARALLEL_READS = 4;

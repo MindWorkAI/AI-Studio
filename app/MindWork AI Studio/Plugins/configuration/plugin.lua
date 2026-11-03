@@ -1246,12 +1246,13 @@ CONFIG["SETTINGS"] = {}
 --                    provider must have HIGH confidence to receive search results.
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
 --   readTopHits      How many of the best results the search reads right away, wiki pages and
---                    attachments alike, as an integer string from 0 to 10. Default: 3. 0 switches
---                    this off. Only results within the wiki are read, and documents follow
---                    read_web_page.documentAccess and read_web_page.maxDocumentMegabytes.
+--                    attachments alike, as an integer string from 0 to 10. Default: 5, as many as
+--                    web_search reads. 0 switches this off. Only results within the wiki are read,
+--                    and documents follow read_web_page.documentAccess and
+--                    read_web_page.maxDocumentMegabytes.
 --   maxHitContentCharacters
---                    How many characters of content these results bring together, at most 100000.
---                    Default: 30000. The results share them equally.
+--                    How many characters of content these results bring together, at most 200000.
+--                    Default: 100000, as for web_search. The results share them equally.
 -- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
 -- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
 -- Where a chat may send data after a search is set by read_web_page.internalPageOutboundDataRestriction.
