@@ -2,13 +2,13 @@
 
 public sealed record EmbeddingResponse
 {
-    public string? Id { get; init; }
+    public string? Id { get; set; }
     
-    public string? Object { get; init; }
+    public string? Object { get; set; }
     
-    public List<EmbeddingData>? Data { get; init; }
+    public List<EmbeddingData>? Data { get; set; }
     
-    public string? Model { get; init; }
+    public string? Model { get; set; }
     
-    public EmbeddingUsage? Usage { get; init; }
+    public EmbeddingUsage? Usage { get; set; }
 }

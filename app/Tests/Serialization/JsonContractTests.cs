@@ -12,6 +12,12 @@ namespace AIStudio.Tests.Serialization;
 public sealed class JsonContractTests
 {
     [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.Stored))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ProviderRequests))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ProviderAnswers))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.RuntimeRequests))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.RuntimeAnswers))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ServiceRequests))]
+    [TestCaseSource(typeof(JsonTestRoots), nameof(JsonTestRoots.ServiceAnswers))]
     public void TheContractsMatchThoseOfReflection(JsonTestRoot root)
     {
         var baseline = JsonReflectionBaseline.Of(root.Options);

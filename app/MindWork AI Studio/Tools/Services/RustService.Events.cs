@@ -35,7 +35,7 @@ public partial class RustService
                             continue;
                         
                         // Deserialize the Tauri event:
-                        var tauriEvent = JsonSerializer.Deserialize<TauriEvent>(line, this.jsonRustSerializerOptions);
+                        var tauriEvent = JsonSerializer.Deserialize<TauriEvent>(line, JSON_OPTIONS);
                         
                         // Forward relevant events to the message bus:
                         if (tauriEvent != default && tauriEvent.EventType

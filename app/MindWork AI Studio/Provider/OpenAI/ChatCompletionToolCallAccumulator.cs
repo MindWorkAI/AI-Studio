@@ -117,7 +117,7 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
             // No text means no content field, the way a round which only calls a tool arrives
             // when it is not streamed. Some providers reject an empty string in its place.
             //
-            RawContent = answer.Length is 0 ? null : JsonSerializer.SerializeToElement(answer),
+            RawContent = answer.Length is 0 ? null : JsonSerializer.SerializeToElement(answer, ProviderJsonOptions.OPTIONS),
             ReasoningContent = this.reasoning.Length is 0 ? null : this.reasoning.ToString(),
             ToolCalls = this.toolCalls.Count is 0
                 ? null

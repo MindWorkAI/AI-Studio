@@ -80,7 +80,8 @@ public sealed class ToolParameterSchemaBuilder
             ["additionalProperties"] = false,
         };
 
-        return JsonSerializer.Deserialize<JsonElement>(schema.ToJsonString());
+        using var document = JsonDocument.Parse(schema.ToJsonString());
+        return document.RootElement.Clone();
     }
 
     private ToolParameterSchemaBuilder Add(string name, string jsonType, string description, bool isRequired, IReadOnlyList<string>? allowedValues = null)

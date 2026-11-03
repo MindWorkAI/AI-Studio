@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using AIStudio.Assistants.SWOTAnalysis;
 using AIStudio.Chat;
 using AIStudio.Settings;
@@ -15,9 +17,11 @@ namespace AIStudio.Tests.Serialization;
 /// </summary>
 /// <remarks>
 /// Only the outermost types belong here: whatever they hold gets checked along with them. Add a type whenever
-/// AI Studio starts to store a new kind of file, with the options it stores the file with.
+/// AI Studio starts to store a new kind of file or to exchange a new kind of message, with the options it uses
+/// for them. What AI Studio sends is listed apart from what it receives: only what it reads has to keep the
+/// defaults of a new object.
 /// </remarks>
-public static class JsonTestRoots
+public static partial class JsonTestRoots
 {
     /// <summary>
     /// The data AI Studio keeps on the disk of the user.
@@ -66,6 +70,27 @@ public static class JsonTestRoots
         root.Options.MakeReadOnly(populateMissingResolver: true);
         return new TestCaseData(root).SetArgDisplayNames(purpose is null ? root.ToString() : $"{root}, {purpose}");
     }
+
+    /// <summary>
+    /// Names the case after its type together with the last part of the namespace, which tells apart types of the
+    /// same name, e.g., the lists of models of two providers.
+    /// </summary>
+    private static TestCaseData CaseWithNamespace(Type type, JsonSerializerOptions options)
+    {
+        var typeNamespace = type.Namespace!;
+        return Case(new(type, options), typeNamespace[(typeNamespace.LastIndexOf('.') + 1)..]);
+    }
+
+    /// <summary>
+    /// Returns the classes and structs of AI Studio which are the given type.
+    /// </summary>
+    /// <remarks>
+    /// A converter which writes a value as the type it is of meets these types without any property naming them.
+    /// Listing them all here keeps a new one from going unchecked.
+    /// </remarks>
+    private static IEnumerable<Type> ImplementationsOf(Type type) => typeof(Program).Assembly.GetTypes()
+        .Where(candidate => candidate is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false } && type.IsAssignableFrom(candidate))
+        .OrderBy(candidate => candidate.FullName, StringComparer.Ordinal);
 
     private static IEnumerable<Type> ManagedSettingValueTypes()
     {
