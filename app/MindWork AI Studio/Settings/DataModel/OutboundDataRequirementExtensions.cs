@@ -24,7 +24,6 @@ public static class OutboundDataRequirementExtensions
     {
         OutboundDataOrigin.MAILBOX => GetMailboxBlockedMessage(requirement, settings.Mailboxes),
         OutboundDataOrigin.CONFLUENCE_WIKI => string.Format(TB("This chat holds content from your Confluence wiki, found while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again."), requirement.Restriction.GetName()),
-        OutboundDataOrigin.INTRANET => string.Format(TB("This chat holds content from your intranet, found while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again."), requirement.Restriction.GetName()),
         OutboundDataOrigin.INTERNAL_WEB_PAGE => string.Format(TB("This chat holds content from an internal web page on '{0}', read while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again."), requirement.Reference, requirement.Restriction.GetName()),
         OutboundDataOrigin.DATA_SOURCE => GetDataSourceBlockedMessage(requirement, settings.DataSources),
 

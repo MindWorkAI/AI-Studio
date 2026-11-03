@@ -7,7 +7,7 @@ using AIStudio.Tools.Web;
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
 /// <summary>
-/// Reads the best hits of a search of the wiki or the intranet, so the model gets their content
+/// Reads the best hits of a search, such as one of the wiki, so the model gets their content
 /// with the search instead of one call of Read Web Page per hit.
 /// </summary>
 /// <remarks>

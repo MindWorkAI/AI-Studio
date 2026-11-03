@@ -12,12 +12,12 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace AIStudio.Tests.Tools.ToolCalling;
 
 /// <summary>
-/// Checks how a search of the wiki or the intranet reads its best hits itself.
+/// Checks how a search of the wiki reads its best hits itself.
 /// </summary>
 /// <remarks>
 /// One search with its hits read costs one tool call instead of one per hit. The hits share a
 /// budget, a hit which cannot be read costs that hit only, and all of them pass the filter for
-/// prompt injections. The loopback server stands in for the intranet, and FakeRuntime plays the
+/// prompt injections. The loopback server stands in for the wiki, and FakeRuntime plays the
 /// runtime for the filter, so these tests replace the application's service provider while they
 /// run and must not run in parallel.
 /// </remarks>

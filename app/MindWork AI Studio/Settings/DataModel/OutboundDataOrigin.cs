@@ -32,9 +32,4 @@ public enum OutboundDataOrigin
     /// model: found by Semantic Search or by the classic RAG process.
     /// </summary>
     DATA_SOURCE,
-
-    /// <summary>
-    /// A search of the configured intranet.
-    /// </summary>
-    INTRANET,
 }
