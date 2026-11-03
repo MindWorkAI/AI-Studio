@@ -1,0 +1,52 @@
+@using AIStudio.Settings
+@inherits MSGComponentBase
+
+@foreach (var failed in this.Matches.Where(match => match.LoadFailed))
+{
+    <MudAlert Severity="Severity.Error" Dense="@true" Class="mt-3">
+        @string.Format(T("The glossary '{0}' could not be loaded, so the translation did not follow it. Try again, or check the glossary under 'Manage glossaries'."), this.GetGlossaryName(failed.Glossary))
+    </MudAlert>
+}
+
+@{ var sections = this.Matches.Where(match => match.Entries.Count > 0).ToList(); }
+@if (sections.Count > 0)
+{
+    <MudExpansionPanels Class="mt-3">
+        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@this.GetHeaderText(sections)">
+            @foreach (var (glossary, entries, _) in sections)
+            {
+                var isTranslation = glossary.Type is GlossaryType.TRANSLATION;
+                <MudText Typo="Typo.subtitle2" Class="mt-2">
+                    @this.GetGlossaryName(glossary)
+                </MudText>
+                <MudSimpleTable Dense="@true" Hover="@true" Class="mb-3">
+                    <thead>
+                        <tr>
+                            <th>@T("Term")</th>
+                            <th>@T("Variants")</th>
+                            <th>@(isTranslation ? T("Translation") : T("Explanation"))</th>
+                            <th>@T("Note")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in entries)
+                        {
+                            <tr>
+                                <td>@entry.Term</td>
+                                <td>@string.Join(", ", entry.Aliases ?? [])</td>
+                                <td>@entry.Value</td>
+                                <td>@entry.Note</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </ExpansionPanel>
+    </MudExpansionPanels>
+}
+else if (this.Matches.All(match => !match.LoadFailed))
+{
+    <MudAlert Severity="Severity.Info" Dense="@true" Class="mt-3">
+        @T("None of the chosen glossaries contains a term of your text.")
+    </MudAlert>
+}

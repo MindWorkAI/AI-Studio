@@ -63,6 +63,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     {
         this.inputText = string.Empty;
         this.inputTextLastTranslation = string.Empty;
+        this.sentGlossaryMatches = [];
         this.webContentURL = string.Empty;
         if (!this.MightPreselectValues())
         {
@@ -99,6 +100,9 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
     private HashSet<string> selectedGlossaryIds = [];
+
+    // The glossary entries of the last request, so the user can check what the translation followed:
+    private List<GlossaryMatches> sentGlossaryMatches = [];
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
     private static readonly AssistantSessionStateKey<bool> LIVE_TRANSLATION_STATE_KEY = new(nameof(liveTranslation));
@@ -109,6 +113,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
     private static readonly AssistantSessionStateKey<HashSet<string>> SELECTED_GLOSSARY_IDS_STATE_KEY = new(nameof(selectedGlossaryIds));
+    private static readonly AssistantSessionStateKey<List<GlossaryMatches>> SENT_GLOSSARY_MATCHES_STATE_KEY = new(nameof(sentGlossaryMatches));
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
@@ -123,6 +128,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
         state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
         state.SetHashSet(SELECTED_GLOSSARY_IDS_STATE_KEY, this.selectedGlossaryIds);
+        state.SetList(SENT_GLOSSARY_MATCHES_STATE_KEY, this.sentGlossaryMatches);
     }
 
     /// <inheritdoc />
@@ -138,6 +144,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
         state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
         state.RestoreHashSet(SELECTED_GLOSSARY_IDS_STATE_KEY, this.selectedGlossaryIds);
+        state.RestoreList(SENT_GLOSSARY_MATCHES_STATE_KEY, this.sentGlossaryMatches);
     }
 
     #region Overrides of AssistantBase
@@ -291,23 +298,26 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     }
 
     /// <summary>
-    /// Builds the glossary part of the request: the entries of the chosen glossaries whose terms occur in the text.
+    /// Finds the entries of the chosen glossaries whose terms occur in the text.
     /// </summary>
-    /// <returns>The glossary block, or an empty string when no entry concerns the text.</returns>
-    private async Task<string> BuildGlossaryPromptAsync(string sourceText)
+    /// <remarks>
+    /// A glossary whose entries cannot be read is part of the result, marked as such: to the user, it
+    /// must not look like a glossary of which no term occurs in the text.
+    /// </remarks>
+    /// <returns>The matches per chosen glossary; none when no glossary is chosen.</returns>
+    private async Task<List<GlossaryMatches>> MatchGlossariesAsync(string sourceText)
     {
         var selectedIds = this.SelectedAvailableGlossaryIds;
-        if (selectedIds.Count == 0)
-            return string.Empty;
-
         var matches = new List<GlossaryMatches>();
         foreach (var glossary in this.AvailableGlossaries.Where(glossary => selectedIds.Contains(glossary.Id)))
         {
-            var entries = await this.GlossaryStore.LoadEntriesAsync(glossary.Id);
-            matches.Add(new(glossary, GlossaryMatcher.For(entries).FindEntries(sourceText)));
+            var entries = await this.GlossaryStore.TryLoadEntriesAsync(glossary.Id);
+            matches.Add(entries is null
+                ? new(glossary, [], LoadFailed: true)
+                : new(glossary, GlossaryMatcher.For(entries).FindEntries(sourceText)));
         }
 
-        return GlossaryPrompt.Build(matches);
+        return matches;
     }
 
     private async Task TranslateText(bool force)
@@ -325,11 +335,14 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         //
         var sourceText = this.inputText;
         this.inputTextLastTranslation = sourceText;
-        var glossaryPrompt = await this.BuildGlossaryPromptAsync(sourceText);
+        var glossaryMatches = await this.MatchGlossariesAsync(sourceText);
 
         // The live translation translates the newer text after the next pause, so this result would be outdated:
         if (!force && this.inputText != sourceText)
             return;
+
+        this.sentGlossaryMatches = glossaryMatches;
+        var glossaryPrompt = GlossaryPrompt.Build(glossaryMatches);
 
         this.CreateChatThread();
         var time = this.AddUserRequest(

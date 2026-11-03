@@ -36,3 +36,10 @@ else
 </MudStack>
 
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+@code {
+    // Nothing to show when the last request followed no glossary:
+    private protected override RenderFragment? AfterResultContent => this.sentGlossaryMatches.Count == 0
+        ? null
+        : @<GlossaryUsageSummary Matches="@this.sentGlossaryMatches"/>;
+}
