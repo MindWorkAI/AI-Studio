@@ -10,7 +10,7 @@
         <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols> <!-- Remove debug symbols -->
         <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization> <!-- Remove unsafe binary formatter serialization -->
         <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding> <!-- Remove unsafe UTF7 encoding -->
-        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault> <!-- Enable reflection for JSON serialization -->
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault> <!-- Blazor Server needs reflection for JSON of its own, while the options of AI Studio use generated contracts only. Without this line, PublishTrimmed switches reflection off, even for dotnet run -->
         <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings> <!-- Suppress trim analysis warnings -->
     </PropertyGroup>
 
