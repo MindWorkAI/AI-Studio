@@ -1,4 +1,4 @@
-// ReSharper disable NotAccessedPositionalProperty.Local
+// ReSharper disable NotAccessedPositionalProperty.Global
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
@@ -14,14 +14,14 @@ public sealed partial class RustService
     {
         try
         {
-            using var response = await this.http.PostAsJsonAsync("/share/file", new ShareFileRequest(filePath), this.jsonRustSerializerOptions);
+            using var response = await this.http.PostAsJsonAsync("/share/file", new ShareFileRequest(filePath), JSON_OPTIONS);
             if (!response.IsSuccessStatusCode)
             {
                 this.logger?.LogError($"The Rust runtime rejected the share request: {response.StatusCode}.");
                 return new(ShareSheetOutcome.FAILED, $"The Rust runtime rejected the share request: {response.StatusCode}.");
             }
 
-            var result = await response.Content.ReadFromJsonAsync<ShareFileResponse>(this.jsonRustSerializerOptions);
+            var result = await response.Content.ReadFromJsonAsync<ShareFileResponse>(JSON_OPTIONS);
             if (result is null)
             {
                 this.logger?.LogError("The Rust runtime answered the share request without a result.");
@@ -50,5 +50,8 @@ public sealed partial class RustService
         }
     }
 
-    private sealed record ShareFileRequest(string FilePath);
+    /// <remarks>
+    /// Internal rather than private, so that the JSON context of the runtime can name it.
+    /// </remarks>
+    internal sealed record ShareFileRequest(string FilePath);
 }

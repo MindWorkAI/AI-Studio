@@ -12,20 +12,20 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<DataDocumentAnalysisPolicy>();
 
     /// <inheritdoc />
-    public override string Id { get; init; } = string.Empty;
+    public override string Id { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public override uint Num { get; init; }
+    public override uint Num { get; set; }
     
     /// <inheritdoc />
     public override string Name
     {
         get => this.PolicyName;
-        init => this.PolicyName = value;
+        set => this.PolicyName = value;
     }
     
     /// <inheritdoc />
-    public override bool IsEnterpriseConfiguration { get; init; }
+    public override bool IsEnterpriseConfiguration { get; set; }
     
     /// <summary>
     /// The name of the document analysis policy.
@@ -43,7 +43,7 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     public bool IsProtected { get; set; }
     
     /// <inheritdoc />
-    public override Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = Guid.Empty;
 
     /// <summary>
     /// The rules for the document analysis policy.

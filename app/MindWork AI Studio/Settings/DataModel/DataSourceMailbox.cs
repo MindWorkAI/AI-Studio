@@ -13,70 +13,70 @@ namespace AIStudio.Settings.DataModel;
 /// IDataSource: classic RAG, Semantic Search and the agents never see a mailbox. Only the mail
 /// tools read from one.
 /// </remarks>
-public readonly record struct DataSourceMailbox : IIndexedDataSource, ISecretId
+public record struct DataSourceMailbox: IIndexedDataSource, ISecretId
 {
     public DataSourceMailbox()
     {
     }
 
     /// <inheritdoc />
-    public uint Num { get; init; }
+    public uint Num { get; set; }
 
     /// <inheritdoc />
-    public string Id { get; init; } = Guid.Empty.ToString();
+    public string Id { get; set; } = Guid.Empty.ToString();
 
     /// <inheritdoc />
-    public string Name { get; init; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public DataSourceType Type { get; init; } = DataSourceType.MAILBOX;
+    public DataSourceType Type { get; set; } = DataSourceType.MAILBOX;
 
     /// <inheritdoc />
-    public bool IsEnterpriseConfiguration { get; init; }
+    public bool IsEnterpriseConfiguration { get; set; }
 
     /// <inheritdoc />
-    public Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+    public Guid EnterpriseConfigurationPluginId { get; set; } = Guid.Empty;
 
     /// <inheritdoc />
-    public string EmbeddingId { get; init; } = Guid.Empty.ToString();
+    public string EmbeddingId { get; set; } = Guid.Empty.ToString();
 
     /// <inheritdoc />
-    public int MaxChunkTokenLength { get; init; }
+    public int MaxChunkTokenLength { get; set; }
 
     /// <inheritdoc />
-    public int ChunkOverlapTokenLength { get; init; } = DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
+    public int ChunkOverlapTokenLength { get; set; } = DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
 
     /// <inheritdoc />
     /// <remarks>
     /// There is no default, the user has to choose one of the levels which IsAllowedMailboxConfidence
     /// accepts. Until then, the level is NONE, and no provider may read the mailbox.
     /// </remarks>
-    public ConfidenceLevel ConfidenceLevel { get; init; } = ConfidenceLevel.NONE;
+    public ConfidenceLevel ConfidenceLevel { get; set; } = ConfidenceLevel.NONE;
 
     /// <summary>
     /// The host name of the IMAP server, e.g., imap.example.org.
     /// </summary>
-    public string Host { get; init; } = string.Empty;
+    public string Host { get; set; } = string.Empty;
 
     /// <summary>
     /// The port of the IMAP server. The default is the one for IMAP with TLS from the first byte on.
     /// </summary>
-    public int Port { get; init; } = MailboxTransportSecurityExtensions.SSL_ON_CONNECT_PORT;
+    public int Port { get; set; } = MailboxTransportSecurityExtensions.SSL_ON_CONNECT_PORT;
 
     /// <summary>
     /// How the connection to the IMAP server is encrypted.
     /// </summary>
-    public MailboxTransportSecurity TransportSecurity { get; init; } = MailboxTransportSecurity.SSL_ON_CONNECT;
+    public MailboxTransportSecurity TransportSecurity { get; set; } = MailboxTransportSecurity.SSL_ON_CONNECT;
 
     /// <summary>
     /// How AI Studio signs in to the IMAP server.
     /// </summary>
-    public MailboxAuthMethod AuthMethod { get; init; } = MailboxAuthMethod.PASSWORD;
+    public MailboxAuthMethod AuthMethod { get; set; } = MailboxAuthMethod.PASSWORD;
 
     /// <summary>
     /// The username to sign in with, often the e-mail address.
     /// </summary>
-    public string Username { get; init; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     /// <summary>
     /// The folder to which the synchronization and all mail tools are restricted, together with its subfolders.
@@ -86,7 +86,7 @@ public readonly record struct DataSourceMailbox : IIndexedDataSource, ISecretId
     /// means the whole mailbox, apart from the trash and the junk folder. The sent mails and the
     /// drafts may come along from outside of it, see IncludeSentAndDrafts.
     /// </remarks>
-    public string RootFolder { get; init; } = string.Empty;
+    public string RootFolder { get; set; } = string.Empty;
 
     /// <summary>
     /// Whether the folders for sent mails and for drafts are synchronized as well, when they lie outside the root folder.
@@ -96,22 +96,22 @@ public readonly record struct DataSourceMailbox : IIndexedDataSource, ISecretId
     /// marks as such count, without their subfolders. A mailbox stored before this setting existed
     /// loads with it switched on, so that its next sync fetches them.
     /// </remarks>
-    public bool IncludeSentAndDrafts { get; init; } = true;
+    public bool IncludeSentAndDrafts { get; set; } = true;
 
     /// <summary>
     /// How far back the index reaches. Flagged mails and drafts are indexed regardless of their age.
     /// </summary>
-    public MailboxMaxAge MaxAge { get; init; } = MailboxMaxAge.LAST_12_MONTHS;
+    public MailboxMaxAge MaxAge { get; set; } = MailboxMaxAge.LAST_12_MONTHS;
 
     /// <summary>
     /// Whether the text of attached documents is indexed as well.
     /// </summary>
-    public bool IndexAttachments { get; init; } = true;
+    public bool IndexAttachments { get; set; } = true;
 
     /// <summary>
     /// The size in megabytes up to which the text of an attachment is indexed. Of a larger one, only the name is.
     /// </summary>
-    public int MaxAttachmentSizeMegabytes { get; init; } = 10;
+    public int MaxAttachmentSizeMegabytes { get; set; } = 10;
 
     /// <summary>
     /// Where a chat may still send data, once it has read from this mailbox.
@@ -119,12 +119,12 @@ public readonly record struct DataSourceMailbox : IIndexedDataSource, ISecretId
     /// <remarks>
     /// An organization may demand a stricter one, see DataMailboxes.MinimumOutboundDataRestriction.
     /// </remarks>
-    public OutboundDataRestriction OutboundDataRestriction { get; init; } = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
+    public OutboundDataRestriction OutboundDataRestriction { get; set; } = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
 
     /// <summary>
     /// The maximum number of mails one search returns. Searched page by page, it is the size of a page.
     /// </summary>
-    public ushort MaxMatches { get; init; } = 10;
+    public ushort MaxMatches { get; set; } = 10;
 
     #region Implementation of ISecretId
 

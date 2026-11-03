@@ -9,7 +9,7 @@ namespace AIStudio.Provider.OpenAI;
 public sealed record ChatCompletionDelta
 {
     [JsonPropertyName("content")]
-    public JsonElement? RawContent { get; init; }
+    public JsonElement? RawContent { get; set; }
 
     [JsonIgnore]
     public string Content => ChatCompletionContent.GetText(this.RawContent) ?? string.Empty;

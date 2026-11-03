@@ -1377,7 +1377,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (runnableTools.Count > 0)
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
-                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
+                    runnableTools.Select(x => (object)ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
                     (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
@@ -1662,13 +1662,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 modelName = "placeholder";
             
             // Prepare the HTTP embedding request:
-            var payload = new
-            {
-                model = modelName,
-                input = texts,
-                encoding_format = "float"
-            };
-            
+            var payload = new EmbeddingRequest(modelName, texts);
             var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
             using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL());
 

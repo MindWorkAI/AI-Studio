@@ -4,13 +4,14 @@ namespace AIStudio.Assistants.Builder;
 
 internal sealed partial class LuaResponse
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         AllowTrailingCommas = false,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         MaxDepth = 32,
-    };
+        TypeInfoResolver = LuaResponseJsonContext.Default,
+    }.AsReadOnly();
 
     public static bool TryParse(string modelResponse, out LuaResponse response, out LuaResponseParseError error, out string technicalDetails)
     {

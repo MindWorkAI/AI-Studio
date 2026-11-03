@@ -52,20 +52,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
         artifact.SourceCoverage = evidence.SourceCoverage;
         artifact.StructuralSignature = plan.StructuralSignature;
         artifact.Model = VisualBriefingModelNames.ExportLabel(provider);
-        artifact.Data = JsonSerializer.SerializeToElement(new
-        {
-            slots = artifact.Slots.ToDictionary(slot => slot.SlotId, slot => slot.Value, StringComparer.Ordinal),
-            charts = artifact.Charts,
-            controls = artifact.Controls,
-            formulas = artifact.Formulas,
-            accessibility = artifact.AccessibilityTexts,
-            sourceReferences = artifact.SourceReferences,
-            labels = new
-            {
-                reset = artifact.ResetLabel,
-                brand = "MindWork AI Studio",
-            },
-        }, VisualBriefingJson.Canonical);
+        artifact.Data = JsonSerializer.SerializeToElement(VisualBriefingContentData.Of(artifact), VisualBriefingJson.Canonical);
 
         artifact.PayloadHash = VisualBriefingPayloadHash.ForContent(artifact.Slots, artifact.Charts, artifact.Controls, artifact.Formulas, artifact.AccessibilityTexts,
             artifact.SourceReferences, artifact.ResetLabel, artifact.SourceCoverage, artifact.AssetPlan, artifact.StructuralSignature);
@@ -107,7 +94,8 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
           Do not return source references, reset controls, filter controls, or entries for ASSET components; AI Studio creates all of them deterministically.
           """;
 
-    private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan)
+    // Internal, so that a test can check the JSON this prompt carries:
+    internal static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan)
     {
         var components = plan.Sections.SelectMany(section => section.Components).ToArray();
         var componentIds = components.Select(component => component.ComponentId).ToArray();
@@ -116,21 +104,10 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
         var requiredSlots = plan.Sections
             .SelectMany(section => new[]
             {
-                new
-                {
-                    SlotId = section.TitleSlotId,
-                    Role = VisualBriefingSlotRole.TITLE,
-                    Type = VisualBriefingSlotType.TEXT,
-                },
-                
-                new
-                {
-                    SlotId = section.SummarySlotId,
-                    Role = VisualBriefingSlotRole.SUMMARY,
-                    Type = VisualBriefingSlotType.TEXT,
-                },
-            }.Concat(section.Components.SelectMany(component => component.Slots.Select(slot => new { slot.SlotId, slot.Role, Type = VisualBriefingSlotTypes.Expected(slot), }
-            )))).ToArray();
+                new VisualBriefingRequiredSlot(section.TitleSlotId, VisualBriefingSlotRole.TITLE, VisualBriefingSlotType.TEXT),
+                new VisualBriefingRequiredSlot(section.SummarySlotId, VisualBriefingSlotRole.SUMMARY, VisualBriefingSlotType.TEXT),
+            }.Concat(section.Components.SelectMany(component => component.Slots.Select(slot => new VisualBriefingRequiredSlot(slot.SlotId, slot.Role, VisualBriefingSlotTypes.Expected(slot))))))
+            .ToArray();
         
         var chartComponentIds = components
             .Where(component => component.Kind is VisualBriefingComponentKind.CHART)
@@ -140,21 +117,20 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
         // Filterable tables are absent here: AI Studio derives their controls from the table data:
         var controlRequirements = components
             .Where(component => component.Kind is VisualBriefingComponentKind.TABS or VisualBriefingComponentKind.SIMULATION)
-            .Select(component => new
-            {
+            .Select(component => new VisualBriefingControlRequirement(
                 component.ComponentId,
                 component.Kind,
-                
-                PanelSlotIds = component.Slots
+
+                PanelSlotIds: component.Slots
                     .Where(slot => slot.Role is VisualBriefingSlotRole.PANEL)
                     .Select(slot => slot.SlotId)
                     .ToArray(),
-                
-                ResultSlotIds = component.Slots
+
+                ResultSlotIds: component.Slots
                     .Where(slot => slot.Role is VisualBriefingSlotRole.RESULT)
                     .Select(slot => slot.SlotId)
-                    .ToArray(),
-            }).ToArray();
+                    .ToArray()))
+            .ToArray();
         
         return $"""
                 Target language: {manifest.Settings.TargetLanguage.PromptGeneralPurpose(manifest.Settings.CustomTargetLanguage)}
@@ -166,7 +142,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
                 Exact chart component IDs, each to receive exactly one chart: {JsonSerializer.Serialize(chartComponentIds, VisualBriefingJson.Canonical)}
                 Exact control and formula requirements, no controls for any other component: {JsonSerializer.Serialize(controlRequirements, VisualBriefingJson.Canonical)}
                 Plan: {JsonSerializer.Serialize(plan.Sections, VisualBriefingJson.Canonical)}
-                Evidence: {JsonSerializer.Serialize(new { evidence.Facts, evidence.Metrics, evidence.Tables, evidence.AssetPlan }, VisualBriefingJson.Canonical)}
+                Evidence: {JsonSerializer.Serialize(VisualBriefingEvidencePrompt.Of(evidence), VisualBriefingJson.Canonical)}
                 """;
     }
 
@@ -233,21 +209,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
         var compiled = VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.CONTENT, () => VisualBriefingLayoutCompiler.Compile(plan, projection, layout, VisualBriefingDesignProfile.EDITORIAL));
         var data = compiled.Data.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
         
-        data["_mwai"] = JsonSerializer.SerializeToElement(new
-        {
-            schemaVersion = VisualBriefingVersions.SCHEMA,
-            runtimeVersion = VisualBriefingVersions.RUNTIME,
-            aiStudioVersion = "validation",
-            assets = evidence.AssetPlan.ToDictionary(asset => asset.AssetId, _ => "data:image/png;base64,AA==", StringComparer.Ordinal),
-            footer = new
-            {
-                createdWith = "validation",
-                models = "validation",
-                createdAt = "validation",
-                authors = "validation",
-                protection = "validation",
-            },
-        }, VisualBriefingJson.Canonical);
+        data["_mwai"] = JsonSerializer.SerializeToElement(VisualBriefingProtectedData.ForValidation(evidence.AssetPlan), VisualBriefingJson.Canonical);
         
         var validationData = JsonSerializer.SerializeToElement(data, VisualBriefingJson.Canonical);
         VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.CONTENT,

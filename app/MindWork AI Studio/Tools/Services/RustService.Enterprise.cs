@@ -39,7 +39,7 @@ public sealed partial class RustService
             throw new HttpRequestException($"Failed to query the enterprise configurations: '{result.StatusCode}'");
         }
 
-        var configs = await result.Content.ReadFromJsonAsync<List<EnterpriseConfig>>(this.jsonRustSerializerOptions);
+        var configs = await result.Content.ReadFromJsonAsync<List<EnterpriseConfig>>(JSON_OPTIONS);
         if (configs is null)
             throw new InvalidOperationException("Failed to parse the enterprise configurations from Rust.");
 

@@ -7,5 +7,5 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamPdfMetadata : ContentStreamSseMetadata
 {
     [JsonPropertyName("Pdf")] 
-    public ContentStreamPdfDetails? Pdf { get; init; }
+    public ContentStreamPdfDetails? Pdf { get; set; }
 }

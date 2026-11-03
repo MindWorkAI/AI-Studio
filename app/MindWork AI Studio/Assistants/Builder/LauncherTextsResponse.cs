@@ -14,30 +14,31 @@ internal sealed class LauncherTextsResponse
 {
     public const string SCHEMA_VERSION_VALUE = "assistant_builder_launcher_texts_v1";
 
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         AllowTrailingCommas = false,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         MaxDepth = 8,
-    };
+        TypeInfoResolver = LauncherTextsResponseJsonContext.Default,
+    }.AsReadOnly();
 
-    public string SchemaVersion { get; init; } = string.Empty;
+    public string SchemaVersion { get; set; } = string.Empty;
 
     /// <summary>
     /// The plugin name, shown on the plugins page.
     /// </summary>
-    public string PluginName { get; init; } = string.Empty;
+    public string PluginName { get; set; } = string.Empty;
 
     /// <summary>
     /// The title on the tile.
     /// </summary>
-    public string Title { get; init; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// The short description, used for both the plugin and the tile.
     /// </summary>
-    public string Description { get; init; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 
     public static bool TryParse(string modelResponse, out LauncherTextsResponse response, out LuaResponseParseError error, out string technicalDetails)
     {

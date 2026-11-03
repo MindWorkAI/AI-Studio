@@ -11,12 +11,12 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.
 /// </remarks>
 internal sealed record TavilySearchResult
 {
-    public string Title { get; init; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
 
-    public string Url { get; init; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 
     /// <summary>
     /// The excerpt of the page that matched, which is what other services call a snippet.
     /// </summary>
-    public string Content { get; init; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
 }

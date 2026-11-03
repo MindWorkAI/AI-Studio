@@ -1,0 +1,442 @@
+{
+  "chat_id": "00000000-0000-4000-8000-000000000001",
+  "workspace_id": "00000000-0000-4000-8000-000000000002",
+  "last_media_transcript_number": 9000000000,
+  "draft": {
+    "text": "text sample 3",
+    "file_attachments": [
+      {
+        "$type": "file",
+        "type": "IMAGE",
+        "file_name": "FileName sample 4",
+        "file_path": "/samples/FilePath-5.txt",
+        "file_size_bytes": 4000000006,
+        "is_forbidden": false,
+        "is_valid": true,
+        "is_image": true,
+        "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-5.txt",
+        "provenance_id": "00000000-0000-4000-8000-000000000007",
+        "version": {
+          "last_write_utc": "2026-10-29T11:08:00Z",
+          "length": 4000000009
+        }
+      },
+      {
+        "$type": "image",
+        "source_type": "LOCAL_PATH",
+        "type": "IMAGE",
+        "file_name": "FileName sample 10",
+        "file_path": "/samples/FilePath-11.txt",
+        "file_size_bytes": 4000000012,
+        "is_forbidden": false,
+        "is_valid": true,
+        "is_image": true,
+        "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-11.txt",
+        "provenance_id": "00000000-0000-4000-8000-000000000013",
+        "version": {
+          "last_write_utc": "2026-10-29T11:14:00Z",
+          "length": 4000000015
+        }
+      },
+      {
+        "$type": "managed_transcript",
+        "original_file_name": "OriginalFileName sample 19",
+        "is_staged": true,
+        "type": "IMAGE",
+        "file_name": "FileName sample 16",
+        "file_path": "/samples/FilePath-17.txt",
+        "file_size_bytes": 4000000018,
+        "is_forbidden": false,
+        "is_valid": true,
+        "is_image": false,
+        "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-17.txt",
+        "provenance_id": "00000000-0000-4000-8000-000000000020",
+        "version": {
+          "last_write_utc": "2026-10-29T11:21:00Z",
+          "length": 4000000022
+        }
+      },
+      {
+        "$type": "managed_transcript",
+        "original_file_name": "OriginalFileName sample 34",
+        "is_staged": true,
+        "type": "IMAGE",
+        "file_name": "FileName sample 31",
+        "file_path": "/samples/FilePath-32.txt",
+        "file_size_bytes": 4000000033,
+        "is_forbidden": false,
+        "is_valid": true,
+        "is_image": false,
+        "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-32.txt",
+        "provenance_id": "00000000-0000-4000-8000-000000000035",
+        "version": {
+          "last_write_utc": "2026-10-29T11:36:00Z",
+          "length": 4000000037
+        }
+      },
+      {
+        "$type": "managed_transcript",
+        "original_file_name": "OriginalFileName sample 41",
+        "is_staged": true,
+        "type": "IMAGE",
+        "file_name": "FileName sample 38",
+        "file_path": "/samples/FilePath-39.txt",
+        "file_size_bytes": 4000000040,
+        "is_forbidden": false,
+        "is_valid": true,
+        "is_image": false,
+        "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-39.txt",
+        "provenance_id": "00000000-0000-4000-8000-000000000042",
+        "version": {
+          "last_write_utc": "2026-10-29T11:43:00Z",
+          "length": 4000000044
+        }
+      }
+    ],
+    "previewed_texts": [
+      {
+        "file_path": "/samples/FilePath-23.txt",
+        "provenance_id": "00000000-0000-4000-8000-000000000024",
+        "version": {
+          "last_write_utc": "2026-10-29T11:25:00Z",
+          "length": 4000000026
+        }
+      },
+      {
+        "file_path": "/samples/FilePath-27.txt",
+        "provenance_id": "00000000-0000-4000-8000-000000000028",
+        "version": {
+          "last_write_utc": "2026-10-29T11:29:00Z",
+          "length": 4000000030
+        }
+      }
+    ]
+  },
+  "selected_provider": "selected_provider sample 45",
+  "selected_profile": "selected_profile sample 46",
+  "selected_chat_template": "selected_chat_template sample 47",
+  "selected_tool_ids": [
+    "selected_tool_ids sample 48",
+    "selected_tool_ids sample 49"
+  ],
+  "include_date_time": true,
+  "data_source_options": {
+    "disable_data_sources": true,
+    "automatic_data_source_selection": true,
+    "automatic_validation": true,
+    "retrieval_mode": "EVERY_MESSAGE",
+    "preselected_data_source_ids": [
+      "preselected_data_source_ids sample 50",
+      "preselected_data_source_ids sample 51"
+    ]
+  },
+  "ai_selected_data_sources": [
+    {
+      "data_source": {
+        "$type_discriminator": "LOCAL_DIRECTORY",
+        "num": 7,
+        "id": "id sample 52",
+        "name": "name sample 53",
+        "description": "description sample 54",
+        "type": "LOCAL_FILE",
+        "embedding_id": "embedding_id sample 55",
+        "max_chunk_token_length": 46,
+        "chunk_overlap_token_length": 47,
+        "confidence_level": "UNTRUSTED",
+        "is_enterprise_configuration": true,
+        "enterprise_configuration_plugin_id": "00000000-0000-4000-8000-000000000058",
+        "max_matches": 8,
+        "outbound_data_restriction": "ONLY_LINKS_FROM_CHAT",
+        "path": "/samples/path-59.txt",
+        "file_patterns": "file_patterns sample 60",
+        "exclude_patterns": "exclude_patterns sample 61",
+        "max_file_size_megabytes": 52,
+        "include_subdirectories": true,
+        "include_hidden_files_and_folders": true
+      },
+      "ai_decision": {
+        "id": "id sample 63",
+        "reason": "reason sample 64",
+        "confidence": 2.25
+      },
+      "selected": true
+    },
+    {
+      "data_source": {
+        "$type_discriminator": "LOCAL_FILE",
+        "num": 7,
+        "id": "id sample 65",
+        "name": "name sample 66",
+        "description": "description sample 67",
+        "type": "LOCAL_FILE",
+        "embedding_id": "embedding_id sample 68",
+        "max_chunk_token_length": 59,
+        "chunk_overlap_token_length": 60,
+        "confidence_level": "UNTRUSTED",
+        "is_enterprise_configuration": true,
+        "enterprise_configuration_plugin_id": "00000000-0000-4000-8000-000000000071",
+        "max_matches": 8,
+        "outbound_data_restriction": "ONLY_LINKS_FROM_CHAT",
+        "file_path": "/samples/file_path-72.txt"
+      },
+      "ai_decision": {
+        "id": "id sample 73",
+        "reason": "reason sample 74",
+        "confidence": 2.25
+      },
+      "selected": true
+    }
+  ],
+  "data_security": "ALLOW_ANY",
+  "required_provider_confidence": "UNTRUSTED",
+  "required_outbound_data_restriction": {
+    "restriction": "ONLY_LINKS_FROM_CHAT",
+    "origin": "MAILBOX",
+    "reference": "Reference sample 75"
+  },
+  "web_addresses_written_by_models": [
+    "web_addresses_written_by_models sample 77",
+    "web_addresses_written_by_models sample 76"
+  ],
+  "name": "name sample 78",
+  "system_prompt": "system_prompt sample 79",
+  "blocks": [
+    {
+      "time": "2026-10-29T13:50:15+01:00",
+      "content_type": "UNKNOWN",
+      "content": {
+        "$type": "text",
+        "sources": [
+          {
+            "title": "Title sample 81",
+            "url": "URL sample 82",
+            "origin": "RAG"
+          },
+          {
+            "title": "Title sample 83",
+            "url": "URL sample 84",
+            "origin": "RAG"
+          }
+        ],
+        "file_attachments": [
+          {
+            "$type": "file",
+            "type": "IMAGE",
+            "file_name": "FileName sample 85",
+            "file_path": "/samples/FilePath-86.txt",
+            "file_size_bytes": 4000000087,
+            "is_forbidden": false,
+            "is_valid": true,
+            "is_image": true,
+            "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-86.txt",
+            "provenance_id": "00000000-0000-4000-8000-000000000088",
+            "version": {
+              "last_write_utc": "2026-10-29T12:29:00Z",
+              "length": 4000000090
+            }
+          },
+          {
+            "$type": "image",
+            "source_type": "LOCAL_PATH",
+            "type": "IMAGE",
+            "file_name": "FileName sample 91",
+            "file_path": "/samples/FilePath-92.txt",
+            "file_size_bytes": 4000000093,
+            "is_forbidden": false,
+            "is_valid": true,
+            "is_image": true,
+            "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-92.txt",
+            "provenance_id": "00000000-0000-4000-8000-000000000094",
+            "version": {
+              "last_write_utc": "2026-10-29T12:35:00Z",
+              "length": 4000000096
+            }
+          },
+          {
+            "$type": "managed_transcript",
+            "original_file_name": "OriginalFileName sample 100",
+            "is_staged": true,
+            "type": "IMAGE",
+            "file_name": "FileName sample 97",
+            "file_path": "/samples/FilePath-98.txt",
+            "file_size_bytes": 4000000099,
+            "is_forbidden": false,
+            "is_valid": true,
+            "is_image": false,
+            "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-98.txt",
+            "provenance_id": "00000000-0000-4000-8000-000000000101",
+            "version": {
+              "last_write_utc": "2026-10-29T12:42:00Z",
+              "length": 4000000103
+            }
+          }
+        ],
+        "tool_invocations": [
+          {
+            "order": 44,
+            "tool_id": "tool_id sample 105",
+            "tool_name": "tool_name sample 106",
+            "tool_icon": "tool_icon sample 107",
+            "tool_call_id": "tool_call_id sample 108",
+            "status": "SUCCESS",
+            "was_executed": true,
+            "status_message": "status_message sample 109",
+            "arguments": {
+              "argumentsKey sample 110": "arguments sample 111",
+              "argumentsKey sample 112": "arguments sample 113"
+            }
+          },
+          {
+            "order": 54,
+            "tool_id": "tool_id sample 115",
+            "tool_name": "tool_name sample 116",
+            "tool_icon": "tool_icon sample 117",
+            "tool_call_id": "tool_call_id sample 118",
+            "status": "SUCCESS",
+            "was_executed": true,
+            "status_message": "status_message sample 119",
+            "arguments": {
+              "argumentsKey sample 120": "arguments sample 121",
+              "argumentsKey sample 122": "arguments sample 123"
+            }
+          }
+        ],
+        "presentation": {
+          "kind": "SWOT_ANALYSIS",
+          "data": {
+            "sample": 124,
+            "text": "Gr\u00F6\u00DFe"
+          }
+        },
+        "source_passages": [
+          {
+            "source_url": "source_url sample 125",
+            "data_source_name": "data_source_name sample 126",
+            "path": "/samples/path-127.txt",
+            "category": "UNKNOWN",
+            "type": "UNKNOWN",
+            "provenance_id": "00000000-0000-4000-8000-000000000128",
+            "text": "text sample 129",
+            "surrounding_content": [
+              "surrounding_content sample 130",
+              "surrounding_content sample 131"
+            ],
+            "page_number": 72,
+            "end_page_number": 73,
+            "sheet_name": "sheet_name sample 134",
+            "start_row": 75,
+            "end_row": 76,
+            "start_line": 77,
+            "end_line": 78,
+            "chunk_number": 79
+          },
+          {
+            "source_url": "source_url sample 140",
+            "data_source_name": "data_source_name sample 141",
+            "path": "/samples/path-142.txt",
+            "category": "UNKNOWN",
+            "type": "UNKNOWN",
+            "provenance_id": "00000000-0000-4000-8000-000000000143",
+            "text": "text sample 144",
+            "surrounding_content": [
+              "surrounding_content sample 145",
+              "surrounding_content sample 146"
+            ],
+            "page_number": 87,
+            "end_page_number": 88,
+            "sheet_name": "sheet_name sample 149",
+            "start_row": 40,
+            "end_row": 41,
+            "start_line": 42,
+            "end_line": 43,
+            "chunk_number": 44
+          }
+        ],
+        "reported_usage": {
+          "prompt_tokens": 45,
+          "model_id": "model_id sample 156",
+          "block_count": 47
+        },
+        "text": "text sample 158"
+      },
+      "role": "UNKNOWN",
+      "hide_from_user": true
+    },
+    {
+      "time": "2026-10-29T15:09:15+01:00",
+      "content_type": "UNKNOWN",
+      "content": {
+        "$type": "image",
+        "sources": [
+          {
+            "title": "Title sample 160",
+            "url": "URL sample 161",
+            "origin": "RAG"
+          },
+          {
+            "title": "Title sample 162",
+            "url": "URL sample 163",
+            "origin": "RAG"
+          }
+        ],
+        "file_attachments": [
+          {
+            "$type": "file",
+            "type": "IMAGE",
+            "file_name": "FileName sample 164",
+            "file_path": "/samples/FilePath-165.txt",
+            "file_size_bytes": 4000000166,
+            "is_forbidden": false,
+            "is_valid": true,
+            "is_image": true,
+            "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-165.txt",
+            "provenance_id": "00000000-0000-4000-8000-000000000167",
+            "version": {
+              "last_write_utc": "2026-10-29T13:48:00Z",
+              "length": 4000000169
+            }
+          },
+          {
+            "$type": "image",
+            "source_type": "LOCAL_PATH",
+            "type": "IMAGE",
+            "file_name": "FileName sample 170",
+            "file_path": "/samples/FilePath-171.txt",
+            "file_size_bytes": 4000000172,
+            "is_forbidden": false,
+            "is_valid": true,
+            "is_image": true,
+            "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-171.txt",
+            "provenance_id": "00000000-0000-4000-8000-000000000173",
+            "version": {
+              "last_write_utc": "2026-10-29T13:54:00Z",
+              "length": 4000000175
+            }
+          },
+          {
+            "$type": "managed_transcript",
+            "original_file_name": "OriginalFileName sample 179",
+            "is_staged": true,
+            "type": "IMAGE",
+            "file_name": "FileName sample 176",
+            "file_path": "/samples/FilePath-177.txt",
+            "file_size_bytes": 4000000178,
+            "is_forbidden": false,
+            "is_valid": true,
+            "is_image": false,
+            "file_path_as_url": "/local/file?path=%2Fsamples%2FFilePath-177.txt",
+            "provenance_id": "00000000-0000-4000-8000-000000000180",
+            "version": {
+              "last_write_utc": "2026-10-29T14:01:00Z",
+              "length": 4000000182
+            }
+          }
+        ],
+        "source_type": "LOCAL_PATH",
+        "source": "source sample 183"
+      },
+      "role": "UNKNOWN",
+      "hide_from_user": true
+    }
+  ]
+}

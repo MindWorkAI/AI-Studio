@@ -17,5 +17,5 @@ public interface IDataSourceBase : IConfigurationObject
     /// <summary>
     /// Which type of data source is this?
     /// </summary>
-    public DataSourceType Type { get; init; }
+    public DataSourceType Type { get; set; }
 }

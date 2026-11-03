@@ -127,26 +127,7 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
             () => VisualBriefingLayoutCompiler.Compile(plan, content, response.Layout, response.Profile));
         
         var data = compiled.Data.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
-        data["_mwai"] = JsonSerializer.SerializeToElement(new
-        {
-            schemaVersion = VisualBriefingVersions.SCHEMA,
-            runtimeVersion = VisualBriefingVersions.RUNTIME,
-            aiStudioVersion = "validation",
-            
-            assets = content.AssetPlan.ToDictionary(
-                asset => asset.AssetId,
-                _ => "data:image/png;base64,AA==",
-                StringComparer.Ordinal),
-            
-            footer = new
-            {
-                createdWith = "validation",
-                models = "validation",
-                createdAt = "validation",
-                authors = "validation",
-                protection = "validation",
-            },
-        }, VisualBriefingJson.Canonical);
+        data["_mwai"] = JsonSerializer.SerializeToElement(VisualBriefingProtectedData.ForValidation(content.AssetPlan), VisualBriefingJson.Canonical);
         
         var validationData = JsonSerializer.SerializeToElement(data, VisualBriefingJson.Canonical);
         VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.DESIGN,
@@ -181,9 +162,10 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
           MindWork AI Studio owns all colors, typography, surfaces, and chart styling.
           """;
 
-    private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingPresentationArtifact? parent)
+    // Internal, so that a test can check the JSON this prompt carries:
+    internal static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingPresentationArtifact? parent)
     {
-        var parentJson = parent is null ? "none" : JsonSerializer.Serialize(new { parent.Layout, parent.Profile }, VisualBriefingJson.Canonical);
+        var parentJson = parent is null ? "none" : JsonSerializer.Serialize(new VisualBriefingParentDesign(parent.Layout, parent.Profile), VisualBriefingJson.Canonical);
         return $"""
                 Operation: {(parent is null ? "CREATE_DESIGN" : "CHANGE_DESIGN")}
                 Design instruction: {manifest.Settings.Instruction}

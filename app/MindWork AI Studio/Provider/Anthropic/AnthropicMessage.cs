@@ -10,4 +10,12 @@ namespace AIStudio.Provider.Anthropic;
 /// thinking blocks, and the thinking blocks have to return exactly as they arrived — reading and
 /// rebuilding them would risk changing them.
 /// </remarks>
-public sealed record AnthropicMessage(IList<JsonElement> Content, string Role = "assistant") : IMessage<IList<JsonElement>>;
+public sealed record AnthropicMessage(IList<JsonElement> Content, string Role = "assistant") : IMessage<IList<JsonElement>>
+{
+    //
+    // The properties of the parameters, declared again to be settable, as the messages demand it. Keep them in
+    // the order of the parameters, which is the order they get written in:
+    //
+    public IList<JsonElement> Content { get; set; } = Content;
+    public string Role { get; set; } = Role;
+}

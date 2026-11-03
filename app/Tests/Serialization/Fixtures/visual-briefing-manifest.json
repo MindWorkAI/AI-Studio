@@ -1,0 +1,137 @@
+{
+  "manifestVersion": 41,
+  "briefingId": "00000000-0000-4000-8000-000000000002",
+  "name": "name sample 3",
+  "author": "author sample 4",
+  "createdAtUtc": "2026-10-29T12:35:15+01:00",
+  "modifiedAtUtc": "2026-10-29T12:36:15+01:00",
+  "settings": {
+    "providerId": "providerId sample 7",
+    "modelId": "modelId sample 8",
+    "profileId": "profileId sample 9",
+    "targetLanguage": "EN_US",
+    "customTargetLanguage": "customTargetLanguage sample 10",
+    "audienceProfile": "STUDENTS",
+    "audienceAgeGroup": "CHILDREN",
+    "audienceOrganizationalLevel": "TRAINEES",
+    "audienceExpertise": "NON_EXPERTS",
+    "showSourceReferences": true,
+    "optimizeImages": true,
+    "instruction": "instruction sample 11",
+    "protectionLevel": "INTERNAL",
+    "customProtectionLevel": "customProtectionLevel sample 12"
+  },
+  "restrictions": {
+    "providerConfidence": "UNTRUSTED",
+    "dataSecurity": "ALLOW_ANY",
+    "outboundData": {
+      "restriction": "ONLY_LINKS_FROM_CHAT",
+      "origin": "MAILBOX",
+      "reference": "Reference sample 13"
+    },
+    "webAddressesWrittenByModels": [
+      "WebAddressesWrittenByModels sample 15",
+      "WebAddressesWrittenByModels sample 14"
+    ]
+  },
+  "sources": [
+    {
+      "sourceId": "00000000-0000-4000-8000-000000000016",
+      "kind": "VISUAL_ASSET",
+      "path": "/samples/path-17.txt",
+      "size": 4000000018,
+      "lastWriteTimeUtc": "2026-10-29T12:49:15+01:00",
+      "transcriptStatus": "CURRENT",
+      "isMedia": true,
+      "assetId": "assetId sample 20"
+    },
+    {
+      "sourceId": "00000000-0000-4000-8000-000000000021",
+      "kind": "VISUAL_ASSET",
+      "path": "/samples/path-22.txt",
+      "size": 4000000023,
+      "lastWriteTimeUtc": "2026-10-29T12:54:15+01:00",
+      "transcriptStatus": "CURRENT",
+      "isMedia": true,
+      "assetId": "assetId sample 25"
+    }
+  ],
+  "versions": [
+    {
+      "schemaVersion": 66,
+      "intermediateArtifactVersion": 67,
+      "evidenceContractVersion": 68,
+      "planContractVersion": 69,
+      "contentContractVersion": 70,
+      "designContractVersion": 71,
+      "versionNumber": 72,
+      "revisionId": "00000000-0000-4000-8000-000000000033",
+      "parentRevisionId": "00000000-0000-4000-8000-000000000034",
+      "createdAtUtc": "2026-10-29T13:05:15+01:00",
+      "editMode": "CHANGE_DESIGN",
+      "instruction": "instruction sample 36",
+      "documentHash": "documentHash sample 37",
+      "origin": "origin sample 38",
+      "fileName": "fileName sample 39",
+      "dataHash": "dataHash sample 40",
+      "assetHash": "assetHash sample 41",
+      "templateHash": "templateHash sample 42",
+      "cssHash": "cssHash sample 43",
+      "runtimeHash": "runtimeHash sample 44",
+      "contentArtifactId": "00000000-0000-4000-8000-000000000045",
+      "evidenceArtifactId": "00000000-0000-4000-8000-000000000046",
+      "planArtifactId": "00000000-0000-4000-8000-000000000047",
+      "presentationArtifactId": "00000000-0000-4000-8000-000000000048",
+      "buildId": "00000000-0000-4000-8000-000000000049",
+      "operationId": "00000000-0000-4000-8000-000000000050",
+      "modelContributions": [
+        {
+          "role": "PLAN",
+          "model": "Model sample 51"
+        },
+        {
+          "role": "PLAN",
+          "model": "Model sample 52"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 43,
+      "intermediateArtifactVersion": 44,
+      "evidenceContractVersion": 45,
+      "planContractVersion": 46,
+      "contentContractVersion": 47,
+      "designContractVersion": 48,
+      "versionNumber": 49,
+      "revisionId": "00000000-0000-4000-8000-000000000060",
+      "parentRevisionId": "00000000-0000-4000-8000-000000000061",
+      "createdAtUtc": "2026-10-29T13:32:15+01:00",
+      "editMode": "CHANGE_DESIGN",
+      "instruction": "instruction sample 63",
+      "documentHash": "documentHash sample 64",
+      "origin": "origin sample 65",
+      "fileName": "fileName sample 66",
+      "dataHash": "dataHash sample 67",
+      "assetHash": "assetHash sample 68",
+      "templateHash": "templateHash sample 69",
+      "cssHash": "cssHash sample 70",
+      "runtimeHash": "runtimeHash sample 71",
+      "contentArtifactId": "00000000-0000-4000-8000-000000000072",
+      "evidenceArtifactId": "00000000-0000-4000-8000-000000000073",
+      "planArtifactId": "00000000-0000-4000-8000-000000000074",
+      "presentationArtifactId": "00000000-0000-4000-8000-000000000075",
+      "buildId": "00000000-0000-4000-8000-000000000076",
+      "operationId": "00000000-0000-4000-8000-000000000077",
+      "modelContributions": [
+        {
+          "role": "PLAN",
+          "model": "Model sample 78"
+        },
+        {
+          "role": "PLAN",
+          "model": "Model sample 79"
+        }
+      ]
+    }
+  ]
+}

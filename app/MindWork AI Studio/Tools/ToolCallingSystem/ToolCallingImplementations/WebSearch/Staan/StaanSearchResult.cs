@@ -10,9 +10,9 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.
 /// </remarks>
 internal sealed record StaanSearchResult
 {
-    public string Title { get; init; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
 
-    public string Url { get; init; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 
-    public string Snippet { get; init; } = string.Empty;
+    public string Snippet { get; set; } = string.Empty;
 }

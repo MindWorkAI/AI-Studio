@@ -28,7 +28,9 @@ internal static class VisualBriefingJson
     /// and a mismatch makes the store discard the stored artifact. Any change here — a converter, a
     /// naming policy, an encoder — therefore invalidates every briefing that was ever written, which
     /// surfaces as a failed integrity check rather than as a build error. This is why enums stay numeric
-    /// here even though the persisted manifest writes their member names.
+    /// here even though the persisted manifest writes their member names. Unlike other options of the app,
+    /// these are not made read-only right here, because MWAIS0010 wants nothing but the object creation;
+    /// System.Text.Json locks them with their first use anyway.
     /// </remarks>
     [CanonicalJsonConfiguration]
     internal static JsonSerializerOptions Canonical { get; } = new()
@@ -38,6 +40,7 @@ internal static class VisualBriefingJson
         WriteIndented = false,
         Encoder = JavaScriptEncoder.Default,
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        TypeInfoResolver = VisualBriefingCanonicalJsonContext.Default,
     };
 
     /// <summary>
@@ -52,7 +55,7 @@ internal static class VisualBriefingJson
     /// defined outside the feature, such as the target language and the audience enums. Reading accepts
     /// numbers as well, so manifests written before this distinction existed keep loading.
     /// </remarks>
-    internal static JsonSerializerOptions Persistence { get; } = new()
+    internal static JsonSerializerOptions Persistence { get; } = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = false,
@@ -60,5 +63,6 @@ internal static class VisualBriefingJson
         Encoder = JavaScriptEncoder.Default,
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
         Converters = { new JsonStringEnumConverter() },
-    };
+        TypeInfoResolver = VisualBriefingPersistenceJsonContext.Default,
+    }.AsReadOnly();
 }
