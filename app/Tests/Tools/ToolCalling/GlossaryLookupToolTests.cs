@@ -100,7 +100,36 @@ public sealed class GlossaryLookupToolTests
         {
             Assert.That(result["entries"]!.AsArray(), Is.Empty);
             Assert.That(result["message"]!.GetValue<string>(), Is.Not.Empty);
+            Assert.That(result.ContainsKey("unavailable_glossaries"), Is.False);
         });
+    }
+
+    [Test]
+    public void AnUnreadableGlossaryIsNoGlossaryWithoutMatches()
+    {
+        var result = GlossaryLookupTool.BuildResult(
+        [
+            new(TRANSLATION_GLOSSARY, [], LoadFailed: true),
+            new(REFERENCE_GLOSSARY, [new GlossaryEntry("Muggel", "A person without magical abilities.")]),
+        ], page: 1);
+
+        var unavailable = result["unavailable_glossaries"]!.AsArray();
+        Assert.Multiple(() =>
+        {
+            Assert.That(unavailable, Has.Count.EqualTo(1));
+            Assert.That(unavailable[0]!["glossary_id"]!.GetValue<string>(), Is.EqualTo(TRANSLATION_GLOSSARY.Id));
+            Assert.That(unavailable[0]!["glossary"]!.GetValue<string>(), Is.EqualTo(TRANSLATION_GLOSSARY.Name));
+            Assert.That(result["entries"]!.AsArray(), Has.Count.EqualTo(1), "The readable glossary still counts.");
+            Assert.That(result["message"]!.GetValue<string>(), Does.Contain("could not be read"));
+        });
+    }
+
+    [Test]
+    public void AnUnreadableGlossaryNeverPassesForNoMatches()
+    {
+        var result = GlossaryLookupTool.BuildResult([new(TRANSLATION_GLOSSARY, [], LoadFailed: true)], page: 1);
+
+        Assert.That(result["message"]!.GetValue<string>(), Does.Not.Contain("No glossary term occurs"));
     }
 
     private static IReadOnlyList<string?> OfferedIds(ToolFunctionDefinition function) => function.Parameters

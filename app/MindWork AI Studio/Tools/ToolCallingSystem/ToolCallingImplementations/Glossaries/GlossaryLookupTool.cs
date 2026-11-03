@@ -124,8 +124,10 @@ public sealed class GlossaryLookupTool(SettingsManager settingsManager, Glossary
         var matches = new List<GlossaryMatches>();
         foreach (var glossary in glossaries.Where(glossary => chosenIds is null || chosenIds.Contains(glossary.Id)))
         {
-            var entries = await glossaryStore.LoadEntriesAsync(glossary.Id, token);
-            matches.Add(new(glossary, GlossaryMatcher.For(entries).FindEntries(text)));
+            var entries = await glossaryStore.TryLoadEntriesAsync(glossary.Id, token);
+            matches.Add(entries is null
+                ? new(glossary, [], LoadFailed: true)
+                : new(glossary, GlossaryMatcher.For(entries).FindEntries(text)));
         }
 
         return new ToolExecutionResult
@@ -191,7 +193,21 @@ public sealed class GlossaryLookupTool(SettingsManager settingsManager, Glossary
             ["entries"] = pageEntries,
         };
 
-        if (allEntries.Count == 0)
+        //
+        // A glossary which could not be read is no glossary without matches: its terms are unknown,
+        // and the model has to tell the user rather than assume that none of them occurs:
+        //
+        var unavailableGlossaries = matches.Where(match => match.LoadFailed).ToList();
+        if (unavailableGlossaries.Count > 0)
+        {
+            result["unavailable_glossaries"] = new JsonArray([..unavailableGlossaries.Select(match => new JsonObject
+            {
+                ["glossary_id"] = match.Glossary.Id,
+                ["glossary"] = match.Glossary.Name,
+            })]);
+            result["message"] = "Some glossaries could not be read, so their terms are unknown. Tell the user about it.";
+        }
+        else if (allEntries.Count == 0)
             result["message"] = "No glossary term occurs in the text.";
 
         return result;

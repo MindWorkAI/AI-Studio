@@ -42,7 +42,7 @@ public static class GlossaryPrompt
 
         var builder = new StringBuilder();
         builder.AppendLine("<GLOSSARY>");
-        foreach (var (glossary, entries) in sections)
+        foreach (var (glossary, entries, _) in sections)
         {
             var isTranslation = glossary.Type is GlossaryType.TRANSLATION;
             builder.AppendLine(isTranslation

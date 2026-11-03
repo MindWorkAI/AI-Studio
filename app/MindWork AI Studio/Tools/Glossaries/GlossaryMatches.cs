@@ -7,4 +7,6 @@ namespace AIStudio.Tools.Glossaries;
 /// </summary>
 /// <param name="Glossary">The glossary.</param>
 /// <param name="Entries">The matching entries.</param>
-public sealed record GlossaryMatches(Glossary Glossary, IReadOnlyList<GlossaryEntry> Entries);
+/// <param name="LoadFailed">True when the entries of the glossary could not be read, so it has no entries here
+/// although its terms might occur in the text.</param>
+public sealed record GlossaryMatches(Glossary Glossary, IReadOnlyList<GlossaryEntry> Entries, bool LoadFailed = false);
