@@ -27,13 +27,13 @@ public sealed class IntervalRunScheduleTests
         var tooEarly = schedule.TakeDue(START + TimeSpan.FromSeconds(30));
         var firstRound = schedule.TakeDue(START + FIRST_ROUND_DELAY);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tooEarly.IsRound, Is.False);
             Assert.That(tooEarly.DataSourceIds, Is.Empty);
             Assert.That(firstRound.IsRound, Is.True);
             Assert.That(firstRound.DataSourceIds, Is.EquivalentTo(new[] { WORK, PRIVATE }));
-        });
+        }
     }
 
     [Test]
@@ -79,11 +79,11 @@ public sealed class IntervalRunScheduleTests
         var rightAfterSettingBack = schedule.TakeDue(setBack).IsRound;
         var oneIntervalLater = schedule.TakeDue(setBack + INTERVAL).IsRound;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(rightAfterSettingBack, Is.False);
             Assert.That(oneIntervalLater, Is.True);
-        });
+        }
     }
 
     [Test]
@@ -97,12 +97,12 @@ public sealed class IntervalRunScheduleTests
         var rightAfterEditing = schedule.TakeDue(firstRound + TimeSpan.FromMinutes(6));
         var nextRound = schedule.TakeDue(firstRound + INTERVAL);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(rightAfterEditing.IsRound, Is.False);
             Assert.That(nextRound.IsRound, Is.True);
             Assert.That(nextRound.DataSourceIds, Is.EqualTo(new[] { PRIVATE }), "A mailbox which is no longer tracked is still synced.");
-        });
+        }
     }
 
     [Test]
@@ -143,13 +143,13 @@ public sealed class IntervalRunScheduleTests
         var retry = schedule.TakeDue(now + TimeSpan.FromMinutes(1));
         var afterTheRetry = schedule.TakeDue(now + TimeSpan.FromMinutes(2));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tooEarly.DataSourceIds, Is.Empty);
             Assert.That(retry.IsRound, Is.False);
             Assert.That(retry.DataSourceIds, Is.EqualTo(new[] { WORK }));
             Assert.That(afterTheRetry.DataSourceIds, Is.Empty, "A retry ran twice.");
-        });
+        }
     }
 
     [Test]
@@ -165,11 +165,11 @@ public sealed class IntervalRunScheduleTests
         var nextRound = schedule.TakeDue(firstRound + INTERVAL);
         var whenTheRetryWasDue = schedule.TakeDue(lastFailure + IntervalRunSchedule.RETRY_DELAYS[^1]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(nextRound.IsRound, Is.True);
             Assert.That(whenTheRetryWasDue.DataSourceIds, Is.Empty, "The round ran the data source already.");
-        });
+        }
     }
 
     [Test]
@@ -198,11 +198,11 @@ public sealed class IntervalRunScheduleTests
         var roundAfterWakingUp = schedule.TakeDue(morning).IsRound;
         var retryDelay = schedule.RecordServerOutOfReach(WORK, morning);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(roundAfterWakingUp, Is.True);
             Assert.That(retryDelay, Is.EqualTo(IntervalRunSchedule.RETRY_DELAYS[0]));
-        });
+        }
     }
 
     [Test]
@@ -231,11 +231,11 @@ public sealed class IntervalRunScheduleTests
         var unknownDelay = schedule.RecordServerOutOfReach("0d6b8e2a-4c1f-4b3e-9d7a-5e2c8f1a3b6d", now);
         var due = schedule.TakeDue(now + TimeSpan.FromMinutes(1));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unknownDelay, Is.Null);
             Assert.That(due.DataSourceIds, Is.Empty, "A deleted mailbox is still synced.");
-        });
+        }
     }
 
     private static IntervalRunSchedule StartSchedule()

@@ -36,6 +36,29 @@ public static class HostExtensions
         _ => "embeddings",
     };
     
+    /// <summary>
+    /// The largest image file, in bytes, which the engine accepts in a chat request, where we know of one.
+    /// </summary>
+    /// <remarks>
+    /// Like the limit of a cloud provider, see LLMProvidersExtensions.GetMaxImageSizeBytes, this
+    /// belongs to the API of the engine, not to the model. What we actually send is asked through
+    /// IImageSourceExtensions.MaxImageSizeBytesFor.
+    /// </remarks>
+    /// <param name="host">The engine.</param>
+    /// <returns>The size limit of one image file, or null when the engine states none we know of.</returns>
+    public static long? GetMaxImageSizeBytes(this Host host) => host switch
+    {
+        //
+        // llmman answers a chat request larger than 2 MiB with 413: its route /v1/chat/completions
+        // keeps the default limit of its web framework, read on 2026-10-22 at
+        // https://github.com/llmmanorg/llmman/blob/main/src/cmd/serve.rs. An image of 1 MiB takes
+        // about 1.33 MiB as base64, which leaves room for the text of the conversation:
+        //
+        Host.LLMMAN => 1_048_576,
+
+        _ => null,
+    };
+
     public static bool IsChatSupported(this Host host)
     {
         switch (host)

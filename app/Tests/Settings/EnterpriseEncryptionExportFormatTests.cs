@@ -69,11 +69,11 @@ public sealed class EnterpriseEncryptionExportFormatTests
         var settingsManager = CreateSettingsManager();
         await settingsManager.LoadSettings();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(File.Exists(this.SettingsPath), Is.False, "A new installation has no settings file yet.");
             Assert.That(settingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, Is.EqualTo(EnterpriseEncryptionFormat.V2));
-        });
+        }
     }
 
     [Test]
@@ -87,11 +87,11 @@ public sealed class EnterpriseEncryptionExportFormatTests
         await settingsManager.LoadSettings();
         await settingsManager.StoreSettings();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(settingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, Is.EqualTo(EnterpriseEncryptionFormat.V1));
             Assert.That(this.ReadStoredFormat(), Is.EqualTo(nameof(EnterpriseEncryptionFormat.V1)), "Once stored, the settings hold the format, and the shim has nothing left to do.");
-        });
+        }
     }
 
     [Test]

@@ -23,16 +23,6 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     [Parameter]
     public DataSourceLocalDirectory DataSource { get; set; }
 
-    /// <summary>
-    /// Whether the folder this data source reads must stay as it is.
-    /// </summary>
-    /// <remarks>
-    /// Set once the index holds something for this data source. The embedding is not locked along
-    /// with it: it can be changed, and DataSourceReindexWarning asks what that costs.
-    /// </remarks>
-    [Parameter]
-    public bool LockSource { get; set; }
-
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -73,6 +63,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private bool showExpertSettings;
     private bool revalidateAfterRender;
     private ConfidenceLevel dataConfidenceLevel = ConfidenceLevel.UNKNOWN;
+    private OutboundDataRestriction dataOutboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -127,6 +118,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
+            this.dataOutboundDataRestriction = this.DataSource.OutboundDataRestriction;
             this.dataMaxMatches = this.DataSource.MaxMatches;
         }
         
@@ -141,7 +133,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
 
         // A check asked for in code waits until the fields hold their new values, cf. ToggleExpertSettings:
         if (this.revalidateAfterRender)
@@ -215,9 +207,23 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
                 ? T("Audio and video files which this data source selects are skipped, because your transcription provider does not meet the confidence level this data source requires.")
                 : null;
 
-    private bool CanChangeSource => !this.IsEditing || !this.LockSource;
-
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
+
+    private OutboundDataRestriction OrganizationMinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction;
+
+    /// <summary>
+    /// The level the data source gets: the one chosen, as far as the organization allows it.
+    /// </summary>
+    /// <remarks>
+    /// The organization may rule out a level while the dialog is open, or after the data source was
+    /// stored with it. The choice itself stays, so the dialog shows it again once the organization
+    /// allows it again.
+    /// </remarks>
+    private OutboundDataRestriction SelectedOutboundDataRestriction
+    {
+        get => this.dataOutboundDataRestriction.StricterOf(this.OrganizationMinimumOutboundDataRestriction);
+        set => this.dataOutboundDataRestriction = value;
+    }
 
     private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
         ? T("No embedding selected")
@@ -244,12 +250,10 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Type = DataSourceType.LOCAL_DIRECTORY,
         EmbeddingId = this.dataEmbeddingId,
 
-        // Kept out of reach of the form while the source is locked, so a stale field cannot point an
-        // indexed data source somewhere else:
-        Path = this.CanChangeSource ? this.dataPath : this.DataSource.Path,
+        Path = this.dataPath,
         FilePatterns = this.NormalizeFilePatterns(),
 
-        // Kept as typed, since the line breaks group the entries for the eye:
+        // Unlike the file patterns, no normalizing, since the exclusion editor passes on valid lists only:
         ExcludePatterns = this.dataExcludePatterns,
         MaxFileSizeMegabytes = this.dataMaxFileSizeMegabytes,
         IncludeSubdirectories = this.dataIncludeSubdirectories,
@@ -257,17 +261,26 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
+        OutboundDataRestriction = this.SelectedOutboundDataRestriction,
         MaxMatches = this.dataMaxMatches,
     };
 
     private async Task Store()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
 
+        await this.StoreValidatedDataSourceAsync();
+    }
+
+    /// <summary>
+    /// Continues Save after form validation, asking before the draft is returned to its caller.
+    /// </summary>
+    internal async Task StoreValidatedDataSourceAsync()
+    {
         var addedDataSource = this.CreateDataSource();
 
         //
@@ -288,7 +301,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private string NormalizeFilePatterns() => FileNamePatterns.Normalize(this.dataFilePatterns);
 
-    private void RestoreDefaultExcludePatterns() => this.dataExcludePatterns = FileExclusions.DEFAULT_PATTERNS;
+    private void RestoreDefaultFilePatterns() => this.dataFilePatterns = DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS;
 
     /// <summary>
     /// Gives the fields which are checked against each other a fresh verdict: the embedding provider

@@ -62,11 +62,11 @@ public sealed class LeftOverConfigurationObjectsTests
     {
         var wasChanged = await PluginConfigurationObjectDescriptors.CHAT_TEMPLATE.CleanLeftOverAsync([new AvailablePlugin()], new HashSet<Guid>(), new HashSet<Guid> { PLUGIN_ID }, []);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(wasChanged, Is.False);
             Assert.That(this.settingsManager.ConfigurationData.ChatTemplates, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -74,11 +74,11 @@ public sealed class LeftOverConfigurationObjectsTests
     {
         var wasChanged = await PluginConfigurationObjectDescriptors.CHAT_TEMPLATE.CleanLeftOverAsync([new AvailablePlugin()], new HashSet<Guid>(), new HashSet<Guid>(), []);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(wasChanged, Is.True, "A plugin which started and no longer defines the template has dropped it, or the test above checks nothing.");
             Assert.That(this.settingsManager.ConfigurationData.ChatTemplates, Is.Empty);
-        });
+        }
     }
 
     /// <summary>

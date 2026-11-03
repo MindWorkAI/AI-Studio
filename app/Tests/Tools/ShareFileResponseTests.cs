@@ -34,11 +34,11 @@ public sealed class ShareFileResponseTests
         var response = JsonSerializer.Deserialize<ShareFileResponse>($$"""{"outcome":"{{outcome}}","issue":"The main window is not available."}""", AS_THE_RUST_SERVICE_READS_IT);
 
         Assert.That(response, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response!.Outcome, Is.EqualTo(expectedOutcome));
             Assert.That(response.Issue, Is.EqualTo("The main window is not available."));
-        });
+        }
     }
 
     [Test]

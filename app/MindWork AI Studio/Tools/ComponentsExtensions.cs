@@ -85,6 +85,7 @@ public static class ComponentsExtensions
     {
         Components.GRAMMAR_SPELLING_ASSISTANT => TB("Grammar & Spelling Assistant"),
         Components.TEXT_SUMMARIZER_ASSISTANT => TB("Text Summarizer Assistant"),
+        Components.SWOT_ANALYSIS_ASSISTANT => TB("SWOT Analysis Assistant"),
         Components.ICON_FINDER_ASSISTANT => TB("Icon Finder Assistant"),
         Components.TRANSLATION_ASSISTANT => TB("Translation Assistant"),
         Components.REWRITE_ASSISTANT => TB("Rewrite Assistant"),
@@ -100,7 +101,7 @@ public static class ComponentsExtensions
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         Components.BATCH_PROCESSING_ASSISTANT => TB("Batch Processing Assistant"),
-        Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
+        Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Assistant"),
         Components.VISUAL_BRIEFING_ASSISTANT => TB("Visual Briefing Assistant"),
         Components.META_ASSISTANT => TB("Assistant Builder"),
         Components.LOG_VIEWER_ASSISTANT => TB("Log Viewer Assistant"),
@@ -121,6 +122,7 @@ public static class ComponentsExtensions
         Components.ICON_FINDER_ASSISTANT => new(Event.SEND_TO_ICON_FINDER_ASSISTANT, Routes.ASSISTANT_ICON_FINDER),
         Components.GRAMMAR_SPELLING_ASSISTANT => new(Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Routes.ASSISTANT_GRAMMAR_SPELLING),
         Components.TEXT_SUMMARIZER_ASSISTANT => new(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Routes.ASSISTANT_SUMMARIZER),
+        Components.SWOT_ANALYSIS_ASSISTANT => new(Event.SEND_TO_SWOT_ANALYSIS_ASSISTANT, Routes.ASSISTANT_SWOT_ANALYSIS),
         Components.LEGAL_CHECK_ASSISTANT => new(Event.SEND_TO_LEGAL_CHECK_ASSISTANT, Routes.ASSISTANT_LEGAL_CHECK),
         Components.SYNONYMS_ASSISTANT => new(Event.SEND_TO_SYNONYMS_ASSISTANT, Routes.ASSISTANT_SYNONYMS),
         Components.MY_TASKS_ASSISTANT => new(Event.SEND_TO_MY_TASKS_ASSISTANT, Routes.ASSISTANT_MY_TASKS),
@@ -144,6 +146,7 @@ public static class ComponentsExtensions
         Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Agenda.MinimumProviderConfidence : default,
         Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Coding.MinimumProviderConfidence : default,
         Components.TEXT_SUMMARIZER_ASSISTANT => settingsManager.ConfigurationData.TextSummarizer.PreselectOptions ? settingsManager.ConfigurationData.TextSummarizer.MinimumProviderConfidence : default,
+        Components.SWOT_ANALYSIS_ASSISTANT => settingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions ? settingsManager.ConfigurationData.SWOTAnalysis.MinimumProviderConfidence : default,
         Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.ConfigurationData.EMail.MinimumProviderConfidence : default,
         Components.LEGAL_CHECK_ASSISTANT => settingsManager.ConfigurationData.LegalCheck.PreselectOptions ? settingsManager.ConfigurationData.LegalCheck.MinimumProviderConfidence : default,
         Components.SYNONYMS_ASSISTANT => settingsManager.ConfigurationData.Synonyms.PreselectOptions ? settingsManager.ConfigurationData.Synonyms.MinimumProviderConfidence : default,
@@ -152,6 +155,7 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.MinimumProviderConfidence : default,
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.MinimumProviderConfidence : default,
         Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence : default,
+        Components.META_ASSISTANT => settingsManager.ConfigurationData.AssistantBuilder.PreselectOptions ? settingsManager.ConfigurationData.AssistantBuilder.MinimumProviderConfidence : default,
         Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.MinimumProviderConfidence,
         
         // The minimum confidence for the Document Analysis Assistant is set per policy.
@@ -175,6 +179,7 @@ public static class ComponentsExtensions
         Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Agenda.PreselectedProvider) : Settings.Provider.NONE,
         Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Coding.PreselectedProvider) : Settings.Provider.NONE,
         Components.TEXT_SUMMARIZER_ASSISTANT => settingsManager.ConfigurationData.TextSummarizer.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.TextSummarizer.PreselectedProvider) : Settings.Provider.NONE,
+        Components.SWOT_ANALYSIS_ASSISTANT => settingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.SWOTAnalysis.PreselectedProvider) : Settings.Provider.NONE,
         Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.EMail.PreselectedProvider) : Settings.Provider.NONE,
         Components.LEGAL_CHECK_ASSISTANT => settingsManager.ConfigurationData.LegalCheck.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.LegalCheck.PreselectedProvider) : Settings.Provider.NONE,
         Components.SYNONYMS_ASSISTANT => settingsManager.ConfigurationData.Synonyms.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Synonyms.PreselectedProvider) : Settings.Provider.NONE,
@@ -184,6 +189,7 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.ERI.PreselectedProvider) : Settings.Provider.NONE,
         Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.I18N.PreselectedProvider) : Settings.Provider.NONE,
         Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : Settings.Provider.NONE,
+        Components.META_ASSISTANT => settingsManager.ConfigurationData.AssistantBuilder.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AssistantBuilder.PreselectedProvider) : Settings.Provider.NONE,
         Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.GetProviderById(settingsManager.ConfigurationData.VisualBriefing.PreselectedProvider),
 
         // The Document Analysis Assistant does not have a preselected provider at the component level.

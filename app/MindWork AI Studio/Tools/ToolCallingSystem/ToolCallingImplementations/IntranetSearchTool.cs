@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
 
@@ -282,13 +283,18 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
         //
         // A search without hits brought nothing of the intranet into the chat, so it demands
         // nothing. Hits do, like a search of the wiki: they are internal, and so are the pages
-        // and documents the model opens next.
+        // and documents the model opens next. What the model read of each hit read along can be
+        // read under its source:
         //
         var hasHits = hits.Count > 0;
         List<Source> sources = hasHits ? [new Source(string.Format(TB("Intranet search for “{0}”"), query), searchUrl.AbsoluteUri, SourceOrigin.TOOL)] : [];
-        sources.AddRange(readContents
-            .Where(content => content.Failure is null && !string.IsNullOrWhiteSpace(content.Markdown))
-            .Select(content => new Source(string.IsNullOrWhiteSpace(content.Title) ? content.FinalUrl.AbsoluteUri : content.Title, content.FinalUrl.AbsoluteUri, SourceOrigin.TOOL)));
+        List<SourcePassage> passages = [];
+        foreach (var content in readContents.Where(content => content.Failure is null && !string.IsNullOrWhiteSpace(content.Markdown)))
+        {
+            var hitSource = new Source(string.IsNullOrWhiteSpace(content.Title) ? content.FinalUrl.AbsoluteUri : content.Title, content.FinalUrl.AbsoluteUri, SourceOrigin.TOOL);
+            sources.Add(hitSource);
+            passages.Add(hitSource.ToWebPagePassage(content.Markdown));
+        }
 
         var (requiredProviderConfidence, requiredOutboundDataRestriction) = GetRequirements(hits.Count, await ReadWebPageTool.ReadInternalPageOutboundDataRestrictionAsync(toolSettingsService));
         return new ToolExecutionResult
@@ -300,6 +306,7 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
                 ["results"] = BuildResults(hits, contentsByIndex),
             },
             Sources = sources,
+            Passages = passages,
             RequiredProviderConfidence = requiredProviderConfidence,
             RequiredOutboundDataRestriction = requiredOutboundDataRestriction,
         };

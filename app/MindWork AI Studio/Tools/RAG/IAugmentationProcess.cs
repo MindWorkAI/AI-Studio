@@ -28,6 +28,6 @@ public interface IAugmentationProcess
     /// <param name="chatThread">The chat thread.</param>
     /// <param name="retrievalContexts">The retrieval contexts that were issued by the retrieval process.</param>
     /// <param name="token">The cancellation token.</param>
-    /// <returns>The altered chat thread.</returns>
-    public Task<ChatThread> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default);
+    /// <returns>The altered chat thread, together with the retrieval contexts handed to the AI.</returns>
+    public Task<AugmentationResult> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default);
 }

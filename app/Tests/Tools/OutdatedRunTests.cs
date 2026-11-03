@@ -30,11 +30,11 @@ public sealed class OutdatedRunTests
     [Test]
     public void ARunWhichIsStillPreparingCarriesOn()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceEmbeddingService.IsRunOutdated(null, OTHER_SIGNATURE), Is.False, "The run has not resolved its embedding provider yet, so it has embedded nothing so far.");
             Assert.That(DataSourceEmbeddingService.IsRunOutdated(null, DataSourceRunSignature.NONE), Is.False, "The run has not resolved its embedding provider yet, so it has sent nothing anywhere so far.");
-        });
+        }
     }
 
     [Test]
@@ -79,11 +79,11 @@ public sealed class OutdatedRunTests
         var runSignature = DataSourceEmbeddingService.GetRunSignature(dataSource, embeddingProvider, ConfidenceLevel.MEDIUM);
         var currentRunSignature = DataSourceEmbeddingService.GetRunSignature(changedDataSource, embeddingProvider, ConfidenceLevel.MEDIUM);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceEmbeddingService.IsRunOutdated(runSignature, currentRunSignature), Is.True, "The run works with files which no longer belong to the data source, or misses the ones which now do.");
             Assert.That(currentRunSignature.EmbeddingSignature, Is.EqualTo(runSignature.EmbeddingSignature), "Every vector stored so far stays valid, so the index must not be built anew.");
-        });
+        }
     }
 
     [TestCase("name and description")]
@@ -112,7 +112,7 @@ public sealed class OutdatedRunTests
     }
 
     [Test]
-    public void ASingleFileHasNoSelection()
+    public void RelocatingASingleFileStopsTheOldRunWithoutInvalidatingItsEmbeddings()
     {
         var dataSource = new DataSourceLocalFile
         {
@@ -125,7 +125,26 @@ public sealed class OutdatedRunTests
             FilePath = "/tmp/test-data/report.pdf",
         };
 
-        Assert.That(DataSourceEmbeddingService.GetRunSignature(dataSource, TestEmbeddingProvider(), ConfidenceLevel.MEDIUM).SelectionSignature, Is.Empty, "The file is the one document of its data source, so there is nothing to choose among.");
+        var before = DataSourceEmbeddingService.GetRunSignature(dataSource, TestEmbeddingProvider(), ConfidenceLevel.MEDIUM);
+        var after = DataSourceEmbeddingService.GetRunSignature(dataSource with { FilePath = "/tmp/moved/report.pdf" }, TestEmbeddingProvider(), ConfidenceLevel.MEDIUM);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(DataSourceEmbeddingService.IsRunOutdated(before, after), Is.True);
+            Assert.That(after.EmbeddingSignature, Is.EqualTo(before.EmbeddingSignature));
+        }
+    }
+
+    [Test]
+    public void RelocatingAFolderStopsTheOldRunWithoutInvalidatingItsEmbeddings()
+    {
+        var dataSource = DataSource(ConfidenceLevel.LOW);
+        var before = DataSourceEmbeddingService.GetRunSignature(dataSource, TestEmbeddingProvider(), ConfidenceLevel.MEDIUM);
+        var after = DataSourceEmbeddingService.GetRunSignature(dataSource with { Path = "/tmp/moved" }, TestEmbeddingProvider(), ConfidenceLevel.MEDIUM);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(DataSourceEmbeddingService.IsRunOutdated(before, after), Is.True);
+            Assert.That(after.EmbeddingSignature, Is.EqualTo(before.EmbeddingSignature));
+        }
     }
 
     [Test]

@@ -39,9 +39,15 @@
                     </MudTd>
                     <MudTd>
                         <MudMarkdown Value="@context.GetConfidence(this.SettingsManager).Description" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                        @if (this.SettingsManager.IsProviderProhibited(context))
+                        {
+                            <MudAlert Severity="Severity.Warning" Dense="@true" Class="mt-2">
+                                @T("The use of this provider has been prohibited by your organization. Therefore, it is untrusted, and you cannot change its confidence level.")
+                            </MudAlert>
+                        }
                     </MudTd>
                     <MudTd Style="vertical-align: top;">
-                        <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsCustomConfidenceSchemeLocked()">
+                        <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsConfidenceLevelLocked(context)">
                             @foreach (var confidenceLevel in Enum.GetValues<ConfidenceLevel>().OrderBy(n => n))
                             {
                                 if(confidenceLevel is ConfidenceLevel.NONE or ConfidenceLevel.UNKNOWN)

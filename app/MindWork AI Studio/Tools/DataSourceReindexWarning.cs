@@ -2,6 +2,7 @@ using System.Text;
 
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -19,6 +20,10 @@ namespace AIStudio.Tools;
 /// Nothing is asked when nothing is lost. A data source only reaches the question when the edit
 /// really changes its embedding signature and when the index already holds something for it, so
 /// renaming an embedding provider or editing a data source nobody has indexed yet stays silent.
+/// A new location of a local file or folder has a question of its own, under the same condition of
+/// a stored index: the signature stays, but every file which is not found unchanged at the new
+/// location is prepared again. When the signature changes as well, only its question is asked,
+/// since everything is prepared again anyway.
 /// </remarks>
 public static class DataSourceReindexWarning
 {
@@ -84,11 +89,60 @@ public static class DataSourceReindexWarning
         DataSourceEmbeddingProviders.TryResolve(settingsManager, before, out var resolvedBeforeProvider);
         var beforeProvider = resolvedBeforeProvider ?? EmbeddingProvider.NONE;
 
-        if (!EmbeddingChangeImpact.AffectsStoredIndex(before, beforeProvider, after, afterProvider))
+        // Everything is prepared again, wherever the files are, so this question covers a new location as well:
+        if (EmbeddingChangeImpact.AffectsStoredIndex(before, beforeProvider, after, afterProvider))
+        {
+            var affected = await embeddingService.GetDataSourcesWithStoredIndexAsync([after], token);
+            return await ConfirmAsync(dialogService, affected, !afterProvider.IsSelfHosted);
+        }
+
+        if (!HasLocationChanged(before, after))
             return true;
 
-        var affected = await embeddingService.GetDataSourcesWithStoredIndexAsync([after], token);
-        return await ConfirmAsync(dialogService, affected, !afterProvider.IsSelfHosted);
+        var indexed = await embeddingService.GetDataSourcesWithStoredIndexAsync([after], token);
+        return indexed.Count == 0 || await ConfirmNewLocationAsync(dialogService, !afterProvider.IsSelfHosted);
+    }
+
+    private static bool HasLocationChanged(IIndexedDataSource before, IIndexedDataSource after) => (before, after) switch
+    {
+        (DataSourceLocalDirectory oldFolder, DataSourceLocalDirectory newFolder) => !string.Equals(oldFolder.Path, newFolder.Path, StringComparison.Ordinal),
+        (DataSourceLocalFile oldFile, DataSourceLocalFile newFile) => !string.Equals(oldFile.FilePath, newFile.FilePath, StringComparison.Ordinal),
+        _ => false,
+    };
+
+    /// <summary>
+    /// Asks before a local file or folder with a stored index is saved with a new location.
+    /// </summary>
+    /// <remarks>
+    /// The conditions for keeping a file are the ones FileSourceIndexer.FindRelocatedFile checks.
+    /// </remarks>
+    /// <param name="dialogService">The dialog service to ask with.</param>
+    /// <param name="usesCloudEmbedding">Whether preparing a file again costs money.</param>
+    /// <returns>True when the edit may be saved.</returns>
+    private static async Task<bool> ConfirmNewLocationAsync(IDialogService dialogService, bool usesCloudEmbedding)
+    {
+        var body = new StringBuilder();
+        body.AppendLine(TB("AI Studio keeps what it has already prepared for every file it finds unchanged at the new location, that is, of the same type and with the same size and modification time. In a folder, such a file also has to keep its name and the subfolder it is in."));
+        body.AppendLine();
+        body.AppendLine(TB("Every other file goes to your embedding provider once more, which takes a while with many files. Files missing at the new location are removed from the index, while your files on disk stay as they are."));
+
+        if (usesCloudEmbedding)
+        {
+            body.AppendLine();
+            body.AppendLine(TB("Your embedding provider runs in the cloud, so preparing files again costs money."));
+        }
+
+        body.AppendLine();
+        body.AppendLine(TB("Do you want to apply this change anyway?"));
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.MarkdownBody, body.ToString() },
+        };
+
+        var dialogReference = await dialogService.ShowAsync<ConfirmDialog>(TB("New Location for This Data Source"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is not null && !dialogResult.Canceled;
     }
 
     /// <summary>

@@ -13,6 +13,9 @@ public sealed class RetrievalImageContext : IRetrievalContext, IImageSource
     public required RetrievalContentCategory Category { get; init; }
 
     /// <inheritdoc />
+    public string SourceCategory { get; init; } = string.Empty;
+
+    /// <inheritdoc />
     public required RetrievalContentType Type { get; init; }
 
     /// <inheritdoc />

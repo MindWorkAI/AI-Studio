@@ -1,0 +1,15 @@
+<MudExpansionPanels Dense="@true" Elevation="0" Class="@this.Class">
+    <MudExpansionPanel Dense="@true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD" Expanded="@this.Expanded" ExpandedChanged="@this.ExpandedChanged">
+        <TitleContent>
+            <div class="d-flex align-center">
+                <MudIcon Icon="@this.HeaderIcon" Color="@this.IconColor" Class="mr-3"/>
+                <MudText Typo="Typo.button">
+                    @this.HeaderText
+                </MudText>
+            </div>
+        </TitleContent>
+        <ChildContent>
+            @this.ChildContent
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>

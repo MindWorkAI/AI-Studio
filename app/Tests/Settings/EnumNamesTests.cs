@@ -35,11 +35,11 @@ public sealed class EnumNamesTests
     [Test]
     public void SeveralNamesDoNotCount()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EnumNames.TryParse<DataSourceRetrievalMode>("SEMANTIC_SEARCH, EVERY_MESSAGE", out _), Is.False, "Enum.TryParse would combine them to EVERY_MESSAGE.");
             Assert.That(EnumNames.TryParse<ConfidenceLevel>("HIGH, MEDIUM", out _), Is.False, "Enum.TryParse would combine them to a confidence level above HIGH.");
-        });
+        }
     }
 
     [TestCase(null)]

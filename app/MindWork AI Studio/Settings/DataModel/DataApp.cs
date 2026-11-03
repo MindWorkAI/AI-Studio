@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 
+using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Settings.DataModel;
@@ -40,6 +41,12 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool EnableSpellchecking { get; set; }
 
     /// <summary>
+    /// Should the message about an exported file close after a few seconds? When false, it stays until
+    /// the user closes it, so that its buttons to the file remain at hand.
+    /// </summary>
+    public bool CloseExportMessagesAutomatically { get; set; }
+
+    /// <summary>
     /// If and when we should look for updates.
     /// </summary>
     public UpdateInterval UpdateInterval { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UpdateInterval, UpdateInterval.HOURLY);
@@ -58,6 +65,49 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Which page should be opened first when the app starts?
     /// </summary>
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
+
+    /// <summary>
+    /// How large AI Studio shows its interface on the screens the user chose a size for, the most
+    /// recently set first.
+    /// </summary>
+    /// <remarks>
+    /// Kept per screen, as the operating systems keep their scaling per monitor: a laptop calls for
+    /// another size than an external monitor, and the same scale looks different on screens of
+    /// different densities. A screen missing here gets InterfaceSize.APP_DEFAULT when it is the
+    /// screen of a laptop, and InterfaceSize.SYSTEM_SCALING otherwise. The
+    /// user's own, like the scaling of the operating system: no configuration plugin manages it.
+    /// </remarks>
+    public List<InterfaceScreenSize> InterfaceScreenSizes { get; set; } = [];
+
+    /// <summary>
+    /// How many screens keep their interface size. Setting the size of one more forgets the screen
+    /// whose size was set the longest time ago, which then gets its default size again.
+    /// </summary>
+    public const int MAX_REMEMBERED_INTERFACE_SCREENS = 20;
+
+    /// <summary>
+    /// What the user chose for the given screen, or null when they chose nothing for it.
+    /// </summary>
+    /// <param name="screenKey">The screen, as the runtime names it.</param>
+    public InterfaceScreenSize? GetInterfaceScreenSize(string screenKey) => this.InterfaceScreenSizes.FirstOrDefault(screen => screen.ScreenKey == screenKey);
+
+    /// <summary>
+    /// Remembers what the user chose for a screen, as the most recently set one.
+    /// </summary>
+    /// <remarks>
+    /// Keeps MAX_REMEMBERED_INTERFACE_SCREENS screens at most and forgets the ones beyond, those whose
+    /// size was set the longest time ago. Replaces the list instead of changing it, since the
+    /// InterfaceSizeService may read it at the same time.
+    /// </remarks>
+    /// <param name="screenSize">What the user chose for the screen.</param>
+    public void RememberInterfaceScreenSize(InterfaceScreenSize screenSize)
+    {
+        this.InterfaceScreenSizes = this.InterfaceScreenSizes
+            .Where(screen => screen.ScreenKey != screenSize.ScreenKey)
+            .Prepend(screenSize)
+            .Take(MAX_REMEMBERED_INTERFACE_SCREENS)
+            .ToList();
+    }
 
     /// <summary>
     /// Whether an alert dialog should be shown when prompt-injection content is blocked.
@@ -191,6 +241,17 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should the user be allowed to add transcription providers?
     /// </summary>
     public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
+
+    /// <summary>
+    /// The providers an organization prohibited, for LLMs, embeddings, and transcriptions alike.
+    /// </summary>
+    /// <remarks>
+    /// A prohibition names the operator of an API, not a family of models: prohibiting the API of a
+    /// model maker leaves its models reachable through a hub or a self-hosted server. Providers the
+    /// user set up before stay in the settings, so they are back once the prohibition ends, but
+    /// AI Studio neither offers nor contacts them, see SettingsManager.IsProviderProhibited.
+    /// </remarks>
+    public HashSet<LLMProviders> ProhibitedProviders { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ProhibitedProviders, []);
 
     /// <summary>
     /// Should the user be allowed to add mailboxes?
@@ -337,7 +398,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// Settings for indexing local data sources.
     /// </summary>
-    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
+    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new(x => x.App.DataSourceIndexing);
 
     /// <summary>
     /// List of assistants that should be hidden from the UI.

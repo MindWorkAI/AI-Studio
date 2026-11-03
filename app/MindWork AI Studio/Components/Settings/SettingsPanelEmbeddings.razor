@@ -44,6 +44,12 @@
 
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
+                        @if (this.SettingsManager.IsProviderProhibited(context.UsedLLMProvider))
+                        {
+                            <MudTooltip Text="@T("The use of this embedding provider has been prohibited by your organization.")">
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Block" Disabled="true"/>
+                            </MudTooltip>
+                        }
                         @if (context.IsTrustedForDataSourceSecurityChecks(this.SettingsManager))
                         {
                             <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted embedding provider is trusted for data source security checks. Local data can be sent to it without security warnings.") : T("This embedding provider is trusted by your organization for data source security checks. Local data can be sent to it without security warnings."))">
@@ -62,7 +68,7 @@
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Key" OnClick="@(() => this.EditEmbeddingProvider(context))"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("Test")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Api" OnClick="@(() => this.TestEmbeddingProvider(context))"/>
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Api" OnClick="@(() => this.TestEmbeddingProvider(context))" Disabled="@this.SettingsManager.IsProviderProhibited(context.UsedLLMProvider)"/>
                             </MudTooltip>
                         }
                         else
@@ -78,7 +84,7 @@
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteEmbeddingProvider(context))"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("Test")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Api" OnClick="@(() => this.TestEmbeddingProvider(context))"/>
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Api" OnClick="@(() => this.TestEmbeddingProvider(context))" Disabled="@this.SettingsManager.IsProviderProhibited(context.UsedLLMProvider)"/>
                             </MudTooltip>
                         }
                     </MudStack>

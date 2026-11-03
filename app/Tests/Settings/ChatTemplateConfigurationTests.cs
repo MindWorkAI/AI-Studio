@@ -7,8 +7,9 @@ using Lua.Standard;
 namespace AIStudio.Tests.Settings;
 
 /// <summary>
-/// Checks the tools and data sources a chat template carries, across the two surfaces which have
-/// to agree on them: the Lua a configuration plugin states, and the Lua the app exports.
+/// Checks the profile, provider, workspace, tools, and data sources a chat template carries, across
+/// the two surfaces which have to agree on them: the Lua a configuration plugin states, and the Lua
+/// the app exports.
 /// </summary>
 /// <remarks>
 /// The interesting part is not that a value survives, but that the difference between "this
@@ -41,7 +42,7 @@ public sealed class ChatTemplateConfigurationTests
 
         var read = await ExportAndReadBackAsync(written);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.ToolIds, Is.EquivalentTo(written.ToolIds!));
             Assert.That(read.DataSourceOptions, Is.Not.Null);
@@ -50,7 +51,7 @@ public sealed class ChatTemplateConfigurationTests
             Assert.That(read.DataSourceOptions.AutomaticValidation, Is.True);
             Assert.That(read.DataSourceOptions.RetrievalMode, Is.EqualTo(DataSourceRetrievalMode.EVERY_MESSAGE), "Semantic search is the default, so only the other choice shows that the export carries it.");
             Assert.That(read.DataSourceOptions.PreselectedDataSourceIds, Is.EqualTo(written.DataSourceOptions!.PreselectedDataSourceIds));
-        });
+        }
     }
 
     [Test]
@@ -69,13 +70,13 @@ public sealed class ChatTemplateConfigurationTests
 
         var read = await ExportAndReadBackAsync(written);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.DataSourceOptions, Is.Not.Null);
             Assert.That(read.DataSourceOptions!.AutomaticDataSourceSelection, Is.True, "Letting an agent pick the sources is the one thing only a chat template can state, so it must not be lost on the way through Lua.");
             Assert.That(read.DataSourceOptions.PreselectedDataSourceIds, Is.Empty);
             Assert.That(read.ToolIds, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -84,19 +85,22 @@ public sealed class ChatTemplateConfigurationTests
         var written = NewTemplate();
         Assert.That(written.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(luaCode, Does.Not.Contain("ToolIds"));
             Assert.That(luaCode, Does.Not.Contain("DataSourceOptions"));
-        });
+            Assert.That(luaCode, Does.Not.Contain("ProviderId"));
+            Assert.That(luaCode, Does.Not.Contain("ProfileId"));
+            Assert.That(luaCode, Does.Not.Contain("WorkspaceName"));
+        }
 
         var read = await ParseAsync(luaCode);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.ToolIds, Is.Null, "A template without a tool selection must stay without one, so the chat keeps using its own default.");
             Assert.That(read.DataSourceOptions, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -126,14 +130,14 @@ public sealed class ChatTemplateConfigurationTests
                                     """);
 
         Assert.That(read.DataSourceOptions, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.DataSourceOptions!.DisableDataSources, Is.False, "Writing this table is already the statement that the template wants data sources, so an omitted switch must not turn them off again.");
             Assert.That(read.DataSourceOptions.AutomaticDataSourceSelection, Is.False);
             Assert.That(read.DataSourceOptions.AutomaticValidation, Is.False);
             Assert.That(read.DataSourceOptions.RetrievalMode, Is.EqualTo(DataSourceRetrievalMode.SEMANTIC_SEARCH));
             Assert.That(read.DataSourceOptions.PreselectedDataSourceIds, Is.EqualTo(new[] { "11111111-1111-1111-1111-111111111111" }));
-        });
+        }
     }
 
     [TestCase("'EVERY_MESSAGE'", DataSourceRetrievalMode.EVERY_MESSAGE)]
@@ -182,11 +186,145 @@ public sealed class ChatTemplateConfigurationTests
                                     }
                                     """);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.ToolIds, Is.EquivalentTo(new[] { "web_search", "read_web_page" }));
             Assert.That(read.DataSourceOptions!.PreselectedDataSourceIds, Is.EqualTo(new[] { "11111111-1111-1111-1111-111111111111" }));
-        });
+        }
+    }
+
+    [Test]
+    public async Task APreselectedProviderAndProfileSurviveTheExport()
+    {
+        var written = NewTemplate() with
+        {
+            ProviderId = "44444444-4444-4444-4444-444444444444",
+            ProfileId = "55555555-5555-5555-5555-555555555555",
+        };
+
+        var read = await ExportAndReadBackAsync(written);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(read.ProviderId, Is.EqualTo(written.ProviderId));
+            Assert.That(read.ProfileId, Is.EqualTo(written.ProfileId));
+        }
+    }
+
+    [Test]
+    public async Task StartingWithoutAProfileIsAStatementOfItsOwn()
+    {
+        var read = await ExportAndReadBackAsync(NewTemplate() with { ProfileId = Profile.NO_PROFILE.Id });
+        var silent = await ExportAndReadBackAsync(NewTemplate());
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(read.ProfileId, Is.EqualTo(Profile.NO_PROFILE.Id), "Reading this back as null would hand out the default profile the template ruled out.");
+            Assert.That(silent.ProfileId, Is.Null);
+            Assert.That(silent.ProviderId, Is.Null);
+        }
+    }
+
+    [Test]
+    public async Task APluginTemplateMayNameTheProviderAndProfileOfItsPlugin()
+    {
+        var read = await ParseAsync("""
+                                    CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                                        ["Id"] = "33333333-3333-3333-3333-333333333333",
+                                        ["Name"] = "Mail",
+                                        ["SystemPrompt"] = "You help with mails.",
+                                        ["AllowProfileUsage"] = true,
+                                        ["ProviderId"] = "44444444-4444-4444-4444-444444444444",
+                                        ["ProfileId"] = "55555555-5555-5555-5555-555555555555",
+                                    }
+                                    """);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(read.ProviderId, Is.EqualTo("44444444-4444-4444-4444-444444444444"));
+            Assert.That(read.ProfileId, Is.EqualTo("55555555-5555-5555-5555-555555555555"));
+        }
+    }
+
+    [TestCase("\"\"")]
+    [TestCase("\"no GUID\"")]
+    [TestCase("42")]
+    [TestCase("\"00000000-0000-0000-0000-000000000000\"")]
+    public async Task AProviderIdWhichNamesNoProviderIsDropped(string luaValue)
+    {
+        var read = await ParseAsync($$"""
+                                      CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                                          ["Id"] = "33333333-3333-3333-3333-333333333333",
+                                          ["Name"] = "Mail",
+                                          ["SystemPrompt"] = "You help with mails.",
+                                          ["ProviderId"] = {{luaValue}},
+                                      }
+                                      """);
+
+        Assert.That(read.ProviderId, Is.Null, "The template still works then, with the provider its chats would start with anyway.");
+    }
+
+    [Test]
+    public async Task AWorkspaceNameSurvivesTheExport()
+    {
+        var written = NewTemplate() with { WorkspaceName = "Mails \"inbox\"" };
+        var read = await ExportAndReadBackAsync(written);
+        var silent = await ExportAndReadBackAsync(NewTemplate());
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(read.WorkspaceName, Is.EqualTo(written.WorkspaceName));
+            Assert.That(silent.WorkspaceName, Is.Null, "A template without a workspace must keep leaving the chat where it would go anyway.");
+        }
+    }
+
+    [TestCase("\"\"")]
+    [TestCase("\"   \"")]
+    [TestCase("42")]
+    [TestCase("{}")]
+    public async Task AWorkspaceNameWhichNamesNothingIsDropped(string luaValue)
+    {
+        var read = await ParseAsync($$"""
+                                      CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                                          ["Id"] = "33333333-3333-3333-3333-333333333333",
+                                          ["Name"] = "Mail",
+                                          ["SystemPrompt"] = "You help with mails.",
+                                          ["WorkspaceName"] = {{luaValue}},
+                                      }
+                                      """);
+
+        Assert.That(read.WorkspaceName, Is.Null);
+    }
+
+    [Test]
+    public async Task APluginTemplateNamesItsWorkspaceWithoutTheSpacesAround()
+    {
+        var read = await ParseAsync("""
+                                    CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                                        ["Id"] = "33333333-3333-3333-3333-333333333333",
+                                        ["Name"] = "Mail",
+                                        ["SystemPrompt"] = "You help with mails.",
+                                        ["WorkspaceName"] = "  Mails  ",
+                                    }
+                                    """);
+
+        Assert.That(read.WorkspaceName, Is.EqualTo("Mails"), "Workspaces are matched by their trimmed name, so the spaces would only make the field look different from the name in the list.");
+    }
+
+    [Test]
+    public void ExportedProviderAndProfileIdsComeWithTheNoteThatTheyAreLocalOnes()
+    {
+        var withProvider = NewTemplate() with { ProviderId = "44444444-4444-4444-4444-444444444444" };
+        var withoutProfile = NewTemplate() with { ProfileId = Profile.NO_PROFILE.Id };
+
+        Assert.That(withProvider.TryExportAsConfigurationSection(out var withProviderLua, out var issue), Is.True, issue);
+        Assert.That(withoutProfile.TryExportAsConfigurationSection(out var withoutProfileLua, out issue), Is.True, issue);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(withProviderLua, Does.StartWith("--"), "A provider of this machine is mostly the user's own, which no configuration plugin knows.");
+            Assert.That(withoutProfileLua, Does.Not.StartWith("--"), "Starting without a profile names nothing which could be missing.");
+        }
     }
 
     [Test]
@@ -205,11 +343,11 @@ public sealed class ChatTemplateConfigurationTests
         Assert.That(withSources.TryExportAsConfigurationSection(out var withSourcesLua, out var issue), Is.True, issue);
         Assert.That(agenticOnly.TryExportAsConfigurationSection(out var agenticOnlyLua, out issue), Is.True, issue);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withSourcesLua, Does.StartWith("--"), "Whoever pastes this into a plugin cannot see from the IDs alone that they belong to another machine.");
             Assert.That(agenticOnlyLua, Does.Not.StartWith("--"), "Without IDs there is nothing to check, so the note would only be noise.");
-        });
+        }
     }
 
     [Test]
@@ -242,12 +380,12 @@ public sealed class ChatTemplateConfigurationTests
             DataSourceOptions = new() { DisableDataSources = false, AutomaticDataSourceSelection = true },
         };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(eriOnly, ConfiguredDataSources()), Is.Empty);
             Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(agentic, ConfiguredDataSources()), Is.Empty, "An agent picks the sources per message, so this template names none to begin with.");
             Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(NewTemplate(), ConfiguredDataSources()), Is.Empty);
-        });
+        }
     }
 
     [Test]

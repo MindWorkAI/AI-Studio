@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
@@ -5,6 +6,7 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.Web;
@@ -102,6 +104,15 @@ public sealed record ChatThread
     /// <summary>
     /// The augmented data for this chat thread. Will be inserted into the system prompt.
     /// </summary>
+    /// <remarks>
+    /// Not stored: it belongs to one request. The classic RAG process empties and writes it anew for
+    /// every message, a regenerated answer included, and a rollback empties it, so nothing reads it
+    /// once the answer is there. What the AI read of it is kept with the answer instead, as the
+    /// passages of its sources, see ContentText.StoreReceivedContentAsync. Stored, it was often the
+    /// largest part of a chat file. Older chat files still hold it; it is ignored on loading and
+    /// left out on their next save.
+    /// </remarks>
+    [JsonIgnore]
     public string AugmentedData { get; set; } = string.Empty;
 
     /// <summary>
@@ -134,27 +145,23 @@ public sealed record ChatThread
     /// any provider marks the chat as one which holds data of a data source, while a restriction set
     /// earlier stays. NOT_SPECIFIED demands nothing and changes nothing.<br/><br/>
     /// Shared by the RAG process and by tools which search the data sources, so both tighten a chat
-    /// the same way.
+    /// the same way. The rule itself is DataSourceSecurityExtensions.TightenedBy, which
+    /// ChatRestrictions uses as well for content which leaves the chat.
     /// </remarks>
     /// <param name="dataSecurity">What the data brought in demands.</param>
-    public void RequireDataSecurity(DataSourceSecurity dataSecurity) => this.DataSecurity = (this.DataSecurity, dataSecurity) switch
-    {
-        (DataSourceSecurity.SELF_HOSTED, _) or (_, DataSourceSecurity.SELF_HOSTED) => DataSourceSecurity.SELF_HOSTED,
-        (_, DataSourceSecurity.ALLOW_ANY) => DataSourceSecurity.ALLOW_ANY,
-        _ => this.DataSecurity,
-    };
+    public void RequireDataSecurity(DataSourceSecurity dataSecurity) => this.DataSecurity = this.DataSecurity.TightenedBy(dataSecurity);
 
     /// <summary>
     /// Where this chat may still send data, because of the internal content it holds: mails, a
-    /// search of the wiki, or an internal web page.
+    /// search of the wiki, an internal web page, or passages of a data source.
     /// </summary>
     /// <remarks>
     /// The third thing the thread ratchets, next to the data security and the required provider
     /// confidence: once internal content is in the thread, every tool which runs afterwards could
     /// carry it out, in a search query or in the address of a web page. It only ever gets stricter,
-    /// and a later change of the settings of a mailbox or of Read Web Page does not loosen it
-    /// either, because the content was read under the old one. A chat which holds no internal
-    /// content demands nothing.
+    /// and a later change of the settings of a mailbox, a data source, or Read Web Page does not
+    /// loosen it either, because the content was read under the old one. A chat which holds no
+    /// internal content demands nothing.
     /// </remarks>
     [JsonInclude]
     public OutboundDataRequirement RequiredOutboundDataRestriction { get; private set; } = OutboundDataRequirement.NONE;
@@ -165,6 +172,64 @@ public sealed record ChatThread
     /// </summary>
     /// <param name="requirement">What the data brought in demands.</param>
     public void RequireOutboundDataRestriction(OutboundDataRequirement requirement) => this.RequiredOutboundDataRestriction = this.RequiredOutboundDataRestriction.StricterOf(requirement);
+
+    /// <summary>
+    /// Tightens this chat to everything another thread demands, because what that thread read comes
+    /// along with its result.
+    /// </summary>
+    /// <remarks>
+    /// For an assistant which lets tools work in a thread of its own and carries the result over into
+    /// the thread it shows: without this, the result would arrive without the restrictions its data
+    /// demands, and a chat started from it could hand that data to any provider or tool. All three
+    /// ratchets go along, and so do the web addresses its models wrote; each part only tightens.
+    /// </remarks>
+    /// <param name="otherThread">The thread whose result this chat takes over.</param>
+    public void RequireRestrictionsOf(ChatThread otherThread) => this.RequireRestrictions(otherThread.CaptureRestrictions());
+
+    /// <summary>
+    /// What this chat demands of everybody who continues with its content, as it stands right now.
+    /// </summary>
+    /// <remarks>
+    /// A snapshot for content which leaves this chat, such as a message sent to an assistant: the chat
+    /// may tighten later on, while an answer is still being written, but the content which left does
+    /// not hold what arrives afterward. A method rather than a property, so that the snapshot is not
+    /// stored along with the chat.
+    /// </remarks>
+    /// <returns>The restrictions of this chat.</returns>
+    public ChatRestrictions CaptureRestrictions() => new(this.RequiredProviderConfidence, this.DataSecurity, this.RequiredOutboundDataRestriction, this.WebAddressesWrittenByModels);
+
+    /// <summary>
+    /// Tightens this chat to everything the given restrictions demand, and never loosens it.
+    /// </summary>
+    /// <remarks>
+    /// For content which arrives with the restrictions of where it was written, see CaptureRestrictions.
+    /// Each part tightens on its own, by the same rules as when this chat reads something itself.
+    /// </remarks>
+    /// <param name="restrictions">What the content arriving demands.</param>
+    public void RequireRestrictions(ChatRestrictions restrictions)
+    {
+        this.RequireProviderConfidence(restrictions.ProviderConfidence);
+        this.RequireDataSecurity(restrictions.DataSecurity);
+        this.RequireOutboundDataRestriction(restrictions.OutboundData);
+        this.WebAddressesWrittenByModels = this.WebAddressesWrittenByModels.Union(restrictions.WebAddressesWrittenByModels);
+    }
+
+    /// <summary>
+    /// The web addresses a model wrote which reached this chat inside a message of the user, as request
+    /// keys, see WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// An answer of a model which is sent on, to an assistant or into a new chat, becomes a message of the
+    /// user there. Its addresses would then pass for ones the user gave, see IsWebAddressGivenToTheModel,
+    /// although a model chose them and could have put anything of the chat it came from into them. This
+    /// set keeps them apart, see ChatRestrictions.WithWebAddressesWrittenByModelIn.<br/><br/>
+    ///
+    /// Stored with the chat, unlike the other sets of addresses: forgetting it after a restart would let
+    /// the chat know more addresses, not fewer. It only ever grows, like the other restrictions, and it is
+    /// immutable, so that a copy of the thread never shares a set which grows later.
+    /// </remarks>
+    [JsonInclude]
+    public ImmutableHashSet<string> WebAddressesWrittenByModels { get; private set; } = [];
 
     /// <summary>
     /// The name of the chat thread. Usually generated by an AI model or manually edited by the user.
@@ -231,8 +296,10 @@ public sealed record ChatThread
     /// message of the user or a document attached to one, see ContentText.RuntimeAttachmentWebAddresses,
     /// or a tool returned it, see RuntimeWebAddressesFromTools. What the model wrote itself never
     /// counts, its answers included, because the model could have put anything of the chat into it.
-    /// The comparison is the one of WebAddresses.CreateRequestKey, so an address counts when it
-    /// asks the server for the same.<br/><br/>
+    /// Neither does what any model wrote and what reached this chat as a message of the user, such
+    /// as an answer sent here from another chat, see WebAddressesWrittenByModels. The comparison is
+    /// the one of WebAddresses.CreateRequestKey, so an address counts when it asks the server for
+    /// the same.<br/><br/>
     /// Shared by both rules of Read Web Page which depend on it: a free address choice switched
     /// off, and a mailbox which allows the addresses from the chat only.
     /// </remarks>
@@ -252,6 +319,10 @@ public sealed record ChatThread
 
         if (messagesOfTheUser.Any(content => content.RuntimeAttachmentWebAddresses.Contains(requestKey)))
             return true;
+
+        // A model wrote it, even though it stands in a message of the user:
+        if (this.WebAddressesWrittenByModels.Contains(requestKey))
+            return false;
 
         return messagesOfTheUser
             .SelectMany(content => WebAddresses.Find(content.Text))
@@ -513,6 +584,42 @@ public sealed record ChatThread
             this.Draft.RestoreFromMessage(textContent);
 
         this.Blocks.Remove(block);
+    }
+
+    /// <summary>
+    /// Stores the documents attached to the messages of this chat which were never sent, so that each
+    /// one is read from the disk once.
+    /// </summary>
+    /// <remarks>
+    /// Called before every request of the chat, see AIJobService. The request then sends the stored
+    /// texts, see ContentText.PrepareTextContentForAI, and so does every later one. Assistants do not
+    /// call this: their messages are made anew with every run, so every run would store its documents
+    /// once more.<br/><br/>
+    ///
+    /// Nothing here may stop the request. A document which is not stored, e.g., since the store is not
+    /// available, is read when the message is built, as every request did before.
+    /// </remarks>
+    /// <param name="readChangedAgain">Whether documents whose files changed since they were stored are read again, see DataChat.ReadChangedAttachmentsAgain.</param>
+    public async Task StoreAttachedDocumentsAsync(bool readChangedAgain)
+    {
+        var messages = this.Blocks.Select(block => block.Content).OfType<ContentText>().Where(text => text.HasDocumentsToStore(readChangedAgain)).ToList();
+        if (messages.Count is 0)
+            return;
+
+        try
+        {
+            if (await ChatProvenance.GetStoreAsync() is not { } store)
+                return;
+
+            // One report for everything filtered out of the documents, as for the request itself:
+            await using var reportingScope = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>().BeginAction();
+            foreach (var message in messages)
+                await message.StoreAttachedDocumentsAsync(store, this.ChatId, Program.RUST_SERVICE, reportingScope, readChangedAgain);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogError(exception, "Failed to store the attached documents of the chat '{ChatId}'. They are read from the disk with every request.", this.ChatId);
+        }
     }
 
     /// <summary>

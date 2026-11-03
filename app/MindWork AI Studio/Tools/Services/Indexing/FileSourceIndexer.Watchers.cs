@@ -251,7 +251,7 @@ internal sealed partial class FileSourceIndexer
             return true;
 
         if (configuration.TargetFileName is { } targetFileName)
-            return string.Equals(fileName, targetFileName, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(fileName, targetFileName, PathTools.COMPARISON);
 
         //
         // Git renames .git/index.lock to .git/index with almost every command, and a build or
@@ -297,13 +297,13 @@ internal sealed partial class FileSourceIndexer
 
     private static DataSourceWatcherConfiguration? GetWatchConfiguration(IDataSourceBase dataSource) => dataSource switch
     {
-        DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path) => new DataSourceWatcherConfiguration(
+        DataSourceLocalDirectory localDirectory when RelocatedFilePaths.IsLocalAbsolute(localDirectory.Path) && Directory.Exists(localDirectory.Path) => new DataSourceWatcherConfiguration(
             localDirectory.Path,
             localDirectory.IncludeSubdirectories,
             localDirectory.IncludeHiddenFilesAndFolders,
             FilePatterns: FileNamePatterns.Parse(localDirectory.EffectiveFilePatterns),
             ExcludePatterns: FileExclusions.Parse(localDirectory.EffectiveExcludePatterns)),
-        DataSourceLocalFile localFile when File.Exists(localFile.FilePath) && !string.IsNullOrWhiteSpace(Path.GetDirectoryName(localFile.FilePath)) => new DataSourceWatcherConfiguration(
+        DataSourceLocalFile localFile when RelocatedFilePaths.IsLocalAbsolute(localFile.FilePath) && File.Exists(localFile.FilePath) && !string.IsNullOrWhiteSpace(Path.GetDirectoryName(localFile.FilePath)) => new DataSourceWatcherConfiguration(
             Path.GetDirectoryName(localFile.FilePath)!,
             false,
             TargetFileName: Path.GetFileName(localFile.FilePath)),
@@ -314,8 +314,8 @@ internal sealed partial class FileSourceIndexer
     {
         return left.IncludeSubdirectories == right.IncludeSubdirectories
                && left.IncludeHiddenFilesAndFolders == right.IncludeHiddenFilesAndFolders
-               && string.Equals(left.RootPath, right.RootPath, StringComparison.OrdinalIgnoreCase)
-               && string.Equals(left.TargetFileName, right.TargetFileName, StringComparison.OrdinalIgnoreCase)
+               && string.Equals(left.RootPath, right.RootPath, PathTools.COMPARISON)
+               && string.Equals(left.TargetFileName, right.TargetFileName, PathTools.COMPARISON)
                && FileNamePatterns.AreEquivalent(left.FilePatterns, right.FilePatterns)
                && FileNamePatterns.AreEquivalent(left.ExcludePatterns, right.ExcludePatterns);
     }

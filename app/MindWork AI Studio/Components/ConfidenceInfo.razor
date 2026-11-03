@@ -3,16 +3,7 @@
 
 <div class="d-flex">
     <MudTooltip Text="@T("Shows and hides the confidence card with information about the selected LLM provider.")" Placement="Placement.Top">
-        @if (this.Mode is PopoverTriggerMode.ICON)
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager)" OnClick="@this.ToggleConfidence"/>
-        }
-        else
-        {
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Security" IconClass="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager)" OnClick="@this.ToggleConfidence">
-                @T("Confidence")
-            </MudButton>
-        }
+        <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager)" OnClick="@this.ToggleConfidence"/>
     </MudTooltip>
 
     <MudPopover Open="@this.showConfidence" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" Style="@this.GetPopoverStyle()" DropShadow="@true" Class="border-solid border-4 rounded-lg">
@@ -62,7 +53,7 @@
             </MudCardContent>
             <MudCardActions>
                 <MudButton Variant="Variant.Filled" OnClick="@this.HideConfidence">
-                    Close
+                    @T("Close")
                 </MudButton>
             </MudCardActions>
         </MudCard>

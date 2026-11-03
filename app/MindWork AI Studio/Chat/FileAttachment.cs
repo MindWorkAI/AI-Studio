@@ -59,9 +59,50 @@ public record FileAttachment(FileAttachmentType Type, string FileName, [property
     public bool Exists => File.Exists(this.FilePath);
 
     /// <summary>
+    /// The entry of the provenance store which holds the text this document was first sent with, or
+    /// null while it was never sent, or could not be stored.
+    /// </summary>
+    /// <remarks>
+    /// A document is read from the disk once, see ChatThread.StoreAttachedDocumentsAsync. Every later
+    /// request of the chat sends the stored text, also when the file changed or is gone by now, so
+    /// what the AI received stays the same and can be shown as it was. Left out of the chat file, and
+    /// of chat templates, while null.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? ProvenanceId { get; init; }
+
+    /// <summary>
+    /// The state of the file which the stored text was read from, see ProvenanceId, or null while
+    /// there is no stored text, or when it was stored before AI Studio noted the state.
+    /// </summary>
+    /// <remarks>
+    /// Tells whether the file changed since, for a chat which reads changed files again, see
+    /// DataChat.ReadChangedAttachmentsAgain. Left out of the chat file while null.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public FileVersion? Version { get; init; }
+
+    /// <summary>
+    /// Whether the file changed since its text was stored.
+    /// </summary>
+    /// <remarks>
+    /// Reads the state of the file. A file which is gone did not change: the stored text is all
+    /// there is of it. Without a noted state, nothing tells, and the stored text stays as well.
+    /// </remarks>
+    public bool ChangedSinceStored() => this.ProvenanceId is not null && this.Version is { } version && FileVersion.Of(this.FilePath) is { } current && current != version;
+
+    /// <summary>
+    /// The same attachment without its stored text, e.g., for a place apart from its chat, where the file is read anew.
+    /// </summary>
+    public FileAttachment WithoutStoredText() => this with { ProvenanceId = null, Version = null };
+
+    /// <summary>
     /// Rebuilds the attachment from its current file path so file type detection uses the latest rules.
     /// </summary>
-    public virtual FileAttachment Normalize() => FromPath(this.FilePath);
+    /// <remarks>
+    /// The entry of its text stays: it belongs to the attachment, not to the rules.
+    /// </remarks>
+    public virtual FileAttachment Normalize() => FromPath(this.FilePath) with { ProvenanceId = this.ProvenanceId, Version = this.Version };
 
     /// <summary>
     /// Makes the same attachment for its file at another place, e.g. after the chat holding the file moved.
@@ -72,7 +113,7 @@ public record FileAttachment(FileAttachmentType Type, string FileName, [property
     /// </remarks>
     /// <param name="filePath">The path of the file now.</param>
     /// <returns>An attachment of the same kind, with the new path.</returns>
-    public virtual FileAttachment WithFilePath(string filePath) => new(this.Type, this.FileName, filePath, this.FileSizeBytes);
+    public virtual FileAttachment WithFilePath(string filePath) => new(this.Type, this.FileName, filePath, this.FileSizeBytes) { ProvenanceId = this.ProvenanceId, Version = this.Version };
 
     /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,

@@ -135,7 +135,16 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     /// The list of used instance names. We need this to check for uniqueness.
     /// </summary>
     private List<string> UsedInstanceNames { get; set; } = [];
-    
+
+    /// <summary>
+    /// Whether the organization prohibited the selected provider.
+    /// </summary>
+    /// <remarks>
+    /// The provider stays selectable, so that nobody wonders where it went. The dialog then shows
+    /// the reason instead of the form, and nothing can be stored.
+    /// </remarks>
+    private bool IsProviderProhibited => this.SettingsManager.IsProviderProhibited(this.DataLLMProvider);
+
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
@@ -242,7 +251,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
-                    await this.form.Validate();
+                    await this.form.ValidateAsync();
                 }
             }
 
@@ -263,7 +272,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -284,9 +293,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     private async Task Store()
     {
+        if (this.IsProviderProhibited)
+            return;
+
         this.dataStoreWasAttempted = true;
         await this.dataTokenizerValidationTask;
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         this.dataAPIKeyStorageIssue = string.Empty;
 
         // Manually validate the model selection (needed when no models are loaded
@@ -331,7 +343,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (!response.Success)
         {
             this.dataCustomTokenizerValidationIssue = string.IsNullOrWhiteSpace(response.Message) ? string.Empty : response.Message;
-            await this.form.Validate();
+            await this.form.ValidateAsync();
             return;
         }
         this.dataFilePath = response.StoredPath;
@@ -346,7 +358,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -360,7 +372,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             if (!deleteResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -394,7 +406,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
         {
             this.dataAPIKeyStorageIssue = string.Empty;
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         }
     }
 
@@ -445,8 +457,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Please drop a tokenizer file in the JSON format.")));
     }
 
-    private async Task OnDataFilePathChanged(string filePath)
+    private async Task OnDataFilePathChanged(string? changedFilePath)
     {
+        var filePath = changedFilePath ?? string.Empty;
         this.dataFilePath = filePath;
         var validationRevision = ++this.dataTokenizerValidationRevision;
         this.dataTokenizerValidationTask = this.ValidateCustomTokenizer(filePath, validationRevision);
@@ -465,9 +478,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.dataTokenizerFingerprint = tokenizerFingerprint;
 
         if (this.dataStoreWasAttempted)
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         else
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
     }
 
     private async Task ValidateCustomTokenizer(string filePath, int validationRevision)
@@ -544,6 +557,10 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
     private async Task ReloadModels()
     {
+        // Loading the models would contact the provider:
+        if (this.IsProviderProhibited)
+            return;
+
         this.dataLoadingModelsIssue = string.Empty;
         this.dataServerWasAskedForItsModels = true;
         var currentEmbeddingProviderSettings = this.CreateEmbeddingProviderSettings();

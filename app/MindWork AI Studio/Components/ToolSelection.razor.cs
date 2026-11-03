@@ -45,6 +45,7 @@ public partial class ToolSelection : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
 
     private bool showSelection;
+    private bool showUnavailableTools;
     private IReadOnlyList<ToolCatalogItem> catalog = [];
 
     protected override void OnParametersSet()
@@ -77,22 +78,72 @@ public partial class ToolSelection : MSGComponentBase
     {
         this.showSelection = !this.showSelection;
         if (this.showSelection)
+        {
+            this.showUnavailableTools = false;
             this.catalog = await this.ToolRegistry.GetCatalogAsync(this.Component);
+        }
     }
 
     private void Hide() => this.showSelection = false;
+
+    private void ToggleUnavailableTools() => this.showUnavailableTools = !this.showUnavailableTools;
+
+    /// <summary>
+    /// Whether the selection keeps the tools which cannot be selected right now apart, behind a button.
+    /// </summary>
+    /// <remarks>
+    /// Not while a response is running: no tool can be switched then, and the list shows the current
+    /// selection as a whole, as the note above it says.
+    /// </remarks>
+    private bool KeepsUnavailableToolsApart => !this.Disabled;
+
+    /// <summary>
+    /// The tools the selection lists first: those the user can select right now, or all of them while a response is running.
+    /// </summary>
+    private List<ToolCatalogItem> GetItemsShownFirst() => this.KeepsUnavailableToolsApart
+        ? [..this.catalog.Where(this.IsSelectable)]
+        : [..this.catalog];
+
+    /// <summary>
+    /// The tools which cannot be selected right now, selected ones included, which the selection lists behind a button.
+    /// </summary>
+    private List<ToolCatalogItem> GetUnavailableItems() => this.KeepsUnavailableToolsApart
+        ? [..this.catalog.Where(item => !this.IsSelectable(item))]
+        : [];
+
+    /// <summary>
+    /// The text of the button which shows or hides the tools that cannot be selected right now.
+    /// </summary>
+    /// <remarks>
+    /// A selected tool may end up behind the button, for example, when the user switches to a provider
+    /// with less confidence. The text then says so, because the selection would otherwise seem to have
+    /// lost it.
+    /// </remarks>
+    private string GetUnavailableToolsButtonText(IReadOnlyCollection<ToolCatalogItem> unavailableItems)
+    {
+        if (this.showUnavailableTools)
+            return T("Hide unavailable tools");
+
+        var selectedCount = unavailableItems.Count(item => this.SelectedToolIds.Contains(item.Id));
+        if (unavailableItems.Count == 1)
+            return selectedCount == 0 ? T("Show 1 unavailable tool") : T("Show 1 unavailable tool, which is selected");
+
+        return selectedCount == 0
+            ? string.Format(T("Show {0} unavailable tools"), unavailableItems.Count.CompactCount())
+            : string.Format(T("Show {0} unavailable tools, {1} of them selected"), unavailableItems.Count.CompactCount(), selectedCount.CompactCount());
+    }
 
     /// <summary>
     /// Whether this tool can be switched at all right now.
     /// </summary>
     /// <remarks>
     /// The switch and the row click share this, so both agree on when a tool is out of reach: the
-    /// organization disabled it, it is not configured, the provider lacks the confidence it needs,
-    /// the chat read a mailbox which keeps the tool back, a response is running, or the model
-    /// cannot call tools in the first place.
+    /// tool itself cannot be selected right now, see ToolSelectionRules.IsSelectable, a response is
+    /// running, or the model cannot call tools in the first place.
     /// </remarks>
-    private bool IsRowDisabled(ToolCatalogItem item) => !item.IsActive || !item.ConfigurationState.IsConfigured || this.IsBlockedByProviderConfidence(item) ||
-                                                        this.IsBlockedByOutboundDataRestriction(item) || this.Disabled || !this.SupportsTools;
+    private bool IsRowDisabled(ToolCatalogItem item) => !this.IsSelectable(item) || this.Disabled || !this.SupportsTools;
+
+    private bool IsSelectable(ToolCatalogItem item) => ToolSelectionRules.IsSelectable(item, this.ProviderConfidence, this.RequiredOutboundDataRestriction.Restriction);
 
     /// <summary>
     /// Switches a tool when the user clicks anywhere in its row.
@@ -134,11 +185,7 @@ public partial class ToolSelection : MSGComponentBase
     /// <summary>
     /// Whether the mailboxes the chat read from keep every tool of this entry back.
     /// </summary>
-    /// <remarks>
-    /// Only then is there nothing left to select. Should a mailbox keep back some tools of a
-    /// collection, the others still run, and the request leaves out the rest on its own.
-    /// </remarks>
-    private bool IsBlockedByOutboundDataRestriction(ToolCatalogItem item) => item.Tools.All(tool => !ToolSelectionRules.IsOutboundDataAllowed(this.RequiredOutboundDataRestriction.Restriction, tool.Implementation));
+    private bool IsBlockedByOutboundDataRestriction(ToolCatalogItem item) => !ToolSelectionRules.IsOutboundDataAllowed(this.RequiredOutboundDataRestriction.Restriction, item);
 
     private string? GetProviderConfidenceHint(ToolCatalogItem item)
     {

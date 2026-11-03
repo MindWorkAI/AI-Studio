@@ -73,6 +73,23 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task AToolSwitchedOffByTheUser()
+    {
+        this.SettingsManager.ConfigurationData.Tools.UserDisabledToolIds.Add(TOOL_ID);
+
+        await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition())), ToolCapableProvider(), ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER, "The user never needs this tool and switched it off.");
+    }
+
+    [Test]
+    public async Task TheOrganizationComesBeforeTheUser()
+    {
+        this.SettingsManager.ConfigurationData.Tools.DisabledToolIds.Add(TOOL_ID);
+        this.SettingsManager.ConfigurationData.Tools.UserDisabledToolIds.Add(TOOL_ID);
+
+        await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition())), ToolCapableProvider(), ToolOfferBlockReason.TOOL_SWITCHED_OFF, "Switching the tool on again would not help the user, so the organization is the reason which counts.");
+    }
+
+    [Test]
     public async Task AToolMissingASetting()
     {
         await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition(requiresSetting: true))), ToolCapableProvider(), ToolOfferBlockReason.NOT_CONFIGURED, "The tool cannot work without a setting nobody filled in.");
@@ -97,10 +114,10 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
         var reason = await registry.GetOfferBlockReasonAsync(TOOL_ID, provider, AIStudio.Tools.Components.CHAT);
         var runnableTools = await registry.GetRunnableToolsAsync(this.ContextFor(provider), [TOOL_ID], mayRunTools: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reason, Is.EqualTo(expected), situation);
             Assert.That(runnableTools.Any(x => x.Definition.Id == TOOL_ID), Is.EqualTo(expected is ToolOfferBlockReason.NONE), "Preparing the request has to come to the same answer as asking beforehand.");
-        });
+        }
     }
 }

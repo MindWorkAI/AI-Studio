@@ -42,17 +42,19 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     /// Studio restarts.
     /// </remarks>
     /// <param name="plugin">The local plugin to archive and share.</param>
+    /// <param name="exportFeedback">Shows that the archive is being written, once the user chose where.
+    /// The caller ends it with the success, which only the caller announces.</param>
     /// <param name="token">Cancellation token for archive creation.</param>
     /// <returns>The share result, including the archive path when successful. When the share sheet
     /// failed or did not respond, the outcome is SHARE_SHEET_UNAVAILABLE, and ExportAsync can still
     /// export the plugin.</returns>
-    public async Task<PluginShareResult> ShareAsync(IAvailablePlugin plugin, CancellationToken token)
+    public async Task<PluginShareResult> ShareAsync(IAvailablePlugin plugin, FileExportFeedback exportFeedback, CancellationToken token)
     {
         if (!this.TryGetShareablePluginRoot(plugin, out var pluginRoot, out var issue))
             return ShareError(plugin, issue);
 
         if (this.UsesExport)
-            return await this.ExportArchiveAsync(plugin, pluginRoot, token);
+            return await this.ExportArchiveAsync(plugin, pluginRoot, exportFeedback, token);
 
         return await this.ShareViaNativeSheetAsync(plugin, pluginRoot, token);
     }
@@ -62,14 +64,16 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     /// be available. This is the way out after the share sheet failed or did not respond.
     /// </summary>
     /// <param name="plugin">The local plugin to archive and export.</param>
+    /// <param name="exportFeedback">Shows that the archive is being written, once the user chose where.
+    /// The caller ends it with the success, which only the caller announces.</param>
     /// <param name="token">Cancellation token for archive creation.</param>
     /// <returns>The export result, including the chosen archive path when successful.</returns>
-    public async Task<PluginShareResult> ExportAsync(IAvailablePlugin plugin, CancellationToken token)
+    public async Task<PluginShareResult> ExportAsync(IAvailablePlugin plugin, FileExportFeedback exportFeedback, CancellationToken token)
     {
         if (!this.TryGetShareablePluginRoot(plugin, out var pluginRoot, out var issue))
             return ShareError(plugin, issue);
 
-        return await this.ExportArchiveAsync(plugin, pluginRoot, token);
+        return await this.ExportArchiveAsync(plugin, pluginRoot, exportFeedback, token);
     }
 
     /// <summary>
@@ -109,9 +113,10 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     /// </summary>
     /// <param name="plugin">The local plugin to archive.</param>
     /// <param name="pluginRoot">The validated plugin root directory.</param>
+    /// <param name="exportFeedback">Shows that the archive is being written.</param>
     /// <param name="token">Cancellation token for archive creation.</param>
     /// <returns>The share result, including the chosen archive path when successful.</returns>
-    private async Task<PluginShareResult> ExportArchiveAsync(IAvailablePlugin plugin, string pluginRoot, CancellationToken token)
+    private async Task<PluginShareResult> ExportArchiveAsync(IAvailablePlugin plugin, string pluginRoot, FileExportFeedback exportFeedback, CancellationToken token)
     {
         var suggestedFileName = $"{CreateSafeFileNamePrefix(plugin.Name)}{PluginArchive.PLUGIN_FILE_EXTENSION}";
         var saveResponse = await rustService.SaveFile(TB("Export plugin archive"), [FileTypes.PLUGIN_ARCHIVE], suggestedFileName);
@@ -119,6 +124,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
             return new(PluginShareOutcome.CANCELLED, plugin.Name, string.Empty, string.Empty);
 
         var archivePath = saveResponse.SaveFilePath;
+        exportFeedback.ShowRunning(archivePath);
         try
         {
             token.ThrowIfCancellationRequested();

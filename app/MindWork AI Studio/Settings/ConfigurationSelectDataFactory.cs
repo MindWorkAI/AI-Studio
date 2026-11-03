@@ -146,6 +146,19 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Settings"), StartPage.SETTINGS);
     }
 
+    /// <summary>
+    /// The interface sizes a screen offers.
+    /// </summary>
+    /// <param name="offerAppDefault">Whether to offer the app default, which only differs from the system scaling on the screen of a laptop.</param>
+    public static IEnumerable<ConfigurationSelectData<InterfaceSize>> GetInterfaceSizeData(bool offerAppDefault)
+    {
+        yield return new(TB("System scaling"), InterfaceSize.SYSTEM_SCALING);
+        if (offerAppDefault)
+            yield return new(TB("App default"), InterfaceSize.APP_DEFAULT);
+
+        yield return new(TB("Custom"), InterfaceSize.CUSTOM);
+    }
+
     public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
     {
         foreach (var source in Enum.GetValues<IconSources>())
@@ -235,7 +248,13 @@ public static class ConfigurationSelectDataFactory
         foreach (var expertise in Enum.GetValues<AudienceExpertise>())
             yield return new(expertise.Name(), expertise);
     }
-    
+
+    public static IEnumerable<ConfigurationSelectData<PresentationOccasion>> GetSlideBuilderOccasionData()
+    {
+        foreach (var occasion in Enum.GetValues<PresentationOccasion>())
+            yield return new(occasion.Name(), occasion);
+    }
+
     public static IEnumerable<ConfigurationSelectData<string>> GetProfilesData(IEnumerable<Profile> profiles)
     {
         foreach (var profile in profiles.GetAllProfiles())
@@ -336,9 +355,9 @@ public static class ConfigurationSelectDataFactory
     }
 
     /// <summary>
-    /// The restrictions a mailbox may have.
+    /// The restrictions a mailbox or a data source may have.
     /// </summary>
-    /// <param name="minimumRestriction">The least strict restriction the organization allows, see DataMailboxes.MinimumOutboundDataRestriction.</param>
+    /// <param name="minimumRestriction">The least strict restriction allowed, see DataMailboxes.MinimumOutboundDataRestriction and DataSourceOutboundDataExtensions.GetMinimumOutboundDataRestriction.</param>
     public static IEnumerable<ConfigurationSelectData<OutboundDataRestriction>> GetOutboundDataRestrictionData(OutboundDataRestriction minimumRestriction)
     {
         foreach (var restriction in Enum.GetValues<OutboundDataRestriction>())

@@ -1,3 +1,4 @@
+using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
@@ -15,10 +16,13 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     [Inject]
     private PandocAvailabilityService PandocAvailability { get; init; } = null!;
 
+    [Inject]
+    private ModelImageService ModelImageService { get; init; } = null!;
+
     private const string DEFAULT_OUTPUT_DIRECTORY_NAME = "ai-results";
     private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
     private const string CSV_EXTENSION = ".csv";
-    private const string RESULT_FILE_SUFFIX = "_result";
+    internal const string RESULT_FILE_SUFFIX = "_result";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private const char LOG_SEPARATOR = ';';
 
@@ -26,7 +30,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     /// The name of the log file. It is fixed, so that a later batch run finds
     /// the log of a previous run and can continue it.
     /// </summary>
-    private const string LOG_FILENAME = "log.csv";
+    internal const string LOG_FILENAME = "log.csv";
 
     protected override Tools.Components Component => Tools.Components.BATCH_PROCESSING_ASSISTANT;
 
@@ -123,6 +127,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
 
     private readonly List<BatchProcessingFileResult> fileResults = [];
     private readonly HashSet<string> usedResultFileNames = new(StringComparer.OrdinalIgnoreCase);
+    private FileExclusionEditor? exclusionEditor;
     private bool showExpertSettings;
     private bool isProcessingBatch;
     private bool hasReportedWriteFailure;
@@ -167,8 +172,6 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     }
 
     private void RestoreDefaultFilePatterns() => this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
-
-    private void RestoreDefaultExcludePatterns() => this.excludePatterns = FileExclusions.DEFAULT_PATTERNS;
 
     private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
 
@@ -290,13 +293,13 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         var minimumLevel = this.GetMinimumConfidenceLevel();
         var policyProvider = this.SettingsManager.GetPreselectedProvider(this.Component, this.selectedPolicy.PreselectedProvider);
         if (policyProvider != Settings.Provider.NONE
-            && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            && this.SettingsManager.IsProviderUsable(policyProvider.UsedLLMProvider, minimumLevel))
             this.ProviderSettings = policyProvider;
         else
         {
             var fallbackProvider = this.SettingsManager.GetPreselectedProvider(this.Component, usePreselectionBeforeCurrentProvider: true);
             this.ProviderSettings = fallbackProvider != Settings.Provider.NONE
-                                    && fallbackProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel
+                                    && this.SettingsManager.IsProviderUsable(fallbackProvider.UsedLLMProvider, minimumLevel)
                 ? fallbackProvider
                 : Settings.Provider.NONE;
         }

@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
@@ -49,14 +51,24 @@ public sealed class MailboxOutboundDataRestrictionTests
     }
 
     [Test]
+    public void ANumberWhichNamesNoLevelRestrictsTheChatToTheConfiguredServices()
+    {
+        var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>("""{"Id": "3c7e1a9f-5d2b-4f8c-a6e3-9b1d4f7a2c56", "OutboundDataRestriction": "5"}""", SettingsManager.JSON_OPTIONS);
+
+        var (_, outboundData) = MailToolResults.GetRequirements([mailbox], OutboundDataRestriction.UNRESTRICTED);
+
+        Assert.That(outboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, mailbox.Id)), "The settings read the number as it is, and compared as it is, it would rank above UNRESTRICTED.");
+    }
+
+    [Test]
     public void TheDialogOffersOnlyTheLevelsAllowed()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(GetOfferedLevels(OutboundDataRestriction.UNRESTRICTED), Is.EqualTo(new[] { OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataRestriction.UNRESTRICTED }));
             Assert.That(GetOfferedLevels(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT), Is.EqualTo(new[] { OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataRestriction.ONLY_LINKS_FROM_CHAT }));
             Assert.That(GetOfferedLevels(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES), Is.EqualTo(new[] { OutboundDataRestriction.ONLY_CONFIGURED_SERVICES }));
-        });
+        }
     }
 
     private static IEnumerable<OutboundDataRestriction> GetOfferedLevels(OutboundDataRestriction minimumRestriction) => ConfigurationSelectDataFactory.GetOutboundDataRestrictionData(minimumRestriction).Select(option => option.Value);

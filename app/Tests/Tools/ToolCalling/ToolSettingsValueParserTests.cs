@@ -25,11 +25,11 @@ public sealed class ToolSettingsValueParserTests
         var settingsValues = value is null ? new Dictionary<string, string>() : new Dictionary<string, string> { [KEY] = value };
         var isValid = ToolSettingsValueParser.TryValidateOptionValue(settingsValues, KEY, ToolSettingsOptionSources.SAFE_SEARCH, ERROR_FORMAT, out var error);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isValid, Is.True, "Whether a field may stay empty is for the schema's required list to decide, not for this check.");
             Assert.That(error, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -38,11 +38,11 @@ public sealed class ToolSettingsValueParserTests
         var settingsValues = new Dictionary<string, string> { [KEY] = nameof(SafeSearchPolicy.MODERATE) };
         var isValid = ToolSettingsValueParser.TryValidateOptionValue(settingsValues, KEY, ToolSettingsOptionSources.SAFE_SEARCH, ERROR_FORMAT, out var error);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isValid, Is.True);
             Assert.That(error, Is.Empty);
-        });
+        }
     }
 
     [TestCase("moderate")]
@@ -52,10 +52,10 @@ public sealed class ToolSettingsValueParserTests
         var settingsValues = new Dictionary<string, string> { [KEY] = value };
         var isValid = ToolSettingsValueParser.TryValidateOptionValue(settingsValues, KEY, ToolSettingsOptionSources.SAFE_SEARCH, ERROR_FORMAT, out var error);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isValid, Is.False, "The stored value is compared exactly, the way the option source offers it.");
             Assert.That(error, Is.EqualTo($"The setting '{KEY}' holds '{value}'."), "The message has to name the field and the value, or nobody can find what to correct.");
-        });
+        }
     }
 }

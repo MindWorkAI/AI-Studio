@@ -114,6 +114,9 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
         { x => x.ToolIds, chatTemplate.ToolIds },
         { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
+        { x => x.ProfileId, chatTemplate.ProfileId },
+        { x => x.ProviderId, chatTemplate.ProviderId },
+        { x => x.WorkspaceName, chatTemplate.WorkspaceName },
     };
 
     private async Task DeleteChatTemplate(ChatTemplate chatTemplate)
@@ -214,7 +217,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
     {
         if (!chatTemplate.TryExportAsConfigurationSection(out var luaCode, out var issue))
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export Chat Template"),
                 issue,
                 T("Close"));
@@ -229,7 +232,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
     {
         if (!chatTemplate.TryExportAsConfigurationSectionWithPackagedAttachments(pluginDirectory, out var luaCode, out var issue))
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export Chat Template"),
                 issue,
                 T("Close"));

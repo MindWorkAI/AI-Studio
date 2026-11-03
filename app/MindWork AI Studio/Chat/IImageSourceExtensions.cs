@@ -1,4 +1,5 @@
-using AIStudio.Tools.MIME;
+using AIStudio.Provider;
+using AIStudio.Provider.SelfHosted;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Chat;
@@ -6,72 +7,40 @@ namespace AIStudio.Chat;
 public static class IImageSourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IImageSourceExtensions).Namespace, nameof(IImageSourceExtensions));
-    
-    public static MIMEType DetermineMimeType(this IImageSource image)
+
+    /// <summary>
+    /// The largest image, in bytes, we send anywhere: no image prepared for a model is larger, and
+    /// TryAsBase64 skips every larger file.
+    /// </summary>
+    public const long MAX_IMAGE_SIZE_BYTES = 10_000_000;
+
+    /// <summary>
+    /// The largest image file, in bytes, which we send through the given provider.
+    /// </summary>
+    /// <remarks>
+    /// The smallest of the limits we know: the one of a self-hosted engine, the one of the provider,
+    /// and MAX_IMAGE_SIZE_BYTES, our own. A provider or engine which states no limit gets ours.
+    /// </remarks>
+    /// <param name="provider">The configured provider the image is sent through.</param>
+    /// <returns>The size limit of one image file.</returns>
+    public static long MaxImageSizeBytesFor(AIStudio.Settings.Provider provider)
     {
-        switch (image.SourceType)
-        {
-            case ContentImageSource.BASE64:
-            {
-                // Try to detect the mime type from the base64 string:
-                var base64Data = image.Source;
-                if (base64Data.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
-                {
-                    var mimeEnd = base64Data.IndexOf(';');
-                    if (mimeEnd > 5)
-                        return Builder.FromTextRepresentation(base64Data[5..mimeEnd]);
-                }
-
-                // Fallback:
-                return Builder.Create().UseApplication().UseSubtype(ApplicationSubtype.OCTET_STREAM).Build();
-            }
-
-            case ContentImageSource.URL:
-            {
-                // Try to detect the mime type from the URL extension:
-                var uri = new Uri(image.Source);
-                var extension = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
-                return DeriveMIMETypeFromExtension(extension);
-            }
-
-            case ContentImageSource.LOCAL_PATH:
-            {
-                var extension = Path.GetExtension(image.Source).ToLowerInvariant();
-                return DeriveMIMETypeFromExtension(extension);
-            }
-
-            default:
-                return Builder.Create().UseApplication().UseSubtype(ApplicationSubtype.OCTET_STREAM).Build();
-        }
-    }
-
-    private static MIMEType DeriveMIMETypeFromExtension(string extension)
-    {
-        var imageBuilder = Builder.Create().UseImage();
-        return extension switch
-        {
-            ".png" => imageBuilder.UseSubtype(ImageSubtype.PNG).Build(),
-            ".jpg" or ".jpeg" => imageBuilder.UseSubtype(ImageSubtype.JPEG).Build(),
-            ".gif" => imageBuilder.UseSubtype(ImageSubtype.GIF).Build(),
-            ".webp" => imageBuilder.UseSubtype(ImageSubtype.WEBP).Build(),
-            ".tiff" or ".tif" => imageBuilder.UseSubtype(ImageSubtype.TIFF).Build(),
-            ".heic" or ".heif" => imageBuilder.UseSubtype(ImageSubtype.HEIC).Build(),
-
-            _ => Builder.Create().UseApplication().UseSubtype(ApplicationSubtype.OCTET_STREAM).Build()
-        };
+        var engineLimit = provider.UsedLLMProvider is LLMProviders.SELF_HOSTED ? provider.Host.GetMaxImageSizeBytes() : null;
+        var providerLimit = provider.UsedLLMProvider.GetMaxImageSizeBytes();
+        return Math.Min(Math.Min(engineLimit ?? MAX_IMAGE_SIZE_BYTES, providerLimit ?? MAX_IMAGE_SIZE_BYTES), MAX_IMAGE_SIZE_BYTES);
     }
 
     /// <summary>
     /// Read the image content as a base64 string.
     /// </summary>
     /// <remarks>
+    /// This is for the images inside the content of a chat, which go to external data sources and
+    /// agents as they are. Attached images, which go to a model, take ModelImageService instead: it
+    /// scales them down and encodes them anew within the limit of the provider.<br/>
+    /// <br/>
     /// The images are directly converted to base64 strings. The maximum
     /// size of the image is around 10 MB. If the image is larger, the method
     /// returns an empty string.<br/>
-    /// <br/>
-    /// As of now, this method does no sort of image processing. LLMs usually
-    /// do not work with arbitrary image sizes. In the future, we might have
-    /// to resize the images before sending them to the model.<br/>
     /// <br/>
     /// Note as well that this method returns just the base64 string without
     /// any data URI prefix (like "data:image/png;base64,"). The caller has
@@ -97,7 +66,7 @@ public static class IImageSourceExtensions
                 {
                     // Read the length of the content:
                     var lengthBytes = response.Content.Headers.ContentLength;
-                    if(lengthBytes > 10_000_000)
+                    if(lengthBytes > MAX_IMAGE_SIZE_BYTES)
                     {
                         await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The image at the URL is too large (>10 MB). Skipping the image.")));
                         return (success: false, string.Empty);
@@ -116,7 +85,7 @@ public static class IImageSourceExtensions
                 {
                     // Read the content length:
                     var length = new FileInfo(image.Source).Length;
-                    if(length > 10_000_000)
+                    if(length > MAX_IMAGE_SIZE_BYTES)
                     {
                         await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The local image file is too large (>10 MB). Skipping the image.")));
                         return (success: false, string.Empty);

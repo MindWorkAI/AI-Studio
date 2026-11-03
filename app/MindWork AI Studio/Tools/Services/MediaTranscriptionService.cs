@@ -314,9 +314,15 @@ public sealed class MediaTranscriptionService(
                     continue;
                 }
 
+                //
+                // Only while chats are stored automatically, the transcript goes right into a stored chat,
+                // which is stored along with it. Otherwise, storing would put whatever the user did not save
+                // on the disk, so the transcript waits in the staging area until the user saves the chat:
+                //
                 var persistentStorage = transcriptStorages.FirstOrDefault(storage => storage.CanStore(target.Owner));
                 var isPersistedChat = persistentStorage is null &&
                                       ownerChat is not null &&
+                                      settingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY &&
                                       WorkspaceBehaviour.IsChatExisting(new LoadChat(ownerChat.WorkspaceId, ownerChat.ChatId));
                 
                 var attachment = persistentStorage is not null
@@ -754,10 +760,11 @@ public sealed class MediaTranscriptionService(
 
     /// <summary>Resolves the configured provider after confidence validation.</summary>
     /// <remarks>
-    /// Checks the global minimum confidence only. A caller with rules of its own, such as the
-    /// confidence level of a data source, checks the provider against them as well.
+    /// Checks the global minimum confidence and whether the organization prohibited the provider. A
+    /// caller with rules of its own, such as the confidence level of a data source, checks the
+    /// provider against them as well.
     /// </remarks>
-    /// <returns>The configured provider, or null when none is configured or it falls short of the global minimum.</returns>
+    /// <returns>The configured provider, or null when none is configured, it falls short of the global minimum, or it is prohibited.</returns>
     public TranscriptionProvider? GetUsableProvider()
     {
         var providerId = settingsManager.ConfigurationData.App.UseTranscriptionProvider;
@@ -769,7 +776,7 @@ public sealed class MediaTranscriptionService(
             return null;
 
         var minimumLevel = settingsManager.GetMinimumConfidenceLevel(Components.NONE);
-        return providerSettings.UsedLLMProvider.GetConfidence(settingsManager).Level >= minimumLevel
+        return settingsManager.IsProviderUsable(providerSettings.UsedLLMProvider, minimumLevel)
             ? providerSettings
             : null;
     }

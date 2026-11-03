@@ -28,25 +28,29 @@ public sealed class SemanticSearchToolResultTests
     [Test]
     public void ASearchWhichFoundNothingRequiresNothing()
     {
-        var requirements = SemanticSearchTool.GetRequirements([HANDBOOK, INTRANET], [0, 0]);
+        var requirements = SemanticSearchTool.GetRequirements([HANDBOOK, INTRANET], [0, 0], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.That(requirements, Is.EqualTo((ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED)), "NOT_SPECIFIED leaves the data security of the chat as it was.");
+        Assert.That(requirements, Is.EqualTo(DataSourceRequirements.NONE), "NOT_SPECIFIED leaves the data security of the chat as it was.");
     }
 
     [Test]
     public void OnlyTheDataSourcesWithPassagesRaiseTheRequirements()
     {
-        var requirements = SemanticSearchTool.GetRequirements([HANDBOOK, MINUTES, INTRANET], [0, 2, 0]);
+        var requirements = SemanticSearchTool.GetRequirements([HANDBOOK, MINUTES, INTRANET], [0, 2, 0], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.That(requirements, Is.EqualTo((ConfidenceLevel.LOW, DataSourceSecurity.ALLOW_ANY)), "Neither the highly confidential handbook nor the self-hosted intranet brought anything into the chat.");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((requirements.Confidence, requirements.Security), Is.EqualTo((ConfidenceLevel.LOW, DataSourceSecurity.ALLOW_ANY)), "Neither the highly confidential handbook nor the self-hosted intranet brought anything into the chat.");
+            Assert.That(requirements.OutboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, MINUTES.Id)), "Only the minutes restrict where the chat may still send data.");
+        }
     }
 
     [Test]
     public void ASelfHostedDataSourceWithPassagesRestrictsTheChat()
     {
-        var requirements = SemanticSearchTool.GetRequirements([MINUTES, INTRANET], [1, 1]);
+        var requirements = SemanticSearchTool.GetRequirements([MINUTES, INTRANET], [1, 1], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.That(requirements, Is.EqualTo((ConfidenceLevel.LOW, DataSourceSecurity.SELF_HOSTED)));
+        Assert.That((requirements.Confidence, requirements.Security), Is.EqualTo((ConfidenceLevel.LOW, DataSourceSecurity.SELF_HOSTED)));
     }
 
     [Test]
@@ -54,11 +58,11 @@ public sealed class SemanticSearchToolResultTests
     {
         var result = SemanticSearchTool.DescribeResult(INTRANET, RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] }, 0, 0);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result["result_count"]!.GetValue<int>(), Is.Zero);
             Assert.That(Issues(result), Has.Count.EqualTo(1), "A result count of zero alone reads as finding nothing.");
-        });
+        }
     }
 
     [Test]
@@ -66,13 +70,13 @@ public sealed class SemanticSearchToolResultTests
     {
         var result = SemanticSearchTool.DescribeResult(HANDBOOK, RetrievalPage.EMPTY with { HasMore = true }, 4, 3);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result["result_count"]!.GetValue<int>(), Is.EqualTo(4), "Only the passages which reached the model count as results.");
             Assert.That(result["has_more"]!.GetValue<bool>(), Is.True);
             Assert.That(Issues(result), Has.Count.EqualTo(1));
             Assert.That(Issues(result).FirstOrDefault(), Does.StartWith("3 further passages").And.Contain("narrower query"), "The model has to learn how many are missing, and how to get to them.");
-        });
+        }
     }
 
     [Test]
@@ -80,12 +84,12 @@ public sealed class SemanticSearchToolResultTests
     {
         var result = SemanticSearchTool.DescribeResult(MINUTES, RetrievalPage.EMPTY, 0, 0);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ContainsKey("issues"), Is.False, "An empty list of issues would cost tokens in every result for nothing.");
             Assert.That(result["id"]!.GetValue<string>(), Is.EqualTo(MINUTES.Id));
             Assert.That(result["has_more"]!.GetValue<bool>(), Is.False);
-        });
+        }
     }
 
     private static IReadOnlyList<string> Issues(JsonObject result) => result["issues"] is JsonArray issues

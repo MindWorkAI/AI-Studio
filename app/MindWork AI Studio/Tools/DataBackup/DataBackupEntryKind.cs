@@ -21,6 +21,12 @@ public enum DataBackupEntryKind
     TEMPORARY_CHATS,
 
     /// <summary>
+    /// What the chats received besides their messages, such as the content of attached files and the
+    /// results of tools. It belongs to the chats, so every backup takes it along, like them.
+    /// </summary>
+    CHAT_PROVENANCE,
+
+    /// <summary>
     /// The plugins of the user. A backup leaves out the plugins of the organization.
     /// </summary>
     PLUGINS,

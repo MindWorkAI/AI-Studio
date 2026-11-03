@@ -186,6 +186,8 @@ public sealed class Data
 
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 
+    public DataSWOTAnalysis SWOTAnalysis { get; init; } = new();
+
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
     
     public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new(x => x.AgentDataSourceSelection);
@@ -204,7 +206,12 @@ public sealed class Data
 
     public DataEMail EMail { get; init; } = new();
     
-    public DataSlideBuilder SlideBuilder { get; init; } = new();
+    public DataSlideBuilder SlideBuilder { get; init; } = new(x => x.SlideBuilder);
+
+    /// <summary>
+    /// Gets the managed Assistant Builder defaults.
+    /// </summary>
+    public DataAssistantBuilder AssistantBuilder { get; init; } = new(x => x.AssistantBuilder);
 
     /// <summary>
     /// Gets the managed Visual Briefing Assistant defaults.

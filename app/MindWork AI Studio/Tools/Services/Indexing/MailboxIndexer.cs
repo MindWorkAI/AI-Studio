@@ -275,6 +275,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
 
             var deletedMails = await this.ApplyRemovalsAsync(context, mailbox, plannedFolders, removals, runStartedUtc, token);
             await ForgetVanishedFailuresAsync(context, encounteredKeys, token);
+            await ForgetVanishedAttemptsAsync(context, encounteredKeys, token);
 
             var completedUtc = DateTimeOffset.UtcNow;
             await context.IndexStore.CompleteMailboxSyncAsync(mailbox.Id, completedUtc, token);
@@ -527,6 +528,27 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
     {
         foreach (var key in context.Manifest.PermanentFailures.Keys.Where(key => !encounteredKeys.Contains(key)).ToList())
             await context.ForgetPermanentFailureAsync(key, token);
+    }
+
+    /// <summary>
+    /// Removes what failed attempts kept of mails which did not turn up during this run.
+    /// </summary>
+    /// <remarks>
+    /// An attempt which failed at the embedding provider keeps its vectors for the next one, under a
+    /// row without chunks, cf. IndexedRunContext.CleanupFailedDocumentAsync. Such a mail has no
+    /// location yet, so every run comes across it among the new mails, for as long as it belongs
+    /// into the index. One which did not turn up is gone, and what its attempt kept would stay
+    /// forever, hidden from every search, but asked about before each one.
+    /// </remarks>
+    private static async Task ForgetVanishedAttemptsAsync(IndexedRunContext context, IReadOnlySet<string> encounteredKeys, CancellationToken token)
+    {
+        foreach (var key in context.Manifest.UnfinishedFiles.Where(key => !encounteredKeys.Contains(key)).ToList())
+        {
+            token.ThrowIfCancellationRequested();
+            await context.DeleteDocumentPointsAsync(key, token);
+            await context.IndexStore.DeleteFileAsync(context.DataSource.Id, key, token);
+            context.Manifest.UnfinishedFiles.Remove(key);
+        }
     }
 
     /// <summary>

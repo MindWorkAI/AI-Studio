@@ -29,7 +29,7 @@ internal static class ExtractedFileText
         {
             var normalized = TextChunker.NormalizeSegment(segment.Content);
             if (!string.IsNullOrWhiteSpace(normalized))
-                segments.Add(new(normalized, segment.TokenCount, segment.PageNumber));
+                segments.Add(new(normalized, segment.TokenCount, segment.Location));
         }
 
         return new(string.Join("\n", segments.Select(segment => segment.Text)).Trim(), segments);

@@ -1,5 +1,4 @@
 @using AIStudio.Chat
-@using AIStudio.Settings.DataModel
 @inherits AssistantLowerBase
 @typeparam TSettings
 
@@ -69,7 +68,26 @@
 
             @if (this.ShowDedicatedProgress && this.IsProcessing)
             {
-                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
+                @if (this.processingStartedAt is null && string.IsNullOrWhiteSpace(this.ProgressText))
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
+                }
+                else
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />
+                    <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="3" Class="mb-6">
+                        @if (this.processingStartedAt is { } startedAt)
+                        {
+                            <ElapsedTime Start="@startedAt"/>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(this.ProgressText))
+                        {
+                            <MudText Typo="Typo.body2">
+                                @this.ProgressText
+                            </MudText>
+                        }
+                    </MudStack>
+                }
             }
             
             <div id="@RESULT_DIV_ID" class="mr-2 mt-3">
@@ -109,7 +127,7 @@
                 {
                     @if (this.ShowSendTo && this.VisibleSendToAssistants.Count > 0)
                     {
-                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                             @foreach (var assistant in this.VisibleSendToAssistants)
                             {
                                 <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, new()))">
@@ -141,7 +159,7 @@
                         case SendToButton sendToButton:
                             @if (this.VisibleSendToAssistants.Count > 0)
                             {
-                                <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                                <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                                     @foreach (var assistant in this.VisibleSendToAssistants)
                                     {
                                         <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, sendToButton))">
@@ -170,7 +188,7 @@
 
                 @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
                 {
-                    <ConfidenceInfo Mode="PopoverTriggerMode.BUTTON" LLMProvider="@this.ProviderSettings.UsedLLMProvider"/>
+                    <ConfidenceInfo LLMProvider="@this.ProviderSettings.UsedLLMProvider"/>
                 }
 
                 @if (this.AllowProfiles && this.ShowProfileSelection)
@@ -181,7 +199,7 @@
                 @* No selection where the assistant's own rules already name the tools: *@
                 @if (this.SettingsManager.AreToolsEnabled() && this.AssistantManagedToolIds is null && this.SettingsManager.IsToolSelectionVisible(this.Component))
                 {
-                    <ToolSelection Component="@this.Component" LLMProvider="@this.ProviderSettings" RequiredOutboundDataRestriction="@(this.ChatThread?.RequiredOutboundDataRestriction ?? OutboundDataRequirement.NONE)" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsProcessing" />
+                    <ToolSelection Component="@this.Component" LLMProvider="@this.ProviderSettings" RequiredOutboundDataRestriction="@this.CurrentRestrictions.OutboundData" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsProcessing" />
                 }
 
                 <MudSpacer />

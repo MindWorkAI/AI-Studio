@@ -27,7 +27,7 @@ public sealed class PortingDifferenceTests
     {
         var corrected = ExpectedChanges.ENTRIES.Where(change => IsAnswered(change.Provider, change.ModelId)).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(corrected, Is.Not.Empty, "Nothing the audit found wrong is answered by a rule at all, which would make this test green for the wrong reason.");
 
@@ -38,7 +38,7 @@ public sealed class PortingDifferenceTests
 
                 Assert.That(rebuilt, Is.EqualTo(CapabilitySnapshot.Describe(change.AnswerWanted)), $"{change.Provider} \"{change.ModelId}\": {change.Reason}");
             }
-        });
+        }
     }
 
     [Test]
@@ -80,7 +80,7 @@ public sealed class PortingDifferenceTests
         // toss. Reading the rules alone cannot find it -- the two patterns are written differently
         // and only meet on a real name, which is what the corpus is full of.
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var entry in ModelCorpus.ENTRIES)
             {
@@ -88,7 +88,7 @@ public sealed class PortingDifferenceTests
 
                 Assert.That(resolution.IsAmbiguous, Is.False, $"{entry.Provider} \"{entry.ModelId}\" is claimed by {resolution.Selector} and, just as strongly, by {string.Join(", ", resolution.TiedSelectors)}.");
             }
-        });
+        }
     }
 
     /// <summary>

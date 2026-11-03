@@ -28,6 +28,12 @@ public enum OutboundDataOrigin
     INTERNAL_WEB_PAGE,
 
     /// <summary>
+    /// A configured data source, such as a local folder or an ERI server, whose passages reached the
+    /// model: found by Semantic Search or by the classic RAG process.
+    /// </summary>
+    DATA_SOURCE,
+
+    /// <summary>
     /// A search of the configured intranet.
     /// </summary>
     INTRANET,

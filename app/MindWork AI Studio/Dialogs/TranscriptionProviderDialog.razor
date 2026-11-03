@@ -25,134 +25,146 @@
                         }
                     }
                 </MudSelect>
-                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton())" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">
+                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton() || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">
                     @T("Create account")
                 </MudButton>
             </MudStack>
-            
-            @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
-            {
-                <SecretInputField Secret="@this.dataAPIKey" SecretChanged="@this.OnAPIKeyChanged" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
-            }
 
-            @if (this.DataLLMProvider.IsHostnameNeeded())
+            @if (this.IsProviderProhibited)
             {
-                <MudTextField
-                    T="string"
-                    @bind-Text="@this.DataHostname"
-                    Label="@T("Hostname")"
-                    Class="mb-3"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.Dns"
-                    AdornmentColor="Color.Info"
-                    Disabled="@this.IsEnterpriseConfiguration"
-                    Validation="@this.providerValidation.ValidatingHostname"
-                    UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
-            }
-
-            @if (this.DataLLMProvider.IsHostNeeded())
-            {
-                <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
-                    @foreach (Host host in Enum.GetValues(typeof(Host)))
-                    {
-                        if (host.IsTranscriptionSupported())
-                        {
-                            <MudSelectItem Value="@host">
-                                @host.Name()
-                            </MudSelectItem>
-                        }
-                    }
-                </MudSelect>
-            }
-
-            @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
-            {
-                <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProviderForTranscription">
-                    @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
-                    {
-                        @if (inferenceProvider.SupportsTranscription())
-                        {
-                            <MudSelectItem Value="@inferenceProvider">
-                                @inferenceProvider.ToName()
-                            </MudSelectItem>
-                        }
-                    }
-                </MudSelect>
-                <MudJustifiedText Class="mb-3">
-                    @T("Hugging Face transcribes audio through a few of its inference providers only, which is why this list is shorter than the one for chatting.")
-                </MudJustifiedText>
-            }
-
-            @if (!this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))
-            {
-                <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
-                    <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
-                        <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
-                            @T("Load")
-                        </MudButton>
-                        @if(this.availableModels.Count is 0)
-                        {
-                            <MudText Typo="Typo.body1">
-                                @T("No models loaded or available.")
-                            </MudText>
-                        }
-                        else
-                        {
-                            <MudSelect Disabled="@(this.IsEnterpriseConfiguration || this.IsNoneProvider)" @bind-Value="@this.DataModel" Label="@T("Model")"
-                                       OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
-                                       AdornmentColor="Color.Info" Adornment="Adornment.Start"
-                                       Validation="@this.providerValidation.ValidatingModel">
-                                @foreach (var model in this.availableModels)
-                                {
-                                    <MudSelectItem Value="@model">
-                                        @model
-                                    </MudSelectItem>
-                                }
-                            </MudSelect>
-                        }
-                    </MudStack>
-                    @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
-                    {
-                        <MudAlert Severity="Severity.Error" Class="mt-3">
-                            @this.dataLoadingModelsIssue
-                        </MudAlert>
-                    }
-                </MudField>
+                <MudAlert Severity="Severity.Warning" Class="mb-3">
+                    @T("The use of this provider has been prohibited by your organization. Please select a different provider.")
+                </MudAlert>
             }
             else
             {
-                <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
-                    <MudText Typo="Typo.body1">
-                        @T("This host uses the model configured at the provider level. No model selection is available.")
-                    </MudText>
-                </MudField>
+                @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
+                {
+                    <SecretInputField Secret="@this.dataAPIKey" SecretChanged="@this.OnAPIKeyChanged" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
+                }
+
+                @if (this.DataLLMProvider.IsHostnameNeeded())
+                {
+                    <MudTextField
+                        T="string"
+                        @bind-Text="@this.DataHostname"
+                        Label="@T("Hostname")"
+                        Class="mb-3"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Dns"
+                        AdornmentColor="Color.Info"
+                        Disabled="@this.IsEnterpriseConfiguration"
+                        Validation="@this.providerValidation.ValidatingHostname"
+                        UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                }
+
+                @if (this.DataLLMProvider.IsHostNeeded())
+                {
+                    <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
+                        @foreach (Host host in Enum.GetValues(typeof(Host)))
+                        {
+                            if (host.IsTranscriptionSupported())
+                            {
+                                <MudSelectItem Value="@host">
+                                    @host.Name()
+                                </MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                }
+
+                @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
+                {
+                    <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProviderForTranscription">
+                        @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
+                        {
+                            @if (inferenceProvider.SupportsTranscription())
+                            {
+                                <MudSelectItem Value="@inferenceProvider">
+                                    @inferenceProvider.ToName()
+                                </MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                    <MudJustifiedText Class="mb-3">
+                        @T("Hugging Face transcribes audio through a few of its inference providers only, which is why this list is shorter than the one for chatting.")
+                    </MudJustifiedText>
+                }
+
+                @if (!this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))
+                {
+                    <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
+                        <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
+                            <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
+                                @T("Load")
+                            </MudButton>
+                            @if(this.availableModels.Count is 0)
+                            {
+                                <MudText Typo="Typo.body1">
+                                    @T("No models loaded or available.")
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudSelect Disabled="@(this.IsEnterpriseConfiguration || this.IsNoneProvider)" @bind-Value="@this.DataModel" Label="@T("Model")"
+                                           OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
+                                           AdornmentColor="Color.Info" Adornment="Adornment.Start"
+                                           Validation="@this.providerValidation.ValidatingModel">
+                                    @foreach (var model in this.availableModels)
+                                    {
+                                        <MudSelectItem Value="@model">
+                                            @model
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                        </MudStack>
+                        @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mt-3">
+                                @this.dataLoadingModelsIssue
+                            </MudAlert>
+                        }
+                    </MudField>
+                }
+                else
+                {
+                    <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
+                        <MudText Typo="Typo.body1">
+                            @T("This host uses the model configured at the provider level. No model selection is available.")
+                        </MudText>
+                    </MudField>
+                }
+
+                @* ReSharper disable once CSharpWarnings::CS8974 *@
+                <MudTextField
+                    T="string"
+                    @bind-Text="@this.DataName"
+                    Label="@T("Instance Name")"
+                    Class="mb-3"
+                    MaxLength="40"
+                    Counter="40"
+                    Immediate="@true"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                    AdornmentColor="Color.Info"
+                    Disabled="@this.IsEnterpriseConfiguration"
+                    Validation="@this.providerValidation.ValidatingInstanceName"
+                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                />
             }
 
-            @* ReSharper disable once CSharpWarnings::CS8974 *@
-            <MudTextField
-                T="string"
-                @bind-Text="@this.DataName"
-                Label="@T("Instance Name")"
-                Class="mb-3"
-                MaxLength="40"
-                Counter="40"
-                Immediate="@true"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
-                AdornmentColor="Color.Info"
-                Disabled="@this.IsEnterpriseConfiguration"
-                Validation="@this.providerValidation.ValidatingInstanceName"
-                UserAttributes="@SPELLCHECK_ATTRIBUTES"
-            />
-            
         </MudForm>
-        <Issues IssuesData="@this.dataIssues"/>
+        @if (!this.IsProviderProhibited)
+        {
+            <Issues IssuesData="@this.dataIssues"/>
+        }
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("Cancel")
         </MudButton>
-        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary" Disabled="@this.IsProviderProhibited">
             @if(this.IsEditing)
             {
                 @T("Update")

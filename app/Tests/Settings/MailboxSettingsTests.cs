@@ -105,12 +105,12 @@ public sealed class MailboxSettingsTests
         var settingsManager = CreateSettingsManager();
         var loaded = await settingsManager.TryReadSettingsSnapshot();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(settingsManager.SettingsWriteBlockReason, Is.EqualTo(SettingsWriteBlockReason.NONE), "The mailboxes kept the settings from being written.");
             Assert.That(loaded?.Version, Is.EqualTo(stored.Version), "The settings were loaded as another version.");
             Assert.That(loaded?.Mailboxes, Is.EqualTo(new[] { MAILBOX }), "The mailboxes were lost while loading.");
-        });
+        }
     }
 
     [Test]
@@ -122,11 +122,11 @@ public sealed class MailboxSettingsTests
         var settingsManager = CreateSettingsManager();
         var loaded = await settingsManager.TryReadSettingsSnapshot();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(settingsManager.SettingsWriteBlockReason, Is.EqualTo(SettingsWriteBlockReason.NONE), "The settings without mailboxes were blocked from being written.");
             Assert.That(loaded?.Mailboxes, Is.Empty, "Mailboxes appeared out of nowhere.");
-        });
+        }
     }
 
     [Test]
@@ -157,14 +157,14 @@ public sealed class MailboxSettingsTests
                             """;
 
         var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>(JSON, SettingsManager.JSON_OPTIONS);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(mailbox.ConfidenceLevel, Is.EqualTo(ConfidenceLevel.NONE));
             Assert.That(mailbox.TransportSecurity, Is.EqualTo(MailboxTransportSecurity.UNKNOWN));
             Assert.That(mailbox.AuthMethod, Is.EqualTo(MailboxAuthMethod.UNKNOWN));
             Assert.That(mailbox.MaxAge, Is.EqualTo(MailboxMaxAge.LAST_3_MONTHS));
             Assert.That(mailbox.OutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
-        });
+        }
     }
 
     /// <remarks>

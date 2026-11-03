@@ -30,12 +30,12 @@ public sealed class DataSourceRunQueueTests
         var first = await Request(queue, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);
         var second = await Request(queue, DataSourceEmbeddingRefreshMode.HASH_CHECK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(first, Is.EqualTo(DataSourceQueueRequestResult.QUEUED));
             Assert.That(second, Is.EqualTo(DataSourceQueueRequestResult.ALREADY_QUEUED));
             Assert.That(DequeueAll(queue), Is.EqualTo(new[] { new DataSourceRunRequest(DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK) }), "The first request decides why the run happens.");
-        });
+        }
     }
 
     [Test]
@@ -51,14 +51,14 @@ public sealed class DataSourceRunQueueTests
         if (requeue)
             await queue.EnqueueAsync(DATA_SOURCE_ID, DataSourceQueueLane.FRONT);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(first, Is.EqualTo(DataSourceQueueRequestResult.RUNNING_MARKED_PENDING));
             Assert.That(second, Is.EqualTo(DataSourceQueueRequestResult.RUNNING));
             Assert.That(requeue, Is.True);
             Assert.That(pendingRefreshMode, Is.EqualTo(DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK), "The first request decides why the follow-up run happens.");
             Assert.That(DequeueAll(queue), Is.EqualTo(new[] { new DataSourceRunRequest(DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK) }), "The running run may have read the data source before the changes, so one more run is needed, and one is enough.");
-        });
+        }
     }
 
     [Test]
@@ -71,11 +71,11 @@ public sealed class DataSourceRunQueueTests
         var requeue = queue.TryComplete(DATA_SOURCE_ID, true, out _);
         var nextRequest = queue.TryReserve(DATA_SOURCE_ID, true, DataSourceEmbeddingRefreshMode.HASH_CHECK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(requeue, Is.False);
             Assert.That(nextRequest, Is.EqualTo(DataSourceQueueRequestResult.QUEUED), "The data source must not count as running after its run completed.");
-        });
+        }
     }
 
     [Test]
@@ -89,11 +89,11 @@ public sealed class DataSourceRunQueueTests
         var requeue = queue.TryComplete(DATA_SOURCE_ID, false, out _);
         var nextRequest = queue.TryReserve(DATA_SOURCE_ID, true, DataSourceEmbeddingRefreshMode.HASH_CHECK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(requeue, Is.False);
             Assert.That(nextRequest, Is.EqualTo(DataSourceQueueRequestResult.QUEUED), "Neither the run nor its follow-up run may linger.");
-        });
+        }
     }
 
     [Test]
@@ -129,12 +129,12 @@ public sealed class DataSourceRunQueueTests
         var retry = await Request(queue, DataSourceEmbeddingRefreshMode.MANUAL_RETRY);
         var later = await Request(queue, DataSourceEmbeddingRefreshMode.TOOL_REQUEST);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(retry, Is.EqualTo(DataSourceQueueRequestResult.ALREADY_QUEUED));
             Assert.That(later, Is.EqualTo(DataSourceQueueRequestResult.ALREADY_QUEUED));
             Assert.That(DequeueAll(queue), Is.EqualTo(new[] { new DataSourceRunRequest(DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.MANUAL_RETRY) }), "Only a manual retry signs in to a mailbox again after its server refused a sign-in, and no later request may take that back.");
-        });
+        }
     }
 
     [Test]
@@ -164,7 +164,7 @@ public sealed class DataSourceRunQueueTests
         if (requeue)
             await queue.EnqueueAsync(DATA_SOURCE_ID, DataSourceQueueLane.BACK);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(begun, Is.True);
             Assert.That(first, Is.EqualTo(DataSourceQueueRequestResult.RUNNING_MARKED_PENDING), "The run began outside the queue, yet it runs all the same.");
@@ -172,7 +172,7 @@ public sealed class DataSourceRunQueueTests
             Assert.That(requeue, Is.True);
             Assert.That(pendingRefreshMode, Is.EqualTo(DataSourceEmbeddingRefreshMode.CONTINUATION));
             Assert.That(DequeueAll(queue), Is.EqualTo(new[] { new DataSourceRunRequest(DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.CONTINUATION) }), "A data source which did its share of the work during the startup check must carry on afterward, exactly once.");
-        });
+        }
     }
 
     [Test]
@@ -182,12 +182,12 @@ public sealed class DataSourceRunQueueTests
         await Request(queue, DataSourceEmbeddingRefreshMode.HASH_CHECK);
         var running = queue.TryBeginRun(OTHER_DATA_SOURCE_ID);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(running, Is.True);
             Assert.That(queue.TryBeginRun(DATA_SOURCE_ID), Is.False, "The data source waits in the queue, so it would run twice in a row.");
             Assert.That(queue.TryBeginRun(OTHER_DATA_SOURCE_ID), Is.False, "The data source runs already, so it would run twice at once.");
-        });
+        }
     }
 
     [Test]
@@ -202,11 +202,11 @@ public sealed class DataSourceRunQueueTests
         await Request(queue, DataSourceEmbeddingRefreshMode.HASH_CHECK, OTHER_DATA_SOURCE_ID);
         var run = await nextRun.WaitAsync(TimeSpan.FromSeconds(10));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(waitedForTheNextRun, Is.True, "Nothing was left to run.");
             Assert.That(run, Is.EqualTo(new DataSourceRunRequest(OTHER_DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.HASH_CHECK)));
-        });
+        }
     }
 
     [Test]
@@ -221,11 +221,11 @@ public sealed class DataSourceRunQueueTests
         await Request(queue, DataSourceEmbeddingRefreshMode.INTERVAL_CHECK, MAILBOX_ID);
         await CarryOn(queue, step!.DataSourceId);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(step.DataSourceId, Is.EqualTo(DATA_SOURCE_ID));
             Assert.That(DequeueAll(queue).Select(run => run.DataSourceId), Is.EqualTo(new[] { MAILBOX_ID, OTHER_DATA_SOURCE_ID, DATA_SOURCE_ID }), "The mailbox must not wait behind every step of every large data source, which would add up to hours.");
-        });
+        }
     }
 
     [Test]
@@ -273,11 +273,11 @@ public sealed class DataSourceRunQueueTests
         Assert.That(queue.TryDequeue(out var repair), Is.True);
         await CarryOn(queue, repair!.DataSourceId);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(repair, Is.EqualTo(new DataSourceRunRequest(DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.MANUAL_RETRY)));
             Assert.That(DequeueAll(queue).Select(run => run.DataSourceId), Is.EqualTo(new[] { OTHER_DATA_SOURCE_ID, DATA_SOURCE_ID }), "The next step of the repaired data source carries on its pass, so it waits its turn in the back lane.");
-        });
+        }
     }
 
     /// <summary>

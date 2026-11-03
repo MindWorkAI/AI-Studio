@@ -40,11 +40,11 @@ public sealed class TranscriptionConfidenceTests
     public void AFolderWhichAsksForAHighLevelKeepsItsRecordingsFromAMediumProvider()
     {
         var directory = new DataSourceLocalDirectory { ConfidenceLevel = ConfidenceLevel.HIGH };
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceEmbeddingService.AllowsTranscription(directory, ConfidenceLevel.MEDIUM), Is.False);
             Assert.That(DataSourceEmbeddingService.AllowsTranscription(directory, ConfidenceLevel.HIGH), Is.True);
-        });
+        }
     }
 
     [Test]

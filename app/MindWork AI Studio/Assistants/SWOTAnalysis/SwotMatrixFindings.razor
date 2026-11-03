@@ -1,0 +1,13 @@
+@if (this.Findings.Count == 0)
+{
+    <p class="swot-empty">@this.EmptyMessage</p>
+}
+else
+{
+    <ul class="swot-cell-findings">
+        @foreach (var finding in this.Findings)
+        {
+            <li>@finding.Summary</li>
+        }
+    </ul>
+}

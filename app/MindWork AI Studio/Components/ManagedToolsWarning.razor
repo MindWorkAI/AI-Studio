@@ -9,7 +9,7 @@
 }
 else
 {
-    @* Two independent reasons a tool stays out of reach, so both may show at once: *@
+    @* Independent reasons a tool stays out of reach, so several may show at once: *@
     @if (this.ToolsNeedingConfiguration.Count > 0)
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="@this.Class">
@@ -21,6 +21,13 @@ else
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="@this.Class">
             @(string.Format(T("Not all tools selected for this run can be used with the chosen AI provider: {0}. Please choose a provider with a higher confidence level to use all of them."), string.Join(", ", this.ToolsBeyondProviderConfidence)))
+        </MudAlert>
+    }
+
+    @if (this.ToolsSwitchedOffByUser.Count > 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="@this.Class">
+            @(string.Format(T("Some tools selected for this run are switched off in your tool settings and stay unused: {0}. Switch them on again in the app settings to use them."), string.Join(", ", this.ToolsSwitchedOffByUser)))
         </MudAlert>
     }
 }

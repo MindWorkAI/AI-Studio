@@ -43,8 +43,9 @@ public static class DataBackupWriter
     /// <returns>The manifest as the backup holds it.</returns>
     public static async Task<DataBackupManifest> WriteAsync(Stream target, DataBackupSources sources, DataBackupManifest manifest, IProgress<DataBackupProgress>? progress, CancellationToken token)
     {
-        var files = CollectFiles(sources, token);
-        var totalFiles = files.Count + 1;
+        // The provenance store follows the chats, cf. DataBackupSources.CopyProvenanceStoreAsync. Until it is copied, it counts as one file:
+        var files = CollectFiles(sources, entry => !entry.ComesFromProvenanceCopy, string.Empty, token);
+        var totalFiles = files.Count + 2;
         var entries = new List<DataBackupManifestEntry>(totalFiles);
         var buffer = new byte[BUFFER_SIZE];
 
@@ -56,25 +57,12 @@ public static class DataBackupWriter
                 entries.Add(await WriteEntryAsync(archive, DataBackupFormat.EntryName(settingsEntry.Location, settingsEntry.RelativePath), settingsStream, DateTimeOffset.Now, buffer, token));
 
             progress?.Report(new(DataBackupPhase.WRITING, entries.Count, totalFiles));
-            foreach (var file in files)
-            {
-                token.ThrowIfCancellationRequested();
+            await WriteFilesAsync(archive, files, entries, totalFiles, progress, buffer, token);
 
-                FileStream source;
-                try
-                {
-                    source = new FileStream(file.SourcePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
-                }
-                catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
-                {
-                    continue;
-                }
-
-                await using (source)
-                    entries.Add(await WriteEntryAsync(archive, file.EntryName, source, File.GetLastWriteTime(file.SourcePath), buffer, token));
-
-                progress?.Report(new(DataBackupPhase.WRITING, entries.Count, totalFiles));
-            }
+            var provenanceCopyDirectory = sources.CopyProvenanceStoreAsync is null ? string.Empty : await sources.CopyProvenanceStoreAsync(token);
+            var provenanceFiles = CollectFiles(sources, entry => entry.ComesFromProvenanceCopy, provenanceCopyDirectory, token);
+            totalFiles = files.Count + 1 + provenanceFiles.Count;
+            await WriteFilesAsync(archive, provenanceFiles, entries, totalFiles, progress, buffer, token);
 
             manifest = manifest with { Entries = entries };
             await using (var manifestStream = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(manifest, DataBackupFormat.JSON_OPTIONS), writable: false))
@@ -88,9 +76,14 @@ public static class DataBackupWriter
     /// Collects the files of the data folder which belong into a backup, cf. DataBackupContents.
     /// </summary>
     /// <remarks>
-    /// The settings are no part of it: they come from memory. The indexes come from their copies.
+    /// The settings are no part of it: they come from memory. The indexes and the provenance store
+    /// come from their copies.
     /// </remarks>
-    private static List<BackupFile> CollectFiles(DataBackupSources sources, CancellationToken token)
+    /// <param name="sources">Where the files come from.</param>
+    /// <param name="include">Which entries of the list to collect.</param>
+    /// <param name="provenanceCopyDirectory">The copy of the provenance store, or an empty string to take it from the data folder.</param>
+    /// <param name="token">Cancels collecting.</param>
+    private static List<BackupFile> CollectFiles(DataBackupSources sources, Func<DataBackupEntry, bool> include, string provenanceCopyDirectory, CancellationToken token)
     {
         var excludedPaths = DataBackupContents.ENTRIES
             .Where(entry => !entry.IsIncluded && entry.Location is DataBackupLocation.DATA_DIRECTORY)
@@ -99,11 +92,14 @@ public static class DataBackupWriter
             .ToList();
 
         var files = new List<BackupFile>();
-        foreach (var entry in DataBackupContents.ENTRIES.Where(entry => entry.IsIncluded && entry.Location is DataBackupLocation.DATA_DIRECTORY))
+        foreach (var entry in DataBackupContents.ENTRIES.Where(entry => entry.IsIncluded && entry.Location is DataBackupLocation.DATA_DIRECTORY && include(entry)))
         {
-            var root = entry.ComesFromIndexCopies
-                ? sources.IndexCopiesDirectory
-                : sources.DataDirectory;
+            var root = entry switch
+            {
+                { ComesFromIndexCopies: true } => sources.IndexCopiesDirectory,
+                { ComesFromProvenanceCopy: true } when !string.IsNullOrWhiteSpace(provenanceCopyDirectory) => provenanceCopyDirectory,
+                _ => sources.DataDirectory,
+            };
 
             if (string.IsNullOrWhiteSpace(root))
                 continue;
@@ -139,6 +135,32 @@ public static class DataBackupWriter
         }
 
         return files;
+    }
+
+    /// <summary>
+    /// Writes files into the backup, and notes each one in the entries of the manifest.
+    /// </summary>
+    private static async Task WriteFilesAsync(ZipArchive archive, IReadOnlyList<BackupFile> files, List<DataBackupManifestEntry> entries, int totalFiles, IProgress<DataBackupProgress>? progress, byte[] buffer, CancellationToken token)
+    {
+        foreach (var file in files)
+        {
+            token.ThrowIfCancellationRequested();
+
+            FileStream source;
+            try
+            {
+                source = new FileStream(file.SourcePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            }
+            catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
+            {
+                continue;
+            }
+
+            await using (source)
+                entries.Add(await WriteEntryAsync(archive, file.EntryName, source, File.GetLastWriteTime(file.SourcePath), buffer, token));
+
+            progress?.Report(new(DataBackupPhase.WRITING, entries.Count, totalFiles));
+        }
     }
 
     /// <summary>

@@ -27,7 +27,7 @@ public sealed class QueuedStatusTests
 
         var queued = DataSourceEmbeddingService.AsQueued(status, DataSource());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(queued.State, Is.EqualTo(DataSourceEmbeddingState.QUEUED));
             Assert.That(queued.TotalDocuments, Is.EqualTo(status.TotalDocuments));
@@ -40,7 +40,7 @@ public sealed class QueuedStatusTests
             Assert.That(queued.FilePatternExclusions, Is.EqualTo(status.FilePatternExclusions));
             Assert.That(queued.LastError, Is.EqualTo(status.LastError), "The sentence about the data source as a whole belongs next to its failures.");
             Assert.That(queued.LastSyncUtc, Is.EqualTo(NOW));
-        });
+        }
     }
 
     [Test]
@@ -48,7 +48,7 @@ public sealed class QueuedStatusTests
     {
         var queued = DataSourceEmbeddingService.AsQueued(RunningStatus(), DataSource());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(queued.CurrentDocument, Is.Empty, "Nothing is being read while the data source waits.");
             Assert.That(queued.CurrentDocumentBlock, Is.Null);
@@ -56,7 +56,7 @@ public sealed class QueuedStatusTests
             Assert.That(queued.Attention, Is.EqualTo(DataSourceAttention.NONE), "The next run asks the user anew when the question still applies.");
             Assert.That(queued.PendingRemovalCount, Is.Null, "The next run asks the user anew, with the number it finds then.");
             Assert.That(queued.VectorStoreUnreadable, Is.False);
-        });
+        }
     }
 
     [Test]

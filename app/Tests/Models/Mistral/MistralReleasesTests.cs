@@ -53,14 +53,14 @@ public sealed class MistralReleasesTests
         // for "mistral-medium-3" would otherwise answer for "mistral-medium-3.5" as well and place
         // it eleven months too early, before the release which gave it reasoning.
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MistralReleases.Of(new ModelId("mistral-medium-3"), SOME_LATEST_RELEASE), Is.EqualTo(2505));
             Assert.That(MistralReleases.Of(new ModelId("mistral-medium-3.5"), SOME_LATEST_RELEASE), Is.EqualTo(2604));
             Assert.That(MistralReleases.Of(new ModelId("mistral-medium-3-5"), SOME_LATEST_RELEASE), Is.EqualTo(2604), "Mistral writes the version separator both ways for the same model.");
             Assert.That(MistralReleases.Of(new ModelId("mistral-large-4"), SOME_LATEST_RELEASE), Is.EqualTo(2610));
             Assert.That(MistralReleases.Of(new ModelId("mistral-large-4-0"), SOME_LATEST_RELEASE), Is.EqualTo(2610), "The model card names it with a minor version, which changes nothing about the release.");
-        });
+        }
     }
 
     [Test]
@@ -73,14 +73,14 @@ public sealed class MistralReleasesTests
         var beforeItCouldSee = ModelRegistry.Shared.Profile(LLMProviders.MISTRAL, "mistral-large-2411");
         var afterwards = ModelRegistry.Shared.Profile(LLMProviders.MISTRAL, "mistral-large-2512");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(beforeItCouldSee.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.False);
             Assert.That(beforeItCouldSee.Reasoning, Is.EqualTo(ReasoningSupport.NONE));
 
             Assert.That(afterwards.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True);
             Assert.That(afterwards.Reasoning, Is.EqualTo(ReasoningSupport.OPTIONAL));
-        });
+        }
     }
 
     [TestCase("mistral-large-4", TestName = "Mistral Large 4 under the name of Mistral's changelog")]
@@ -93,12 +93,12 @@ public sealed class MistralReleasesTests
         //
         var profile = ModelRegistry.Shared.Profile(LLMProviders.MISTRAL, modelId);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True);
             Assert.That(profile.Reasoning, Is.EqualTo(ReasoningSupport.OPTIONAL));
             Assert.That(profile.Context.DefaultTokens, Is.EqualTo(1_000_000));
-        });
+        }
     }
 
     [TestCase("mistral-large-2512", TestName = "Mistral Large 3 keeps its own window")]
@@ -119,12 +119,12 @@ public sealed class MistralReleasesTests
         //
         var profile = ModelRegistry.Shared.Profile(LLMProviders.MISTRAL, "mistral-large-whenever");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.FUNCTION_CALLING), Is.True, "What the family could always do is still stated.");
             Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.False);
             Assert.That(profile.Reasoning, Is.EqualTo(ReasoningSupport.NONE));
-        });
+        }
     }
 
     [Test]
@@ -132,10 +132,10 @@ public sealed class MistralReleasesTests
     {
         var newest = ModelRegistry.Shared.Profile(LLMProviders.MISTRAL, "ministral-3b-latest");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(newest.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True, "Ministral 3 reads images.");
             Assert.That(newest.Reasoning, Is.EqualTo(ReasoningSupport.NONE), "No Ministral reasons, whatever its release.");
-        });
+        }
     }
 }

@@ -41,6 +41,12 @@
 
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
+                        @if (this.SettingsManager.IsProviderProhibited(context.UsedLLMProvider))
+                        {
+                            <MudTooltip Text="@T("The use of this transcription provider has been prohibited by your organization.")">
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Block" Disabled="true"/>
+                            </MudTooltip>
+                        }
                         @if (context.IsTrustedForDataSourceSecurityChecks(this.SettingsManager))
                         {
                             <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted transcription provider is trusted for data source security checks.") : T("This transcription provider is trusted by your organization for data source security checks."))">

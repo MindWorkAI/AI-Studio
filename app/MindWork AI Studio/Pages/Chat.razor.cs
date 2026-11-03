@@ -37,6 +37,7 @@ public partial class Chat : MSGComponentBase
     private bool workspaceSearchVisible;
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
+    private ChatComponent? chatComponent;
     private double splitterPosition = 30;
     private bool skipRenderAfterSplitterChange;
     private readonly ChatComposerState composerState = new();
@@ -165,6 +166,23 @@ public partial class Chat : MSGComponentBase
             return;
 
         await this.workspaces.ToggleSearchAsync();
+    }
+
+    /// <summary>
+    /// Starts a new chat in a workspace, when the workspace tree asks for one.
+    /// </summary>
+    /// <remarks>
+    /// The page reads its reference to the chat component only now, when the user clicked. The chat
+    /// component is created anew whenever the workspace sidebar is shown or hidden, so a reference
+    /// taken earlier could point to one which is gone.
+    /// </remarks>
+    /// <param name="workspaceId">The ID of the workspace.</param>
+    private async Task StartNewChatInWorkspace(Guid workspaceId)
+    {
+        if (this.chatComponent is null)
+            return;
+
+        await this.chatComponent.StartNewChatInWorkspaceAsync(workspaceId);
     }
 
     #region Overrides of MSGComponentBase

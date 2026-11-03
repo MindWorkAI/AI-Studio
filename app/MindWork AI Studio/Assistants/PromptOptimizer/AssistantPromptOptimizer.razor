@@ -12,7 +12,7 @@
               Label="@T("Prompt or prompt description")"
               Variant="Variant.Outlined"
               Lines="8"
-              AutoGrow="@true"
+              Sizing="InputSizing.Auto"
               MaxLines="20"
               Class="mb-3"
               UserAttributes="@USER_INPUT_ATTRIBUTES"/>
@@ -29,7 +29,7 @@
                LabelOther="@T("Custom language")"/>
 
 <MudTextField T="string"
-              AutoGrow="true"
+              Sizing="InputSizing.Auto"
               Lines="2"
               @bind-Text="@this.importantAspects"
               Class="mb-3"
@@ -59,22 +59,22 @@
 
     <MudGrid Class="mb-3">
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recClarityDirectness" Label="@T("Be clear and direct")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recClarityDirectness" Label="@T("Be clear and direct")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recExamplesContext" Label="@T("Add examples and context")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recExamplesContext" Label="@T("Add examples and context")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recSequentialSteps" Label="@T("Use sequential steps")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recSequentialSteps" Label="@T("Use sequential steps")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recStructureMarkers" Label="@T("Structure with markers")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recStructureMarkers" Label="@T("Structure with markers")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recRoleDefinition" Label="@T("Give the model a role")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recRoleDefinition" Label="@T("Give the model a role")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recLanguageChoice" Label="@T("Choose prompt language deliberately")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recLanguageChoice" Label="@T("Choose prompt language deliberately")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
     </MudGrid>
 } 

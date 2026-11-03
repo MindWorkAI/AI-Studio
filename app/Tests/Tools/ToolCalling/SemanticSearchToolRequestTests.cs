@@ -27,12 +27,12 @@ public sealed class SemanticSearchToolRequestTests
     {
         var request = SemanticSearchTool.ReadRequest(Arguments("""{"query":"  travel expenses  "}"""), OFFERED);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.Query, Is.EqualTo("travel expenses"));
             Assert.That(request.DataSources, Is.EqualTo(OFFERED));
             Assert.That(request.Page, Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -47,11 +47,11 @@ public sealed class SemanticSearchToolRequestTests
     {
         var message = Refusal(() => SemanticSearchTool.ReadRequest(Arguments("""{"query":"travel expenses","data_source_ids":["44444444-4444-4444-4444-444444444444"]}"""), OFFERED));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain(HANDBOOK.Id).And.Contain(INTRANET.Id), "A data source which dropped out since the request was prepared is refused the same way, so the model learns which ones are left.");
             Assert.That(message, Does.Contain("Leave it out to search all listed data sources."));
-        });
+        }
     }
 
     [Test]
@@ -73,25 +73,25 @@ public sealed class SemanticSearchToolRequestTests
     {
         var message = Refusal(() => SemanticSearchTool.ReadRequest(Arguments("""{"query":"travel expenses","page":2}"""), OFFERED));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("'page'").And.Contain("exactly one data source").And.Contain("but was 2 for 2"));
             Assert.That(message, Does.Contain("leave 'page' out"), "The way out when the model wanted the first page of each.");
-        });
+        }
     }
 
     [Test]
     public void APageAfterTheFirstComesThroughForOneDataSource()
     {
-        var named = SemanticSearchTool.ReadRequest(Arguments($$"""{"query":"travel expenses","data_source_ids":["{{INTRANET.Id}}"],"page":2}"""), OFFERED);
+        var named = SemanticSearchTool.ReadRequest(Arguments($$"""{"query":"travel expenses","data_source_ids":["{{HANDBOOK.Id}}"],"page":2}"""), OFFERED);
         var onlyOneOffered = SemanticSearchTool.ReadRequest(Arguments("""{"query":"travel expenses","page":2}"""), [HANDBOOK]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(named.DataSources, Is.EqualTo(new[] { INTRANET }));
+            Assert.That(named.DataSources, Is.EqualTo(new[] { HANDBOOK }));
             Assert.That(named.Page, Is.EqualTo(2));
             Assert.That(onlyOneOffered.Page, Is.EqualTo(2), "With a single data source offered, leaving it unnamed still means that one.");
-        });
+        }
     }
 
     [Test]
@@ -101,6 +101,13 @@ public sealed class SemanticSearchToolRequestTests
         Assert.That(message, Does.Contain("at most 9").And.Contain("but was 10").And.Contain("Rephrase the query"));
     }
 
+    [Test]
+    public void AnERIDataSourceHasNoFurtherPage()
+    {
+        var message = Refusal(() => SemanticSearchTool.ReadRequest(Arguments($$"""{"query":"travel expenses","data_source_ids":["{{INTRANET.Id}}"],"page":2}"""), OFFERED));
+        Assert.That(message, Does.Contain("at most 1").And.Contain("but was 2").And.Contain("Rephrase the query"), "A server which allows only the configured number of matches would refuse the page, and the data source would count as not searched.");
+    }
+
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);
 
     private static JsonElement Query(string query) => JsonSerializer.SerializeToElement(new Dictionary<string, string> { ["query"] = query });
@@ -108,5 +115,5 @@ public sealed class SemanticSearchToolRequestTests
     /// <summary>
     /// Reads a search which has to be refused and returns what the refusal said.
     /// </summary>
-    private static string Refusal(TestDelegate read) => Assert.Throws<ArgumentException>(read)!.Message;
+    private static string Refusal(Action read) => Assert.Throws<ArgumentException>(read)!.Message;
 }

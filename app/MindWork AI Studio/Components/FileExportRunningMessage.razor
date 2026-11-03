@@ -1,0 +1,8 @@
+@inherits MSGComponentBase
+
+<MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="3">
+    <MudProgressCircular Size="Size.Small" Indeterminate="@true" Color="Color.Primary"/>
+    <div>
+        @string.Format(T("Saving '{0}'..."), this.FileName)
+    </div>
+</MudStack>

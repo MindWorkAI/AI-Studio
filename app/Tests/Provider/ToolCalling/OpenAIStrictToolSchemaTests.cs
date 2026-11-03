@@ -24,11 +24,11 @@ public sealed class OpenAIStrictToolSchemaTests
             .OptionalString("language", "The language.")
             .OptionalInteger("page", "The page."))["properties"]!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Types(properties["language"]!), Is.EqualTo(new[] { "string", "null" }));
             Assert.That(Types(properties["page"]!), Is.EqualTo(new[] { "integer", "null" }));
-        });
+        }
     }
 
     [Test]
@@ -38,11 +38,11 @@ public sealed class OpenAIStrictToolSchemaTests
             .RequiredString("query", "The search query.")
             .OptionalEnum("time_range", "The time range.", "day", "month", "year"))["properties"]!["time_range"]!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Types(timeRange), Is.EqualTo(new[] { "string", "null" }));
             Assert.That(timeRange["enum"]!.AsArray().Select(value => value?.GetValue<string>()), Is.EqualTo(new[] { null, "day", "month", "year" }));
-        });
+        }
     }
 
     [Test]
@@ -52,12 +52,12 @@ public sealed class OpenAIStrictToolSchemaTests
             .RequiredString("query", "The search query.")
             .OptionalStringArray("data_source_ids", "The data sources.", "first", "second"))["properties"]!["data_source_ids"]!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Types(dataSourceIds), Is.EqualTo(["array", "null"]), "Leaving the list out is said by allowing null for the list itself.");
             Assert.That(dataSourceIds["items"]!["enum"]!.AsArray().Select(value => value?.GetValue<string>()), Is.EqualTo(["first", "second"]), "Null is a way to leave the list out, not an entry it may hold.");
             Assert.That(dataSourceIds["enum"], Is.Null, "The list itself names no values of its own.");
-        });
+        }
     }
 
     [Test]

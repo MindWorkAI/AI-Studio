@@ -46,6 +46,15 @@ public sealed partial class UpdateMetadataCommands
         await this.PerformPrepare(action, true, version);
 
         await this.BuildPreparedRelease(offline);
+
+        // The wiki is a repository of its own, and nothing in this build touches it.
+        // It describes what users can install, so it changes once the release is published:
+        Console.WriteLine();
+        Console.WriteLine("==============================");
+        Console.WriteLine("- Warning: Remember the wiki, https://github.com/MindWorkAI/AI-Studio/wiki");
+        Console.WriteLine("  Once the release is published, carry the \"Wiki\" sections of the pull requests merged since the");
+        Console.WriteLine("  last release into the wiki, and raise the version in _Footer.md and de/_Footer.md. See step 9 of");
+        Console.WriteLine("  \"Release Process\" in app/Build/AGENTS.md.");
     }
 
     [Command("rebuild-release", Description = "Prepare & build a new build of the current release")]

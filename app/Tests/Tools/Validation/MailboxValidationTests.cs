@@ -27,11 +27,11 @@ public sealed class MailboxValidationTests
     [Test]
     public void AnUnknownEncryptionIsRejectedAndNeverOffered()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceValidation.ValidateMailboxTransportSecurity(MailboxTransportSecurity.UNKNOWN), Is.Not.Null);
             Assert.That(ConfigurationSelectDataFactory.GetMailboxTransportSecurityData().Select(option => option.Value), Is.EqualTo(new[] { MailboxTransportSecurity.SSL_ON_CONNECT, MailboxTransportSecurity.STARTTLS }));
-        });
+        }
     }
 
     [TestCase(MailboxTransportSecurity.SSL_ON_CONNECT, ExpectedResult = 993)]
@@ -51,11 +51,11 @@ public sealed class MailboxValidationTests
         const string STORAGE_ISSUE = "The keyring is locked.";
         var validationWithIssue = new DataSourceValidation { GetSecretStorageIssue = () => STORAGE_ISSUE };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(VALIDATION.ValidateMailboxPassword(string.Empty), Is.Not.Null, "An empty password was accepted.");
             Assert.That(VALIDATION.ValidateMailboxPassword(" secret with spaces "), Is.Null, "A password was trimmed or rejected for its spaces.");
             Assert.That(validationWithIssue.ValidateMailboxPassword("secret"), Is.EqualTo(STORAGE_ISSUE), "The issue of the keyring was not shown.");
-        });
+        }
     }
 }

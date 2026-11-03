@@ -168,8 +168,6 @@ public sealed class DataSourceValidation
 
     public string? ValidateFilePatterns(string patterns) => FileNamePatterns.Validate(patterns);
 
-    public string? ValidateExcludePatterns(string patterns) => FileExclusions.Validate(patterns);
-
     public string? ValidateEmbeddingId(string embeddingId)
     {
         if(string.IsNullOrWhiteSpace(embeddingId))
@@ -188,8 +186,12 @@ public sealed class DataSourceValidation
         // An id which matches no provider belongs to one which was deleted since. Saved like this, the
         // data source keeps pointing at a provider nobody can reach, and nothing of it is embedded:
         //
-        if(this.GetSelectedEmbeddingProvider() is null)
+        if(this.GetSelectedEmbeddingProvider() is not { } selectedEmbedding)
             return TB("The embedding provider of this data source no longer exists. Please select another one.");
+
+        // Saved like this, nothing of the data source would ever be embedded:
+        if(this.GetSettingsManager() is { } settingsManager && settingsManager.IsProviderProhibited(selectedEmbedding.UsedLLMProvider))
+            return TB("The use of this embedding provider has been prohibited by your organization. Please select a different embedding provider.");
 
         return this.ValidateSelectedEmbeddingProviderAccess();
     }

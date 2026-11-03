@@ -40,11 +40,11 @@ public sealed class TokenizerRuleTests
     {
         var tokenizer = provider.GetModelProfile(new Model(modelId, null)).Tokenizer;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tokenizer.Kind, Is.EqualTo(TokenizerKind.TIKTOKEN));
             Assert.That(tokenizer.Id, Is.EqualTo(encoding));
-        });
+        }
     }
 
     [TestCase(LLMProviders.ANTHROPIC, "claude-opus-5", "/v1/messages/count_tokens")]
@@ -55,11 +55,11 @@ public sealed class TokenizerRuleTests
     {
         var tokenizer = provider.GetModelProfile(new Model(modelId, null)).Tokenizer;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tokenizer.Kind, Is.EqualTo(TokenizerKind.PROVIDER_API));
             Assert.That(tokenizer.Id, Is.EqualTo(endpoint));
-        });
+        }
     }
 
     [TestCase(LLMProviders.OPEN_AI, "gpt-6-astra", Description = "Newer than the mapping OpenAI publishes, so nothing is claimed for it.")]
@@ -70,11 +70,11 @@ public sealed class TokenizerRuleTests
     {
         var tokenizer = provider.GetModelProfile(new Model(modelId, null)).Tokenizer;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tokenizer.IsKnown, Is.False);
             Assert.That(tokenizer.Kind, Is.EqualTo(TokenizerKind.UNKNOWN), "Which means the built-in tokenizer, the same as today.");
-        });
+        }
     }
 
     [Test]
@@ -98,12 +98,12 @@ public sealed class TokenizerRuleTests
         // without a kind cannot be told apart from any other string -- whether it is a repository,
         // an encoding or an endpoint decides what a person can do with it.
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(new TokenizerRef(TokenizerKind.HUGGING_FACE, string.Empty).IsKnown, Is.False);
             Assert.That(new TokenizerRef(TokenizerKind.UNKNOWN, "o200k_base").IsKnown, Is.False);
             Assert.That(TokenizerRef.UNKNOWN.IsKnown, Is.False);
             Assert.That(new TokenizerRef(TokenizerKind.TIKTOKEN, "o200k_base").IsKnown, Is.True);
-        });
+        }
     }
 }

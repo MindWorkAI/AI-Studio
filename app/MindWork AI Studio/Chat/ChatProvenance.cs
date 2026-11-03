@@ -1,0 +1,115 @@
+using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.ProvenanceStore;
+
+namespace AIStudio.Chat;
+
+/// <summary>
+/// Keeps what chats received in the provenance store in step with the chats themselves: it goes
+/// when its chat goes, and it comes along when its chat is copied.
+/// </summary>
+/// <remarks>
+/// Called from the places which delete or copy chats. Nothing here may stop them: a chat is
+/// deleted or copied either way, and what the store keeps too long is removed by the cleanup at
+/// the next start, see ProvenanceCleanup.
+/// </remarks>
+public static class ChatProvenance
+{
+    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(ChatProvenance));
+
+    /// <summary>
+    /// Collects the entries of the provenance store which a chat refers to.
+    /// </summary>
+    /// <remarks>
+    /// The passages of its answers, the documents attached to its messages, and those attached to
+    /// the message being written, which may come from a message sent before, e.g., one being edited,
+    /// together with the texts a preview read of them.
+    /// </remarks>
+    /// <param name="thread">The chat.</param>
+    /// <returns>The ids of the entries.</returns>
+    public static IReadOnlySet<Guid> CollectProvenanceIds(this ChatThread thread)
+    {
+        var provenanceIds = new HashSet<Guid>();
+        foreach (var block in thread.Blocks)
+        {
+            if (block.Content is ContentText text)
+                provenanceIds.UnionWith(text.SourcePassages.Select(passage => passage.ProvenanceId).OfType<Guid>());
+
+            if (block.Content is not null)
+                provenanceIds.UnionWith(block.Content.FileAttachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>());
+        }
+
+        provenanceIds.UnionWith(thread.Draft.FileAttachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>());
+        provenanceIds.UnionWith(thread.Draft.PreviewedTexts.Select(text => text.ProvenanceId));
+        return provenanceIds;
+    }
+
+    /// <summary>
+    /// Deletes what the given chats received from the provenance store, for chats which were deleted.
+    /// </summary>
+    /// <param name="chatIds">The deleted chats.</param>
+    public static async Task ForgetChatsAsync(IReadOnlyCollection<Guid> chatIds)
+    {
+        if (chatIds.Count is 0 || await GetStoreAsync() is not { } store)
+            return;
+
+        try
+        {
+            var deleted = await store.DeleteChatsAsync(chatIds, CancellationToken.None);
+            if (deleted > 0)
+                LOGGER.LogInformation("Deleted {Count} provenance entries of {ChatCount} deleted chats.", deleted, chatIds.Count);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogWarning(exception, "Failed to delete the provenance entries of {ChatCount} deleted chats. The next start removes them.", chatIds.Count);
+        }
+    }
+
+    /// <summary>
+    /// Copies what a chat received to its copy, which refers to the same entries.
+    /// </summary>
+    /// <param name="sourceChatId">The chat which was copied.</param>
+    /// <param name="targetChatId">The copy.</param>
+    public static async Task CopyChatAsync(Guid sourceChatId, Guid targetChatId)
+    {
+        if (await GetStoreAsync() is not { } store)
+            return;
+
+        try
+        {
+            await store.CopyChatAsync(sourceChatId, targetChatId, CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogWarning(exception, "Failed to copy the provenance entries of the chat '{SourceChatId}' to its copy '{TargetChatId}'. The copy shows them as long as the original keeps them.", sourceChatId, targetChatId);
+        }
+    }
+
+    /// <summary>
+    /// Gets the provenance store for chats and their messages, or nothing when there is none to use.
+    /// </summary>
+    /// <remarks>
+    /// The one way to the store for code which the app's services do not create, such as a chat or a
+    /// message. Components and services get the DatabaseClientProvider injected instead. It never
+    /// throws: there is no store while the app has not started its services, e.g., in a test, or when
+    /// the store is not available. Every caller carries on without it then.
+    /// </remarks>
+    /// <returns>The provenance store, or null when there is none.</returns>
+    internal static async Task<ProvenanceStoreClient?> GetStoreAsync()
+    {
+        try
+        {
+            // Declared as never null, but it is null until the app has started its services:
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            if (Program.SERVICE_PROVIDER?.GetService<DatabaseClientProvider>() is not { } databaseClientProvider)
+                return null;
+
+            var store = await databaseClientProvider.GetProvenanceStoreAsync();
+            return store is NoProvenanceStoreClient ? null : store;
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogWarning(exception, "The provenance store is not available to the chats.");
+            return null;
+        }
+    }
+}

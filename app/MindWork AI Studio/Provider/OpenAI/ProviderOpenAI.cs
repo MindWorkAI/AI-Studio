@@ -113,15 +113,14 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                        {
                                            Text = text,
                                        },
-                                       async attachment => new SubContentImageUrlNested
+                                       image => new SubContentImageUrlNested
                                        {
                                            ImageUrl = new SubContentImageUrlData
                                            {
-                                               Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                                                   ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                                                   : string.Empty,
+                                               Url = image.ToDataUrl(),
                                            },
-                                       });
+                                       },
+                                       token);
 
                                    return new ChatCompletionAPIRequest
                                    {
@@ -192,12 +191,11 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             {
                 Text = text,
             },
-            async attachment => new SubContentInputImage
+            image => new SubContentInputImage
             {
-                ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                    ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                    : string.Empty,
-            });
+                ImageUrl = image.ToDataUrl(),
+            },
+            token);
 
         var baseInput = new List<object> { systemPrompt };
         baseInput.AddRange(messages);

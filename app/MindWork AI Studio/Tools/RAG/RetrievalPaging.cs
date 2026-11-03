@@ -8,7 +8,8 @@ namespace AIStudio.Tools.RAG;
 /// Neither the vector store nor the keyword index knows an offset, and neither needs one: page p
 /// of size k is cut from the first p·k + 1 matches of every channel. The one match beyond the
 /// page tells whether a next page is worth asking for. The first page is therefore exactly what a
-/// search for k matches always returned.
+/// search for k matches always returned. A data source which cannot page that far, such as an ERI
+/// data source, says so through IDataSource.GetLastPage.
 /// </para>
 /// <para>
 /// Staying without state is not a shortcut but a requirement: tool results do not travel into
@@ -21,9 +22,9 @@ public static class RetrievalPaging
     /// How many matches a page beyond the first may fetch at most, per channel.
     /// </summary>
     /// <remarks>
-    /// Every page fetches its whole window again, from the vector store and the keyword index, or
-    /// from the ERI server. The first page is exempt: its size is what the user or the organization
-    /// configured, and fetching it is what the retrieval always did.
+    /// Every page fetches its whole window again, from the vector store and the keyword index. The
+    /// first page is exempt: its size is what the user or the organization configured, and
+    /// fetching it is what the retrieval always did.
     /// </remarks>
     public const int MAX_RESULT_WINDOW = 100;
 

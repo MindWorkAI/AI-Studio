@@ -69,13 +69,13 @@ public sealed class RelativeDataPathsMigrationTests
             var json = await File.ReadAllTextAsync(chat.ThreadPath);
             var stored = JsonSerializer.Deserialize<ChatThread>(json, WorkspaceBehaviour.JSON_OPTIONS)!;
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(json, Does.Not.Contain(JsonEncodedText.Encode(this.testDirectory).ToString()), "Not a single path may name the data directory of this computer anymore.");
                 Assert.That(stored.Draft.MediaTranscripts.Single().FilePath, Is.EqualTo(chat.TranscriptPath), "The draft still finds its transcript.");
                 Assert.That(((ContentText)stored.Blocks.Single().Content!).FileAttachments.Single().FilePath, Is.EqualTo(chat.TranscriptPath), "The sent message still finds its transcript.");
                 Assert.That(File.GetLastWriteTimeUtc(chat.ThreadPath), Is.EqualTo(LAST_EDIT_TIME), "Writing the chat once more is no change of the chat.");
-            });
+            }
         }
     }
 

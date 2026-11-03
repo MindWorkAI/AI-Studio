@@ -58,12 +58,12 @@ public sealed class ToolCallingLoopTests
             [Text(ANSWER), Completed(ANSWER)]);
 
         var written = await Run(adapter);
-        
-        Assert.Multiple(() =>
+
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Occurrences(written, PREAMBLE), Is.EqualTo(1), "The preamble streamed out; the round reporting it again must not put it on screen a second time.");
             Assert.That(Occurrences(written, ANSWER), Is.EqualTo(1), "The same goes for the final answer, which is where a duplicate would be most visible.");
-        });
+        }
     }
     
     [Test]
@@ -81,11 +81,11 @@ public sealed class ToolCallingLoopTests
             [Completed(string.Empty, [Call("call-1")])],
             [Text(ANSWER), Completed(ANSWER)]));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(afterSpeaking, Is.EqualTo($"{PREAMBLE}{SEPARATOR}{ANSWER}"), "Two texts from two rounds are two paragraphs, not one run-on sentence.");
             Assert.That(afterSilence, Is.EqualTo(ANSWER), "Nothing was said before, so there is nothing to separate from.");
-        });
+        }
     }
     
     [Test]
@@ -98,12 +98,12 @@ public sealed class ToolCallingLoopTests
         //
         var answering = await Run(new ScriptedAdapter([..ExhaustTheToolBudget(), [Text(ANSWER), Completed(ANSWER)]]));
         var silent = await Run(new ScriptedAdapter([..ExhaustTheToolBudget(), [Completed(string.Empty)]]));
-        
-        Assert.Multiple(() =>
+
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answering, Does.EndWith(ANSWER).And.Not.Contains(NO_ANSWER), "The model answered, so nothing has to be said on its behalf.");
             Assert.That(silent, Does.Contain(NO_ANSWER), "It stayed silent after using up its tools, and silence would look like a hung request.");
-        });
+        }
     }
     
     [Test]
@@ -116,12 +116,12 @@ public sealed class ToolCallingLoopTests
         var silent = await Run(new ScriptedAdapter(
             [Completed(string.Empty, [Call("call-1")])],
             [Completed(string.Empty)]));
-        
-        Assert.Multiple(() =>
+
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answering, Is.EqualTo(ANSWER), "There is an answer, so the fallback message has no place here.");
             Assert.That(silent, Does.Contain(NO_ANSWER), "The tool ran and nothing came of it, which the user has to be told.");
-        });
+        }
     }
     
     [Test]
@@ -151,12 +151,12 @@ public sealed class ToolCallingLoopTests
         var adapter = new ScriptedAdapter([Text(PREAMBLE)]);
 
         var chunks = await Collect(adapter);
-        
-        Assert.Multiple(() =>
+
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(string.Concat(chunks.Select(x => x.Content)), Is.EqualTo(PREAMBLE), "What was streamed stays; nothing is taken back.");
             Assert.That(chunks.Select(x => x.Content), Has.None.Contains(NO_ANSWER), "An error message on top of the adapter's own would say the same thing twice.");
-        });
+        }
     }
     
     [Test]
@@ -170,11 +170,11 @@ public sealed class ToolCallingLoopTests
             [Completed(string.Empty, [Call(string.Empty)])],
             [Text(ANSWER), Completed(ANSWER)]));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(written, Does.Contain("The tool call was invalid."), "The user learns why the answer stops here.");
             Assert.That(written, Does.Not.Contain(ANSWER), "And the loop does not carry on into a round the provider would refuse.");
-        });
+        }
     }
     
     [Test]
@@ -208,12 +208,12 @@ public sealed class ToolCallingLoopTests
         };
 
         var chunks = await Collect(adapter, cancellation.Token);
-        
-        Assert.Multiple(() =>
+
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(string.Concat(chunks.Select(x => x.Content)), Is.EqualTo(PREAMBLE), "Everything written before the stop stays, and nothing after it arrives.");
             Assert.That(chunks.Select(x => x.Content), Has.None.Contains(NO_ANSWER), "A stop is not a failure to answer, so it is not reported as one.");
-        });
+        }
     }
 
     [Test]
@@ -250,11 +250,11 @@ public sealed class ToolCallingLoopTests
             [Completed(string.Empty, [Call("call-1")])],
             [Text(ANSWER), Completed(ANSWER)]));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withUsage.Select(x => x.Content), Is.EqualTo(withoutUsage.Select(x => x.Content)), "The same chunks arrive as if the round had reported nothing.");
             Assert.That(withUsage.Select(x => x.Usage.IsKnown), Has.None.True, "And none of them carries the usage on.");
-        });
+        }
     }
 
     /// <summary>

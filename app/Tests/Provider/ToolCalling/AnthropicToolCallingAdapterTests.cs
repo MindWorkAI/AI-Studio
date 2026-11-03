@@ -49,11 +49,11 @@ public sealed class AnthropicToolCallingAdapterTests
 
         var secondRound = await Usages(adapter);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(firstRound, Is.EqualTo(new[] { 1200 }), "The first round states the conversation up to the question.");
             Assert.That(secondRound, Is.EqualTo(new[] { 9800 }), "The second round states its own request, and the cumulative number at its end stays behind.");
-        });
+        }
     }
 
     [Test]

@@ -36,6 +36,15 @@ public sealed class FileSourceIndexerWatcherTests
     }
 
     [Test]
+    public void SingleFileWatcherIgnoresAnotherCaseDistinctFileOnUnix()
+    {
+        var configuration = new FileSourceIndexer.DataSourceWatcherConfiguration(Path.GetTempPath(), false, TargetFileName: "Report.md");
+
+        Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, Path.Combine(Path.GetTempPath(), "report.md"), WatcherChangeTypes.Changed),
+            Is.EqualTo(OperatingSystem.IsWindows()));
+    }
+
+    [Test]
     public void SingleFileWatcherRecognizesARenameAwayFromTheConfiguredFile()
     {
         var rootPath = Path.GetTempPath();
@@ -174,11 +183,11 @@ public sealed class FileSourceIndexerWatcherTests
                 FilePatterns: FileNamePatterns.Parse("*.txt"));
             var includingHiddenDirectories = visibleDirectoriesOnly with { IncludeHiddenFilesAndFolders = true };
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(visibleDirectoriesOnly, filePath, WatcherChangeTypes.Changed), Is.False);
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(includingHiddenDirectories, filePath, WatcherChangeTypes.Changed), Is.True);
-            });
+            }
         }
         finally
         {
@@ -200,12 +209,12 @@ public sealed class FileSourceIndexerWatcherTests
         var namingTheFile = everything with { FilePatterns = FileNamePatterns.Parse("*;.env") };
         var includingHiddenFiles = everything with { IncludeHiddenFilesAndFolders = true };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(everything, environmentPath, changeType), Is.False, "A hidden file is no part of the data source, so changing it needs no run.");
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(namingTheFile, environmentPath, changeType), Is.True);
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(includingHiddenFiles, environmentPath, changeType), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -263,6 +272,41 @@ public sealed class FileSourceIndexerWatcherTests
     }
 
     [Test]
+    public void ReorderingEquivalentExclusionsDoesNotRecreateTheWatcher()
+    {
+        var before = DefaultConfiguration(Path.GetTempPath()) with
+        {
+            ExcludePatterns = FileExclusions.Parse("*.mp3;draft-*"),
+        };
+        var after = before with { ExcludePatterns = FileExclusions.Parse("DRAFT-*;*.MP3;*.mp3") };
+
+        Assert.That(FileSourceIndexer.IsSameWatchConfiguration(before, after), Is.True);
+    }
+
+    [Test]
+    public void RenamingAnIncludedFileIntoAnExcludedNameStillRefreshesTheIndex()
+    {
+        var rootPath = Path.Combine(Path.GetTempPath(), $"ai-studio-excluded-rename-{Guid.NewGuid():N}");
+        var configuration = DefaultConfiguration(rootPath) with
+        {
+            FilePatterns = FileNamePatterns.Parse("*.md"),
+            ExcludePatterns = FileExclusions.Parse("draft-*"),
+        };
+        var renamed = new RenamedEventArgs(WatcherChangeTypes.Renamed, rootPath, "draft-report.md", "report.md");
+
+        Assert.That(FileSourceIndexer.IsRelevantWatcherEvent(configuration, renamed), Is.True);
+    }
+
+    [Test]
+    public void RelocatingToADirectoryWithDifferentCasingUsesTheLocalPathRules()
+    {
+        var before = DefaultConfiguration(Path.Combine(Path.GetTempPath(), "Documents"));
+        var after = before with { RootPath = Path.Combine(Path.GetTempPath(), "documents") };
+
+        Assert.That(FileSourceIndexer.IsSameWatchConfiguration(before, after), Is.EqualTo(OperatingSystem.IsWindows()), "On Unix these can be different directories; their watchers must not be treated as interchangeable.");
+    }
+
+    [Test]
     public async Task DirectoryWatcherIgnoresTheBatchTranscriptWhenTheMediaIsSelected()
     {
         var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-transcript-watcher-{Guid.NewGuid():N}");
@@ -279,12 +323,12 @@ public sealed class FileSourceIndexerWatcherTests
                 FilePatterns: FileNamePatterns.Parse("*"));
             var unrelatedPatterns = configuration with { FilePatterns = FileNamePatterns.Parse("*.tf") };
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, mediaPath, WatcherChangeTypes.Changed), Is.True);
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, transcriptPath, WatcherChangeTypes.Created), Is.False);
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(unrelatedPatterns, transcriptPath, WatcherChangeTypes.Created), Is.False);
-            });
+            }
         }
         finally
         {
@@ -327,11 +371,11 @@ public sealed class FileSourceIndexerWatcherTests
         var documents = DefaultConfiguration(rootPath);
         var everything = documents with { FilePatterns = FileNamePatterns.Parse("*") };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(documents, path, WatcherChangeTypes.Created), Is.False, "The documents selector never selects audio or video.");
             Assert.That(FileSourceIndexer.IsRelevantWatcherPath(everything, path, WatcherChangeTypes.Created), Is.True);
-        });
+        }
     }
 
     private static FileSourceIndexer.DataSourceWatcherConfiguration DefaultConfiguration(string rootPath) => new(

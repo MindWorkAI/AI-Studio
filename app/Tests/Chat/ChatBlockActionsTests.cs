@@ -25,11 +25,11 @@ public sealed class ChatBlockActionsTests
 
         var removed = WhileWriting(chat).TryRemove(chat, answer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(removed, Is.False);
             Assert.That(chat.Blocks.Select(x => x.Content), Is.EqualTo(new[] { question.Content, answer.Content }), "The answer stays, since the job goes on writing into it.");
-        });
+        }
     }
 
     [Test]
@@ -41,13 +41,13 @@ public sealed class ChatBlockActionsTests
         var blocks = chat.Blocks.ToList();
         var actions = WhileWriting(chat);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(actions.TryRemove(chat, firstQuestion.Content!), Is.False);
             Assert.That(actions.TryRemove(chat, firstAnswer.Content!), Is.False);
             Assert.That(actions.TryRemoveForRegenerate(chat, firstAnswer.Content!), Is.False);
             Assert.That(chat.Blocks, Is.EqualTo(blocks), "The job stores the conversation meanwhile, so no message may change, not even an older one.");
-        });
+        }
     }
 
     [Test]
@@ -58,13 +58,13 @@ public sealed class ChatBlockActionsTests
         var chat = Chat(question, answer);
         var actions = WhileWriting(chat);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(actions.TryEditLastUserBlock(chat, question.Content!), Is.False);
             Assert.That(actions.TryEditLastBlock(chat, question.Content!), Is.False);
             Assert.That(chat.Blocks, Has.Count.EqualTo(2), "Both the question and the answer being written stay.");
             Assert.That(chat.Draft.IsEmpty, Is.True, "The question does not become the draft, since it could not be sent anyway.");
-        });
+        }
     }
 
     [Test]
@@ -75,11 +75,11 @@ public sealed class ChatBlockActionsTests
 
         var removed = WhileWriting(chat).TryRemoveForRegenerate(chat, answer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(removed, Is.False, "Regenerating would leave a second answer next to the one being written.");
             Assert.That(chat.Blocks, Has.Count.EqualTo(2));
-        });
+        }
     }
 
     [Test]
@@ -90,11 +90,11 @@ public sealed class ChatBlockActionsTests
 
         var rolledBack = WhileWriting(chat).TryRollBack(chat, firstAnswer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(rolledBack, Is.False);
             Assert.That(chat.Blocks, Has.Count.EqualTo(4));
-        });
+        }
     }
 
     [Test]
@@ -106,11 +106,11 @@ public sealed class ChatBlockActionsTests
 
         var removed = Done().TryRemove(chat, answer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(removed, Is.True);
             Assert.That(chat.Blocks.Select(x => x.Content), Is.EqualTo(new[] { question.Content }));
-        });
+        }
     }
 
     [Test]
@@ -122,11 +122,11 @@ public sealed class ChatBlockActionsTests
 
         var removed = Done().TryRemoveForRegenerate(chat, answer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(removed, Is.True);
             Assert.That(chat.Blocks.Select(x => x.Content), Is.EqualTo(new[] { question.Content }), "The question stays, to be answered anew.");
-        });
+        }
     }
 
     [Test]
@@ -138,11 +138,11 @@ public sealed class ChatBlockActionsTests
 
         var rolledBack = Done().TryRollBack(chat, firstAnswer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(rolledBack, Is.True);
             Assert.That(chat.Blocks.Select(x => x.Content), Is.EqualTo(new[] { firstQuestion.Content, firstAnswer.Content }));
-        });
+        }
     }
 
     [Test]
@@ -153,12 +153,12 @@ public sealed class ChatBlockActionsTests
 
         var edited = Done().TryEditLastUserBlock(chat, question.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edited, Is.True);
             Assert.That(chat.Blocks, Is.Empty, "The question goes back into the composer, and the answer to it goes.");
             Assert.That(chat.Draft.Text, Is.EqualTo("Question"));
-        });
+        }
     }
 
     [Test]
@@ -169,12 +169,12 @@ public sealed class ChatBlockActionsTests
 
         var edited = Done().TryEditLastBlock(chat, question.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edited, Is.True);
             Assert.That(chat.Blocks, Is.Empty);
             Assert.That(chat.Draft.Text, Is.EqualTo("Question"));
-        });
+        }
     }
 
     [Test]
@@ -185,12 +185,12 @@ public sealed class ChatBlockActionsTests
 
         var edited = Done().TryEditLastUserBlock(chat, new ContentText { Text = "Question of another chat" });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(edited, Is.False);
             Assert.That(chat.Blocks, Has.Count.EqualTo(2), "Removing the last answer only makes sense together with the question to it.");
             Assert.That(chat.Draft.IsEmpty, Is.True);
-        });
+        }
     }
 
     [Test]
@@ -208,11 +208,11 @@ public sealed class ChatBlockActionsTests
 
         var removed = actions.TryRemove(chat, answer.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(removed, Is.True);
             Assert.That(askedChatIds, Is.EqualTo(new[] { chat.ChatId }), "Only the chat being changed decides.");
-        });
+        }
     }
 
     [Test]
@@ -221,7 +221,7 @@ public sealed class ChatBlockActionsTests
         var actions = Done();
         var content = new ContentText { Text = "Question" };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(actions.AreAllowed(null), Is.False);
             Assert.That(actions.TryRemove(null, content), Is.False);
@@ -229,7 +229,7 @@ public sealed class ChatBlockActionsTests
             Assert.That(actions.TryRollBack(null, content), Is.False);
             Assert.That(actions.TryEditLastUserBlock(null, content), Is.False);
             Assert.That(actions.TryEditLastBlock(null, content), Is.False);
-        });
+        }
     }
 
     /// <summary>

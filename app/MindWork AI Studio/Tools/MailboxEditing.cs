@@ -43,7 +43,7 @@ public static class MailboxEditing
         {
             { x => x.IsEditing, true },
             { x => x.DataSource, storedMailbox },
-            { x => x.LockSource, await embeddingService.ShouldLockDataSourceOriginAsync(storedMailbox.Id) },
+            { x => x.LockSource, await embeddingService.ShouldLockMailboxOriginAsync(storedMailbox.Id) },
         };
 
         var dialogReference = await dialogService.ShowAsync<DataSourceMailboxDialog>(TB("Edit Mailbox"), dialogParameters, DialogOptions.FULLSCREEN);

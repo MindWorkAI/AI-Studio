@@ -1,7 +1,7 @@
 @using AIStudio.Tools.ChatArchive
 @inherits MSGComponentBase
 
-<MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" PanelClass="pa-4">
+<MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" TabPanelsClass="pa-4">
     <MudTabPanel Text="@T("Back up")" Icon="@Icons.Material.Filled.Archive" Disabled="@(this.isBusy || this.DataRestoreService.IsPreparing)">
 
         <MudText Typo="Typo.body1" Class="mb-3">
@@ -32,9 +32,13 @@
                 @if (backupResult.Success)
                 {
                     <MudAlert Severity="@(backupResult.IncludesDataSourceIndexes ? Severity.Success : Severity.Warning)" Dense="@true" Class="mt-3">
-                        <MudText Typo="Typo.body2">
-                            @string.Format(T("Backed up {0} files into: {1}"), backupResult.FileCount, backupResult.ArchivePath)
-                        </MudText>
+                        @* Opening a backup with the default program would only unpack it, so the file manager is the one way offered. *@
+                        <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+                            <MudText Typo="Typo.body2">
+                                @string.Format(T("Backed up {0} files into: {1}"), backupResult.FileCount, backupResult.ArchivePath)
+                            </MudText>
+                            <FileActions Path="@backupResult.ArchivePath" ShowCopy="@false" ShowOpen="@false"/>
+                        </MudStack>
                         @if (!backupResult.IncludesDataSourceIndexes)
                         {
                             <MudText Typo="Typo.body2">

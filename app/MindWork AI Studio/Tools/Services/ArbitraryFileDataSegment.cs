@@ -5,5 +5,5 @@ namespace AIStudio.Tools.Services;
 /// </summary>
 /// <param name="Content">The extracted text.</param>
 /// <param name="TokenCount">The number of tokens of that text.</param>
-/// <param name="PageNumber">The page that text came from, or null when it has none. Presentations and spreadsheets have none.</param>
-public sealed record ArbitraryFileDataSegment(string Content, int TokenCount, int? PageNumber);
+/// <param name="Location">Where that text came from: its page, its sheet and row, or its line. Presentations have none.</param>
+public sealed record ArbitraryFileDataSegment(string Content, int TokenCount, SourceLocation Location);

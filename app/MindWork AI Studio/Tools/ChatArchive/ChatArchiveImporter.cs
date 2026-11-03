@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.PluginSystem;
 
@@ -24,12 +25,24 @@ public static class ChatArchiveImporter
 
     private const int BUFFER_SIZE = 64 * 1024;
 
+    /// <summary>
+    /// What SQLite appends to the name of a database for its write-ahead log.
+    /// </summary>
+    private const string WRITE_AHEAD_LOG_SUFFIX = "-wal";
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatArchiveImporter).Namespace, nameof(ChatArchiveImporter));
 
     /// <summary>
     /// One entry of a backup, with its name checked and normalized.
     /// </summary>
     private sealed record BackupEntry(string Name, ZipArchiveEntry Entry);
+
+    /// <summary>
+    /// Where the imported chats get what they received besides their messages from.
+    /// </summary>
+    /// <param name="Store">The provenance store of this computer, which receives the entries.</param>
+    /// <param name="BackupStorePath">The provenance store of the backup, unpacked into a file of its own.</param>
+    private sealed record ProvenanceImport(ProvenanceStoreClient Store, string BackupStorePath);
 
     /// <summary>
     /// What one import did so far.
@@ -84,22 +97,26 @@ public static class ChatArchiveImporter
     /// Adds all chats of a backup to the chat storage.
     /// </summary>
     /// <param name="archivePath">The backup.</param>
+    /// <param name="provenanceStore">The provenance store, which receives what the imported chats received besides their messages.</param>
     /// <param name="collisionBehavior">What to do with chats which exist already.</param>
     /// <param name="progress">Receives the progress.</param>
     /// <param name="token">Cancels the import. Chats added before the cancellation are kept.</param>
     /// <returns>What the import did.</returns>
-    public static async Task<ChatArchiveImportResult> ImportAsync(string archivePath, ChatArchiveCollisionBehavior collisionBehavior, IProgress<ChatArchiveProgress>? progress, CancellationToken token)
+    public static async Task<ChatArchiveImportResult> ImportAsync(string archivePath, ProvenanceStoreClient provenanceStore, ChatArchiveCollisionBehavior collisionBehavior, IProgress<ChatArchiveProgress>? progress, CancellationToken token)
     {
         var tally = new ImportTally();
         var preview = await ReadPreviewAsync(archivePath, token);
         if (!preview.Success)
             return new(false, 0, 0, 0, 0, preview.Issue, false);
 
+        // Next to the copies a backup makes, which the next start clears in case AI Studio stops halfway:
+        var provenanceDirectory = Path.Join(DataRestoreFormat.DirectoryIn(SettingsManager.DataDirectory!, DataBackupFormat.STAGING_DIRECTORY), $"provenance-import-{Guid.NewGuid():N}");
         try
         {
             var manifest = preview.Manifest;
             using var archive = ZipFile.OpenRead(archivePath);
             var entriesByChat = GroupEntriesByChat(archive);
+            var provenance = await ExtractProvenanceStoreAsync(archive, provenanceStore, provenanceDirectory, token);
 
             // Which workspaces exist already is asked once per workspace of the backup, so read
             // the tree once instead of building a full snapshot every time:
@@ -134,10 +151,10 @@ public static class ChatArchiveImporter
                 }
 
                 var workspaceEntryPrefix = $"{ChatArchiveFormat.WORKSPACES_PREFIX}{workspace.WorkspaceId}{ZipEntryNames.SEPARATOR}";
-                await ImportChatsAsync(tally, workspaceEntryPrefix, targetWorkspaceId, workspace.Chats, true, manifest.TotalChatCount, entriesByChat, collisionBehavior, existingChatIds, progress, token);
+                await ImportChatsAsync(tally, workspaceEntryPrefix, targetWorkspaceId, workspace.Chats, true, manifest.TotalChatCount, entriesByChat, collisionBehavior, existingChatIds, provenance, progress, token);
             }
 
-            await ImportChatsAsync(tally, ChatArchiveFormat.TEMPORARY_CHATS_PREFIX, Guid.Empty, manifest.TemporaryChats, false, manifest.TotalChatCount, entriesByChat, collisionBehavior, existingChatIds, progress, token);
+            await ImportChatsAsync(tally, ChatArchiveFormat.TEMPORARY_CHATS_PREFIX, Guid.Empty, manifest.TemporaryChats, false, manifest.TotalChatCount, entriesByChat, collisionBehavior, existingChatIds, provenance, progress, token);
 
             progress?.Report(new(tally.ProcessedChats, manifest.TotalChatCount));
             LOG.LogInformation("Imported {ImportedChats} chats from the backup '{ArchivePath}'. Skipped {SkippedChats} existing chats, {FailedChats} chats failed.", tally.ImportedChats, archivePath, tally.SkippedChats, tally.FailedChats);
@@ -158,12 +175,111 @@ public static class ChatArchiveImporter
             LOG.LogError(exception, "Failed to import the backup '{ArchivePath}'.", archivePath);
             return new(false, tally.ImportedWorkspaces, tally.ImportedChats, tally.SkippedChats, tally.FailedChats, string.Format(TB("Unexpected error: {0}"), exception.Message), false);
         }
+        finally
+        {
+            TryDeleteDirectory(provenanceDirectory);
+        }
+    }
+
+    /// <summary>
+    /// Unpacks the provenance store of a backup, so that every imported chat can take its entries from it.
+    /// </summary>
+    /// <remarks>
+    /// A backup of a version before the store holds none, and its chats arrive as they were: their
+    /// sources without the contents behind them.
+    /// </remarks>
+    /// <param name="archive">The backup.</param>
+    /// <param name="provenanceStore">The provenance store of this computer.</param>
+    /// <param name="directory">The directory to unpack the store into. The caller deletes it afterward.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>Where the entries come from, or null when the backup holds no store, or this computer cannot keep one.</returns>
+    private static async Task<ProvenanceImport?> ExtractProvenanceStoreAsync(ZipArchive archive, ProvenanceStoreClient provenanceStore, string directory, CancellationToken token)
+    {
+        if (provenanceStore is NoProvenanceStoreClient)
+        {
+            LOG.LogWarning("The provenance store is not available, so the chats of the backup arrive without what they received besides their messages.");
+            return null;
+        }
+
+        var entry = archive.GetEntry(ChatArchiveFormat.PROVENANCE_STORE_ENTRY);
+        if (entry is null)
+        {
+            LOG.LogInformation("The backup holds no provenance store, so its chats arrive without what they received besides their messages.");
+            return null;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(directory);
+            var path = Path.Join(directory, SqliteProvenanceStoreClientImplementation.DATABASE_FILENAME);
+            await ExtractEntryAsync(entry, path, token);
+
+            //
+            // A backup which took the store as it lay in the data folder may hold its newest entries
+            // in the write-ahead log next to it, which SQLite reads along:
+            //
+            if (archive.GetEntry(ChatArchiveFormat.PROVENANCE_STORE_ENTRY + WRITE_AHEAD_LOG_SUFFIX) is { } logEntry)
+                await ExtractEntryAsync(logEntry, path + WRITE_AHEAD_LOG_SUFFIX, token);
+
+            return new(provenanceStore, path);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // As in ImportProvenanceAsync: without the store, the chats lose the contents behind their sources, not themselves.
+            LOG.LogWarning(exception, "The provenance store of the backup could not be unpacked, so its chats arrive without what they received besides their messages.");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Writes one entry of the backup into a file, as a stream.
+    /// </summary>
+    /// <param name="entry">The entry.</param>
+    /// <param name="destinationPath">The file, which is replaced when it exists.</param>
+    /// <param name="token">The cancellation token.</param>
+    private static async Task ExtractEntryAsync(ZipArchiveEntry entry, string destinationPath, CancellationToken token)
+    {
+        await using var entryStream = entry.Open();
+        await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await entryStream.CopyToAsync(fileStream, token);
+    }
+
+    /// <summary>
+    /// Adds what an imported chat received besides its messages, from the provenance store of the backup.
+    /// </summary>
+    /// <remarks>
+    /// The chat is stored already, so this ends neither by a cancellation nor by a failure: the next
+    /// chat checks for the cancellation. A chat without its entries still has its messages and
+    /// sources; it only lacks the contents behind them, and the store of the backup may be damaged
+    /// or of a newer form.
+    /// </remarks>
+    /// <param name="provenance">Where the entries come from, or null when they come from nowhere.</param>
+    /// <param name="sourceChatId">The chat in the backup.</param>
+    /// <param name="targetChatId">The chat as it was imported, possibly under a new id.</param>
+    private static async Task ImportProvenanceAsync(ProvenanceImport? provenance, Guid sourceChatId, Guid targetChatId)
+    {
+        if (provenance is null)
+            return;
+
+        try
+        {
+            var count = await provenance.Store.ImportChatAsync(provenance.BackupStorePath, sourceChatId, targetChatId, CancellationToken.None);
+            LOG.LogDebug("Imported {Count} provenance entries of the chat '{ChatId}'.", count, targetChatId);
+        }
+        catch (Exception exception)
+        {
+            LOG.LogWarning(exception, "The chat '{ChatId}' was imported without what it received besides its messages, because the provenance store of the backup could not be read.", targetChatId);
+        }
     }
 
     /// <summary>
     /// Adds the chats of one workspace of the backup, or its temporary chats.
     /// </summary>
-    private static async Task ImportChatsAsync(ImportTally tally, string entryPrefix, Guid targetWorkspaceId, IReadOnlyList<ChatArchiveManifestChat> chats, bool countsAsWorkspace, int totalChats, Dictionary<string, List<BackupEntry>> entriesByChat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, IProgress<ChatArchiveProgress>? progress, CancellationToken token)
+    private static async Task ImportChatsAsync(ImportTally tally, string entryPrefix, Guid targetWorkspaceId, IReadOnlyList<ChatArchiveManifestChat> chats, bool countsAsWorkspace, int totalChats, Dictionary<string, List<BackupEntry>> entriesByChat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, ProvenanceImport? provenance, IProgress<ChatArchiveProgress>? progress, CancellationToken token)
     {
         var isFirstImportOfWorkspace = true;
         foreach (var chat in chats)
@@ -175,7 +291,7 @@ public static class ChatArchiveImporter
             var chatEntryPrefix = $"{entryPrefix}{chat.ChatId}{ZipEntryNames.SEPARATOR}";
             var chatEntries = entriesByChat.GetValueOrDefault(chatEntryPrefix, []);
 
-            switch (await ImportChatAsync(chatEntries, chatEntryPrefix, targetWorkspaceId, chat, collisionBehavior, existingChatIds, token))
+            switch (await ImportChatAsync(chatEntries, chatEntryPrefix, targetWorkspaceId, chat, collisionBehavior, existingChatIds, provenance, token))
             {
                 case ChatArchiveImportOutcome.IMPORTED:
                     tally.ImportedChats++;
@@ -383,8 +499,9 @@ public static class ChatArchiveImporter
     /// <param name="chat">The chat as the preview lists it.</param>
     /// <param name="collisionBehavior">What to do when a chat with the same ID exists already.</param>
     /// <param name="existingChatIds">The IDs of all chats in the storage. An imported chat is added.</param>
+    /// <param name="provenance">Where the chat gets what it received besides its messages from, or null when from nowhere.</param>
     /// <param name="token">Cancels the import.</param>
-    private static async Task<ChatArchiveImportOutcome> ImportChatAsync(IReadOnlyList<BackupEntry> chatEntries, string chatEntryPrefix, Guid targetWorkspaceId, ChatArchiveManifestChat chat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, CancellationToken token)
+    private static async Task<ChatArchiveImportOutcome> ImportChatAsync(IReadOnlyList<BackupEntry> chatEntries, string chatEntryPrefix, Guid targetWorkspaceId, ChatArchiveManifestChat chat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, ProvenanceImport? provenance, CancellationToken token)
     {
         var threadEntry = chatEntries.FirstOrDefault(entry => entry.Name.Equals($"{chatEntryPrefix}{ChatArchiveFormat.THREAD_FILE_NAME}", StringComparison.OrdinalIgnoreCase));
         if (threadEntry is null)
@@ -427,10 +544,7 @@ public static class ChatArchiveImporter
 
                 var destinationPath = ZipEntryNames.GetDestinationPath(chatDirectory, relativePath);
                 Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-
-                await using var entryStream = entry.Entry.Open();
-                await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
-                await entryStream.CopyToAsync(fileStream, token);
+                await ExtractEntryAsync(entry.Entry, destinationPath, token);
 
                 extractedPaths.Add(relativePath);
             }
@@ -477,6 +591,9 @@ public static class ChatArchiveImporter
             }
 
             existingChatIds.Add(targetChatId);
+
+            // Under the id of the chat in the backup, which is what the store of the backup knows it by:
+            await ImportProvenanceAsync(provenance, chat.ChatId, targetChatId);
             return ChatArchiveImportOutcome.IMPORTED;
         }
         catch (OperationCanceledException)
@@ -533,7 +650,7 @@ public static class ChatArchiveImporter
         }
         catch (Exception exception)
         {
-            LOG.LogWarning(exception, "Failed to clean up the incomplete chat directory '{ChatDirectory}'.", directory);
+            LOG.LogWarning(exception, "Failed to clean up the directory '{Directory}'.", directory);
         }
     }
 }

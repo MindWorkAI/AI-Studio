@@ -8,6 +8,7 @@
         @if (this.ChatThread is not null)
         {
             var blocks = this.ChatThread.Blocks.OrderBy(n => n.Time).ToList();
+            var sendToDestinations = this.AssistantLaunchService.GetDestinationsFor(Components.CHAT);
             for (var i = 0; i < blocks.Count; i++)
             {
                 var block = blocks[i];
@@ -30,7 +31,9 @@
                         RollbackFunc="@this.RollbackBlock"
                         BlockActionsEnabled="@(() => this.blockActions.AreAllowed(this.ChatThread))"
                         EditLastBlockFunc="@this.EditLastBlock"
-                        EditLastUserBlockFunc="@this.EditLastUserBlock"/>
+                        EditLastUserBlockFunc="@this.EditLastUserBlock"
+                        SendToFunc="@this.SendBlockToAsync"
+                        SendToDestinations="@sendToDestinations"/>
                 }
             }
         }
@@ -43,7 +46,7 @@
                 @ref="@this.inputField"
                 @bind-Text="@this.UserInput"
                 Variant="Variant.Outlined"
-                AutoGrow="@true"
+                Sizing="InputSizing.Auto"
                 Lines="3"
                 MaxLines="12"
                 Label="@this.InputLabel"
@@ -109,7 +112,7 @@
                 </MudTooltip>
             }
             
-            <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" Disabled="@(!this.CanAttachFiles)"/>
+            <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" KeepPreviewedText="@this.KeepPreviewedTextAsync" Disabled="@(!this.CanAttachFiles)"/>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
@@ -140,12 +143,12 @@
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAgentSelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@T("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAgentSelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@T("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
             }
             
             @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
             {
-                <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
+                <ConfidenceInfo LLMProvider="@this.Provider.UsedLLMProvider"/>
             }
 
             @if (this.IsCurrentChatStreaming)
@@ -157,7 +160,7 @@
 
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
-                <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security or confidence-level requirements.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@(this.SettingsManager.IsProviderProhibited(this.Provider.UsedLLMProvider) ? T("The use of this provider has been prohibited by your organization. Please select a different provider.") : T("The selected provider is not allowed in this chat due to data security or confidence-level requirements."))" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
                 </MudTooltip>
             }

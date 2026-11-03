@@ -1007,22 +1007,12 @@ public abstract class BaseProvider : IProvider, ISecretId
         try
         {
             //
-            // Read the stream, line by line:
+            // Read the stream, line by line, until it ends. We never ask the reader whether the
+            // stream ended: that would wait for the next data without any timeout, and it would
+            // hold a thread meanwhile. Reading the next line tells the same, see below.
             //
             while (true)
             {
-                try
-                {
-                    if(streamReader.EndOfStream)
-                        break;
-                }
-                catch (Exception e)
-                {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                    this.logger.LogWarning(e, "Failed to read the end-of-stream state from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
-                    break;
-                }
-
                 // Check if the token is canceled:
                 if (token.IsCancellationRequested)
                 {
@@ -1058,13 +1048,14 @@ public abstract class BaseProvider : IProvider, ISecretId
                     break;
                 }
 
+                // The stream ended:
                 if (line is null)
                     break;
 
                 // Skip empty lines:
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
-                
+
                 if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
                     throw providerRequestException;
 
@@ -1445,9 +1436,22 @@ public abstract class BaseProvider : IProvider, ISecretId
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The ID and whether the provider is self-hosted come along, because the data source checks
+    /// trust a provider by them: Semantic Search decides with these settings which data sources
+    /// it offers, while the classic RAG process asks this provider itself. Without them, a
+    /// self-hosted provider, or one the organization trusts, could search a data source which asks
+    /// for such a provider in one process but not in the other.<br/><br/>
+    /// With the ID, the settings also know what the provider's own model list reported, e.g., the
+    /// context window of a self-hosted model, see ProviderExtensions.GetAutomaticModelProfile. So
+    /// the tools of a request and the way images are passed on see the model as the configured
+    /// provider does.
+    /// </remarks>
     public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
+        Id = this.ConfiguredProviderId,
         UsedLLMProvider = this.Provider,
+        IsSelfHosted = this.Provider is LLMProviders.SELF_HOSTED,
         Model = chatModel,
         InstanceName = this.InstanceName,
         CapabilityOverrides = this.CapabilityOverrides,

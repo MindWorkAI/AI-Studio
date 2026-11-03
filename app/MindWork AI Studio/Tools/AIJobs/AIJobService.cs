@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
 
@@ -175,7 +176,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
         request.AIText.InitialRemoteWait = true;
         request.AIText.IsStreaming = false;
-        await CheckpointChatAsync(state, force: true);
+        await this.CheckpointChatAsync(state, force: true);
         await this.NotifyChangedAsync(state);
 
         //
@@ -255,6 +256,14 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             var provider = request.ProviderSettings.CreateProvider();
             var chatThread = request.ChatThread;
 
+            // Checked on its own, so that the user learns what to change:
+            if (settingsManager.IsProviderProhibited(request.ProviderSettings.UsedLLMProvider))
+            {
+                logger.LogError("The provider of chat '{ChatId}' is prohibited by the organization. Skipping the AI process.", chatThread.ChatId);
+                await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, TB("The use of this provider has been prohibited by your organization. Please select a different provider."));
+                return;
+            }
+
             if (!chatThread.IsLLMProviderAllowed(provider))
             {
                 logger.LogError("The provider is not allowed for chat '{ChatId}' due to data security reasons. Skipping the AI process.", chatThread.ChatId);
@@ -297,6 +306,10 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
             token.ThrowIfCancellationRequested();
 
+            // Read each attached document once, before the request sends it, see ChatThread.StoreAttachedDocumentsAsync:
+            await chatThread.StoreAttachedDocumentsAsync(settingsManager.ConfigurationData.Chat.ReadChangedAttachmentsAgain);
+            token.ThrowIfCancellationRequested();
+
             var lastStreamingEvent = DateTimeOffset.MinValue;
             if (!TrySetWaitingForRemote(state, token))
                 return;
@@ -317,7 +330,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                     await this.NotifyChangedAsync(state);
                 }
 
-                await CheckpointChatAsync(state);
+                await this.CheckpointChatAsync(state);
             }
 
             await this.CompleteChatGenerationAsync(state, token.IsCancellationRequested ? AIJobStatus.CANCELED : AIJobStatus.COMPLETED);
@@ -363,6 +376,13 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
         RemoveEmptyAIResponse(state);
 
+        //
+        // Before the last checkpoint, so that the stored chat refers to what the AI received instead
+        // of holding it. An answer which was removed for being empty keeps nothing:
+        //
+        if (request.ChatThread.Blocks.Any(block => ReferenceEquals(block.Content, aiText)))
+            await aiText.StoreReceivedContentAsync(request.ChatThread.ChatId);
+
         lock (state.SyncRoot)
         {
             state.Snapshot = state.Snapshot with
@@ -374,7 +394,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         }
 
         this.activeChatJobsByChatId.TryRemove(request.ChatThread.ChatId, out _);
-        await CheckpointChatAsync(state, force: true);
+        await this.CheckpointChatAsync(state, force: true);
         await this.NotifyChangedAsync(state);
         await messageBus.SendMessage(null, Event.AI_JOB_FINISHED, state.Snapshot);
         state.CancellationTokenSource.Dispose();
@@ -453,12 +473,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             if (state.IsCompletionStarted || token.IsCancellationRequested || state.ChatGenerationRequest is null)
                 return false;
 
-            var aiText = state.ChatGenerationRequest.AIText;
-            aiText.InitialRemoteWait = false;
-            aiText.IsStreaming = true;
-            aiText.Text += contentStreamChunk;
-            aiText.Sources.MergeSources(contentStreamChunk.Sources);
-            aiText.RecordReportedUsage(contentStreamChunk.Usage, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
+            state.ChatGenerationRequest.AIText.ApplyStreamChunk(contentStreamChunk, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
 
             if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {
@@ -491,8 +506,26 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         await messageBus.SendMessage(null, Event.AI_JOB_CHANGED, state.Snapshot);
     }
 
-    private static async Task CheckpointChatAsync(AIJobState state, bool force = false)
+    /// <summary>
+    /// Stores the chat of a job, at most once per <see cref="CHECKPOINT_MIN_TIME"/> unless forced.
+    /// </summary>
+    /// <remarks>
+    /// Only while chats are stored automatically. Whoever stores chats manually decides when a chat
+    /// reaches the disk, with its save button, and whoever disabled the workspaces wants no chat on the
+    /// disk at all. Storing it here anyway would put every message on the disk the moment it is sent,
+    /// and overwrite what the user saved by hand with what they did not save. The chat marks the answer
+    /// as unsaved instead, once the job is done.<br/><br/>
+    ///
+    /// The storage mode is read every time rather than once for the job: whoever changes it while an
+    /// answer is being written gets what the chat reads when the answer is done.
+    /// </remarks>
+    /// <param name="state">The job whose chat to store.</param>
+    /// <param name="force">True stores the chat even when the last checkpoint was just now.</param>
+    private async Task CheckpointChatAsync(AIJobState state, bool force = false)
     {
+        if (settingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            return;
+
         var now = DateTimeOffset.Now;
         if (!force && now - state.LastCheckpoint < CHECKPOINT_MIN_TIME)
             return;

@@ -30,12 +30,12 @@ public sealed class ToolRegistryResolutionTests : ToolRegistryTestBase
 
         var offered = await this.GetOfferedDefinition(tool);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(offered?.Function.DescriptionForLLM, Is.EqualTo("Tailored."));
             Assert.That(offered?.Function.Parameters.GetRawText(), Is.EqualTo(parameters.GetRawText()));
             Assert.That(offered?.Id, Is.EqualTo(TOOL_ID), "Tailoring the function leaves the rest of the definition as registered.");
-        });
+        }
     }
 
     [Test]
@@ -45,12 +45,12 @@ public sealed class ToolRegistryResolutionTests : ToolRegistryTestBase
 
         var offered = await this.GetOfferedDefinition(tool);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(offered?.Function.Name, Is.EqualTo(TOOL_ID), "The model's calls find their tool by this name. Another one would reach nobody.");
             Assert.That(offered?.Function.Strict, Is.True, "Whether a tool can go strict is part of what was registered.");
             Assert.That(offered?.Function.DescriptionForLLM, Is.EqualTo("Tailored."), "What a tool may change still arrives.");
-        });
+        }
     }
 
     [Test]
@@ -71,11 +71,11 @@ public sealed class ToolRegistryResolutionTests : ToolRegistryTestBase
         var runnableTools = await registry.GetRunnableToolsAsync(this.ContextFor(ToolCapableProvider()), [TOOL_ID], mayRunTools: true);
         var reason = await registry.GetOfferBlockReasonAsync(TOOL_ID, ToolCapableProvider(), AIStudio.Tools.Components.CHAT);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(runnableTools, Is.Empty, "A model should not learn about a tool which can only come back empty.");
             Assert.That(reason, Is.EqualTo(ToolOfferBlockReason.NONE), "Asking beforehand only covers the checks. Whether a tool has anything to offer depends on the chat and is left to the request.");
-        });
+        }
     }
 
     [Test]
@@ -108,12 +108,12 @@ public sealed class ToolRegistryResolutionTests : ToolRegistryTestBase
         var offered = await this.GetOfferedDefinition(tool);
         var toolPolicy = ToolSelectionRules.BuildToolPolicyPrompt(offered is null ? [] : [offered]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(offered?.SystemPromptInstructions, Is.EqualTo("Tailored."));
             Assert.That(offered?.Function.DescriptionForLLM, Is.EqualTo("A tool for tests."), "Tailoring the instructions leaves the function as registered.");
             Assert.That(toolPolicy, Does.Contain("Tailored.").And.Not.Contain("Registered."), "The system prompt is built from the definitions a request offers.");
-        });
+        }
     }
 
     [Test]

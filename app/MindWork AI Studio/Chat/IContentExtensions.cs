@@ -76,17 +76,20 @@ public static class IContentExtensions
     /// the answer rests on.
     /// </summary>
     /// <remarks>
-    /// A code block saved on its own came out of the same answer, so it rests on the same sources
+    /// A document saved on its own came out of the same answer, so it rests on the same sources
     /// and takes them along. How depends on the format. Markdown is what the source list is written
     /// in, so a Markdown text gets it just as the entire answer does. A web page or a LaTeX document
     /// gets it as a comment at its end: anything visible would have to be woven into markup the
     /// model wrote. A fragment has no body to put it in, a page may hide whatever lies outside its
     /// layout, and one underscore in a title is enough to stop a LaTeX run. A comment breaks
     /// neither, and whoever opens the file finds it. A table gets no sources at all, since it has
-    /// no column a link list would fit into.
+    /// no column a link list would fit into. Neither does code: a program, a script, or a
+    /// configuration is meant for a compiler or a tool, and a comment of ours would be the one part
+    /// of it nobody asked for. In some languages, such as JSON, it would even break the file.
     ///
     /// Apart from that, the file is what the model wrote, scripts of a web page included. Saving it
-    /// is what the user chose to do; the chat still never renders it.
+    /// is what the user chose to do; the chat still never renders it. Code only gets what its tools
+    /// expect of a file, see ToSourceCodeFile.
     /// </remarks>
     /// <param name="content">The content the file was found in.</param>
     /// <param name="file">The file, as PlainFileExport.ExtractFiles read it out of this content.</param>
@@ -96,6 +99,9 @@ public static class IContentExtensions
         if (file.Format.IsTabular())
             return file.Content;
 
+        if (file.Format is FileExportFormat.SOURCE_CODE)
+            return ToSourceCodeFile(file);
+
         var sources = content.Sources.ToExportMarkdown(file.Format.FollowsPageAnchors());
         if (file.Format is FileExportFormat.MARKDOWN)
             return AppendSources(file.Content, sources);
@@ -104,6 +110,22 @@ public static class IContentExtensions
             return file.Content;
 
         return $"{file.Content}{Environment.NewLine}{Environment.NewLine}{comment}";
+    }
+
+    /// <summary>
+    /// Turns a code block into the file its tools expect.
+    /// </summary>
+    /// <remarks>
+    /// Markdig hands us the lines of a block without a line break after the last one. Compilers
+    /// and shells read such a file, but Git marks it, and some tools drop the last line altogether.
+    /// The lines end with LF as the model wrote them, except where the language needs CR LF.
+    /// </remarks>
+    /// <param name="file">The code block.</param>
+    /// <returns>The content of the file to write.</returns>
+    private static string ToSourceCodeFile(MessageFile file)
+    {
+        var code = file.Content.EndsWith('\n') ? file.Content : $"{file.Content}\n";
+        return file.Language.NeedsWindowsLineEndings ? code.ReplaceLineEndings("\r\n") : code;
     }
 
     /// <summary>

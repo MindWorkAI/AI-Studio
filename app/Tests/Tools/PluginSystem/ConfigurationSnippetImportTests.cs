@@ -74,7 +74,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var (original, snippet) = Export(type);
         var imported = Import(snippet, type).ConfigurationObject;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Guid.TryParse(imported.Id, out _), Is.True, "Every configuration object needs a GUID as its ID.");
             Assert.That(imported.Id, Is.Not.EqualTo(original.Id).And.Not.EqualTo(ExportedId(snippet, type)), "Importing the same snippet twice must not create two objects with one ID.");
@@ -82,7 +82,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             Assert.That(imported.IsEnterpriseConfiguration, Is.False);
             Assert.That(imported.EnterpriseConfigurationPluginId, Is.EqualTo(Guid.Empty));
             Assert.That(imported.Name, Is.EqualTo(original.Name));
-        });
+        }
     }
 
     [Test]
@@ -108,7 +108,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var template = (ChatTemplate)original;
         var imported = (ChatTemplate)Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE).ConfigurationObject;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(imported.SystemPrompt, Is.EqualTo(template.SystemPrompt));
             Assert.That(imported.PredefinedUserPrompt, Is.EqualTo(template.PredefinedUserPrompt));
@@ -118,7 +118,10 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             Assert.That(imported.DataSourceOptions!.AutomaticDataSourceSelection, Is.EqualTo(template.DataSourceOptions!.AutomaticDataSourceSelection));
             Assert.That(imported.DataSourceOptions.AutomaticValidation, Is.EqualTo(template.DataSourceOptions.AutomaticValidation));
             Assert.That(imported.DataSourceOptions.PreselectedDataSourceIds, Is.EqualTo(template.DataSourceOptions.PreselectedDataSourceIds));
-        });
+            Assert.That(imported.ProviderId, Is.EqualTo(template.ProviderId));
+            Assert.That(imported.ProfileId, Is.EqualTo(template.ProfileId));
+            Assert.That(imported.WorkspaceName, Is.EqualTo(template.WorkspaceName));
+        }
     }
 
     [Test]
@@ -128,7 +131,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var policy = (DataDocumentAnalysisPolicy)original;
         var imported = (DataDocumentAnalysisPolicy)Import(snippet, PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY).ConfigurationObject;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(imported.IsProtected, Is.False, "A configuration plugin protects its policies; the user's own policy is the user's to edit.");
             Assert.That(imported.PolicyDescription, Is.EqualTo(policy.PolicyDescription));
@@ -139,7 +142,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             Assert.That(imported.PreselectedProvider, Is.EqualTo(policy.PreselectedProvider));
             Assert.That(imported.PreselectedProfile, Is.EqualTo(policy.PreselectedProfile));
             Assert.That(imported.HidePolicyDefinition, Is.EqualTo(policy.HidePolicyDefinition));
-        });
+        }
     }
 
     [Test]
@@ -147,22 +150,22 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     {
         const string PROFILE_WITHOUT_ACTIONS = """CONFIG["PROFILES"][#CONFIG["PROFILES"]+1] = { ["Id"] = "6b8e1a2c-3d4f-4a5b-9c6d-7e8f9a0b1c2d", ["Name"] = "Writer", ["NeedToKnow"] = "I write." }""";
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ConfigurationSnippetImport.TryImport(PROFILE_WITHOUT_ACTIONS, PluginConfigurationObjectType.PROFILE, out var result, out var issue), Is.False);
             Assert.That(result, Is.Null);
             Assert.That(issue, Is.Not.Empty);
-        });
+        }
     }
 
     [Test]
     public void ASnippetWhichCannotBeReadIsRefused()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ConfigurationSnippetImport.TryImport("CONFIG[\"PROFILES\"] = os.getenv(\"HOME\")", PluginConfigurationObjectType.PROFILE, out _, out var issue), Is.False);
             Assert.That(issue, Is.Not.Empty);
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -172,11 +175,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     {
         var result = Import(ExportProvider(type, Encrypt(API_KEY)).Snippet, type);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Secret, Is.EqualTo(API_KEY));
             Assert.That(result.Hints, Is.Empty);
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -223,11 +226,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
                                                           """);
 
         var imported = (IUserProvidedAPIKey)Import(snippetWithPrompt, type).ConfigurationObject;
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(imported.PromptForUserAPIKey, Is.False);
             Assert.That(imported.AllowUserProvidedAPIKey, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -271,12 +274,30 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var result = Import(snippet, PluginConfigurationObjectType.DATA_SOURCE);
         var dataSource = (DataSourceERI_V1)result.ConfigurationObject;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(dataSource.Username, Is.EqualTo(expectedUsername));
             Assert.That(dataSource.UsernamePasswordMode, Is.EqualTo(DataSourceERIUsernamePasswordMode.USER_MANAGED), "Only an organization manages the sign-in for its users.");
             Assert.That(result.Secret, Is.EqualTo(TOKEN));
-        });
+        }
+    }
+
+    [TestCase(null, OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, TestName = "A data source without a level gets the one of a new data source")]
+    [TestCase("\"ONLY_CONFIGURED_SERVICES\"", OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, TestName = "A data source keeps the level it names")]
+    [TestCase("\"only_links_from_chat\"", OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, TestName = "A level is read regardless of case")]
+    [TestCase("\"NOTHING_AT_ALL\"", OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, TestName = "A level this version does not know counts as the strictest")]
+    [TestCase("\"2\"", OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, TestName = "A number is no level, even as text")]
+    [TestCase("2", OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, TestName = "A number is no level")]
+    public void ADataSourceReadsWhereAChatMaySendData(string? luaValue, OutboundDataRestriction expected)
+    {
+        var (_, exported) = ExportDataSource(AuthMethod.NONE);
+        const string EXPORTED_LINE = "[\"OutboundDataRestriction\"] = \"UNRESTRICTED\",";
+        Assert.That(exported, Does.Contain(EXPORTED_LINE));
+
+        var snippet = exported.Replace(EXPORTED_LINE, luaValue is null ? string.Empty : $"[\"OutboundDataRestriction\"] = {luaValue},", StringComparison.Ordinal);
+        var dataSource = (DataSourceERI_V1)Import(snippet, PluginConfigurationObjectType.DATA_SOURCE).ConfigurationObject;
+
+        Assert.That(dataSource.OutboundDataRestriction, Is.EqualTo(expected));
     }
 
     [Test]
@@ -291,11 +312,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var result = Import(ExportChatTemplate([existing, missing, RELATIVE, WINDOWS_SHARE, UNIX_SHARE]), PluginConfigurationObjectType.CHAT_TEMPLATE);
         var template = (ChatTemplate)result.ConfigurationObject;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.FileAttachments.Select(attachment => attachment.FilePath), Is.EqualTo(new[] { existing }));
             Assert.That(result.AttachmentsToRelink, Is.EqualTo(new[] { missing, RELATIVE, WINDOWS_SHARE, UNIX_SHARE }));
-        });
+        }
     }
 
     [Test]
@@ -312,11 +333,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     {
         var result = Import(ExportChatTemplate([]), PluginConfigurationObjectType.CHAT_TEMPLATE);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Hints, Is.Empty);
             Assert.That(result.AttachmentsToRelink, Is.Empty);
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -328,11 +349,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var copy = this.CreateTokenizerCopy(type, original.Id);
         var result = Import(snippet, type);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.EqualTo(copy), "Imported on the computer it came from, the export leads back to the copy of the provider.");
             Assert.That(result.Hints, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -347,11 +368,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var storedFingerprint = await TokenizerFingerprint.KeepOrReadAsync(imported.TokenizerPath, imported.TokenizerFingerprint);
         var fingerprintOfTheCopiedFile = await TokenizerFingerprint.ForFileAsync(copy);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(imported.TokenizerFingerprint, Is.Empty, "The import reads no file before the user agreed to it.");
             Assert.That(storedFingerprint, Is.Not.Empty.And.EqualTo(fingerprintOfTheCopiedFile), "Without the fingerprint, the embedding signature cannot tell the tokenizer apart from no tokenizer at all.");
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -360,11 +381,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     {
         var result = Import(ExportProvider(type, null, Path.Combine(this.temporaryDirectory, "missing-tokenizer.json")).Snippet, type);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.Empty, "Saving the provider would fail on a tokenizer which cannot be copied.");
             Assert.That(result.Hints, Has.Exactly(1).Contains("missing-tokenizer.json"));
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -374,11 +395,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var tokenizer = this.CreateFile("tokenizer.json");
         var result = Import(ExportProviderWithTokenizerPath(type, tokenizer), type);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.EqualTo(tokenizer), "Versions before v26.10.1 exported the absolute path of the tokenizer.");
             Assert.That(result.Hints, Is.Empty);
-        });
+        }
     }
 
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
@@ -389,11 +410,11 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         File.WriteAllText(Path.Combine(this.dataDirectory, "settings.json"), "{}");
         var result = Import(ExportProviderWithTokenizerPath(type, "tokenizers/../settings.json"), type);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.Empty, "Only the folder of the tokenizers holds what an export may name.");
             Assert.That(result.Hints, Has.Count.EqualTo(1));
-        });
+        }
     }
 
     [Test]
@@ -403,29 +424,81 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var snippet = ExportPolicy(preselectedProvider: "missing-provider", preselectedProfile: missingProfileId, allowedToolIds: [TOOL_ID, "missing_tool"]);
         var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Hints, Has.Count.EqualTo(3), "One sentence for each kind of reference.");
             Assert.That(result.Hints, Has.Exactly(1).Contains("missing-provider"));
             Assert.That(result.Hints, Has.Exactly(1).Contains(missingProfileId));
             Assert.That(result.Hints, Has.Exactly(1).Contains("missing_tool"));
             Assert.That(result.Hints, Has.None.Contains(TOOL_ID), "The tool exists.");
-        });
+        }
     }
 
     [Test]
     public async Task MissingReferencesOfAChatTemplateAreNamed()
     {
         var missingDataSourceId = Guid.NewGuid().ToString();
-        var snippet = ExportChatTemplate([], toolIds: [TOOL_ID, "missing_tool"], dataSourceIds: [missingDataSourceId]);
+        var missingProviderId = Guid.NewGuid().ToString();
+        var missingProfileId = Guid.NewGuid().ToString();
+        var snippet = ExportChatTemplate([], toolIds: [TOOL_ID, "missing_tool"], dataSourceIds: [missingDataSourceId], providerId: missingProviderId, profileId: missingProfileId);
         var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(result.Hints, Has.Count.EqualTo(2), "One sentence for each kind of reference.");
+            Assert.That(result.Hints, Has.Count.EqualTo(4), "One sentence for each kind of reference.");
             Assert.That(result.Hints, Has.Exactly(1).Contains(missingDataSourceId));
             Assert.That(result.Hints, Has.Exactly(1).Contains("missing_tool"));
-        });
+            Assert.That(result.Hints, Has.Exactly(1).Contains(missingProviderId));
+            Assert.That(result.Hints, Has.Exactly(1).Contains(missingProfileId));
+        }
+    }
+
+    [Test]
+    public async Task AChatTemplateWhichStartsWithoutAProfileNamesNothingMissing()
+    {
+        var snippet = ExportChatTemplate([], profileId: Profile.NO_PROFILE.Id);
+        var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Hints, Is.Empty, "Starting without a profile is a statement, not a reference to a profile which could be missing.");
+            Assert.That(((ChatTemplate)result.ConfigurationObject).ProfileId, Is.EqualTo(Profile.NO_PROFILE.Id));
+        }
+    }
+
+    [Test]
+    public async Task AProviderBelowTheConfidenceOfTheChatIsNamed()
+    {
+        // A chat template names its provider by a GUID, as every provider of the app has one:
+        var provider = LessTrustedProvider() with { Id = Guid.NewGuid().ToString() };
+        this.SettingsManager.ConfigurationData.Providers.Add(provider);
+        this.SettingsManager.ConfigurationData.Confidence.EnforceGlobalMinimumConfidence = true;
+        this.SettingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence = ConfidenceLevel.HIGH;
+
+        var snippet = ExportChatTemplate([], providerId: provider.Id);
+        var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Hints, Has.Count.EqualTo(1), "The provider exists, but chats started with the template would not use it.");
+            Assert.That(result.Hints, Has.Exactly(1).Contains(provider.InstanceName));
+        }
+    }
+
+    [Test]
+    public async Task AProfileOfATemplateWhichForbidsProfilesIsNamed()
+    {
+        var missingProfileId = Guid.NewGuid().ToString();
+        var template = ChatTemplateWith([], null, null, profileId: missingProfileId) with { AllowProfileUsage = false };
+        Assert.That(template.TryExportAsConfigurationSection(out var snippet, out var issue), Is.True, issue);
+
+        var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Hints, Has.Count.EqualTo(1), "Whether the profile exists does not matter, since chats ignore it anyway.");
+            Assert.That(result.Hints, Has.None.Contains(missingProfileId));
+        }
     }
 
     [Test]
@@ -440,13 +513,13 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var registry = this.CreateRegistry(new TestTool(Definition()));
 
         var policy = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportPolicy(provider.Id, profile.Id, [TOOL_ID]), PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY), this.SettingsManager, registry);
-        var template = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportChatTemplate([], [TOOL_ID], [dataSource.Id]), PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, registry);
+        var template = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportChatTemplate([], [TOOL_ID], [dataSource.Id], provider.Id, profile.Id), PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, registry);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(policy.Hints, Is.Empty);
             Assert.That(template.Hints, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -458,13 +531,31 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var policy = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportPolicy(allowedToolIds: [TOOL_ID]), PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY), this.SettingsManager, registry);
         var template = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportChatTemplate([], [TOOL_ID]), PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, registry);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(((DataDocumentAnalysisPolicy)policy.ConfigurationObject).AllowedToolIds, Is.EquivalentTo(new[] { COLLECTION_ID }));
             Assert.That(((ChatTemplate)template.ConfigurationObject).ToolIds, Is.EquivalentTo(new[] { COLLECTION_ID }));
             Assert.That(policy.Hints, Is.Empty);
             Assert.That(template.Hints, Is.Empty);
-        });
+        }
+    }
+
+    [Test]
+    public async Task AToolYouSwitchedOffIsNotMissing()
+    {
+        var registry = this.CreateRegistry(new TestTool(Definition()));
+        registry.SetSwitchedOffByUser(TOOL_ID, true);
+
+        var policy = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportPolicy(allowedToolIds: [TOOL_ID]), PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY), this.SettingsManager, registry);
+        var template = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportChatTemplate([], [TOOL_ID]), PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, registry);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(policy.Hints, Is.Empty, "The tool exists on this computer; switching it on again makes the policy use it.");
+            Assert.That(template.Hints, Is.Empty);
+            Assert.That(((DataDocumentAnalysisPolicy)policy.ConfigurationObject).AllowedToolIds, Is.EquivalentTo(new[] { TOOL_ID }), "The import keeps the tool.");
+            Assert.That(((ChatTemplate)template.ConfigurationObject).ToolIds, Is.EquivalentTo(new[] { TOOL_ID }));
+        }
     }
 
     [Test]
@@ -483,21 +574,21 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
 
     private static void AssertRefused(string snippet, PluginConfigurationObjectType type)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ConfigurationSnippetImport.TryImport(snippet, type, out var result, out var issue), Is.False);
             Assert.That(result, Is.Null);
             Assert.That(issue, Is.Not.Empty);
-        });
+        }
     }
 
     private static void AssertAPIKeyLeftOut(ConfigurationSnippetImportResult result)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Secret, Is.Empty);
             Assert.That(result.Hints, Has.Count.EqualTo(1), "The provider is imported, but the user has to enter a key.");
-        });
+        }
     }
 
     /// <summary>
@@ -589,7 +680,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
                 return (profile, profile.ExportAsConfigurationSection());
 
             case PluginConfigurationObjectType.CHAT_TEMPLATE:
-                var template = ChatTemplateWith([], ["web_search"], [Guid.NewGuid().ToString()]);
+                var template = ChatTemplateWith([], ["web_search"], [Guid.NewGuid().ToString()], Guid.NewGuid().ToString(), Guid.NewGuid().ToString()) with { WorkspaceName = "Contracts" };
                 Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);
                 return (template, luaCode);
 
@@ -669,6 +760,10 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             AuthMethod = authMethod,
             Username = username,
             SecurityPolicy = DataSourceSecurity.SELF_HOSTED,
+
+            // Not the default, so that a parser which ignores the level does not pass unnoticed. The
+            // stored level travels, not the stricter one the security policy demands at runtime:
+            OutboundDataRestriction = OutboundDataRestriction.UNRESTRICTED,
             SelectedRetrievalId = "semantic-search",
             MaxMatches = 25,
         };
@@ -677,14 +772,14 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         return (dataSource, dataSource.ExportAsConfigurationSection(encryptedSecret, usernamePasswordMode));
     }
 
-    private static string ExportChatTemplate(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds = null, IReadOnlyList<string>? dataSourceIds = null)
+    private static string ExportChatTemplate(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds = null, IReadOnlyList<string>? dataSourceIds = null, string? providerId = null, string? profileId = null)
     {
-        var template = ChatTemplateWith(attachmentPaths, toolIds, dataSourceIds);
+        var template = ChatTemplateWith(attachmentPaths, toolIds, dataSourceIds, providerId, profileId);
         Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);
         return luaCode;
     }
 
-    private static ChatTemplate ChatTemplateWith(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds, IReadOnlyList<string>? dataSourceIds) => new()
+    private static ChatTemplate ChatTemplateWith(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds, IReadOnlyList<string>? dataSourceIds, string? providerId = null, string? profileId = null) => new()
     {
         Num = 1,
         Id = Guid.NewGuid().ToString(),
@@ -700,6 +795,8 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         ],
         ToolIds = toolIds?.ToHashSet(StringComparer.Ordinal),
         DataSourceOptions = dataSourceIds is null ? null : new() { DisableDataSources = false, AutomaticValidation = true, PreselectedDataSourceIds = [..dataSourceIds] },
+        ProviderId = providerId,
+        ProfileId = profileId,
     };
 
     private static string ExportPolicy(string preselectedProvider = "", string preselectedProfile = "", IReadOnlyList<string>? allowedToolIds = null) => PolicyWith(preselectedProvider, preselectedProfile, allowedToolIds ?? []).ExportAsConfigurationSection();

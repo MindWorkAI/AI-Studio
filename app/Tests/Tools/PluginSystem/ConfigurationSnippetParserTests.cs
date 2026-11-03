@@ -159,11 +159,11 @@ public sealed class ConfigurationSnippetParserTests
     private static void AssertRefused(string snippet, PluginConfigurationObjectType type = PluginConfigurationObjectType.PROFILE)
     {
         var accepted = ConfigurationSnippetParser.TryParse(snippet, type, out _, out var issue);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(accepted, Is.False);
             Assert.That(issue, Is.Not.Empty, "A refused snippet needs a reason the user can read.");
-        });
+        }
     }
 
     /// <summary>
@@ -270,8 +270,12 @@ public sealed class ConfigurationSnippetParserTests
             ],
             ToolIds = ["web_search"],
 
-            // Preselected data sources make the export start with a comment:
+            // Preselected data sources make the export start with a comment, and so do a preselected
+            // provider and profile, with a comment of their own:
             DataSourceOptions = new() { DisableDataSources = false, PreselectedDataSourceIds = [Guid.NewGuid().ToString()] },
+            ProviderId = Guid.NewGuid().ToString(),
+            ProfileId = Guid.NewGuid().ToString(),
+            WorkspaceName = QUOTED_TEXT,
         };
 
         Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);

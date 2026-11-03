@@ -56,6 +56,27 @@ internal sealed partial class DataSourceTranscriptStore(string dataDirectory, st
     }
 
     /// <summary>
+    /// This store, for a media file whose content the caller hashed already, so the file is not read twice.
+    /// </summary>
+    /// <remarks>
+    /// Hashing a recording reads all of it, which takes long for a video. The hash counts only while
+    /// the file is as it was when it was hashed: the location is asked after its caller took its own
+    /// stamp of the file, cf. PersistentMediaTranscript, so a change in between keeps a transcript
+    /// out of the place of the content before. Then the file is hashed anew.
+    /// </remarks>
+    /// <param name="contentHash">The hash of the content, cf. FileContentHash.</param>
+    /// <param name="isUnchangedSinceHashed">Whether the file at the given path is still as it was when it was hashed.</param>
+    /// <returns>The location.</returns>
+    public IMediaTranscriptLocation WithKnownContentHash(string contentHash, Func<string, bool> isUnchangedSinceHashed) => new KnownContentHashLocation(this, contentHash, isUnchangedSinceHashed);
+
+    private sealed class KnownContentHashLocation(DataSourceTranscriptStore store, string contentHash, Func<string, bool> isUnchangedSinceHashed) : IMediaTranscriptLocation
+    {
+        public Task<MediaTranscriptSlot> ResolveAsync(string mediaPath, CancellationToken token) => isUnchangedSinceHashed(mediaPath)
+            ? Task.FromResult(new MediaTranscriptSlot(store.GetPath(contentHash), contentHash))
+            : store.ResolveAsync(mediaPath, token);
+    }
+
+    /// <summary>
     /// Whether a text is a key of this store, i.e. a lowercase SHA-256 hash.
     /// </summary>
     /// <param name="key">The text to check.</param>

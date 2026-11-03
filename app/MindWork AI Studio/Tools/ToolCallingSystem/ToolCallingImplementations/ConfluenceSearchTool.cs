@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
 
@@ -309,12 +310,20 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             readHits.Add(readHit);
         }
 
+        //
         // The search page is what AI Studio actually read, and so are the results read along.
-        // Other pages found on it become sources once read_web_page loads them:
-        List<Source> sources = [new Source(string.Format(TB("Confluence search for “{0}”"), query), page.FinalUrl.ToString(), SourceOrigin.TOOL)];
-        sources.AddRange(readContents
-            .Where(content => content.Failure is null && !string.IsNullOrWhiteSpace(content.Markdown))
-            .Select(content => new Source(string.IsNullOrWhiteSpace(content.Title) ? content.FinalUrl.AbsoluteUri : content.Title, content.FinalUrl.AbsoluteUri, SourceOrigin.TOOL)));
+        // Other pages found on it become sources once read_web_page loads them. What the model
+        // read of each source can be read under it:
+        //
+        var searchSource = new Source(string.Format(TB("Confluence search for “{0}”"), query), page.FinalUrl.ToString(), SourceOrigin.TOOL);
+        List<Source> sources = [searchSource];
+        List<SourcePassage> passages = [searchSource.ToWebPagePassage(modelContent.Markdown)];
+        foreach (var content in readContents.Where(content => content.Failure is null && !string.IsNullOrWhiteSpace(content.Markdown)))
+        {
+            var hitSource = new Source(string.IsNullOrWhiteSpace(content.Title) ? content.FinalUrl.AbsoluteUri : content.Title, content.FinalUrl.AbsoluteUri, SourceOrigin.TOOL);
+            sources.Add(hitSource);
+            passages.Add(hitSource.ToWebPagePassage(content.Markdown));
+        }
 
         var jsonContent = new JsonObject
         {
@@ -330,6 +339,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
         {
             JsonContent = jsonContent,
             Sources = sources,
+            Passages = passages,
             RequiredProviderConfidence = ConfidenceLevel.HIGH,
 
             // Set here only, on a search which returned content: a refused or failed one brought

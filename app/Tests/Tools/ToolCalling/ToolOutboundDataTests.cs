@@ -23,6 +23,7 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 public sealed class ToolOutboundDataTests : ToolRegistryTestBase
 {
     private const string MAILBOX_ID = "6e3a9d2f-1b7c-4f8e-a5d4-9c2b7e1f3a6d";
+    private const string DATA_SOURCE_ID = "1c7e4a9f-3b6d-4e2a-8f5c-9d2b6e1a4c38";
 
     [TestCase(OutboundDataRestriction.UNRESTRICTED, ToolOutboundData.NONE, true)]
     [TestCase(OutboundDataRestriction.UNRESTRICTED, ToolOutboundData.CONFIGURED_SERVICE, true)]
@@ -61,11 +62,11 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
     public void AToolWhichSaysNothingCountsAsTheMostOpenKind()
     {
         IToolImplementation tool = new SilentTool();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(tool.OutboundData, Is.EqualTo(ToolOutboundData.MODEL_CHOSEN_ADDRESSES));
             Assert.That(tool.EnforcesOutboundDataRestriction, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -78,11 +79,11 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         var restricted = await this.OfferedToolIds(registry, RestrictedChat(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
         var unrestricted = await this.OfferedToolIds(registry, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(restricted, Is.EqualTo(new[] { "wiki_search_test" }), "The configured wiki stays allowed, the web search is left out.");
             Assert.That(unrestricted, Is.EquivalentTo(new[] { "web_search_test", "wiki_search_test" }), "A chat which holds no internal content gets every tool it selected.");
-        });
+        }
     }
 
     [TestCase(OutboundDataRestriction.UNRESTRICTED)]
@@ -134,13 +135,13 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         var executor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance);
         var outcome = await executor.ExecuteAsync("call-1", TOOL_ID, "{}", [(webSearch.GetDefinition(), webSearch)], new NoProvider(), RestrictedChat(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT), order: 1);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(hasRun, Is.False, "The mail would already have left AI Studio.");
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
             Assert.That(outcome.Content, Does.Contain("Work mailbox"), "The user learns which mailbox stands in the way.");
             Assert.That(outcome.Content, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName()));
-        });
+        }
     }
 
     [Test]
@@ -149,12 +150,12 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID);
         var message = requirement.GetToolBlockedMessage(new Data { Mailboxes = [new DataSourceMailbox { Id = "another-mailbox", Name = "Private mailbox" }] });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("removed since"));
             Assert.That(message, Does.Not.Contain("Private mailbox"), "Another mailbox did not restrict the chat.");
             Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()), "The restriction stays, so the user still learns why.");
-        });
+        }
     }
 
     [Test]
@@ -163,12 +164,12 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty);
         var message = requirement.GetToolBlockedMessage(new Data { Mailboxes = [new DataSourceMailbox { Id = MAILBOX_ID, Name = "Work mailbox" }] });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("Confluence wiki"), "The user learns that the wiki stands in the way.");
             Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
             Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName()));
-        });
+        }
     }
 
     [Test]
@@ -177,12 +178,53 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.INTERNAL_WEB_PAGE, "intranet.example.org");
         var message = requirement.GetToolBlockedMessage(new Data());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.Contain("intranet.example.org"), "The user learns which page stands in the way.");
             Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
             Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()));
-        });
+        }
+    }
+
+    [Test]
+    public void ADataSourceIsNamedByItsName()
+    {
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID);
+        var message = requirement.GetToolBlockedMessage(new Data { DataSources = [new DataSourceLocalDirectory { Id = DATA_SOURCE_ID, Name = "Project files" }] });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(message, Does.Contain("Project files"), "The user learns which data source stands in the way.");
+            Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName()));
+        }
+    }
+
+    [Test]
+    public void ADataSourceRemovedSinceIsNotNamed()
+    {
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.DATA_SOURCE, DATA_SOURCE_ID);
+        var message = requirement.GetToolBlockedMessage(new Data { DataSources = [new DataSourceLocalFile { Id = "another-data-source", Name = "Minutes" }] });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(message, Does.Contain("removed since"));
+            Assert.That(message, Does.Not.Contain("Minutes"), "Another data source did not restrict the chat.");
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()), "The restriction stays, so the user still learns why.");
+        }
+    }
+
+    [Test]
+    public void EveryMessageSpeaksOfTheContentTheChatHolds([Values] OutboundDataOrigin origin)
+    {
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, origin, "intranet.example.org");
+        var message = requirement.GetToolBlockedMessage(new Data());
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(message, Does.StartWith("This chat holds"), "Content sent here from another chat or an assistant was never read by this chat.");
+            Assert.That(message, Does.EndWith("A new chat without this content can use it again."), "A new chat which gets the same content sent to it is restricted just the same.");
+        }
     }
 
     [Test]
@@ -200,12 +242,12 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         var executor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance);
         var outcome = await executor.ExecuteAsync("call-1", TOOL_ID, "{}", [(webSearch.GetDefinition(), webSearch)], new NoProvider(), thread, order: 1);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(hasRun, Is.False, "The wiki content would already have left AI Studio.");
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
             Assert.That(outcome.Content, Does.Contain("Confluence wiki"));
-        });
+        }
     }
 
     private static ChatThread RestrictedChat(OutboundDataRestriction restriction)

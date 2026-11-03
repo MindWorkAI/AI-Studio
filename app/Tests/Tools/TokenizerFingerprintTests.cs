@@ -41,11 +41,11 @@ public sealed class TokenizerFingerprintTests
         var stored = new EmbeddingProvider(1, EMBEDDING_ID, "Test embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-small", "text-embedding-3-small"), TokenizerPath: this.tokenizerPath, TokenizerFingerprint: STORED_FINGERPRINT);
         var storedFingerprint = await TokenizerFingerprint.KeepOrReadAsync(stored.TokenizerPath, stored.TokenizerFingerprint);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storedFingerprint, Is.EqualTo(STORED_FINGERPRINT), "The file was read although its fingerprint was known.");
             Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { TokenizerFingerprint = storedFingerprint }), Is.False, "Saving a provider without touching its tokenizer must not index its data sources again.");
-        });
+        }
     }
 
     [Test]

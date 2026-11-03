@@ -27,12 +27,9 @@ public partial class RustService
                     // Read events line by line:
                     using var reader = new StreamReader(stream);
                     
-                    // Read until the end of the stream or cancellation:
-                    while(!reader.EndOfStream && !stopToken.IsCancellationRequested)
+                    // Read the next line of JSON until the end of the stream or cancellation:
+                    while(!stopToken.IsCancellationRequested && await reader.ReadLineAsync(stopToken) is { } line)
                     {
-                        // Read the next line of JSON from the stream:
-                        var line = await reader.ReadLineAsync(stopToken);
-                        
                         // Skip empty lines:
                         if (string.IsNullOrWhiteSpace(line))
                             continue;

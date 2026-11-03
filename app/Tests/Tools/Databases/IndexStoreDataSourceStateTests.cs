@@ -41,10 +41,10 @@ public sealed class IndexStoreDataSourceStateTests
         await using var context = store.CreateContext();
         var failuresAfterDeletion = await context.PermanentIndexingFailures.CountAsync(token);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(stateAfterDeletion, Is.Null);
             Assert.That(failuresAfterDeletion, Is.Zero, "The failures go with the data source.");
-        });
+        }
     }
 }

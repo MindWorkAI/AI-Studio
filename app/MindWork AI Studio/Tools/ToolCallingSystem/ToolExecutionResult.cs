@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.RAG;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -27,6 +28,16 @@ public sealed class ToolExecutionResult
     public JsonNode? JsonContent { get; init; }
 
     public IReadOnlyList<Source> Sources { get; init; } = [];
+
+    /// <summary>
+    /// The passages of the sources, exactly as the model reads them in this result.
+    /// </summary>
+    /// <remarks>
+    /// The result itself is not stored with the chat, see ToolInvocationTrace.Result. The passages
+    /// are, so the user can still read what the answer rests on after the chat was reloaded. A
+    /// passage belongs to one of the Sources, see SourcePassageExtensions.GetPassagesOf.
+    /// </remarks>
+    public IReadOnlyList<SourcePassage> Passages { get; init; } = [];
 
     public ConfidenceLevel RequiredProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 

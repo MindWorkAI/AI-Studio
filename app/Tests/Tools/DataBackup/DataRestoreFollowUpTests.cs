@@ -42,12 +42,12 @@ public sealed class DataRestoreFollowUpTests
 
         DataRestoreFollowUp.RemoveLeftovers(this.DataDirectory, this.ConfigDirectory);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Directory.Exists(Path.Combine(this.DataDirectory, ".backup-staging")), Is.False);
             Assert.That(Directory.Exists(Path.Combine(this.DataDirectory, ".restore-pending")), Is.False);
             Assert.That(Directory.Exists(Path.Combine(this.ConfigDirectory, ".restore-pending")), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -58,12 +58,12 @@ public sealed class DataRestoreFollowUpTests
 
         DataRestoreFollowUp.RemoveLeftovers(this.DataDirectory, this.ConfigDirectory);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataRestoreFollowUp.IsRestorePending(this.DataDirectory), Is.True);
             Assert.That(DataRestoreFollowUp.IsRestoreUnfinished(this.DataDirectory), Is.False);
             Assert.That(File.Exists(Path.Combine(this.DataDirectory, ".restore-pending", "workspaces", "chat", "thread.json")), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -77,7 +77,7 @@ public sealed class DataRestoreFollowUpTests
         DataRestoreFollowUp.RemoveLeftovers(this.DataDirectory, this.ConfigDirectory);
         var removedReplacedData = DataRestoreFollowUp.RemoveReplacedData(this.DataDirectory, this.ConfigDirectory);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataRestoreFollowUp.IsRestoreUnfinished(this.DataDirectory), Is.True);
             Assert.That(DataRestoreFollowUp.IsRestorePending(this.DataDirectory), Is.False, "The runtime moves it back rather than applying it.");
@@ -85,7 +85,7 @@ public sealed class DataRestoreFollowUpTests
             Assert.That(File.Exists(Path.Combine(this.DataDirectory, ".restore-previous", "workspaces", "chat", "thread.json")), Is.True, "These are the data of the user.");
             Assert.That(() => DataRestorePreparer.Discard(target), Throws.InvalidOperationException);
             Assert.That(File.Exists(Path.Combine(this.DataDirectory, ".restore-pending", DataRestoreFormat.JOURNAL_FILE_NAME)), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -96,12 +96,12 @@ public sealed class DataRestoreFollowUpTests
 
         var removedReplacedData = DataRestoreFollowUp.RemoveReplacedData(this.DataDirectory, this.ConfigDirectory);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(removedReplacedData, Is.True);
             Assert.That(Directory.Exists(Path.Combine(this.DataDirectory, ".restore-previous")), Is.False);
             Assert.That(Directory.Exists(Path.Combine(this.ConfigDirectory, ".restore-previous")), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -120,13 +120,13 @@ public sealed class DataRestoreFollowUpTests
 
         var report = await DataRestoreFollowUp.ReadReportAsync(this.DataDirectory, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(report, Is.Not.Null);
             Assert.That(report!.Outcome, Is.EqualTo(DataRestoreOutcome.ROLLED_BACK));
             Assert.That(report.BackupAppVersion, Is.EqualTo("26.10.1"));
             Assert.That(report.Detail, Does.Contain("access denied"));
-        });
+        }
     }
 
     [Test]

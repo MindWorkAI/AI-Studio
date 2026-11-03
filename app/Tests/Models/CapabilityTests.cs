@@ -37,7 +37,7 @@ public sealed class CapabilityTests
     {
         var bits = new Dictionary<ulong, Capability>();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var capability in Enum.GetValues<Capability>())
             {
@@ -52,7 +52,7 @@ public sealed class CapabilityTests
 
                 bits[value] = capability;
             }
-        });
+        }
     }
 
     [Test]

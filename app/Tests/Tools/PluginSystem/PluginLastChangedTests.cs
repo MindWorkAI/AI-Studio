@@ -27,12 +27,12 @@ public sealed class PluginLastChangedTests
     {
         using var plugin = await LoadModelPlugin(LAST_CHANGED_LINE);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(plugin.IsValid, Is.True, string.Join(" ", plugin.Issues));
             Assert.That(plugin.LastChanged, Is.EqualTo(LAST_CHANGED));
             Assert.That(plugin.LastChanged?.Offset, Is.EqualTo(TimeSpan.Zero), "The UI converts from UTC, so the value has to be in UTC.");
-        });
+        }
     }
 
     [Test]
@@ -40,11 +40,11 @@ public sealed class PluginLastChangedTests
     {
         using var plugin = await LoadModelPlugin(string.Empty);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(plugin.IsValid, Is.True, string.Join(" ", plugin.Issues));
             Assert.That(plugin.LastChanged, Is.Null);
-        });
+        }
     }
 
     [TestCase("\"2026-10-12\"")]
@@ -57,11 +57,11 @@ public sealed class PluginLastChangedTests
     {
         using var plugin = await LoadModelPlugin($"LAST_CHANGED = {luaValue}");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(plugin.IsValid, Is.True, "A malformed LAST_CHANGED is no reason to refuse an otherwise valid plugin.");
             Assert.That(plugin.LastChanged, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -86,12 +86,12 @@ public sealed class PluginLastChangedTests
         var lua = DirectChatLauncherLuaWriter.Write(CreateLauncherMetadata(LAST_CHANGED), CreateLauncherDefinition());
         using var plugin = await PluginFactory.Load(null, lua);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(lua, Does.Contain(LAST_CHANGED_LINE));
             Assert.That(plugin.IsValid, Is.True, string.Join(" ", plugin.Issues));
             Assert.That(plugin.LastChanged, Is.EqualTo(LAST_CHANGED));
-        });
+        }
     }
 
     /// <summary>

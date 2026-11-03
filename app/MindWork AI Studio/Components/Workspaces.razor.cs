@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
@@ -32,6 +33,17 @@ public partial class Workspaces : MSGComponentBase
     
     [Parameter]
     public EventCallback<ChatThread> CurrentChatThreadChanged { get; set; }
+
+    /// <summary>
+    /// Asks the page to start a new chat in the workspace with the given ID.
+    /// </summary>
+    /// <remarks>
+    /// The page hands the request to its chat component. A message on the bus would not do: the bus
+    /// also serves the chat components of windows which were reloaded long ago, and each of them would
+    /// start a chat of its own, storing what it still holds on its way.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<Guid> StartNewChatRequested { get; set; }
 
     [Parameter]
     public bool ExpandRootNodes { get; set; } = true;
@@ -103,6 +115,8 @@ public partial class Workspaces : MSGComponentBase
     }
 
     private bool HasSearchQuery => this.SearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
+
+    private string SearchPlaceholder => this.includeThreadContents ? T("Search chat names and contents") : T("Search chat names");
 
     private string GetAddChatToWorkspaceTooltip(string workspaceName) => string.Format(T("Start a new chat in workspace '{0}'"), workspaceName);
 
@@ -523,9 +537,9 @@ public partial class Workspaces : MSGComponentBase
         }
     }
 
-    private async Task OnSearchTextChanged(string value)
+    private async Task OnSearchTextChanged(string? value)
     {
-        this.searchText = value;
+        this.searchText = value ?? string.Empty;
         if (string.IsNullOrWhiteSpace(this.searchText))
         {
             await this.CancelSearchAsync();
@@ -996,11 +1010,14 @@ public partial class Workspaces : MSGComponentBase
     /// Neither asks for the target workspace nor follows the chat in the chat view: both depend on
     /// where the move was asked for. Whoever moves a chat while this component exists goes through
     /// here, though, since the tree draws what it has built before and would otherwise keep showing
-    /// the chat in its old place.
+    /// the chat in its old place.<br/><br/>
+    ///
+    /// What the user did not save reaches the new place only while chats are stored automatically,
+    /// see WorkspaceBehaviour.MoveChatAsync.
     /// </remarks>
     public async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
     {
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId, this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
@@ -1011,9 +1028,10 @@ public partial class Workspaces : MSGComponentBase
             return;
 
         //
-        // The open chat moves as it stands on the screen, just like with the button in the chat
-        // itself. The copy from the disk lacks whatever is not stored yet, such as a message being
-        // edited, and the chat would continue with that copy afterward:
+        // The open chat is the one which moves, just like with the button in the chat itself. The
+        // copy from the disk lacks whatever is not stored yet, such as a message being edited, and
+        // the chat would continue with that copy afterward. Whether that reaches the disk in the new
+        // place depends on how chats are stored, see MoveChatAsync:
         //
         var chat = this.CurrentChatThread is { } openChat && openChat.ChatId == storedChat.ChatId ? openChat : storedChat;
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
@@ -1040,36 +1058,20 @@ public partial class Workspaces : MSGComponentBase
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
     }
     
+    /// <summary>
+    /// Asks the chat component to start a new chat in the given workspace.
+    /// </summary>
+    /// <param name="workspacePath">The directory of the workspace.</param>
+    /// <remarks>
+    /// The chat component starts the chat just like its own button for a new chat in the workspace:
+    /// it asks about unsaved changes, applies the chat template with its data sources, tools, and
+    /// example conversation, and stores the chat only once it has content. Until then, the chat is
+    /// missing from the tree.
+    /// </remarks>
     private async Task AddChatAsync(string workspacePath)
     {
-        if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
-        {
-            var dialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                { x => x.Message, T("Are you sure you want to create a another chat? All unsaved changes will be lost.") },
-            };
-        
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Create Chat"), dialogParameters, DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is null || dialogResult.Canceled)
-                return;
-        }
-        
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
-        var chat = new ChatThread
-        {
-            WorkspaceId = workspaceId,
-            ChatId = Guid.NewGuid(),
-            Name = string.Empty,
-            SystemPrompt = SystemPrompts.DEFAULT,
-            Blocks = [],
-        };
-        
-        var chatPath = Path.Join(workspacePath, chat.ChatId.ToString());
-        
-        await WorkspaceBehaviour.StoreChatAsync(chat);
-        await this.LoadChatAsync(chatPath, switchToChat: true);
-        await this.LoadTreeItemsAsync(startPrefetch: false);
+        await this.StartNewChatRequested.InvokeAsync(workspaceId);
     }
 
     #region Overrides of MSGComponentBase

@@ -5,6 +5,7 @@ using System.Text;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Databases;
 
 namespace AIStudio.Tools.Services;
 
@@ -28,7 +29,7 @@ using Provider = AIStudio.Settings.Provider;
 /// provider, the built-in one does the counting, and two tokenizers disagree by a few percent on
 /// prose and by more than that on code.
 /// </remarks>
-public sealed class ConversationTokenCounter(RustService rustService, ILogger<ConversationTokenCounter> logger)
+public sealed class ConversationTokenCounter(RustService rustService, DatabaseClientProvider databaseClientProvider, ILogger<ConversationTokenCounter> logger)
 {
     /// <summary>
     /// How much text goes into one counting request.
@@ -267,6 +268,29 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
     /// </remarks>
     private async Task<int> CountDocumentAsync(Provider provider, FileAttachment document, CancellationToken token)
     {
+        //
+        // A document sent before goes out as the text it was stored with, see FileAttachment.ProvenanceId,
+        // so that is what counts, whatever its file says by now. The entry never changes, so its id is
+        // key enough:
+        //
+        if (document.ProvenanceId is { } provenanceId)
+        {
+            var storedKey = $"{provider.TokenizerPath}{KEY_SEPARATOR}{provenanceId}";
+            if (this.counted.TryGetValue(storedKey, out var storedTokens))
+                return storedTokens;
+
+            var store = await databaseClientProvider.GetProvenanceStoreAsync(token);
+            var entries = await store.GetEntriesAsync([provenanceId], token);
+            if (entries.TryGetValue(provenanceId, out var entry))
+            {
+                storedTokens = await this.CountTextAsync(provider, entry.Content, token);
+                this.counted[storedKey] = storedTokens;
+                return storedTokens;
+            }
+
+            // Without its entry, the request reads the file instead, and so does the count.
+        }
+
         var file = new FileInfo(document.FilePath);
         if (!file.Exists)
             return 0;

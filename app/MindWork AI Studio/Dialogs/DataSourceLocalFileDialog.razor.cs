@@ -24,16 +24,6 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     [Parameter]
     public DataSourceLocalFile DataSource { get; set; }
 
-    /// <summary>
-    /// Whether the file this data source reads must stay as it is.
-    /// </summary>
-    /// <remarks>
-    /// Set once the index holds something for this data source. The embedding is not locked along
-    /// with it: it can be changed, and DataSourceReindexWarning asks what that costs.
-    /// </remarks>
-    [Parameter]
-    public bool LockSource { get; set; }
-
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -69,6 +59,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     private bool showExpertSettings;
     private bool revalidateAfterRender;
     private ConfidenceLevel dataConfidenceLevel = ConfidenceLevel.UNKNOWN;
+    private OutboundDataRestriction dataOutboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -118,6 +109,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
+            this.dataOutboundDataRestriction = this.DataSource.OutboundDataRestriction;
             this.dataMaxMatches = this.DataSource.MaxMatches;
         }
         
@@ -132,7 +124,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
 
         // A check asked for in code waits until the fields hold their new values, cf. ToggleExpertSettings:
         if (this.revalidateAfterRender)
@@ -206,9 +198,23 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
                 ? T("This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.")
                 : null;
 
-    private bool CanChangeSource => !this.IsEditing || !this.LockSource;
-
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
+
+    private OutboundDataRestriction OrganizationMinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction;
+
+    /// <summary>
+    /// The level the data source gets: the one chosen, as far as the organization allows it.
+    /// </summary>
+    /// <remarks>
+    /// The organization may rule out a level while the dialog is open, or after the data source was
+    /// stored with it. The choice itself stays, so the dialog shows it again once the organization
+    /// allows it again.
+    /// </remarks>
+    private OutboundDataRestriction SelectedOutboundDataRestriction
+    {
+        get => this.dataOutboundDataRestriction.StricterOf(this.OrganizationMinimumOutboundDataRestriction);
+        set => this.dataOutboundDataRestriction = value;
+    }
 
     private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
         ? T("No embedding selected")
@@ -235,23 +241,30 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         Type = DataSourceType.LOCAL_FILE,
         EmbeddingId = this.dataEmbeddingId,
 
-        // Kept out of reach of the form while the source is locked, so a stale field cannot point an
-        // indexed data source somewhere else:
-        FilePath = this.CanChangeSource ? this.dataFilePath : this.DataSource.FilePath,
+        FilePath = this.dataFilePath,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
+        OutboundDataRestriction = this.SelectedOutboundDataRestriction,
         MaxMatches = this.dataMaxMatches,
     };
     
     private async Task Store()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
 
+        await this.StoreValidatedDataSourceAsync();
+    }
+
+    /// <summary>
+    /// Continues Save after form validation, asking before the draft is returned to its caller.
+    /// </summary>
+    internal async Task StoreValidatedDataSourceAsync()
+    {
         var addedDataSource = this.CreateDataSource();
 
         //

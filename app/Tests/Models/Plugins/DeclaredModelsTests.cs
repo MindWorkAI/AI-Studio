@@ -49,11 +49,11 @@ public sealed class DeclaredModelsTests
 
         var profile = registry.Profile(LLMProviders.SELF_HOSTED, "acme-assistant-7b");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.FUNCTION_CALLING), Is.False, "The built-in rule grants this one, and the declaration does not.");
             Assert.That(profile.Reasoning, Is.EqualTo(ReasoningSupport.NONE), "Nor does it reason, whatever the built-in rule says.");
-        });
+        }
     }
 
     [Test]
@@ -83,11 +83,11 @@ public sealed class DeclaredModelsTests
         registry.Declare([]);
         var afterwards = registry.Profile(LLMProviders.SELF_HOSTED, "acme-assistant-7b");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(whileDeclared.Has(Capability.FUNCTION_CALLING), Is.False);
             Assert.That(afterwards.Has(Capability.FUNCTION_CALLING), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -105,11 +105,11 @@ public sealed class DeclaredModelsTests
             Declaring("acme-assistant-7b", MatchKind.EXACT, Capability.TEXT_INPUT | Capability.TEXT_OUTPUT | Capability.MULTIPLE_IMAGE_INPUT),
         ]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(registry.Profile(LLMProviders.SELF_HOSTED, "acme-assistant-7b").Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True);
             Assert.That(registry.Profile(LLMProviders.SELF_HOSTED, "acme-assistant-3b").Has(Capability.MULTIPLE_IMAGE_INPUT), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -127,11 +127,11 @@ public sealed class DeclaredModelsTests
         {
             registry.Declare([declaration]);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(registry.Profile(LLMProviders.OPEN_AI, "gpt-5.1").Has(Capability.VIDEO_INPUT), Is.True);
                 Assert.That(registry.Profile(LLMProviders.OPEN_ROUTER, "openai/gpt-5.1").Has(Capability.VIDEO_INPUT), Is.True, "The same model, reached through a gateway which wraps the name.");
-            });
+            }
         }
         finally
         {

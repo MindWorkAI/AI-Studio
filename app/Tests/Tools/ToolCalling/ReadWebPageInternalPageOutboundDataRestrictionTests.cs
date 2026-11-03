@@ -116,10 +116,10 @@ public sealed class ReadWebPageInternalPageOutboundDataRestrictionTests : ToolRe
             TargetChosenByUser = true,
         });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(retrievedPage.Page.FinalUrl.AbsolutePath, Is.EqualTo("/page"), "The redirect was followed.");
             Assert.That(retrievedPage.ReachedNonPublicAddress, Is.True);
-        });
+        }
     }
 }

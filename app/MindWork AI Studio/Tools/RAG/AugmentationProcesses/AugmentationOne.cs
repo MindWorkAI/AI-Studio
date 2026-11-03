@@ -27,24 +27,25 @@ public sealed class AugmentationOne : IAugmentationProcess
     public string Description => TB("This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.");
     
     /// <inheritdoc />
-    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
+    public async Task<AugmentationResult> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
     {
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
         
         if(retrievalContexts.Count == 0)
         {
             LOGGER.LogWarning("No retrieval contexts were issued. Skipping the augmentation process.");
-            return chatThread;
+            return new(chatThread, []);
         }
 
-        var numTotalRetrievalContexts = retrievalContexts.Count;
-
         //
-        // One report for the whole answer. With the check of which passages fit, every passage is
-        // filtered twice: once for that check, and once more for the model.
+        // One report for the whole answer. Every passage is filtered once, before the check of
+        // which passages fit: the check then judges exactly what the model would receive, and the
+        // model receives exactly what the check judged.
         //
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
         await using var reportingScope = guardService.BeginAction();
+        var preparedContexts = await retrievalContexts.PrepareForModelAsync(guardService, reportingScope, token);
+        var usedContexts = preparedContexts;
 
         // Want the user to validate all retrieval contexts?
         if (settings.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && chatThread.DataSourceOptions.AutomaticValidation)
@@ -56,7 +57,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                 try
                 {
                     // Let's validate all retrieval contexts:
-                    var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, reportingScope, token);
+                    var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, preparedContexts, token);
                     if (validationResults.Count == 0)
                         LOGGER.LogWarning("Retrieval context validation returned no results. Continuing augmentation with all retrieved contexts.");
                     else
@@ -68,7 +69,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                         var threshold = validationResults.GetConfidenceThreshold(targetWindow);
 
                         // Filter the retrieval contexts:
-                        retrievalContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
+                        usedContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
                     }
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -97,7 +98,7 @@ public sealed class AugmentationOne : IAugmentationProcess
             }
         }
         
-        LOGGER.LogInformation($"Starting the augmentation process over {retrievalContexts.Count:###,###,###,###} of {numTotalRetrievalContexts:###,###,###,###} retrieved contexts.");
+        LOGGER.LogInformation($"Starting the augmentation process over {usedContexts.Count:###,###,###,###} of {retrievalContexts.Count:###,###,###,###} retrieved contexts.");
         
         //
         // We build a huge prompt from all retrieval contexts:
@@ -107,11 +108,12 @@ public sealed class AugmentationOne : IAugmentationProcess
         sb.AppendLine();
         
         // Let's convert all retrieval contexts to Markdown:
-        await retrievalContexts.AsMarkdown(sb, reportingScope, token);
+        for (var index = 0; index < usedContexts.Count; index++)
+            sb.Append(usedContexts[index].ToMarkdown(index + 1, usedContexts.Count));
         
         // Add the augmented data to the chat thread:
         chatThread.AugmentedData = sb.ToString();
-        return chatThread;
+        return new(chatThread, usedContexts);
     }
 
     #endregion

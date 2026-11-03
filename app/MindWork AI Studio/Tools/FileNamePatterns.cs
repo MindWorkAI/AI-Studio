@@ -34,7 +34,6 @@ internal static class FileNamePatterns
     {
         NONE,
         MISSING,
-        EMPTY_ENTRY,
         UNKNOWN_SELECTOR,
         RECURSIVE_WILDCARD,
         PATH,
@@ -50,6 +49,9 @@ internal static class FileNamePatterns
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileNamePatterns).Namespace, nameof(FileNamePatterns));
 
+    /// <summary>
+    /// Splits the list, ignoring empty entries, including a trailing semicolon.
+    /// </summary>
     public static string[] Parse(string? patterns) => (patterns ?? string.Empty)
         .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -124,7 +126,6 @@ internal static class FileNamePatterns
     {
         ValidationIssue.NONE => null,
         ValidationIssue.MISSING => TB("Please provide at least one file pattern, e.g., :documents: or *.txt. Separate multiple patterns with a semicolon."),
-        ValidationIssue.EMPTY_ENTRY => TB("Please remove empty file patterns. Separate valid patterns with a single semicolon."),
         ValidationIssue.UNKNOWN_SELECTOR => TB("One of the file patterns is an unknown selector. Please use :documents: or :text:, or a file name pattern such as *.txt."),
         ValidationIssue.RECURSIVE_WILDCARD => TB("Please use only single asterisks as wildcards, e.g., *.txt or report-*.md."),
         ValidationIssue.PATH => TB("Please use file name patterns without folder paths, e.g., *.txt or report-*.md."),
@@ -134,16 +135,12 @@ internal static class FileNamePatterns
 
     private static ValidationIssue GetValidationIssue(string? patterns)
     {
-        if (string.IsNullOrWhiteSpace(patterns))
+        var individualPatterns = Parse(patterns);
+        if (individualPatterns.Length == 0)
             return ValidationIssue.MISSING;
 
-        var individualPatterns = patterns.Split(';');
-        if (individualPatterns.Any(string.IsNullOrWhiteSpace))
-            return ValidationIssue.EMPTY_ENTRY;
-
-        foreach (var patternEntry in individualPatterns)
+        foreach (var pattern in individualPatterns)
         {
-            var pattern = patternEntry.Trim();
             if (IsSelector(pattern))
                 continue;
 

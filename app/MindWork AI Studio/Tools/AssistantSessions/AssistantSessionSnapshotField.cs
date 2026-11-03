@@ -1,4 +1,6 @@
 // ReSharper disable MemberCanBePrivate.Global
+using System.Collections;
+
 namespace AIStudio.Tools.AssistantSessions;
 
 /// <summary>
@@ -40,6 +42,39 @@ public sealed record AssistantSessionSnapshotField<T> : IAssistantSessionSnapsho
         }
 
         value = default;
+        return false;
+    }
+
+    /// <inheritdoc />
+    public bool HasSameValueAs(IAssistantSessionSnapshotField other) => other is AssistantSessionSnapshotField<T> otherField && AreSame(this.Value, otherField.Value);
+
+    private static bool AreSame(object? value, object? otherValue)
+    {
+        if (ReferenceEquals(value, otherValue))
+            return true;
+
+        if (value is null || otherValue is null)
+            return false;
+
+        // Nobody can change a string or a copied value type behind our back:
+        if (value is string || value.GetType().IsValueType)
+            return value.Equals(otherValue);
+
+        //
+        // The writer copies lists, sets, and dictionaries for every snapshot, so these never share a
+        // reference. Their items, though, are those of the assistant. Any other object may change
+        // without a new reference, e.g., a record holding a list, so only its reference tells:
+        //
+        if (value is IDictionary dictionary && otherValue is IDictionary otherDictionary)
+            return dictionary.Count == otherDictionary.Count && dictionary.Keys.Cast<object>().All(key => otherDictionary.Contains(key) && AreSame(dictionary[key], otherDictionary[key]));
+
+        if (value is IEnumerable items && otherValue is IEnumerable otherItems)
+        {
+            var itemList = items.Cast<object?>().ToList();
+            var otherItemList = otherItems.Cast<object?>().ToList();
+            return itemList.Count == otherItemList.Count && itemList.Zip(otherItemList).All(pair => AreSame(pair.First, pair.Second));
+        }
+
         return false;
     }
 }

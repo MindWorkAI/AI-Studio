@@ -45,11 +45,11 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     {
         var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), restriction, ChatWithTheUserWriting(GIVEN), WIKI_URL, IS_ALLOWED_PRIVATE_HOST, out var redirectLimit);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(allowed, Is.True, "The allowed private hosts are services configured in AI Studio, as the wiki is.");
             Assert.That(redirectLimit, Is.EqualTo(ReadWebPageTool.RedirectLimit.NON_PUBLIC_ONLY), "A matching name is not enough: the request may only reach non-public addresses.");
-        });
+        }
     }
 
     [Test]
@@ -57,11 +57,11 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     {
         var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri("https://intranet.example.org/handbook/travel"), OutboundDataRestriction.UNRESTRICTED, new ChatThread(), WIKI_URL, IS_ALLOWED_PRIVATE_HOST, out var redirectLimit);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(allowed, Is.True);
             Assert.That(redirectLimit, Is.EqualTo(ReadWebPageTool.RedirectLimit.NONE));
-        });
+        }
     }
 
     [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, "https://example.org/chosen-by-the-model")]
@@ -79,11 +79,11 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     {
         var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri("https://wiki.corp.example.org/confluence/display/TEAM/Budget"), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, new ChatThread(), WIKI_URL, IS_ALLOWED_PRIVATE_HOST, out var redirectLimit);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(allowed, Is.True);
             Assert.That(redirectLimit, Is.EqualTo(ReadWebPageTool.RedirectLimit.WITHIN_WIKI), "The stricter of both limits: a redirect out of the wiki is refused even when it stays in the intranet.");
-        });
+        }
     }
 
     [Test]
@@ -91,11 +91,11 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     {
         var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(GIVEN), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, ChatWithTheUserWriting(GIVEN), WIKI_URL, IS_ALLOWED_PRIVATE_HOST, out var redirectLimit);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(allowed, Is.True);
             Assert.That(redirectLimit, Is.EqualTo(ReadWebPageTool.RedirectLimit.NONE), "The model did not write the address, so whatever a redirect carries came from the server.");
-        });
+        }
     }
 
     [Test]
@@ -121,11 +121,11 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     {
         var isAllowedPrivateHost = ReadWebPageTool.ReadAllowedPrivateHosts(rawValue, out var hasAny);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(hasAny, Is.EqualTo(expectedHasAny));
             Assert.That(isAllowedPrivateHost("intranet.example.org"), Is.EqualTo(expectedHasAny));
-        });
+        }
     }
 
     [Test]
@@ -149,11 +149,11 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     }
 
     [Test]
-    public void AnAllowedNameWhichResolvesToAPublicAddressIsRefused()
+    public async Task AnAllowedNameWhichResolvesToAPublicAddressIsRefused()
     {
         var service = new WebPageRetrievalService(new HTMLParser());
 
-        var exception = Assert.ThrowsAsync<WebPageAccessBlockedException>(() => service.RetrieveAsync(new Uri(PUBLIC_ADDRESS), new WebPageRetrievalOptions
+        var exception = await Assert.ThrowsAsync<WebPageAccessBlockedException>(() => service.RetrieveAsync(new Uri(PUBLIC_ADDRESS), new WebPageRetrievalOptions
         {
             TimeoutSeconds = 10,
             ProviderConfidence = ConfidenceLevel.HIGH,
@@ -165,7 +165,7 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
     }
 
     [Test]
-    public void ARedirectFromAnAllowedPrivateHostToAPublicAddressIsRefused()
+    public async Task ARedirectFromAnAllowedPrivateHostToAPublicAddressIsRefused()
     {
         using var server = new LoopbackWebServer(redirectLocation: PUBLIC_ADDRESS);
         var service = new WebPageRetrievalService(new HTMLParser());
@@ -175,18 +175,18 @@ public sealed class ReadWebPageAllowedPrivateHostTests : ToolRegistryTestBase
         // chose only, which the limit holds for all the same, because it guards what the address
         // may carry:
         //
-        var exception = Assert.ThrowsAsync<WebPageAccessBlockedException>(() => service.RetrieveAsync(server.Address("/redirect"), new WebPageRetrievalOptions
+        var exception = await Assert.ThrowsAsync<WebPageAccessBlockedException>(() => service.RetrieveAsync(server.Address("/redirect"), new WebPageRetrievalOptions
         {
             TimeoutSeconds = 10,
             TargetChosenByUser = true,
             NonPublicTargetsOnly = true,
         }));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(exception!.Reason, Is.EqualTo(WebPageAccessBlockReason.PUBLIC_TARGET_NOT_ALLOWED));
             Assert.That(exception.Message, Does.Not.Contain("93.184.215.14"), "The refusal reaches the model and must not hand it an address.");
-        });
+        }
     }
 
     [Test]

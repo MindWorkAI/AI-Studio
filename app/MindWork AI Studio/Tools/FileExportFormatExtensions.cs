@@ -12,7 +12,9 @@ namespace AIStudio.Tools;
 /// <remarks>
 /// This is the single place where an export format is described. Adding another one means adding
 /// an enum member and one line per method here; neither the exporters nor the export menu need
-/// to know about it.
+/// to know about it. Code is the one exception: SOURCE_CODE stands for code in every language, so
+/// its file takes the extension and the save dialog filter from its language, see
+/// SourceCodeLanguage, and the format itself names none.
 /// </remarks>
 public static class FileExportFormatExtensions
 {
@@ -64,6 +66,7 @@ public static class FileExportFormatExtensions
         FileExportFormat.HTML => TB("Webpage (.html)"),
         FileExportFormat.CSV => TB("Table (.csv)"),
         FileExportFormat.TSV => TB("Table (.tsv)"),
+        FileExportFormat.SOURCE_CODE => TB("Source code"),
 
         _ => TB("Unknown format"),
     };
@@ -81,6 +84,7 @@ public static class FileExportFormatExtensions
         FileExportFormat.MARKDOWN => Icons.Material.Filled.TextFields,
         FileExportFormat.HTML => Icons.Material.Filled.Html,
         FileExportFormat.CSV or FileExportFormat.TSV => Icons.Material.Filled.TableChart,
+        FileExportFormat.SOURCE_CODE => Icons.Material.Filled.Code,
 
         _ => Icons.Material.Filled.Help,
     };
@@ -89,7 +93,8 @@ public static class FileExportFormatExtensions
     /// Returns the file extension of the format, including the leading dot.
     /// </summary>
     /// <param name="format">The format.</param>
-    /// <returns>The file extension, or an empty string when the format writes no file.</returns>
+    /// <returns>The file extension, or an empty string when the format writes no file or, as code
+    /// does, takes the extension from its language.</returns>
     public static string ToFileExtension(this FileExportFormat format) => format switch
     {
         FileExportFormat.MICROSOFT_WORD => ".docx",
@@ -111,7 +116,8 @@ public static class FileExportFormatExtensions
     /// A model which answers with a finished file puts it into a code block and names its language,
     /// as in ```html. Models do not agree on the spelling, so we accept the usual names of a format
     /// in any case. Only formats which are plain text appear here: a code block holds text, never
-    /// a Word document.
+    /// a Word document. A block in any other language, or in none, is code, see
+    /// SourceCodeLanguages.FromCodeFenceLanguage.
     /// </remarks>
     /// <param name="language">The language behind the opening fence, as Markdig reads it into
     /// FencedCodeBlock.Info.</param>
@@ -152,7 +158,7 @@ public static class FileExportFormatExtensions
     /// </remarks>
     /// <param name="format">The format.</param>
     /// <returns>True, when a text written as it is makes a valid file of the format.</returns>
-    public static bool IsPlainText(this FileExportFormat format) => format is FileExportFormat.LATEX or FileExportFormat.MARKDOWN or FileExportFormat.HTML or FileExportFormat.CSV or FileExportFormat.TSV;
+    public static bool IsPlainText(this FileExportFormat format) => format is FileExportFormat.LATEX or FileExportFormat.MARKDOWN or FileExportFormat.HTML or FileExportFormat.CSV or FileExportFormat.TSV or FileExportFormat.SOURCE_CODE;
 
     /// <summary>
     /// Returns the file name the save dialog starts with.
@@ -166,10 +172,22 @@ public static class FileExportFormatExtensions
     /// <param name="name">What the file is about, for example the heading above a table. Anything
     /// a file name cannot hold is removed. Null or blank falls back to a generic name.</param>
     /// <returns>The suggested file name, including its extension.</returns>
-    public static string ToSuggestedFileName(this FileExportFormat format, string? name = null)
+    public static string ToSuggestedFileName(this FileExportFormat format, string? name = null) => SuggestFileName(name, format.ToFileExtension());
+
+    /// <summary>
+    /// Returns the file name the save dialog starts with, for a file with the given extension.
+    /// </summary>
+    /// <remarks>
+    /// The same rules as for a format apply, see ToSuggestedFileName. Code blocks need this, since
+    /// their extension comes from the language of the block, not from a format.
+    /// </remarks>
+    /// <param name="name">What the file is about. Null or blank falls back to a generic name.</param>
+    /// <param name="fileExtension">The file extension, including the leading dot.</param>
+    /// <returns>The suggested file name, including its extension.</returns>
+    internal static string SuggestFileName(string? name, string fileExtension)
     {
         var fileName = ToFileNameFragment(name);
-        return $"{(fileName.Length is 0 ? "export" : fileName)}{format.ToFileExtension()}";
+        return $"{(fileName.Length is 0 ? "export" : fileName)}{fileExtension}";
     }
 
     /// <summary>
@@ -181,7 +199,7 @@ public static class FileExportFormatExtensions
     /// set below is what no common file system accepts, plus the length limit which keeps the name
     /// readable in a dialog.
     /// </remarks>
-    private static string ToFileNameFragment(string? name)
+    internal static string ToFileNameFragment(string? name)
     {
         const int MAX_LENGTH = 60;
         const string FORBIDDEN_CHARACTERS = @"\/:*?""<>|";
@@ -223,7 +241,8 @@ public static class FileExportFormatExtensions
     /// Returns the filter which the save dialog offers for the format.
     /// </summary>
     /// <param name="format">The format.</param>
-    /// <returns>The filter, or null when the format cannot be written.</returns>
+    /// <returns>The filter, or null when the format cannot be written or, as code does, takes the
+    /// filter from its language.</returns>
     public static FileTypeFilter? ToFileTypeFilter(this FileExportFormat format) => format switch
     {
         FileExportFormat.MICROSOFT_WORD => FileTypes.MS_WORD,

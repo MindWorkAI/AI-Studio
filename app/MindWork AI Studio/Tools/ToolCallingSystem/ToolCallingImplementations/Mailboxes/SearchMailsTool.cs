@@ -6,6 +6,7 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Mail;
 using AIStudio.Tools.PluginSystem;
@@ -115,7 +116,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
                 - Search whenever a question concerns the mails of the user: what somebody wrote, what arrived, or what is still open.
                 - Put what the question names into the conditions, such as `from`, `after`, `is_unread`, or `folder`, rather than into the query. Without a query, the mails meeting the conditions are listed, the most recently received first.
                 - Write a query only to find mails by their content: self-contained, naming the subject, in the language the mails are most likely written in.
-                - The passage of a mail is only an excerpt. Read the whole mail and its attachments with `read_mail` and its `mail_id` before you answer from it. When `read_mail` is not available, answer from the passages and say so.
+                - The passage of a mail is only an excerpt. When it comes from an attachment, `passage_location` names the attachment and where in it the passage is. Read the whole mail and its attachments with `read_mail` and its `mail_id` before you answer from it. When `read_mail` is not available, answer from the passages and say so.
                 - Dates without an offset are read in the time zone of the user. The `conditions` of the result show how they were read.
                 - The index holds the mails the user sent and the drafts of the user as well, unless a mailbox leaves them out. `special_folder` searches only the sent mails or only the drafts, however the server names their folders, and a result marks every mail in one of them with `special_folder`. For mails the user wrote to somebody, combine `special_folder` set to `sent` with `to`.
                 - A draft has not been sent. When the user asks about a draft, search with `special_folder` set to `drafts`: AI Studio then fetches the drafts saved since its last sync. To improve a draft, read it with `read_mail` and propose the improved text in your answer. You cannot save or send it.
@@ -242,6 +243,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         var mails = searches.Select(_ => new JsonArray()).ToArray();
         var leftOutCounts = new int[searches.Length];
         var sources = new List<Source>();
+        var passages = new List<SourcePassage>();
         var resultCharacters = 0;
         var mostMails = pendingMails.Select(list => list.Count).DefaultIfEmpty(0).Max();
         for (var rank = 0; rank < mostMails; rank++)
@@ -264,7 +266,11 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 
                 resultCharacters += mailCharacters;
                 mails[index].Add(mail);
-                sources.Add(pendingMail.ToSource(texts, timeZone));
+
+                // Mails are listed without a link, so what the model received of one is all there is to read under it:
+                var source = pendingMail.ToSource(texts, timeZone);
+                sources.Add(source);
+                passages.Add(pendingMail.ToPassage(source, texts, timeZone));
             }
         }
 
@@ -296,6 +302,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
                 ["mailboxes"] = mailboxResults,
             },
             Sources = sources,
+            Passages = passages,
             RequiredProviderConfidence = requirements.Confidence,
             RequiredOutboundDataRestriction = requirements.OutboundData,
         };
@@ -425,7 +432,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
     /// <remarks>
     /// Whether the mail lies among the sent mails or the drafts is AI Studio's own value, so it needs no filtering.
     /// </remarks>
-    private sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summary, int Subject, int From, int Sender, IReadOnlyList<int> Recipients, int MoreRecipients, IReadOnlyList<int> Folders, string? SpecialFolder, IReadOnlyList<int> Attachments, int? Passage)
+    private sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summary, int Subject, int From, int Sender, IReadOnlyList<int> Recipients, int MoreRecipients, IReadOnlyList<int> Folders, string? SpecialFolder, IReadOnlyList<int> Attachments, int? Passage, ChunkLocation? PassageLocation)
     {
         public static PendingMail Register(MailSearchHit hit, DataSourceMailbox mailbox, IReadOnlyList<MailFolderRecord> mailboxFolders, MailTexts texts)
         {
@@ -444,7 +451,8 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
                 summary.FolderPaths.Select(folder => texts.Add(folder, mailbox)).ToList(),
                 MailToolResults.GetSpecialFolder(summary.FolderPaths, mailboxFolders),
                 summary.AttachmentNames.Select(name => texts.Add(name, mailbox)).ToList(),
-                hit.Passage is null ? null : texts.Add(hit.Passage.Shorten(MAX_PASSAGE_CHARACTERS), mailbox));
+                hit.Passage is null ? null : texts.Add(hit.Passage.Shorten(MAX_PASSAGE_CHARACTERS), mailbox),
+                hit.PassageLocation);
         }
 
         public JsonObject Describe(MailTexts texts, TimeZoneInfo timeZone)
@@ -476,11 +484,68 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
                 description["attachments"] = new JsonArray([..this.Attachments.Select(attachment => (JsonNode?)texts[attachment])]);
 
             if (this.Passage is { } passage)
+            {
                 description["passage"] = texts[passage];
+                var attachment = this.LocatePassageInAttachment(texts);
+                if (attachment != MailPassageAttachment.NONE)
+                    description["passage_location"] = attachment.Where is null ? $"attachment \"{attachment.Name}\"" : $"attachment \"{attachment.Name}\", {attachment.Where}";
+            }
 
             return description;
         }
 
-        public Source ToSource(MailTexts texts, TimeZoneInfo timeZone) => MailToolResults.CreateSource(this.Mailbox, this.Summary.MailId, texts[this.Subject], texts[this.Sender], this.Summary.ReceivedAtUtc, timeZone);
+        /// <summary>
+        /// Writes what the model received of this mail, for the user to read under its source.
+        /// </summary>
+        /// <param name="source">The source of this mail, see ToSource.</param>
+        /// <param name="texts">The filtered texts of the result.</param>
+        /// <param name="timeZone">The time zone of the user.</param>
+        /// <returns>The passage of this mail.</returns>
+        public SourcePassage ToPassage(Source source, MailTexts texts, TimeZoneInfo timeZone)
+        {
+            var attachment = this.LocatePassageInAttachment(texts);
+            return source.ToMailPassage(MailToolResults.ComposePassage(
+                texts[this.From],
+                [..this.Recipients.Select(recipient => texts[recipient])],
+                texts[this.Subject],
+                MailToolResults.FormatTime(this.Summary.ReceivedAtUtc, timeZone),
+                [..this.Attachments.Select(name => texts[name])],
+                attachment == MailPassageAttachment.NONE ? null : attachment.Label,
+                this.Passage is { } passage ? texts[passage] : null));
+        }
+
+        public Source ToSource(MailTexts texts, TimeZoneInfo timeZone)
+        {
+            var attachment = this.LocatePassageInAttachment(texts);
+            return MailToolResults.CreateSource(
+                this.Mailbox,
+                this.Summary.MailId,
+                texts[this.Subject],
+                texts[this.Sender],
+                this.Summary.ReceivedAtUtc,
+                timeZone,
+                attachment == MailPassageAttachment.NONE ? null : attachment.Label);
+        }
+
+        /// <summary>
+        /// The attachment the passage is from, and where in it.
+        /// </summary>
+        /// <remarks>
+        /// The attachments are numbered the way the index numbers them, cf. MailSummary.AttachmentNames.
+        /// Where in an attachment is worded like the location of any other passage, cf.
+        /// IRetrievalContextExtensions.DescribeLocation. A passage of the text of the mail names
+        /// no attachment, and neither does one of a mail indexed before attachments were told apart.
+        /// </remarks>
+        /// <param name="texts">The filtered texts of the result.</param>
+        /// <returns>The filtered name of the attachment, and where in it the passage is, if known; MailPassageAttachment.NONE when the passage is from no attachment.</returns>
+        private MailPassageAttachment LocatePassageInAttachment(MailTexts texts)
+        {
+            if (this.Passage is null || this.PassageLocation is not { AttachmentPosition: { } position } location || position < 0 || position >= this.Attachments.Count || position >= this.Summary.AttachmentNames.Count)
+                return MailPassageAttachment.NONE;
+
+            var type = DataSourceLocalRetrievalService.GetRetrievalContentType(Path.GetExtension(this.Summary.AttachmentNames[position]));
+            var located = DataSourceLocalRetrievalService.LocatePassage(location, type, chunkNumber: 1);
+            return new(texts[this.Attachments[position]], IRetrievalContextExtensions.DescribeLocation(located.PageNumber, located.EndPageNumber, located.SheetName, located.StartRow, located.EndRow, located.StartLine, located.EndLine));
+        }
     }
 }

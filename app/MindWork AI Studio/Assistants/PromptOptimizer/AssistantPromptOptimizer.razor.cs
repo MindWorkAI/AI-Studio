@@ -1,9 +1,9 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
@@ -17,10 +17,6 @@ namespace AIStudio.Assistants.PromptOptimizer;
 
 public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialogPromptOptimizer>
 {
-    private static readonly Regex JSON_CODE_FENCE_REGEX = new(
-        pattern: """```(?:json)?\s*(?<json>\{[\s\S]*\})\s*```""",
-        options: RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -115,7 +111,6 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         },
         new SendToButton
         {
-            Self = Tools.Components.PROMPT_OPTIMIZER_ASSISTANT,
             UseResultingContentBlockData = false,
             SendToChatAsInput = true,
             GetText = () => string.IsNullOrWhiteSpace(this.optimizedPrompt) ? this.inputPrompt : this.optimizedPrompt,
@@ -168,12 +163,10 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.ResetGuidelineSummaryToDefault();
         this.hasUpdatedDefaultRecommendations = false;
 
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_PROMPT_OPTIMIZER_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputPrompt = deferredContent;
-
         await base.OnInitializedAsync();
     }
+
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputPrompt = payload.Text;
 
     private string inputPrompt = string.Empty;
     private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
@@ -297,7 +290,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private async Task OptimizePromptAsync()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 
@@ -384,34 +377,8 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     {
         parsedResult = new();
 
-        if (TryDeserialize(rawResponse, out parsedResult))
-            return true;
-
-        var codeFenceMatch = JSON_CODE_FENCE_REGEX.Match(rawResponse);
-        if (codeFenceMatch.Success)
-        {
-            var codeFenceJson = codeFenceMatch.Groups["json"].Value;
-            if (TryDeserialize(codeFenceJson, out parsedResult))
-                return true;
-        }
-
-        var firstBrace = rawResponse.IndexOf('{');
-        var lastBrace = rawResponse.LastIndexOf('}');
-        if (firstBrace >= 0 && lastBrace > firstBrace)
-        {
-            var objectText = rawResponse[firstBrace..(lastBrace + 1)];
-            if (TryDeserialize(objectText, out parsedResult))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool TryDeserialize(string json, out PromptOptimizationResult parsedResult)
-    {
-        parsedResult = new();
-
-        if (string.IsNullOrWhiteSpace(json))
+        var json = ModelAnswerJson.ExtractObject(rawResponse);
+        if (json.IsWhiteSpace())
             return false;
 
         try
@@ -491,6 +458,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         if (!this.CanImproveFurther)
             return Task.CompletedTask;
 
+        this.TakeOverRestrictionsOfResult(this.optimizedPrompt);
         this.inputPrompt = this.optimizedPrompt;
         this.ResetOutput();
         this.ClearConversationState();

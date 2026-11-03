@@ -1,3 +1,4 @@
+@using AIStudio.Tools.RAG
 @inherits MSGComponentBase
 
 @* The class is what the Markdown renderer wraps its own output in, so the headings and the list
@@ -13,32 +14,85 @@
         <ul>
             @foreach (var entry in group.Entries)
             {
-                <li>
-                    @($"[{entry.Number}] ")
-                    @if (entry.Document is { } document)
-                    {
-                        <MudTooltip Text="@T("Opens this document in the program your system uses for it")" Placement="Placement.Top">
-                            <MudLink Typo="Typo.body1" OnClick="@(() => this.OpenDocument(document))">
+                <li class="source-entry">
+                    <div class="source-entry-title">
+                        @($"[{entry.Number}] ")
+                        @if (this.IsMissing(entry))
+                        {
+                            @* A link would only fail. The warning next to the entry says why: *@
+                            <MudText Typo="Typo.body1" Inline="true">
+                                @entry.Title
+                            </MudText>
+                        }
+                        else if (entry.Document is { } pagedDocument && entry.Location is { } location)
+                        {
+                            @* Each page the AI read is a link of its own, which opens the document there. The
+                               name would only open it at one of them, so it is no link. *@
+                            <MudText Typo="Typo.body1" Inline="true">
+                                @($"{entry.Name} ({location.Prefix}")
+                            </MudText>
+                            @for (var rangeIndex = 0; rangeIndex < location.Ranges.Count; rangeIndex++)
+                            {
+                                var pageRange = location.Ranges[rangeIndex];
+                                if (rangeIndex > 0)
+                                {
+                                    <MudText Typo="Typo.body1" Inline="true">
+                                        @PassageLocation.RANGE_SEPARATOR
+                                    </MudText>
+                                }
+
+                                <MudTooltip Text="@FileActions.GetOpenTooltip(pageRange.First)" Placement="Placement.Top">
+                                    <MudLink Typo="Typo.body1" OnClick="@(() => this.OpenDocument(pagedDocument with { PageNumber = pageRange.First }))">
+                                        @pageRange
+                                    </MudLink>
+                                </MudTooltip>
+                            }
+                            <MudText Typo="Typo.body1" Inline="true">
+                                @($"{location.Suffix})")
+                            </MudText>
+                        }
+                        else if (entry.Document is { } document)
+                        {
+                            @* Inline rather than the usual inline block: a long title, e.g., one naming many
+                               parts, then wraps like text right after its number instead of moving below it. *@
+                            <MudTooltip Text="@FileActions.GetOpenTooltip(null)" Placement="Placement.Top" RootClass="d-inline">
+                                <MudLink Typo="Typo.body1" OnClick="@(() => this.OpenDocument(document))">
+                                    @entry.Title
+                                </MudLink>
+                            </MudTooltip>
+                        }
+                        else if (entry.HasNoLink)
+                        {
+                            @* Nothing opens a mail by its address yet, nor what only a data source knows, so a link would lead nowhere. *@
+                            <MudText Typo="Typo.body1" Inline="true">
+                                @entry.Title
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudLink Href="@entry.Link" Target="_blank" Typo="Typo.body1">
                                 @entry.Title
                             </MudLink>
-                        </MudTooltip>
-                        <MudTooltip Text="@T("Show this file in the file manager of your system")" Placement="Placement.Top">
-                            <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" OnClick="@(() => this.ShowInFileManager(document))"/>
-                        </MudTooltip>
-                    }
-                    else if (entry.IsMail)
-                    {
-                        @* Nothing opens a mail by its address yet, so a link would lead nowhere. *@
-                        <MudText Typo="Typo.body1" Inline="true">
-                            @entry.Title
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudLink Href="@entry.Link" Target="_blank" Typo="Typo.body1">
-                            @entry.Title
-                        </MudLink>
-                    }
+                        }
+                    </div>
+
+                    @* The passages come last, so their button lines up at the right edge also where a
+                       source has no file to show. The tooltips open to the left, where there is room
+                       for them; above a button at the edge, they would be pushed around and cover the
+                       row above. They show on hover only: the focus comes back to the button when the
+                       dialog closes, or the file manager does, and a tooltip shown on focus would then
+                       stay until the user clicks somewhere else. The title opens the file or the page,
+                       so the actions only copy and find it; a mail gets none, see FileActions. *@
+                    <div class="source-entry-actions">
+                        <FileActions Path="@(entry.Document?.Path ?? entry.Link)" ShowOpen="@false" TooltipPlacement="Placement.Left" OnExistenceChecked="@(exists => this.NoteExistence(entry, exists))"/>
+
+                        @if (entry.Passages.Count > 0)
+                        {
+                            <MudTooltip Text="@this.PassagesTooltip(entry)" Placement="Placement.Left" ShowOnFocus="@false">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Class="icon-button-compact" OnClick="@(() => this.ShowPassages(entry))"/>
+                            </MudTooltip>
+                        }
+                    </div>
                 </li>
             }
         </ul>

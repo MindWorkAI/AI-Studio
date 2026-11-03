@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.Agenda;
@@ -167,8 +168,8 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string inputContent = string.Empty;
     private string inputDuration = string.Empty;
     private string inputStartTime = string.Empty;
-    private IEnumerable<string> selectedFoci = new HashSet<string>();
-    private IEnumerable<string> justBriefly = new HashSet<string>();
+    private IReadOnlyCollection<string> selectedFoci = new HashSet<string>();
+    private IReadOnlyCollection<string> justBriefly = new HashSet<string>();
     private string inputObjective = string.Empty;
     private string inputModerator = string.Empty;
     private CommonLanguages selectedTargetLanguage;
@@ -266,16 +267,9 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
         state.RestoreList(CONTENT_LINES_STATE_KEY, this.contentLines);
     }
 
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_AGENDA_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputContent = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputContent = payload.Text;
 
     #endregion
 
@@ -417,7 +411,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 
     private async Task CreateAgenda()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         
@@ -486,7 +480,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string PromptSocialActivity()
     {
         if (this.doingSocialActivity)
-            return "- The participants will engage in a social activity after the meeting or seminar. This can be a team-building exercise, a sightseeing tour, or a visit to a local attraction. Please make a recommendation for an activity at '{this.inputLocation}'.";
+            return $"- The participants will engage in a social activity after the meeting or seminar. This can be a team-building exercise, a sightseeing tour, or a visit to a local attraction. Please make a recommendation for an activity at '{this.inputLocation}'.";
 
         return "- The participants will not engage in a social activity after the meeting or seminar.";
     }
