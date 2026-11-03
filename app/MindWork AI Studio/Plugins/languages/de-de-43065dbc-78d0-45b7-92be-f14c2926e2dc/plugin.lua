@@ -5091,6 +5091,36 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T613888204"] = "Über
 -- Import Glossary
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T99577620"] = "Glossar importieren"
 
+-- {0} (reference)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1495175485"] = "{0} (Referenz)"
+
+-- None of the chosen glossaries contains a term of your text.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1804170386"] = "Keines der ausgewählten Glossare enthält einen Begriff aus Ihrem Text."
+
+-- Variants
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1918801359"] = "Varianten"
+
+-- Glossary entries for this translation: {0} from 1 glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2015588230"] = "Glossareinträge für diese Übersetzung: {0} aus 1 Glossar"
+
+-- Explanation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2840582448"] = "Erklärung"
+
+-- Note
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T339788125"] = "Hinweis"
+
+-- Glossary entries for this translation: {0} from {1} glossaries
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T424767458"] = "Glossareinträge für diese Übersetzung: {0} aus {1} Glossaren"
+
+-- Term
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T586836727"] = "Begriff"
+
+-- Translation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T613888204"] = "Übersetzung"
+
+-- The glossary '{0}' could not be loaded, so the translation did not follow it. Try again, or check the glossary under 'Manage glossaries'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T815876924"] = "Das Glossar „{0}“ konnte nicht geladen werden und wurde daher bei der Übersetzung nicht berücksichtigt. Versuchen Sie es erneut oder überprüfen Sie das Glossar unter „Glossare verwalten“."
+
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs können Fehler machen. Überprüfen Sie wichtige Informationen."
 

@@ -5091,6 +5091,33 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T613888204"] = "Trans
 -- Import Glossary
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T99577620"] = "Import Glossary"
 
+-- {0} (reference)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1495175485"] = "{0} (reference)"
+
+-- Glossary entries sent to the AI: {0} from {1} glossaries
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1531033282"] = "Glossary entries sent to the AI: {0} from {1} glossaries"
+
+-- None of the chosen glossaries contains a term of your text.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1804170386"] = "None of the chosen glossaries contains a term of your text."
+
+-- Variants
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1918801359"] = "Variants"
+
+-- Explanation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2840582448"] = "Explanation"
+
+-- Note
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T339788125"] = "Note"
+
+-- Term
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T586836727"] = "Term"
+
+-- Translation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T613888204"] = "Translation"
+
+-- The glossary '{0}' could not be loaded, so the translation did not follow it. Try again, or check the glossary under 'Manage glossaries'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T815876924"] = "The glossary '{0}' could not be loaded, so the translation did not follow it. Try again, or check the glossary under 'Manage glossaries'."
+
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
 
