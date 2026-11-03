@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tests.Tools;
@@ -122,7 +123,7 @@ public class FileTypesTests
     public void DialogFilterMatchesTheRuntimeContract()
     {
         // The struct FileTypeFilter in runtime/src/file_actions.rs knows exactly these two fields:
-        var json = JsonSerializer.Serialize(FileTypes.ToFileDialogFilter(FileTypes.JSON), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+        var json = JsonSerializer.Serialize(FileTypes.ToFileDialogFilter(FileTypes.JSON), RustService.JSON_OPTIONS);
 
         Assert.That(json, Is.EqualTo("""{"filter_name":"JSON","filter_extensions":["json"]}"""));
     }
