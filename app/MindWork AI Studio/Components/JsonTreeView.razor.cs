@@ -1,5 +1,7 @@
 using System.Text.Json.Nodes;
 
+using AIStudio.Tools.ToolCallingSystem;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -36,7 +38,7 @@ public partial class JsonTreeView : ComponentBase
     private static List<TreeItemData<JsonTreeNode>> CreateChildren(JsonNode? value) => value switch
     {
         JsonObject jsonObject => jsonObject
-            .Select(property => CreateTreeItem(JsonValue.Create(property.Key).ToJsonString(), property.Value))
+            .Select(property => CreateTreeItem(FormatKey(property.Key), property.Value))
             .ToList(),
         JsonArray jsonArray => jsonArray
             .Select((item, index) => CreateTreeItem($"[{index}]", item))
@@ -44,14 +46,24 @@ public partial class JsonTreeView : ComponentBase
         _ => [],
     };
 
-    private static string FormatValue(JsonNode? value) => value switch
+    internal static string FormatKey(string key) => JsonValue.Create(key).ToJsonString(ToolExecutionResult.MODEL_CONTENT_OPTIONS);
+
+    /// <summary>
+    /// Writes a value as JSON, objects and arrays only as a placeholder.
+    /// </summary>
+    /// <remarks>
+    /// The tree shows the result of a tool, so it writes like the model reads it, see
+    /// ToolExecutionResult.MODEL_CONTENT_OPTIONS. The default options would escape every umlaut and
+    /// every quotation mark for a web page, although Blazor encodes the text for the page anyway.
+    /// </remarks>
+    internal static string FormatValue(JsonNode? value) => value switch
     {
         JsonObject jsonObject when jsonObject.Count == 0 => "{}",
         JsonObject => "{...}",
         JsonArray jsonArray when jsonArray.Count == 0 => "[]",
         JsonArray => "[...]",
         null => "null",
-        _ => value.ToJsonString(),
+        _ => value.ToJsonString(ToolExecutionResult.MODEL_CONTENT_OPTIONS),
     };
 
     private static string GetIcon(JsonNode? value) => value switch
