@@ -67,6 +67,56 @@ public sealed class GlossaryMatcherTests
     }
 
     [Test]
+    public void TermsWhichOverlapOrEndOtherTermsAreAllFound()
+    {
+        IReadOnlyList<GlossaryEntry> entries = [new("Arbeitszeit", "working hours"), new("Zeit", "time"), new("it", "information technology")];
+        var matcher = GlossaryMatcher.For(entries);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(matcher.FindEntries("Arbeitszeit").Select(entry => entry.Term), Is.EqualTo(new[] { "Arbeitszeit", "Zeit", "it" }));
+            Assert.That(matcher.FindEntries("Arbeitsamt").Select(entry => entry.Term), Is.EqualTo(new[] { "it" }), "\"Arbeit\" contains \"it\".");
+            Assert.That(matcher.FindEntries("Ein Zeugnis"), Is.Empty);
+        });
+    }
+
+    [Test]
+    public void EntriesWithTheSameTermAreAllFound()
+    {
+        IReadOnlyList<GlossaryEntry> entries = [new("Arbeitszeit", "working hours"), new("Urlaub", "leave"), new("arbeitszeit", "working time")];
+
+        var found = GlossaryMatcher.For(entries).FindEntries("Die Arbeitszeit endet um fünf.");
+
+        Assert.That(found.Select(entry => entry.Value), Is.EqualTo(new[] { "working hours", "working time" }));
+    }
+
+    [Test]
+    public void TheAutomatonFindsWhatAPlainSearchForEveryTermFinds()
+    {
+        //
+        // A small alphabet makes terms overlap, share beginnings, and end one another all the time;
+        // the cases with case, umlauts, and whitespace runs check the normalization on the fly:
+        //
+        const string ALPHABET = "abAäÄ  \r\n";
+        var random = new Random(4711);
+        string RandomText(int maxLength) => new(Enumerable.Range(0, random.Next(maxLength + 1)).Select(_ => ALPHABET[random.Next(ALPHABET.Length)]).ToArray());
+
+        for (var round = 0; round < 50; round++)
+        {
+            var entries = Enumerable.Range(0, 40)
+                .Select(index => new GlossaryEntry(RandomText(6), $"value{index}", random.Next(3) == 0 ? [RandomText(6)] : null))
+                .ToList();
+
+            var matcher = GlossaryMatcher.For(entries);
+            for (var textIndex = 0; textIndex < 20; textIndex++)
+            {
+                var text = RandomText(200);
+                Assert.That(matcher.FindEntries(text), Is.EqualTo(FindEntriesPlainly(entries, text)), $"Round {round}, text {textIndex}: '{text}'");
+            }
+        }
+    }
+
+    [Test]
     public void TheSameListGetsTheSameMatcher()
     {
         IReadOnlyList<GlossaryEntry> entries = [new("Glossar", "glossary")];
@@ -101,4 +151,48 @@ public sealed class GlossaryMatcherTests
         TestContext.Out.WriteLine($"Searching {TERM_COUNT} terms in {text.Length} characters took {stopwatch.ElapsedMilliseconds} ms.");
         Assert.That(found.Select(entry => entry.Value), Is.EqualTo(new[] { "term42", "term4999" }));
     }
+
+    [Test]
+    public void AHugeTextIsReadOnce()
+    {
+        //
+        // About a million tokens. Like the test above, this one reports its time rather than asserting
+        // it; the search reads every character once, whatever the number of terms:
+        //
+        const int TERM_COUNT = 5_000;
+        const int TEXT_LENGTH = 4_000_000;
+        var entries = Enumerable.Range(0, TERM_COUNT).Select(index => new GlossaryEntry($"Fachbegriff{index:D5}", $"term{index}")).ToList();
+
+        var text = new StringBuilder(TEXT_LENGTH + 100);
+        while (text.Length < TEXT_LENGTH)
+            text.Append("Ein gewöhnlicher Satz über Arbeitszeiten und Fachbegriffe ohne Nummer. ");
+
+        text.Append("Am Ende steht Fachbegriff01234.");
+
+        var matcher = GlossaryMatcher.For(entries);
+        var stopwatch = Stopwatch.StartNew();
+        var found = matcher.FindEntries(text.ToString());
+        stopwatch.Stop();
+
+        TestContext.Out.WriteLine($"Searching {TERM_COUNT} terms in {text.Length} characters took {stopwatch.ElapsedMilliseconds} ms.");
+        Assert.That(found.Select(entry => entry.Value), Is.EqualTo(new[] { "term1234" }));
+    }
+
+    //
+    // The search the matcher used before the automaton: the whole text normalized into a copy, then
+    // every term looked for in it on its own. Slow for long texts, but obviously right:
+    //
+    private static List<GlossaryEntry> FindEntriesPlainly(IEnumerable<GlossaryEntry> entries, string text)
+    {
+        var normalizedText = Normalize(text);
+        return entries
+            .Where(entry => new[] { entry.Term }
+                .Concat(entry.Aliases ?? [])
+                .Select(Normalize)
+                .Where(term => term.Length >= 2)
+                .Any(term => normalizedText.Contains(term, StringComparison.Ordinal)))
+            .ToList();
+    }
+
+    private static string Normalize(string text) => string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)).ToLowerInvariant();
 }
