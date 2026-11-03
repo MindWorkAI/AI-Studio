@@ -17,6 +17,13 @@ public static class Program
 
         var roots = JsonRoots.FindAll();
         var failures = new List<string>();
+
+        //
+        // Finding no options at all means looking in the wrong place, not a build without JSON:
+        //
+        if (roots.Count is 0)
+            failures.Add("Found no JSON options of AI Studio, see AppJsonOptions.FindAll, so nothing got checked.");
+
         foreach (var root in roots)
             failures.AddRange(JsonContractWalker.FindBrokenContracts(root));
 

@@ -28,6 +28,12 @@ public static class AppJsonOptions
     public static IReadOnlyDictionary<string, JsonSerializerOptions> FindAll()
     {
         var found = new SortedDictionary<string, JsonSerializerOptions>(StringComparer.Ordinal);
+
+        //
+        // The Program of AI Studio, not the one of the trim smoke test, which is closer from here. Only within
+        // the tests, which compile this file, too, the qualifier is redundant, and Rider reads it there:
+        //
+        // ReSharper disable once RedundantNameQualifier
         foreach (var type in typeof(AIStudio.Program).Assembly.GetTypes())
         {
             //
