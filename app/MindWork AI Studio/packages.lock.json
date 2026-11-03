@@ -92,12 +92,12 @@
       },
       "MudBlazor.Markdown": {
         "type": "Direct",
-        "requested": "[9.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "zu+K7epXvygGOV5HarFPGpzup3irQetUZcfUKY52iJ90CF5DPtFrNaBsYklCAGR8r2Z9YU0DuDMtlWnzySeSCw==",
+        "requested": "[9.10.0, )",
+        "resolved": "9.10.0",
+        "contentHash": "/uO8FrwS7NANxw6tI5F1fnHTD9r1g/1Xn5SBF2s2jdr6oS4CCnIGC8HSip6qNR/mzZaEx0Ioc0s7abYcMM50Wg==",
         "dependencies": {
-          "Markdig": "0.45.0",
-          "MudBlazor": "9.0.0"
+          "Markdig": "1.4.0",
+          "MudBlazor": "9.10.0"
         }
       },
       "ReverseMarkdown": {
@@ -144,8 +144,8 @@
       },
       "Markdig": {
         "type": "Transitive",
-        "resolved": "0.45.0",
-        "contentHash": "ObNLcA1b+0lpNNoEg256g9faMeJZi35wZW0AnKJ4nGPJe+5qkwnV26kUvQTHuanFnSX9SdvPzOO41BVJ6XarAg=="
+        "resolved": "1.4.0",
+        "contentHash": "lLhaiI/mNDTNzgLqnmknhf4LjgTqOAyjx5+GNz0X3AxYMxUhmFppF2WVMdER+SDqwhE5wUF1pzs/cuLwFxs7xA=="
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Transitive",

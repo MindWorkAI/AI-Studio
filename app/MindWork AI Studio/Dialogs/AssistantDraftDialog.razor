@@ -10,7 +10,7 @@
             <MudTabPanel Text="@T("Preview")" Icon="@Icons.Material.Filled.Article">
                 <MudField Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Visibility" Adornment="Adornment.Start" Label="@T("Assistant draft")" FullWidth="true" Class="ma-2 pe-4">
                     <div style="max-height: 58vh; overflow-y: auto;">
-                        <MudMarkdown Value="@this.DraftMarkdown" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                        <MudMarkdown Value="@this.DraftMarkdown" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                     </div>
                 </MudField>
             </MudTabPanel>
