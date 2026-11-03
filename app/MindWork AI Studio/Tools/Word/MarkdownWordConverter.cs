@@ -251,6 +251,12 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
     /// The first paragraph of an item carries the bullet or number. Further paragraphs of the item
     /// carry none, even when their style brings one along, and start where the text of the first one
     /// does. Other blocks, such as code, stand as they would outside the list.
+    ///
+    /// When a style brings its numbering along, Word lets the indentation of the style win over the
+    /// one of the numbering, but not when the paragraph names the numbering itself, as the items here
+    /// do. So the items of the first level take the indentation of their style directly, and look
+    /// like the lists of the template. Deeper levels move in as the numbering says, as they do when
+    /// somebody indents an item in the template.
     /// </remarks>
     /// <param name="list">The list.</param>
     /// <param name="elements">The paragraphs and tables of the document so far.</param>
@@ -260,7 +266,8 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
         level = Math.Min(level, WordNumbering.LEVELS - 1);
         var (styleId, templateInstance) = this.ListLookOf(list.IsOrdered);
         var instance = numbering.InstanceFor(list.IsOrdered, int.TryParse(list.OrderedStart, out var start) ? start : 1, level, templateInstance);
-        var textIndentation = numbering.TextIndentationOf(instance, level);
+        var styleIndentation = templateInstance is not null && level is 0 ? styles.IndentationOf(styleId) : null;
+        var textIndentation = styleIndentation is null ? numbering.TextIndentationOf(instance, level) : WordNumbering.LeftOf(styleIndentation) ?? 0;
         foreach (var item in list.OfType<ListItemBlock>())
         {
             var isFirstBlock = true;
@@ -276,16 +283,22 @@ internal sealed class MarkdownWordConverter(MainDocumentPart mainPart, WordStyle
                         var paragraph = this.ParagraphOf(paragraphBlock.Inline, styleId);
                         var properties = paragraph.ParagraphProperties!;
                         if (isFirstBlock)
+                        {
                             properties.NumberingProperties = new W.NumberingProperties
                             {
                                 NumberingLevelReference = new W.NumberingLevelReference { Val = level },
                                 NumberingId = new W.NumberingId { Val = instance },
                             };
+
+                            if (styleIndentation is not null)
+                                properties.Indentation = (W.Indentation)styleIndentation.CloneNode(true);
+                        }
                         else
                         {
-                            // The instance 0 stands for no numbering at all:
+                            // The instance 0 stands for no numbering at all, and without the hanging
+                            // indentation of the style, the first line starts with the others:
                             properties.NumberingProperties = new W.NumberingProperties { NumberingId = new W.NumberingId { Val = 0 } };
-                            properties.Indentation = new W.Indentation { Left = textIndentation.ToString() };
+                            properties.Indentation = new W.Indentation { Left = textIndentation.ToString(), Hanging = "0" };
                         }
 
                         elements.Add(paragraph);

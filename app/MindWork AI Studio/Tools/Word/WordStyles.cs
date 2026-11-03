@@ -203,11 +203,17 @@ internal sealed class WordStyles
     /// </summary>
     /// <param name="styleId">The ID of the paragraph style.</param>
     /// <returns>The ID of the numbering instance; null when the style carries none.</returns>
-    public int? NumberingOf(string styleId)
-    {
-        var style = this.styles.Elements<W.Style>().FirstOrDefault(candidate => candidate.StyleId?.Value == styleId && IsOfType(candidate, "paragraph"));
-        return style?.StyleParagraphProperties?.NumberingProperties?.NumberingId?.Val?.Value is > 0 and var id ? id : null;
-    }
+    public int? NumberingOf(string styleId) => this.ParagraphStyleOf(styleId)?.StyleParagraphProperties?.NumberingProperties?.NumberingId?.Val?.Value is > 0 and var id ? id : null;
+
+    /// <summary>
+    /// Returns the indentation a paragraph style states itself, e.g., one with which "List Paragraph"
+    /// of a template pulls its bullets out to the margin.
+    /// </summary>
+    /// <param name="styleId">The ID of the paragraph style.</param>
+    /// <returns>The indentation; null when the style states none.</returns>
+    public W.Indentation? IndentationOf(string styleId) => this.ParagraphStyleOf(styleId)?.StyleParagraphProperties?.Indentation;
+
+    private W.Style? ParagraphStyleOf(string styleId) => this.styles.Elements<W.Style>().FirstOrDefault(candidate => candidate.StyleId?.Value == styleId && IsOfType(candidate, "paragraph"));
 
     /// <summary>
     /// The ID of the paragraph style of a quotation.

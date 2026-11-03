@@ -45,6 +45,12 @@ internal static class TestWordTemplate
     /// </summary>
     public const int LIST_INDENTATION = 284;
 
+    /// <summary>
+    /// The indentation of "List Paragraph" of the template, a quarter of a centimeter, with which it
+    /// pulls its dashes further out than its numbering does.
+    /// </summary>
+    public const int LIST_STYLE_INDENTATION = 153;
+
     private const int BULLET_DEFINITION_ID = 3;
 
     public const string HEADER_TEXT = "Header of the organization";
@@ -105,7 +111,7 @@ internal static class TestWordTemplate
 
             if (options.ListNumbering)
             {
-                styles.Add(ListStyleOf(LIST_PARAGRAPH_STYLE_ID, "List Paragraph", BULLET_INSTANCE_ID));
+                styles.Add(ListStyleOf(LIST_PARAGRAPH_STYLE_ID, "List Paragraph", BULLET_INSTANCE_ID, LIST_STYLE_INDENTATION));
                 styles.Add(ListStyleOf(LIST_NUMBER_STYLE_ID, "List Number", NUMBER_INSTANCE_ID));
                 mainPart.AddNewPart<NumberingDefinitionsPart>().Numbering = new W.Numbering(
                     ListDefinitionOf(BULLET_DEFINITION_ID, W.NumberFormatValues.Bullet, _ => "-"),
@@ -188,7 +194,12 @@ internal static class TestWordTemplate
     /// <summary>
     /// A paragraph style for the items of a list, which brings its numbering along.
     /// </summary>
-    private static W.Style ListStyleOf(string styleId, string name, int numberingInstance) => new()
+    /// <param name="styleId">The ID of the style.</param>
+    /// <param name="name">The name of the built-in style.</param>
+    /// <param name="numberingInstance">The numbering instance the style brings along.</param>
+    /// <param name="indentation">How far the text moves in, with the bullet or number hanging out
+    /// by as much; null for the indentation of the numbering.</param>
+    private static W.Style ListStyleOf(string styleId, string name, int numberingInstance, int? indentation = null) => new()
     {
         Type = W.StyleValues.Paragraph,
         StyleId = styleId,
@@ -198,6 +209,7 @@ internal static class TestWordTemplate
         {
             NumberingProperties = new W.NumberingProperties { NumberingId = new W.NumberingId { Val = numberingInstance } },
             ContextualSpacing = new W.ContextualSpacing(),
+            Indentation = indentation is { } left ? new W.Indentation { Left = left.ToString(), Hanging = left.ToString() } : null,
         },
     };
 

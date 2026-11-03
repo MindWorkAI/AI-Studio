@@ -99,11 +99,14 @@ internal sealed class WordNumbering(MainDocumentPart mainPart)
     /// <param name="instanceId">The ID of the numbering instance of the list.</param>
     /// <param name="level">The level of the list, starting with 0.</param>
     /// <returns>The indentation from the left margin, in twentieths of a point.</returns>
-    public int TextIndentationOf(int instanceId, int level)
-    {
-        var indentation = this.LevelOf(instanceId, level)?.PreviousParagraphProperties?.Indentation;
-        return int.TryParse(indentation?.Left?.Value ?? indentation?.Start?.Value, out var left) ? left : IndentationOf(level);
-    }
+    public int TextIndentationOf(int instanceId, int level) => LeftOf(this.LevelOf(instanceId, level)?.PreviousParagraphProperties?.Indentation) ?? IndentationOf(level);
+
+    /// <summary>
+    /// Returns where the text of a paragraph with the given indentation starts, apart from its first line.
+    /// </summary>
+    /// <param name="indentation">The indentation, e.g., of a level of a numbering.</param>
+    /// <returns>The indentation from the left margin, in twentieths of a point; null when it states none.</returns>
+    public static int? LeftOf(W.Indentation? indentation) => int.TryParse(indentation?.Left?.Value ?? indentation?.Start?.Value, out var left) ? left : null;
 
     /// <summary>
     /// The numbering of the document as it is, without adding a part for it.

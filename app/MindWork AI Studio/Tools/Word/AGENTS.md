@@ -41,6 +41,11 @@ numbers raised, rather than going to the foot of the page.
   template often bring the bullets or numbers of the organization along. `MarkdownWordConverter.ListLookOf`
   picks the first one whose numbering is of the kind of the list; only without one does a list get a
   numbering of its own. The further paragraphs of an item switch the numbering of their style off.
+- **List items keep the indentation of their style.** Word lets the indentation of a style win over
+  the one of the numbering the style brings along, but not when the paragraph names the numbering
+  itself, as every item of the answer does. So the items of the first level state the indentation
+  of their style directly; otherwise they move in as far as the numbering says, which often differs.
+  This only restores the look of the template, unlike formatting of their own.
 - **Every numbered list counts on its own.** Word goes on counting across all lists which share a
   numbering instance, so `WordNumbering` gives each numbered list an instance of its own, which restarts
   the count, also when it takes the numbering definition of the template.

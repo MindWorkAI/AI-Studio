@@ -293,17 +293,37 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
+    public void ListsKeepTheIndentationOfTheirStyle()
+    {
+        using var file = Write("- Earth\n  - Phobos\n\n1. Launch", new TestWordTemplateOptions(ListNumbering: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var indentations = ParagraphsOf(document).ToDictionary(paragraph => paragraph.InnerText, paragraph => paragraph.ParagraphProperties?.Indentation);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(indentations["Earth"]?.Left?.Value, Is.EqualTo(TestWordTemplate.LIST_STYLE_INDENTATION.ToString()), "The style pulls the dashes out further than its numbering, which a numbering on the paragraph itself would undo.");
+            Assert.That(indentations["Earth"]?.Hanging?.Value, Is.EqualTo(TestWordTemplate.LIST_STYLE_INDENTATION.ToString()));
+            Assert.That(indentations["Phobos"], Is.Null, "A deeper level moves in as the numbering of the template says.");
+            Assert.That(indentations["Launch"], Is.Null, "\"List Number\" of the template states no indentation, so its numbering does.");
+        });
+    }
+
+    [Test]
     public void FurtherParagraphsOfAnItemCarryNoBullet()
     {
-        using var file = Write("- Earth\n\n  Close to the sun.\n- Mars", new TestWordTemplateOptions(ListNumbering: true));
+        using var file = Write("- Earth\n\n  Close to the sun.\n\n  - Phobos\n\n    A small moon.\n- Mars", new TestWordTemplateOptions(ListNumbering: true));
         using var document = WordprocessingDocument.Open(file, false);
 
         var further = ParagraphsOf(document).Single(paragraph => paragraph.InnerText == "Close to the sun.");
+        var furtherInside = ParagraphsOf(document).Single(paragraph => paragraph.InnerText == "A small moon.");
         Assert.Multiple(() =>
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(further.ParagraphProperties?.NumberingProperties?.NumberingId?.Val?.Value, Is.Zero, "Its style brings the dashes along, which only the first paragraph of an item shows.");
-            Assert.That(further.ParagraphProperties?.Indentation?.Left?.Value, Is.EqualTo(TestWordTemplate.LIST_INDENTATION.ToString()), "It starts where the text of the item does, as the numbering of the template states it.");
+            Assert.That(further.ParagraphProperties?.Indentation?.Left?.Value, Is.EqualTo(TestWordTemplate.LIST_STYLE_INDENTATION.ToString()), "It starts where the text of the item does, as the style of the template states it.");
+            Assert.That(further.ParagraphProperties?.Indentation?.Hanging?.Value, Is.EqualTo("0"), "Its first line starts with the others, despite the hanging indentation of the style.");
+            Assert.That(furtherInside.ParagraphProperties?.Indentation?.Left?.Value, Is.EqualTo((TestWordTemplate.LIST_INDENTATION * 2).ToString()), "Further in, it starts where the numbering of the template puts the text.");
         });
     }
 
