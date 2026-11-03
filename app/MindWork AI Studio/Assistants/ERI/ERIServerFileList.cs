@@ -24,7 +24,7 @@ internal sealed class ERIServerFileList
     /// <summary>
     /// The paths of the files, relative to the base directory.
     /// </summary>
-    public List<string>? Files { get; init; }
+    public List<string>? Files { get; set; }
 
     /// <summary>
     /// Reads the list of files out of the answer of the model.
