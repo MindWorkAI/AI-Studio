@@ -51,6 +51,19 @@ public sealed class GlossaryLookupToolTests
     }
 
     [Test]
+    public void TheTranslationAssistantDoesNotOfferTheTool()
+    {
+        var visibleIn = new GlossaryLookupTool(null!, null!).GetDefinition().VisibleIn;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(visibleIn.IsVisibleIn(AIStudio.Tools.Components.TRANSLATION_ASSISTANT), Is.False, "The assistant matches the chosen glossaries itself.");
+            Assert.That(visibleIn.IsVisibleIn(AIStudio.Tools.Components.CHAT), Is.True);
+            Assert.That(visibleIn.IsVisibleIn(AIStudio.Tools.Components.CODING_ASSISTANT), Is.True);
+        });
+    }
+
+    [Test]
     public void ManyGlossariesAreNotListedButNamedByTheirLanguages()
     {
         var glossaries = Enumerable.Range(1, GlossaryLookupTool.MAX_LISTED_GLOSSARIES)

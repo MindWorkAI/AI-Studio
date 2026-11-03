@@ -55,6 +55,17 @@ public sealed class GlossaryLookupTool(SettingsManager settingsManager, Glossary
     {
         Id = ToolSelectionRules.GLOSSARY_LOOKUP_TOOL_ID,
         ImplementationKey = ToolSelectionRules.GLOSSARY_LOOKUP_TOOL_ID,
+
+        //
+        // The translation assistant matches the glossaries the user chose for a translation itself and
+        // shows the entries it sent. The tool would search all glossaries besides, also those the user
+        // left out or which translate into another language, and its entries would not show up there:
+        //
+        VisibleIn = new()
+        {
+            DeniedComponents = [Components.TRANSLATION_ASSISTANT],
+        },
+
         SystemPromptInstructions =
             """
             Use `glossary_lookup` when a text contains terms which may be specific to the user, such as technical terms of the organization, product names, or invented words, and before you translate a text.
