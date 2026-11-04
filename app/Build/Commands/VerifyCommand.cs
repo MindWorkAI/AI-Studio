@@ -2,9 +2,6 @@ using Build.Tools;
 
 using SharedTools;
 
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
 namespace Build.Commands;
 
 /// <summary>
@@ -22,7 +19,16 @@ public sealed class VerifyCommand
     /// </summary>
     private const string SIDECAR_PREFIX = "mindworkAIStudioServer-";
 
-    [Command("verify", Description = "Run the quality gate: .NET tests, the trim smoke test, Rust tests, Clippy, and the model sources")]
+    /// <summary>
+    /// Defines the command "verify".
+    /// </summary>
+    public static Command CreateCommand()
+    {
+        var command = new Command("verify", "Run the quality gate: .NET tests, the trim smoke test, Rust tests, Clippy, and the model sources");
+        command.SetAction((_, _) => new VerifyCommand().Verify());
+        return command;
+    }
+
     public async Task<int> Verify()
     {
         if(!Environment.IsWorkingDirectoryValid())

@@ -1,7 +1,3 @@
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
-
 using SharedTools;
 
 namespace Build.Commands;
@@ -14,7 +10,16 @@ public sealed class UpdateWebAssetsCommand
     /// </summary>
     private static readonly HashSet<string> SKIPPED_EXTENSIONS = new(StringComparer.OrdinalIgnoreCase) { ".br", ".gz", ".map" };
 
-    [Command("update-web", Description = "Update web assets")]
+    /// <summary>
+    /// Defines the command "update-web".
+    /// </summary>
+    public static Command CreateCommand()
+    {
+        var command = new Command("update-web", "Update web assets");
+        command.SetAction(_ => new UpdateWebAssetsCommand().UpdateWebAssets());
+        return command;
+    }
+
     public void UpdateWebAssets()
     {
         if(!Environment.IsWorkingDirectoryValid())
