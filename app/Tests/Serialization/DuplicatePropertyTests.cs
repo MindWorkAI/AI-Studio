@@ -2,6 +2,8 @@ using System.Text.Json;
 
 using AIStudio.Assistants.Builder;
 using AIStudio.Assistants.VisualBriefing;
+using AIStudio.Tools.ERIClient;
+using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Tests.Serialization;
 
@@ -22,6 +24,7 @@ public sealed class DuplicatePropertyTests
         yield return new TestCaseData(LuaResponse.JSON_OPTIONS).SetName("The plugins the Assistant Builder writes");
         yield return new TestCaseData(LauncherTextsResponse.JSON_OPTIONS).SetName("The texts the Assistant Builder writes for a chat launcher");
         yield return new TestCaseData(VisualBriefingJson.Canonical).SetName("The answers of the model for a visual briefing");
+        yield return new TestCaseData(ERIClientBase.JSON_OPTIONS).SetName("The answers of ERI servers");
     }
 
     [TestCaseSource(nameof(OptionsForAnswersFromOutside))]
@@ -51,5 +54,14 @@ public sealed class DuplicatePropertyTests
             Assert.That(error, Is.EqualTo(LuaResponseParseError.INVALID_JSON));
             Assert.That(technicalDetails, Does.Contain("'title'"), "The user learns which field the model wrote twice.");
         }
+    }
+
+    [TestCase("""{"allowedProviderType":"SELF_HOSTED","allowedProviderType":"ANY"}""", TestName = "The same name twice")]
+    [TestCase("""{"allowedProviderType":"SELF_HOSTED","AllowedProviderType":"ANY"}""", TestName = "Two names which differ only in case")]
+    public void SecurityRequirementsOfAnERIServerWhichNameAFieldTwiceAreRefused(string answer)
+    {
+        var exception = Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<SecurityRequirements>(answer, ERIClientBase.JSON_OPTIONS));
+
+        Assert.That(exception.Message, Does.Contain("AllowedProviderType").IgnoreCase, "The message names the field the server wrote twice.");
     }
 }
