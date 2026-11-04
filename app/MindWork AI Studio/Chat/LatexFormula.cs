@@ -25,6 +25,18 @@ internal static class LatexFormula
     private const string BEGIN_ENVIRONMENT = @"\begin{";
 
     /// <summary>
+    /// How many letters a word of text has at least: shorter ones, such as mc in E = mc^2, are
+    /// variables of a formula.
+    /// </summary>
+    private const int MIN_LETTERS_OF_A_WORD = 3;
+
+    /// <summary>
+    /// From how many words on LaTeX is text: a formula names its functions with commands, such as
+    /// \sin, and writes words inside braces, such as \text{if}.
+    /// </summary>
+    private const int MIN_WORDS_OF_TEXT = 2;
+
+    /// <summary>
     /// Commands which belong to a document or to its text, never to a formula.
     /// </summary>
     private static readonly string[] TEXT_COMMANDS =
@@ -112,7 +124,7 @@ internal static class LatexFormula
         //
         // Markers inside mean text with formulas in it, and so does an empty line, which ends a paragraph:
         //
-        if (latex.Contains('$') || latex.Contains(@"\(", StringComparison.Ordinal) || HasEmptyLine(latex))
+        if (latex.Contains('$') || latex.Contains(@"\(", StringComparison.Ordinal) || HasEmptyLine(latex) || HasWordsOfText(latex))
             return false;
 
         foreach (var command in TEXT_COMMANDS)
@@ -134,6 +146,60 @@ internal static class LatexFormula
 
             rest = rest[(nameEnd + 1)..];
         }
+    }
+
+    /// <summary>
+    /// Checks whether LaTeX holds words of text outside of braces, such as a sentence.
+    /// </summary>
+    private static bool HasWordsOfText(ReadOnlySpan<char> latex)
+    {
+        var depth = 0;
+        var words = 0;
+        for (var position = 0; position < latex.Length;)
+        {
+            var character = latex[position];
+            if (character is '\\')
+            {
+                //
+                // A command, such as \frac, or a character after a backslash, such as \{, is no word:
+                //
+                position++;
+                if (position < latex.Length && char.IsLetter(latex[position]))
+                    position = EndOfWord(latex, position);
+                else
+                    position++;
+
+                continue;
+            }
+
+            if (char.IsLetter(character))
+            {
+                var end = EndOfWord(latex, position);
+                if (depth is 0 && end - position >= MIN_LETTERS_OF_A_WORD && ++words >= MIN_WORDS_OF_TEXT)
+                    return true;
+
+                position = end;
+                continue;
+            }
+
+            if (character is '{')
+                depth++;
+            else if (character is '}' && depth > 0)
+                depth--;
+
+            position++;
+        }
+
+        return false;
+    }
+
+    private static int EndOfWord(ReadOnlySpan<char> latex, int start)
+    {
+        var end = start;
+        while (end < latex.Length && char.IsLetter(latex[end]))
+            end++;
+
+        return end;
     }
 
     private static bool HasEmptyLine(ReadOnlySpan<char> latex)

@@ -15,6 +15,8 @@ public sealed class LatexFormulaTests
     [TestCase(@"\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}")]
     [TestCase("\\begin{align}\n  a &= b \\\\\n  c &= d\n\\end{align}")]
     [TestCase(@"f(x) = \begin{cases} 1 & x > 0 \\ 0 & \text{otherwise} \end{cases}")]
+    [TestCase(@"x_{max} = \max_i x_i", Description = "A word inside braces is part of the formula.")]
+    [TestCase(@"\lim_{n \to \infty} \left\{ a_n \right\}")]
     public void AFormulaIsAFormula(string latex)
     {
         Assert.That(LatexFormula.IsFormulaOnly(latex), Is.True);
@@ -28,6 +30,8 @@ public sealed class LatexFormulaTests
     [TestCase("The value $x$ grows.", TestName = "Text with a formula in it")]
     [TestCase(@"The value \(x\) grows.", TestName = "Text with a formula in parentheses in it")]
     [TestCase("a^2 + b^2 = c^2\n\nE = mc^2", TestName = "Two formulas apart")]
+    [TestCase("The content.", TestName = "A sentence")]
+    [TestCase("Let x be a number.", TestName = "A sentence with short words")]
     [TestCase(@"\begin{align", TestName = "An environment which never opens")]
     public void MoreThanAFormulaIsNoFormula(string latex)
     {
