@@ -700,6 +700,11 @@ CONFIG["SETTINGS"] = {}
 -- can create a PowerPoint file from the result. Without a template, the assistant plans an
 -- outline only.
 --
+-- Users choose the template from the PowerPoint templates among their format templates, see
+-- CONFIG["FORMAT_TEMPLATES"] below. To preselect or lock one of the format templates of this
+-- plugin, give the same path here. A path which no format template names works as well: the
+-- assistant lists it under the name of its file.
+--
 -- The simplest way is to ship the template with this plugin: put the file next to this
 -- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The
 -- path must stay inside the plugin directory, i.e., no '..' segments and no links pointing

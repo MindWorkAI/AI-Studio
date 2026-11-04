@@ -3,7 +3,8 @@
 These instructions cover the Word tools in `app/MindWork AI Studio/Tools/Word/`, with which AI Studio
 exports an answer into a Word template of the user. They add to the `AGENTS.md` in the repository root and
 to `app/AGENTS.md`, which apply here as well. Without a template, Pandoc writes the document instead; that
-path does not run through here.
+path does not run through here. Users choose the template in the export menu of an answer, among the Word
+templates of their format templates.
 
 ## How a document comes about
 

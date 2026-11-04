@@ -161,6 +161,12 @@ An answer exported into a Word template is written with the Open XML SDK as well
 `app/MindWork AI Studio/Tools/Word/`; without a template, Pandoc writes it. Both kinds of Office documents
 come about in a `TemplateCopy` from `app/MindWork AI Studio/Tools/OpenXml/`.
 
+Word and PowerPoint templates are format templates (`Settings/FormatTemplate.cs`), which users keep in the
+app settings: the export menu of an answer lists the Word templates, the Slide Assistant the PowerPoint
+ones. Which templates of a kind a place offers, and how it shows them, comes from `FormatTemplateExtensions`;
+a selection of them is `FormatTemplateSelection`. A new kind of template joins `FileTypes.FORMAT_TEMPLATE`
+once something uses it.
+
 **Area guide:** `app/MindWork AI Studio/Tools/Word/AGENTS.md`, with how a document comes about and the
 rules which are easy to break.
 
