@@ -203,26 +203,20 @@ public partial class Information : MSGComponentBase
     /// Determines whether the enterprise configuration has details that can be shown/hidden.
     /// Returns true if there are details available, false otherwise.
     /// </summary>
-    private bool HasEnterpriseConfigurationDetails
+    private bool HasEnterpriseConfigurationDetails => this.HasAnyActiveEnvironment switch
     {
-        get
-        {
-            return this.HasAnyActiveEnvironment switch
-            {
-                // Case 1: No enterprise config and no plugin - no details available
-                false when this.configPlugins.Count == 0 => false,
+        // Case 1: No enterprise config and no plugin - no details available
+        false when this.configPlugins.Count == 0 => false,
 
-                // Case 2: Enterprise config with plugin but no central management - has details
-                false => true,
+        // Case 2: Enterprise config with plugin but no central management - has details
+        false => true,
 
-                // Case 3: Enterprise config active but no plugin - has details
-                true when this.configPlugins.Count == 0 => true,
+        // Case 3: Enterprise config active but no plugin - has details
+        true when this.configPlugins.Count == 0 => true,
 
-                // Case 4: Enterprise config active with plugin - has details
-                true => true
-            };
-        }
-    }
+        // Case 4: Enterprise config active with plugin - has details
+        true => true
+    };
     
     #region Overrides of ComponentBase
     
@@ -321,19 +315,13 @@ public partial class Information : MSGComponentBase
         await this.InvokeAsync(this.StateHasChanged);
     }
     
-    private string PandocButtonText
+    private string PandocButtonText => this.pandocInstallation switch
     {
-        get
-        {
-            return this.pandocInstallation switch
-            {
-                { IsAvailable: true, CheckWasSuccessful: true } => this.T("Check Pandoc Installation"),
-                { IsAvailable: false, CheckWasSuccessful: true } => this.T("Update Pandoc"),
-                
-                _ => this.T("Install Pandoc")
-            };
-        }
-    }
+        { IsAvailable: true, CheckWasSuccessful: true } => this.T("Check Pandoc Installation"),
+        { IsAvailable: false, CheckWasSuccessful: true } => this.T("Update Pandoc"),
+        
+        _ => this.T("Install Pandoc")
+    };
 
     private async Task ShowPandocDialog()
     {
