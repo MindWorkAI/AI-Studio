@@ -17,6 +17,7 @@ public static class ToolSelectionRules
     public const string MAILBOXES_COLLECTION_ID = "mailboxes";
     public const string CALCULATE_TOOL_ID = "calculate";
     public const string COMPUTE_SYMBOLICALLY_TOOL_ID = "compute_symbolically";
+    public const string MATHEMATICS_COLLECTION_ID = "mathematics";
 
     public static string GetMaxToolCallsFinalResponseInstruction() => $"The maximum of {MAX_TOOL_CALLS} tool calls has been reached. No more tools are available. Provide the best possible final answer to the user based on the tool results already available.";
 
