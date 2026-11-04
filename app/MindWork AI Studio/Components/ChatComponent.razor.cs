@@ -1011,9 +1011,7 @@ public partial class ChatComponent : MSGComponentBase
         var automaticOptions = this.GetAutomaticDataSourceOptions();
         this.lastAppliedAutomaticDataSourceOptions = automaticOptions.CreateCopy();
         this.earlyDataSourceOptions = automaticOptions;
-        if(this.ChatThread is not null)
-            this.ChatThread.DataSourceOptions = automaticOptions;
-
+        this.ChatThread?.DataSourceOptions = automaticOptions;
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(automaticOptions);
     }
 
