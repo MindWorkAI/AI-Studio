@@ -24,7 +24,7 @@ public sealed class FormatTemplateTests
         }
     }
 
-    [TestCase("Slides.potx", Description = "A PowerPoint template serves presentations, not documents.")]
+    [TestCase("Slides.potx", Description = "A PowerPoint template is no format template so far.")]
     [TestCase("Slides.pptx")]
     [TestCase("Report.pdf", Description = "A file of another kind serves nothing.")]
     public void AnyOtherFileServesNoExportToWord(string fileName) => Assert.That(TemplateAt(fileName).Serves(FileExportFormat.MICROSOFT_WORD), Is.False);

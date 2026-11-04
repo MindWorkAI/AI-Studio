@@ -8,13 +8,14 @@ using LuaTable = Lua.LuaTable;
 namespace AIStudio.Settings;
 
 /// <summary>
-/// A template for the documents AI Studio writes, e.g., a Word or a PowerPoint template of an organization.
+/// A template for the documents AI Studio writes, e.g., a Word template of an organization.
 /// </summary>
 /// <remarks>
 /// The file stays where the user keeps it, so that a new version of the template takes effect at
 /// once. Hence, FilePath is the absolute path of a file of the user, not one below the data directory.
 /// Which documents a template serves follows from the type of its file, cf. FileTypes.FORMAT_TEMPLATE:
-/// a Word template serves the export to Word, cf. Serves, a PowerPoint template serves presentations.
+/// a Word template serves the export to Word, cf. Serves. Further kinds, such as PowerPoint or
+/// OpenDocument templates, join that filter once something uses them.
 /// </remarks>
 public record FormatTemplate(
     uint Num,
