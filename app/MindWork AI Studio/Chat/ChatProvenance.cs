@@ -16,31 +16,34 @@ public static class ChatProvenance
 {
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(ChatProvenance));
 
-    /// <summary>
-    /// Collects the entries of the provenance store which a chat refers to.
-    /// </summary>
-    /// <remarks>
-    /// The passages of its answers, the documents attached to its messages, and those attached to
-    /// the message being written, which may come from a message sent before, e.g., one being edited,
-    /// together with the texts a preview read of them.
-    /// </remarks>
     /// <param name="thread">The chat.</param>
-    /// <returns>The ids of the entries.</returns>
-    public static IReadOnlySet<Guid> CollectProvenanceIds(this ChatThread thread)
+    extension(ChatThread thread)
     {
-        var provenanceIds = new HashSet<Guid>();
-        foreach (var block in thread.Blocks)
+        /// <summary>
+        /// Collects the entries of the provenance store which a chat refers to.
+        /// </summary>
+        /// <remarks>
+        /// The passages of its answers, the documents attached to its messages, and those attached to
+        /// the message being written, which may come from a message sent before, e.g., one being edited,
+        /// together with the texts a preview read of them.
+        /// </remarks>
+        /// <returns>The ids of the entries.</returns>
+        public IReadOnlySet<Guid> CollectProvenanceIds()
         {
-            if (block.Content is ContentText text)
-                provenanceIds.UnionWith(text.SourcePassages.Select(passage => passage.ProvenanceId).OfType<Guid>());
+            var provenanceIds = new HashSet<Guid>();
+            foreach (var block in thread.Blocks)
+            {
+                if (block.Content is ContentText text)
+                    provenanceIds.UnionWith(text.SourcePassages.Select(passage => passage.ProvenanceId).OfType<Guid>());
 
-            if (block.Content is not null)
-                provenanceIds.UnionWith(block.Content.FileAttachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>());
+                if (block.Content is not null)
+                    provenanceIds.UnionWith(block.Content.FileAttachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>());
+            }
+
+            provenanceIds.UnionWith(thread.Draft.FileAttachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>());
+            provenanceIds.UnionWith(thread.Draft.PreviewedTexts.Select(text => text.ProvenanceId));
+            return provenanceIds;
         }
-
-        provenanceIds.UnionWith(thread.Draft.FileAttachments.Select(attachment => attachment.ProvenanceId).OfType<Guid>());
-        provenanceIds.UnionWith(thread.Draft.PreviewedTexts.Select(text => text.ProvenanceId));
-        return provenanceIds;
     }
 
     /// <summary>
