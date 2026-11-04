@@ -57,15 +57,16 @@ public sealed class FormatTemplateConfigurationTests
         }
     }
 
-    [Test]
-    public async Task AFileOfThePluginIsFoundByItsRelativePath()
+    [TestCase("Report.dotx", Description = "A Word template, into which a document is exported.")]
+    [TestCase("Slides.potx", Description = "A PowerPoint template, for the Slide Assistant.")]
+    public async Task AFileOfThePluginIsFoundByItsRelativePath(string fileName)
     {
-        var (isValid, read) = await ParseAsync(Snippet(ID, "Report", "templates/Report.dotx"), this.pluginDirectory);
+        var (isValid, read) = await ParseAsync(Snippet(ID, "Report", $"templates/{fileName}"), this.pluginDirectory);
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(isValid, Is.True);
-            Assert.That(read.FilePath, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates", "Report.dotx")));
+            Assert.That(read.FilePath, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates", fileName)));
         }
     }
 
@@ -85,7 +86,6 @@ public sealed class FormatTemplateConfigurationTests
     [TestCase("../Report.dotx", Description = "A relative path must not leave the plugin directory.")]
     [TestCase("templates/Missing.dotx", Description = "A file the plugin ships has to exist.")]
     [TestCase("Report.pdf", Description = "A file which is no format template serves no export.")]
-    [TestCase("templates/Slides.potx", Description = "Nothing uses PowerPoint templates of this list so far.")]
     public async Task AFileWhichCannotServeAsTemplateIsRejected(string filePath) => Assert.That((await ParseAsync(Snippet(ID, "Report", filePath), this.pluginDirectory)).IsValid, Is.False);
 
     [TestCase("no GUID", "Report", "templates/Report.dotx")]

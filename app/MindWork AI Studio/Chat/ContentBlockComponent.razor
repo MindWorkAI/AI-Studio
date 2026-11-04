@@ -102,7 +102,7 @@
                                         <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@T("Export without template")"/>
                                         @foreach (var formatTemplate in this.FormatTemplatesFor(documentFormat))
                                         {
-                                            <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat, formatTemplate))" Icon="@(formatTemplate.IsEnterpriseConfiguration ? Icons.Material.Filled.Business : Icons.Material.Filled.Description)" Label="@formatTemplate.Name"/>
+                                            <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat, formatTemplate))" Icon="@formatTemplate.Icon" Label="@formatTemplate.Name"/>
                                         }
                                     </MudMenu>
                                 }

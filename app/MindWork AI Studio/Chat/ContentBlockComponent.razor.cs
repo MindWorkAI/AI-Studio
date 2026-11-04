@@ -6,8 +6,6 @@ using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
 
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
-
 namespace AIStudio.Chat;
 
 /// <summary>
@@ -652,15 +650,14 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// <summary>
     /// The format templates the given format can be exported into, in the order the settings list them.
     /// </summary>
-    private IEnumerable<FormatTemplate> FormatTemplatesFor(FileExportFormat format) => this.SettingsManager.ConfigurationData.FormatTemplates.Where(formatTemplate => formatTemplate.Serves(format));
+    private IEnumerable<FormatTemplate> FormatTemplatesFor(FileExportFormat format) => format.FormatTemplateFilter is { } kind ? this.SettingsManager.ConfigurationData.FormatTemplates.Serving(kind) : [];
 
     /// <summary>
     /// Opens the management of the format templates, the same as in the app settings.
     /// </summary>
     private async Task ManageFormatTemplates()
     {
-        var dialogReference = await this.DialogService.ShowAsync<SettingsDialogFormatTemplates>(null, new DialogParameters(), DialogOptions.FULLSCREEN);
-        await dialogReference.Result;
+        await SettingsDialogFormatTemplates.ShowAsync(this.DialogService);
 
         // This block hears of no change of the settings, so it looks at the templates once the dialog is closed:
         this.StateHasChanged();
