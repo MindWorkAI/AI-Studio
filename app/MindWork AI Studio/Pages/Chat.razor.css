@@ -1,0 +1,47 @@
+/*
+ * The workspace sidebar and the chat side by side. The columns take the height left below the header
+ * of the page.
+ */
+.chat-columns {
+    display: flex;
+    flex-grow: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/*
+ * The sidebar keeps the width the user dragged it to, which the page passes as --sidebar-width, but
+ * within limits: never wider than 32rem, and always leaving the chat the 36em it needs at least, see
+ * ChatComponent, plus the gap of 1rem between both. On a window too narrow for both, the sidebar keeps
+ * its least width.
+ *
+ * The least width fits the titles of the sections in one line. The longest we ship is the German
+ * "Selbstlöschende Chats": 185 pixels in Roboto, plus 16 of padding around the text, 16 around the
+ * title, and the button of 32 beside it, makes 249. The border and a scrollbar of up to 17 pixels come
+ * on top, and 17.5rem leaves some room for fonts which render a little wider. A longer title ends with
+ * an ellipsis, see Workspaces.razor.css.
+ */
+.chat-sidebar {
+    position: relative;
+    display: flex;
+    flex: 0 0 clamp(17.5rem, var(--sidebar-width, 18rem), min(32rem, 100% - 37rem));
+    min-width: 0;
+    margin-right: 1rem;
+}
+
+/*
+ * The right border of the sidebar is its handle: on the border, the cursor tells that it resizes, and
+ * dragging moves the border. The handle lies over the border and reaches mostly into the gap, so that
+ * it leaves the scrollbar of the list alone. It ends where the border ends, above the bottom margin of
+ * the panel.
+ */
+.chat-sidebar-handle {
+    position: absolute;
+    top: 0;
+    bottom: 12px;
+    right: -6px;
+    width: 8px;
+    z-index: 1;
+    cursor: col-resize;
+    touch-action: none;
+}

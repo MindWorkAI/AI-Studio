@@ -6,8 +6,6 @@ using AIStudio.Settings.DataModel;
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
-using Timer = System.Timers.Timer;
-
 namespace AIStudio.Pages;
 
 /// <summary>
@@ -19,7 +17,13 @@ public partial class Chat : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+
+    [Inject]
+    private ILogger<Chat> Logger { get; init; } = null!;
+
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
 
@@ -38,61 +42,60 @@ public partial class Chat : MSGComponentBase
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
     private ChatComponent? chatComponent;
-    private double splitterPosition = 30;
-    private bool skipRenderAfterSplitterChange;
     private readonly ChatComposerState composerState = new();
-    
-    private readonly Timer splitterSaveTimer = new(TimeSpan.FromSeconds(1.6));
+
+    private ElementReference sidebarElement;
+    private ElementReference sidebarHandle;
+
+    /// <summary>
+    /// Whether the script lets the user drag the handle beside the sidebar shown now.
+    /// </summary>
+    private bool isSidebarResizeWatched;
+
+    private DotNetObjectReference<Chat>? dotNetReference;
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         this.ApplyFilters([], [ Event.WORKSPACE_TOGGLE_OVERLAY ]);
-        
-        this.splitterPosition = this.SettingsManager.ConfigurationData.Workspace.SplitterPosition;
-        this.splitterSaveTimer.AutoReset = false;
-        //
-        // Mind that this handler deliberately stays off the renderer thread, although it writes the
-        // configuration data from a thread pool thread. The position is a single double, and every
-        // target we ship is 64 bit, so the write cannot tear -- and the worst a lost one could do is
-        // a splitter standing somewhere else after the next start. What a jump to the dispatcher
-        // would cost instead is paid by the user: storing the settings serializes all of them and
-        // writes two files, and it would do that in the very queue which draws the drag they are in
-        // the middle of. The splitter then stutters under their hand. Whoever synchronizes the
-        // configuration data one day should do it without moving that work onto the renderer.
-        //
-        this.splitterSaveTimer.Elapsed += (_, _) =>
-        {
-            this.SettingsManager.ConfigurationData.Workspace.SplitterPosition = this.splitterPosition;
-            this.SettingsManager.StoreSettings().Observe($"{nameof(Chat)}: storing the splitter position");
-        };
-        
         await base.OnInitializedAsync();
     }
 
-    /// <summary>
-    /// Decides whether this page renders again.
-    /// </summary>
-    /// <remarks>
-    /// Dragging the splitter reports every movement, and Blazor renders this page after each of
-    /// them. That render is pure waste: all it would contribute is the position the splitter just
-    /// reported, and the splitter has it already -- it renders itself after its own event, which is
-    /// what resizes the two panels. What this page rebuilds instead is everything else it holds,
-    /// the workspace list above all, which has no render guard of its own and draws a row with a
-    /// button for every chat it shows. That is what the user sees stutter while they drag.<br/><br/>
-    /// Dropping that one render costs nothing, because the splitter never needed it. Should a
-    /// message from the bus ask for a render in the very same moment, this swallows it -- both sit
-    /// on the same dispatcher and the render of a movement follows it without a gap, so the window
-    /// is as good as closed, and the next render brings the message along anyway.
-    /// </remarks>
-    protected override bool ShouldRender()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!this.skipRenderAfterSplitterChange)
-            return true;
+        //
+        // The sidebar and its handle are created anew whenever the sidebar shows up again, and the
+        // script then has to watch the new handle:
+        //
+        if (!this.AreWorkspacesVisible)
+            this.isSidebarResizeWatched = false;
 
-        this.skipRenderAfterSplitterChange = false;
-        return false;
+        else if (!this.isSidebarResizeWatched)
+        {
+            this.isSidebarResizeWatched = true;
+            this.dotNetReference ??= DotNetObjectReference.Create(this);
+
+            //
+            // Resizing is a convenience. An exception from here would end the whole circuit, though,
+            // and the page would freeze while it still loads. A browser which still runs a cached
+            // app.js from an older version lacks the function:
+            //
+            try
+            {
+                await this.JsRuntime.InvokeVoidAsync("watchSidebarResize", this.sidebarHandle, this.sidebarElement, this.dotNetReference);
+            }
+            catch (JSDisconnectedException)
+            {
+                // Nobody is left to see the sidebar.
+            }
+            catch (JSException ex)
+            {
+                this.Logger.LogWarning(ex, "Failed to let the user resize the workspace sidebar.");
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     #endregion
@@ -107,32 +110,38 @@ public partial class Chat : MSGComponentBase
                                          && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
                                          || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
 
-    private bool AreWorkspacesHidden => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
-                                        && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR
-                                        && !this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible;
-
     private async Task ToggleWorkspaceSidebar()
     {
         this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible = !this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible;
         await this.SettingsManager.StoreSettings();
     }
 
-    private void SplitterChanged(double position)
+    /// <summary>
+    /// The width the user dragged the sidebar to, which Chat.razor.css keeps within its limits.
+    /// </summary>
+    private string SidebarWidthStyle => FormattableString.Invariant($"--sidebar-width: {this.SettingsManager.ConfigurationData.Workspace.SidebarWidth}px;");
+
+    /// <summary>
+    /// Stores the width of the sidebar, once the user let go of the handle beside it.
+    /// </summary>
+    /// <remarks>
+    /// The script resized the sidebar while the user dragged, without a round trip to the server for
+    /// every movement, so the page needs no render for it.
+    /// </remarks>
+    /// <param name="width">The width the sidebar took, in CSS pixels.</param>
+    [JSInvokable]
+    public async Task SidebarResizedAsync(double width)
     {
-        this.splitterPosition = position;
-        this.splitterSaveTimer.Stop();
-        this.splitterSaveTimer.Start();
-        this.skipRenderAfterSplitterChange = true;
+        this.SettingsManager.ConfigurationData.Workspace.SidebarWidth = width;
+        await this.SettingsManager.StoreSettings();
     }
-    
+
     private void ToggleWorkspacesOverlay()
     {
         this.workspaceOverlayVisible = !this.workspaceOverlayVisible;
         this.StateHasChanged();
     }
-    
-    private double ReadSplitterPosition => this.AreWorkspacesHidden ? 6 : this.splitterPosition;
-    
+
     private void UpdateWorkspaceName(string workspaceName)
     {
         this.currentWorkspaceName = workspaceName;
@@ -189,16 +198,7 @@ public partial class Chat : MSGComponentBase
 
     protected override void DisposeResources()
     {
-        try
-        {
-            this.splitterSaveTimer.Stop();
-            this.splitterSaveTimer.Dispose();
-        }
-        catch
-        {
-            // ignore
-        }
-        
+        this.dotNetReference?.Dispose();
         base.DisposeResources();
     }
 

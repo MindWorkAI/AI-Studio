@@ -201,6 +201,56 @@ window.watchStuckSections = function (list) {
     update()
 }
 
+// Lets the user resize the workspace sidebar of the chat page by dragging the handle on its right
+// border. The sidebar follows the pointer right away, without a round trip to the server for every
+// movement, and its CSS keeps it within its limits, see Chat.razor.css. Once the user lets go, the
+// server learns the width the sidebar took and stores it. Watching a handle a second time changes
+// nothing.
+window.watchSidebarResize = function (handle, sidebar, dotNetReference) {
+    if (!handle || !sidebar || handle.dataset.resizeWatched)
+        return
+
+    handle.dataset.resizeWatched = 'true'
+    let startX = 0
+    let startWidth = 0
+
+    const move = function (event) {
+        sidebar.style.setProperty('--sidebar-width', `${startWidth + event.clientX - startX}px`)
+    }
+
+    const stop = function (event) {
+        if (handle.hasPointerCapture(event.pointerId))
+            handle.releasePointerCapture(event.pointerId)
+
+        handle.removeEventListener('pointermove', move)
+        handle.removeEventListener('pointerup', stop)
+        handle.removeEventListener('pointercancel', stop)
+        document.documentElement.removeAttribute('data-resizing-sidebar')
+
+        // The pointer may have gone beyond the limits, so the width is the one the sidebar took. The
+        // next drag then starts from what the user sees:
+        const width = Math.round(sidebar.getBoundingClientRect().width)
+        sidebar.style.setProperty('--sidebar-width', `${width}px`)
+        dotNetReference.invokeMethodAsync('SidebarResizedAsync', width).catch(() => {})
+    }
+
+    handle.addEventListener('pointerdown', function (event) {
+        if (event.button !== 0)
+            return
+
+        // Keeps the browser from selecting text while the pointer moves:
+        event.preventDefault()
+
+        startX = event.clientX
+        startWidth = sidebar.getBoundingClientRect().width
+        handle.setPointerCapture(event.pointerId)
+        document.documentElement.setAttribute('data-resizing-sidebar', '')
+        handle.addEventListener('pointermove', move)
+        handle.addEventListener('pointerup', stop)
+        handle.addEventListener('pointercancel', stop)
+    })
+}
+
 window.setDocumentLanguage = function (ietfTag) {
     document.documentElement.lang = ietfTag
 }

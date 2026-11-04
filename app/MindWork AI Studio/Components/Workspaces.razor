@@ -126,7 +126,7 @@ else
     private RenderFragment RenderSectionHeader(string title, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle, Func<ElementReference> sectionStart, bool isSecond, bool canAddWorkspace) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Spacing="0" Class="@this.GetSectionHeaderClasses(isSecond)">
         @if (this.isShowingSearchResults)
         {
-            <MudText Typo="Typo.button" Class="px-2 py-1 mud-text-secondary">
+            <MudText Typo="Typo.button" Class="px-2 py-1 mud-text-secondary" title="@title">
                 @title
             </MudText>
         }
@@ -134,7 +134,7 @@ else
         {
             var isMarked = isCollapsed && containsCurrentChat;
             <div class="@(isMarked ? "workspace-section-toggle d-flex align-center is-current" : "workspace-section-toggle d-flex align-center")" style="cursor: pointer;" @onclick="@(() => this.ClickSectionTitleAsync(sectionStart(), isCollapsed, toggle))">
-                <MudText Typo="Typo.button" Color="@(isMarked ? Color.Primary : Color.Default)" Class="px-2">
+                <MudText Typo="Typo.button" Color="@(isMarked ? Color.Primary : Color.Default)" Class="px-2" title="@title">
                     @title
                 </MudText>
                 <MudIconButton Icon="@GetSectionChevron(isCollapsed)" Color="@(isMarked ? Color.Primary : Color.Default)" aria-label="@title" aria-expanded="@(isCollapsed ? "false" : "true")" OnClick="@toggle"/>

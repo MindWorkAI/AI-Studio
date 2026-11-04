@@ -33,7 +33,10 @@ public sealed class DataWorkspace
     public bool IsTemporaryChatsSectionCollapsed { get; set; }
 
     /// <summary>
-    /// The position of the splitter between the chat and the workspaces.
+    /// The width of the workspace sidebar beside the chat, in CSS pixels, as the user dragged it.
     /// </summary>
-    public double SplitterPosition { get; set; } = 30;
+    /// <remarks>
+    /// The chat page keeps the sidebar within limits whatever the stored width, see Chat.razor.css.
+    /// </remarks>
+    public double SidebarWidth { get; set; } = 288;
 }

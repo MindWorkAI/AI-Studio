@@ -51,6 +51,27 @@
     box-sizing: border-box;
 }
 
+/*
+ * The fixed height leaves room for one line only, so a title never wraps. The chat page keeps the
+ * sidebar wide enough for the titles we ship, see Chat.razor.css. A longer one, in another language or
+ * a sidebar narrowed some other way, ends with an ellipsis, and its buttons keep their size.
+ */
+.workspace-list ::deep .workspace-section-header > .mud-tooltip-root,
+.workspace-list ::deep .workspace-section-toggle .mud-icon-button {
+    flex-shrink: 0;
+}
+
+.workspace-list ::deep .workspace-section-toggle {
+    min-width: 0;
+}
+
+.workspace-list ::deep .workspace-section-header .mud-typography {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .workspace-list ::deep .workspace-section-header.is-sticky {
     position: sticky;
     top: 0;

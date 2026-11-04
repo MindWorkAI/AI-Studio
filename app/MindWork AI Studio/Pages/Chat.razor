@@ -36,44 +36,29 @@
     </CascadingValue>
     @if (this.AreWorkspacesVisible)
     {
-        <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" Sensitivity="0.05" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
-            <StartContent>
-                @if (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
-                {
-                    // Case: Sidebar can be toggled and is currently visible
-                    <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="18em">
-                        <HeaderContent>
-                            @this.RenderWorkspaceSidebarHeader(canHide: true, canClose: false)
-                        </HeaderContent>
-                        <ChildContent>
-                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
-                        </ChildContent>
-                    </InnerScrolling>
-                }
-                else
-                {
-                    // Case: Sidebar is always visible
-                    <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="18em">
-                        <HeaderContent>
-                            @this.RenderWorkspaceSidebarHeader(canHide: false, canClose: false)
-                        </HeaderContent>
-                        <ChildContent>
-                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
-                        </ChildContent>
-                    </InnerScrolling>
-                }
-            </StartContent>
-            <EndContent>
-                <ChatComponent
-                    @ref="this.chatComponent"
-                    @bind-ChatThread="@this.chatThread"
-                    @bind-Provider="@this.providerSettings"
-                    IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
-                    ComposerState="@this.composerState"
-                    Workspaces="@this.workspaces"
-                    WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
-            </EndContent>
-        </MudSplitter>
+        // Case: Sidebar is visible, either always or until it is hidden. It keeps the width the user
+        // dragged its right border to, within limits, see Chat.razor.css and watchSidebarResize in app.js:
+        <div class="chat-columns">
+            <div class="chat-sidebar" style="@this.SidebarWidthStyle" @ref="this.sidebarElement">
+                <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3">
+                    <HeaderContent>
+                        @this.RenderWorkspaceSidebarHeader(canHide: this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR, canClose: false)
+                    </HeaderContent>
+                    <ChildContent>
+                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
+                    </ChildContent>
+                </InnerScrolling>
+                <div class="chat-sidebar-handle" role="separator" aria-orientation="vertical" @ref="this.sidebarHandle"></div>
+            </div>
+            <ChatComponent
+                @ref="this.chatComponent"
+                @bind-ChatThread="@this.chatThread"
+                @bind-Provider="@this.providerSettings"
+                IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
+                ComposerState="@this.composerState"
+                Workspaces="@this.workspaces"
+                WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
+        </div>
     }
     else if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR)
     {
