@@ -16,8 +16,8 @@ namespace AIStudio.Components;
 /// A block finds its file by where it starts. The chat renders an answer in parts, cut around its
 /// formulas, and Markdig reads each part on its own: a block knows where it starts within its part
 /// only. Added to where the part starts in the answer, that is the position the file was read with.
-/// A block without a file, such as a formula or a block the model never closed, gets no actions,
-/// just as the export menu does not offer it.
+/// A block without a file, such as a block the model never closed, gets no actions, just as the export
+/// menu does not offer it. The formulas between the parts get the same actions from MathJaxBlock.
 /// </remarks>
 public sealed class ExportableMarkdown : HighlightedMarkdown
 {

@@ -54,6 +54,33 @@ public sealed class ExportableMarkdownTests
     }
 
     [Test]
+    public void EveryFormulaFindsItsFile()
+    {
+        var answer = Lines(
+            "$$",
+            "a = b",
+            "$$",
+            @"\[",
+            "c = d",
+            @"\]",
+            "```latex",
+            "e = f",
+            "```",
+            "1. Item",
+            "   $$",
+            "   g = h",
+            "   $$");
+
+        var plan = MarkdownRenderPlanner.Build(answer);
+        var files = PlainFileExport.ExtractFiles(plan, ',');
+        var foundFiles = plan.Segments
+            .Where(segment => segment.Type is MarkdownRenderSegmentType.MATH_BLOCK)
+            .Select(segment => ExportableMarkdown.FileAt(files, segment.FileStart)?.Format);
+
+        Assert.That(foundFiles, Is.EqualTo(Enumerable.Repeat<FileExportFormat?>(FileExportFormat.LATEX, 4)), "The chat looks a formula's file up where its block starts, so that the formula gets the button to save it.");
+    }
+
+    [Test]
     public void ACodeBlockTheModelNeverClosedFindsNoFile()
     {
         var answer = Lines("The answer starts normally.", string.Empty, "```python", "def main():");
