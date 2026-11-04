@@ -42,7 +42,7 @@ public sealed class DirectI18NGetTextAnalyzer : DiagnosticAnalyzer
             return;
 
         var targetMethod = method.ReducedFrom ?? method;
-        if (targetMethod.Name != "GetText" || targetMethod.ContainingType.Name != "ILangExtensions" || targetMethod.ContainingNamespace.ToDisplayString() != "AIStudio.Tools.PluginSystem")
+        if (targetMethod.Name != "GetText" || !IsLangExtensions(targetMethod.ContainingType))
             return;
 
         if (context.SemanticModel.GetOperation(invocation) is IInvocationOperation operation
@@ -50,6 +50,19 @@ public sealed class DirectI18NGetTextAnalyzer : DiagnosticAnalyzer
             return;
 
         context.ReportDiagnostic(Diagnostic.Create(RULE, invocation.GetLocation()));
+    }
+
+    /// <summary>
+    /// Whether a method of this type is the GetText of the language plugins.
+    /// </summary>
+    /// <remarks>
+    /// A classic extension method belongs to its static class directly. A member of an extension block
+    /// belongs to the block, and only the block belongs to the static class.
+    /// </remarks>
+    private static bool IsLangExtensions(INamedTypeSymbol? type)
+    {
+        var staticClass = type is { IsExtension: true } ? type.ContainingType : type;
+        return staticClass?.Name == "ILangExtensions" && staticClass.ContainingNamespace.ToDisplayString() == "AIStudio.Tools.PluginSystem";
     }
 
     private static bool IsCollectorCompatibleWrapper(IMethodSymbol? containingMethod, IInvocationOperation invocation)
