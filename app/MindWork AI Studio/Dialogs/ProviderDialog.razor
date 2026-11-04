@@ -27,7 +27,7 @@
                         </MudSelectItem>
                     }
                 </MudSelect>
-                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton() || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">
+                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">
                     @T("Create account")
                 </MudButton>
             </MudStack>
@@ -45,7 +45,7 @@
                     <SecretInputField Secret="@this.dataAPIKey" SecretChanged="@this.OnAPIKeyChanged" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
                 }
 
-                @if (this.DataLLMProvider.IsHostnameNeeded())
+                @if (this.DataLLMProvider.IsHostnameNeeded)
                 {
                     <MudTextField
                         T="string"
@@ -60,12 +60,12 @@
                         UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                 }
 
-                @if (this.DataLLMProvider.IsHostNeeded())
+                @if (this.DataLLMProvider.IsHostNeeded)
                 {
                     <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
                         @foreach (Host host in Enum.GetValues(typeof(Host)))
                         {
-                            @if (host.IsChatSupported())
+                            @if (host.IsChatSupported)
                             {
                                 <MudSelectItem Value="@host">
                                     @host.Name
@@ -75,12 +75,12 @@
                     </MudSelect>
                 }
 
-                @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
+                @if (this.DataLLMProvider.IsHFInstanceProviderNeeded)
                 {
                     <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
                         @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                         {
-                            @if (inferenceProvider.SupportsChat())
+                            @if (inferenceProvider.SupportsChat)
                             {
                                 <MudSelectItem Value="@inferenceProvider">
                                     @inferenceProvider.Name
@@ -97,7 +97,7 @@
                 {
                     <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                         <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
-                            @if (this.DataLLMProvider.IsLLMModelProvidedManually())
+                            @if (this.DataLLMProvider.IsLLMModelProvidedManually)
                             {
                                 <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
                                     @T("Show available models")

@@ -61,53 +61,62 @@ public static class HostExtensions
             _ => null,
         };
 
-        public bool IsChatSupported()
+        public bool IsChatSupported
         {
-            switch (host)
+            get
             {
-                case Host.WHISPER_CPP:
-                    return false;
-            
-                default:
-                case Host.OLLAMA:
-                case Host.VLLM:
-                case Host.LM_STUDIO:
-                case Host.LLAMA_CPP:
-                case Host.LLMMAN:
-                    return true;
+                switch (host)
+                {
+                    case Host.WHISPER_CPP:
+                        return false;
+                
+                    default:
+                    case Host.OLLAMA:
+                    case Host.VLLM:
+                    case Host.LM_STUDIO:
+                    case Host.LLAMA_CPP:
+                    case Host.LLMMAN:
+                        return true;
+                }
             }
         }
 
-        public bool IsEmbeddingSupported()
+        public bool IsEmbeddingSupported
         {
-            switch (host)
+            get
             {
-                case Host.LM_STUDIO:
-                case Host.OLLAMA:
-                case Host.VLLM:
-                case Host.LLMMAN:
-                    return true;
-            
-                default:
-                case Host.LLAMA_CPP:
-                    return false;
+                switch (host)
+                {
+                    case Host.LM_STUDIO:
+                    case Host.OLLAMA:
+                    case Host.VLLM:
+                    case Host.LLMMAN:
+                        return true;
+                
+                    default:
+                    case Host.LLAMA_CPP:
+                        return false;
+                }
             }
         }
 
-        public bool IsTranscriptionSupported()
+        public bool IsTranscriptionSupported
         {
-            switch (host)
+            get
             {
-                case Host.OLLAMA:
-                case Host.VLLM:
-                case Host.WHISPER_CPP:
-                case Host.LLMMAN:
-                    return true;
+                switch (host)
+                {
+                    case Host.OLLAMA:
+                    case Host.VLLM:
+                    case Host.WHISPER_CPP:
+                    case Host.LLMMAN:
+                        return true;
 
-                default:
-                case Host.LM_STUDIO:
-                case Host.LLAMA_CPP:
-                    return false;
+                    default:
+                    case Host.LM_STUDIO:
+                    case Host.LLAMA_CPP:
+                        return false;
+                }
             }
         }
 
@@ -122,22 +131,25 @@ public static class HostExtensions
         /// provider offers that model under a fixed name instead. llama.cpp is, even though builds
         /// older than the route answer it with 404; the provider handles those builds itself.
         /// </remarks>
-        /// <returns>True when the models can be loaded from the engine; otherwise, false.</returns>
-        public bool IsModelListSupported()
+        /// <value>True when the models can be loaded from the engine; otherwise, false.</value>
+        public bool IsModelListSupported
         {
-            switch (host)
+            get
             {
-                case Host.LLAMA_CPP:
-                case Host.OLLAMA:
-                case Host.LM_STUDIO:
-                case Host.VLLM:
-                case Host.LLMMAN:
-                    return true;
+                switch (host)
+                {
+                    case Host.LLAMA_CPP:
+                    case Host.OLLAMA:
+                    case Host.LM_STUDIO:
+                    case Host.VLLM:
+                    case Host.LLMMAN:
+                        return true;
 
-                default:
-                case Host.NONE:
-                case Host.WHISPER_CPP:
-                    return false;
+                    default:
+                    case Host.NONE:
+                    case Host.WHISPER_CPP:
+                        return false;
+                }
             }
         }
     }

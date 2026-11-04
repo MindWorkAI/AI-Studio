@@ -117,7 +117,7 @@ public static class ConfigurationSelectDataFactory
     
     public static IEnumerable<ConfigurationSelectData<PreviewFeatures>> GetPreviewFeaturesData(SettingsManager settingsManager)
     {
-        foreach (var source in settingsManager.ConfigurationData.App.PreviewVisibility.GetPreviewFeatures().Where(x => !x.IsReleased()))
+        foreach (var source in settingsManager.ConfigurationData.App.PreviewVisibility.GetPreviewFeatures().Where(x => !x.IsReleased))
             yield return new(source.PreviewDescription, source);
     }
     
@@ -330,7 +330,7 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var level in Enum.GetValues<ConfidenceLevel>())
         {
-            if (!level.IsAllowedMailboxConfidence())
+            if (!level.IsAllowedMailboxConfidence)
                 continue;
 
             yield return new(level.Name, level);

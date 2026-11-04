@@ -209,7 +209,7 @@ public sealed class DataSourceValidation
         if(confidenceLevel is ConfidenceLevel.NONE)
             return TB("Please select a required provider confidence level.");
 
-        if(!confidenceLevel.IsAllowedMailboxConfidence())
+        if(!confidenceLevel.IsAllowedMailboxConfidence)
             return string.Format(TB("A mailbox requires a provider confidence level from '{0}' to '{1}'."), ConfidenceLevel.VERY_LOW.Name, ConfidenceLevel.HIGH.Name);
 
         return this.ValidateSelectedEmbeddingProviderAccess();

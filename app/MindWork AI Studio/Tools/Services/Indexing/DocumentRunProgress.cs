@@ -332,7 +332,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 break;
             }
 
-            case FileExtractionException extractionFailure when extractionFailure.Code.IsPermanentIndexingFailure():
+            case FileExtractionException extractionFailure when extractionFailure.Code.IsPermanentIndexingFailure:
             {
                 //
                 // The document itself is why this failed, so trying it again changes nothing until

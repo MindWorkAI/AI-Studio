@@ -195,8 +195,8 @@ public static class LLMProvidersExtensions
         /// <summary>
         /// Determines if the specified provider supports embeddings.
         /// </summary>
-        /// <returns>True if the provider supports embeddings; otherwise, false.</returns>
-        public bool ProvideEmbeddingAPI() => provider switch
+        /// <value>True if the provider supports embeddings; otherwise, false.</value>
+        public bool ProvideEmbeddingAPI => provider switch
         {
             //
             // Providers that support embeddings:
@@ -239,7 +239,7 @@ public static class LLMProvidersExtensions
             _ => false,
         };
 
-        public bool ProvideTranscriptionAPI() => provider switch
+        public bool ProvideTranscriptionAPI => provider switch
         {
             //
             // Providers that support transcription:
@@ -408,7 +408,7 @@ public static class LLMProvidersExtensions
             _ => string.Empty,
         };
 
-        public bool HasDashboard() => provider switch
+        public bool HasDashboard => provider switch
         {
             LLMProviders.OPEN_AI => true,
             LLMProviders.MISTRAL => true,
@@ -438,7 +438,7 @@ public static class LLMProvidersExtensions
             _ => string.Empty,
         };
 
-        public bool IsLLMModelProvidedManually() => provider switch
+        public bool IsLLMModelProvidedManually => provider switch
         {
             LLMProviders.FIREWORKS => true,
             _ => false,
@@ -467,13 +467,13 @@ public static class LLMProvidersExtensions
             _ => false,
         };
 
-        public bool IsHostNeeded() => provider switch
+        public bool IsHostNeeded => provider switch
         {
             LLMProviders.SELF_HOSTED => true,
             _ => false,
         };
 
-        public bool IsHostnameNeeded() => provider switch
+        public bool IsHostnameNeeded => provider switch
         {
             LLMProviders.SELF_HOSTED => true,
             LLMProviders.LITE_LLM => true,
@@ -490,8 +490,8 @@ public static class LLMProvidersExtensions
         /// today: whether a dialog asks for a hostname is a question of the user interface, and it must
         /// never silently decide what a server learns about the user.
         /// </remarks>
-        /// <returns>True when the provider runs on a self-hosted server; otherwise, false.</returns>
-        public bool RunsOnSelfHostedServer() => provider switch
+        /// <value>True when the provider runs on a self-hosted server; otherwise, false.</value>
+        public bool RunsOnSelfHostedServer => provider switch
         {
             LLMProviders.SELF_HOSTED => true,
             LLMProviders.LITE_LLM => true,
@@ -529,7 +529,7 @@ public static class LLMProvidersExtensions
             _ => false,
         };
 
-        public bool ShowRegisterButton() => provider switch
+        public bool ShowRegisterButton => provider switch
         {
             LLMProviders.OPEN_AI => true,
             LLMProviders.MISTRAL => true,
@@ -556,7 +556,7 @@ public static class LLMProvidersExtensions
         public bool CanLoadModels(Host host, string? apiKey)
         {
             if (provider is LLMProviders.SELF_HOSTED)
-                return host.IsModelListSupported();
+                return host.IsModelListSupported;
 
             if(provider is LLMProviders.NONE)
                 return false;
@@ -567,7 +567,7 @@ public static class LLMProvidersExtensions
             return true;
         }
 
-        public bool IsHFInstanceProviderNeeded() => provider switch
+        public bool IsHFInstanceProviderNeeded => provider switch
         {
             LLMProviders.HUGGINGFACE => true,
             _ => false,

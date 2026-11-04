@@ -321,7 +321,7 @@ public partial class Embeddings : MSGComponentBase
         //
         if (failure.FailureReason is not ProviderRequestFailureReason.NONE)
         {
-            var isFixedInSettings = failure.FailureReason.IsFixedInProviderSettings();
+            var isFixedInSettings = failure.FailureReason.IsFixedInProviderSettings;
             return new FailureCause(isFixedInSettings ? 0 : 1, failure.FailureReason.Name, isFixedInSettings ? Icons.Material.Filled.Key : Icons.Material.Filled.CloudOff, Color.Error, false, isFixedInSettings, true);
         }
 

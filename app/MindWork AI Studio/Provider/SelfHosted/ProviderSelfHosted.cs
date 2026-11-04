@@ -25,7 +25,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     public override string InstanceName { get; set; } = "Self-hosted";
 
     /// <inheritdoc />
-    public override bool HasModelLoadingCapability => host.IsModelListSupported();
+    public override bool HasModelLoadingCapability => host.IsModelListSupported;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -97,7 +97,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             if (host is Host.LLAMA_CPP)
                 return await this.LoadLlamaCppTextModels(apiKeyProvisional, token);
 
-            if (!host.IsChatSupported() || !host.IsModelListSupported())
+            if (!host.IsChatSupported || !host.IsModelListSupported)
                 return ModelLoadResult.FromModels([]);
 
             var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
@@ -123,7 +123,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     {
         try
         {
-            if (!host.IsEmbeddingSupported() || !host.IsModelListSupported())
+            if (!host.IsEmbeddingSupported || !host.IsModelListSupported)
                 return ModelLoadResult.FromModels([]);
 
             var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
@@ -150,7 +150,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                     new Provider.Model("loaded-model", TB("Model as configured by whisper.cpp")),
                 ]);
 
-            if (!host.IsTranscriptionSupported() || !host.IsModelListSupported())
+            if (!host.IsTranscriptionSupported || !host.IsModelListSupported)
                 return ModelLoadResult.FromModels([]);
 
             //

@@ -22,8 +22,8 @@ internal static class FileExtractionErrorCodeExtensions
         /// Gets a value indicating whether reading the file again will fail again, as long as the file
         /// itself does not change.
         /// </summary>
-        /// <returns>True, when the reason lies in the file itself.</returns>
-        internal bool IsPermanentIndexingFailure() => code switch
+        /// <value>True, when the reason lies in the file itself.</value>
+        internal bool IsPermanentIndexingFailure => code switch
         {
             //
             // The reason lies in the file. Reading it again without changing it produces the same

@@ -111,8 +111,8 @@ public static class FileExportFormatExtensions
         /// <summary>
         /// Determines whether the format holds a table rather than a text.
         /// </summary>
-        /// <returns>True for the formats a spreadsheet opens.</returns>
-        public bool IsTabular() => format is FileExportFormat.CSV or FileExportFormat.TSV;
+        /// <value>True for the formats a spreadsheet opens.</value>
+        public bool IsTabular => format is FileExportFormat.CSV or FileExportFormat.TSV;
 
         /// <summary>
         /// Determines whether a file of the format is plain text, which AI Studio writes as it is.
@@ -124,8 +124,8 @@ public static class FileExportFormatExtensions
         /// list is spelled out on purpose, so a format added later counts as plain text only once
         /// somebody says so.
         /// </remarks>
-        /// <returns>True, when a text written as it is makes a valid file of the format.</returns>
-        public bool IsPlainText() => format is FileExportFormat.LATEX or FileExportFormat.MARKDOWN or FileExportFormat.HTML or FileExportFormat.CSV or FileExportFormat.TSV or FileExportFormat.SOURCE_CODE;
+        /// <value>True, when a text written as it is makes a valid file of the format.</value>
+        public bool IsPlainText => format is FileExportFormat.LATEX or FileExportFormat.MARKDOWN or FileExportFormat.HTML or FileExportFormat.CSV or FileExportFormat.TSV or FileExportFormat.SOURCE_CODE;
 
         /// <summary>
         /// Returns the file name the save dialog starts with.
@@ -221,8 +221,8 @@ public static class FileExportFormatExtensions
         /// which page it was stays in the title of the source. Verified on 2026-09-15 with LibreOffice
         /// on an exported .odt. A format added later keeps the page unless it is known to stumble too.
         /// </remarks>
-        /// <returns>True, when a reader of this format follows such a link.</returns>
-        public bool FollowsPageAnchors() => format switch
+        /// <value>True, when a reader of this format follows such a link.</value>
+        public bool FollowsPageAnchors => format switch
         {
             FileExportFormat.MICROSOFT_WORD or FileExportFormat.OPEN_DOCUMENT_TEXT => false,
 
@@ -238,8 +238,8 @@ public static class FileExportFormatExtensions
         /// no such title, and handed one anyway, they keep it as a document property nobody asked for;
         /// verified with Pandoc 3.8.3 on 2026-09-23. LaTeX ignores it.
         /// </remarks>
-        /// <returns>True, when a document of this format needs a title besides its content.</returns>
-        public bool NeedsPageTitle() => format is FileExportFormat.HTML;
+        /// <value>True, when a document of this format needs a title besides its content.</value>
+        public bool NeedsPageTitle => format is FileExportFormat.HTML;
 
         /// <summary>
         /// Returns the name Pandoc knows the format by.
@@ -258,8 +258,8 @@ public static class FileExportFormatExtensions
         /// <summary>
         /// Determines whether writing the format needs Pandoc.
         /// </summary>
-        /// <returns>True, when Pandoc converts the message; false, when AI Studio writes the file itself.</returns>
-        public bool UsesPandoc() => !string.IsNullOrWhiteSpace(format.ToPandocOutputFormat());
+        /// <value>True, when Pandoc converts the message; false, when AI Studio writes the file itself.</value>
+        public bool UsesPandoc => !string.IsNullOrWhiteSpace(format.ToPandocOutputFormat());
     }
 
     /// <summary>

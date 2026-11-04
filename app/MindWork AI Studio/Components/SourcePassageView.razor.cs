@@ -187,7 +187,7 @@ public partial class SourcePassageView : MSGComponentBase
     /// </remarks>
     private string GetTranscriptLabel()
     {
-        if (!this.Passage.IsTranscript())
+        if (!this.Passage.IsTranscript)
             return string.Empty;
 
         var extension = Path.GetExtension(this.Passage.Path);

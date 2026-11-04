@@ -55,8 +55,8 @@ public static class HFInferenceProviderExtensions
         /// <summary>
         /// Whether this inference provider serves models to chat with.
         /// </summary>
-        /// <returns>True, when the provider serves chat models.</returns>
-        public bool SupportsChat() => provider is not HFInferenceProvider.NONE;
+        /// <value>True, when the provider serves chat models.</value>
+        public bool SupportsChat => provider is not HFInferenceProvider.NONE;
 
         /// <summary>
         /// Whether this inference provider creates embeddings for us.
@@ -67,8 +67,8 @@ public static class HFInferenceProviderExtensions
         /// OpenAI-compatible form we send. The routing strategies are out by their nature: without a
         /// named provider there is no route to address.
         /// </remarks>
-        /// <returns>True, when we can create embeddings through this provider.</returns>
-        public bool SupportsEmbeddings() => provider is HFInferenceProvider.TOGETHER_AI or HFInferenceProvider.DEEPINFRA;
+        /// <value>True, when we can create embeddings through this provider.</value>
+        public bool SupportsEmbeddings => provider is HFInferenceProvider.TOGETHER_AI or HFInferenceProvider.DEEPINFRA;
 
         /// <summary>
         /// Whether this inference provider transcribes audio for us.
@@ -79,8 +79,8 @@ public static class HFInferenceProviderExtensions
         /// transcribe for Hugging Face, but not in a shape we could send an audio file to: fal-ai and
         /// Replicate both turn the request down with "Model not supported by provider".
         /// </remarks>
-        /// <returns>True, when we can transcribe audio through this provider.</returns>
-        public bool SupportsTranscription() => provider is HFInferenceProvider.TOGETHER_AI or HFInferenceProvider.DEEPINFRA;
+        /// <value>True, when we can transcribe audio through this provider.</value>
+        public bool SupportsTranscription => provider is HFInferenceProvider.TOGETHER_AI or HFInferenceProvider.DEEPINFRA;
 
         /// <summary>
         /// The base URL of the provider's own OpenAI-compatible route.

@@ -13,6 +13,6 @@ public static class ERIVersionExtensions
             return $"specs/eri/{filename}";
         }
 
-        public bool WasSpecificationSelected() => version != ERIVersion.NONE;
+        public bool WasSpecificationSelected => version != ERIVersion.NONE;
     }
 }

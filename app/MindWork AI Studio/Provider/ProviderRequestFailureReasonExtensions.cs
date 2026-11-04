@@ -39,7 +39,7 @@ public static class ProviderRequestFailureReasonExtensions
         /// Only for the failures a setting actually fixes. Pointing at the settings for a provider
         /// which is merely overloaded would send the user looking for a mistake they never made.
         /// </remarks>
-        public bool IsFixedInProviderSettings() => failureReason is
+        public bool IsFixedInProviderSettings => failureReason is
             ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY or
             ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR or
             ProviderRequestFailureReason.MODEL_NOT_FOUND or

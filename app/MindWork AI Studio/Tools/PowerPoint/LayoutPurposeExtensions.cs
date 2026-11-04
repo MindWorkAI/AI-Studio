@@ -48,7 +48,7 @@ internal static partial class LayoutPurposeExtensions
         /// presentation has one follows from its content. The slides which frame a presentation are
         /// different: whoever chooses a layout for the table of contents or the imprint expects them.
         /// </remarks>
-        public bool ChoiceAddsSlide() => purpose.PromptPlacement() is not null;
+        public bool ChoiceAddsSlide => purpose.PromptPlacement() is not null;
 
         /// <summary>
         /// Where a slide goes which a choice puts into the presentation, and what it holds, for the model.
@@ -69,7 +69,7 @@ internal static partial class LayoutPurposeExtensions
         /// <summary>
         /// The help below the choice: its question, and whether a choice adds such a slide.
         /// </summary>
-        public string Help => purpose.ChoiceAddsSlide()
+        public string Help => purpose.ChoiceAddsSlide
             ? $"{purpose.Question} {TB("Choosing a layout also adds such a slide to the presentation.")}"
             : purpose.Question;
     }

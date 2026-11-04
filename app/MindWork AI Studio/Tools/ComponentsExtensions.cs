@@ -37,8 +37,8 @@ public static class ComponentsExtensions
         /// component. All must be excluded from the single-slot checks, which is why this is a
         /// capability and not a component comparison.
         /// </remarks>
-        /// <returns><c>true</c> when the component owns exactly one session slot.</returns>
-        public bool HasSingleSessionSlot() => component switch
+        /// <value><c>true</c> when the component owns exactly one session slot.</value>
+        public bool HasSingleSessionSlot => component switch
         {
             Components.CHAT or Components.DYNAMIC_ASSISTANT => false,
             Components.VISUAL_BRIEFING_ASSISTANT => false,
@@ -57,7 +57,7 @@ public static class ComponentsExtensions
             _ => MediaImportOwnerKind.ASSISTANT,
         };
 
-        public bool AllowSendTo() => component switch
+        public bool AllowSendTo => component switch
         {
             Components.NONE => false,
             Components.DYNAMIC_ASSISTANT => false,

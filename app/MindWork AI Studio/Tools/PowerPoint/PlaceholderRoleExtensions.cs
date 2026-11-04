@@ -51,7 +51,7 @@ internal static class PlaceholderRoleExtensions
         /// Footer, slide number and date are filled as well, but by the presentation as a whole rather
         /// than by a single slide, so they are no slots of a layout.
         /// </remarks>
-        public bool IsSlot() => role switch
+        public bool IsSlot => role switch
         {
             PlaceholderRole.TITLE => true,
             PlaceholderRole.SUBTITLE => true,
@@ -70,7 +70,7 @@ internal static class PlaceholderRoleExtensions
         /// A layout offering nothing but a title and some labels has no room for content. Such layouts are
         /// samples or blank pages, and they are left out of the catalog.
         /// </remarks>
-        public bool CarriesContent() => role switch
+        public bool CarriesContent => role switch
         {
             PlaceholderRole.SUBTITLE => true,
             PlaceholderRole.TEXT => true,

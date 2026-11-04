@@ -207,7 +207,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
-            IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually(),
+            IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually,
             GetCustomTokenizerValidationIssue = () => this.dataCustomTokenizerValidationIssue,
             IsModelSelectionHidden = () => this.IsLLMModelSelectionHidden,
         };
@@ -241,7 +241,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (this.IsLLMModelSelectionHidden)
             return Model.SYSTEM_MODEL;
 
-        if (this.DataLLMProvider.IsLLMModelProvidedManually())
+        if (this.DataLLMProvider.IsLLMModelProvidedManually)
             return new Model(this.dataManuallyModel, null);
 
         return this.DataModel;
@@ -273,7 +273,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.dataFilePath = this.DataTokenizerPath;
 
         // When using Fireworks, we must copy the model name:
-        if (this.DataLLMProvider.IsLLMModelProvidedManually())
+        if (this.DataLLMProvider.IsLLMModelProvidedManually)
             this.dataManuallyModel = this.DataModel.Id;
 
         // When editing, we need to load the data:
@@ -421,7 +421,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     private string? ValidateManuallyModel(string manuallyModel)
     {
-        if (this.DataLLMProvider.IsLLMModelProvidedManually() && string.IsNullOrWhiteSpace(manuallyModel))
+        if (this.DataLLMProvider.IsLLMModelProvidedManually && string.IsNullOrWhiteSpace(manuallyModel))
             return T("Please enter a model name.");
         
         return null;

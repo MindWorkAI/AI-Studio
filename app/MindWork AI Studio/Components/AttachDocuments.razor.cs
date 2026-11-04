@@ -185,7 +185,7 @@ public partial class AttachDocuments : MSGComponentBase
         var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
         // Owners that persist their own sources have already taken the media over when the batch
         // started, so re-adding the delivered transcripts here would duplicate them.
-        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources()
+        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources
             ? Array.Empty<FileAttachment>()
             : delivery?.Attachments ?? [];
         var pending = this.OwnerChat?.Draft.MediaTranscripts ?? [];
@@ -436,7 +436,7 @@ public partial class AttachDocuments : MSGComponentBase
 
         // Owners that persist their own sources show the file right away and keep it next to the
         // stored document, instead of waiting for the transcription to be delivered back.
-        if (this.EffectiveImportOwner.Kind.PersistsOwnSources())
+        if (this.EffectiveImportOwner.Kind.PersistsOwnSources)
         {
             foreach (var mediaPath in mediaPaths)
                 this.DocumentPaths.Add(FileAttachment.FromPath(mediaPath));

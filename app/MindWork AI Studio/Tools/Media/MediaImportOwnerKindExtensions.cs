@@ -16,7 +16,7 @@ public static class MediaImportOwnerKindExtensions
         /// the file, nor deliver the completed transcripts back into its own list afterwards, because
         /// the owner already holds them. All other owners rely on that delivery instead.
         /// </remarks>
-        /// <returns><c>true</c> when the owner persists its own sources.</returns>
-        public bool PersistsOwnSources() => kind is MediaImportOwnerKind.VISUAL_BRIEFING;
+        /// <value><c>true</c> when the owner persists its own sources.</value>
+        public bool PersistsOwnSources => kind is MediaImportOwnerKind.VISUAL_BRIEFING;
     }
 }

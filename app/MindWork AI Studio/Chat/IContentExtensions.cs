@@ -95,13 +95,13 @@ public static class IContentExtensions
         /// <returns>The content of the file to write.</returns>
         public string ToExportContent(MessageFile file)
         {
-            if (file.Format.IsTabular())
+            if (file.Format.IsTabular)
                 return file.Content;
 
             if (file.Format is FileExportFormat.SOURCE_CODE)
                 return ToSourceCodeFile(file);
 
-            var sources = content.Sources.ToExportMarkdown(file.Format.FollowsPageAnchors());
+            var sources = content.Sources.ToExportMarkdown(file.Format.FollowsPageAnchors);
             if (file.Format is FileExportFormat.MARKDOWN)
                 return AppendSources(file.Content, sources);
 

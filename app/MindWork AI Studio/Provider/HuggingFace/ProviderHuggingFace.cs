@@ -293,7 +293,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        if (!this.hfProvider.SupportsEmbeddings())
+        if (!this.hfProvider.SupportsEmbeddings)
             return Task.FromResult(ModelLoadResult.FromModels([]));
 
         return this.LoadHubModels(SecretStoreType.EMBEDDING_PROVIDER, "feature-extraction", apiKeyProvisional, token);
@@ -316,7 +316,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        if (!this.hfProvider.SupportsTranscription())
+        if (!this.hfProvider.SupportsTranscription)
             return Task.FromResult(ModelLoadResult.FromModels([]));
 
         return this.LoadHubModels(SecretStoreType.TRANSCRIPTION_PROVIDER, "automatic-speech-recognition", apiKeyProvisional, token);

@@ -74,7 +74,7 @@
                         else
                         {
                             <MudTooltip Text="@T("Open Dashboard")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard)"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditEmbeddingProvider(context))"/>

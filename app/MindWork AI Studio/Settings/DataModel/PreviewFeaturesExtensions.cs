@@ -32,8 +32,8 @@ public static class PreviewFeaturesExtensions
         /// This metadata is necessary because we cannot remove the enum values from the list.
         /// Otherwise, we could not deserialize old settings files that may contain these values.
         /// </remarks>
-        /// <returns>True when the preview feature is released, false otherwise.</returns>
-        public bool IsReleased() => feature switch
+        /// <value>True when the preview feature is released, false otherwise.</value>
+        public bool IsReleased => feature switch
         {
             PreviewFeatures.PRE_READ_PDF_2025 => true,
             PreviewFeatures.PRE_PLUGINS_2025 => true,
@@ -45,7 +45,7 @@ public static class PreviewFeaturesExtensions
 
         public bool IsEnabled(SettingsManager settingsManager)
         {
-            if(feature.IsReleased())
+            if(feature.IsReleased)
                 return true;
         
             return settingsManager.ConfigurationData.App.EnabledPreviewFeatures.Contains(feature);

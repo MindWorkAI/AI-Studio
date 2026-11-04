@@ -46,7 +46,7 @@ internal sealed record ChosenLayouts(IReadOnlyDictionary<LayoutPurpose, LayoutFa
     /// <summary>
     /// The kinds of slides the presentation has to have, because the user chose a layout for them.
     /// </summary>
-    public IEnumerable<LayoutPurpose> AddedSlides => Enum.GetValues<LayoutPurpose>().Where(purpose => purpose.ChoiceAddsSlide() && this.Families.ContainsKey(purpose));
+    public IEnumerable<LayoutPurpose> AddedSlides => Enum.GetValues<LayoutPurpose>().Where(purpose => purpose.ChoiceAddsSlide && this.Families.ContainsKey(purpose));
 
     /// <summary>
     /// Writes the choices as rules for the model, one line per kind of slide, in the order of the kinds.

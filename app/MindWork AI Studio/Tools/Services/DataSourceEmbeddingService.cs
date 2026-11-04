@@ -873,7 +873,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         if (!AllowsEmbedding(dataSource, embeddingProvider.GetConfidenceLevel(settingsManager)))
         {
-            var errorMessage = dataSource is DataSourceMailbox && !dataSource.ConfidenceLevel.IsAllowedMailboxConfidence()
+            var errorMessage = dataSource is DataSourceMailbox && !dataSource.ConfidenceLevel.IsAllowedMailboxConfidence
                 ? TB("The mailbox has no valid confidence level, so no provider may read it. Please choose one in the settings of the mailbox.")
                 : string.Format(TB("The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."), dataSource.ConfidenceLevel.Name, embeddingProvider.GetConfidenceLevel(settingsManager).Name);
             logger.LogWarning(
