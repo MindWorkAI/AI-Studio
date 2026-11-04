@@ -4,6 +4,7 @@ using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PowerPoint;
+using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
 
@@ -32,6 +33,12 @@ public partial class SettingsDialogSlideBuilder : SettingsDialogBase
     /// The path the template and the layout options were read from; null before the first reading.
     /// </summary>
     private string? templatePathRead;
+
+    /// <summary>
+    /// What the preselection of the template offers: no template, then the PowerPoint format templates,
+    /// see ConfigurationSelectDataFactory.GetFormatTemplatesData.
+    /// </summary>
+    private IEnumerable<ConfigurationSelectData<string>> TemplateOptions => ConfigurationSelectDataFactory.GetFormatTemplatesData(this.SettingsManager.ConfigurationData.FormatTemplates, FileTypes.POWER_POINT_TEMPLATE, this.SettingsManager.ConfigurationData.SlideBuilder.TemplatePath);
 
     /// <summary>
     /// What the preselection of the maximum number of bullet points offers: no maximum, then 1 up to the most a slide may hold.
