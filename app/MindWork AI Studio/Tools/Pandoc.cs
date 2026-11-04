@@ -196,11 +196,7 @@ public static partial class Pandoc
             if (uri.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
             {
                 await RunWithRetriesAsync(
-                    () =>
-                    {
-                        ZipFile.ExtractToDirectory(pandocTempDownloadFile, stagingDir, true);
-                        return Task.CompletedTask;
-                    },
+                    () => ZipFile.ExtractToDirectoryAsync(pandocTempDownloadFile, stagingDir, true),
                     "extracting the Pandoc ZIP archive");
             }
             else if (uri.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
