@@ -5022,9 +5022,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1941431282"] =
 -- No format templates configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1955378082"] = "Noch keine Dokumentvorlagen konfiguriert."
 
--- Store your templates here, for example the Word and PowerPoint templates of your organization. When you export a result to Word, you can choose one of your Word templates.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2752175671"] = "Speichern Sie hier Ihre Vorlagen, z. B. die Word- und PowerPoint-Vorlagen Ihrer Organisation. Wenn Sie ein Ergebnis nach Word exportieren, können Sie eine Ihrer Word-Vorlagen auswählen."
-
 -- Edit Format Template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2823861742"] = "Dokumentvorlage bearbeiten"
 
@@ -5051,6 +5048,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T4157017975"] =
 
 -- File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T723007075"] = "Datei"
+
+-- Add your templates here, for example the Word templates of your organization. When you export a result to Word, you can choose one of them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T799944837"] = "Fügen Sie hier Ihre Vorlagen hinzu, z. B. die Word-Vorlagen Ihrer Organisation. Wenn Sie ein Ergebnis nach Word exportieren, können Sie eine davon auswählen."
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs können Fehler machen. Überprüfen Sie wichtige Informationen."
@@ -8487,8 +8487,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1231150347"] = "Die a
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1847791252"] = "Aktualisieren"
 
--- Store a template, for example a Word or PowerPoint template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2059843578"] = "Speichern Sie eine Vorlage, z. B. eine Word- oder PowerPoint-Vorlage Ihrer Organisation. AI Studio merkt sich den Speicherort der Datei, sodass eine neue Version der Vorlage sofort wirksam wird."
+-- The template file cannot be found.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1941431282"] = "Die Vorlagendatei kann nicht gefunden werden."
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2646845972"] = "Hinzufügen"
@@ -8505,9 +8505,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3448155331"] = "Schli
 -- Template file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3609077655"] = "Vorlagendatei"
 
--- The template file does not exist.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3882045083"] = "Die Vorlagendatei existiert nicht."
-
 -- The name of the format template must be unique; the chosen name is already in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4239698038"] = "Der Name der Dokumentvorlage muss eindeutig sein; der gewählte Name wird bereits verwendet."
 
@@ -8516,6 +8513,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4261636653"] = "Dokum
 
 -- Please enter a name for the format template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T454079616"] = "Bitte geben Sie einen Namen für die Dokumentvorlage ein."
+
+-- Add a template, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T512889034"] = "Fügen Sie eine Vorlage hinzu, z. B. eine Word-Vorlage Ihrer Organisation. AI Studio merkt sich den Speicherort der Datei, sodass eine neue Version der Vorlage sofort wirksam wird."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T900713019"] = "Abbrechen"
@@ -9891,11 +9891,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T36293728
 -- ERI server options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T488190224"] = "ERI-Serveroptionen sind vorausgewählt"
 
+-- Your Format Templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T1870172530"] = "Ihre Dokumentvorlagen"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T3448155331"] = "Schließen"
-
--- Configured Format Templates
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T379780235"] = "Konfigurierte Dokumentvorlagen"
 
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1417990312"] = "Zielsprache vorauswählen"
@@ -12309,6 +12309,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1714878838"] = "Vielen Dank, Peer
 -- Individual Contributors
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1874835680"] = "Einzelspender"
 
+-- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, for the protection against prompt injection, and for the export into Word templates.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2110420370"] = "Vielen Dank, Sabrina, dass du den Chat um Dateianhänge erweitert, den Folien-Assistenten und den SWOT-Analyse-Assistenten entwickelt, den Schutz vor Prompt-Injection eingebaut und den Export in Word-Vorlagen ermöglicht hast."
+
 -- The first 10 supporters who make a one-time contribution:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2410456125"] = "Die ersten 10 Spender, die einen einmaligen Beitrag geleistet haben:"
 
@@ -12332,9 +12335,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3061261435"] = "Finanzielle Unter
 
 -- Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3226413110"] = "Vielen Dank, Prodman, dass du LiteLLM als neuen Anbieter in AI Studio integriert hast."
-
--- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, and for the protection against prompt injection.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T32630309"] = "Vielen Dank, Sabrina, dass du den Chat um Dateianhänge erweitert, den Folien-Assistenten und den SWOT-Analyse-Assistenten entwickelt und den Schutz vor Prompt-Injection eingebaut hast."
 
 -- German Aerospace Center (DLR)
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3264998714"] = "Deutsches Zentrum für Luft- und Raumfahrt (DLR)"

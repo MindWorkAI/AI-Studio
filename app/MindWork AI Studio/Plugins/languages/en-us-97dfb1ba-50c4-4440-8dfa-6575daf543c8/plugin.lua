@@ -5022,9 +5022,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1941431282"] =
 -- No format templates configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1955378082"] = "No format templates configured yet."
 
--- Store your templates here, for example the Word and PowerPoint templates of your organization. When you export a result to Word, you can choose one of your Word templates.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2752175671"] = "Store your templates here, for example the Word and PowerPoint templates of your organization. When you export a result to Word, you can choose one of your Word templates."
-
 -- Edit Format Template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2823861742"] = "Edit Format Template"
 
@@ -5051,6 +5048,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T4157017975"] =
 
 -- File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T723007075"] = "File"
+
+-- Add your templates here, for example the Word templates of your organization. When you export a result to Word, you can choose one of them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T799944837"] = "Add your templates here, for example the Word templates of your organization. When you export a result to Word, you can choose one of them."
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
@@ -8487,8 +8487,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1231150347"] = "The s
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1847791252"] = "Update"
 
--- Store a template, for example a Word or PowerPoint template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2059843578"] = "Store a template, for example a Word or PowerPoint template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once."
+-- The template file cannot be found.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1941431282"] = "The template file cannot be found."
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2646845972"] = "Add"
@@ -8505,9 +8505,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3448155331"] = "Close
 -- Template file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3609077655"] = "Template file"
 
--- The template file does not exist.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3882045083"] = "The template file does not exist."
-
 -- The name of the format template must be unique; the chosen name is already in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4239698038"] = "The name of the format template must be unique; the chosen name is already in use."
 
@@ -8516,6 +8513,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4261636653"] = "Selec
 
 -- Please enter a name for the format template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T454079616"] = "Please enter a name for the format template."
+
+-- Add a template, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T512889034"] = "Add a template, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T900713019"] = "Cancel"
@@ -9891,11 +9891,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T36293728
 -- ERI server options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T488190224"] = "ERI server options are preselected"
 
+-- Your Format Templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T1870172530"] = "Your Format Templates"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T3448155331"] = "Close"
-
--- Configured Format Templates
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T379780235"] = "Configured Format Templates"
 
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1417990312"] = "Preselect the target language"
@@ -12309,6 +12309,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1714878838"] = "Thank you, Peer, 
 -- Individual Contributors
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1874835680"] = "Individual Contributors"
 
+-- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, for the protection against prompt injection, and for the export into Word templates.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2110420370"] = "Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, for the protection against prompt injection, and for the export into Word templates."
+
 -- The first 10 supporters who make a one-time contribution:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2410456125"] = "The first 10 supporters who make a one-time contribution:"
 
@@ -12332,9 +12335,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3061261435"] = "Financial Support
 
 -- Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3226413110"] = "Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider."
-
--- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, and for the protection against prompt injection.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T32630309"] = "Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, and for the protection against prompt injection."
 
 -- German Aerospace Center (DLR)
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3264998714"] = "German Aerospace Center (DLR)"
