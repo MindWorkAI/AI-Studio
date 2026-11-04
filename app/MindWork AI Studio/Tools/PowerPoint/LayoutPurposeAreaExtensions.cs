@@ -13,7 +13,7 @@ internal static class LayoutPurposeAreaExtensions
         /// <summary>
         /// The name of the area, as the forms show it above its kinds of slides.
         /// </summary>
-        public string Label() => area switch
+        public string Label => area switch
         {
             LayoutPurposeArea.FRAMING => TB("Structure and framing"),
             LayoutPurposeArea.GENERAL => TB("General content"),

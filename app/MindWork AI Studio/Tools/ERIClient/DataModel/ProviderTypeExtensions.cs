@@ -8,7 +8,7 @@ public static class ProviderTypeExtensions
     
     extension(ProviderType providerType)
     {
-        public string Explain() => providerType switch
+        public string Explanation => providerType switch
         {
             ProviderType.NONE => TB("The related data is not allowed to be sent to any LLM provider. This means that this data source cannot be used at the moment."),
             ProviderType.ANY => TB("The related data can be sent to any provider, regardless of where it is hosted (cloud or self-hosted)."),

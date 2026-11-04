@@ -8,7 +8,7 @@ public static class PromptInjectionFindingCategoryExtensions
 
     extension(PromptInjectionFindingCategory category)
     {
-        public string GetDisplayName() => category switch
+        public string DisplayName => category switch
         {
             PromptInjectionFindingCategory.OVERRIDE => TB("Attempt to override instructions"),
             PromptInjectionFindingCategory.ROLE_OVERRIDE => TB("Attempt to change the AI's role"),

@@ -173,7 +173,7 @@ public static partial class Pandoc
             if (string.IsNullOrWhiteSpace(uri))
             {
                 await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("AI Studio couldn't install Pandoc because the archive type is unknown.")));
-                LOG.LogError("Pandoc was not installed, no archive is available for architecture '{Architecture}'.", CPU_ARCHITECTURE.ToUserFriendlyName());
+                LOG.LogError("Pandoc was not installed, no archive is available for architecture '{Architecture}'.", CPU_ARCHITECTURE.UserFriendlyName);
                 return;
             }
 
@@ -477,7 +477,7 @@ public static partial class Pandoc
                 return $"{baseUri}arm64-macOS.pkg";
             
             default:
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, string.Format(TB("Installers are not available on {0} systems."), CPU_ARCHITECTURE.ToUserFriendlyName())));
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, string.Format(TB("Installers are not available on {0} systems."), CPU_ARCHITECTURE.UserFriendlyName)));
                 return string.Empty;
         }
     }

@@ -147,7 +147,7 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
     private string GetMinimumProviderConfidenceName()
     {
         var confidence = this.item is null ? ConfidenceLevel.NONE : this.ToolRegistry.GetMinimumProviderConfidence(this.item.Id);
-        return confidence is ConfidenceLevel.NONE ? T("No minimum confidence level chosen") : confidence.GetName();
+        return confidence is ConfidenceLevel.NONE ? T("No minimum confidence level chosen") : confidence.Name;
     }
 
     private async Task Export()

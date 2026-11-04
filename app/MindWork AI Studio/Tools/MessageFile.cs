@@ -32,12 +32,12 @@ public sealed record MessageFile(int Ordinal, int Position, string Caption, File
     /// Returns the name of the file's type as shown to the user, for example "Webpage (.html)" or
     /// "Python (.py)".
     /// </summary>
-    public string ToName() => this.IsSourceCode ? this.Language.ToName() : this.Format.ToName();
+    public string ToName() => this.IsSourceCode ? this.Language.ToName() : this.Format.Name;
 
     /// <summary>
     /// Returns the icon of the file's type.
     /// </summary>
-    public string ToIcon() => this.Format.ToIcon();
+    public string ToIcon() => this.Format.Icon;
 
     /// <summary>
     /// Returns what tells a file of this type apart: its extension, for example ".html", or the

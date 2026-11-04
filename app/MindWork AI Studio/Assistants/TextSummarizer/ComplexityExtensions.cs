@@ -6,7 +6,7 @@ public static class ComplexityExtensions
     
     extension(Complexity complexity)
     {
-        public string Name() => complexity switch
+        public string Name => complexity switch
         {
             Complexity.NO_CHANGE => TB("No change in complexity"),
         

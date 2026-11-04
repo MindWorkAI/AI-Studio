@@ -6,7 +6,7 @@ public static class BatchProcessingOutputModeExtensions
 
     extension(BatchProcessingOutputMode outputMode)
     {
-        public string Name() => outputMode switch
+        public string Name => outputMode switch
         {
             BatchProcessingOutputMode.INDIVIDUAL_FILES => TB("One file per document"),
             BatchProcessingOutputMode.TABLE_ONLY => TB("One CSV results table, where each answer becomes one row"),

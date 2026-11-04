@@ -12,8 +12,8 @@ public static class ReadWebContentStepsExtensions
         /// <summary>
         /// Gets the text representation of a given ReadWebContentSteps enum value.
         /// </summary>
-        /// <returns>>The text representation of the process step.</returns>
-        public string GetText() => step switch
+        /// <value>The text representation of the process step.</value>
+        public string Text => step switch
         {
             ReadWebContentSteps.START => TB("Start"),
             ReadWebContentSteps.LOADING => TB("Loading"),

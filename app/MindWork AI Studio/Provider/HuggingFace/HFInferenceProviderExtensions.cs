@@ -110,7 +110,7 @@ public static class HFInferenceProviderExtensions
             return string.IsNullOrEmpty(slug) ? "all" : slug;
         }
 
-        public string ToName() => provider switch
+        public string Name => provider switch
         {
             HFInferenceProvider.AUTOMATIC => TB("Automatic: the fastest provider"),
             HFInferenceProvider.CHEAPEST => TB("Automatic: the cheapest provider"),

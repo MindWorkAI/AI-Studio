@@ -20,7 +20,7 @@
                         if (provider.ProvideEmbeddingAPI() || provider is LLMProviders.NONE)
                         {
                             <MudSelectItem Value="@provider">
-                                <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.ToName()" />
+                                <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.Name" />
                             </MudSelectItem>
                         }
                     }
@@ -66,7 +66,7 @@
                             if (host.IsEmbeddingSupported())
                             {
                                 <MudSelectItem Value="@host">
-                                    @host.Name()
+                                    @host.Name
                                 </MudSelectItem>
                             }
                         }
@@ -81,7 +81,7 @@
                             @if (inferenceProvider.SupportsEmbeddings())
                             {
                                 <MudSelectItem Value="@inferenceProvider">
-                                    @inferenceProvider.ToName()
+                                    @inferenceProvider.Name
                                 </MudSelectItem>
                             }
                         }

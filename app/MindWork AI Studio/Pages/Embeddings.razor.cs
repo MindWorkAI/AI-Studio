@@ -322,14 +322,14 @@ public partial class Embeddings : MSGComponentBase
         if (failure.FailureReason is not ProviderRequestFailureReason.NONE)
         {
             var isFixedInSettings = failure.FailureReason.IsFixedInProviderSettings();
-            return new FailureCause(isFixedInSettings ? 0 : 1, failure.FailureReason.GetName(), isFixedInSettings ? Icons.Material.Filled.Key : Icons.Material.Filled.CloudOff, Color.Error, false, isFixedInSettings, true);
+            return new FailureCause(isFixedInSettings ? 0 : 1, failure.FailureReason.Name, isFixedInSettings ? Icons.Material.Filled.Key : Icons.Material.Filled.CloudOff, Color.Error, false, isFixedInSettings, true);
         }
 
         //
         // Codes without a name of their own carry everything they know in the message of the
         // single file, which is why those groups show that message per file:
         //
-        var causeName = failure.ExtractionCode.GetIndexingCauseName();
+        var causeName = failure.ExtractionCode.IndexingCauseName;
         var hasCauseName = !string.IsNullOrWhiteSpace(causeName);
         var title = hasCauseName ? causeName : T("Other cause");
 

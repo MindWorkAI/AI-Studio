@@ -60,8 +60,8 @@ internal static class FileExtractionErrorCodeExtensions
         /// Used to group the files of an indexing run by what happened to them: nine hundred entries
         /// which all say the same sentence are one cause, not nine hundred.
         /// </remarks>
-        /// <returns>The localized name of the cause, or an empty text when the code has none.</returns>
-        internal string GetIndexingCauseName() => code switch
+        /// <value>The localized name of the cause, or an empty text when the code has none.</value>
+        internal string IndexingCauseName => code switch
         {
             FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No readable text"),
             FileExtractionErrorCode.NO_CONTENT => TB("No content"),

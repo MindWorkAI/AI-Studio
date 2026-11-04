@@ -40,8 +40,8 @@ public static class LLMProvidersExtensions
         /// This value is UI text and may be localized. Do not use it for persisted IDs, secret namespaces,
         /// or other stable identifiers.
         /// </remarks>
-        /// <returns>The human-readable name of the provider.</returns>
-        public string ToName() => provider.ToName(translate: true);
+        /// <value>The human-readable name of the provider.</value>
+        public string Name => provider.ToName(translate: true);
 
         /// <summary>
         /// Returns the human-readable name of the provider.

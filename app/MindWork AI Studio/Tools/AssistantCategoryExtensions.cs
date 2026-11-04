@@ -8,7 +8,7 @@ public static class AssistantCategoryExtensions
     
     extension(AssistantCategory category)
     {
-        public string Name() => category switch
+        public string Name => category switch
         {
             AssistantCategory.AS_IS => TB("Select the assistant category"),
             AssistantCategory.GENERAL => TB("General"),
@@ -23,12 +23,15 @@ public static class AssistantCategoryExtensions
             _ => string.Empty,
         };
 
-        public string NameSelecting()
+        public string NameSelecting
         {
-            if(category is AssistantCategory.AS_IS)
-                return TB("Please select the assistant category");
+            get
+            {
+                if(category is AssistantCategory.AS_IS)
+                    return TB("Please select the assistant category");
 
-            return category.Name();
+                return category.Name;
+            }
         }
     }
 }

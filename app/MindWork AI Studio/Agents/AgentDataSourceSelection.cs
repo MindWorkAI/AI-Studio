@@ -153,12 +153,12 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
 
         if (!agentProvider.AllowsDataSourceAccess(this.SettingsManager, requiredDataSecurity, requiredConfidenceLevel))
         {
-            logger.LogWarning($"The agent for data source selection uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).GetName()}', but the available data sources require data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.GetName()}'. The agent cannot select data sources.");
+            logger.LogWarning($"The agent for data source selection uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).Name}', but the available data sources require data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.Name}'. The agent cannot select data sources.");
             return [];
         }
 
         // Assign the provider settings to the agent:
-        logger.LogInformation($"The agent for the data source selection uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
+        logger.LogInformation($"The agent for the data source selection uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.Name}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.Name}).");
         this.ProviderSettings = agentProvider;
 
         //

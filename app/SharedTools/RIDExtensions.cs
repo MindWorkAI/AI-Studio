@@ -50,7 +50,7 @@ public static class RIDExtensions
             _ => string.Empty,
         };
 
-        public string ToUserFriendlyName() => rid switch
+        public string UserFriendlyName => rid switch
         {
             RID.WIN_X64 => "Windows x64",
             RID.WIN_ARM64 => "Windows ARM64",

@@ -11,7 +11,7 @@ public static class MailboxProviderTemplateExtensions
         /// <summary>
         /// What the user enters as the username at this provider.
         /// </summary>
-        public string GetDescription() => format switch
+        public string Description => format switch
         {
             MailboxUsernameFormat.EMAIL_ADDRESS => TB("Your full e-mail address."),
             MailboxUsernameFormat.ADDRESS_NAME_PART => TB("The part of your e-mail address before the @ sign. When that does not work, try your full e-mail address."),

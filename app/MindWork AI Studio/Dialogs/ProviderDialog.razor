@@ -23,7 +23,7 @@
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         <MudSelectItem Value="@provider">
-                            <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.ToName()" />
+                            <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.Name" />
                         </MudSelectItem>
                     }
                 </MudSelect>
@@ -68,7 +68,7 @@
                             @if (host.IsChatSupported())
                             {
                                 <MudSelectItem Value="@host">
-                                    @host.Name()
+                                    @host.Name
                                 </MudSelectItem>
                             }
                         }
@@ -83,7 +83,7 @@
                             @if (inferenceProvider.SupportsChat())
                             {
                                 <MudSelectItem Value="@inferenceProvider">
-                                    @inferenceProvider.ToName()
+                                    @inferenceProvider.Name
                                 </MudSelectItem>
                             }
                         }

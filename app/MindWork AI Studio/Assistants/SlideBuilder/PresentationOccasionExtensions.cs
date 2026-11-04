@@ -7,7 +7,7 @@ public static class PresentationOccasionExtensions
     /// <param name="occasion">The occasion.</param>
     extension(PresentationOccasion occasion)
     {
-        public string Name() => occasion switch
+        public string Name => occasion switch
         {
             PresentationOccasion.UNSPECIFIED => TB("Unspecified occasion"),
             PresentationOccasion.TALK => TB("Talk"),

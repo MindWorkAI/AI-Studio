@@ -6,7 +6,7 @@ public static class AudienceExpertiseExtensions
 
     extension(AudienceExpertise expertise)
     {
-        public string Name() => expertise switch
+        public string Name => expertise switch
         {
             AudienceExpertise.UNSPECIFIED => TB("Unspecified expertise"),
             AudienceExpertise.NON_EXPERTS => TB("No expertise"),

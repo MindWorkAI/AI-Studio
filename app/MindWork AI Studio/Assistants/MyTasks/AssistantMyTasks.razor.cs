@@ -182,7 +182,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
 
     private ContentBlock CloneHiddenUserBlockWithoutAttachments(ContentBlock block)

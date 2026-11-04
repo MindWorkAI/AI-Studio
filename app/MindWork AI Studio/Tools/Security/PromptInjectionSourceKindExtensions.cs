@@ -8,7 +8,7 @@ public static class PromptInjectionSourceKindExtensions
 
     extension(PromptInjectionSourceKind kind)
     {
-        public string GetDisplayName() => kind switch
+        public string DisplayName => kind switch
         {
             PromptInjectionSourceKind.WEB_CONTENT => TB("Web content"),
             PromptInjectionSourceKind.FILE_CONTENT => TB("File content"),

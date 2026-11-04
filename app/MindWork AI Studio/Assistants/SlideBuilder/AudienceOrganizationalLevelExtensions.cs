@@ -6,7 +6,7 @@ public static class AudienceOrganizationalLevelExtensions
 
     extension(AudienceOrganizationalLevel level)
     {
-        public string Name() => level switch
+        public string Name => level switch
         {
             AudienceOrganizationalLevel.UNSPECIFIED => TB("Unspecified organizational level"),
             AudienceOrganizationalLevel.TRAINEES => TB("Trainees"),

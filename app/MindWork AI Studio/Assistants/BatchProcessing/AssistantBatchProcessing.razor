@@ -63,7 +63,7 @@
     @foreach (var source in Enum.GetValues<BatchProcessingPromptSource>())
     {
         <MudSelectItem Value="@source">
-            @source.Name()
+            @source.Name
         </MudSelectItem>
     }
 </MudSelect>
@@ -149,7 +149,7 @@ else
     @foreach (var mode in Enum.GetValues<BatchProcessingOutputMode>())
     {
         <MudSelectItem Value="@mode">
-            @mode.Name()
+            @mode.Name
         </MudSelectItem>
     }
 </MudSelect>
@@ -160,7 +160,7 @@ else
         @foreach (var format in FileExportFormatExtensions.ANSWER_FORMATS)
         {
             <MudSelectItem Value="@format">
-                @format.ToName()
+                @format.Name
             </MudSelectItem>
         }
     </MudSelect>
@@ -179,7 +179,7 @@ else
         @foreach (var separator in Enum.GetValues<BatchProcessingCsvSeparator>())
         {
             <MudSelectItem Value="@separator">
-                @separator.Name()
+                @separator.Name
             </MudSelectItem>
         }
     </MudSelect>

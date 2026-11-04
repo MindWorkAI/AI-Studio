@@ -51,27 +51,27 @@ public partial class SettingsDialogBatchProcessing : SettingsDialogBase
     [
         .. Enum
             .GetValues<BatchProcessingPromptSource>()
-            .Select(value => new ConfigurationSelectData<BatchProcessingPromptSource>(value.Name(), value))
+            .Select(value => new ConfigurationSelectData<BatchProcessingPromptSource>(value.Name, value))
     ];
 
     private IReadOnlyList<ConfigurationSelectData<BatchProcessingOutputMode>> OutputModeData =>
     [
         .. Enum
             .GetValues<BatchProcessingOutputMode>()
-            .Select(value => new ConfigurationSelectData<BatchProcessingOutputMode>(value.Name(), value))
+            .Select(value => new ConfigurationSelectData<BatchProcessingOutputMode>(value.Name, value))
     ];
 
     private static IReadOnlyList<ConfigurationSelectData<FileExportFormat>> ResultFileFormatData =>
     [
         .. FileExportFormatExtensions.ANSWER_FORMATS
-            .Select(value => new ConfigurationSelectData<FileExportFormat>(value.ToName(), value))
+            .Select(value => new ConfigurationSelectData<FileExportFormat>(value.Name, value))
     ];
 
     private IReadOnlyList<ConfigurationSelectData<BatchProcessingCsvSeparator>> CsvSeparatorData =>
     [
         .. Enum
             .GetValues<BatchProcessingCsvSeparator>()
-            .Select(value => new ConfigurationSelectData<BatchProcessingCsvSeparator>(value.Name(), value))
+            .Select(value => new ConfigurationSelectData<BatchProcessingCsvSeparator>(value.Name, value))
     ];
 
     private string? ValidateCustomCsvSeparator(string separator)

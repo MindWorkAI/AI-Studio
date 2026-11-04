@@ -8,7 +8,7 @@ public static class ConfidenceSchemesExtensions
     
     extension(ConfidenceSchemes scheme)
     {
-        public string GetListDescription() => scheme switch
+        public string ListDescription => scheme switch
         {
             ConfidenceSchemes.TRUST_ALL => TB("Trust all LLM providers"),
             ConfidenceSchemes.TRUST_USA_EUROPE => TB("Trust LLM providers from the USA and Europe"),

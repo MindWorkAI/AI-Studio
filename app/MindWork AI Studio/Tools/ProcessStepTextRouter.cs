@@ -22,7 +22,7 @@ public static class ProcessStepTextRouter
     /// <returns>The text representation of the process step.</returns>
     public static string GetText<T>(T step) where T : struct, Enum => step switch
     {
-        ReadWebContentSteps x => x.GetText(),
+        ReadWebContentSteps x => x.Text,
         _ => DeriveName(step)
     };
 

@@ -6,7 +6,7 @@ public static class PluginTargetGroupExtensions
     
     extension(PluginTargetGroup group)
     {
-        public string Name() => group switch
+        public string Name => group switch
         {
             PluginTargetGroup.NONE => TB("No target group"),
 

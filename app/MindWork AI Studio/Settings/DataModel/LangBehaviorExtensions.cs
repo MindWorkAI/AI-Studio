@@ -8,7 +8,7 @@ public static class LangBehaviorExtensions
     
     extension(LangBehavior langBehavior)
     {
-        public string Name() => langBehavior switch
+        public string Name => langBehavior switch
         {
             LangBehavior.AUTO => TB("Choose the language automatically, based on your system language."),
             LangBehavior.MANUAL => TB("Choose the language manually."),

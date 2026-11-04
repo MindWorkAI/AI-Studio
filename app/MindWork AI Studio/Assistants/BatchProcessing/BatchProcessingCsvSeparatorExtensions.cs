@@ -8,7 +8,7 @@ public static class BatchProcessingCsvSeparatorExtensions
 
     extension(BatchProcessingCsvSeparator separator)
     {
-        public string Name() => separator switch
+        public string Name => separator switch
         {
             BatchProcessingCsvSeparator.COMMA => TB("Comma (,)"),
             BatchProcessingCsvSeparator.SEMICOLON => TB("Semicolon (;)"),

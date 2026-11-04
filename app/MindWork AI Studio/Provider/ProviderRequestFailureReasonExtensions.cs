@@ -15,7 +15,7 @@ public static class ProviderRequestFailureReasonExtensions
         /// Meant as a label beside the full message, so a list of failures can be scanned instead of
         /// read: twenty entries which all say API key are one problem, not twenty.
         /// </remarks>
-        public string GetName() => failureReason switch
+        public string Name => failureReason switch
         {
             ProviderRequestFailureReason.INSUFFICIENT_QUOTA => TB("No credits left"),
             ProviderRequestFailureReason.TOO_MANY_REQUESTS => TB("Too many requests"),

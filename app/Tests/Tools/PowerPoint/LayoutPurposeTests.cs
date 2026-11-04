@@ -15,8 +15,8 @@ public sealed class LayoutPurposeTests
         {
             foreach (var purpose in Enum.GetValues<LayoutPurpose>())
             {
-                Assert.That(purpose.Label(), Is.Not.Empty, $"The kind of slide {purpose} has no label.");
-                Assert.That(purpose.Question(), Does.EndWith("?"), $"The kind of slide {purpose} has no question.");
+                Assert.That(purpose.Label, Is.Not.Empty, $"The kind of slide {purpose} has no label.");
+                Assert.That(purpose.Question, Does.EndWith("?"), $"The kind of slide {purpose} has no question.");
                 Assert.That(purpose.PromptDescription(), Is.Not.Empty.And.Not.EndWith("."), $"The kind of slide {purpose} has no description, or one which ends where the rule for the model goes on.");
             }
         }
@@ -28,7 +28,7 @@ public sealed class LayoutPurposeTests
     [Test]
     public void EveryKindOfSlideHasALabelOfItsOwn()
     {
-        var labels = Enum.GetValues<LayoutPurpose>().Select(purpose => purpose.Label()).ToList();
+        var labels = Enum.GetValues<LayoutPurpose>().Select(purpose => purpose.Label).ToList();
         Assert.That(labels, Is.Unique);
     }
 

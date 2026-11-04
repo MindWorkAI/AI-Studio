@@ -6,7 +6,7 @@ public static class ProgrammingLanguagesExtensions
     
     extension(ProgrammingLanguages language)
     {
-        public string Name() => language switch
+        public string Name => language switch
         { 
             ProgrammingLanguages.NONE => TB("No programming language selected"),
         

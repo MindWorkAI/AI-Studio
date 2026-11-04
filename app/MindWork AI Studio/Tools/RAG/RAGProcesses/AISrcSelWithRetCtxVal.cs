@@ -175,7 +175,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     chatThread.RequireProviderConfidence(dataSource.ConfidenceLevel);
 
                 if (previousRequiredProviderConfidence != chatThread.RequiredProviderConfidence)
-                    LOGGER.LogInformation($"The required provider confidence of the chat thread was updated from '{previousRequiredProviderConfidence.GetName()}' to '{chatThread.RequiredProviderConfidence.GetName()}'.");
+                    LOGGER.LogInformation($"The required provider confidence of the chat thread was updated from '{previousRequiredProviderConfidence.Name}' to '{chatThread.RequiredProviderConfidence.Name}'.");
             }
             
             //

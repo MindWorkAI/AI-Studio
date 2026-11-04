@@ -51,8 +51,8 @@ public sealed class ConfigurationSnippetParser
             var section = parser.ReadBracketedString();
             if (section != expectedSection)
                 throw new FormatException(PluginConfigurationObjectDescriptors.TryGet(section, out var otherDescriptor)
-                    ? string.Format(TB("The pasted configuration describes the type '{0}', but only the type '{1}' can be imported here."), otherDescriptor.Type.GetName(), type.GetName())
-                    : string.Format(TB("The pasted configuration does not describe the type '{0}', which can be imported here."), type.GetName()));
+                    ? string.Format(TB("The pasted configuration describes the type '{0}', but only the type '{1}' can be imported here."), otherDescriptor.Type.Name, type.Name)
+                    : string.Format(TB("The pasted configuration does not describe the type '{0}', which can be imported here."), type.Name));
 
             parser.Expect('[');
             parser.Expect('#');

@@ -4,7 +4,7 @@ public static class BiasCategoryExtensions
 {
     extension(BiasCategory biasCategory)
     {
-        public string ToName() => biasCategory switch
+        public string Name => biasCategory switch
         {
             BiasCategory.WHAT_SHOULD_WE_REMEMBER => "What should we remember?",
             BiasCategory.TOO_MUCH_INFORMATION => "Too much information",

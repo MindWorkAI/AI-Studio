@@ -39,7 +39,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 
     protected override string SendToChatVisibleUserPromptText =>
         $"""
-        {string.Format(T("Translate the following text to {0}:"), this.selectedTargetLanguage is CommonLanguages.OTHER ? this.customTargetLanguage : this.selectedTargetLanguage.Name())}
+        {string.Format(T("Translate the following text to {0}:"), this.selectedTargetLanguage is CommonLanguages.OTHER ? this.customTargetLanguage : this.selectedTargetLanguage.Name)}
         
         {this.inputText}
         """;

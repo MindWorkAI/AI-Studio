@@ -6,7 +6,7 @@ public static class AuthExtensions
     
     extension(Auth auth)
     {
-        public string Name() => auth switch
+        public string Name => auth switch
         {
             Auth.NONE => TB("No login necessary: useful for public data sources"),
         

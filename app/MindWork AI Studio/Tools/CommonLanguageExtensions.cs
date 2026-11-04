@@ -8,7 +8,7 @@ public static class CommonLanguageExtensions
     
     extension(CommonLanguages language)
     {
-        public string Name() => language switch
+        public string Name => language switch
         {
             CommonLanguages.AS_IS => TB("Do not change the language"),
         
@@ -51,14 +51,14 @@ public static class CommonLanguageExtensions
             CommonLanguages.AS_IS => "Use the language the text is written in for the summary.",
             CommonLanguages.OTHER => $"Output your summary in {customLanguage}.",
 
-            _ => $"Output your summary in {language.Name()} ({language}).",
+            _ => $"Output your summary in {language.Name} ({language}).",
         };
 
         public string PromptTranslation(string customLanguage) => language switch
         {
             CommonLanguages.OTHER => $"Translate the source text to {customLanguage}.",
 
-            _ => $"Translate the source text to {language.Name()} ({language}).",
+            _ => $"Translate the source text to {language.Name} ({language}).",
         };
 
         public string PromptGeneralPurpose(string customLanguage) => language switch
@@ -66,23 +66,29 @@ public static class CommonLanguageExtensions
             CommonLanguages.AS_IS => "Use the language the user input is written in for the output.",
             CommonLanguages.OTHER => $"use the language {customLanguage} for your output.",
 
-            _ => $"Use the language {language.Name()} ({language}) for your output.",
+            _ => $"Use the language {language.Name} ({language}) for your output.",
         };
 
-        public string NameSelecting()
+        public string NameSelecting
         {
-            if(language is CommonLanguages.AS_IS)
-                return TB("Please select the target language");
-        
-            return language.Name();
+            get
+            {
+                if(language is CommonLanguages.AS_IS)
+                    return TB("Please select the target language");
+            
+                return language.Name;
+            }
         }
 
-        public string NameSelectingOptional()
+        public string NameSelectingOptional
         {
-            if(language is CommonLanguages.AS_IS)
-                return TB("Do not specify the language");
-        
-            return language.Name();
+            get
+            {
+                if(language is CommonLanguages.AS_IS)
+                    return TB("Do not specify the language");
+            
+                return language.Name;
+            }
         }
     }
 }

@@ -58,8 +58,8 @@ public static class FileExportFormatExtensions
         /// <summary>
         /// Returns the name of the format as shown to the user.
         /// </summary>
-        /// <returns>The name of the format.</returns>
-        public string ToName() => format switch
+        /// <value>The name of the format.</value>
+        public string Name => format switch
         {
             FileExportFormat.MICROSOFT_WORD => TB("Microsoft Word (.docx)"),
             FileExportFormat.OPEN_DOCUMENT_TEXT => TB("OpenDocument Text (.odt), e.g. LibreOffice"),
@@ -76,8 +76,8 @@ public static class FileExportFormatExtensions
         /// <summary>
         /// Returns the icon of the format.
         /// </summary>
-        /// <returns>The icon of the format.</returns>
-        public string ToIcon() => format switch
+        /// <value>The icon of the format.</value>
+        public string Icon => format switch
         {
             FileExportFormat.MICROSOFT_WORD => Icons.Custom.FileFormats.FileWord,
             FileExportFormat.OPEN_DOCUMENT_TEXT => Icons.Custom.FileFormats.FileDocument,

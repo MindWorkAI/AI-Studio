@@ -6,7 +6,7 @@ public static class OperatingSystemExtensions
     
     extension(OperatingSystem os)
     {
-        public string Name() => os switch
+        public string Name => os switch
         {
             OperatingSystem.NONE => TB("No operating system specified"),
         

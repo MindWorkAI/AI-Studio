@@ -8,7 +8,7 @@ public static class AssistantAuditLevelExtensions
 
     extension(AssistantAuditLevel level)
     {
-        public string GetName() => level switch
+        public string Name => level switch
         {
             AssistantAuditLevel.DANGEROUS => TB("Dangerous"),
             AssistantAuditLevel.CAUTION => TB("Concerning"),
@@ -16,7 +16,7 @@ public static class AssistantAuditLevelExtensions
             _ => TB("Unknown"),
         };
 
-        public Severity GetSeverity() => level switch
+        public Severity Severity => level switch
         {
             AssistantAuditLevel.DANGEROUS => Severity.Error,
             AssistantAuditLevel.CAUTION => Severity.Warning,
@@ -24,7 +24,7 @@ public static class AssistantAuditLevelExtensions
             _ => Severity.Info,
         };
 
-        public Color GetColor() => level switch
+        public Color Color => level switch
         {
             AssistantAuditLevel.DANGEROUS => Color.Error,
             AssistantAuditLevel.CAUTION => Color.Warning,
@@ -32,7 +32,7 @@ public static class AssistantAuditLevelExtensions
             _ => Color.Default,
         };
 
-        public string GetIcon() => level switch
+        public string Icon => level switch
         {
             AssistantAuditLevel.DANGEROUS => Icons.Material.Filled.Dangerous,
             AssistantAuditLevel.CAUTION => Icons.Material.Filled.Warning,

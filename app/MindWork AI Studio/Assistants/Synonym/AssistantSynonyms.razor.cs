@@ -157,7 +157,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
             CommonLanguages.AS_IS => "source",
             CommonLanguages.OTHER => this.customTargetLanguage,
             
-            _ => $"{this.selectedLanguage.Name()}",
+            _ => $"{this.selectedLanguage.Name}",
         };
 
         if (string.IsNullOrWhiteSpace(lang))

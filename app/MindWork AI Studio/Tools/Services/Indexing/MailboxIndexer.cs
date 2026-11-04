@@ -118,7 +118,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
         if (!policy.IsAllowed(mailbox.Host))
         {
             logger.LogInformation("Not connecting to mailbox '{MailboxId}' because the organization allows only its own mail servers, and this one is none of them.", mailbox.Id);
-            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(MailboxConnectionFailure.SERVER_NOT_ALLOWED.GetDescription(), DataSourceAttention.SERVER_NOT_ALLOWED);
+            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(MailboxConnectionFailure.SERVER_NOT_ALLOWED.Description, DataSourceAttention.SERVER_NOT_ALLOWED);
             return IndexedRunOutcome.DONE;
         }
 
@@ -170,7 +170,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
                 progress.PublishRunFailure(GetAuthFailureMessage(failure), DataSourceAttention.AUTH_FAILED);
             }
             else
-                progress.PublishRunFailure(e.Failure.GetDescription(), e.Failure is MailboxConnectionFailure.SERVER_NOT_ALLOWED ? DataSourceAttention.SERVER_NOT_ALLOWED : DataSourceAttention.NONE);
+                progress.PublishRunFailure(e.Failure.Description, e.Failure is MailboxConnectionFailure.SERVER_NOT_ALLOWED ? DataSourceAttention.SERVER_NOT_ALLOWED : DataSourceAttention.NONE);
 
             return IndexedRunOutcome.DONE;
         }
@@ -307,7 +307,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             this.RecordConnectionFailure(mailbox.Id, e.Failure);
             await context.OptimizeCollectionIfNeededAsync("mailbox sync stopped", token);
             progress ??= await this.CreateStoredStateProgressAsync(context, token);
-            progress.PublishRunFailure(e.Failure.GetDescription());
+            progress.PublishRunFailure(e.Failure.Description);
             return IndexedRunOutcome.DONE;
         }
     }

@@ -11,7 +11,7 @@ public static class MailboxConnectionFailureExtensions
         /// <summary>
         /// What went wrong, and what the user can do about it.
         /// </summary>
-        public string GetDescription() => failure switch
+        public string Description => failure switch
         {
             MailboxConnectionFailure.AUTHENTICATION_FAILED => TB("The server rejected the username or the password. Some providers require an app password instead of your usual password."),
             MailboxConnectionFailure.NETWORK_UNAVAILABLE => TB("The server could not be reached. Please check the host and the port, and whether you need a VPN connection."),

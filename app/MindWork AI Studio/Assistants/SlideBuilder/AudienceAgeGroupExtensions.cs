@@ -6,7 +6,7 @@ public static class AudienceAgeGroupExtensions
 
     extension(AudienceAgeGroup ageGroup)
     {
-        public string Name() => ageGroup switch
+        public string Name => ageGroup switch
         {
             AudienceAgeGroup.UNSPECIFIED => TB("Unspecified age group"),
             AudienceAgeGroup.CHILDREN => TB("Children"),

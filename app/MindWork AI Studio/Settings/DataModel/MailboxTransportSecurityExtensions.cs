@@ -18,7 +18,7 @@ public static class MailboxTransportSecurityExtensions
 
     extension(MailboxTransportSecurity transportSecurity)
     {
-        public string GetName() => transportSecurity switch
+        public string Name => transportSecurity switch
         {
             MailboxTransportSecurity.SSL_ON_CONNECT => TB("TLS from the start (usually port 993)"),
             MailboxTransportSecurity.STARTTLS => TB("STARTTLS (usually port 143)"),

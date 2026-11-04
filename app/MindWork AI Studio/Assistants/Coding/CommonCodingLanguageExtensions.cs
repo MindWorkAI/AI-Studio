@@ -6,7 +6,7 @@ public static class CommonCodingLanguageExtensions
     
     extension(CommonCodingLanguages language)
     {
-        public string Name() => language switch
+        public string Name => language switch
         { 
             CommonCodingLanguages.NONE => TB("None"),
         

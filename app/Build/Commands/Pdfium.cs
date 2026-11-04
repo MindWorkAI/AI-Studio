@@ -14,7 +14,7 @@ public static class Pdfium
 
     public static async Task InstallAsync(RID rid, string version, bool offline)
     {
-        Console.Write($"- Installing Pdfium {version} for {rid.ToUserFriendlyName()} ...");
+        Console.Write($"- Installing Pdfium {version} for {rid.UserFriendlyName} ...");
 
         var cwd = Environment.GetRustRuntimeDirectory();
         var pdfiumUrl = GetPdfiumDownloadUrl(rid, version);
@@ -35,7 +35,7 @@ public static class Pdfium
 
         if (string.IsNullOrWhiteSpace(library.Path))
         {
-            Console.WriteLine($" failed to find the library path for {rid.ToUserFriendlyName()}");
+            Console.WriteLine($" failed to find the library path for {rid.UserFriendlyName}");
             return;
         }
 
@@ -50,7 +50,7 @@ public static class Pdfium
         using var response = await CLIENT.GetAsync(pdfiumUrl, HttpCompletionOption.ResponseHeadersRead);
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine($" failed to download Pdfium {version} for {rid.ToUserFriendlyName()} from {pdfiumUrl}");
+            Console.WriteLine($" failed to download Pdfium {version} for {rid.UserFriendlyName} from {pdfiumUrl}");
             return;
         }
 

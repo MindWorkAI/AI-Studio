@@ -179,7 +179,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             };
         }
 
-        logger.LogInformation($"The assistant plugin audit agent uses the provider '{provider.InstanceName}' ({provider.UsedLLMProvider.ToName()}, confidence={provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
+        logger.LogInformation($"The assistant plugin audit agent uses the provider '{provider.InstanceName}' ({provider.UsedLLMProvider.Name}, confidence={provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.Name}).");
 
         var promptPreview = await plugin.BuildAuditPromptPreviewAsync(token);
         var promptFallbackPreview = plugin.BuildAuditPromptFallbackPreview();

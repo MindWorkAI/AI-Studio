@@ -27,12 +27,12 @@ internal static partial class LayoutPurposeExtensions
         /// <summary>
         /// The short name of the choice, e.g., "Layout for chapters".
         /// </summary>
-        public string Label() => Describe(purpose).Label;
+        public string Label => Describe(purpose).Label;
 
         /// <summary>
         /// The question the choice answers, which says which slides it applies to.
         /// </summary>
-        public string Question() => Describe(purpose).Question;
+        public string Question => Describe(purpose).Question;
 
         /// <summary>
         /// Describes the slides of this kind for the model, so that it knows which of its slides a choice applies to.
@@ -69,9 +69,9 @@ internal static partial class LayoutPurposeExtensions
         /// <summary>
         /// The help below the choice: its question, and whether a choice adds such a slide.
         /// </summary>
-        public string Help() => purpose.ChoiceAddsSlide()
-            ? $"{purpose.Question()} {TB("Choosing a layout also adds such a slide to the presentation.")}"
-            : purpose.Question();
+        public string Help => purpose.ChoiceAddsSlide()
+            ? $"{purpose.Question} {TB("Choosing a layout also adds such a slide to the presentation.")}"
+            : purpose.Question;
     }
 
     private static LayoutPurposeInfo Describe(LayoutPurpose purpose) =>

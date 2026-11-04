@@ -97,7 +97,7 @@ else
         @foreach (var language in Enum.GetValues<ProgrammingLanguages>())
         {
             <MudSelectItem Value="@language">
-                @language.Name()
+                @language.Name
             </MudSelectItem>
         }
     </MudSelect>
@@ -130,7 +130,7 @@ else
         @foreach (var dataSource in Enum.GetValues<DataSources>())
         {
             <MudSelectItem Value="@dataSource">
-                @dataSource.Name()
+                @dataSource.Name
             </MudSelectItem>
         }
     </MudSelect>
@@ -181,7 +181,7 @@ else
         @foreach (var authMethod in Enum.GetValues<Auth>())
         {
             <MudSelectItemExtended Value="@authMethod">
-                @authMethod.Name()
+                @authMethod.Name
             </MudSelectItemExtended>
         }
     </MudSelectExtended>
@@ -194,7 +194,7 @@ else
         @foreach (var os in Enum.GetValues<OperatingSystem>())
         {
             <MudSelectItem Value="@os">
-                @os.Name()
+                @os.Name
             </MudSelectItem>
         }
     </MudSelect>
@@ -208,7 +208,7 @@ else
     @foreach (var option in Enum.GetValues<AllowedLLMProviders>())
     {
         <MudSelectItem Value="@option">
-            @option.Description()
+            @option.Description
         </MudSelectItem>
     }
 </MudSelect>

@@ -6,7 +6,7 @@ public static class WritingStylesExtensions
     
     extension(WritingStyles style)
     {
-        public string Name() => style switch
+        public string Name => style switch
         {
             WritingStyles.EVERYDAY => TB("Everyday (personal texts, social media)"),
             WritingStyles.BUSINESS => TB("Business (business emails, reports, presentations)"),

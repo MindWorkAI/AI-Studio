@@ -15,8 +15,8 @@ public static class DataSourceTypeExtension
         /// <summary>
         /// Get the display name of the data source type.
         /// </summary>
-        /// <returns>The display name of the data source type.</returns>
-        public string GetDisplayName() => type switch
+        /// <value>The display name of the data source type.</value>
+        public string DisplayName => type switch
         {
             DataSourceType.LOCAL_FILE => TB("Local File"),
             DataSourceType.LOCAL_DIRECTORY => TB("Local Directory"),

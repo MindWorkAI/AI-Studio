@@ -9,7 +9,7 @@ public static class ConfidenceLevelExtensions
     
     extension(ConfidenceLevel level)
     {
-        public string GetName() => level switch
+        public string Name => level switch
         {
             ConfidenceLevel.NONE => TB("No provider selected"),
         

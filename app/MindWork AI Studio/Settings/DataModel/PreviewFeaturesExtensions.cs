@@ -9,7 +9,7 @@ public static class PreviewFeaturesExtensions
     /// <param name="feature">The preview feature to check.</param>
     extension(PreviewFeatures feature)
     {
-        public string GetPreviewDescription() => feature switch
+        public string PreviewDescription => feature switch
         {
             PreviewFeatures.PRE_WRITER_MODE_2024 => TB("Writer Mode: Experiments about how to write long texts using AI"),
             PreviewFeatures.PRE_RAG_2024 => TB("RAG: Preview of our RAG implementation where you can refer your files or integrate enterprise data within your company"),

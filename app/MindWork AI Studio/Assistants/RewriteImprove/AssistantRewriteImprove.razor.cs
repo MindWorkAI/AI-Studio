@@ -137,7 +137,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
             CommonLanguages.AS_IS => "the source language",
             CommonLanguages.OTHER => this.customTargetLanguage,
             
-            _ => $"{this.selectedTargetLanguage.Name()}",
+            _ => $"{this.selectedTargetLanguage.Name}",
         };
 
         if (string.IsNullOrWhiteSpace(lang))

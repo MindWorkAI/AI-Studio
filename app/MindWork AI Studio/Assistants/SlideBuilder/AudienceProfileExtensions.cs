@@ -6,7 +6,7 @@ public static class AudienceProfileExtensions
 
     extension(AudienceProfile profile)
     {
-        public string Name() => profile switch
+        public string Name => profile switch
         {
             AudienceProfile.UNSPECIFIED => TB("Unspecified audience profile"),
             AudienceProfile.STUDENTS => TB("Students"),

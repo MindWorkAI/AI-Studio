@@ -149,7 +149,7 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
         .Where(destination => destination.AllowSendTo())
         .Where(destination => destination != sender || destination is Components.CHAT)
         .Where(isVisible)
-        .OrderBy(destination => destination.Name().Length)
+        .OrderBy(destination => destination.Name.Length)
         .ToArray();
 
     private bool IsVisible(Components destination) => settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature());

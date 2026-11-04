@@ -8,7 +8,7 @@ public static class DataSourceSecurityExtensions
     
     extension(DataSourceSecurity security)
     {
-        public string ToSelectionText() => security switch
+        public string SelectionText => security switch
         {
             DataSourceSecurity.NOT_SPECIFIED => TB("Please select a security policy"),
         
@@ -18,7 +18,7 @@ public static class DataSourceSecurityExtensions
             _ => TB("Unknown security policy")
         };
 
-        public string ToInfoText() => security switch
+        public string InfoText => security switch
         {
             DataSourceSecurity.NOT_SPECIFIED => TB("The security of the data source is not specified yet. You cannot use this data source until you specify a security policy."),
         
@@ -28,7 +28,7 @@ public static class DataSourceSecurityExtensions
             _ => TB("Unknown security policy")
         };
 
-        public TextColor GetColor() => security switch
+        public TextColor Color => security switch
         {
             DataSourceSecurity.ALLOW_ANY => TextColor.WARN,
             DataSourceSecurity.SELF_HOSTED => TextColor.SUCCESS,

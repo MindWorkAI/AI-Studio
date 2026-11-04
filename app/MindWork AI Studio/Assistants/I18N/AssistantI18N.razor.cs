@@ -190,7 +190,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string SystemPromptLanguage() => this.activeSystemPromptLanguage ?? (this.selectedTargetLanguage switch
     {
         CommonLanguages.OTHER => this.customTargetLanguage,
-        _ => $"{this.selectedTargetLanguage.Name()}",
+        _ => $"{this.selectedTargetLanguage.Name}",
     });
 
     private async Task OnLanguagePluginChanged(Guid pluginId)

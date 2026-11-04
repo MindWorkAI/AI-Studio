@@ -81,7 +81,7 @@ public static class ComponentsExtensions
             _ => true,
         };
 
-        public string Name() => component switch
+        public string Name => component switch
         {
             Components.GRAMMAR_SPELLING_ASSISTANT => TB("Grammar & Spelling Assistant"),
             Components.TEXT_SUMMARIZER_ASSISTANT => TB("Text Summarizer Assistant"),

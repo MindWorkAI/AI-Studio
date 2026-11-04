@@ -6,7 +6,7 @@ public static class WritingStylesExtensions
     
     extension(WritingStyles style)
     {
-        public string Name() => style switch
+        public string Name => style switch
         {
             WritingStyles.ACADEMIC => TB("Academic"),
             WritingStyles.PERSONAL => TB("Personal"),

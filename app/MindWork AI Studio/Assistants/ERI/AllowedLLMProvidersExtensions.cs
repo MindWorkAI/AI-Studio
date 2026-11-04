@@ -6,7 +6,7 @@ public static class AllowedLLMProvidersExtensions
     
     extension(AllowedLLMProviders provider)
     {
-        public string Description() => provider switch
+        public string Description => provider switch
         {
             AllowedLLMProviders.NONE => TB("Please select what kind of LLM provider are allowed for this data source"),
             AllowedLLMProviders.ANY => TB("Any LLM provider is allowed: users might choose a cloud-based or a self-hosted provider"),

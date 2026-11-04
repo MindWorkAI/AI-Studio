@@ -35,7 +35,7 @@ public partial class PluginImportDialog : MSGComponentBase
         _ => this.T("You are about to install a plugin from a file."),
     };
 
-    private string TypeLabel => this.Preview.Plugin.Type.GetName();
+    private string TypeLabel => this.Preview.Plugin.Type.Name;
 
     private string AuthorsLabel => this.Preview.Plugin.Authors.Length > 0
         ? string.Join(", ", this.Preview.Plugin.Authors)

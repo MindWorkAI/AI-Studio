@@ -89,9 +89,9 @@ public sealed record Provider(
     public override string ToString()
     {
         if(this.IsSelfHosted)
-            return $"{this.InstanceName} ({this.UsedLLMProvider.ToName()}, {this.Host}, {this.Hostname}, {this.Model})";
+            return $"{this.InstanceName} ({this.UsedLLMProvider.Name}, {this.Host}, {this.Hostname}, {this.Model})";
 
-        return $"{this.InstanceName} ({this.UsedLLMProvider.ToName()}, {this.Model})";
+        return $"{this.InstanceName} ({this.UsedLLMProvider.Name}, {this.Model})";
     }
 
     #endregion

@@ -286,7 +286,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
         var unfilteredBackends = this.dispatcher.GetConfiguredBackends(settingsValues)
             .Where(backend => !backend.Capabilities.SupportsSafeSearch)
-            .Select(backend => backend.Backend.ToName())
+            .Select(backend => backend.Backend.Name)
             .ToList();
 
         if (unfilteredBackends.Count is 0)
@@ -362,7 +362,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
                 return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
                 {
                     IsConfigured = false,
-                    Message = string.Format(TB("The preferred search service {0} is not configured. Please configure it, or choose one of the services you did configure."), primaryBackend.Value.ToName()),
+                    Message = string.Format(TB("The preferred search service {0} is not configured. Please configure it, or choose one of the services you did configure."), primaryBackend.Value.Name),
                 });
             }
 
@@ -429,7 +429,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
                 return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
                 {
                     IsConfigured = false,
-                    Message = string.Format(TB("The preferred search service {0} cannot filter explicit results, but a safe search policy is configured and it is the only service that would be used. Please choose another service, let the services be used one after another, or set the safe search policy to off."), chosenBackend.Value.ToName()),
+                    Message = string.Format(TB("The preferred search service {0} cannot filter explicit results, but a safe search policy is configured and it is the only service that would be used. Please choose another service, let the services be used one after another, or set the safe search policy to off."), chosenBackend.Value.Name),
                 });
             }
         }
@@ -612,7 +612,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             // what tells apart a thin answer from one search service having nothing to say and
             // a thin answer from the others never having been asked.
             //
-            ["backends"] = BuildJsonArray(searchResponse.Backends.Select(backend => backend.ToName())),
+            ["backends"] = BuildJsonArray(searchResponse.Backends.Select(backend => backend.Name)),
             ["candidate_count"] = searchResponse.CandidateCount,
             ["result_count"] = retrievalResult.Results.Count,
 
@@ -654,7 +654,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             "Completed web search. ToolCallId={ToolCallId}, Strategy={Strategy}, Backends={Backends}, CandidateCount={CandidateCount}, ResultCount={ResultCount}, RetrievedPageCount={RetrievedPageCount}, BlockedPageCount={BlockedPageCount}, PageTimeoutCount={PageTimeoutCount}, FailedPageCount={FailedPageCount}, EmptyContentCount={EmptyContentCount}, RetrievalTimedOut={RetrievalTimedOut}, ReturnedContentCharacters={ReturnedContentCharacters}, TruncatedResultCount={TruncatedResultCount}, Notes={Notes}",
             context.ToolCallId,
             backendStrategy,
-            string.Join(", ", searchResponse.Backends.Select(backend => backend.ToName())),
+            string.Join(", ", searchResponse.Backends.Select(backend => backend.Name)),
             searchResponse.CandidateCount,
             retrievalResult.Results.Count,
             retrievedPageCount,
@@ -719,7 +719,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
             // Two services having found the same page says something about the page that
             // neither of them says alone, so it is reported per hit and not only per search:
-            ["backends"] = BuildJsonArray(result.Candidate.Backends.Select(backend => backend.ToName())),
+            ["backends"] = BuildJsonArray(result.Candidate.Backends.Select(backend => backend.Name)),
         };
 
         //

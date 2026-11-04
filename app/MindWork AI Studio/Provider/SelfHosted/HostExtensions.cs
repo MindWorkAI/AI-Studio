@@ -5,7 +5,7 @@ public static class HostExtensions
     /// <param name="host">The engine.</param>
     extension(Host host)
     {
-        public string Name() => host switch
+        public string Name => host switch
         {
             Host.NONE => "None",
 

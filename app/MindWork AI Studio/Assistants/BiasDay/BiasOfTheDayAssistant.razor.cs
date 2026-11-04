@@ -18,7 +18,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
     protected override string SystemPrompt => $"""
                                               You are a friendly, helpful expert on cognitive bias. You studied psychology and
                                               have a lot of experience. You explain a bias every day. Today's bias belongs to
-                                              the category: "{this.biasOfTheDay.Category.ToName()}". We have the following
+                                              the category: "{this.biasOfTheDay.Category.Name}". We have the following
                                               thoughts on this category:
                                               
                                               {this.biasOfTheDay.Category.GetThoughts()}
@@ -124,7 +124,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
     
     private async Task TellBias()

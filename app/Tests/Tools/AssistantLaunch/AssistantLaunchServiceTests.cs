@@ -58,7 +58,7 @@ public sealed class AssistantLaunchServiceTests
     [Test]
     public void ShorterNamesComeFirst()
     {
-        var lengths = AssistantLaunchService.SelectDestinations(AIStudio.Tools.Components.CHAT, _ => true).Select(destination => destination.Name().Length).ToList();
+        var lengths = AssistantLaunchService.SelectDestinations(AIStudio.Tools.Components.CHAT, _ => true).Select(destination => destination.Name.Length).ToList();
         Assert.That(lengths, Is.Ordered);
     }
 }

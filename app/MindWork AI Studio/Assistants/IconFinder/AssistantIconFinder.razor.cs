@@ -31,7 +31,7 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
 
     protected override string SendToChatVisibleUserPromptText =>
         $"""
-        {string.Format(T("Find icon suggestions on {0} for the following context:"), this.selectedIconSource.Name())}
+        {string.Format(T("Find icon suggestions on {0} for the following context:"), this.selectedIconSource.Name)}
         
         {this.inputContext}
         """;

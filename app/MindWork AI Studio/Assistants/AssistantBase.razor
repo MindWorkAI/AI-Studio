@@ -131,7 +131,7 @@
                             @foreach (var assistant in this.VisibleSendToAssistants)
                             {
                                 <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, new()))">
-                                    @assistant.Name()
+                                    @assistant.Name
                                 </MudMenuItem>
                             }
                         </MudMenu>
@@ -163,7 +163,7 @@
                                     @foreach (var assistant in this.VisibleSendToAssistants)
                                     {
                                         <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, sendToButton))">
-                                            @assistant.Name()
+                                            @assistant.Name
                                         </MudMenuItem>
                                     }
                                 </MudMenu>

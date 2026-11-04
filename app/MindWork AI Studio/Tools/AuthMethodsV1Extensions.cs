@@ -9,7 +9,7 @@ public static class AuthMethodsV1Extensions
     
     extension(AuthMethod authMethod)
     {
-        public string DisplayName() => authMethod switch
+        public string DisplayName => authMethod switch
         {
             AuthMethod.NONE => TB("None"),
             AuthMethod.USERNAME_PASSWORD => TB("Username & Password"),

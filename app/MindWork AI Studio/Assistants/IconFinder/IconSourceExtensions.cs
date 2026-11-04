@@ -4,7 +4,7 @@ public static class IconSourceExtensions
 {
     extension(IconSources iconSource)
     {
-        public string Name() => iconSource switch
+        public string Name => iconSource switch
         {
             IconSources.FLAT_ICON => "Flaticon",
             IconSources.FONT_AWESOME => "Font Awesome",

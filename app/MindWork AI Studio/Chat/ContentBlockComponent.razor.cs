@@ -322,7 +322,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// <summary>
     /// Returns the icon of the submenu of one kind of files in the export menu.
     /// </summary>
-    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.ToIcon() : FileExportFormat.SOURCE_CODE.ToIcon();
+    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.Icon : FileExportFormat.SOURCE_CODE.Icon;
 
     /// <summary>
     /// What the export offers, falling back to the chat wording when nobody named it.

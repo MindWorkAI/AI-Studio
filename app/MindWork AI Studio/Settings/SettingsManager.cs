@@ -697,7 +697,7 @@ public sealed class SettingsManager
     /// </remarks>
     /// <returns>All configured providers, unfiltered.</returns>
     public IReadOnlyList<Provider> GetAllProviders() => this.ConfigurationData.Providers
-        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => x.UsedLLMProvider.Name, StringComparer.OrdinalIgnoreCase)
         .ThenBy(x => x.InstanceName, StringComparer.OrdinalIgnoreCase)
         .ThenBy(x => x.Num)
         .ToList();
@@ -821,7 +821,7 @@ public sealed class SettingsManager
     /// </remarks>
     /// <returns>All configured embedding providers.</returns>
     public IReadOnlyList<EmbeddingProvider> GetAllEmbeddingProviders() => this.ConfigurationData.EmbeddingProviders
-        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => x.UsedLLMProvider.Name, StringComparer.OrdinalIgnoreCase)
         .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
         .ThenBy(x => x.Num)
         .ToList();
@@ -859,7 +859,7 @@ public sealed class SettingsManager
     /// </remarks>
     /// <returns>All configured transcription providers.</returns>
     public IReadOnlyList<TranscriptionProvider> GetAllTranscriptionProviders() => this.ConfigurationData.TranscriptionProviders
-        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => x.UsedLLMProvider.Name, StringComparer.OrdinalIgnoreCase)
         .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
         .ThenBy(x => x.Num)
         .ToList();
