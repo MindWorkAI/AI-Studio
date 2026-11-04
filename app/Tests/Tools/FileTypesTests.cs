@@ -188,6 +188,19 @@ public class FileTypesTests
             path => Assert.That(validation.ValidateFilePath(path), Is.Not.Null));
     }
 
+    /// <summary>
+    /// A section of a OneNote notebook is a document, but the table of contents and the package of a
+    /// notebook are not: the first holds no pages, and the runtime does not unpack the second. Both
+    /// are binary, which the content check sees by their NUL bytes.
+    /// </summary>
+    [Test]
+    public void OnlyTheSectionsOfAOneNoteNotebookAreDocuments()
+    {
+        AssertPath([0xE4, 0x52, 0x5C, 0x7B, 0x8C, 0xD8, 0xA7, 0x4D, 0x00, 0x00, 0x00, 0x00], "Meeting notes.one", true, FileTypes.DOCUMENT);
+        AssertPath([0xA1, 0x2F, 0xFF, 0x43, 0xD9, 0xEF, 0x76, 0x4C, 0x00, 0x00, 0x00, 0x00], "Open Notebook.onetoc2", false, FileTypes.DOCUMENT);
+        AssertPath([0x4D, 0x53, 0x43, 0x46, 0x00, 0x00, 0x00, 0x00], "Notebook.onepkg", false, FileTypes.DOCUMENT);
+    }
+
     [TestCase("recording.mp3")]
     [TestCase("meeting.mp4")]
     [TestCase("voice-recording.webm")]
