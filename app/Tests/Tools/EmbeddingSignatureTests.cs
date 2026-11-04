@@ -41,6 +41,18 @@ public sealed class EmbeddingSignatureTests
     }
 
     [Test]
+    public void ChangingDirectoryExclusionsKeepsTheStoredEmbeddingsOfRetainedFiles()
+    {
+        var allFiles = DataSource(ConfidenceLevel.LOW);
+        var filteredFiles = allFiles with { ExcludePatterns = "*.mp3;draft-*" };
+
+        Assert.That(
+            Signature(filteredFiles),
+            Is.EqualTo(Signature(allFiles)),
+            "Exclusions change which files belong to the source, not how retained files are embedded.");
+    }
+
+    [Test]
     public void ChangingDirectoryRecursionKeepsTheStoredEmbeddingsOfRetainedFiles()
     {
         var recursive = DataSource(ConfidenceLevel.LOW);
@@ -173,7 +185,7 @@ public sealed class EmbeddingSignatureTests
         var mailbox = new DataSourceMailbox { EmbeddingId = embeddingProvider.Id, MaxAttachmentSizeMegabytes = 10 };
         var signature = DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox, embeddingProvider);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { MaxAttachmentSizeMegabytes = 20 }, embeddingProvider), Is.Not.EqualTo(signature), "The mails indexed before would never get their larger attachments.");
             Assert.That(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false }, embeddingProvider), Does.EndWith("|attachments:none"));
@@ -181,7 +193,7 @@ public sealed class EmbeddingSignatureTests
                 DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false, MaxAttachmentSizeMegabytes = 20 }, embeddingProvider),
                 Is.EqualTo(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false }, embeddingProvider)),
                 "A limit which reads nothing threw the index away for nothing.");
-        });
+        }
     }
 
     /// <summary>
@@ -222,7 +234,7 @@ public sealed class EmbeddingSignatureTests
     /// <summary>
     /// A data source which is embedded but not kept in DataSources, the way mailboxes are.
     /// </summary>
-    private readonly record struct IndexedElsewhere() : IIndexedDataSource
+    private record struct IndexedElsewhere() : IIndexedDataSource
     {
         public string Id => "0c3f9b52-7d4e-4a1b-9e6f-2b8c5d7a1e40";
 
@@ -234,14 +246,14 @@ public sealed class EmbeddingSignatureTests
 
         public Guid EnterpriseConfigurationPluginId => Guid.Empty;
 
-        public DataSourceType Type { get; init; } = DataSourceType.NONE;
+        public DataSourceType Type { get; set; } = DataSourceType.NONE;
 
-        public ConfidenceLevel ConfidenceLevel { get; init; } = ConfidenceLevel.LOW;
+        public ConfidenceLevel ConfidenceLevel { get; set; } = ConfidenceLevel.LOW;
 
-        public string EmbeddingId { get; init; } = Guid.Empty.ToString();
+        public string EmbeddingId { get; set; } = Guid.Empty.ToString();
 
-        public int MaxChunkTokenLength { get; init; }
+        public int MaxChunkTokenLength { get; set; }
 
-        public int ChunkOverlapTokenLength { get; init; }
+        public int ChunkOverlapTokenLength { get; set; }
     }
 }

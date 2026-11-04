@@ -287,6 +287,11 @@ public enum Event
     SEND_TO_TEXT_SUMMARIZER_ASSISTANT,
 
     /// <summary>
+    /// Sends content to the SWOT analysis assistant.
+    /// </summary>
+    SEND_TO_SWOT_ANALYSIS_ASSISTANT,
+
+    /// <summary>
     /// Sends the result of the current assistant to the chat component.
     /// </summary>
     SEND_TO_CHAT,

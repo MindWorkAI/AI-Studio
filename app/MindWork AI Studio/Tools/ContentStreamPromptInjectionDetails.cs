@@ -17,12 +17,12 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamPromptInjectionDetails
 {
     [JsonPropertyName("findings")]
-    public List<PromptInjectionFinding>? Findings { get; init; }
+    public List<PromptInjectionFinding>? Findings { get; set; }
 
     /// <summary>
     /// How many passages were filtered. Can exceed the number of findings, because the runtime
     /// caps how many it reports in detail while it filters every single one.
     /// </summary>
     [JsonPropertyName("redacted_count")]
-    public int RedactedCount { get; init; }
+    public int RedactedCount { get; set; }
 }

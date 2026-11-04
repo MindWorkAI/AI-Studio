@@ -140,7 +140,7 @@ internal sealed partial class PresentationTemplate
                 continue;
 
             var role = RoleOf(placeholder.Type, bounds, slideArea);
-            if (!role.IsSlot())
+            if (!role.IsSlot)
                 continue;
 
             //

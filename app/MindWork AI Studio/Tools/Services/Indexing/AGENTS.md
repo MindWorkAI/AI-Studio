@@ -40,6 +40,10 @@ The parts:
   a mailbox at most 500 mails. A large data source is indexed in steps, one run each. A run which returns
   `MORE_TO_DO` gets its next step in the back lane of `DataSourceRunQueue`, behind every data source which begins
   a pass, so a mailbox waits for one step at most.
+- **`PauseBetweenSteps`** - a gap after every step which worked on documents, so that many people can share one
+  embedding server. The next run, of whichever data source, waits for a random pause between the bounds of the
+  settings (`PauseRange`: 0 to 300 seconds, none by default), less the time which passed since the step ended.
+  Not to be confused with the pause of the indexing as a whole (`IndexingPauses`), which a backup takes.
 - **`IndexingPass`** - the steps of one data source, from its first step until one of them is done. It remembers
   which documents failed during an earlier step, so the next steps do not read them again, and which failures
   were reported to the user already.
@@ -98,6 +102,13 @@ Rules which are easy to break:
   holds two stores which do not fit together. Discarding the stored index of a data source, when it is deleted
   or repaired, waits for the end of a pause as well (`WaitWhilePausedAsync`); the user interface asks
   `IsIndexingPaused` first and tells the user instead of waiting.
+- **The pause between steps lies behind the run gate.** `ProcessDataSourceRunAsync` waits for it right after
+  `runGate.WaitAsync`, before the run resolves anything: only one run waits, its token ends the wait, and its
+  data source still shows as queued. Never wait for it in an indexer, where the run would hold its signature and
+  its stores, and show as running. Afterward, the run looks up its data source anew, since the user may have
+  changed it meanwhile. A step opens a gap only once it asked `HasDoneItsShare` (`IndexedRunContext.ShareStartedUtc`),
+  so a run which found nothing to read leaves none, and a startup check over unchanged data sources does not
+  slow down.
 - **A pass lives only while the last step left more to do.** The service drops the pass of a data source after
   every other outcome and every exception, and when the stored index is reset. A retry the user asks for, and a
   step with other embedding settings or another selection of documents, begin a new pass

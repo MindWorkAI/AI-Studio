@@ -158,8 +158,9 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- or "ENC:v1:<base64-encoded encrypted data>", which every version of AI Studio reads. Both
 --     -- formats use the same secret. DataApp.EnterpriseEncryptionExportFormat below decides which
 --     -- one your exports write.
---     -- The encryption secret must be configured via:
+--     -- The encryption secret must be configured via one of:
 --     --   Windows Registry: HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret
+--     --   Policy file: config_encryption_secret.yaml, in the folder of the other policy files
 --     --   Environment variable: MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
 --     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
@@ -596,12 +597,14 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the preselected provider.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
--- Please note: using an empty string ("") will lock the preselected provider selection, even though no valid preselected provider is found.
+-- Please note: an empty string ("") locks the selection to no preselected provider. This needs
+-- AI Studio v26.11.1 or newer; older versions ignore the empty string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure the preselected profile.
 -- It must be one of the profile IDs defined in CONFIG["PROFILES"].
--- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
+-- Please note: an empty string ("") locks the selection to no preselected profile. This needs
+-- AI Studio v26.11.1 or newer; older versions ignore the empty string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure chat-specific preselected options.
@@ -886,7 +889,9 @@ CONFIG["SETTINGS"] = {}
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
 -- Without a selected transcription provider, dictation and transcription features will be disabled.
--- Please note: using an empty string ("") will lock the selection and disable dictation/transcription.
+-- Please note: an empty string ("") locks the selection to no transcription provider, which disables
+-- dictation/transcription. This needs AI Studio v26.11.1 or newer; older versions ignore the empty
+-- string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.UseTranscriptionProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure the Opus bitrate used when normalizing uploaded audio/video for transcription.
@@ -905,7 +910,8 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are:
 --   GRAMMAR_SPELLING_ASSISTANT, ICON_FINDER_ASSISTANT, REWRITE_ASSISTANT,
 --   PROMPT_OPTIMIZER_ASSISTANT, TRANSLATION_ASSISTANT, AGENDA_ASSISTANT,
---   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
+--   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, SWOT_ANALYSIS_ASSISTANT,
+--   EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
 --   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
@@ -1094,6 +1100,8 @@ CONFIG["SETTINGS"] = {}
 -- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
 -- search the data sources with every message instead, the way it does for models without
 -- tool usage.
+-- Users can switch off further tools themselves in the tool settings, e.g., one they never need.
+-- They can never switch on a tool you disable here.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools or tool
@@ -1277,11 +1285,20 @@ CONFIG["SETTINGS"] = {}
 --
 -- IMPORTANT: A configuration plugin cannot fix the very first download of that same
 -- configuration plugin. For bootstrapping enterprise configuration downloads, deploy
--- the equivalent environment variables before AI Studio starts:
+-- the policy file external_http_custom_root_certificates.yaml, in the folder of the
+-- other policy files, before AI Studio starts. It takes precedence over everything else:
+--
+-- enabled: true
+-- bundle_path: "/path/in/sandbox/company-root-cas.pem"
+-- allowed_hosts: "*.intra.example.org;data.example.org"
+--
+-- Alternatively, deploy the equivalent environment variables before AI Studio starts:
 --
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED=true
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH=/path/in/sandbox/company-root-cas.pem
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS=*.intra.example.org;data.example.org
+--
+-- See https://github.com/MindWorkAI/AI-Studio/wiki/Configuration-Server#your-own-certificate-authorities
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the host
 -- list completely. Deploy this setting in one configuration only, or repeat every host
@@ -1330,7 +1347,7 @@ CONFIG["SETTINGS"] = {}
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
 -- table. Every configuration that sets this must therefore list all providers it wants
 -- to cover. A partial table is not completed from the configuration below it, and the
--- providers left out fall back to the app default.
+-- providers left out get the confidence level UNKNOWN.
 -- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme"] = {
 --     ["OPEN_AI"] = "MODERATE",
 --     ["ANTHROPIC"] = "MODERATE",
@@ -1411,6 +1428,22 @@ CONFIG["SETTINGS"] = {}
 -- so the mailbox comes back as it was, should you allow its server again. Without any mail server
 -- in CONFIG["MAILBOX_PROVIDERS"], this blocks every mailbox.
 -- CONFIG["SETTINGS"]["DataMailboxes.AllowOnlyOrganizationMailServers"] = true
+
+-- Configure a pause between two indexing steps of local data sources, i.e., files, folders, and
+-- mailboxes. AI Studio indexes large data sources in steps of a few minutes. Between two steps, it
+-- waits for a random number of seconds between the lower and the upper bound, both included. This
+-- spares an embedding server which many users share: a single user with large folders or
+-- mailboxes no longer keeps it busy for hours. The pause applies after every step which worked on
+-- documents, also when the same data source carries on. Time which passes anyway counts toward
+-- it. Both values must be between 0 and 300 seconds. The default is 0 for both, i.e., no pause.
+-- You may set one bound or both. A bound you set wins, and AI Studio adjusts the other one to it.
+-- Should the upper bound be below the lower bound, the lower bound wins.
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds"] = 30
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds"] = 90
+--
+-- Allow users to change the bounds, so that your values are only defaults:
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.

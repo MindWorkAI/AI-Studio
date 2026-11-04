@@ -20,7 +20,7 @@ public sealed class EnumNamesTests
     [TestCase("  Every_Message  ")]
     public void ANameCountsWhateverItsCase(string text)
     {
-        Assert.That(EnumNames.TryParse<DataSourceRetrievalMode>(text, out var mode), Is.True);
+        Assert.That(DataSourceRetrievalMode.TryParseName(text, out var mode), Is.True);
         Assert.That(mode, Is.EqualTo(DataSourceRetrievalMode.EVERY_MESSAGE));
     }
 
@@ -29,17 +29,17 @@ public sealed class EnumNamesTests
     [TestCase("0x1")]
     public void ANumberDoesNotCountEvenWhenAMemberHasIt(string text)
     {
-        Assert.That(EnumNames.TryParse<DataSourceRetrievalMode>(text, out _), Is.False, "Enum.TryParse would read 1 as EVERY_MESSAGE.");
+        Assert.That(DataSourceRetrievalMode.TryParseName(text, out _), Is.False, "Enum.TryParse would read 1 as EVERY_MESSAGE.");
     }
 
     [Test]
     public void SeveralNamesDoNotCount()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(EnumNames.TryParse<DataSourceRetrievalMode>("SEMANTIC_SEARCH, EVERY_MESSAGE", out _), Is.False, "Enum.TryParse would combine them to EVERY_MESSAGE.");
-            Assert.That(EnumNames.TryParse<ConfidenceLevel>("HIGH, MEDIUM", out _), Is.False, "Enum.TryParse would combine them to a confidence level above HIGH.");
-        });
+            Assert.That(DataSourceRetrievalMode.TryParseName("SEMANTIC_SEARCH, EVERY_MESSAGE", out _), Is.False, "Enum.TryParse would combine them to EVERY_MESSAGE.");
+            Assert.That(ConfidenceLevel.TryParseName("HIGH, MEDIUM", out _), Is.False, "Enum.TryParse would combine them to a confidence level above HIGH.");
+        }
     }
 
     [TestCase(null)]
@@ -48,7 +48,7 @@ public sealed class EnumNamesTests
     [TestCase("EVERY MESSAGE")]
     public void NoNameDoesNotCount(string? text)
     {
-        Assert.That(EnumNames.TryParse<DataSourceRetrievalMode>(text, out var mode), Is.False);
+        Assert.That(DataSourceRetrievalMode.TryParseName(text, out var mode), Is.False);
         Assert.That(mode, Is.EqualTo(default(DataSourceRetrievalMode)));
     }
 

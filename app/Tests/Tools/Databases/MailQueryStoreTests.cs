@@ -129,12 +129,12 @@ public sealed class MailQueryStoreTests
         var second = await this.Client.QueryMailsAsync(MAILBOX, new MailFilter(), 2, 2, TOKEN);
         var beyond = await this.Client.QueryMailsAsync(MAILBOX, new MailFilter(), 3, 2, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(first, Is.EqualTo(this.IdsOf(BUDGET, REPORT)));
             Assert.That(second, Is.EqualTo(this.IdsOf(NEWSLETTER)));
             Assert.That(beyond, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -145,12 +145,12 @@ public sealed class MailQueryStoreTests
         var unread = await this.Client.QueryMailsAsync(MAILBOX, new MailFilter { IsUnread = true }, 0, 10, TOKEN);
         var summary = (await this.Client.GetMailSummariesAsync(MAILBOX, [this.mailIds[BUDGET]], TOKEN)).Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(unread, Is.Empty, "Whoever read the copy in the archive read the mail.");
             Assert.That(summary.Flags, Is.EqualTo(new MailFlags(true, true, false)));
             Assert.That(summary.FolderPaths, Is.EqualTo(new[] { ARCHIVE, INBOX }));
-        });
+        }
     }
 
     [Test]
@@ -159,11 +159,11 @@ public sealed class MailQueryStoreTests
         var flagged = await this.Client.GetMailChunkIdsAsync(MAILBOX, new MailFilter { IsFlagged = true }, TOKEN);
         var all = await this.Client.GetMailChunkIdsAsync(MAILBOX, new MailFilter(), TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(flagged, Is.EqualTo(new[] { ChunkIdOf(MAILBOX, BUDGET) }));
             Assert.That(all, Is.EquivalentTo(new[] { ChunkIdOf(MAILBOX, REPORT), ChunkIdOf(MAILBOX, BUDGET), ChunkIdOf(MAILBOX, NEWSLETTER) }), "The chunks of the deleted mail are still in the vector store, but must not be searched.");
-        });
+        }
     }
 
     [Test]
@@ -173,12 +173,12 @@ public sealed class MailQueryStoreTests
         var flagged = await this.Client.SearchMailChunksAsync(MAILBOX, "report", new MailFilter { IsFlagged = true }, 10, TOKEN);
         var bySubject = await this.Client.SearchMailChunksAsync(MAILBOX, "newsletter", new MailFilter(), 10, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(everywhere.Select(result => result.ParentFileId), Is.EquivalentTo(this.IdsOf(REPORT, BUDGET)));
             Assert.That(flagged.Select(result => result.ParentFileId), Is.EqualTo(this.IdsOf(BUDGET)));
             Assert.That(bySubject.Select(result => result.ParentFileId), Is.EqualTo(this.IdsOf(NEWSLETTER)), "The subject is searched along with the text.");
-        });
+        }
     }
 
     [Test]
@@ -189,7 +189,7 @@ public sealed class MailQueryStoreTests
         var bySender = await this.Client.CountMailsAsync(MAILBOX, new MailFilter(), MailCountGrouping.SENDER, 2, TOKEN);
         var flaggedBySender = await this.Client.CountMailsAsync(MAILBOX, new MailFilter { IsFlagged = true }, MailCountGrouping.SENDER, 20, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(total.TotalCount, Is.EqualTo(3));
             Assert.That(total.Groups, Is.Empty);
@@ -198,7 +198,7 @@ public sealed class MailQueryStoreTests
             Assert.That(bySender.Groups, Is.EqualTo(new MailCountGroup[] { new("alice@example.org", "Alice Müller", 1), new("bob@example.org", "Bob", 1) }), "Groups of the same size by their key, and no more than asked for.");
             Assert.That(flaggedBySender.TotalCount, Is.EqualTo(1));
             Assert.That(flaggedBySender.Groups, Is.EqualTo(new MailCountGroup[] { new("bob@example.org", "Bob", 1) }));
-        });
+        }
     }
 
     [Test]
@@ -208,11 +208,11 @@ public sealed class MailQueryStoreTests
 
         var byFolder = await this.Client.CountMailsAsync(MAILBOX, new MailFilter(), MailCountGrouping.FOLDER, 20, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(byFolder.TotalCount, Is.EqualTo(3));
             Assert.That(byFolder.Groups, Is.EqualTo(new MailCountGroup[] { new(ARCHIVE, string.Empty, 2), new(INBOX, string.Empty, 2) }));
-        });
+        }
     }
 
     [Test]
@@ -224,7 +224,7 @@ public sealed class MailQueryStoreTests
 
         Assert.That(summaries.Select(summary => summary.MailId), Is.EqualTo(this.IdsOf(BUDGET, REPORT)), "In the order asked for, without unknown mails, deleted ones, or those of another mailbox.");
         var budget = summaries[0];
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(budget.Subject, Is.EqualTo("Budget 2027"));
             Assert.That(budget.ReceivedAtUtc, Is.EqualTo(new DateTimeOffset(2026, 9, 10, 9, 30, 0, TimeSpan.Zero)));
@@ -236,7 +236,7 @@ public sealed class MailQueryStoreTests
             Assert.That(budget.Importance, Is.EqualTo(MailImportance.HIGH));
             Assert.That(budget.EncryptionKind, Is.EqualTo(MailEncryptionKind.NONE));
             Assert.That(budget.AttachmentNames, Is.EqualTo(new[] { "budget.xlsx" }));
-        });
+        }
     }
 
     [Test]
@@ -247,13 +247,13 @@ public sealed class MailQueryStoreTests
         var deleted = await this.Client.FindMailByMessageIdAsync(MAILBOX, "deleted@example.org", TOKEN);
         var none = await this.Client.FindMailByMessageIdAsync(MAILBOX, string.Empty, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answered, Is.EqualTo(this.mailIds[REPORT]));
             Assert.That(answeredElsewhere, Is.EqualTo(this.mailIds[ELSEWHERE]), "The same Message-ID in another mailbox is that mailbox's own copy.");
             Assert.That(deleted, Is.Null);
             Assert.That(none, Is.Null, "Mails without a Message-ID must not all answer each other.");
-        });
+        }
     }
 
     private async Task StoreMailAsync(string dataSourceId, string name, string subject, string text, MailRecord mail) =>

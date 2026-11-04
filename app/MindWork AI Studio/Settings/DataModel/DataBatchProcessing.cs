@@ -56,11 +56,21 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
     /// The file format of the individual result files, one per processed document.
     /// </summary>
     /// <remarks>
-    /// Only formats which hold an entire answer, see FileExportFormatExtensions.ANSWER_FORMATS.
+    /// Only formats which hold an entire answer, see FileExportFormat.AnswerFormats.
     /// The tabular formats belong to the output mode TABLE_ONLY, which writes one table for the
     /// whole run instead of one file per document.
     /// </remarks>
     public FileExportFormat ResultFileFormat { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultFileFormat, FileExportFormat.MARKDOWN);
+
+    /// <summary>
+    /// Whether the result files can be written in a format: only in one which holds an entire answer.
+    /// </summary>
+    /// <remarks>
+    /// The format list of the assistant offers nothing else, but a configuration plugin may name
+    /// any format, a table or code for example, and the result files would then end up without an
+    /// extension.
+    /// </remarks>
+    public static bool IsValidResultFileFormat(FileExportFormat format) => FileExportFormat.AnswerFormats.Contains(format);
 
     public string CsvFileName { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvFileName, string.Empty);
 

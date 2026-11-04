@@ -1,0 +1,13 @@
+@namespace AIStudio.Chat
+@using AIStudio.Assistants.SWOTAnalysis
+
+@switch (this.data)
+{
+    case SwotAnalysisResult swotAnalysisResult:
+        <SwotAnalysisResultView Result="@swotAnalysisResult"/>
+        break;
+
+    default:
+        @this.ChildContent
+        break;
+}

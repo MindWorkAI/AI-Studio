@@ -39,12 +39,12 @@ public sealed class DataSourceRequirementsTests
     {
         var requirements = DataSourceRequirements.Of([MINUTES, HANDBOOK, INTRANET], [1, 1, 1], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(requirements.Confidence, Is.EqualTo(ConfidenceLevel.HIGH));
             Assert.That(requirements.Security, Is.EqualTo(DataSourceSecurity.SELF_HOSTED));
             Assert.That(requirements.OutboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.DATA_SOURCE, INTRANET.Id)), "The intranet may only be seen by self-hosted providers.");
-        });
+        }
     }
 
     [Test]
@@ -52,11 +52,11 @@ public sealed class DataSourceRequirementsTests
     {
         var expected = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, HANDBOOK.Id);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceRequirements.Of([HANDBOOK, ARCHIVE], [1, 1], OutboundDataRestriction.UNRESTRICTED).OutboundData, Is.EqualTo(expected));
             Assert.That(DataSourceRequirements.Of([ARCHIVE, HANDBOOK], [1, 1], OutboundDataRestriction.UNRESTRICTED).OutboundData, Is.EqualTo(expected), "An agent may select the data sources in another order.");
-        });
+        }
     }
 
     [Test]

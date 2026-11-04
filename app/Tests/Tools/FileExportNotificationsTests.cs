@@ -73,7 +73,7 @@ public sealed class FileExportNotificationsTests
 
     [TestCase(false, ExpectedResult = true)]
     [TestCase(true, ExpectedResult = false)]
-    public bool TheSuccessWaitsForTheUserUnlessTheyChoseOtherwise(bool closesAutomatically)
+    public bool? TheSuccessWaitsForTheUserUnlessTheyChoseOtherwise(bool closesAutomatically)
     {
         var snackbar = new RecordingSnackbar();
         new FileExportNotifications(snackbar).ShowSuccess(SUCCESS, closesAutomatically);
@@ -89,7 +89,7 @@ public sealed class FileExportNotificationsTests
     {
         public List<string> Calls { get; } = [];
 
-        public List<bool> RequiresInteraction { get; } = [];
+        public List<bool?> RequiresInteraction { get; } = [];
 
         public SnackbarConfiguration Configuration { get; } = new();
 

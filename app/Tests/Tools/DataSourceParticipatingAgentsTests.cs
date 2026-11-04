@@ -35,11 +35,11 @@ public sealed class DataSourceParticipatingAgentsTests
     [Test]
     public void TheClassicRAGProcessCountsNoAgentItDoesNotRun()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceService.GetParticipatingAgents(Options(automaticSelection: false, automaticValidation: false), DataSourceRetrievalMode.EVERY_MESSAGE, retrievalContextValidationEnabled: true), Is.Empty);
             Assert.That(DataSourceService.GetParticipatingAgents(Options(automaticSelection: false, automaticValidation: true), DataSourceRetrievalMode.EVERY_MESSAGE, retrievalContextValidationEnabled: false), Is.Empty, "The validation of this chat is on, but the settings switch it off everywhere.");
-        });
+        }
     }
 
     private static DataSourceOptions Options(bool automaticSelection, bool automaticValidation) => new()

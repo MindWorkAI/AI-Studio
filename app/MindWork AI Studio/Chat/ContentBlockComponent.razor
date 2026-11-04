@@ -6,14 +6,14 @@
 <MudCard Class="@this.CardClasses" Outlined="@true">
     <MudCardHeader>
         <CardHeaderAvatar>
-            <MudAvatar Color="@this.Role.ToColor()">
-                <MudIcon Icon="@this.Role.ToIcon()"/>
+            <MudAvatar Color="@this.Role.Color">
+                <MudIcon Icon="@this.Role.Icon"/>
             </MudAvatar>
         </CardHeaderAvatar>
         <CardHeaderContent>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudText Typo="Typo.body1">
-                    @this.Role.ToName() (@this.Time.LocalDateTime)
+                    @this.Role.Name (@this.Time.LocalDateTime)
                 </MudText>
                 @if (this.HasToolTrace)
                 {
@@ -83,23 +83,23 @@
                     </MudTooltip>
                 }
 
-                @if (this.Role is ChatRole.AI && this.CanExport)
+                @if (this.CanExportAnswer)
                 {
                     <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
-                        <MudMenu Icon="@Icons.Material.Filled.Save">
-                            @foreach (var documentFormat in FileExportFormatExtensions.DOCUMENT_FORMATS)
+                        <MudMenu Icon="@Icons.Material.Filled.Save" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                            @foreach (var documentFormat in FileExportFormat.DocumentFormats)
                             {
-                                if (documentFormat.ToFormatTemplateFilter() is null)
+                                if (documentFormat.FormatTemplateFilter is null)
                                 {
-                                    <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
+                                    <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@documentFormat.Name"/>
                                 }
                                 else
                                 {
                                     @* A format which takes templates opens a menu of its own, which also leads to managing them: *@
-                                    <MudMenu StartIcon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()">
+                                    <MudMenu StartIcon="@documentFormat.Icon" Label="@documentFormat.Name" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                                         <MudMenuItem OnClick="@this.ManageFormatTemplates" Icon="@Icons.Material.Filled.Settings" Label="@T("Manage your templates")"/>
                                         <MudDivider/>
-                                        <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@T("Export without template")"/>
+                                        <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@T("Export without template")"/>
                                         @foreach (var formatTemplate in this.FormatTemplatesFor(documentFormat))
                                         {
                                             <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat, formatTemplate))" Icon="@(formatTemplate.IsEnterpriseConfiguration ? Icons.Material.Filled.Business : Icons.Material.Filled.Description)" Label="@formatTemplate.Name"/>
@@ -107,18 +107,42 @@
                                     </MudMenu>
                                 }
                             }
-                            @if (this.MessageFiles.Count > 0)
+                            @if (this.MessageFiles.Count > MAX_FILES_WITHOUT_SUBMENUS)
+                            {
+                                <MudDivider/>
+                                @foreach (var filesOfAKind in this.MessageFilesByKind)
+                                {
+                                    <MudMenu StartIcon="@ExportGroupIcon(filesOfAKind)" Label="@this.ExportGroupLabel(filesOfAKind)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                                        @foreach (var messageFile in filesOfAKind)
+                                        {
+                                            <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                        }
+                                    </MudMenu>
+                                }
+                            }
+                            else if (this.MessageFiles.Count > 0)
                             {
                                 <MudDivider/>
                                 @foreach (var messageFile in this.MessageFiles)
                                 {
-                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.Format.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
                                 }
                             }
                             <MudDivider/>
-                            @foreach (var textFormat in FileExportFormatExtensions.TEXT_FORMATS)
+                            @foreach (var textFormat in FileExportFormat.TextFormats)
                             {
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.ToIcon()" Label="@textFormat.ToName()"/>
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.Icon" Label="@textFormat.Name"/>
+                            }
+                        </MudMenu>
+                    </MudTooltip>
+                }
+                @if (this.CanSendTo)
+                {
+                    <MudTooltip Text="@T("Send to ...")" Placement="Placement.Bottom">
+                        <MudMenu Icon="@Icons.Material.Filled.Apps" Disabled="@(!this.IsSendToEnabled)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                            @foreach (var destination in this.SendToDestinations)
+                            {
+                                <MudMenuItem OnClick="@(() => this.SendTo(destination))" Label="@destination.Name"/>
                             }
                         </MudMenu>
                     </MudTooltip>
@@ -229,20 +253,28 @@
                         }
                         else
                         {
-                            var renderPlan = this.GetMarkdownRenderPlan(textContent.Text);
                             <div @ref="this.mathContentContainer" class="chat-math-container">
-                                @foreach (var segment in renderPlan.Segments)
-                                {
-                                    var segmentContent = segment.GetContent(renderPlan.Source);
-                                    if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
-                                    {
-                                        <MudMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" />
+                                <ContentPresentationView Presentation="@textContent.Presentation">
+                                    @{
+                                        var renderPlan = this.GetMarkdownRenderPlan(textContent.Text);
+                                        RenderFragment<MessageFile> saveButton = file =>
+                                            @<MudTooltip Text="@this.SaveAsLabel(file)" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Primary" Variant="Variant.Filled" Class="ma-2" OnClick="@(() => this.ExportFile(file))"/>
+                                            </MudTooltip>;
                                     }
-                                    else
+                                    @foreach (var segment in renderPlan.Segments)
                                     {
-                                        <MathJaxBlock @key="@segment.RenderKey" Value="@segmentContent" Class="mb-5" />
+                                        var segmentContent = segment.GetContent(renderPlan.Source);
+                                        if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
+                                        {
+                                            <ExportableMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" Files="@this.FilesWithSaveButton" ValueStart="@segment.Start" CodeBlockActions="@saveButton"/>
+                                        }
+                                        else
+                                        {
+                                            <MathJaxBlock @key="@segment.RenderKey" Value="@segmentContent" Class="mb-5" File="@ExportableMarkdown.FileAt(this.FilesWithSaveButton, segment.FileStart)" Actions="@saveButton"/>
+                                        }
                                     }
-                                }
+                                </ContentPresentationView>
                                 @if (textContent.Sources.Count > 0)
                                 {
                                     <SourcesList @ref="this.sourcesList" Sources="@textContent.Sources" Passages="@textContent.SourcePassages"/>

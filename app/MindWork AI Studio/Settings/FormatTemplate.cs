@@ -24,6 +24,19 @@ public record FormatTemplate(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default) : ConfigurationBaseObject
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public override string Name { get; set; } = Name;
+    public string FilePath { get; set; } = FilePath;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+
     public FormatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty)
     {
     }
@@ -39,7 +52,7 @@ public record FormatTemplate(
     /// </summary>
     /// <param name="format">The export format.</param>
     /// <returns>True, when the file of the template is of the kind the format takes.</returns>
-    public bool Serves(FileExportFormat format) => format.ToFormatTemplateFilter() is { } filter && FileTypes.IsAllowedPath(this.FilePath, filter);
+    public bool Serves(FileExportFormat format) => format.FormatTemplateFilter is { } filter && FileTypes.IsAllowedPath(this.FilePath, filter);
 
     /// <summary>
     /// Reads a format template the way a configuration plugin states it.

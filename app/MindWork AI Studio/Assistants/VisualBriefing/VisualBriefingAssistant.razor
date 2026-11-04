@@ -104,7 +104,7 @@
                                         <MudTextField T="string" @bind-Text="@this.editor.Author" Label="@T("Author (optional)")" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
                                     </MudItem>
                                 </MudGrid>
-                                <MudTextField T="string" @bind-Text="@this.editor.Instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" AutoGrow="true" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                                <MudTextField T="string" @bind-Text="@this.editor.Instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" Sizing="InputSizing.Auto" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
                                 <EnumSelection T="VisualBriefingProtectionLevel"
                                                NameFunc="@this.ProtectionLevelName"
@@ -210,16 +210,16 @@
                                     </div>
                                     @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
                                     {
-                                        <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
+                                        <ConfidenceInfo LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
                                     }
                                 </MudStack>
 
                                 <ProfileFormSelection @bind-Profile="@this.editor.Profile" Disabled="@this.IsCurrentBusy"/>
-                                <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.editor.TargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.editor.CustomTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
-                                <EnumSelection T="AudienceProfile" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceProfile" Label="@T("Audience profile")" Disabled="@this.IsCurrentBusy"/>
-                                <EnumSelection T="AudienceAgeGroup" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceAgeGroup" Label="@T("Audience age group")" Disabled="@this.IsCurrentBusy"/>
-                                <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceOrganizationalLevel" Label="@T("Audience organizational level")" Disabled="@this.IsCurrentBusy"/>
-                                <EnumSelection T="AudienceExpertise" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceExpertise" Label="@T("Audience expertise")" Disabled="@this.IsCurrentBusy"/>
+                                <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name)" @bind-Value="@this.editor.TargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.editor.CustomTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
+                                <EnumSelection T="AudienceProfile" NameFunc="@(value => value.Name)" @bind-Value="@this.editor.AudienceProfile" Label="@T("Audience profile")" Disabled="@this.IsCurrentBusy"/>
+                                <EnumSelection T="AudienceAgeGroup" NameFunc="@(value => value.Name)" @bind-Value="@this.editor.AudienceAgeGroup" Label="@T("Audience age group")" Disabled="@this.IsCurrentBusy"/>
+                                <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(value => value.Name)" @bind-Value="@this.editor.AudienceOrganizationalLevel" Label="@T("Audience organizational level")" Disabled="@this.IsCurrentBusy"/>
+                                <EnumSelection T="AudienceExpertise" NameFunc="@(value => value.Name)" @bind-Value="@this.editor.AudienceExpertise" Label="@T("Audience expertise")" Disabled="@this.IsCurrentBusy"/>
                                 <MudSwitch T="bool" @bind-Value="@this.editor.ShowSourceReferences" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Show source references")</MudSwitch>
                                 <MudSwitch T="bool" @bind-Value="@this.editor.OptimizeImages" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Optimize large visual assets")</MudSwitch>
                             </MudPaper>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        Checks what only a published build of AI Studio lacks. The trimmer removes code of .NET which System.Text.Json
+        reaches by reflection only, while debug builds and the tests are not trimmed. Hence, this program has to run
+        published, trimmed by the same Trimming.props as the app; `dotnet run verify` does both.
+    -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <RootNamespace>AIStudio.TrimSmokeTest</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <SelfContained>true</SelfContained> <!-- Trimming works for self-contained builds only -->
+
+        <!-- IL2026: Usage of methods marked as RequiresUnreferencedCode. Finding out what this means for a trimmed build is the whole point of this program. -->
+        <NoWarn>IL2026</NoWarn>
+    </PropertyGroup>
+
+    <Import Project="..\Trimming.props" />
+
+    <!--
+        AI Studio reaches nearly all of its code from its start, and with it the assemblies it depends on. This
+        program starts nowhere near that, so the trimmer would remove, e.g., the Blazor server and SQLite, and the
+        types of the app which use them could not even be loaded, let alone their options be read. Rooting the
+        app keeps what the app itself keeps, while code of .NET which only reflection reaches is still removed.
+    -->
+    <ItemGroup>
+        <TrimmerRootAssembly Include="mindworkAIStudio" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MindWork AI Studio\MindWork AI Studio.csproj" />
+    </ItemGroup>
+
+</Project>

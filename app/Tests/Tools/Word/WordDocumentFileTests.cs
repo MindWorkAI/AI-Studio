@@ -47,13 +47,13 @@ public sealed class WordDocumentFileTests
         await WordDocumentFile.CreateAsync(templatePath, targetPath, MARKDOWN, WordHeadingLevels.AS_THEY_ARE, NullLogger.Instance, CancellationToken.None);
 
         using var document = WordprocessingDocument.Open(targetPath, false);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Directory.GetFileSystemEntries(this.targetFolder), Is.EqualTo(new[] { targetPath }), "Nothing else came about next to the chosen file.");
             Assert.That(document.MainDocumentPart!.Document!.Body!.InnerText, Is.EqualTo("MarsClose to Earth."), "The chosen file holds the document instead of what it held before.");
             Assert.That(File.ReadAllBytes(templatePath), Is.EqualTo(templateContent), "The template stays as it is.");
             Assert.That(TemporaryFiles(), Is.EquivalentTo(temporaryFiles), "The copy of the template is gone.");
-        });
+        }
     }
 
     [Test]
@@ -65,12 +65,12 @@ public sealed class WordDocumentFileTests
         await File.WriteAllBytesAsync(targetPath, PREVIOUS_CONTENT);
         var temporaryFiles = TemporaryFiles();
 
-        Assert.CatchAsync(() => WordDocumentFile.CreateAsync(templatePath, targetPath, MARKDOWN, WordHeadingLevels.AS_THEY_ARE, NullLogger.Instance, CancellationToken.None));
-        Assert.Multiple(() =>
+        await Assert.CatchAsync(() => WordDocumentFile.CreateAsync(templatePath, targetPath, MARKDOWN, WordHeadingLevels.AS_THEY_ARE, NullLogger.Instance, CancellationToken.None));
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(File.ReadAllBytes(targetPath), Is.EqualTo(PREVIOUS_CONTENT));
             Assert.That(TemporaryFiles(), Is.EquivalentTo(temporaryFiles), "The copy of the template is gone.");
-        });
+        }
     }
 
     [Test]

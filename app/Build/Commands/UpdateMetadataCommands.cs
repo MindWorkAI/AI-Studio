@@ -46,6 +46,15 @@ public sealed partial class UpdateMetadataCommands
         await this.PerformPrepare(action, true, version);
 
         await this.BuildPreparedRelease(offline);
+
+        // The wiki is a repository of its own, and nothing in this build touches it.
+        // It describes what users can install, so it changes once the release is published:
+        Console.WriteLine();
+        Console.WriteLine("==============================");
+        Console.WriteLine("- Warning: Remember the wiki, https://github.com/MindWorkAI/AI-Studio/wiki");
+        Console.WriteLine("  Once the release is published, carry the \"Wiki\" sections of the pull requests merged since the");
+        Console.WriteLine("  last release into the wiki, and raise the version in _Footer.md and de/_Footer.md. See step 9 of");
+        Console.WriteLine("  \"Release Process\" in app/Build/AGENTS.md.");
     }
 
     [Command("rebuild-release", Description = "Prepare & build a new build of the current release")]
@@ -257,9 +266,9 @@ public sealed partial class UpdateMetadataCommands
         var pdfiumVersion = await this.ReadPdfiumVersion();
         await Pdfium.InstallAsync(rid, pdfiumVersion, Environment.IsOfflineBuildRequested(offline));
         
-        Console.Write($"- Start .NET build for {rid.ToUserFriendlyName()} ...");
-        await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
-        var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --disable-build-servers --force");
+        Console.Write($"- Start .NET build for {rid.UserFriendlyName} ...");
+        await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.MicrosoftRid}");
+        var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.MicrosoftRid} --disable-build-servers --force");
         var dotnetBuildOutputLines = dotnetBuildOutput.Text.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         var foundIssue = false;
         foreach (var buildOutputLine in dotnetBuildOutputLines)
@@ -318,7 +327,7 @@ public sealed partial class UpdateMetadataCommands
 
         if (string.IsNullOrWhiteSpace(tauriSidecarArtifactName))
         {
-            Console.WriteLine($"- Error: Unsupported rid '{rid.AsMicrosoftRid()}'.");
+            Console.WriteLine($"- Error: Unsupported rid '{rid.MicrosoftRid}'.");
             throw new CommandExitedException(1);
         }
     
@@ -332,7 +341,7 @@ public sealed partial class UpdateMetadataCommands
             _ => "mindworkAIStudio",
         };
         
-        var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", dotnetArtifactFilename);
+        var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.MicrosoftRid, "publish", dotnetArtifactFilename);
         var finalDestination = Path.Combine(dotnetArtifactPath, tauriSidecarArtifactName);
         
         if(File.Exists(dotnetPublishedPath))

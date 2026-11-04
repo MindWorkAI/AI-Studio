@@ -206,7 +206,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
-                    await this.form.Validate();
+                    await this.form.ValidateAsync();
                 }
             }
 
@@ -227,7 +227,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -240,7 +240,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
     // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
     // silently end up in the wrong keyring row and never be found again.
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.SecretId}" : this.DataLLMProvider.SecretId;
 
     public string SecretName => this.DataName;
 
@@ -251,7 +251,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         if (this.IsProviderProhibited)
             return;
 
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         this.dataAPIKeyStorageIssue = string.Empty;
 
         // Manually validate the model selection (needed when no models are loaded
@@ -277,7 +277,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -291,7 +291,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             if (!deleteResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -309,7 +309,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
         {
             this.dataAPIKeyStorageIssue = string.Empty;
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         }
     }
 
@@ -357,7 +357,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
                 this.dataLoadingModelsIssue = result.FailureReason.ToUserMessage(provider.InstanceName);
 
             // Order descending by ID means that the newest models probably come first:
-            var orderedModels = result.Models.OrderByDescending(n => n.Id);
+            var orderedModels = result.Models.OrderByDescending(n => n.Id, Model.ID_ORDER);
 
             this.availableModels.Clear();
             this.availableModels.AddRange(orderedModels);

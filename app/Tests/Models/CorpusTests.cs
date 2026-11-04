@@ -41,7 +41,7 @@ public sealed class CorpusTests
     [Test]
     public void EveryKnownWrongAnswerSaysWhyAndWhereThatCanBeChecked()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var change in ExpectedChanges.ENTRIES)
             {
@@ -49,7 +49,7 @@ public sealed class CorpusTests
                 Assert.That(change.Source, Is.Not.Empty, $"{change.Provider} {change.ModelId} does not say where that can be checked.");
                 Assert.That(change.AnswerWanted, Is.Not.Empty, $"{change.Provider} {change.ModelId} does not say what the answer should be.");
             }
-        });
+        }
     }
 
     [Test]

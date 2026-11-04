@@ -27,13 +27,13 @@ public sealed class NewOpenAIModelTests
     {
         var profile = LLMProviders.OPEN_AI.GetModelProfile(new Model(modelId, null));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.RESPONSES_API), Is.True);
             Assert.That(profile.Has(Capability.FUNCTION_CALLING), Is.True);
             Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True);
             Assert.That(profile.Reasoning, Is.Not.EqualTo(ReasoningSupport.NONE));
-        });
+        }
     }
 
     [Test]
@@ -46,12 +46,12 @@ public sealed class NewOpenAIModelTests
         //
         var profile = LLMProviders.OPEN_AI.GetModelProfile(new Model("gpt-oss-120b", null));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.RESPONSES_API), Is.False);
             Assert.That(profile.Reasoning, Is.EqualTo(ReasoningSupport.NONE));
             Assert.That(profile.Context.DefaultTokens, Is.EqualTo(131_072));
-        });
+        }
     }
 
     [Test]
@@ -59,11 +59,11 @@ public sealed class NewOpenAIModelTests
     {
         var profile = LLMProviders.SELF_HOSTED.GetModelProfile(new Model("gpt-j-6b", null));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Has(Capability.RESPONSES_API), Is.False);
             Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.False);
             Assert.That(profile.Reasoning, Is.EqualTo(ReasoningSupport.NONE));
-        });
+        }
     }
 }

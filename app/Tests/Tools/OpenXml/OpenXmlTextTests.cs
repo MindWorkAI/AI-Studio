@@ -32,11 +32,11 @@ public sealed class OpenXmlTextTests
         const char HIGH = '\ud83d';
         const char LOW = '\ude80';
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(OpenXmlText.XmlSafe($"Rakete {HIGH}{LOW}"), Is.EqualTo($"Rakete {HIGH}{LOW}"), "An emoji takes two chars, and the pair stays.");
             Assert.That(OpenXmlText.XmlSafe($"Rakete {HIGH}!"), Is.EqualTo("Rakete !"), "Half of a pair alone cannot go into XML.");
             Assert.That(OpenXmlText.XmlSafe($"{LOW}Rakete"), Is.EqualTo("Rakete"), "Neither can the other half.");
-        });
+        }
     }
 }

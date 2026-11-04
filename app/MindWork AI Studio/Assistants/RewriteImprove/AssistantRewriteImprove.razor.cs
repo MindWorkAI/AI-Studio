@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.RewriteImprove;
@@ -18,7 +19,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         text. You can also correct spelling and grammar issues. You never add additional information. You never
         ask the user for additional information. Your response only contains the improved text. You do not explain
         your changes. If no changes are needed, you return the text unchanged.
-        The style of the text: {this.selectedWritingStyle.Prompt()}.{this.selectedSentenceStructure.Prompt()}
+        The style of the text: {this.selectedWritingStyle.Prompt}.{this.selectedSentenceStructure.Prompt}
         You follow the rules according to {this.SystemPromptLanguage()} in all your changes.
         """;
     
@@ -32,7 +33,6 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     [
         new SendToButton
         {
-            Self = Tools.Components.REWRITE_ASSISTANT,
             UseResultingContentBlockData = false,
             GetText = () => string.IsNullOrWhiteSpace(this.rewrittenText) ? this.inputText : this.rewrittenText,
         },
@@ -73,16 +73,9 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         return false;
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_REWRITE_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputText = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputText = payload.Text;
 
     #endregion
     
@@ -144,7 +137,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
             CommonLanguages.AS_IS => "the source language",
             CommonLanguages.OTHER => this.customTargetLanguage,
             
-            _ => $"{this.selectedTargetLanguage.Name()}",
+            _ => $"{this.selectedTargetLanguage.Name}",
         };
 
         if (string.IsNullOrWhiteSpace(lang))
@@ -155,7 +148,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     private async Task RewriteText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

@@ -102,9 +102,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string launcherProviderId = string.Empty;
     private string launcherProfileId = string.Empty;
     private string launcherChatTemplateId = string.Empty;
-    private IEnumerable<string> launcherDataSourceIds = [];
+    private IReadOnlyCollection<string> launcherDataSourceIds = [];
     private HashSet<string> launcherToolIds = [];
-    private IEnumerable<AssistantComponentType> selectedAssistantComponents = [];
+    private IReadOnlyCollection<AssistantComponentType> selectedAssistantComponents = [];
     private CommonLanguages selectedOutputLanguage = CommonLanguages.AS_IS;
     private string customOutputLanguage = string.Empty;
     private bool allowGeneratedAssistantProfiles = true;
@@ -391,7 +391,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private async Task GenerateAssistantSpec()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 
@@ -435,7 +435,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private async Task GenerateLuaAssistant()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 
@@ -520,17 +520,17 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     {
         AssistantCategory.AS_IS => string.Empty,
         AssistantCategory.OTHER => this.customCategory,
-        _ => this.selectedCategory.Name(),
+        _ => this.selectedCategory.Name,
     };
 
     private string GetSelectedOutputLanguageName() => this.selectedOutputLanguage switch
     {
         CommonLanguages.AS_IS => string.Empty,
         CommonLanguages.OTHER => this.customOutputLanguage,
-        _ => this.selectedOutputLanguage.Name(),
+        _ => this.selectedOutputLanguage.Name,
     };
 
-    private string GetSelectedAssistantComponentText(List<string?>? selectedValues)
+    private string GetSelectedAssistantComponentText(IReadOnlyList<string?>? selectedValues)
     {
         if (selectedValues is null || selectedValues.Count == 0)
             return T("Model decides");
@@ -625,7 +625,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string GetAssistantComponentDisplayName(string? typeName)
     {
         if (Enum.TryParse<AssistantComponentType>(typeName, out var type))
-            return type.GetDisplayName();
+            return type.DisplayName;
 
         return typeName ?? string.Empty;
     }
@@ -726,7 +726,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             this.UpsertAudit(this.pluginAudit);
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendSuccess(new(
-                this.pluginAudit.Level.GetIcon(),
+                this.pluginAudit.Level.Icon,
                 this.pluginAudit.Findings.Count == 0
                     ? T("Security check completed. No security issues were found.")
                     : T("Security check completed with findings.")));
@@ -787,8 +787,8 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
                 string.Format(
                     T("The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
                     this.pluginInstallResult?.PluginName ?? T("Unknown assistant"),
-                    this.pluginAudit?.Level.GetName() ?? T("Unknown"),
-                    this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.GetName())
+                    this.pluginAudit?.Level.Name ?? T("Unknown"),
+                    this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.Name)
             },
         };
 

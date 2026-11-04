@@ -52,11 +52,11 @@ public sealed class PreselectedMaxBulletPointsTests
     {
         var processed = await ProcessAsync("5");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True);
             Assert.That(this.PreselectedMaximum, Is.EqualTo(5));
-        });
+        }
     }
 
     [Test]
@@ -65,11 +65,11 @@ public sealed class PreselectedMaxBulletPointsTests
         this.PreselectedMaximum = 3;
         var processed = await ProcessAsync("0");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True, "An organization may decide on no maximum at all.");
             Assert.That(this.PreselectedMaximum, Is.Zero);
-        });
+        }
     }
 
     [TestCase("9")]
@@ -80,12 +80,12 @@ public sealed class PreselectedMaxBulletPointsTests
         var processed = await ProcessAsync(configuredMaximum);
 
         ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedMaxBulletPointsPerSlide, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.False);
             Assert.That(this.PreselectedMaximum, Is.EqualTo(3), "A rejected value leaves the choice of the user untouched.");
             Assert.That(configMeta.IsLocked, Is.False, "A rejected value locks nothing.");
-        });
+        }
     }
 
     [Test]
@@ -94,12 +94,12 @@ public sealed class PreselectedMaxBulletPointsTests
         await ProcessAsync("5");
 
         var isManaged = ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedMaxBulletPointsPerSlide, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isManaged, Is.True);
             Assert.That(configMeta.IsLocked, Is.True);
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(PLUGIN_ID));
-        });
+        }
     }
 
     private int PreselectedMaximum

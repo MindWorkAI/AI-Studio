@@ -97,12 +97,12 @@ public sealed class ModelRegistryGeneratorTests
     {
         var generated = Generate(TWO_FAMILIES_AND_A_HOST, out _, out _);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(generated, Does.Contain("new global::Sample.FirstFamily()"));
             Assert.That(generated, Does.Contain("new global::Sample.SecondFamily()"), "A family which inherits through another class is still a family.");
             Assert.That(generated, Does.Contain("new global::Sample.SampleHost()"));
-        });
+        }
     }
 
     [Test]
@@ -142,11 +142,11 @@ public sealed class ModelRegistryGeneratorTests
         //
         var generated = Generate("namespace Sample;\n\npublic sealed class NothingToDoWithModels;", out var updated, out _);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(generated, Does.Contain("public static class ModelRegistrations"));
             Assert.That(CompilationHarness.ErrorsOf(updated), Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -155,12 +155,12 @@ public sealed class ModelRegistryGeneratorTests
         var generated = Generate(A_FAMILY_NEEDING_AN_ARGUMENT, out _, out var diagnostics);
         var reported = diagnostics.Where(diagnostic => diagnostic.Id is "MDR001").ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(reported, Has.Count.EqualTo(1));
             Assert.That(reported.FirstOrDefault()?.GetMessage(), Does.Contain("DemandingFamily"));
             Assert.That(generated, Does.Not.Contain("DemandingFamily"));
-        });
+        }
     }
 
     [Test]
@@ -170,11 +170,11 @@ public sealed class ModelRegistryGeneratorTests
         // The tests above run the generator by hand. This one asks whether it also ran while the app
         // was built, which is a different question and the one that actually matters.
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ModelRegistrations.CreateFamilies(), Is.Not.Null);
             Assert.That(ModelRegistrations.CreateHosts(), Is.Not.Null);
-        });
+        }
     }
 
     private static string Generate(string source, out Compilation updated, out IReadOnlyList<Diagnostic> diagnostics)

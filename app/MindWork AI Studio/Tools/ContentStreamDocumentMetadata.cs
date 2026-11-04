@@ -6,5 +6,5 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamDocumentMetadata : ContentStreamSseMetadata
 {
     [JsonPropertyName("Document")]
-    public ContentStreamDocumentDetails? Document { get; init; }
+    public ContentStreamDocumentDetails? Document { get; set; }
 }

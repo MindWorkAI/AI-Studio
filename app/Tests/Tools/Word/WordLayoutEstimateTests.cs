@@ -98,11 +98,11 @@ public sealed class WordLayoutEstimateTests
         const int CHARACTERS = 150;
         var lines = (int)Math.Ceiling(CHARACTERS * FONT_SIZE * 10 * WordLayoutEstimate.CHARACTER_WIDTH / WIDTH);
         var paragraph = ParagraphOf(NORMAL_STYLE_ID, new W.Text(new string('x', CHARACTERS)));
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(lines, Is.GreaterThan(1));
             Assert.That(this.estimate.HeightOf(paragraph, WIDTH), Is.EqualTo((int)(lines * FONT_SIZE * 10 * WordLayoutEstimate.LINE_HEIGHT)), "Single spacing takes a little more than the font size per line.");
-        });
+        }
     }
 
     [Test]

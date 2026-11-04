@@ -67,6 +67,16 @@ public sealed class EffectiveRetrievalModeTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task SwitchingTheToolOffYourselfGetsEveryMessageSearched()
+    {
+        this.SettingsManager.ConfigurationData.Tools.UserDisabledToolIds.Add(ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID);
+
+        var mode = await this.GetModeAsync(DataSourceRetrievalMode.SEMANTIC_SEARCH, ToolCapableProvider());
+
+        Assert.That(mode, Is.EqualTo(new EffectiveRetrievalMode(DataSourceRetrievalMode.EVERY_MESSAGE, ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER)), "A user who switches the tool off still wants their data sources searched.");
+    }
+
+    [Test]
     public async Task OutsideTheChatEveryMessageIsSearched()
     {
         var mode = await this.GetModeAsync(DataSourceRetrievalMode.SEMANTIC_SEARCH, ToolCapableProvider(), AIStudio.Tools.Components.REWRITE_ASSISTANT);

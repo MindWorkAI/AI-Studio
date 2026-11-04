@@ -27,7 +27,7 @@ public static class PandocExport
     /// <returns>True, when the document was written.</returns>
     public static async Task<bool> ConvertAsync(RustService rustService, string markdownText, string targetFilePath, FileExportFormat format, CancellationToken token = default)
     {
-        if (!format.UsesPandoc())
+        if (!format.UsesPandoc)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
         var tempMarkdownFilePath = string.Empty;
@@ -45,7 +45,7 @@ public static class PandocExport
                 .Create()
                 .UseStandaloneMode()
                 .WithInputFormat("gfm+emoji+tex_math_dollars")
-                .WithOutputFormat(format.ToPandocOutputFormat())
+                .WithOutputFormat(format.PandocOutputFormat)
                 .WithOutputFile(targetFilePath)
                 .WithInputFile(tempMarkdownFilePath);
 
@@ -54,7 +54,7 @@ public static class PandocExport
             // reaches the page as a string which Pandoc escapes; only a file named true or false
             // is read as a switch and keeps the temporary name.
             //
-            if (format.NeedsPageTitle())
+            if (format.NeedsPageTitle)
                 pandocBuilder.AddArgument("-M").AddArgument($"pagetitle={Path.GetFileNameWithoutExtension(targetFilePath)}");
 
             var pandoc = await pandocBuilder.BuildAsync(rustService);

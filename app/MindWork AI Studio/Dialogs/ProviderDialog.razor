@@ -23,11 +23,11 @@
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         <MudSelectItem Value="@provider">
-                            <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.ToName()" />
+                            <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.Name" />
                         </MudSelectItem>
                     }
                 </MudSelect>
-                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton() || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">
+                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.CreationURL" Target="_blank">
                     @T("Create account")
                 </MudButton>
             </MudStack>
@@ -45,7 +45,7 @@
                     <SecretInputField Secret="@this.dataAPIKey" SecretChanged="@this.OnAPIKeyChanged" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
                 }
 
-                @if (this.DataLLMProvider.IsHostnameNeeded())
+                @if (this.DataLLMProvider.IsHostnameNeeded)
                 {
                     <MudTextField
                         T="string"
@@ -60,30 +60,30 @@
                         UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                 }
 
-                @if (this.DataLLMProvider.IsHostNeeded())
+                @if (this.DataLLMProvider.IsHostNeeded)
                 {
                     <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
                         @foreach (Host host in Enum.GetValues(typeof(Host)))
                         {
-                            @if (host.IsChatSupported())
+                            @if (host.IsChatSupported)
                             {
                                 <MudSelectItem Value="@host">
-                                    @host.Name()
+                                    @host.Name
                                 </MudSelectItem>
                             }
                         }
                     </MudSelect>
                 }
 
-                @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
+                @if (this.DataLLMProvider.IsHFInstanceProviderNeeded)
                 {
                     <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
                         @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                         {
-                            @if (inferenceProvider.SupportsChat())
+                            @if (inferenceProvider.SupportsChat)
                             {
                                 <MudSelectItem Value="@inferenceProvider">
-                                    @inferenceProvider.ToName()
+                                    @inferenceProvider.Name
                                 </MudSelectItem>
                             }
                         }
@@ -97,7 +97,7 @@
                 {
                     <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                         <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
-                            @if (this.DataLLMProvider.IsLLMModelProvidedManually())
+                            @if (this.DataLLMProvider.IsLLMModelProvidedManually)
                             {
                                 <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
                                     @T("Show available models")
@@ -311,7 +311,7 @@
                         <MudJustifiedText Typo="Typo.body2" Class="mb-4">
                             @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
                         </MudJustifiedText>
-                        <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
+                        <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" Sizing="InputSizing.Auto" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
                         @if (this.ShowTokenizerSettings)
                         {
                             <MudJustifiedText Typo="Typo.body1" Class="mt-4 mb-3">

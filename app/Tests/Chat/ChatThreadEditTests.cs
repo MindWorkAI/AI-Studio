@@ -67,14 +67,14 @@ public sealed class ChatThreadEditTests
         thread.Remove(answer.Content!);
         composer.RestoreFromDraft(thread.Draft);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.Blocks, Is.Empty, "Both the question and the stopped answer leave the chat.");
             Assert.That(File.Exists(transcript.FilePath), Is.True, "The composer still carries the transcript, so its file has to stay.");
             Assert.That(composer.FileAttachments.Single().Exists, Is.True, "The edited message goes out with the transcript, not with a reference to a deleted file.");
             Assert.That(thread.Draft.MediaTranscripts.Select(x => x.FilePath), Is.EqualTo(new[] { transcript.FilePath }), "The draft owns the transcript now: opening the chat again brings it back, and removing it from the composer deletes the file.");
             Assert.That(thread.Draft.Text, Is.EqualTo("Summarize the meeting"), "The message being edited is the draft now, its text included.");
-        });
+        }
     }
 
     [Test]
@@ -101,11 +101,11 @@ public sealed class ChatThreadEditTests
 
         thread.Remove(question.Content!);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(File.Exists(transcript.FilePath), Is.False, "Nothing refers to the transcript of a deleted message any longer, so its file has to go.");
             Assert.That(thread.Draft.IsEmpty, Is.True, "A deleted message hands nothing over to the draft.");
-        });
+        }
     }
 
     [Test]
@@ -121,12 +121,12 @@ public sealed class ChatThreadEditTests
 
         thread.RemoveForEditing(new ContentText { Text = "Question of another chat", FileAttachments = [transcript] });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.Blocks, Has.Count.EqualTo(2), "The message to edit is not part of this chat, so no block goes.");
             Assert.That(thread.Draft.IsEmpty, Is.True, "A message this chat does not hold never becomes its draft.");
             Assert.That(File.Exists(transcript.FilePath), Is.True);
-        });
+        }
     }
 
     /// <summary>

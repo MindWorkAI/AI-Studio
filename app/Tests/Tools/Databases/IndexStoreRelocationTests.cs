@@ -26,7 +26,7 @@ public sealed class IndexStoreRelocationTests
         var manifest = await store.Client.GetManifestAsync(sourceId, token);
         var hits = await store.Client.SearchChunksAsync(sourceId, "relocation", 10, token);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(manifest.Files.Keys, Is.EquivalentTo(new[] { newPath }));
             Assert.That(manifest.Files[newPath].Fingerprint, Is.EqualTo("new-fingerprint"));
@@ -39,7 +39,7 @@ public sealed class IndexStoreRelocationTests
             Assert.That(hits[0].FileName, Is.EqualTo("renamed.md"));
             Assert.That(hits[0].PageNumber, Is.EqualTo(2));
             Assert.That(hits[0].ChunkText, Is.EqualTo("report about relocation"));
-        });
+        }
 
         await store.Client.DeleteFileAsync(sourceId, newPath, token);
         Assert.That(await store.Client.SearchChunksAsync(sourceId, "relocation", 10, token), Is.Empty, "Ordinary removal must still find a relocated document's chunks.");

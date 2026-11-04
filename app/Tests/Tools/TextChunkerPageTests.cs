@@ -62,11 +62,11 @@ public sealed class TextChunkerPageTests
     {
         var chunks = await this.SplitAsync(maxChunkTokenLength: 4, Page(1, "one two"), Page(7, "alpha beta gamma delta. epsilon zeta eta theta. iota kappa lambda mu."));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chunks.Count(chunk => chunk.PageNumber is 7), Is.GreaterThan(1), "The page is too long for one chunk.");
             Assert.That(chunks.Where(chunk => chunk.PageNumber is 7).Select(chunk => chunk.EndPageNumber), Has.All.EqualTo(7), "A chunk cut out of a single page ends on it.");
-        });
+        }
     }
 
     [Test]
@@ -102,11 +102,11 @@ public sealed class TextChunkerPageTests
     {
         var chunks = await this.SplitAsync(maxChunkTokenLength: 4, Line(1, "one two"), Line(7, "alpha beta gamma delta. epsilon zeta eta theta. iota kappa lambda mu."));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chunks.Count(chunk => chunk.Start.LineNumber is 7), Is.GreaterThan(1), "The line is too long for one chunk.");
             Assert.That(chunks.Where(chunk => chunk.Start.LineNumber is 7).Select(chunk => chunk.End.LineNumber), Has.All.EqualTo(7), "A chunk cut out of a single line ends on it.");
-        });
+        }
     }
 
     /// <remarks>
@@ -138,11 +138,11 @@ public sealed class TextChunkerPageTests
             Row("Budget", 0, "# Budget ```csv"), Row("Budget", 1, "rent 1200"), Row("Budget", 2, "food 400"), Row("Budget", 2, "```"),
             Row("Summary", 0, "# Summary ```csv"), Row("Summary", 1, "total 1600"), Row("Summary", 1, "```"));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(chunks.Select(chunk => (chunk.Start.SheetName, chunk.Start.RowNumber, chunk.End.RowNumber)), Is.EqualTo(new (string?, int?, int?)[] { ("Budget", 1, 2), ("Summary", 1, 1) }));
             Assert.That(chunks[1].Text, Does.StartWith("# Summary"), "The second sheet does not start with the overlap of the first.");
-        });
+        }
     }
 
     [Test]

@@ -254,11 +254,11 @@ fn detect_installation_kind() -> InstallationKind {
 
     // The updater replaces the entire app bundle, so it needs to write into the directory that
     // contains the bundle. On a device managed through an MDM solution like Jamf, the bundle sits
-    // in a location the user cannot write to. We deliberately do not look for a marker file here:
-    // any additional file inside the bundle would break its code signature. As a consequence, a
-    // macOS installation is never reported as managed, only as an unsupported location. An
-    // organization that wants AI Studio to name it explicitly sets DataApp.UpdateInterval to
-    // DISABLE_UPDATES in its enterprise configuration, which takes precedence anyway.
+    // in a location the user cannot write to, and update_target_installation_kind reports such an
+    // installation as managed. We deliberately do not look for a marker file here: any additional
+    // file inside the bundle would break its code signature. An organization that wants AI Studio to
+    // name it explicitly sets DataApp.UpdateInterval to DISABLE_UPDATES in its enterprise
+    // configuration, which takes precedence anyway.
     match macos_app_bundle_directory(&executable_path) {
         Some(bundle_directory) => update_target_installation_kind(&bundle_directory),
         None => InstallationKind::User,
@@ -1303,11 +1303,18 @@ fn add_enterprise_config_pair(
     configs: &mut Vec<EnterpriseConfig>,
     seen_ids: &mut HashSet<String>,
 ) {
-    let id = raw_id.and_then(|value| normalize_enterprise_config_id(value.value()));
+    let id = raw_id.and_then(|value| normalize_enterprise_value(value.value()));
     let server_url = raw_server_url.and_then(|value| normalize_enterprise_value(value.value()));
 
     match (id, server_url) {
         (Some(id), Some(server_url)) => {
+            // The app drops an ID which is no GUID. Taking the pair anyway would make this source the
+            // one we use, hide every source after it, and leave the device without any configuration:
+            let Some(id) = canonical_enterprise_config_id(&id) else {
+                warn!("Ignoring enterprise configuration from {} in '{}', because its ID '{}' is no valid GUID.", source_name, slot, id);
+                return;
+            };
+
             if seen_ids.insert(id.clone()) {
                 configs.push(EnterpriseConfig {
                     id,
@@ -1368,14 +1375,50 @@ fn normalize_enterprise_value(value: &str) -> Option<String> {
     }
 }
 
-fn normalize_enterprise_config_id(value: &str) -> Option<String> {
-    normalize_enterprise_value(value).map(|value| value.to_lowercase())
+/// Returns the configuration ID in the form the app works with, lower case and with hyphens, or
+/// `None` when it is no GUID.
+///
+/// The app reads the ID with `Guid.TryParse`. We accept the forms of it that IDs come in: with
+/// hyphens, the same in braces or in parentheses, and 32 digits without hyphens. Writing every ID in
+/// one form also lets the check for duplicates see the same ID in two forms.
+fn canonical_enterprise_config_id(value: &str) -> Option<String> {
+    let enclosed = value
+        .strip_prefix('{')
+        .and_then(|inner| inner.strip_suffix('}'))
+        .or_else(|| value.strip_prefix('(').and_then(|inner| inner.strip_suffix(')')));
+
+    // Only the form with hyphens may be enclosed, as with Guid.TryParse:
+    let digits = match enclosed {
+        Some(inner) => digits_of_hyphenated_guid(inner)?,
+        None if value.len() == 32 => String::from(value),
+        None => digits_of_hyphenated_guid(value)?,
+    };
+
+    // Checking for hex digits also ensures that every character is a single byte, so that the slicing
+    // below cannot cut a character apart:
+    if digits.len() != 32 || !digits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
+
+    let digits = digits.to_ascii_lowercase();
+    Some(format!("{}-{}-{}-{}-{}", &digits[0..8], &digits[8..12], &digits[12..16], &digits[16..20], &digits[20..32]))
+}
+
+/// Returns the digits of a GUID written with hyphens, e.g., `9072b77d-ca81-40da-be6a-861da525ef7b`,
+/// or `None` when its groups do not have the lengths of such a GUID. Whether the digits are hex
+/// digits is left to the caller.
+fn digits_of_hyphenated_guid(value: &str) -> Option<String> {
+    let groups: Vec<&str> = value.split('-').collect();
+    let has_guid_groups = groups.len() == 5
+        && groups.iter().zip([8, 4, 4, 4, 12]).all(|(group, length)| group.len() == length);
+
+    has_guid_groups.then(|| groups.concat())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        directory_is_writable, enterprise_env_key_suffix_ignoring_case,
+        canonical_enterprise_config_id, directory_is_writable, enterprise_env_key_suffix_ignoring_case,
         enterprise_environment_key_name, enterprise_policy_file_slot_suffix,
         has_managed_installation_marker,
         is_windows_machine_wide_installation, is_windows_per_user_installation,
@@ -1724,6 +1767,115 @@ mod tests {
         assert_eq!(selected.source_name, "registry");
         assert_eq!(selected.encryption_secret, "");
         assert_eq!(selected.configs.len(), 1);
+    }
+
+    /// A pair whose ID is no GUID must not make its source the one we use: the app drops the ID, and
+    /// the device would run without any configuration, although the next source has a valid one.
+    #[test]
+    fn select_effective_enterprise_config_source_skips_a_source_with_only_invalid_ids() {
+        let mut registry_values = HashMap::new();
+        registry_values.insert(String::from("config_id_00000"), String::from("not-a-guid"));
+        registry_values.insert(
+            String::from("config_server_url_00000"),
+            String::from("https://registry.example.org"),
+        );
+
+        let mut policy_values = HashMap::new();
+        policy_values.insert(String::from("config_id_00000"), String::from(TEST_ID_B));
+        policy_values.insert(
+            String::from("config_server_url_00000"),
+            String::from("https://policy.example.org"),
+        );
+
+        let selected = select_effective_enterprise_config_source(vec![
+            parse_enterprise_source_values("Windows registry", &registry_values),
+            parse_enterprise_source_values("policy files", &policy_values),
+        ]);
+
+        assert_eq!(selected.source_name, "policy files");
+        assert_eq!(
+            selected.configs,
+            vec![enterprise_config(TEST_ID_B, "https://policy.example.org", "policy files", "", "indexed slot 00000")]
+        );
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_skips_configs_with_invalid_ids() {
+        let mut values = HashMap::new();
+        values.insert(String::from("config_id0"), String::from("not-a-guid"));
+        values.insert(
+            String::from("config_server_url0"),
+            String::from("https://invalid.example.org"),
+        );
+        values.insert(String::from("config_id1"), String::from(TEST_ID_B));
+        values.insert(
+            String::from("config_server_url1"),
+            String::from("https://valid.example.org"),
+        );
+        values.insert(
+            String::from("configs"),
+            format!("not-a-guid@https://combined-invalid.example.org;{TEST_ID_C}@https://combined.example.org"),
+        );
+
+        let source = parse_enterprise_source_values("test", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![
+                enterprise_config(TEST_ID_B, "https://valid.example.org", "test", "", "indexed slot 1"),
+                enterprise_config(TEST_ID_C, "https://combined.example.org", "test", "", "combined legacy entry 2"),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_detects_duplicates_across_id_forms() {
+        let mut values = HashMap::new();
+        values.insert(String::from("config_id0"), format!("{{{TEST_ID_A}}}"));
+        values.insert(
+            String::from("config_server_url0"),
+            String::from("https://braces.example.org"),
+        );
+        values.insert(String::from("config_id1"), TEST_ID_A.replace('-', ""));
+        values.insert(
+            String::from("config_server_url1"),
+            String::from("https://digits.example.org"),
+        );
+
+        let source = parse_enterprise_source_values("test", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://braces.example.org", "test", "", "indexed slot 0")]
+        );
+    }
+
+    #[test]
+    fn canonical_enterprise_config_id_accepts_the_forms_the_app_reads() {
+        let canonical = Some(String::from("9072b77d-ca81-40da-be6a-861da525ef7b"));
+
+        assert_eq!(canonical_enterprise_config_id("9072B77D-CA81-40DA-BE6A-861DA525EF7B"), canonical);
+        assert_eq!(canonical_enterprise_config_id("{9072b77d-ca81-40da-be6a-861da525ef7b}"), canonical);
+        assert_eq!(canonical_enterprise_config_id("(9072b77d-ca81-40da-be6a-861da525ef7b)"), canonical);
+        assert_eq!(canonical_enterprise_config_id("9072b77dca8140dabe6a861da525ef7b"), canonical);
+    }
+
+    #[test]
+    fn canonical_enterprise_config_id_rejects_other_forms() {
+        for id in [
+            "not-a-guid",
+            "9072b77d-ca81-40da-be6a-861da525ef7",
+            "9072b77d-ca81-40da-be6a-861da525ef7bb",
+            "9072b77g-ca81-40da-be6a-861da525ef7b",
+            "9072b77d-ca81-40da-be6a-861da525efä",
+            "9072b77dca8140dabe6a861da525ef7",
+            "{9072b77d-ca81-40da-be6a-861da525ef7b)",
+            "{9072b77dca8140dabe6a861da525ef7b}",
+            "urn:uuid:9072b77d-ca81-40da-be6a-861da525ef7b",
+            "{0x9072b77d,0xca81,0x40da,{0xbe,0x6a,0x86,0x1d,0xa5,0x25,0xef,0x7b}}",
+        ] {
+            assert_eq!(canonical_enterprise_config_id(id), None, "'{id}' must not count as a configuration ID.");
+        }
     }
 
     #[test]

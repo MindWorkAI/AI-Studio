@@ -46,6 +46,15 @@ public partial class ToolSettingsDialog : SettingsDialogBase
     }
 
     /// <summary>
+    /// Whether the user switched this tool off, and nothing but the user.
+    /// </summary>
+    /// <remarks>
+    /// When the organization switched it off as well, that is what the dialog says: switching it on
+    /// again would not help the user.
+    /// </remarks>
+    private bool IsSwitchedOffByUser => this.item?.SwitchOffReason is ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER;
+
+    /// <summary>
     /// Whether each section is headed by the name of its tool.
     /// </summary>
     /// <remarks>

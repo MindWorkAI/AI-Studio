@@ -59,7 +59,7 @@
             {
                 <LayoutChoicePanels IsChosen="@(purpose => this.PreselectedLayoutOf(purpose).Length > 0)">
                     <ChoiceContent Context="purpose">
-                        <ConfigurationSelect OptionDescription="@purpose.Label()" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedLayoutOf(purpose))" Data="@this.layoutOptions" SelectionUpdate="@(selectedValue => this.SetPreselectedLayout(purpose, selectedValue))" OptionHelp="@purpose.Help()" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked"/>
+                        <ConfigurationSelect OptionDescription="@purpose.Label" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedLayoutOf(purpose))" Data="@this.layoutOptions" SelectionUpdate="@(selectedValue => this.SetPreselectedLayout(purpose, selectedValue))" OptionHelp="@purpose.Help" IsLocked="() => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var meta) && meta.IsLocked"/>
                     </ChoiceContent>
                 </LayoutChoicePanels>
             }
@@ -83,7 +83,7 @@
             {
                 @foreach (var templateSlide in loadedTemplate.Slides)
                 {
-                    <ConfigurationSelect OptionDescription="@templateSlide.Label()" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedUseOf(templateSlide))" Data="@UseOptionsOf(templateSlide)" SelectionUpdate="@(selectedValue => this.SetPreselectedUse(templateSlide.Number, selectedValue))" IsLocked="@AreTemplateSlideUsesLocked"/>
+                    <ConfigurationSelect OptionDescription="@templateSlide.Label" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.PreselectedUseOf(templateSlide))" Data="@UseOptionsOf(templateSlide)" SelectionUpdate="@(selectedValue => this.SetPreselectedUse(templateSlide.Number, selectedValue))" IsLocked="@AreTemplateSlideUsesLocked"/>
                 }
             }
 

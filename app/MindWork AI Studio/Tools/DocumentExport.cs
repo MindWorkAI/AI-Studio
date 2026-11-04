@@ -40,7 +40,7 @@ public static class DocumentExport
     /// <returns>True, when the document was written.</returns>
     public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, AIGeneratedContentDisclosureService? disclosureService, string dialogTitle, FileExportFormat format, IContent markdownContent, string? fileName = null, FormatTemplate? formatTemplate = null)
     {
-        if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!format.UsesPandoc || format.FileTypeFilter is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
         if (formatTemplate is not null && !formatTemplate.Serves(format))
@@ -50,7 +50,7 @@ public static class DocumentExport
         // We read the text before we ask for a path: when there is nothing to convert, the user
         // should learn that right away instead of picking a file first and getting an error afterwards.
         //
-        if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors()))
+        if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors))
         {
             LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));
@@ -111,7 +111,7 @@ public static class DocumentExport
     /// Writes the Markdown into a copy of the template, and the result into the target.
     /// </summary>
     /// <remarks>
-    /// Only Word templates serve an export so far, cf. FileExportFormatExtensions.ToFormatTemplateFilter,
+    /// Only Word templates serve an export so far, cf. FileExportFormatExtensions.FormatTemplateFilter,
     /// so the Word writer takes every template. Like PandocExport.ConvertAsync, this says nothing to
     /// the user and reports only whether the document was written.
     ///

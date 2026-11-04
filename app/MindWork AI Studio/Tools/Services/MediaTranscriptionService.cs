@@ -314,9 +314,15 @@ public sealed class MediaTranscriptionService(
                     continue;
                 }
 
+                //
+                // Only while chats are stored automatically, the transcript goes right into a stored chat,
+                // which is stored along with it. Otherwise, storing would put whatever the user did not save
+                // on the disk, so the transcript waits in the staging area until the user saves the chat:
+                //
                 var persistentStorage = transcriptStorages.FirstOrDefault(storage => storage.CanStore(target.Owner));
                 var isPersistedChat = persistentStorage is null &&
                                       ownerChat is not null &&
+                                      settingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY &&
                                       WorkspaceBehaviour.IsChatExisting(new LoadChat(ownerChat.WorkspaceId, ownerChat.ChatId));
                 
                 var attachment = persistentStorage is not null
@@ -684,7 +690,7 @@ public sealed class MediaTranscriptionService(
         // unchanged when it already is a single mono 48 kHz Opus track in a WebM container and small
         // enough. Such a file keeps whatever bitrate it was made with, which is the better outcome --
         // re-encoding it could only take quality away, never add any.
-        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.GetBitsPerSecond();
+        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.BitsPerSecond;
 
         // Which quality an upload was produced with is the first question to ask when a transcript
         // comes back missing something, so it has to be in the log of the job it belongs to:

@@ -47,7 +47,7 @@ public static class DataRestorePreparer
         Discard(target);
         try
         {
-            using var archive = ZipFile.OpenRead(archivePath);
+            await using var archive = await ZipFile.OpenReadAsync(archivePath, token);
             var manifestResult = await DataBackupReader.ReadManifestAsync(archive, token);
             if (manifestResult.Manifest is not { } manifest)
                 return new(false, false, manifestResult.Issue);
@@ -218,7 +218,7 @@ public static class DataRestorePreparer
 
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         long size = 0;
-        await using (var source = file.Entry.Open())
+        await using (var source = await file.Entry.OpenAsync(token))
         await using (var destination = new FileStream(file.DestinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan))
         {
             int read;

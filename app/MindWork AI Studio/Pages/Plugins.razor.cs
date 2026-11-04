@@ -123,7 +123,7 @@ public partial class Plugins : MSGComponentBase
         {
             var blockedAudit = securityState.Audit;
             if (blockedAudit is not null)
-                await this.DialogService.ShowMessageBox(this.T("Assistant Audit"), $"{blockedAudit.Level.GetName()}: {blockedAudit.Summary}", this.T("Close"));
+                await this.DialogService.ShowMessageBoxAsync(this.T("Assistant Audit"), $"{blockedAudit.Level.Name}: {blockedAudit.Summary}", this.T("Close"));
             return;
         }
 
@@ -168,8 +168,8 @@ public partial class Plugins : MSGComponentBase
                 string.Format(
                     this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
                     pluginName,
-                    actualLevel.GetName(),
-                    this.AssistantPluginAuditSettings.MinimumLevel.GetName())
+                    actualLevel.Name,
+                    this.AssistantPluginAuditSettings.MinimumLevel.Name)
             },
         };
 

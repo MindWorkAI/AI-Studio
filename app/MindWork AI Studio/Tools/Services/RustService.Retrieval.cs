@@ -112,7 +112,7 @@ public sealed partial class RustService
 
                 try
                 {
-                    var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
+                    var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent, CONTENT_STREAM_JSON_OPTIONS);
                     if (sseEvent is null)
                         continue;
 
@@ -352,9 +352,8 @@ public sealed partial class RustService
             await using var stream = await response.Content.ReadAsStreamAsync(token);
             using var reader = new StreamReader(stream);
 
-            while (!reader.EndOfStream && !token.IsCancellationRequested)
+            while (!token.IsCancellationRequested && await reader.ReadLineAsync(token) is { } line)
             {
-                var line = await reader.ReadLineAsync(token);
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
@@ -365,7 +364,7 @@ public sealed partial class RustService
                 ContentStreamSseEvent? sseEvent = null;
                 try
                 {
-                    sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
+                    sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent, CONTENT_STREAM_JSON_OPTIONS);
                 }
                 catch (JsonException)
                 {
@@ -461,7 +460,7 @@ public sealed partial class RustService
     {
         try
         {
-            var errorMessage = JsonSerializer.Deserialize<string>(jsonContent);
+            var errorMessage = JsonSerializer.Deserialize<string>(jsonContent, CONTENT_STREAM_JSON_OPTIONS);
             if (string.IsNullOrWhiteSpace(errorMessage))
                 return false;
 

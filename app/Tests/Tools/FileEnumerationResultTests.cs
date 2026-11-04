@@ -17,7 +17,7 @@ public sealed class FileEnumerationResultTests
         result.AddFilePatternExclusion(Path.Combine(directoryPath, "nested", "dockerfile"));
         result.AddFilePatternExclusion(Path.Combine(directoryPath, "Caddyfile"));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.FilePatternExclusionCount, Is.EqualTo(6));
             Assert.That(result.FilePatternExclusions, Is.EquivalentTo(new[]
@@ -27,6 +27,6 @@ public sealed class FileEnumerationResultTests
                 new DataSourceEmbeddingFilePatternGroup("Dockerfile", 2),
                 new DataSourceEmbeddingFilePatternGroup(".pdf", 2),
             }));
-        });
+        }
     }
 }

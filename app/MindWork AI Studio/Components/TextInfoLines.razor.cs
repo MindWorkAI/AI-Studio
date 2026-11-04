@@ -10,6 +10,9 @@ public partial class TextInfoLines : MSGComponentBase
     public string Label { get; set; } = string.Empty;
 
     [Parameter]
+    public string Icon { get; set; } = string.Empty;
+
+    [Parameter]
     public string Value { get; set; } = string.Empty;
 
     [Parameter]
@@ -17,6 +20,9 @@ public partial class TextInfoLines : MSGComponentBase
 
     [Parameter]
     public int MaxLines { get; set; } = 30;
+
+    [Parameter]
+    public int Lines { get; set; } = 3;
 
     [Parameter]
     public bool ShowingCopyButton { get; set; } = true;

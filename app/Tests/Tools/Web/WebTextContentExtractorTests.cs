@@ -44,7 +44,7 @@ public sealed class WebTextContentExtractorTests
     {
         var page = WebTextContentExtractor.Extract("Plain text.", "text/plain", URL);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(page.Title, Is.Empty, "A text document has no title element, and guessing one from the file name would claim something the document does not say.");
             Assert.That(page.Description, Is.Empty);
@@ -52,7 +52,7 @@ public sealed class WebTextContentExtractorTests
             Assert.That(page.Language, Is.Empty);
             Assert.That(page.CanonicalUrl, Is.Null);
             Assert.That(page.Outline, Is.Empty);
-        });
+        }
     }
 
     [Test]

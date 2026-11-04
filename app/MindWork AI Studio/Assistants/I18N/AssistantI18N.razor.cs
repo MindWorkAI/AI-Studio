@@ -190,7 +190,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string SystemPromptLanguage() => this.activeSystemPromptLanguage ?? (this.selectedTargetLanguage switch
     {
         CommonLanguages.OTHER => this.customTargetLanguage,
-        _ => $"{this.selectedTargetLanguage.Name()}",
+        _ => $"{this.selectedTargetLanguage.Name}",
     });
 
     private async Task OnLanguagePluginChanged(Guid pluginId)
@@ -215,9 +215,9 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             this.loadingIssue = string.Format(T("Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin."), this.selectedLanguagePluginId);
             this.selectedLanguagePlugin = null;
         }
-        else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.ToIETFTag())
+        else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.IETFTag)
         {
-            this.loadingIssue = string.Format(T("The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.ToIETFTag());
+            this.loadingIssue = string.Format(T("The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.IETFTag);
             this.selectedLanguagePlugin = null;
         }
         else
@@ -349,14 +349,14 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     private async Task LocalizeTextContent()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         
         if(this.selectedLanguagePlugin is null)
             return;
         
-        if (this.selectedLanguagePlugin.IETFTag != this.selectedTargetLanguage.ToIETFTag())
+        if (this.selectedLanguagePlugin.IETFTag != this.selectedTargetLanguage.IETFTag)
             return;
         
         var addedContentSnapshot = this.addedContent.ToArray();

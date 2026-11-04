@@ -32,11 +32,11 @@ public sealed class IndexStoreFullTextSearchTests
         var all = await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "report", 10, TOKEN);
         var firstTwo = await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "report", 2, TOKEN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(all.Select(result => (result.ParentFileId, result.ChunkIndex)), Is.EqualTo(new[] { (best, 0), (ties[0], 0), (ties[1], 0) }), "The chunk without the word is not found, and the tie falls by document.");
             Assert.That(firstTwo.Select(result => result.ParentFileId), Is.EqualTo(new[] { best, ties[0] }), "A smaller limit cuts the same order short.");
-        });
+        }
     }
 
     [Test]
@@ -53,11 +53,11 @@ public sealed class IndexStoreFullTextSearchTests
 
         var found = (await store.Client.SearchChunksAsync(DATA_SOURCE_ID, "report", 10, TOKEN)).Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(found.PageNumber, Is.EqualTo(3));
             Assert.That(found.EndPageNumber, Is.EqualTo(5), "The passage the AI receives from this chunk names pages 3 to 5.");
-        });
+        }
     }
 
     private static async Task<string> StoreFileAsync(TemporaryIndexStore store, string path, params string[] chunkTexts)

@@ -133,7 +133,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
 
         // A check asked for in code waits until the fields hold their new values, cf. ToggleExpertSettings:
         if (this.revalidateAfterRender)
@@ -253,7 +253,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Path = this.dataPath,
         FilePatterns = this.NormalizeFilePatterns(),
 
-        // Kept as typed, since the line breaks group the entries for the eye:
+        // Unlike the file patterns, no normalizing, since the exclusion editor passes on valid lists only:
         ExcludePatterns = this.dataExcludePatterns,
         MaxFileSizeMegabytes = this.dataMaxFileSizeMegabytes,
         IncludeSubdirectories = this.dataIncludeSubdirectories,
@@ -267,7 +267,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private async Task Store()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
@@ -301,7 +301,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private string NormalizeFilePatterns() => FileNamePatterns.Normalize(this.dataFilePatterns);
 
-    private void RestoreDefaultExcludePatterns() => this.dataExcludePatterns = FileExclusions.DEFAULT_PATTERNS;
+    private void RestoreDefaultFilePatterns() => this.dataFilePatterns = DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS;
 
     /// <summary>
     /// Gives the fields which are checked against each other a fresh verdict: the embedding provider

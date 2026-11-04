@@ -1007,22 +1007,12 @@ public abstract class BaseProvider : IProvider, ISecretId
         try
         {
             //
-            // Read the stream, line by line:
+            // Read the stream, line by line, until it ends. We never ask the reader whether the
+            // stream ended: that would wait for the next data without any timeout, and it would
+            // hold a thread meanwhile. Reading the next line tells the same, see below.
             //
             while (true)
             {
-                try
-                {
-                    if(streamReader.EndOfStream)
-                        break;
-                }
-                catch (Exception e)
-                {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                    this.logger.LogWarning(e, "Failed to read the end-of-stream state from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
-                    break;
-                }
-
                 // Check if the token is canceled:
                 if (token.IsCancellationRequested)
                 {
@@ -1058,13 +1048,14 @@ public abstract class BaseProvider : IProvider, ISecretId
                     break;
                 }
 
+                // The stream ended:
                 if (line is null)
                     break;
 
                 // Skip empty lines:
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
-                
+
                 if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
                     throw providerRequestException;
 
@@ -1386,7 +1377,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (runnableTools.Count > 0)
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
-                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
+                    runnableTools.Select(x => (object)ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
                     (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
@@ -1582,7 +1573,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             form.Add(new StringContent("json"), "response_format");
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL);
             request.Content = form;
 
             // Handle the authorization header based on the provider:
@@ -1671,15 +1662,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                 modelName = "placeholder";
             
             // Prepare the HTTP embedding request:
-            var payload = new
-            {
-                model = modelName,
-                input = texts,
-                encoding_format = "float"
-            };
-            
+            var payload = new EmbeddingRequest(modelName, texts);
             var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
-            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL());
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL);
 
             // Handle the authorization header based on the provider:
             switch (this.Provider)

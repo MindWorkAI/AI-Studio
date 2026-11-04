@@ -5,6 +5,8 @@ using Lua.Standard;
 
 using SharedTools;
 
+using LuaTable = Lua.LuaTable;
+
 namespace AIStudio.Tests.Settings;
 
 /// <summary>
@@ -44,7 +46,7 @@ public sealed class FormatTemplateConfigurationTests
         var written = new FormatTemplate(3, Guid.NewGuid().ToString(), "Annual \"report\"", Path.Combine(Path.GetTempPath(), "templates", "Annual report.dotx"));
         var (isValid, read) = await ParseAsync(written.ExportAsConfigurationSection(), string.Empty);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isValid, Is.True);
             Assert.That(read.Name, Is.EqualTo(written.Name));
@@ -52,7 +54,7 @@ public sealed class FormatTemplateConfigurationTests
             Assert.That(read.IsEnterpriseConfiguration, Is.True);
             Assert.That(read.EnterpriseConfigurationPluginId, Is.EqualTo(PLUGIN_ID));
             Assert.That(read.Num, Is.Zero, "The number is given when the object is stored.");
-        });
+        }
     }
 
     [TestCase("Report.dotx", Description = "A Word template, into which a document is exported.")]
@@ -61,11 +63,11 @@ public sealed class FormatTemplateConfigurationTests
     {
         var (isValid, read) = await ParseAsync(Snippet(ID, "Report", $"templates/{fileName}"), this.pluginDirectory);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isValid, Is.True);
             Assert.That(read.FilePath, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates", fileName)));
-        });
+        }
     }
 
     [Test]
@@ -74,11 +76,11 @@ public sealed class FormatTemplateConfigurationTests
         var absolutePath = Path.Combine(this.pluginDirectory, "nowhere", "Letter.dotx");
         var (isValid, read) = await ParseAsync(Snippet(ID, "Letter", absolutePath), this.pluginDirectory);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isValid, Is.True, "A network share which is not connected right now is no reason to drop the template.");
             Assert.That(read.FilePath, Is.EqualTo(absolutePath));
-        });
+        }
     }
 
     [TestCase("../Report.dotx", Description = "A relative path must not leave the plugin directory.")]

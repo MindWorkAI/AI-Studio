@@ -287,8 +287,8 @@ internal sealed class WordLayoutEstimate(W.Styles? styles, WordNumbering numberi
                 if (int.TryParse(spacing.Line?.Value, out var line))
                     this.Line = line;
 
-                if (spacing.LineRule is { } rule)
-                    this.LineRule = rule.InnerText;
+                if (spacing.LineRule?.InnerText is { } rule)
+                    this.LineRule = rule;
             }
 
             if (properties.GetFirstChild<W.Indentation>() is { } indentation)

@@ -37,12 +37,12 @@ public sealed class IndexStoreBackupTests
             var manifest = await copy.GetManifestAsync(DATA_SOURCE_ID, TOKEN);
             var found = await copy.SearchChunksAsync(DATA_SOURCE_ID, "quarterly", 10, TOKEN);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(Path.GetFileName(copyPath), Is.EqualTo("rag-index.sqlite3"), "A restore puts the copy where the index belongs, under the same name.");
                 Assert.That(manifest.Files.Keys, Is.EqualTo(new[] { FILE_PATH }), "Without the fingerprint, the file would be embedded anew.");
                 Assert.That(found.Select(result => result.ChunkText), Is.EqualTo(new[] { "The quarterly report is due." }));
-            });
+            }
         }
         finally
         {

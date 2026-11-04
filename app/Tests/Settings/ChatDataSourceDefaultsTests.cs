@@ -45,10 +45,10 @@ public sealed class ChatDataSourceDefaultsTests
 
         var read = JsonSerializer.Deserialize<DataChat>(LEGACY_JSON, SettingsManager.JSON_OPTIONS)!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(read.PreselectedDataSourcesDisabled, Is.False, "The legacy nested object has to reach the individual fields, or this test checks nothing.");
             Assert.That(read.PreselectedDataSourcesRetrievalMode, Is.EqualTo(DataSourceRetrievalMode.SEMANTIC_SEARCH));
-        });
+        }
     }
 }

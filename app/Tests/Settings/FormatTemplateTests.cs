@@ -16,12 +16,12 @@ public sealed class FormatTemplateTests
     {
         var formatTemplate = TemplateAt(fileName);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(formatTemplate.Serves(FileExportFormat.MICROSOFT_WORD), Is.True);
             Assert.That(formatTemplate.Serves(FileExportFormat.OPEN_DOCUMENT_TEXT), Is.False, "LibreOffice writes no Word template.");
             Assert.That(formatTemplate.Serves(FileExportFormat.HTML), Is.False);
-        });
+        }
     }
 
     [TestCase("Slides.potx", Description = "A PowerPoint template serves presentations, not documents.")]

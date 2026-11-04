@@ -4,10 +4,13 @@ namespace AIStudio.Tools;
 
 public static class ProfileExtensions
 {
-    public static IEnumerable<Profile> GetAllProfiles(this IEnumerable<Profile> profiles)
+    extension(IEnumerable<Profile> profiles)
     {
-        yield return Profile.NO_PROFILE;
-        foreach (var profile in profiles)
-            yield return profile;
+        public IEnumerable<Profile> GetAllProfiles()
+        {
+            yield return Profile.NO_PROFILE;
+            foreach (var profile in profiles)
+                yield return profile;
+        }
     }
 }

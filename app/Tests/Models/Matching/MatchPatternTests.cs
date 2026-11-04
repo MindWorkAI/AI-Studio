@@ -21,11 +21,11 @@ public sealed class MatchPatternTests
         var onAlibaba = new MatchPattern { Kind = MatchKind.SEGMENT, Text = "qwq", OnlyOn = LLMProviders.ALIBABA_CLOUD };
         var name = new ModelId("qwq-32b");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(onAlibaba.Matches(name, LLMProviders.ALIBABA_CLOUD, ModelVendor.UNKNOWN), Is.True);
             Assert.That(onAlibaba.Matches(name, LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -34,11 +34,11 @@ public sealed class MatchPatternTests
         var fromAnthropic = new MatchPattern { Kind = MatchKind.SEGMENT, Text = "claude", OnlyFrom = ModelVendor.ANTHROPIC };
         var name = new ModelId("claude-sonnet-4-0");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(fromAnthropic.Matches(name, LLMProviders.LITE_LLM, ModelVendor.ANTHROPIC), Is.True);
             Assert.That(fromAnthropic.Matches(name, LLMProviders.LITE_LLM, ModelVendor.UNKNOWN), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -46,12 +46,12 @@ public sealed class MatchPatternTests
     {
         var withVision = new MatchPattern { Kind = MatchKind.SEGMENT, Text = "qwen3.8", AlsoContains = ["vl"] };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withVision.Matches(new ModelId("qwen3.8-27b-vl"), LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN), Is.True);
             Assert.That(withVision.Matches(new ModelId("qwen3.8-27b"), LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN), Is.False);
             Assert.That(withVision.Matches(new ModelId("qwen3.8-27b-vllm"), LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN), Is.False, "\"vl\" inside another name part is not the vision variant.");
-        });
+        }
     }
 
     [Test]
@@ -62,11 +62,11 @@ public sealed class MatchPatternTests
         //
         var withoutTools = new MatchPattern { Kind = MatchKind.SEGMENT, Text = "salamandra", NotContains = ["tools"] };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutTools.Matches(new ModelId("salamandra-7b-instruct"), LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN), Is.True);
             Assert.That(withoutTools.Matches(new ModelId("salamandra-7b-instruct-tools"), LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN), Is.False);
-        });
+        }
     }
 
     [TestCase("gpt-5.1", true)]

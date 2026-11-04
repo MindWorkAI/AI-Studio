@@ -39,11 +39,11 @@ public sealed class RetrievalPagingTests
         for (var page = 1; page <= 3; page++)
             shown.AddRange(Merge(first, second, page).Matches);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(shown, Is.Unique, "A chunk both channels found is shown on the earlier of its two pages only.");
             Assert.That(shown, Is.EquivalentTo(first.Take(6).Union(second.Take(6))), "Leaving out the duplicates must not leave out anything else.");
-        });
+        }
     }
 
     [Test]
@@ -68,11 +68,11 @@ public sealed class RetrievalPagingTests
         var lastPage = RetrievalPaging.GetLastPage(PAGE_SIZE);
         var everything = Enumerable.Range(0, RetrievalPaging.MAX_RESULT_WINDOW).Select(number => $"chunk-{number}").ToArray();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Merge(everything, [], lastPage - 1).HasMore, Is.True);
             Assert.That(Merge(everything, [], lastPage).HasMore, Is.False, "No page beyond this one can be retrieved, however much the search found.");
-        });
+        }
     }
 
     [TestCase(0)]
@@ -105,11 +105,11 @@ public sealed class RetrievalPagingTests
     [Test]
     public void TheFirstPageAlwaysHoldsTheConfiguredNumberOfMatches()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(RetrievalPaging.GetLastPage(500), Is.EqualTo(1));
             Assert.That(RetrievalPaging.GetWindowSize(1, 500), Is.EqualTo(501), "The limit is for paging deeper. It must not shorten what the user asked for per search.");
-        });
+        }
     }
 
     [Test]
@@ -135,13 +135,13 @@ public sealed class RetrievalPagingTests
         var secondPage = RetrievalPaging.Cut(matches, 2, PAGE_SIZE);
         var thirdPage = RetrievalPaging.Cut(matches, 3, PAGE_SIZE);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(secondPage.Matches, Is.EqualTo(new[] { "c", "d" }));
             Assert.That(secondPage.HasMore, Is.True);
             Assert.That(thirdPage.Matches, Is.EqualTo(new[] { "e" }));
             Assert.That(thirdPage.HasMore, Is.False, "A channel which found fewer than asked for ends the paging.");
-        });
+        }
     }
 
     [TestCase((ushort)1)]
@@ -163,11 +163,11 @@ public sealed class RetrievalPagingTests
     }
 
     [Test]
-    public void AnERIDataSourceRefusesAFurtherPage()
+    public async Task AnERIDataSourceRefusesAFurtherPage()
     {
         var source = new DataSourceERI_V1 { Id = "33333333-3333-3333-3333-333333333333", Name = "Intranet", MaxMatches = 10 };
 
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await source.RetrieveDataAsync("query", 2, new AIStudio.Chat.ChatThread()));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await source.RetrieveDataAsync("query", 2, new AIStudio.Chat.ChatThread()));
     }
 
     private static (IReadOnlyList<string> Matches, bool HasMore) Merge(string[] first, string[] second, int page)

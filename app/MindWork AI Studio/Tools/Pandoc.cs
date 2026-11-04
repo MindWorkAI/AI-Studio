@@ -14,7 +14,7 @@ public static partial class Pandoc
     private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(Pandoc).Namespace, nameof(Pandoc));
 
     // Pandoc is a program of its own, so it has to fit the machine, not the build of AI Studio:
-    private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
+    private static readonly RID CPU_ARCHITECTURE = RID.Current;
 
     private const string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download";
     private const string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
@@ -173,7 +173,7 @@ public static partial class Pandoc
             if (string.IsNullOrWhiteSpace(uri))
             {
                 await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("AI Studio couldn't install Pandoc because the archive type is unknown.")));
-                LOG.LogError("Pandoc was not installed, no archive is available for architecture '{Architecture}'.", CPU_ARCHITECTURE.ToUserFriendlyName());
+                LOG.LogError("Pandoc was not installed, no archive is available for architecture '{Architecture}'.", CPU_ARCHITECTURE.UserFriendlyName);
                 return;
             }
 
@@ -196,11 +196,7 @@ public static partial class Pandoc
             if (uri.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
             {
                 await RunWithRetriesAsync(
-                    () =>
-                    {
-                        ZipFile.ExtractToDirectory(pandocTempDownloadFile, stagingDir, true);
-                        return Task.CompletedTask;
-                    },
+                    () => ZipFile.ExtractToDirectoryAsync(pandocTempDownloadFile, stagingDir, true),
                     "extracting the Pandoc ZIP archive");
             }
             else if (uri.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
@@ -477,7 +473,7 @@ public static partial class Pandoc
                 return $"{baseUri}arm64-macOS.pkg";
             
             default:
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, string.Format(TB("Installers are not available on {0} systems."), CPU_ARCHITECTURE.ToUserFriendlyName())));
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, string.Format(TB("Installers are not available on {0} systems."), CPU_ARCHITECTURE.UserFriendlyName)));
                 return string.Empty;
         }
     }

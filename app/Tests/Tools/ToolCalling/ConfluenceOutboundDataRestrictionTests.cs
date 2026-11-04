@@ -84,12 +84,12 @@ public sealed class ConfluenceOutboundDataRestrictionTests : ToolRegistryTestBas
         var executor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance);
         var outcome = await executor.ExecuteAsync("call-1", TOOL_ID, "{}", [(webSearch.GetDefinition(), webSearch)], new NoProvider(), ChatAfterASearch(), order: 1);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(hasRun, Is.False, "The wiki content would already have left AI Studio.");
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
             Assert.That(outcome.Content, Does.Contain("Confluence wiki"));
-        });
+        }
     }
 
     [TestCase(WIKI_PAGE, true)]

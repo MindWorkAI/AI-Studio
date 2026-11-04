@@ -87,7 +87,7 @@ public static partial class PluginFactory
     {
         await using var inputStream = resourceFilePath.CreateReadStream();
         
-        var pluginTypeBasePath = Path.Join(INTERNAL_PLUGINS_ROOT, metaData.Type.GetDirectory());
+        var pluginTypeBasePath = Path.Join(INTERNAL_PLUGINS_ROOT, metaData.Type.Directory);
         
         if (!Directory.Exists(INTERNAL_PLUGINS_ROOT))
             Directory.CreateDirectory(INTERNAL_PLUGINS_ROOT);

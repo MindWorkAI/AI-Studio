@@ -95,12 +95,12 @@ public sealed class RetrievalContextPreparationTests
     {
         var prepared = (await this.PrepareAsync(this.TextContext(AbsolutePath("handbook.pdf")))).Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prepared.ToMarkdown(3), Does.StartWith($"# Retrieval context 3{Environment.NewLine}Data source name:"), "Semantic Search numbers its passages without knowing how many fit its budget.");
             Assert.That(prepared.ToMarkdown(), Does.StartWith($"# Retrieval context{Environment.NewLine}Data source name:"), "A context standing alone has no number.");
             Assert.That(prepared.ToMarkdown(2, 5), Is.EqualTo($"# Retrieval context 2 of 5{Environment.NewLine}{prepared.Body}{Environment.NewLine}"), "Below its header, a context is its body.");
-        });
+        }
     }
 
     [Test]
@@ -124,7 +124,7 @@ public sealed class RetrievalContextPreparationTests
         IRetrievalContextExtensions.AppendImageMatch(expected);
         expected.AppendLine();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prepared.ToMarkdown(), Is.EqualTo(expected.ToString()));
             Assert.That(this.runtime.FilteredTexts, Has.None.Contains(image.Source), "The image data is no text to filter.");
@@ -132,7 +132,7 @@ public sealed class RetrievalContextPreparationTests
             Assert.That(prepared.Passage?.Category, Is.EqualTo(RetrievalContentCategory.IMAGE));
             Assert.That(prepared.Passage?.Type, Is.EqualTo(RetrievalContentType.IMAGE_MAP));
             Assert.That(prepared.Passage?.SourceUrl, Is.EqualTo(image.Path), "The image is listed under its own address.");
-        });
+        }
     }
 
     [Test]
@@ -143,7 +143,7 @@ public sealed class RetrievalContextPreparationTests
         await this.PrepareAsync(context);
 
         var batch = this.runtime.FilteredBatches.Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(batch, Has.Count.EqualTo(3), "The description, the matched text, and each part of the surrounding content are filtered one by one.");
             Assert.That(batch[0], Does.StartWith($"Data source name: {this.labelPrefix}"));
@@ -151,7 +151,7 @@ public sealed class RetrievalContextPreparationTests
             Assert.That(batch[2], Is.EqualTo("It has 24 channels."));
             Assert.That(this.runtime.FilteredTexts, Has.None.Contains("# Retrieval context"), "The app writes the header itself, so it needs no filter.");
             Assert.That(this.runtime.FilteredTexts, Has.None.Contains("Matched text content:"), "The labels and the fences are written by the app as well.");
-        });
+        }
     }
 
     [Test]
@@ -161,11 +161,11 @@ public sealed class RetrievalContextPreparationTests
             this.TextContext(AbsolutePath("handbook.pdf"), matchedText: $"The console. {SUSPICIOUS_PASSAGE}"),
             this.TextContext(AbsolutePath("manual.pdf"), matchedText: $"The amplifier. {SUSPICIOUS_PASSAGE}"));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.runtime.FilteredBatches, Has.Count.EqualTo(1), "A search may bring dozens of passages, and each one asked the runtime on its own.");
             Assert.That(this.collector.Alerts, Is.EqualTo(new[] { new[] { $"{this.labelPrefix}: {AbsolutePath("handbook.pdf")}", $"{this.labelPrefix}: {AbsolutePath("manual.pdf")}" } }), "The user wants to know once that something was filtered, not once per passage.");
-        });
+        }
     }
 
     [Test]
@@ -176,13 +176,13 @@ public sealed class RetrievalContextPreparationTests
         var prepared = (await this.PrepareAsync(context)).Single();
         var passage = prepared.Passage!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prepared.Body, Does.Not.Contain(SUSPICIOUS_PASSAGE), "The suspicious passage reached the AI.");
             Assert.That(passage.Text, Is.EqualTo($"The console. {FakeRuntime.REDACTION_MARKER}"), "The user would read something the AI never received.");
             Assert.That(passage.SurroundingContent, Is.EqualTo(new[] { $"Before. {FakeRuntime.REDACTION_MARKER}", "After." }));
             Assert.That(prepared.Body, Does.Contain(passage.Text).And.Contain(passage.SurroundingContent[0]), "The passage is what the AI read, not a second filtering of it.");
-        });
+        }
     }
 
     [Test]
@@ -194,7 +194,7 @@ public sealed class RetrievalContextPreparationTests
         var prepared = (await this.PrepareAsync(this.TextContext(path, referenceLink: referenceLink))).Single();
         var passage = prepared.Passage!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(passage.SourceUrl, Is.EqualTo(prepared.Sources[0].URL), "A passage is listed under the first source of its context.");
             Assert.That(passage.SourceUrl, Is.EqualTo(referenceLink));
@@ -204,7 +204,7 @@ public sealed class RetrievalContextPreparationTests
             Assert.That(passage.Type, Is.EqualTo(RetrievalContentType.TEXT_DOCUMENT));
             Assert.That(passage.PageNumber, Is.EqualTo(12));
             Assert.That(passage.EndPageNumber, Is.Null, "No data source reports where a passage ends yet.");
-        });
+        }
     }
 
     [Test]
@@ -212,14 +212,14 @@ public sealed class RetrievalContextPreparationTests
     {
         var prepared = (await this.PrepareAsync(this.TextContext(Path.Combine("docs", "handbook.pdf"), surroundingContent: ["The paragraph before."], links: []))).Single();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prepared.Sources, Has.Count.EqualTo(1), "A relative path becomes no link, but the AI received the context all the same.");
             Assert.That(prepared.Sources[0].HasNoLink(), Is.True);
             Assert.That(prepared.Passage?.SourceUrl, Is.EqualTo(prepared.Sources[0].URL), "The passage is read under that source, e.g., one an ERI server named by a path of its own.");
             Assert.That(prepared.Passage?.SurroundingContent, Is.EqualTo(new[] { "The paragraph before." }));
             Assert.That(prepared.Body, Does.Contain("The mixing console is described here."));
-        });
+        }
     }
 
     private Task<IReadOnlyList<PreparedRetrievalContext>> PrepareAsync(params IRetrievalContext[] retrievalContexts) => retrievalContexts.PrepareForModelAsync(this.guardService);

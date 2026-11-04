@@ -5,16 +5,7 @@
 {
     <div class="d-flex">
         <MudTooltip Text="@T("Select the data you want to use here.")" Placement="Placement.Top">
-            @if (this.PopoverTriggerMode is PopoverTriggerMode.ICON)
-            {
-                <MudIconButton Icon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
-            }
-            else
-            {
-                <MudButton Variant="Variant.Filled" StartIcon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection">
-                    @T("Select data")
-                </MudButton>
-            }
+            <MudIconButton Icon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
         </MudTooltip>
 
         <MudPopover Open="@this.showDataSourceSelection" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" DropShadow="@true" Class="border-solid border-4 rounded-lg">
@@ -155,7 +146,7 @@
                                                                     @if (source.DataSource is IInternalDataSource internalSource)
                                                                     {
                                                                         <MudSpacer/>
-                                                                        <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
+                                                                        <MudTooltip Text="@internalSource.ConfidenceLevel.Name">
                                                                             <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                                         </MudTooltip>
                                                                     }

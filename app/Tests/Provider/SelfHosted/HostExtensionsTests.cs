@@ -21,7 +21,7 @@ public sealed class HostExtensionsTests
     [TestCaseSource(nameof(ALL_HOSTS))]
     public void TheDialogsOfferToLoadModelsExactlyWhereTheEngineCanListThem(Host host)
     {
-        Assert.That(LLMProviders.SELF_HOSTED.CanLoadModels(host, null), Is.EqualTo(host.IsModelListSupported()));
+        Assert.That(LLMProviders.SELF_HOSTED.CanLoadModels(host, null), Is.EqualTo(host.IsModelListSupported));
     }
 
     [Test]
@@ -30,7 +30,7 @@ public sealed class HostExtensionsTests
         //
         // There is no fixed chat model to offer instead, so such an engine would offer an empty list:
         //
-        var unlisted = ALL_HOSTS.Where(host => host is not Host.NONE && host.IsChatSupported() && !host.IsModelListSupported());
+        var unlisted = ALL_HOSTS.Where(host => host is not Host.NONE && host.IsChatSupported && !host.IsModelListSupported);
         Assert.That(unlisted, Is.Empty);
     }
 
@@ -40,7 +40,7 @@ public sealed class HostExtensionsTests
         //
         // There is no fixed embedding model to offer instead, so such an engine would offer an empty list:
         //
-        var unlisted = ALL_HOSTS.Where(host => host.IsEmbeddingSupported() && !host.IsModelListSupported());
+        var unlisted = ALL_HOSTS.Where(host => host.IsEmbeddingSupported && !host.IsModelListSupported);
         Assert.That(unlisted, Is.Empty);
     }
 
@@ -51,19 +51,19 @@ public sealed class HostExtensionsTests
         // The provider offers the one model of whisper.cpp under a fixed name. Any other engine
         // which transcribes but cannot list its models would offer an empty list:
         //
-        var unlisted = ALL_HOSTS.Where(host => host.IsTranscriptionSupported() && !host.IsModelListSupported());
+        var unlisted = ALL_HOSTS.Where(host => host.IsTranscriptionSupported && !host.IsModelListSupported);
         Assert.That(unlisted, Is.EqualTo(new[] { Host.WHISPER_CPP }));
     }
 
     [Test]
     public void TheHostNoneLoadsNoModels()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(Host.NONE.IsModelListSupported(), Is.False);
-            Assert.That(Host.NONE.IsEmbeddingSupported(), Is.False);
-            Assert.That(Host.NONE.IsTranscriptionSupported(), Is.False);
+            Assert.That(Host.NONE.IsModelListSupported, Is.False);
+            Assert.That(Host.NONE.IsEmbeddingSupported, Is.False);
+            Assert.That(Host.NONE.IsTranscriptionSupported, Is.False);
             Assert.That(LLMProviders.SELF_HOSTED.CanLoadModels(Host.NONE, "a key"), Is.False);
-        });
+        }
     }
 }

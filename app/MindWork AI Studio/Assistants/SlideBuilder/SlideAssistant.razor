@@ -8,7 +8,7 @@
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("You can enter text, use one or more documents or images, or use both. At least one of these options is required.")
 </MudJustifiedText>
-<MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" Sizing="InputSizing.Fixed" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 @* Side by side where the window is wide enough; each column ends with its zone, so both zones line up below explanations of different length: *@
 <MudGrid Class="mt-1">
@@ -60,7 +60,7 @@
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.")
 </MudJustifiedText>
-<MudTextField T="string" AutoGrow="true" Lines="3" @bind-Text="@this.importantAspects" class="mb-1" Label="@T("(Optional) Important Aspects")" ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" Sizing="InputSizing.Auto" Lines="3" @bind-Text="@this.importantAspects" class="mb-1" Label="@T("(Optional) Important Aspects")" ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Extent of the planned presentation")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
@@ -95,22 +95,22 @@
 </MudGrid>
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Language")</MudText>
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name)" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
 
 <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Occasion")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("The occasion helps the LLM to structure the presentation. A lecture, for example, may close its chapters with an interim summary or with room for questions, and a report to management leads with the key messages.")
 </MudJustifiedText>
-<EnumSelection T="PresentationOccasion" NameFunc="@(occasion => occasion.Name())" @bind-Value="@this.selectedOccasion" Icon="@Icons.Material.Filled.Event" Label="@T("Occasion of the presentation")" AllowOther="@true" @bind-OtherInput="@this.customOccasion" OtherValue="PresentationOccasion.OTHER" LabelOther="@T("Other occasion")" ValidateOther="@this.ValidateCustomOccasion" />
+<EnumSelection T="PresentationOccasion" NameFunc="@(occasion => occasion.Name)" @bind-Value="@this.selectedOccasion" Icon="@Icons.Material.Filled.Event" Label="@T("Occasion of the presentation")" AllowOther="@true" @bind-OtherInput="@this.customOccasion" OtherValue="PresentationOccasion.OTHER" LabelOther="@T("Other occasion")" ValidateOther="@this.ValidateCustomOccasion" />
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Audience")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @T("Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.")
 </MudJustifiedText>
-<EnumSelection T="AudienceProfile" NameFunc="@(profile => profile.Name())" @bind-Value="@this.selectedAudienceProfile" Icon="@Icons.Material.Filled.Groups" Label="@T("Audience profile")" />
-<EnumSelection T="AudienceAgeGroup" NameFunc="@(ageGroup => ageGroup.Name())" @bind-Value="@this.selectedAudienceAgeGroup" Icon="@Icons.Material.Filled.Cake" Label="@T("Audience age group")" />
-<EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(level => level.Name())" @bind-Value="@this.selectedAudienceOrganizationalLevel" Icon="@Icons.Material.Filled.AccountTree" Label="@T("Audience organizational level")" />
-<EnumSelection T="AudienceExpertise" NameFunc="@(expertise => expertise.Name())" @bind-Value="@this.selectedAudienceExpertise" Icon="@Icons.Material.Filled.School" Label="@T("Audience expertise")" />
+<EnumSelection T="AudienceProfile" NameFunc="@(profile => profile.Name)" @bind-Value="@this.selectedAudienceProfile" Icon="@Icons.Material.Filled.Groups" Label="@T("Audience profile")" />
+<EnumSelection T="AudienceAgeGroup" NameFunc="@(ageGroup => ageGroup.Name)" @bind-Value="@this.selectedAudienceAgeGroup" Icon="@Icons.Material.Filled.Cake" Label="@T("Audience age group")" />
+<EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(level => level.Name)" @bind-Value="@this.selectedAudienceOrganizationalLevel" Icon="@Icons.Material.Filled.AccountTree" Label="@T("Audience organizational level")" />
+<EnumSelection T="AudienceExpertise" NameFunc="@(expertise => expertise.Name)" @bind-Value="@this.selectedAudienceExpertise" Icon="@Icons.Material.Filled.School" Label="@T("Audience expertise")" />
 
 <MudText Typo="Typo.h5" Class="mb-1 mt-6"> @T("PowerPoint template")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
@@ -160,7 +160,7 @@
         </MudJustifiedText>
         <LayoutChoicePanels IsChosen="@(purpose => this.LayoutNameOf(purpose).Length > 0)">
             <ChoiceContent Context="purpose">
-                <MudSelect T="string" Value="@this.LayoutNameOf(purpose)" ValueChanged="@(name => this.SetLayoutName(purpose, name))" Disabled="@this.AreLayoutsLocked" Label="@purpose.Label()" HelperText="@purpose.Help()" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewQuilt" Class="mb-3">
+                <MudSelect T="string" Value="@this.LayoutNameOf(purpose)" ValueChanged="@(name => this.SetLayoutName(purpose, name))" Disabled="@this.AreLayoutsLocked" Label="@purpose.Label" HelperText="@purpose.Help" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewQuilt" Class="mb-3">
                     <MudSelectItem T="string" Value="@string.Empty">@LayoutPurposeExtensions.NoPreference</MudSelectItem>
                     @foreach (var layoutName in loadedTemplate.FamilyNames)
                     {
@@ -178,7 +178,7 @@
             </MudJustifiedText>
             @foreach (var templateSlide in loadedTemplate.Slides)
             {
-                <EnumSelection T="TemplateSlideUse" NameFunc="@(use => use.Name())" Value="@this.TemplateSlideUseOf(templateSlide.Number)" ValueChanged="@(use => this.SetTemplateSlideUse(templateSlide.Number, use))" ValidateSelection="@(use => this.ValidateTemplateSlideUse(templateSlide, use))" Disabled="@this.AreTemplateSlideUsesLocked" Icon="@Icons.Material.Filled.Slideshow" Label="@templateSlide.Label()"/>
+                <EnumSelection T="TemplateSlideUse" NameFunc="@(use => use.Name)" Value="@this.TemplateSlideUseOf(templateSlide.Number)" ValueChanged="@(use => this.SetTemplateSlideUse(templateSlide.Number, use))" ValidateSelection="@(use => this.ValidateTemplateSlideUse(templateSlide, use))" Disabled="@this.AreTemplateSlideUsesLocked" Icon="@Icons.Material.Filled.Slideshow" Label="@templateSlide.Label"/>
             }
         }
     </CompactExpansionPanel>

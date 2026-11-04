@@ -63,13 +63,13 @@ public sealed class TokenizerSyncTests
         var (storedPath, fingerprint) = await this.SyncAsync(storage, string.Empty);
         var fingerprintOfTheCopy = await TokenizerFingerprint.ForFileAsync(storedPath);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"validate {this.sourcePath}", $"store {MODEL_ID} {this.sourcePath}" }), "Without a stored copy, there is nothing to compare with.");
             Assert.That(storedPath, Is.Not.Empty.And.Not.EqualTo(this.sourcePath), "The provider points to the copy, not to the file inside the plugin.");
             Assert.That(File.ReadAllBytes(storedPath), Is.EqualTo(File.ReadAllBytes(this.sourcePath)));
             Assert.That(fingerprint, Is.Not.Empty.And.EqualTo(fingerprintOfTheCopy));
-        });
+        }
     }
 
     [Test]
@@ -81,12 +81,12 @@ public sealed class TokenizerSyncTests
         var secondStart = await this.SyncAsync(storage, firstStart.Path);
         var fingerprintOfTheCopy = await TokenizerFingerprint.ForFileAsync(firstStart.Path);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.Empty, "Checking the same file again would cost most of a second and change nothing.");
             Assert.That(secondStart, Is.EqualTo(firstStart), "A fingerprint which differs from the one before would cost every data source of the provider its index.");
             Assert.That(secondStart.Fingerprint, Is.EqualTo(fingerprintOfTheCopy));
-        });
+        }
     }
 
     [Test]
@@ -98,12 +98,12 @@ public sealed class TokenizerSyncTests
 
         var secondStart = await this.SyncAsync(storage, firstStart.Path);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"validate {this.sourcePath}", $"store {MODEL_ID} {this.sourcePath}" }));
             Assert.That(File.Exists(secondStart.Path), Is.True);
             Assert.That(secondStart.Fingerprint, Is.EqualTo(firstStart.Fingerprint), "It is the same tokenizer, so the index stays.");
-        });
+        }
     }
 
     [Test]
@@ -117,12 +117,12 @@ public sealed class TokenizerSyncTests
 
         var secondStart = await this.SyncAsync(storage, firstStart.Path);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"validate {this.sourcePath}", $"store {MODEL_ID} {this.sourcePath}" }), "Size and time do not tell a damaged copy apart, the content does.");
             Assert.That(File.ReadAllBytes(secondStart.Path), Is.EqualTo(File.ReadAllBytes(this.sourcePath)));
             Assert.That(secondStart.Fingerprint, Is.EqualTo(firstStart.Fingerprint));
-        });
+        }
     }
 
     [Test]
@@ -135,12 +135,12 @@ public sealed class TokenizerSyncTests
         var secondStart = await this.SyncAsync(storage, firstStart.Path);
         var fingerprintOfThePluginFile = await TokenizerFingerprint.ForFileAsync(this.sourcePath);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"validate {this.sourcePath}", $"store {MODEL_ID} {this.sourcePath}" }));
             Assert.That(secondStart.Fingerprint, Is.Not.EqualTo(firstStart.Fingerprint), "Another tokenizer cuts the text at other places, so the index has to go.");
             Assert.That(secondStart.Fingerprint, Is.EqualTo(fingerprintOfThePluginFile));
-        });
+        }
     }
 
     [Test]
@@ -153,12 +153,12 @@ public sealed class TokenizerSyncTests
 
         var secondStart = await this.SyncAsync(storage, firstStart.Path);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"validate {this.sourcePath}", $"delete {MODEL_ID}" }), "Neither file can be read, so nothing says they hold the same tokenizer.");
             Assert.That(secondStart.Path, Is.Empty);
             Assert.That(secondStart.Fingerprint, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -169,12 +169,12 @@ public sealed class TokenizerSyncTests
         var (storedPath, fingerprint) = await this.SyncAsync(storage, string.Empty);
         var fingerprintOfThePluginFile = await TokenizerFingerprint.ForFileAsync(this.sourcePath);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storedPath, Is.Not.Empty);
             Assert.That(File.Exists(storedPath), Is.False, "Otherwise this test checks nothing.");
             Assert.That(fingerprint, Is.Not.Empty.And.EqualTo(fingerprintOfThePluginFile), "The runtime copies the file as it is, so the file in the plugin tells what the copy holds.");
-        });
+        }
     }
 
     [Test]
@@ -184,12 +184,12 @@ public sealed class TokenizerSyncTests
 
         var (storedPath, fingerprint) = await this.SyncAsync(storage, string.Empty);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"validate {this.sourcePath}", $"delete {MODEL_ID}" }), "A tokenizer stored earlier must not outlive the plugin naming an unusable one.");
             Assert.That(storedPath, Is.Empty);
             Assert.That(fingerprint, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -200,13 +200,13 @@ public sealed class TokenizerSyncTests
 
         var (storedPath, fingerprint) = await this.SyncAsync(storage, firstStart.Path, string.Empty);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"delete {MODEL_ID}" }), "The plugin no longer names a tokenizer, so the one stored for it goes.");
             Assert.That(File.Exists(firstStart.Path), Is.False);
             Assert.That(storedPath, Is.Empty);
             Assert.That(fingerprint, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -217,12 +217,12 @@ public sealed class TokenizerSyncTests
 
         var (storedPath, fingerprint) = await this.SyncAsync(storage, firstStart.Path, "../outside/tokenizer.json");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"delete {MODEL_ID}" }), "A plugin must not make the app read files from anywhere else on the machine.");
             Assert.That(storedPath, Is.Empty);
             Assert.That(fingerprint, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -232,12 +232,12 @@ public sealed class TokenizerSyncTests
 
         var (storedPath, fingerprint) = await this.SyncAsync(storage, string.Empty);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(storage.Calls, Is.EqualTo(new[] { $"validate {this.sourcePath}", $"store {MODEL_ID} {this.sourcePath}" }));
             Assert.That(storedPath, Is.Empty);
             Assert.That(fingerprint, Is.Empty);
-        });
+        }
     }
 
     /// <summary>

@@ -122,6 +122,46 @@
     color: var(--custom-icon-color) !important;
 }
 
+/*
+   WebKitGTK, the webview on Linux, leaves the zoom of the page out of the font size of an SVG
+   element. MudBlazor sizes its icons with 1em of that font size, so they would keep their size while
+   everything around them grows or shrinks with the interface size. The runtime therefore sets
+   --svg-icon-zoom to its zoom on Linux, see interface_zoom.rs. The webviews of Windows and macOS zoom
+   SVG elements like everything else, and the variable stays unset there. The :where keeps this as
+   weak as MudBlazor's own rule, so that every more specific size still wins.
+*/
+.mud-icon-root:where(svg) {
+    width: calc(1em * var(--svg-icon-zoom, 1));
+    height: calc(1em * var(--svg-icon-zoom, 1));
+}
+
+/*
+   MudBlazor draws the thumb of a slider as a dot of 4px, scaled up five times. Zoomed to an interface
+   size, the dot covers a fraction of a pixel, which the webview rounds to whole pixels before the
+   scaling magnifies the error: the thumb turns into an uneven shape. These rules draw the thumb in its
+   final size instead, with the shadows MudBlazor's scaling gave it. All sliders of the app have the
+   medium size and the primary color.
+*/
+.mud-slider.mud-slider-medium .mud-slider-input::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: -8px;
+    transform: none;
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input::-webkit-slider-thumb {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3);
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input::-webkit-slider-thumb:hover {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3), 0 0 0 5px rgba(var(--mud-palette-primary-rgb), 0.24);
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input:focus-visible::-webkit-slider-thumb,
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input:active::-webkit-slider-thumb {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3), 0 0 0 10px rgba(var(--mud-palette-primary-rgb), 0.24);
+}
+
 .improvedDiff .wikEdDiffFragment {
     background-color: initial !important;
 }
@@ -169,6 +209,24 @@
 /* Fixed the margin for the Markdown code blocks */
 .mud-card-content .mud-markdown-body .hljs.mud-markdown-code-highlight {
     margin-bottom:2em;
+}
+
+/* The actions of a code block, such as saving it, appear left of its copy button, which is 36px wide plus a margin of 8px */
+.mud-markdown-body .code-block-with-actions {
+    position: relative;
+}
+
+.mud-markdown-body .code-block-actions {
+    position: absolute;
+    display: none;
+    top: 0;
+    right: 44px;
+}
+
+/* Both appear while the pointer is on the code block, and the copy button stays while it is on the actions, which are no part of the block */
+.mud-markdown-body .code-block-with-actions:hover > .code-block-actions,
+.mud-markdown-body .code-block-with-actions:hover .mud-markdown-code-highlight-copybtn {
+    display: block;
 }
 
 .justified-markdown .mud-markdown-body p,
@@ -246,6 +304,28 @@
 .chat-mathjax-block mjx-container[display="true"] mjx-math {
     margin-left: 0 !important;
     margin-right: 0 !important;
+}
+
+/* The buttons of a formula, such as copying and saving it, appear while the pointer is on it, as they do at a code block */
+.formula-block {
+    position: relative;
+}
+
+.formula-block > .formula-block-actions {
+    position: absolute;
+    display: none;
+    top: 0;
+    right: 0;
+}
+
+.formula-block:hover > .formula-block-actions {
+    display: flex;
+}
+
+/* The copy button stands in the row of the other buttons, not in the corner of a code block */
+.formula-block > .formula-block-actions .mud-markdown-code-highlight-copybtn {
+    position: static;
+    display: block;
 }
 
 .log-viewer-shell {
@@ -530,6 +610,32 @@ tr:has(> .provider-group-header) .mud-icon-button {
 .text-switch-dense .mud-input-slot.mud-input-root-outlined {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+}
+
+/* A field for file patterns with its help button on the right, which keeps its width while the field grows. */
+.pattern-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    column-gap: 8px;
+    align-items: center;
+}
+
+/* The field takes the first column, and so does what follows below it, such as the help, which keeps them equally wide. */
+.pattern-row-main {
+    grid-column: 1;
+    min-width: 0;
+}
+
+/*
+ * Pattern lists wrap and grow with their content, up to a limit beyond which they scroll. MudBlazor
+ * measures the height only on input, after a render with new text, and when the window changes its
+ * size. When the field gets narrower otherwise, e.g., in a dialog, more lines wrap than it is high,
+ * and MudBlazor hides the scrollbar below the limit. Allowing it always keeps every line reachable.
+ */
+.pattern-text-field textarea.mud-input-slot {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-y: auto !important;
 }
 
 /*

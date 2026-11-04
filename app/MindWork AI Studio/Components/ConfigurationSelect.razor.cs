@@ -53,8 +53,12 @@ public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
 
     #endregion
     
-    private async Task OptionChanged(TConfig updatedValue)
+    private async Task OptionChanged(TConfig? updatedValue)
     {
+        // The select hands out null only when it has no value at all, which leaves nothing to store:
+        if (updatedValue is null)
+            return;
+
         this.SelectionUpdate(updatedValue);
         await this.SelectionUpdateAsync(updatedValue);
         await this.SettingsManager.StoreSettings();

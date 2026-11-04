@@ -38,7 +38,20 @@ public sealed class ToolCatalogItem
     /// </summary>
     public required ToolConfigurationState ConfigurationState { get; init; }
 
-    public bool IsActive { get; init; }
+    /// <summary>
+    /// Who switched the collection off: tools altogether, the organization, or the user; NONE while it may be used.
+    /// </summary>
+    /// <remarks>
+    /// A reason rather than a yes or no, because the settings have to tell the user apart from the
+    /// organization: the user can switch on again what they switched off themselves, but nothing
+    /// their organization switched off.
+    /// </remarks>
+    public ToolOfferBlockReason SwitchOffReason { get; init; } = ToolOfferBlockReason.NONE;
+
+    /// <summary>
+    /// Whether the collection may be used at all, see ToolRegistry.IsToolActive.
+    /// </summary>
+    public bool IsActive => this.SwitchOffReason is ToolOfferBlockReason.NONE;
 
     public ConfidenceLevel MinimumProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 }

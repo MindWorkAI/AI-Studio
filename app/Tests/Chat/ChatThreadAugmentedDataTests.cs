@@ -41,11 +41,11 @@ public sealed class ChatThreadAugmentedDataTests
 
         var loaded = JsonSerializer.Deserialize<ChatThread>(CHAT_WITH_AUGMENTED_DATA, WorkspaceBehaviour.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(loaded, Is.Not.Null, "An older chat file must still load.");
             Assert.That(loaded!.AugmentedData, Is.Empty, "It belonged to a request long over; the next message retrieves anew.");
             Assert.That(loaded.Name, Is.EqualTo("An older chat"));
-        });
+        }
     }
 }

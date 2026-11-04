@@ -76,11 +76,11 @@ public sealed class ProvenanceCleanupServiceTests
 
         var entries = await this.store.Client.GetEntriesAsync([unreferenced!.Value], TOKEN);
         var lastCleanup = await this.store.Client.GetLastCleanupAsync(TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { unreferenced.Value }), "Nothing changed in the chat since the last cleanup, so it was not read.");
             Assert.That(lastCleanup, Is.GreaterThan(DateTimeOffset.UtcNow.AddMinutes(-1)), "The next start reads only what changes from now on.");
-        });
+        }
     }
 
     [Test]
@@ -108,11 +108,11 @@ public sealed class ProvenanceCleanupServiceTests
 
         var entries = await this.store.Client.GetEntriesAsync([entry!.Value], TOKEN);
         var lastCleanup = await this.store.Client.GetLastCleanupAsync(TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { entry.Value }), "The chat may wait elsewhere to be moved back.");
             Assert.That(lastCleanup, Is.Null);
-        });
+        }
     }
 
     /// <summary>
