@@ -2,10 +2,6 @@ using System.Text.RegularExpressions;
 
 using SharedTools;
 
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
-
 namespace Build.Commands;
 
 public sealed partial class CollectI18NKeysCommand
@@ -43,7 +39,16 @@ public sealed partial class CollectI18NKeysCommand
         END_TAG2
     ];
     
-    [Command("collect-i18n", Description = "Collect I18N keys")]
+    /// <summary>
+    /// Defines the command "collect-i18n".
+    /// </summary>
+    public static Command CreateCommand()
+    {
+        var command = new Command("collect-i18n", "Collect I18N keys");
+        command.SetAction((_, _) => new CollectI18NKeysCommand().CollectI18NKeys());
+        return command;
+    }
+
     public async Task CollectI18NKeys()
     {
         if(!Environment.IsWorkingDirectoryValid())

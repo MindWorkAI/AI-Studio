@@ -9,17 +9,38 @@ using SharedTools;
 namespace Build.Commands;
 
 // ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
 
 public sealed partial class UpdateMetadataCommands
 {
-    [Command("release", Description = "Prepare & build the next release")]
-    public async Task Release(
-        [Option("action", ['a'], Description = "The release action: patch, minor, or major")] PrepareAction action = PrepareAction.NONE,
-        [Option("version", ['v'], Description = "Set a specific version directly, e.g., 26.1.2")] string? version = null,
-        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
+    /// <summary>
+    /// Creates the option "--action" of the commands which prepare a release.
+    /// </summary>
+    private static Option<PrepareAction> CreateActionOption() => new("--action", "-a") { Description = "The release action: build, month, or year, which raise the release, the month, or the year of the version, e.g., 26.11.1 becomes 26.11.2, 26.12.1, or 27.1.1", DefaultValueFactory = _ => PrepareAction.NONE };
+
+    /// <summary>
+    /// Creates the option "--version" of the commands which prepare a release.
+    /// </summary>
+    private static Option<string> CreateVersionOption() => new("--version", "-v") { Description = "Set a specific version directly, e.g., 26.1.2" };
+
+    /// <summary>
+    /// Creates the option "--offline" of the commands which build the app.
+    /// </summary>
+    private static Option<bool> CreateOfflineOption() => new("--offline") { Description = "Skip downloads and use locally available build dependencies" };
+
+    /// <summary>
+    /// Defines the command "release".
+    /// </summary>
+    public static Command CreateReleaseCommand()
+    {
+        var action = CreateActionOption();
+        var version = CreateVersionOption();
+        var offline = CreateOfflineOption();
+        var command = new Command("release", "Prepare & build the next release") { action, version, offline };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().Release(parseResult.GetValue(action), parseResult.GetValue(version), parseResult.GetValue(offline)));
+        return command;
+    }
+
+    public async Task Release(PrepareAction action = PrepareAction.NONE, string? version = null, bool offline = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             throw new CommandExitedException(1);
@@ -57,9 +78,18 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine("  \"Release Process\" in app/Build/AGENTS.md.");
     }
 
-    [Command("rebuild-release", Description = "Prepare & build a new build of the current release")]
-    public async Task RebuildRelease(
-        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
+    /// <summary>
+    /// Defines the command "rebuild-release".
+    /// </summary>
+    public static Command CreateRebuildReleaseCommand()
+    {
+        var offline = CreateOfflineOption();
+        var command = new Command("rebuild-release", "Prepare & build a new build of the current release") { offline };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().RebuildRelease(parseResult.GetValue(offline)));
+        return command;
+    }
+
+    public async Task RebuildRelease(bool offline = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             throw new CommandExitedException(1);
@@ -106,10 +136,19 @@ public sealed partial class UpdateMetadataCommands
         await this.Build(offline, skipVerify: true);
     }
 
-    [Command("update-metainfo", Description = "Update the AppStream metainfo entry of one release from its changelog")]
-    public async Task UpdateMetainfo(
-        [Option("version", ['v'], Description = "The release version, e.g., 26.1.2. Defaults to the version from the metadata")] string? version = null,
-        [Option("date", ['d'], Description = "The release date as yyyy-MM-dd. Defaults to the build time from the metadata")] string? date = null)
+    /// <summary>
+    /// Defines the command "update-metainfo".
+    /// </summary>
+    public static Command CreateUpdateMetainfoCommand()
+    {
+        var version = new Option<string>("--version", "-v") { Description = "The release version, e.g., 26.1.2. Defaults to the version from the metadata" };
+        var date = new Option<string>("--date", "-d") { Description = "The release date as yyyy-MM-dd. Defaults to the build time from the metadata" };
+        var command = new Command("update-metainfo", "Update the AppStream metainfo entry of one release from its changelog") { version, date };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().UpdateMetainfo(parseResult.GetValue(version), parseResult.GetValue(date)));
+        return command;
+    }
+
+    public async Task UpdateMetainfo(string? version = null, string? date = null)
     {
         const int APP_VERSION_INDEX = 0;
         const int BUILD_TIME_INDEX = 1;
@@ -140,7 +179,16 @@ public sealed partial class UpdateMetadataCommands
         }
     }
 
-    [Command("update-versions", Description = "The command will update the package versions in the metadata file")]
+    /// <summary>
+    /// Defines the command "update-versions".
+    /// </summary>
+    public static Command CreateUpdateVersionsCommand()
+    {
+        var command = new Command("update-versions", "The command will update the package versions in the metadata file");
+        command.SetAction((_, _) => new UpdateMetadataCommands().UpdateVersions());
+        return command;
+    }
+
     public async Task UpdateVersions()
     {
         if(!Environment.IsWorkingDirectoryValid())
@@ -156,10 +204,19 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateVectorStoreVersion();
     }
     
-    [Command("prepare", Description = "Prepare the metadata for the next release")]
-    public async Task Prepare(
-        [Option("action", ['a'], Description = "The release action: patch, minor, or major")] PrepareAction action = PrepareAction.NONE,
-        [Option("version", ['v'], Description = "Set a specific version directly, e.g., 26.1.2")] string? version = null)
+    /// <summary>
+    /// Defines the command "prepare".
+    /// </summary>
+    public static Command CreatePrepareCommand()
+    {
+        var action = CreateActionOption();
+        var version = CreateVersionOption();
+        var command = new Command("prepare", "Prepare the metadata for the next release") { action, version };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().Prepare(parseResult.GetValue(action), parseResult.GetValue(version)));
+        return command;
+    }
+
+    public async Task Prepare(PrepareAction action = PrepareAction.NONE, string? version = null)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
@@ -236,10 +293,19 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "Information.razor.cs")));
     }
     
-    [Command("build", Description = "Build MindWork AI Studio")]
-    public async Task Build(
-        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false,
-        [Option("skip-verify", Description = "Skip the quality gate which otherwise runs before anything is built")] bool skipVerify = false)
+    /// <summary>
+    /// Defines the command "build".
+    /// </summary>
+    public static Command CreateBuildCommand()
+    {
+        var offline = CreateOfflineOption();
+        var skipVerify = new Option<bool>("--skip-verify") { Description = "Skip the quality gate which otherwise runs before anything is built" };
+        var command = new Command("build", "Build MindWork AI Studio") { offline, skipVerify };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().Build(parseResult.GetValue(offline), parseResult.GetValue(skipVerify)));
+        return command;
+    }
+
+    public async Task Build(bool offline = false, bool skipVerify = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             throw new CommandExitedException(1);
@@ -863,7 +929,16 @@ public sealed partial class UpdateMetadataCommands
         return shortVersion;
     }
 
-    [Command("update-project-hash", Description = "Update the project commit hash")]
+    /// <summary>
+    /// Defines the command "update-project-hash".
+    /// </summary>
+    public static Command CreateUpdateProjectHashCommand()
+    {
+        var command = new Command("update-project-hash", "Update the project commit hash");
+        command.SetAction((_, _) => new UpdateMetadataCommands().UpdateProjectCommitHash());
+        return command;
+    }
+
     public async Task UpdateProjectCommitHash()
     {
         const int COMMIT_HASH_INDEX = 8;
