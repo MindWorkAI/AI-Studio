@@ -38,6 +38,8 @@ public sealed class NumericCheckTests
             Assert.That(Check("x^2", "x^3"), Is.EqualTo(NumericCheckOutcome.FAILED));
             Assert.That(Check("(x + y)^2", "x^2 + y^2"), Is.EqualTo(NumericCheckOutcome.FAILED));
             Assert.That(Check("pi^4/15", "6.4939394022668"), Is.EqualTo(NumericCheckOutcome.FAILED), "Fourteen digits are not equality.");
+            Assert.That(Check("sin(x)", "sin(x + 2*pi)"), Is.EqualTo(NumericCheckOutcome.PASSED), "pi is a constant, not a variable which takes the values of the sample points.");
+            Assert.That(Check("e^x", "x + 1"), Is.EqualTo(NumericCheckOutcome.FAILED));
         }
     }
 

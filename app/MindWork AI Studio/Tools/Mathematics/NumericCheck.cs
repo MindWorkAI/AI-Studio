@@ -48,7 +48,7 @@ public static class NumericCheck
     {
         left = WithoutCondition(left);
         right = WithoutCondition(right);
-        var variables = left.FreeVariables.Concat(right.FreeVariables).Distinct().OrderBy(variable => variable.Name, StringComparer.Ordinal).ToArray();
+        var variables = MathVariables.FreeIn(left).Concat(MathVariables.FreeIn(right)).Distinct().OrderBy(variable => variable.Name, StringComparer.Ordinal).ToArray();
 
         using var precision = MathS.Settings.DecimalPrecisionContext.Set(EContext.ForPrecision(PRECISION));
         var validPoints = 0;

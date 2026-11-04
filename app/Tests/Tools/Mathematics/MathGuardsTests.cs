@@ -28,6 +28,7 @@ public sealed class MathGuardsTests
             Assert.That(ExactSizeRefusal("(1/2)^100000"), Does.Contain("would have about 30,103 digits"), "Numerator and denominator count.");
             Assert.That(ExactSizeRefusal("sqrt(2)^1000000"), Does.Contain("would have about"), "sqrt(2)^1000000 is the exact number 2^500000.");
             Assert.That(ExactSizeRefusal("x^(9^9^9)"), Does.StartWith("'9 ^ 9 ^ 9' would have"), "An exponent is a number even when the base is a variable.");
+            Assert.That(ExactSizeRefusal("(e^0 + 1)^(10^9)"), Does.Contain("would have about 301,029,996 digits"), "A constant is no variable: the base is the number 2.");
         }
     }
 

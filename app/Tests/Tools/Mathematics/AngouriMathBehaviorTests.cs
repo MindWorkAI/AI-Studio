@@ -181,6 +181,8 @@ public sealed class AngouriMathBehaviorTests
         {
             Assert.That(Parse("integral(x^2, x, 0, 1)").FreeVariables, Is.Empty);
             Assert.That(Parse("integral(x*a, x, 0, 1)").FreeVariables, Is.EquivalentTo(new[] { MathS.Var("a") }));
+            Assert.That(Parse("pi + x").FreeVariables, Has.Some.InstanceOf<Entity.Constant>(), "The constants count among the free variables, see MathVariables.");
+            Assert.That(Parse("ln(0)").FreeVariables.Select(variable => variable.Name), Is.EqualTo(new[] { "e" }), "ln is the logarithm to the base e.");
             Assert.That(Parse("x + 1").EvaluableNumerical, Is.False);
             Assert.Throws<CannotEvalException>(() => Parse("x + 1").EvalNumerical());
         }

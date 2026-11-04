@@ -82,7 +82,7 @@ public static class MathGuards
     {
         var baseDigits = EstimateDigits(power.Base);
         var exponentDigits = EstimateDigits(power.Exponent);
-        if (power.Base.FreeVariables.Any())
+        if (MathVariables.HasAny(power.Base))
             return baseDigits + exponentDigits;
 
         var exponent = ValueOf(power.Exponent);
@@ -124,7 +124,7 @@ public static class MathGuards
     /// </summary>
     private static double? ValueOf(Entity part)
     {
-        if (part.FreeVariables.Any())
+        if (MathVariables.HasAny(part))
             return null;
 
         var value = part.Evaled switch
