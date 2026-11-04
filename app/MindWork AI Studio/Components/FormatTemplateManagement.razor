@@ -7,18 +7,21 @@
     <ColGroup>
         <col style="width: 3em;"/>
         <col style="width: 16em;"/>
+        <col style="width: 14em;"/>
         <col/>
         <col style="width: 16em;"/>
     </ColGroup>
     <HeaderContent>
         <MudTh>#</MudTh>
         <MudTh>@T("Format Template Name")</MudTh>
+        <MudTh>@T("Type")</MudTh>
         <MudTh>@T("File")</MudTh>
         <MudTh>@T("Actions")</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>@context.Num</MudTd>
         <MudTd>@context.Name</MudTd>
+        <MudTd>@context.TypeName</MudTd>
         <MudTd Style="word-break: break-all;">
             @if (this.templateIdsWithMissingFile.Contains(context.Id))
             {

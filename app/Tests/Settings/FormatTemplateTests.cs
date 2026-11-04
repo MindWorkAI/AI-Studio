@@ -49,5 +49,22 @@ public sealed class FormatTemplateTests
         }
     }
 
+    [TestCase("Report.dotx", "Word template (.dotx)")]
+    [TestCase("Letter.DOCX", "Word template (.docx)", Description = "The extension is shown the same way, however the file spells it.")]
+    [TestCase("Slides.potx", "PowerPoint template (.potx)")]
+    [TestCase("Lecture.pptx", "PowerPoint template (.pptx)")]
+    public void TheTypeNamesTheKindAndTheExtension(string fileName, string typeName) => Assert.That(TemplateAt(fileName).TypeName, Is.EqualTo(typeName));
+
+    [Test]
+    public void EveryKindOfFormatTemplateHasATypeName()
+    {
+        var unknown = TemplateAt("Notes").TypeName;
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var extension in FileTypes.FORMAT_TEMPLATE.FlattenExtensions())
+                Assert.That(TemplateAt($"Template.{extension}").TypeName, Does.Not.StartWith(unknown), $"A format template with the extension .{extension} needs a name of its kind in FormatTemplateExtensions.TypeName.");
+        }
+    }
+
     private static FormatTemplate TemplateAt(string fileName) => new(1, Guid.NewGuid().ToString(), "Report", Path.Combine(Path.GetTempPath(), "templates", fileName));
 }
