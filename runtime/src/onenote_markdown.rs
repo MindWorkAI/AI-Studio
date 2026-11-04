@@ -1,11 +1,13 @@
-//! Renders the pages of a OneNote section as Markdown, for `stream_onenote_section` in `file_data.rs`.
+//! Renders the pages of a OneNote section as Markdown and finds their images, for
+//! `stream_onenote_section` in `file_data.rs`.
 //!
 //! The text is what OneNote shows: runs marked as hidden are left out, among them the markers which
 //! carry the targets of hyperlinks. Nothing is escaped except the column separator inside a table
 //! cell, so the prompt-injection filter reads the words exactly as the AI does.
 
+use std::io::Read;
 use chrono::{DateTime, SecondsFormat};
-use onenote_parser::contents::{Content, EmbeddedFile, Image, List, NoteTag, OutlineElement, OutlineItem, ParagraphStyling, RichText, Table, TableCell, TextHyperlink};
+use onenote_parser::contents::{Content, EmbeddedFile, FileDataStatus, Image, List, NoteTag, OutlineElement, OutlineItem, ParagraphStyling, RichText, Table, TableCell, TextHyperlink};
 use onenote_parser::page::{Page, PageContent};
 use onenote_parser::section::Section;
 use crate::file_data::push_presentation_metadata_field;
@@ -59,6 +61,78 @@ pub(crate) fn page_to_markdown(page: &Page) -> String {
     }
 
     writer.blocks.join("\n\n")
+}
+
+/// The images of a page in the order its text names them: those placed on the page itself, and
+/// those inside its outlines and tables.
+pub(crate) fn page_images(page: &Page) -> Vec<&Image> {
+    let mut images = Vec::new();
+    for content in page.contents() {
+        match content {
+            PageContent::Image(image) => images.push(image),
+            PageContent::Outline(outline) => collect_images_of_items(outline.items(), &mut images),
+            PageContent::EmbeddedFile(_) | PageContent::Ink(_) | PageContent::Unknown => {},
+        }
+    }
+
+    images
+}
+
+fn collect_images_of_items<'a>(items: &'a [OutlineItem], images: &mut Vec<&'a Image>) {
+    for item in items {
+        match item {
+            OutlineItem::Element(element) => collect_images_of_element(element, images),
+            OutlineItem::Group(group) => collect_images_of_items(group.outlines(), images),
+        }
+    }
+}
+
+fn collect_images_of_element<'a>(element: &'a OutlineElement, images: &mut Vec<&'a Image>) {
+    for content in element.contents() {
+        match content {
+            Content::Image(image) => images.push(image),
+            Content::Table(table) => {
+                for cell in table.contents().iter().flat_map(|row| row.contents()) {
+                    for cell_element in cell.contents() {
+                        collect_images_of_element(cell_element, images);
+                    }
+                }
+            },
+
+            Content::RichText(_) | Content::EmbeddedFile(_) | Content::Ink(_) | Content::Unknown => {},
+        }
+    }
+
+    collect_images_of_items(element.children(), images);
+}
+
+/// The data of an image in a format every model with image input reads, together with its media
+/// type, or `None` when there is none.
+///
+/// OneNote keeps some images in formats which no model reads, e.g., a printout of a document as
+/// EMF. It then usually adds a picture for browsers, which takes the place of the original.
+pub(crate) fn image_data_for_models(image: &Image) -> Option<(Box<dyn Read>, &'static str)> {
+    if image.data_status() == FileDataStatus::Available
+        && let Some(media_type) = image.extension().and_then(media_type_of_extension)
+        && let Some(reader) = image.read() {
+        return Some((reader, media_type));
+    }
+
+    let picture = image.web_picture().filter(|picture| picture.data_status() == FileDataStatus::Available)?;
+    let media_type = picture.extension().and_then(media_type_of_extension)?;
+    Some((picture.read(), media_type))
+}
+
+/// The media type of an image format every model with image input reads. OneNote stores the
+/// extension with or without its dot.
+fn media_type_of_extension(extension: &str) -> Option<&'static str> {
+    match extension.trim_start_matches('.').to_ascii_lowercase().as_str() {
+        "png" => Some("image/png"),
+        "jpg" | "jpeg" => Some("image/jpeg"),
+        "gif" => Some("image/gif"),
+        "webp" => Some("image/webp"),
+        _ => None,
+    }
 }
 
 /// The metadata comment of a page: who wrote it, and when.
@@ -364,6 +438,14 @@ mod tests {
     #[test]
     fn a_title_across_lines_ends_up_on_one_line() {
         assert_eq!(single_line(" A  title\nacross lines "), "A title across lines");
+    }
+
+    #[test]
+    fn only_images_every_model_reads_are_handed_on() {
+        assert_eq!(media_type_of_extension(".PNG"), Some("image/png"));
+        assert_eq!(media_type_of_extension("jpg"), Some("image/jpeg"));
+        assert_eq!(media_type_of_extension(".emf"), None);
+        assert_eq!(media_type_of_extension(""), None);
     }
 
     #[test]

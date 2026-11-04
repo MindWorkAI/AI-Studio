@@ -312,6 +312,10 @@ const DOCX: &str = "docx";
 const ODT: &str = "odt";
 const HTML: &str = "html";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
+
+/// How many bytes of an image fill one segment. Base64 turns three bytes into four characters, so
+/// a segment of this many bytes fills `IMAGE_SEGMENT_SIZE_IN_CHARS` exactly and needs no padding.
+const IMAGE_SEGMENT_SIZE_IN_BYTES: usize = IMAGE_SEGMENT_SIZE_IN_CHARS / 4 * 3;
 const MAX_TEXT_SEGMENT_LENGTH_IN_CHARS: usize = 100_000;
 
 /// The signature which identifies a PDF file.
@@ -932,7 +936,7 @@ async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> 
         ExtractionRoute::PandocHtml => convert_with_pandoc(file_path, HTML, TO_MARKDOWN).await?,
         ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx, stream_id).await?,
         ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp, stream_id).await?,
-        ExtractionRoute::OneNote => stream_onenote_section(file_path).await?,
+        ExtractionRoute::OneNote => stream_onenote_section(file_path, extract_images, stream_id).await?,
         ExtractionRoute::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
         ExtractionRoute::Csv => stream_text_file(file_path, true, Some("csv".to_string())).await?,
         ExtractionRoute::Text => stream_text_file(file_path, false, None).await?,
@@ -1850,12 +1854,14 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
     Ok(Box::pin(ReceiverStream::new(rx)))
 }
 
-/// Reads a section of a OneNote notebook, one chunk per page.
+/// Reads a section of a OneNote notebook, one chunk per page, followed by the images of the page.
 ///
 /// A page is numbered by its place in the page list of the section, subpages included, which is
-/// where the user finds it in OneNote. The parser reads the file on demand rather than as a whole.
-async fn stream_onenote_section(file_path: &str) -> Result<ChunkStream> {
+/// where the user finds it in OneNote. The parser reads the file on demand rather than as a whole,
+/// and the images are read the same way, one segment at a time.
+async fn stream_onenote_section(file_path: &str, extract_images: bool, stream_id: &str) -> Result<ChunkStream> {
     let path = file_path.to_owned();
+    let stream_id = stream_id.to_owned();
     let (tx, rx) = mpsc::channel(32);
     let worker_error_tx = tx.clone();
 
@@ -1927,6 +1933,44 @@ async fn stream_onenote_section(file_path: &str) -> Result<ChunkStream> {
             }))).is_err() {
                 return;
             }
+
+            if !extract_images {
+                continue;
+            }
+
+            for (index, image) in onenote_markdown::page_images(page).into_iter().enumerate() {
+                let Some((reader, media_type)) = onenote_markdown::image_data_for_models(image) else {
+                    continue;
+                };
+
+                //
+                // The image ID carries the stream it belongs to, like the other readers do it. The app
+                // removes the segments of a finished extraction by that prefix:
+                //
+                let image_id = format!("{stream_id}-{number_of_pages}-{index}");
+                let mut receiver_is_gone = false;
+                let reading = for_each_base64_segment(reader, |content, segment, is_end| {
+                    let base64_image = Base64Image::new(image_id.clone(), content, segment, is_end, Some(media_type.to_string()));
+                    receiver_is_gone = tx.blocking_send(Ok(Chunk::new(String::new(), Metadata::Document {
+                        page_number: Some(number_of_pages),
+                        image: Some(base64_image),
+                    }))).is_err();
+
+                    !receiver_is_gone
+                });
+
+                if receiver_is_gone {
+                    return;
+                }
+
+                //
+                // A missing image costs the page a picture, not its text. The segments sent so far
+                // never complete, and the app drops them with the stream.
+                //
+                if let Err(e) = reading {
+                    warn!("Image {index} on page {number_of_pages} of '{path}' could not be read: {e}");
+                }
+            }
         }
 
         debug!("Extracted {number_of_characters} readable character(s) from {number_of_pages} page(s) of '{path}'.");
@@ -1955,6 +1999,38 @@ async fn stream_onenote_section(file_path: &str) -> Result<ChunkStream> {
     });
 
     Ok(Box::pin(ReceiverStream::new(rx)))
+}
+
+/// Encodes what a reader yields as base64 segments of `IMAGE_SEGMENT_SIZE_IN_CHARS`, reading only as
+/// much as one segment needs, and hands each to `send` together with its index and whether it is the
+/// last one. Stops as soon as `send` returns `false`.
+///
+/// The segments add up to the encoding of the whole data: every segment but the last encodes a
+/// multiple of three bytes and therefore carries no padding.
+fn for_each_base64_segment(mut reader: impl std::io::Read, mut send: impl FnMut(String, usize, bool) -> bool) -> std::io::Result<()> {
+    let mut current = read_image_segment(&mut reader)?;
+    let mut index = 0;
+    while !current.is_empty() {
+        // Reading one segment ahead is what tells the last segment as such:
+        let next = read_image_segment(&mut reader)?;
+        if !send(general_purpose::STANDARD.encode(&current), index, next.is_empty()) {
+            return Ok(());
+        }
+
+        current = next;
+        index += 1;
+    }
+
+    Ok(())
+}
+
+/// Reads the bytes of the next image segment, fewer only at the end of the data.
+fn read_image_segment(reader: &mut impl std::io::Read) -> std::io::Result<Vec<u8>> {
+    use std::io::Read;
+
+    let mut segment = Vec::with_capacity(IMAGE_SEGMENT_SIZE_IN_BYTES);
+    reader.take(IMAGE_SEGMENT_SIZE_IN_BYTES as u64).read_to_end(&mut segment)?;
+    Ok(segment)
 }
 
 fn presentation_metadata_to_markdown(metadata: &PresentationMetadata) -> Option<String> {
@@ -2331,6 +2407,53 @@ mod tests {
         }
 
         (pages, codes)
+    }
+
+    /// Reads data through `for_each_base64_segment` and returns every segment with its index and
+    /// whether it was marked as the last one.
+    fn base64_segments_of(data: &[u8]) -> Vec<(String, usize, bool)> {
+        let mut segments = Vec::new();
+        for_each_base64_segment(std::io::Cursor::new(data), |content, index, is_end| {
+            segments.push((content, index, is_end));
+            true
+        }).expect("reading from memory cannot fail");
+
+        segments
+    }
+
+    /// An image is read one segment at a time, and the segments add up to the encoding of the whole
+    /// image, with only the last one marked as such.
+    #[test]
+    fn the_segments_of_an_image_add_up_to_its_whole_encoding() {
+        let data: Vec<u8> = (0..IMAGE_SEGMENT_SIZE_IN_BYTES * 2 + 5).map(|index| (index % 251) as u8).collect();
+        let segments = base64_segments_of(&data);
+
+        assert_eq!(segments.iter().map(|(content, _, _)| content.len()).collect::<Vec<_>>(), vec![IMAGE_SEGMENT_SIZE_IN_CHARS, IMAGE_SEGMENT_SIZE_IN_CHARS, 8]);
+        assert_eq!(segments.iter().map(|&(_, index, is_end)| (index, is_end)).collect::<Vec<_>>(), vec![(0, false), (1, false), (2, true)]);
+        assert_eq!(segments.into_iter().map(|(content, _, _)| content).collect::<String>(), general_purpose::STANDARD.encode(&data));
+    }
+
+    /// An image which fills exactly one segment is its own last segment, and an empty one sends
+    /// nothing at all.
+    #[test]
+    fn an_image_of_one_segment_ends_there_and_an_empty_one_sends_nothing() {
+        let segments = base64_segments_of(&[7; IMAGE_SEGMENT_SIZE_IN_BYTES]);
+        assert_eq!(segments.len(), 1);
+        assert_eq!((segments[0].0.len(), segments[0].2), (IMAGE_SEGMENT_SIZE_IN_CHARS, true));
+
+        assert!(base64_segments_of(&[]).is_empty());
+    }
+
+    /// Once the app stopped listening, the rest of the image is not read anymore.
+    #[test]
+    fn the_segments_of_an_image_stop_once_nobody_listens() {
+        let mut calls = 0;
+        for_each_base64_segment(std::io::Cursor::new(vec![0; IMAGE_SEGMENT_SIZE_IN_BYTES * 3]), |_, _, _| {
+            calls += 1;
+            false
+        }).expect("reading from memory cannot fail");
+
+        assert_eq!(calls, 1);
     }
 
     #[test]
