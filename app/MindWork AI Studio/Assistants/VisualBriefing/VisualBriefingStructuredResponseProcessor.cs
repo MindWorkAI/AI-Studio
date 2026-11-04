@@ -20,7 +20,7 @@ internal static partial class VisualBriefingStructuredResponseProcessor
         .DisableHtml()
         .Build();
     private static readonly NullabilityInfoContext NULLABILITY = new();
-    private static readonly object CONTRACT_LOCK = new();
+    private static readonly Lock CONTRACT_LOCK = new();
     private static readonly Dictionary<Type, ContractShape> CONTRACTS = [];
 
     /// <summary>
