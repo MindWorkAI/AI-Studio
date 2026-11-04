@@ -1,6 +1,10 @@
 using System.Web;
 
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.Tools.ToolCalling;
 
@@ -139,6 +143,73 @@ public sealed class ConfluenceSearchToolTests
         var searchUrl = ConfluenceSearchTool.BuildSearchUrl(WIKI, "login.action os_destination=", null);
 
         Assert.That(ConfluenceSearchTool.IsLoginPage(searchUrl), Is.False, "Somebody looking up the login page in the wiki gets search results, not a message saying that the sign-in failed.");
+    }
+
+    [Test]
+    public void TheInstructionsPointToTheAttachmentsOfTheWiki()
+    {
+        var instructions = ConfluenceSearchTool.BuildSystemPromptInstructions(endsWebSearch: false);
+        Assert.That(instructions, Does.Contain("/download/attachments/").And.Contain("`read_web_page`"), "Guidelines, templates, and slides often lie in attachments, which the model would otherwise leave unread.");
+    }
+
+    [Test]
+    public void AnAttachmentIsWithinTheWiki()
+    {
+        // Which makes it an internal document Read Web Page may open with its default setting:
+        Assert.That(ConfluenceSearchTool.IsWithinWiki(WIKI, new Uri("https://wiki.example.org/confluence/download/attachments/42/Travel%20guideline.pdf?version=1&api=v2")), Is.True);
+    }
+
+    [Test]
+    public void TheResultLinksAreFoundInTheOrderOfTheSearchPage()
+    {
+        const string HTML = """
+            <html><body>
+              <nav><a href="/confluence/display/HELP/Navigation">Help</a></nav>
+              <ol class="search-results cql">
+                <li class="search-result"><h3><a class="search-result-link visitable" href="/confluence/display/HR/Travel+Policy">Travel Policy</a></h3></li>
+                <li class="search-result"><h3><a class="search-result-link visitable" href="https://wiki.example.org/confluence/download/attachments/42/Travel%20form.pdf">Travel form.pdf</a></h3></li>
+                <li class="search-result"><h3><a class="search-result-link" href="/confluence/display/HR/Travel+Policy">Travel Policy</a></h3></li>
+                <li class="search-result"><h3><a class="search-result-link" href="https://elsewhere.example.com/page">Elsewhere</a></h3></li>
+              </ol>
+            </body></html>
+            """;
+
+        var hits = ConfluenceSearchTool.FindHitUrls(HTML, WIKI, new Uri("https://wiki.example.org/confluence/dosearchsite.action?cql=x"));
+
+        Assert.That(hits.Select(hit => hit.AbsoluteUri), Is.EqualTo(new[]
+        {
+            "https://wiki.example.org/confluence/display/HR/Travel+Policy",
+            "https://wiki.example.org/confluence/download/attachments/42/Travel%20form.pdf",
+        }), "Only result links count, each once, and only those within the wiki; the navigation is no result.");
+    }
+
+    [Test]
+    public void WithoutMarkedLinksTheFirstLinkOfEachResultCounts()
+    {
+        const string HTML = """<div class="search-result"><a href="/confluence/pages/viewpage.action?pageId=7">Budget</a><a href="/confluence/display/~someone">Author</a></div>""";
+
+        var hits = ConfluenceSearchTool.FindHitUrls(HTML, WIKI, WIKI);
+
+        Assert.That(hits.Select(hit => hit.AbsoluteUri), Is.EqualTo(new[] { "https://wiki.example.org/confluence/pages/viewpage.action?pageId=7" }));
+    }
+
+    [Test]
+    public void ASearchPageWithoutResultsHasNoHits()
+    {
+        Assert.That(ConfluenceSearchTool.FindHitUrls("<html><body><p>No results</p><a href=\"/confluence/display/HELP\">Help</a></body></html>", WIKI, WIKI), Is.Empty);
+    }
+
+    [TestCase("readTopHits", "maxResults")]
+    [TestCase("maxHitContentCharacters", "maxTotalContentCharacters")]
+    public void TheResultsReadAlongDefaultToWhatWebSearchReads(string confluenceSetting, string webSearchSetting)
+    {
+        IToolImplementation confluence = new ConfluenceSearchTool(null!, null!, null!, null!);
+        IToolImplementation webSearch = new WebSearchTool([], null!, null!, NullLogger<WebSearchTool>.Instance);
+
+        var confluenceDefault = confluence.GetSettingsFieldDefaultValue(confluenceSetting, confluence.GetDefinition().SettingsSchema.Properties[confluenceSetting]);
+        var webSearchDefault = webSearch.GetSettingsFieldDefaultValue(webSearchSetting, webSearch.GetDefinition().SettingsSchema.Properties[webSearchSetting]);
+
+        Assert.That(confluenceDefault, Is.Not.Null.And.EqualTo(webSearchDefault), "Both searches read their best hits themselves, so they bring about as much content into a chat.");
     }
 
     private static Uri ParseBaseUrl(string value) => ConfluenceSearchTool.TryParseBaseUrl(value, out var baseUrl)

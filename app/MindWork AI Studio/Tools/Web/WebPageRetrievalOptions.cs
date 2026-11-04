@@ -51,4 +51,10 @@ public sealed class WebPageRetrievalOptions
     public Func<Uri, bool>? IsTargetAllowed { get; init; }
 
     public Func<Uri, ConfidenceLevel, Task>? OnPrivateHostProviderBlockAsync { get; init; }
+
+    /// <summary>
+    /// Whether and from where documents such as PDFs are read, or null to refuse them all, as
+    /// before documents could be read at all.
+    /// </summary>
+    public WebDocumentOptions? Documents { get; init; }
 }

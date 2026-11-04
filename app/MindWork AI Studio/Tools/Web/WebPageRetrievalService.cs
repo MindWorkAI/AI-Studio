@@ -5,14 +5,43 @@ using HtmlAgilityPack;
 
 namespace AIStudio.Tools.Web;
 
-public sealed class WebPageRetrievalService(HTMLParser htmlParser)
+/// <summary>
+/// Reads web pages, text documents, and, where the caller allows it, documents such as PDFs.
+/// </summary>
+/// <param name="htmlParser">Performs the requests.</param>
+/// <param name="documentReader">Reads documents through the runtime, or null where no document is ever read.</param>
+public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentReader? documentReader = null)
 {
     private const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5MB
 
+    /// <summary>
+    /// Reads the page or document at an address.
+    /// </summary>
+    /// <remarks>
+    /// A document is read only when the options allow documents for the address which returned
+    /// it, see WebDocumentOptions. It streams into a file of its own, which the runtime reads and
+    /// which is deleted right after, whether reading succeeded, failed, or was cancelled. Whether
+    /// a response counts as a document is decided by its media type, as everything else is read
+    /// as HTML or text; what kind of document it is, the runtime decides by its content.
+    /// </remarks>
     public async Task<RetrievedWebPage> RetrieveAsync(
         Uri url,
         WebPageRetrievalOptions options,
         CancellationToken token = default)
+    {
+        string? documentPath = null;
+        try
+        {
+            return await this.RetrieveCoreAsync(url, options, path => documentPath = path, token);
+        }
+        finally
+        {
+            if (documentPath is not null)
+                documentReader?.Delete(documentPath);
+        }
+    }
+
+    private async Task<RetrievedWebPage> RetrieveCoreAsync(Uri url, WebPageRetrievalOptions options, Action<string> rememberDocumentPath, CancellationToken token)
     {
         var triedOsSso = false;
         var requiredProviderConfidence = ConfidenceLevel.NONE;
@@ -21,6 +50,24 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         // Always overwritten: the media type is validated before the body is read, so no page
         // arrives without the check having decided what it is.
         var contentKind = WebContentKind.HTML_PAGE;
+        var documentDownload = options.Documents is { } documents && documentReader is not null
+            ? new HTMLParserDocumentDownload((mediaType, finalUrl) =>
+            {
+                // Pages and text formats are read as before, wherever they come from, and images,
+                // audio, or video are refused by the media type check before their body is downloaded:
+                if (WebContentTypeClassifier.Classify(mediaType) is not null || !MayBeDocument(mediaType))
+                    return null;
+
+                // The text names no address, so a caller may hand it on without repeating one:
+                if (!documents.IsAllowed(finalUrl, lastAddressIsNonPublic))
+                    throw new WebPageAccessBlockedException("The address returned a document, such as a PDF, which may not be read from there.", WebPageAccessBlockReason.DOCUMENT_NOT_ALLOWED);
+
+                var path = documentReader.CreatePath();
+                rememberDocumentPath(path);
+                return path;
+            }, documents.MaxBytes)
+            : null;
+
         HTMLParserWebPage page;
         try
         {
@@ -48,6 +95,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
                 },
                 validateMediaType: mediaType => contentKind = WebContentTypeClassifier.Classify(mediaType) ??
                     throw new InvalidOperationException($"Unsupported content type '{mediaType}'. Only HTML pages and text formats such as plain text, JSON, XML, or CSV are supported."),
+                documentDownload: documentDownload,
                 token: token);
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
@@ -69,6 +117,9 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
             throw new InvalidOperationException($"Loading the web page failed: {exception.Message}", exception);
         }
 
+        if (page.DocumentPath is { } downloadedPath && documentReader is not null && options.Documents is not null)
+            return await ReadDocumentAsync(documentReader, page, downloadedPath, options.Documents, requiredProviderConfidence, lastAddressIsNonPublic, token);
+
         return new RetrievedWebPage
         {
             Page = page,
@@ -82,6 +133,68 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
             RequiredProviderConfidence = requiredProviderConfidence,
             ReachedNonPublicAddress = lastAddressIsNonPublic,
         };
+    }
+
+    private static async Task<RetrievedWebPage> ReadDocumentAsync(WebDocumentReader reader, HTMLParserWebPage page, string path, WebDocumentOptions documents, ConfidenceLevel requiredProviderConfidence, bool reachedNonPublicAddress, CancellationToken token)
+    {
+        var extraction = await reader.ReadAsync(path, page.FinalUrl, documents.MaxCharacters, token);
+        if (!extraction.HasUsableContent)
+        {
+            token.ThrowIfCancellationRequested();
+
+            // English, like every other failure here, because it reaches the model:
+            throw new InvalidOperationException(extraction.ErrorCode switch
+            {
+                FileExtractionErrorCode.UNSUPPORTED when extraction.DetectedFormat is not null => $"The document is a {extraction.DetectedFormat}, which AI Studio cannot read.",
+                FileExtractionErrorCode.UNSUPPORTED => "The document has a format which AI Studio cannot read.",
+                FileExtractionErrorCode.EXECUTABLE_REJECTED => "The address returned a program instead of a document, which is never read.",
+                FileExtractionErrorCode.PDF_ENCRYPTED => "The document is protected and cannot be opened.",
+                FileExtractionErrorCode.NO_TEXT_EXTRACTED or FileExtractionErrorCode.NO_CONTENT => "No text could be read from the document. It might contain images only, such as a scanned PDF without a text layer.",
+                _ => $"Reading the document failed: {extraction.ErrorMessage}",
+            });
+        }
+
+        return new RetrievedWebPage
+        {
+            Page = page,
+            ContentKind = WebContentKind.DOCUMENT,
+            ExtractedPage = new ExtractedWebPage
+            {
+                Title = page.FileName ?? GetFileName(page.FinalUrl),
+                Description = string.Empty,
+                Authors = [],
+                PublishedTime = string.Empty,
+                ModifiedTime = string.Empty,
+                Language = string.Empty,
+                SiteName = string.Empty,
+                CanonicalUrl = null,
+                Markdown = extraction.Content.Replace("\r\n", "\n", StringComparison.Ordinal).Trim(),
+                Outline = [],
+            },
+            RetrievedAtUtc = DateTimeOffset.UtcNow,
+            RequiredProviderConfidence = requiredProviderConfidence,
+            ReachedNonPublicAddress = reachedNonPublicAddress,
+            IsCutAtCharacterLimit = extraction.IsCutAtCharacterLimit,
+            HasUnreadableParts = extraction.Outcome is FileExtractionOutcome.PARTIAL,
+        };
+    }
+
+    /// <summary>
+    /// Whether a response of this media type may hold a document such as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Documents arrive as application/*, often as application/octet-stream, and sometimes without
+    /// any media type. The runtime decides by the content which of them it reads. An image, a
+    /// recording, or a video is none, and downloading it first would cost up to the size limit of
+    /// documents before the runtime refused it.
+    /// </remarks>
+    private static bool MayBeDocument(string mediaType) =>
+        mediaType.Length is 0 || mediaType.StartsWith("application/", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetFileName(Uri url)
+    {
+        var fileName = Path.GetFileName(Uri.UnescapeDataString(url.AbsolutePath));
+        return string.IsNullOrWhiteSpace(fileName) ? url.Host : fileName;
     }
 
     private static HtmlDocument ParseHtml(string html)
