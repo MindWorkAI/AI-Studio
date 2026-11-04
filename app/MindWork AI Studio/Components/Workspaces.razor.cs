@@ -548,7 +548,8 @@ public partial class Workspaces : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// The name follows the icon instead of the states, so that a new state needs nothing but its
-    /// entry in <see cref="ChatIndicator"/>.
+    /// entry in <see cref="ChatIndicator"/>. Only an unread answer leaves the name alone: it is news,
+    /// not a problem, and its icon tells it well enough.
     /// </remarks>
     private static string GetChatNameColorStyle(ChatIndicator indicator) => indicator.Color switch
     {
@@ -560,11 +561,41 @@ public partial class Workspaces : MSGComponentBase
     };
 
     /// <summary>
-    /// The icon of a chat, which also tells what is going on in it: a transcript, or an answer being written.
+    /// The icon of a chat, which also tells what is going on in it: a transcript, an answer being
+    /// written, or an answer which the user has not seen yet.
     /// </summary>
-    private ChatIndicator GetChatIndicator(Guid chatId) => ChatIndicator.Of(
-        this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(chatId))?.Status,
-        this.AIJobService.TryGetChatSnapshot(chatId)?.Status);
+    private ChatIndicator GetChatIndicator(Guid chatId)
+    {
+        var answer = this.AIJobService.TryGetChatSnapshot(chatId);
+        return ChatIndicator.Of(
+            this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(chatId))?.Status,
+            answer?.Status,
+            answer?.IsOutcomeSeen ?? true);
+    }
+
+    /// <summary>
+    /// The color of the dot on the folder icon of a collapsed workspace, or null when it needs none.
+    /// </summary>
+    /// <remarks>
+    /// A collapsed workspace hides the icons of its chats, so the dot tells that one of them holds
+    /// an answer the user has not seen yet, in the color of that chat's icon. A failed answer comes
+    /// before an unread one, since it needs the user more. An expanded workspace shows the chats'
+    /// icons themselves and needs no dot.
+    /// </remarks>
+    private Color? GetWorkspaceMarkColor(WorkspaceTreeWorkspace workspace, bool isExpanded)
+    {
+        if (isExpanded || !workspace.ChatsLoaded)
+            return null;
+
+        var indicators = workspace.Chats.Select(chat => this.GetChatIndicator(chat.ChatId)).ToHashSet();
+        if (indicators.Contains(ChatIndicator.ANSWER_FAILED))
+            return ChatIndicator.ANSWER_FAILED.Color;
+
+        if (indicators.Contains(ChatIndicator.ANSWER_UNREAD))
+            return ChatIndicator.ANSWER_UNREAD.Color;
+
+        return null;
+    }
 
     /// <summary>
     /// How much a chat's icon stands out.

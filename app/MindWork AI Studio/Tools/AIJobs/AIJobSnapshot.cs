@@ -30,5 +30,16 @@ public sealed record AIJobSnapshot
 
     public string ErrorMessage { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Whether the user has seen how the job ended.
+    /// </summary>
+    /// <remarks>
+    /// True right away when the job ended while its subject was in the foreground, such as the open
+    /// chat; otherwise once its subject comes to the foreground afterward, see
+    /// <see cref="AIJobService.SetForegroundAsync"/>. False while the job runs. Kept in memory only,
+    /// like the outcome itself.
+    /// </remarks>
+    public bool IsOutcomeSeen { get; init; }
+
     public bool IsActive => this.Status is AIJobStatus.QUEUED or AIJobStatus.WAITING_FOR_REMOTE or AIJobStatus.RUNNING;
 }

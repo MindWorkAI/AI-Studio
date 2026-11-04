@@ -220,21 +220,41 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         await this.CancelAsync(jobId);
     }
 
+    /// <summary>
+    /// Tells the running jobs of a subject, such as a chat, whether it is in the foreground.
+    /// </summary>
+    /// <remarks>
+    /// A subject coming to the foreground also shows how its finished jobs ended, so these count as
+    /// seen from then on, see <see cref="AIJobSnapshot.IsOutcomeSeen"/>.
+    /// </remarks>
     public async Task SetForegroundAsync(AIJobKind kind, Guid subjectId, bool isForeground)
     {
         var matchingJobs = this.jobs.Values
-            .Where(job => job.Snapshot.Kind == kind && job.Snapshot.SubjectId == subjectId && job.Snapshot.IsActive)
+            .Where(job => job.Snapshot.Kind == kind && job.Snapshot.SubjectId == subjectId)
+            .Where(job => job.Snapshot.IsActive || (isForeground && !job.Snapshot.IsOutcomeSeen))
             .ToList();
 
         foreach (var job in matchingJobs)
         {
+            //
+            // Decided under the lock, since a job may have finished since the query above. One which
+            // finished in the meantime counts as seen only when its subject comes to the foreground:
+            //
             lock (job.SyncRoot)
             {
-                job.Snapshot = job.Snapshot with
-                {
-                    IsForeground = isForeground,
-                    UpdatedAt = DateTimeOffset.Now,
-                };
+                if (job.Snapshot.IsActive)
+                    job.Snapshot = job.Snapshot with
+                    {
+                        IsForeground = isForeground,
+                        UpdatedAt = DateTimeOffset.Now,
+                    };
+
+                // Not a change of the job itself, which is why the time of its last update stays:
+                else if (isForeground)
+                    job.Snapshot = job.Snapshot with { IsOutcomeSeen = true };
+
+                else
+                    continue;
             }
 
             await this.NotifyChangedAsync(job);
@@ -390,6 +410,9 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 Status = status,
                 ErrorMessage = errorMessage,
                 UpdatedAt = DateTimeOffset.Now,
+
+                // The open chat shows how its answer ended; any other learns it once it opens, see SetForegroundAsync:
+                IsOutcomeSeen = state.Snapshot.IsForeground,
             };
         }
 

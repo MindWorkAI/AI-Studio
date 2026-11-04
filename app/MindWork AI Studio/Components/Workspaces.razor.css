@@ -69,18 +69,36 @@
 }
 
 /*
- * A chat's icon, or the spinner in its place, is 20 pixels in the 24 of a folder's icon. The outlined
- * chat bubble fills more of its box than the folder does, and at the same size it looks the larger
- * one. The margin keeps the names of chats and workspaces in line.
+ * Whatever shows the state of a chat sits in a slot of 20 pixels, in the 24 of a folder's icon. The
+ * outlined chat bubble fills more of its box than the folder does, and at the same size it looks the
+ * larger one. The margin keeps the names of chats and workspaces in line, and the fixed size keeps a
+ * name in its place while the icon in front of it changes.
+ *
+ * The slot sizes its content, so that a new state needs no rule of its own. A Material icon fills the
+ * slot, since it draws within the inner 20 of its 24 units and brings its padding along. Anything else,
+ * such as the spinner, fills its whole box and therefore gets those inner 20 units only: it is as large
+ * as the drawing of an icon.
+ *
+ * The slot is an HTML element, so its size follows the interface size on every system, and the icon
+ * in it with it. The fix for SVG icons in app.css is not needed here.
  */
 .workspace-list ::deep .workspace-chat-icon {
-    font-size: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
     margin: 0 2px;
 }
 
-.workspace-list ::deep .mud-progress-circular.workspace-chat-icon {
-    width: 20px;
-    height: 20px;
+.workspace-list ::deep .workspace-chat-icon > .mud-icon-root {
+    width: 100%;
+    height: 100%;
+}
+
+.workspace-list ::deep .workspace-chat-icon > :not(.mud-icon-root) {
+    width: calc(100% * 20 / 24);
+    height: calc(100% * 20 / 24);
 }
 
 /*

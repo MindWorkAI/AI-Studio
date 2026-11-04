@@ -160,10 +160,13 @@ else
     private RenderFragment RenderWorkspace(WorkspaceTreeWorkspace workspace) => @<text>
         @{
             var isExpanded = this.IsWorkspaceExpanded(workspace.WorkspaceId);
+            var markColor = this.GetWorkspaceMarkColor(workspace, isExpanded);
         }
         <MudListItem T="string" Class="@this.GetWorkspaceItemClasses(workspace, isExpanded)" OnClick="@(() => this.ToggleWorkspaceAsync(workspace))">
             <div class="d-flex align-center gap-2" style="min-width: 0; height: 24px;">
-                <MudIcon Icon="@(isExpanded ? AppIcons.FOLDER_OPEN_OUTLINED : Icons.Material.Outlined.Folder)"/>
+                <MudBadge Dot="@true" Overlap="@true" Bordered="@true" Visible="@(markColor is not null)" Color="@(markColor ?? Color.Default)" Class="d-flex flex-shrink-0">
+                    <MudIcon Icon="@(isExpanded ? AppIcons.FOLDER_OPEN_OUTLINED : Icons.Material.Outlined.Folder)"/>
+                </MudBadge>
                 <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@NAME_STYLE" title="@workspace.Name">
                     @workspace.Name
                 </MudText>
@@ -215,14 +218,17 @@ else
         }
         <MudListItem T="string" Class="@this.GetChatItemClasses(chat, isNested)" OnClick="@(() => this.LoadChatAsync(chat.ChatPath, true))">
             <div class="d-flex align-center gap-2" style="min-width: 0; height: 24px;">
-                @if (indicator.IsSpinning)
-                {
-                    <MudProgressCircular Indeterminate="@true" Size="Size.Small" Color="@indicator.Color" StrokeWidth="5" Class="workspace-chat-icon flex-shrink-0"/>
-                }
-                else
-                {
-                    <MudIcon Icon="@indicator.Icon" Color="@indicator.Color" Class="workspace-chat-icon flex-shrink-0" Style="@this.GetChatIconStyle(chat, indicator)"/>
-                }
+                @* The slot gives whatever shows the chat's state its size, see Workspaces.razor.css: *@
+                <span class="workspace-chat-icon flex-shrink-0" style="@this.GetChatIconStyle(chat, indicator)">
+                    @if (indicator.IsSpinning)
+                    {
+                        <MudProgressCircular Indeterminate="@true" Size="Size.Small" Color="@indicator.Color" StrokeWidth="5"/>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@indicator.Icon" Color="@indicator.Color"/>
+                    }
+                </span>
                 <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@($"{NAME_STYLE} {GetChatNameColorStyle(indicator)}")" title="@name">
                     @name
                 </MudText>

@@ -5,7 +5,8 @@ namespace AIStudio.Components;
 
 /// <summary>
 /// What the icon of a chat in the workspace list shows: the plain chat icon, a spinner while work
-/// on the chat is going on, or how its transcript ended.
+/// on the chat is going on, how an answer ended which the user has not seen yet, or how its
+/// transcript ended.
 /// </summary>
 /// <param name="Icon">The icon, unless a spinner turns in its place.</param>
 /// <param name="IsSpinning">Whether work on the chat is going on, which a spinner shows.</param>
@@ -23,6 +24,20 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     private static readonly ChatIndicator ANSWER_GOING_ON = new(string.Empty, IsSpinning: true, Color.Inherit, IsStatus: true);
 
     private static readonly ChatIndicator TRANSCRIPT_GOING_ON = new(string.Empty, IsSpinning: true, Color.Info, IsStatus: true);
+
+    /// <summary>
+    /// An answer which was written while the chat was not open, and which the user has not read yet.
+    /// </summary>
+    /// <remarks>
+    /// In the tertiary color, which marks nothing else in the list: the primary color marks the open
+    /// chat, and the colors of states tell how a transcript went.
+    /// </remarks>
+    public static readonly ChatIndicator ANSWER_UNREAD = new(Icons.Material.Outlined.MarkChatUnread, IsSpinning: false, Color.Tertiary, IsStatus: true);
+
+    /// <summary>
+    /// An answer which failed while the chat was not open, before the user saw it.
+    /// </summary>
+    public static readonly ChatIndicator ANSWER_FAILED = new(Icons.Material.Outlined.SmsFailed, IsSpinning: false, Color.Error, IsStatus: true);
 
     /// <summary>
     /// What each state of a transcript shows.
@@ -43,7 +58,7 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     };
 
     /// <summary>
-    /// What each state of an answer shows.
+    /// What each state of an answer shows once the user has seen how it ended, or while it runs.
     /// </summary>
     /// <remarks>
     /// An answer shows the spinner in all of its steps: while it waits in the queue, while it waits
@@ -62,21 +77,43 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     };
 
     /// <summary>
+    /// What each state of an answer shows while the user has not seen how it ended.
+    /// </summary>
+    /// <remarks>
+    /// An answer written or failed while its chat was not open stays marked until the chat opens,
+    /// see <see cref="AIJobSnapshot.IsOutcomeSeen"/>. An answer the user canceled needs no mark,
+    /// and one which still runs shows the spinner, as with <see cref="ANSWER_STATES"/>.
+    /// </remarks>
+    internal static readonly IReadOnlyDictionary<AIJobStatus, ChatIndicator> UNSEEN_ANSWER_STATES = new Dictionary<AIJobStatus, ChatIndicator>
+    {
+        [AIJobStatus.NONE] = PLAIN,
+        [AIJobStatus.QUEUED] = ANSWER_GOING_ON,
+        [AIJobStatus.WAITING_FOR_REMOTE] = ANSWER_GOING_ON,
+        [AIJobStatus.RUNNING] = ANSWER_GOING_ON,
+        [AIJobStatus.COMPLETED] = ANSWER_UNREAD,
+        [AIJobStatus.CANCELED] = PLAIN,
+        [AIJobStatus.FAILED] = ANSWER_FAILED,
+    };
+
+    /// <summary>
     /// What the icon of a chat shows, given the state of its transcript and of its answer.
     /// </summary>
     /// <remarks>
-    /// Work going on comes first, then how the last transcript ended. Otherwise, an answer being
-    /// written after a finished transcript would hide behind the icon of that transcript.
+    /// Work going on comes first, then how an answer ended which the user has not seen yet, then
+    /// how the last transcript ended. Otherwise, an answer being written after a finished transcript
+    /// would hide behind the icon of that transcript, and so would the news of an answer.
     /// </remarks>
     /// <param name="transcriptState">The state of the chat's transcript, or null when there is none.</param>
     /// <param name="answerState">The state of the chat's answer, or null when there is none.</param>
-    public static ChatIndicator Of(MediaImportStatus? transcriptState, AIJobStatus? answerState)
+    /// <param name="isAnswerOutcomeSeen">Whether the user has seen how the answer ended, see <see cref="AIJobSnapshot.IsOutcomeSeen"/>.</param>
+    public static ChatIndicator Of(MediaImportStatus? transcriptState, AIJobStatus? answerState, bool isAnswerOutcomeSeen = true)
     {
         var transcript = transcriptState is { } transcriptValue ? TRANSCRIPT_STATES.GetValueOrDefault(transcriptValue, PLAIN) : PLAIN;
         if (transcript.IsSpinning)
             return transcript;
 
-        var answer = answerState is { } answerValue ? ANSWER_STATES.GetValueOrDefault(answerValue, PLAIN) : PLAIN;
-        return answer.IsSpinning ? answer : transcript;
+        var answerStates = isAnswerOutcomeSeen ? ANSWER_STATES : UNSEEN_ANSWER_STATES;
+        var answer = answerState is { } answerValue ? answerStates.GetValueOrDefault(answerValue, PLAIN) : PLAIN;
+        return answer.IsSpinning || answer.IsStatus ? answer : transcript;
     }
 }
