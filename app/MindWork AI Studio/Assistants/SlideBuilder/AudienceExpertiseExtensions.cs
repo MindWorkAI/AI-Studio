@@ -17,7 +17,7 @@ public static class AudienceExpertiseExtensions
             _ => TB("Unspecified expertise"),
         };
 
-        public string Prompt() => expertise switch
+        public string Prompt => expertise switch
         {
             AudienceExpertise.UNSPECIFIED => "Do not tailor the text to a specific expertise level.",
             AudienceExpertise.NON_EXPERTS => "Avoid jargon and explain specialized concepts plainly.",

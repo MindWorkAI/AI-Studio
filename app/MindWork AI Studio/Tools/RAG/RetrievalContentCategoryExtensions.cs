@@ -10,8 +10,8 @@ public static class RetrievalContentCategoryExtensions
         /// <summary>
         /// Converts an ERI content type to a common retrieval content category.
         /// </summary>
-        /// <returns>The corresponding retrieval content category.</returns>
-        public RetrievalContentCategory ToRetrievalContentCategory() => contentType switch
+        /// <value>The corresponding retrieval content category.</value>
+        public RetrievalContentCategory RetrievalContentCategory => contentType switch
         {
             ContentType.NONE => RetrievalContentCategory.NONE,
             ContentType.UNKNOWN => RetrievalContentCategory.UNKNOWN,

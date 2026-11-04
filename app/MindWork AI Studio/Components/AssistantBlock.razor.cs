@@ -126,7 +126,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     private bool OwnedByThisBlock(MediaImportOwner owner)
     {
         if (owner.Kind.PersistsOwnSources)
-            return owner.Kind == this.Component.MediaOwnerKind();
+            return owner.Kind == this.Component.MediaOwnerKind;
 
         if (string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId))
             return owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal);

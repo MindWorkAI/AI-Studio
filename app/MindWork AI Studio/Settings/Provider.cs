@@ -100,7 +100,7 @@ public sealed record Provider(
     
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToSecretId()}" : this.UsedLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.SecretId}" : this.UsedLLMProvider.SecretId;
     
     /// <inheritdoc />
     [JsonIgnore]
@@ -247,7 +247,7 @@ public sealed record Provider(
                         if (!dryRun)
                         {
                             PendingEnterpriseApiKeys.Add(new(
-                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
+                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.SecretId}",
                                 instanceName,
                                 decryptedApiKey,
                                 SecretStoreType.LLM_PROVIDER));

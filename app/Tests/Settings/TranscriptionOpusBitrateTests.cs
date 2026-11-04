@@ -29,7 +29,7 @@ public sealed class TranscriptionOpusBitrateTests
         foreach (var bitrate in Enum.GetValues<TranscriptionOpusBitrate>())
         {
             Assert.That(EXPECTED_BITS_PER_SECOND.ContainsKey(bitrate), Is.True, $"The selection offers {bitrate}, so this test has to state what that is worth in bits per second.");
-            Assert.That(bitrate.GetBitsPerSecond(), Is.EqualTo(EXPECTED_BITS_PER_SECOND[bitrate]), $"{bitrate} is what the user picked; anything else travels to the encoder behind their back.");
+            Assert.That(bitrate.BitsPerSecond, Is.EqualTo(EXPECTED_BITS_PER_SECOND[bitrate]), $"{bitrate} is what the user picked; anything else travels to the encoder behind their back.");
         }
     }
 
@@ -39,7 +39,7 @@ public sealed class TranscriptionOpusBitrateTests
         var undeclared = (TranscriptionOpusBitrate)999;
 
         Assert.That(Enum.IsDefined(undeclared), Is.False, "The point of this test is a value outside the enum; a declared one would prove nothing.");
-        Assert.That(undeclared.GetBitsPerSecond(), Is.EqualTo(128_000u), "Not knowing which quality was meant is no reason to pick the worst one available.");
+        Assert.That(undeclared.BitsPerSecond, Is.EqualTo(128_000u), "Not knowing which quality was meant is no reason to pick the worst one available.");
     }
 
     [Test]

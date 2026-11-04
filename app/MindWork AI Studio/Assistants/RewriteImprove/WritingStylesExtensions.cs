@@ -22,7 +22,7 @@ public static class WritingStylesExtensions
             _ => TB("Not specified"),
         };
 
-        public string Prompt() => style switch
+        public string Prompt => style switch
         {
             WritingStyles.EVERYDAY => "Use a everyday style like for personal texts, social media, and informal communication.",
             WritingStyles.BUSINESS => "Use a business style like for business emails, reports, and presentations. Most important is clarity and professionalism.",

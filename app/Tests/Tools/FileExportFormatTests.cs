@@ -110,8 +110,8 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormat.SOURCE_CODE.ToFileExtension(), Is.Empty, "Python and Rust share the format, but not the extension.");
-            Assert.That(FileExportFormat.SOURCE_CODE.ToFileTypeFilter(), Is.Null, "Without the language, the save dialog would offer the wrong files.");
+            Assert.That(FileExportFormat.SOURCE_CODE.FileExtension, Is.Empty, "Python and Rust share the format, but not the extension.");
+            Assert.That(FileExportFormat.SOURCE_CODE.FileTypeFilter, Is.Null, "Without the language, the save dialog would offer the wrong files.");
             Assert.That(FileExportFormatExtensions.ANSWER_FORMATS, Does.Not.Contain(FileExportFormat.SOURCE_CODE), "Code is one block out of an answer, never the answer itself.");
         }
     }

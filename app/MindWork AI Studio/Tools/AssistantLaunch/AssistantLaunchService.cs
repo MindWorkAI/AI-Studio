@@ -152,5 +152,5 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
         .OrderBy(destination => destination.Name.Length)
         .ToArray();
 
-    private bool IsVisible(Components destination) => settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature());
+    private bool IsVisible(Components destination) => settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature);
 }

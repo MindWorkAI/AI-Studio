@@ -43,13 +43,13 @@ public sealed record MessageFile(int Ordinal, int Position, string Caption, File
     /// Returns what tells a file of this type apart: its extension, for example ".html", or the
     /// fixed name a tool looks for, such as Dockerfile.
     /// </summary>
-    public string ToFileExtensionOrName() => this.IsSourceCode ? this.Language.ToFileExtensionOrName() : this.Format.ToFileExtension();
+    public string ToFileExtensionOrName() => this.IsSourceCode ? this.Language.ToFileExtensionOrName() : this.Format.FileExtension;
 
     /// <summary>
     /// Returns the filter which the save dialog offers for the file.
     /// </summary>
     /// <returns>The filter, or null when AI Studio cannot write the file itself.</returns>
-    public FileTypeFilter? ToFileTypeFilter() => this.IsSourceCode ? this.Language.ToFileTypeFilter() : this.Format.ToFileTypeFilter();
+    public FileTypeFilter? ToFileTypeFilter() => this.IsSourceCode ? this.Language.ToFileTypeFilter() : this.Format.FileTypeFilter;
 
     /// <summary>
     /// Returns the file name the save dialog starts with.
@@ -61,5 +61,5 @@ public sealed record MessageFile(int Ordinal, int Position, string Caption, File
     /// <summary>
     /// Returns the encoding the file gets written with.
     /// </summary>
-    public Encoding ToFileEncoding() => this.IsSourceCode ? this.Language.ToFileEncoding() : this.Format.ToFileEncoding();
+    public Encoding ToFileEncoding() => this.IsSourceCode ? this.Language.ToFileEncoding() : this.Format.FileEncoding;
 }

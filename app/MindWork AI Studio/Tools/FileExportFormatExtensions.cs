@@ -93,9 +93,9 @@ public static class FileExportFormatExtensions
         /// <summary>
         /// Returns the file extension of the format, including the leading dot.
         /// </summary>
-        /// <returns>The file extension, or an empty string when the format writes no file or, as code
-        /// does, takes the extension from its language.</returns>
-        public string ToFileExtension() => format switch
+        /// <value>The file extension, or an empty string when the format writes no file or, as code
+        /// does, takes the extension from its language.</value>
+        public string FileExtension => format switch
         {
             FileExportFormat.MICROSOFT_WORD => ".docx",
             FileExportFormat.OPEN_DOCUMENT_TEXT => ".odt",
@@ -138,14 +138,14 @@ public static class FileExportFormatExtensions
         /// <param name="name">What the file is about, for example the heading above a table. Anything
         /// a file name cannot hold is removed. Null or blank falls back to a generic name.</param>
         /// <returns>The suggested file name, including its extension.</returns>
-        public string ToSuggestedFileName(string? name = null) => SuggestFileName(name, format.ToFileExtension());
+        public string ToSuggestedFileName(string? name = null) => SuggestFileName(name, format.FileExtension);
 
         /// <summary>
         /// Returns the filter which the save dialog offers for the format.
         /// </summary>
-        /// <returns>The filter, or null when the format cannot be written or, as code does, takes the
-        /// filter from its language.</returns>
-        public FileTypeFilter? ToFileTypeFilter() => format switch
+        /// <value>The filter, or null when the format cannot be written or, as code does, takes the
+        /// filter from its language.</value>
+        public FileTypeFilter? FileTypeFilter => format switch
         {
             FileExportFormat.MICROSOFT_WORD => FileTypes.MS_WORD,
             FileExportFormat.OPEN_DOCUMENT_TEXT => FileTypes.ODT,
@@ -167,8 +167,8 @@ public static class FileExportFormatExtensions
         /// turns every umlaut into garbage. Text files get none: editors, compilers, and LaTeX have
         /// no use for it and some of them stumble over it.
         /// </remarks>
-        /// <returns>The encoding to write the file with.</returns>
-        public Encoding ToFileEncoding() => format switch
+        /// <value>The encoding to write the file with.</value>
+        public Encoding FileEncoding => format switch
         {
             FileExportFormat.CSV or FileExportFormat.TSV => WITH_BYTE_ORDER_MARK,
 
@@ -244,8 +244,8 @@ public static class FileExportFormatExtensions
         /// <summary>
         /// Returns the name Pandoc knows the format by.
         /// </summary>
-        /// <returns>The Pandoc output format, or an empty string when AI Studio writes the file itself.</returns>
-        public string ToPandocOutputFormat() => format switch
+        /// <value>The Pandoc output format, or an empty string when AI Studio writes the file itself.</value>
+        public string PandocOutputFormat => format switch
         {
             FileExportFormat.MICROSOFT_WORD => "docx",
             FileExportFormat.OPEN_DOCUMENT_TEXT => "odt",
@@ -259,7 +259,7 @@ public static class FileExportFormatExtensions
         /// Determines whether writing the format needs Pandoc.
         /// </summary>
         /// <value>True, when Pandoc converts the message; false, when AI Studio writes the file itself.</value>
-        public bool UsesPandoc => !string.IsNullOrWhiteSpace(format.ToPandocOutputFormat());
+        public bool UsesPandoc => !string.IsNullOrWhiteSpace(format.PandocOutputFormat);
     }
 
     /// <summary>

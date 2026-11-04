@@ -267,8 +267,8 @@ public sealed partial class UpdateMetadataCommands
         await Pdfium.InstallAsync(rid, pdfiumVersion, Environment.IsOfflineBuildRequested(offline));
         
         Console.Write($"- Start .NET build for {rid.UserFriendlyName} ...");
-        await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
-        var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --disable-build-servers --force");
+        await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.MicrosoftRid}");
+        var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.MicrosoftRid} --disable-build-servers --force");
         var dotnetBuildOutputLines = dotnetBuildOutput.Text.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         var foundIssue = false;
         foreach (var buildOutputLine in dotnetBuildOutputLines)
@@ -327,7 +327,7 @@ public sealed partial class UpdateMetadataCommands
 
         if (string.IsNullOrWhiteSpace(tauriSidecarArtifactName))
         {
-            Console.WriteLine($"- Error: Unsupported rid '{rid.AsMicrosoftRid()}'.");
+            Console.WriteLine($"- Error: Unsupported rid '{rid.MicrosoftRid}'.");
             throw new CommandExitedException(1);
         }
     
@@ -341,7 +341,7 @@ public sealed partial class UpdateMetadataCommands
             _ => "mindworkAIStudio",
         };
         
-        var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", dotnetArtifactFilename);
+        var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.MicrosoftRid, "publish", dotnetArtifactFilename);
         var finalDestination = Path.Combine(dotnetArtifactPath, tauriSidecarArtifactName);
         
         if(File.Exists(dotnetPublishedPath))

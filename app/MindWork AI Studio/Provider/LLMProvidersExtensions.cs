@@ -85,8 +85,8 @@ public static class LLMProvidersExtensions
         /// These values are used for OS keyring namespaces. They must never be localized or changed without
         /// an explicit migration for existing API keys.
         /// </remarks>
-        /// <returns>The stable secret namespace for the provider.</returns>
-        public string ToSecretId() => provider switch
+        /// <value>The stable secret namespace for the provider.</value>
+        public string SecretId => provider switch
         {
             LLMProviders.NONE => "No provider selected",
 
@@ -294,8 +294,8 @@ public static class LLMProvidersExtensions
         /// larger images through another provider. What we actually send is asked through
         /// IImageSourceExtensions.MaxImageSizeBytesFor, which also applies our own limit.
         /// </remarks>
-        /// <returns>The size limit of one image file, or null when the provider states none we know of.</returns>
-        public long? GetMaxImageSizeBytes() => provider switch
+        /// <value>The size limit of one image file, or null when the provider states none we know of.</value>
+        public long? MaxImageSizeBytes => provider switch
         {
             //
             // Anthropic accepts at most 5 MiB (5,242,880 bytes) of base64 per image. Base64 needs four
@@ -360,7 +360,7 @@ public static class LLMProvidersExtensions
             }
         }
 
-        public string GetCreationURL() => provider switch
+        public string CreationURL => provider switch
         {
             LLMProviders.OPEN_AI => "https://platform.openai.com/signup",
             LLMProviders.MISTRAL => "https://console.mistral.ai/",
@@ -385,7 +385,7 @@ public static class LLMProvidersExtensions
             _ => string.Empty,
         };
 
-        public string GetDashboardURL() => provider switch
+        public string DashboardURL => provider switch
         {
             LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
             LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
@@ -434,7 +434,7 @@ public static class LLMProvidersExtensions
         public string GetModelsOverviewURL(HFInferenceProvider inferenceProvider) => provider switch
         {
             LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
-            LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={inferenceProvider.CatalogFilter()}",
+            LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={inferenceProvider.CatalogFilter}",
             _ => string.Empty,
         };
 

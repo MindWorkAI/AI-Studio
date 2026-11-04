@@ -389,7 +389,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     /// </remarks>
     private async Task SaveSpecificationAsync()
     {
-        var specificationPath = this.selectedERIVersion.SpecificationURL();
+        var specificationPath = this.selectedERIVersion.SpecificationURL;
         var response = await this.RustService.SaveFile(T("Save the ERI specification"), [FileTypes.JSON], Path.GetFileName(specificationPath));
         if (response.UserCancelled)
             return;

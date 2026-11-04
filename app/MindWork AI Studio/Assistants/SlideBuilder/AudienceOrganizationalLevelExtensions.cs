@@ -19,7 +19,7 @@ public static class AudienceOrganizationalLevelExtensions
             _ => TB("Unspecified organizational level"),
         };
 
-        public string Prompt() => level switch
+        public string Prompt => level switch
         {
             AudienceOrganizationalLevel.UNSPECIFIED => "Do not tailor the text to a specific organizational level.",
             AudienceOrganizationalLevel.TRAINEES => "Keep the content supportive and introductory. Explain context and avoid assuming prior organizational knowledge.",

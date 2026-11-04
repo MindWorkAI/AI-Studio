@@ -10,7 +10,7 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider(LLMProviders.SELF_HOSTED, new Uri($"{hostname}{host.BaseURL()}"), ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED, LOGGER)
+public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider(LLMProviders.SELF_HOSTED, new Uri($"{hostname}{host.BaseURL}"), ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED, LOGGER)
 {
     private static readonly ILogger<ProviderSelfHosted> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderSelfHosted>();
     
@@ -19,7 +19,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.SELF_HOSTED.ToSecretId();
+    public override string Id => LLMProviders.SELF_HOSTED.SecretId;
     
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Self-hosted";
@@ -63,7 +63,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                                };
                            },
                            isTryingSecret: true,
-                           requestPath: host.ChatURL(),
+                           requestPath: host.ChatURL,
                            token: token))
             yield return content;
     }

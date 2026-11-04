@@ -16,7 +16,7 @@ public static class AudienceAgeGroupExtensions
             _ => TB("Unspecified age group"),
         };
 
-        public string Prompt() => ageGroup switch
+        public string Prompt => ageGroup switch
         {
             AudienceAgeGroup.UNSPECIFIED => "Do not tailor the text to a specific age group.",
             AudienceAgeGroup.CHILDREN => "Use simple, concrete language with short sentences and minimal jargon.",

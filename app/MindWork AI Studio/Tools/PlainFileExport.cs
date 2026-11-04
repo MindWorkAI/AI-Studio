@@ -239,10 +239,10 @@ public static class PlainFileExport
     /// <returns>True, when the file was written.</returns>
     public static async Task<bool> ToFile(RustService rustService, string dialogTitle, FileExportFormat format, string fileContent, string? fileName = null)
     {
-        if (!format.IsPlainText || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!format.IsPlainText || format.FileTypeFilter is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
-        return await WriteFile(rustService, dialogTitle, format, fileTypeFilter, format.ToSuggestedFileName(fileName), format.ToFileEncoding(), fileContent);
+        return await WriteFile(rustService, dialogTitle, format, fileTypeFilter, format.ToSuggestedFileName(fileName), format.FileEncoding, fileContent);
     }
 
     /// <summary>

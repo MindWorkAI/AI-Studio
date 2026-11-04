@@ -11,7 +11,7 @@ public static class SafeSearchPolicyExtensions
         /// SearXNG takes the level as a number. That number stays here, at the edge towards the
         /// search engine, instead of travelling through the settings where nobody can read it.
         /// </remarks>
-        public string ToSearXNGValue() => policy switch
+        public string SearXNGValue => policy switch
         {
             SafeSearchPolicy.OFF => "0",
             SafeSearchPolicy.MODERATE => "1",
@@ -28,6 +28,6 @@ public static class SafeSearchPolicyExtensions
         /// a strict one. Of the two ways to round that, filtering more than was asked for is the one
         /// that cannot surprise anyone.
         /// </remarks>
-        public bool ToTavilyValue() => policy is not SafeSearchPolicy.OFF;
+        public bool TavilyValue => policy is not SafeSearchPolicy.OFF;
     }
 }

@@ -78,8 +78,8 @@ internal static class SwotAnalysisModeration
         string sharedResearch = "")
     {
         var payload = Enum.GetValues<SwotAnalysisCategory>().ToDictionary(
-            category => category.JsonName(),
-            category => CreateCategoryPayload(categories[category], category.FactorIdPrefix()));
+            category => category.JsonName,
+            category => CreateCategoryPayload(categories[category], category.FactorIdPrefix));
 
         return $"""
                 Reconcile these preliminary results of the four SWOT categories. Then write the overall assessment

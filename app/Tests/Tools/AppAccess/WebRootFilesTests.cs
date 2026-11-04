@@ -78,7 +78,7 @@ public sealed class WebRootFilesTests
         var destinationPath = Path.Combine(Path.GetTempPath(), $"eri-specification-{Guid.NewGuid():N}.json");
         try
         {
-            Assert.That(await webRootFiles.CopyToAsync(version.SpecificationURL(), destinationPath), Is.True);
+            Assert.That(await webRootFiles.CopyToAsync(version.SpecificationURL, destinationPath), Is.True);
             Assert.That(await File.ReadAllTextAsync(destinationPath), Is.EqualTo(await version.ReadSpecification(webRootFiles)));
         }
         finally

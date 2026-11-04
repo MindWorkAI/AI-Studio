@@ -166,7 +166,7 @@ else
     </MudSelect>
 
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-        @(string.Format(T("Each answer is stored as its own file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result{0}."), this.resultFileFormat.ToFileExtension()))
+        @(string.Format(T("Each answer is stored as its own file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result{0}."), this.resultFileFormat.FileExtension))
     </MudJustifiedText>
 }
 else

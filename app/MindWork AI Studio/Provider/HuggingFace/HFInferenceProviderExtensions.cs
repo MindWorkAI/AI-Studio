@@ -12,8 +12,8 @@ public static class HFInferenceProviderExtensions
         /// <summary>
         /// The slug Hugging Face uses for this inference provider.
         /// </summary>
-        /// <returns>The slug, or an empty string for the routing strategies, which name no provider.</returns>
-        public string EndpointsId() => provider switch
+        /// <value>The slug, or an empty string for the routing strategies, which name no provider.</value>
+        public string EndpointsId => provider switch
         {
             HFInferenceProvider.BASETEN => "baseten",
             HFInferenceProvider.CEREBRAS => "cerebras",
@@ -41,15 +41,15 @@ public static class HFInferenceProviderExtensions
         /// a suffix on the model name, e.g. "google/gemma-4-31B-it:novita". Without a suffix, the router
         /// picks the fastest provider itself.
         /// </remarks>
-        /// <returns>The suffix including its colon, or an empty string when the router should choose.</returns>
-        public string ModelSuffix() => provider switch
+        /// <value>The suffix including its colon, or an empty string when the router should choose.</value>
+        public string ModelSuffix => provider switch
         {
             HFInferenceProvider.NONE or HFInferenceProvider.AUTOMATIC => string.Empty,
 
             HFInferenceProvider.CHEAPEST => ":cheapest",
             HFInferenceProvider.PREFERRED => ":preferred",
 
-            _ => $":{provider.EndpointsId()}",
+            _ => $":{provider.EndpointsId}",
         };
 
         /// <summary>
@@ -91,8 +91,8 @@ public static class HFInferenceProviderExtensions
         /// keeps it below an additional "openai" segment, and answers the path without it with
         /// "Not allowed to POST /v1/embeddings for provider deepinfra".
         /// </remarks>
-        /// <returns>The base URL, or an empty string when the provider has no such route.</returns>
-        public string ProviderBaseURL() => provider switch
+        /// <value>The base URL, or an empty string when the provider has no such route.</value>
+        public string ProviderBaseURL => provider switch
         {
             HFInferenceProvider.TOGETHER_AI => "https://router.huggingface.co/together/v1/",
             HFInferenceProvider.DEEPINFRA => "https://router.huggingface.co/deepinfra/v1/openai/",
@@ -103,11 +103,14 @@ public static class HFInferenceProviderExtensions
         /// <summary>
         /// The value to filter the Hugging Face model catalog by.
         /// </summary>
-        /// <returns>The provider slug, or "all" when no particular provider was chosen.</returns>
-        public string CatalogFilter()
+        /// <value>The provider slug, or "all" when no particular provider was chosen.</value>
+        public string CatalogFilter
         {
-            var slug = provider.EndpointsId();
-            return string.IsNullOrEmpty(slug) ? "all" : slug;
+            get
+            {
+                var slug = provider.EndpointsId;
+                return string.IsNullOrEmpty(slug) ? "all" : slug;
+            }
         }
 
         public string Name => provider switch

@@ -27,7 +27,7 @@ internal static class PlaceholderRoleExtensions
 
         foreach (var candidate in SLOT_ROLES)
         {
-            if (!string.Equals(words[0], candidate.CatalogName(), StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(words[0], candidate.CatalogName, StringComparison.OrdinalIgnoreCase))
                 continue;
 
             var number = 1;
@@ -83,7 +83,7 @@ internal static class PlaceholderRoleExtensions
         /// <summary>
         /// How the role is called in the catalog the model reads.
         /// </summary>
-        public string CatalogName() => role switch
+        public string CatalogName => role switch
         {
             PlaceholderRole.TITLE => "title",
             PlaceholderRole.SUBTITLE => "subtitle",

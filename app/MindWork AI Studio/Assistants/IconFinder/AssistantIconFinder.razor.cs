@@ -98,7 +98,7 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
         this.CreateChatThread();
         var time = this.AddUserRequest(
         $"""
-            {this.selectedIconSource.Prompt()} I search for an icon for the following context:
+            {this.selectedIconSource.Prompt} I search for an icon for the following context:
             
             ```
             {this.inputContext}

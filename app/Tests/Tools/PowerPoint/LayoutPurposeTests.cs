@@ -17,7 +17,7 @@ public sealed class LayoutPurposeTests
             {
                 Assert.That(purpose.Label, Is.Not.Empty, $"The kind of slide {purpose} has no label.");
                 Assert.That(purpose.Question, Does.EndWith("?"), $"The kind of slide {purpose} has no question.");
-                Assert.That(purpose.PromptDescription(), Is.Not.Empty.And.Not.EndWith("."), $"The kind of slide {purpose} has no description, or one which ends where the rule for the model goes on.");
+                Assert.That(purpose.PromptDescription, Is.Not.Empty.And.Not.EndWith("."), $"The kind of slide {purpose} has no description, or one which ends where the rule for the model goes on.");
             }
         }
     }
@@ -42,7 +42,7 @@ public sealed class LayoutPurposeTests
     [Test]
     public void TheKindsOfSlidesFollowTheOrderOfTheAreas()
     {
-        var areas = Enum.GetValues<LayoutPurpose>().Select(purpose => purpose.Area()).ToList();
+        var areas = Enum.GetValues<LayoutPurpose>().Select(purpose => purpose.Area).ToList();
         using (Assert.EnterMultipleScope())
         {
             Assert.That(areas, Is.Ordered, "The kinds of an area stand together, and the areas follow their own order.");

@@ -29,8 +29,8 @@ public static class MailboxTransportSecurityExtensions
         /// <summary>
         /// The port the encryption usually comes with.
         /// </summary>
-        /// <returns>The port, or null when there is no usual one.</returns>
-        public int? GetUsualPort() => transportSecurity switch
+        /// <value>The port, or null when there is no usual one.</value>
+        public int? UsualPort => transportSecurity switch
         {
             MailboxTransportSecurity.SSL_ON_CONNECT => SSL_ON_CONNECT_PORT,
             MailboxTransportSecurity.STARTTLS => STARTTLS_PORT,

@@ -23,8 +23,8 @@ public static class SourcePassageExtensions
         /// Told by what the content is rather than by where it came from: a mail is a mail, whether a
         /// mailbox data source or a tool handed it over.
         /// </remarks>
-        /// <returns>The kind of its entry.</returns>
-        public ProvenanceKind GetProvenanceKind() => passage.Type switch
+        /// <value>The kind of its entry.</value>
+        public ProvenanceKind ProvenanceKind => passage.Type switch
         {
             RetrievalContentType.TEXT_EMAIL => ProvenanceKind.MAIL,
             RetrievalContentType.TEXT_WEBSITE => ProvenanceKind.WEB_PAGE,

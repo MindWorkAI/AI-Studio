@@ -493,7 +493,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         // Who switches the encryption usually means the port that comes with it, unless they
         // entered a port of their own:
         //
-        if (this.dataPort == this.dataTransportSecurity.GetUsualPort() && transportSecurity.GetUsualPort() is { } usualPort)
+        if (this.dataPort == this.dataTransportSecurity.UsualPort && transportSecurity.UsualPort is { } usualPort)
             this.dataPort = usualPort;
 
         this.dataTransportSecurity = transportSecurity;

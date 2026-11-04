@@ -16,7 +16,7 @@ public static class WritingStylesExtensions
             _ => TB("Not specified"),
         };
 
-        public string Prompt() => style switch
+        public string Prompt => style switch
         {
             WritingStyles.ACADEMIC => "Use an academic style for communication in an academic context like between students and professors.",
             WritingStyles.PERSONAL => "Use a personal style for communication between friends and family.",

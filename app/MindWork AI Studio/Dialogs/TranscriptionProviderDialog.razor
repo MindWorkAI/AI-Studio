@@ -25,7 +25,7 @@
                         }
                     }
                 </MudSelect>
-                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">
+                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.CreationURL" Target="_blank">
                     @T("Create account")
                 </MudButton>
             </MudStack>

@@ -27,7 +27,7 @@ public static class CommonLanguageExtensions
             _ => TB("Other"),
         };
 
-        public string ToIETFTag() => language switch
+        public string IETFTag => language switch
         {
             CommonLanguages.AS_IS => string.Empty,
         

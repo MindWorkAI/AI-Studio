@@ -14,7 +14,7 @@ public static class BiasCategoryExtensions
             _ => "Unknown category",
         };
 
-        public string GetThoughts() => biasCategory switch
+        public string Thoughts => biasCategory switch
         {
             BiasCategory.WHAT_SHOULD_WE_REMEMBER => 
                 """

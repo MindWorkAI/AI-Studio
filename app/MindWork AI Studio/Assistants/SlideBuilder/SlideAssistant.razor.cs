@@ -491,16 +491,16 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         var prompts = new List<string>();
 
         if (this.selectedAudienceProfile is not AudienceProfile.UNSPECIFIED)
-            prompts.Add(this.selectedAudienceProfile.Prompt());
+            prompts.Add(this.selectedAudienceProfile.Prompt);
 
         if (this.selectedAudienceAgeGroup is not AudienceAgeGroup.UNSPECIFIED)
-            prompts.Add(this.selectedAudienceAgeGroup.Prompt());
+            prompts.Add(this.selectedAudienceAgeGroup.Prompt);
 
         if (this.selectedAudienceOrganizationalLevel is not AudienceOrganizationalLevel.UNSPECIFIED)
-            prompts.Add(this.selectedAudienceOrganizationalLevel.Prompt());
+            prompts.Add(this.selectedAudienceOrganizationalLevel.Prompt);
 
         if (this.selectedAudienceExpertise is not AudienceExpertise.UNSPECIFIED)
-            prompts.Add(this.selectedAudienceExpertise.Prompt());
+            prompts.Add(this.selectedAudienceExpertise.Prompt);
 
         if (prompts.Count == 0)
             return "            - Do not tailor the text to a specific audience.";

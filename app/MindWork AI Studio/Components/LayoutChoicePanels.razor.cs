@@ -35,7 +35,7 @@ public partial class LayoutChoicePanels : ComponentBase
 
     private string HeaderTextOf(LayoutPurposeArea area)
     {
-        var chosen = Enum.GetValues<LayoutPurpose>().Count(purpose => purpose.Area() == area && this.IsChosen(purpose));
+        var chosen = Enum.GetValues<LayoutPurpose>().Count(purpose => purpose.Area == area && this.IsChosen(purpose));
         return chosen == 0 ? area.Label : $"{area.Label} ({chosen})";
     }
 

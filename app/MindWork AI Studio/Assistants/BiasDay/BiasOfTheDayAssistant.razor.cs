@@ -21,7 +21,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
                                               the category: "{this.biasOfTheDay.Category.Name}". We have the following
                                               thoughts on this category:
                                               
-                                              {this.biasOfTheDay.Category.GetThoughts()}
+                                              {this.biasOfTheDay.Category.Thoughts}
                                               
                                               Today's bias is:  
                                               {this.biasOfTheDay.Description}

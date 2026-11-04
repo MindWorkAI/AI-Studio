@@ -16,7 +16,7 @@ public static class OperatingSystemExtensions
             _ => TB("Unknown operating system")
         };
 
-        public string ToPrompt() => os switch
+        public string Prompt => os switch
         {
             OperatingSystem.NONE => "No operating system specified",
         

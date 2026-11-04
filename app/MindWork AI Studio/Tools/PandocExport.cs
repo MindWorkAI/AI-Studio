@@ -49,7 +49,7 @@ public static class PandocExport
                 .Create()
                 .UseStandaloneMode()
                 .WithInputFormat("gfm+emoji+tex_math_dollars")
-                .WithOutputFormat(format.ToPandocOutputFormat())
+                .WithOutputFormat(format.PandocOutputFormat)
                 .WithOutputFile(targetFilePath)
                 .WithInputFile(tempMarkdownFilePath);
 
@@ -127,7 +127,7 @@ public static class PandocExport
     /// <returns>True, when the document was written.</returns>
     public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, AIGeneratedContentDisclosureService? disclosureService, string dialogTitle, FileExportFormat format, IContent markdownContent, string? fileName = null)
     {
-        if (!format.UsesPandoc || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!format.UsesPandoc || format.FileTypeFilter is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
         //

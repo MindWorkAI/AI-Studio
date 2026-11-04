@@ -25,8 +25,8 @@ public static class IImageSourceExtensions
     /// <returns>The size limit of one image file.</returns>
     public static long MaxImageSizeBytesFor(AIStudio.Settings.Provider provider)
     {
-        var engineLimit = provider.UsedLLMProvider is LLMProviders.SELF_HOSTED ? provider.Host.GetMaxImageSizeBytes() : null;
-        var providerLimit = provider.UsedLLMProvider.GetMaxImageSizeBytes();
+        var engineLimit = provider.UsedLLMProvider is LLMProviders.SELF_HOSTED ? provider.Host.MaxImageSizeBytes : null;
+        var providerLimit = provider.UsedLLMProvider.MaxImageSizeBytes;
         return Math.Min(Math.Min(engineLimit ?? MAX_IMAGE_SIZE_BYTES, providerLimit ?? MAX_IMAGE_SIZE_BYTES), MAX_IMAGE_SIZE_BYTES);
     }
 

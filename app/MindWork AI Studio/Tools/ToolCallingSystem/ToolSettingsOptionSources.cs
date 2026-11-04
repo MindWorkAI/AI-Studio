@@ -136,7 +136,7 @@ public static class ToolSettingsOptionSources
             // user may keep a text as it is or type a language of their own. A search engine needs
             // a concrete tag, and ANY_LANGUAGE above already covers "no preference".
             //
-            var tag = language.ToIETFTag();
+            var tag = language.IETFTag;
             if (!string.IsNullOrWhiteSpace(tag))
                 options.Add(new(tag, language.Name));
         }

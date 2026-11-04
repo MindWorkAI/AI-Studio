@@ -334,7 +334,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
     // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
     // silently end up in the wrong keyring row and never be found again.
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.SecretId}" : this.DataLLMProvider.SecretId;
 
     public string SecretName => this.DataInstanceName;
 

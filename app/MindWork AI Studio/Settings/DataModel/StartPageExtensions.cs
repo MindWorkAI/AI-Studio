@@ -4,7 +4,7 @@ public static class StartPageExtensions
 {
     extension(StartPage startPage)
     {
-        public string ToRoute() => startPage switch
+        public string Route => startPage switch
         {
             StartPage.HOME => string.Empty,
             StartPage.CHAT => Routes.CHAT,

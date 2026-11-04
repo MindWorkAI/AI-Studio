@@ -100,7 +100,7 @@ public sealed record DataMailboxProvider : ILivePluginContent
             return false;
         }
 
-        var port = transportSecurity.GetUsualPort() ?? MailboxTransportSecurityExtensions.SSL_ON_CONNECT_PORT;
+        var port = transportSecurity.UsualPort ?? MailboxTransportSecurityExtensions.SSL_ON_CONNECT_PORT;
         if (table.TryGetValue("Port", out var portValue) && (!portValue.TryRead(out port) || port is < 1 or > 65535))
         {
             logger.LogWarning("The configured mailbox provider {ProviderIndex} does not contain a valid Port field. The port must be a number from 1 to 65535.", index);

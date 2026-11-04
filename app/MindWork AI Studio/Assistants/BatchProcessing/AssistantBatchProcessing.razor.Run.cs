@@ -283,7 +283,7 @@ public partial class AssistantBatchProcessing
                     }
                 }
                 else
-                    await File.WriteAllTextAsync(resultFilePath, resultText, this.resultFileFormat.ToFileEncoding(), CancellationToken.None);
+                    await File.WriteAllTextAsync(resultFilePath, resultText, this.resultFileFormat.FileEncoding, CancellationToken.None);
 
                 this.FinishFileResult(fileResult, BatchProcessingFileStatus.DONE, Path.GetFileName(resultFilePath));
             }

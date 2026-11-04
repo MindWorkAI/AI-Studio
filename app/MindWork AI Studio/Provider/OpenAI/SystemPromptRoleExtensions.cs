@@ -15,8 +15,8 @@ public static class SystemPromptRoleExtensions
         /// model the rules do not know is almost always one released after they were written, and the
         /// older generations which still want "system" say so in their families.
         /// </remarks>
-        /// <returns>The role, as OpenAI names it.</returns>
-        public string ToOpenAIRole() => role switch
+        /// <value>The role, as OpenAI names it.</value>
+        public string OpenAIRole => role switch
         {
             SystemPromptRole.SYSTEM => "system",
             SystemPromptRole.DEVELOPER => "developer",

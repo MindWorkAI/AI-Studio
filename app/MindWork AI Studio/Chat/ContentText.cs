@@ -168,7 +168,7 @@ public sealed class ContentText : IContent
             try
             {
                 // Not cancellable: the answer is complete, also when the user stopped it.
-                provenanceId = await store.StoreAsync(chatId, passage.GetProvenanceKind(), passage.Text, passage.SurroundingContent, CancellationToken.None);
+                provenanceId = await store.StoreAsync(chatId, passage.ProvenanceKind, passage.Text, passage.SurroundingContent, CancellationToken.None);
             }
             catch (Exception exception)
             {

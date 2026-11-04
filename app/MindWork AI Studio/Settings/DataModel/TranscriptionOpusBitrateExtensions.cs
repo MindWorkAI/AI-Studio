@@ -17,7 +17,7 @@ public static class TranscriptionOpusBitrateExtensions
             _ => TB("Unknown"),
         };
 
-        public uint GetBitsPerSecond() => bitrate switch
+        public uint BitsPerSecond => bitrate switch
         {
             TranscriptionOpusBitrate.KBPS_32 => 32_000,
             TranscriptionOpusBitrate.KBPS_64 => 64_000,

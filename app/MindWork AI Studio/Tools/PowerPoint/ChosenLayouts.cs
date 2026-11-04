@@ -64,14 +64,14 @@ internal sealed record ChosenLayouts(IReadOnlyDictionary<LayoutPurpose, LayoutFa
         var rules = new StringBuilder("    - The user chose layouts for some kinds of slides. A choice decides which layout such a slide uses, and it comes before every other rule on choosing layouts. Whether the presentation has such a slide follows from the content and the occasion, except for the slides the next rule requires. Vary the layouts only where no choice applies:");
         foreach (var purpose in Enum.GetValues<LayoutPurpose>())
             if (this.For(purpose) is { } family)
-                rules.Append('\n').Append("        - ").Append(family.Id).Append(" for ").Append(purpose.PromptDescription()).Append('.');
+                rules.Append('\n').Append("        - ").Append(family.Id).Append(" for ").Append(purpose.PromptDescription).Append('.');
 
         var addedSlides = this.AddedSlides.ToList();
         if (addedSlides.Count > 0)
         {
             rules.Append('\n').Append("    - The presentation has at least one slide of each of these kinds, on its layout:");
             foreach (var purpose in addedSlides)
-                rules.Append('\n').Append("        - ").Append(this.Families[purpose].Id).Append(": ").Append(purpose.PromptDescription()).Append(", ").Append(purpose.PromptPlacement()).Append('.');
+                rules.Append('\n').Append("        - ").Append(this.Families[purpose].Id).Append(": ").Append(purpose.PromptDescription).Append(", ").Append(purpose.PromptPlacement).Append('.');
         }
 
         return rules.ToString();

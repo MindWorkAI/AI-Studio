@@ -36,7 +36,7 @@ public static class RIDExtensions
 
     extension(RID rid)
     {
-        public string AsMicrosoftRid() => rid switch
+        public string MicrosoftRid => rid switch
         {
             RID.WIN_X64 => "win-x64",
             RID.WIN_ARM64 => "win-arm64",

@@ -244,7 +244,7 @@ public partial class AssistantBatchProcessing
     /// </remarks>
     private string CreateResultFileName(string sourceFileName)
     {
-        var extension = this.resultFileFormat.ToFileExtension();
+        var extension = this.resultFileFormat.FileExtension;
         var stem = Path.GetFileNameWithoutExtension(sourceFileName);
         var candidate = $"{stem}{RESULT_FILE_SUFFIX}{extension}";
 

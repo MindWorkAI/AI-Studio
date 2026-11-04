@@ -20,7 +20,7 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.IONOS.ToSecretId();
+    public override string Id => LLMProviders.IONOS.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "IONOS";

@@ -16,7 +16,7 @@ public static class IconSourceExtensions
             _ => "Generic",
         };
 
-        public string Prompt() => iconSource switch
+        public string Prompt => iconSource switch
         {
             IconSources.FLAT_ICON => "My icon source is Flaticon.",
             IconSources.FONT_AWESOME => "I look for an icon on Font Awesome. Please provide just valid icon names. Valid icon names are using the format `fa-icon-name`.",
@@ -28,7 +28,7 @@ public static class IconSourceExtensions
             _ => string.Empty,
         };
 
-        public string URL() => iconSource switch
+        public string URL => iconSource switch
         {
             IconSources.FLAT_ICON => "https://www.flaticon.com/",
             IconSources.FONT_AWESOME => "https://fontawesome.com/",

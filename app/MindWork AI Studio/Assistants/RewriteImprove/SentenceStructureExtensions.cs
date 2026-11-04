@@ -14,7 +14,7 @@ public static class SentenceStructureExtensions
             _ => TB("Not Specified"),
         };
 
-        public string Prompt() => sentenceStructure switch
+        public string Prompt => sentenceStructure switch
         {
             SentenceStructure.ACTIVE => " Use an active voice for the sentence structure.",
             SentenceStructure.PASSIVE => " Use a passive voice for the sentence structure.",

@@ -109,7 +109,7 @@ public static class AppUserAgent
 
     private static string CreateBase()
     {
-        var rid = RIDExtensions.GetCurrentRID().AsMicrosoftRid();
+        var rid = RIDExtensions.GetCurrentRID().MicrosoftRid;
         return string.IsNullOrWhiteSpace(rid)
             ? $"MindWorkAIStudio/{META_DATA.Version}"
             : $"MindWorkAIStudio/{META_DATA.Version} ({rid})";

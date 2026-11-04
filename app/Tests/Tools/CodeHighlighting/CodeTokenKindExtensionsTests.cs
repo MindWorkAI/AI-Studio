@@ -14,7 +14,7 @@ public sealed class CodeTokenKindExtensionsTests
     public async Task EveryKindHasAClassWhichTheStyleSheetColors([Values] CodeTokenKind kind)
     {
         var styleSheet = await new WebRootFiles().ReadTextAsync("system/MudBlazor.Markdown/MudBlazor.Markdown.min.css");
-        var cssClass = kind.ToCssClass().Split(' ')[0];
+        var cssClass = kind.CssClass.Split(' ')[0];
 
         Assert.That(styleSheet, Does.Contain($".{cssClass}"), "A library which renames its classes would leave this kind without color.");
     }

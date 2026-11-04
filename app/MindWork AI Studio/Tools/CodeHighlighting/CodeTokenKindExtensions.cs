@@ -9,8 +9,8 @@ public static class CodeTokenKindExtensions
         /// The CSS class which MudBlazor.Markdown gives this kind of part, so that it takes its color from
         /// the palette of the theme, just as the languages the library highlights itself.
         /// </summary>
-        /// <returns>The CSS class of the part.</returns>
-        public string ToCssClass() => kind switch
+        /// <value>The CSS class of the part.</value>
+        public string CssClass => kind switch
         {
             CodeTokenKind.KEYWORD => "hljs-keyword",
             CodeTokenKind.TYPE => "hljs-type",

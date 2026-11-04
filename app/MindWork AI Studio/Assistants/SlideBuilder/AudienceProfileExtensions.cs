@@ -23,7 +23,7 @@ public static class AudienceProfileExtensions
             _ => TB("Unspecified audience profile"),
         };
 
-        public string Prompt() => profile switch
+        public string Prompt => profile switch
         {
             AudienceProfile.UNSPECIFIED => "Do not tailor the text to a specific audience profile.",
             AudienceProfile.STUDENTS => "Write for students. Keep it structured, easy to study, and focused on key takeaways.",

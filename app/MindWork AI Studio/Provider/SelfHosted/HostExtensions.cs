@@ -19,22 +19,22 @@ public static class HostExtensions
             _ => "Unknown",
         };
 
-        public string BaseURL() => host switch
+        public string BaseURL => host switch
         {
             _ => "/v1/",
         };
 
-        public string ChatURL() => host switch
+        public string ChatURL => host switch
         {
             _ => "chat/completions",
         };
 
-        public string TranscriptionURL() => host switch
+        public string TranscriptionURL => host switch
         {
             _ => "audio/transcriptions",
         };
 
-        public string EmbeddingURL() => host switch
+        public string EmbeddingURL => host switch
         {
             _ => "embeddings",
         };
@@ -43,12 +43,12 @@ public static class HostExtensions
         /// The largest image file, in bytes, which the engine accepts in a chat request, where we know of one.
         /// </summary>
         /// <remarks>
-        /// Like the limit of a cloud provider, see LLMProvidersExtensions.GetMaxImageSizeBytes, this
+        /// Like the limit of a cloud provider, see LLMProvidersExtensions.MaxImageSizeBytes, this
         /// belongs to the API of the engine, not to the model. What we actually send is asked through
         /// IImageSourceExtensions.MaxImageSizeBytesFor.
         /// </remarks>
-        /// <returns>The size limit of one image file, or null when the engine states none we know of.</returns>
-        public long? GetMaxImageSizeBytes() => host switch
+        /// <value>The size limit of one image file, or null when the engine states none we know of.</value>
+        public long? MaxImageSizeBytes => host switch
         {
             //
             // llmman answers a chat request larger than 2 MiB with 413: its route /v1/chat/completions
