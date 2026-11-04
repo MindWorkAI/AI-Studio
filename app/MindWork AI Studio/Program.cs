@@ -173,9 +173,18 @@ internal sealed class Program
             config.PopoverOptions.ModalOverlay = true;
         });
 
-        builder.Services.AddMemoryCache(); // Needed for the Markdown library
         builder.Services.AddMudMarkdownServices();
-        builder.Services.AddSingleton(new MudTheme());
+
+        //
+        // Code blocks in Markdown take their colors from the palettes, see MudMarkdownThemeProvider in the
+        // main layout. Their backgrounds stay those of the code blocks before, so that a code block still
+        // stands out against a white card:
+        //
+        builder.Services.AddSingleton(new MudTheme
+        {
+            PaletteLight = new MudMarkdownPaletteLight { CodeHighlight = MudCodeHighlightThemes.Light.LightPlus with { Background = "#F0F0F0" } },
+            PaletteDark = new MudMarkdownPaletteDark { CodeHighlight = MudCodeHighlightThemes.Dark.DarkPlus with { Background = "#444444" } },
+        });
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);

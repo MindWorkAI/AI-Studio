@@ -77,7 +77,6 @@ public sealed class PlainFileExportTests
     [TestCase("```css", "CSS (.css)")]
     [TestCase("~~~bash", "Shell (.sh)")]
     [TestCase("```foo", "foo (.txt)", Description = "A language AI Studio does not know still names the block.")]
-    [TestCase("```", "Text (.txt)", Description = "A block without a language is plain text.")]
     public void ACodeBlockInAnyOtherLanguageIsOfferedAsCode(string openingFence, string expectedName)
     {
         var files = PlainFileExport.ExtractFiles(Lines(openingFence, "print(42)", openingFence[..3]), ',');
@@ -89,6 +88,39 @@ public sealed class PlainFileExportTests
             Assert.That(files[0].ToName(), Is.EqualTo(expectedName));
             Assert.That(files[0].Content, Is.EqualTo("print(42)"), "The code leaves the answer exactly as the model wrote it, without the fence around it.");
         }
+    }
+
+    [TestCase("using System;\n\nConsole.WriteLine(\"Hello\");", "C# (.cs)")]
+    [TestCase("def greet(name):\n    print(f\"Hello {name}\")\n\nif __name__ == \"__main__\":\n    greet(\"Ada\")", "Python (.py)")]
+    [TestCase("{\"name\": \"Ada\", \"age\": 36}", "JSON (.json)")]
+    [TestCase("Just a few words the model put into a block.", "Text (.txt)", Description = "A block whose language is not clear stays text.")]
+    public void ACodeBlockWithoutALanguageIsOfferedInTheLanguageOfItsCode(string code, string expectedName)
+    {
+        var files = PlainFileExport.ExtractFiles(Lines("```", code, "```"), ',');
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(files, Has.Count.EqualTo(1));
+            Assert.That(files[0].Format, Is.EqualTo(FileExportFormat.SOURCE_CODE));
+            Assert.That(files[0].ToName(), Is.EqualTo(expectedName));
+            Assert.That(files[0].Content, Is.EqualTo(code));
+        }
+    }
+
+    [Test]
+    public void ACodeBlockMarkedAsTextStaysText()
+    {
+        var files = PlainFileExport.ExtractFiles(Lines("```text", "using System;", string.Empty, "Console.WriteLine(\"Hello\");", "```"), ',');
+
+        Assert.That(files.Select(file => file.ToName()), Is.EqualTo(new[] { "Text (.txt)" }), "Whoever marks a block as text gets a text file, whatever its code looks like.");
+    }
+
+    [Test]
+    public void AWebPageWithoutALanguageIsOfferedAsAWebPage()
+    {
+        var files = PlainFileExport.ExtractFiles(Lines("```", "<div class=\"card\">", "  <p>Hello</p>", "</div>", "```"), ',');
+
+        Assert.That(files.Select(file => file.Format), Is.EqualTo(new[] { FileExportFormat.HTML }));
     }
 
     [Test]

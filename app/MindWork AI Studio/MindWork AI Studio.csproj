@@ -88,7 +88,7 @@
       -->
       <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.14" />
       <PackageReference Include="MudBlazor" Version="9.12.0" />
-      <PackageReference Include="MudBlazor.Markdown" Version="9.0.0" />
+      <PackageReference Include="MudBlazor.Markdown" Version="9.10.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
       <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
       <PackageReference Include="LuaCSharp" Version="0.5.8" />

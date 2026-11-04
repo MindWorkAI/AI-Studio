@@ -81,7 +81,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool navBarOpen;
     private bool performingUpdate;
     private UpdateResponse? currentUpdateResponse;
-    private MudThemeProvider themeProvider = null!;
+    private MudMarkdownThemeProvider themeProvider = null!;
     private bool useDarkMode;
     private bool startupCompleted;
     private bool settingsWriteProtectionWarningShown;
