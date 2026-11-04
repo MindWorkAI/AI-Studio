@@ -1197,8 +1197,9 @@ Format templates are the templates of your organization, which users find in the
 Configure Format Templates. When users export an answer of a chat or an assistant to Word, the export
 menu lists every Word template (.docx or .dotx), and AI Studio writes the answer into a copy of the
 chosen one. The document keeps the styles, the page layout, the headers and footers, and the logos of
-the template, while the answer replaces the text of its body, e.g., a cover page or sample text. Users
-can still export without a template; Pandoc then writes the document as before.
+the template, while the answer replaces its sample text; a cover page stays, see [How an export
+follows your Word template](#how-an-export-follows-your-word-template). Users can still export without
+a template; Pandoc then writes the document as before.
 
 The answer takes the styles Word knows by their built-in names: `heading 1` to `heading 6`, `List
 Paragraph`, `Quote`, `HTML Preformatted` for code, and the character styles `Hyperlink` and `HTML Code`.
@@ -1233,6 +1234,50 @@ your configuration changes.
 The list takes PowerPoint templates (.pptx or .potx) as well, but nothing uses them yet. To provide the
 template of the Slide Assistant, see [Shipping the PowerPoint template of the Slide
 Assistant](#shipping-the-powerpoint-template-of-the-slide-assistant).
+
+### How an export follows your Word template
+
+AI Studio reads everything from the template itself and knows nothing about a particular
+organization. These rules decide what the document keeps:
+
+- **The first page.** When the first page of your template holds text, the answer starts where that
+  text starts: below a picture in the header of the first page, below a larger top margin, or below
+  empty paragraphs. When the first page holds no text of its own, it is a cover page. It stays as it
+  is, with its placeholders, together with everything up to the first heading of your template, e.g.,
+  a page with document properties and a table of contents. The answer then starts on a new page.
+- **The table of contents.** A table of contents before the text keeps its field, but not the entries
+  for your sample chapters. When users open the document, Word asks whether to update its fields, and
+  then lists the headings of the answer.
+- **The pages of the answer.** They take the layout, the headers, and the footers of the section which
+  holds your chapters, i.e., the section with the last heading of your template. Pages after it, e.g.,
+  instructions to remove before sending the document, are left out.
+- **A first page with columns of its own.** When the text of the first page runs in other columns than
+  on the pages after it, e.g., next to a wide margin for pictures, which is on the left on the first
+  page and on the right on the others, the first page keeps its layout. Only Word knows where it breaks
+  a page, so AI Studio estimates how much text fits on the first page and leaves some room to spare.
+- **Pictures, text boxes, and lines.** Shapes which float in the margins, above the text of the first
+  page, or behind the text stay on their page, e.g., pictures with captions in a wide margin, a box for
+  the title, or a picture behind the whole page. Shapes within the text, e.g., a sample table in a text
+  box or a chart, belong to your sample text and are left out. Shapes only in the older format of
+  Word 2007 (VML), frames, and embedded objects are left out as well.
+- **The title box.** A text box on the first page with a paragraph in the style `Title` receives the
+  heading the answer starts with. Its first title paragraph keeps its look, further title paragraphs
+  are removed, and paragraphs in the style `Subtitle` stay empty. The heading then does not repeat in
+  the text.
+- **Headings.** The top heading level of the answer becomes `heading 1` of your template, so that
+  numbered chapters start at 1, and the levels below follow.
+- **Lists.** Bulleted lists take the bullets of `List Bullet`, numbered lists the numbers of `List
+  Number`, and both take the ones of `List Paragraph` when it brings a numbering of their kind. Items
+  of the first level keep the indentation of their style, and each numbered list counts anew.
+- **Spacing.** When your default paragraph style leaves no space after a paragraph, empty paragraphs
+  separate the paragraphs, lists, and tables of the answer, as they do in such templates.
+- **The footer.** Word keeps the text clear of the text of a footer, but not of shapes floating in it,
+  e.g., an address in a text box. AI Studio moves the bottom margin up as far as such a shape reaches
+  across the text.
+
+For the best results, use the built-in styles for headings, lists, and the title; place design
+elements in the headers and footers, in the margins, or behind the text; and start the chapters of your
+sample text with built-in headings, so that AI Studio finds the section with your text.
 
 ## Shipping the PowerPoint template of the Slide Assistant
 
