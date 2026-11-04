@@ -117,6 +117,12 @@ internal static class TestWordTemplate
     public const string APPENDIX_TEXT = "Remove this page afterwards.";
 
     /// <summary>
+    /// The bottom margin of the section of the second chapter, 3 cm, which keeps the text further
+    /// away from the footer than the one of the first chapter, which shares the section of the cover page.
+    /// </summary>
+    public const int CHAPTER_BOTTOM_MARGIN = 1701;
+
+    /// <summary>
     /// How far the picture and the caption in the margin of the first page are from the left edge of the page, in EMU: ten points.
     /// </summary>
     public const long MARGIN_PICTURE_LEFT = 127_000;
@@ -262,16 +268,32 @@ internal static class TestWordTemplate
                     PageSize(),
                     PageMarginOf(TOP_MARGIN, right: otherPagesRight));
 
-            if (!options.AppendixPage)
-                body.Append(mainSection);
-            else
+            // The sections after the first one, each with the blocks before its end; the last one ends the body:
+            var laterSections = new List<(OpenXmlElement[] Blocks, W.SectionProperties Properties)> { ([], mainSection) };
+            if (options.SecondChapterSection)
+                laterSections.Add((
+                    [
+                        new W.Paragraph(new W.ParagraphProperties { ParagraphStyleId = new W.ParagraphStyleId { Val = HEADING_1_STYLE_ID } }, new W.Run(new W.Text("Second chapter"))),
+                        new W.Paragraph(new W.Run(new W.Text("More sample text."))),
+                    ],
+                    new W.SectionProperties(new W.SectionType { Val = W.SectionMarkValues.Continuous }, PageSize(), PageMarginOf(TOP_MARGIN, right: otherPagesRight, bottom: CHAPTER_BOTTOM_MARGIN))));
+
+            if (options.AppendixPage)
             {
                 var appendixHeaderPart = mainPart.AddNewPart<HeaderPart>();
                 appendixHeaderPart.Header = new W.Header(new W.Paragraph(new W.Run(new W.Text(APPENDIX_TEXT))));
-                body.Append(
-                    new W.Paragraph(new W.ParagraphProperties { SectionProperties = mainSection }),
-                    new W.Paragraph(new W.Run(new W.Text(APPENDIX_TEXT))),
-                    new W.SectionProperties(new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(appendixHeaderPart) }, PageSize(), PageMarginOf(TOP_MARGIN)));
+                laterSections.Add((
+                    [new W.Paragraph(new W.Run(new W.Text(APPENDIX_TEXT)))],
+                    new W.SectionProperties(new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(appendixHeaderPart) }, PageSize(), PageMarginOf(TOP_MARGIN))));
+            }
+
+            foreach (var (blocks, properties) in laterSections)
+            {
+                body.Append(blocks);
+                if (properties == laterSections[^1].Properties)
+                    body.Append(properties);
+                else
+                    body.Append(new W.Paragraph(new W.ParagraphProperties { SectionProperties = properties }));
             }
 
             mainPart.Document = new W.Document(body);
@@ -359,7 +381,7 @@ internal static class TestWordTemplate
     /// </summary>
     private static W.PageSize PageSize() => new() { Width = (uint)PAGE_WIDTH, Height = (uint)PAGE_HEIGHT };
 
-    private static W.PageMargin PageMarginOf(int top, int left = SIDE_MARGIN, int right = SIDE_MARGIN) => new() { Top = top, Right = (uint)right, Bottom = BOTTOM_MARGIN, Left = (uint)left, Header = 709U, Footer = 709U, Gutter = 0U };
+    private static W.PageMargin PageMarginOf(int top, int left = SIDE_MARGIN, int right = SIDE_MARGIN, int bottom = BOTTOM_MARGIN) => new() { Top = top, Right = (uint)right, Bottom = bottom, Left = (uint)left, Header = 709U, Footer = 709U, Gutter = 0U };
 
     /// <summary>
     /// The shapes which float around the text of the first page: a picture with a caption in the

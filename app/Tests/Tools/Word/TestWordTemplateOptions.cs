@@ -30,4 +30,6 @@ namespace AIStudio.Tests.Tools.Word;
 /// a page of its own, and a heading of the first level starts the sample text, like in a report.</param>
 /// <param name="AppendixPage">Whether a heading of the first level starts the sample text, and a page
 /// of instructions follows it in a section with a header of its own, to remove before sending the document.</param>
-internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false, bool SidebarLayout = false, bool Shapes = false, bool TitleBox = false, bool FooterShapes = false, bool TableOfContents = false, bool AppendixPage = false);
+/// <param name="SecondChapterSection">Whether a second chapter follows the sample text in a section
+/// of its own, which continues the page and leaves a wider margin at the bottom.</param>
+internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false, bool SidebarLayout = false, bool Shapes = false, bool TitleBox = false, bool FooterShapes = false, bool TableOfContents = false, bool AppendixPage = false, bool SecondChapterSection = false);

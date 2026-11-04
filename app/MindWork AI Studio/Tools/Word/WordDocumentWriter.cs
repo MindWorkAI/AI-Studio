@@ -269,8 +269,9 @@ internal static class WordDocumentWriter
     /// bring their headers and footers along, and the last section inherits them, as in Word. It takes
     /// only those which the sections between them state, and none the sections before refer to as
     /// well: Word refuses a document in which two sections refer to the same header or footer, which
-    /// the validator of the Open XML SDK does not notice. After a first page of its own, the last
-    /// section starts on a new page, whatever the section before it in the template did.
+    /// the validator of the Open XML SDK does not notice. After a first page of its own, or a front
+    /// matter with a section of its own, the last section starts on a new page, whatever the section
+    /// before it in the template did.
     /// </remarks>
     /// <param name="body">The body of the template, not cleared yet.</param>
     /// <param name="pages">What the pages of the template hold.</param>
@@ -317,7 +318,7 @@ internal static class WordDocumentWriter
         for (var index = mergedReferences.Count - 1; index >= 0; index--)
             lastSection.PrependChild(mergedReferences[index]);
 
-        if (keepsFirstPage)
+        if (keepsFirstPage || pages.FrontMatterEndsSection)
             lastSection.RemoveAllChildren<W.SectionType>();
 
         if (sectionsBefore > 0)

@@ -18,11 +18,12 @@ namespace AIStudio.Tools.Word;
 /// and keeps the shapes of the design around it, see WordShapes. So does the page after it, when
 /// the first page stays a section of its own, with the shapes of the first page of the main section.
 ///
-/// The main section holds the text of the template, which starts with its first heading after the
-/// first page. Its layout, headers, and footers become those of the pages of the answer. Sections
-/// after it go with the sample text, e.g., pages with instructions to remove before sending the
-/// document. Without such a heading, the section after a cover page is the main one, or else the
-/// last section.
+/// The main section holds the text of the template, up to its last heading after the first page.
+/// Its layout, headers, and footers become those of the pages of the answer. Sections after it go
+/// with the sample text, e.g., pages with instructions to remove before sending the document.
+/// Without such a heading, the section after a cover page is the main one, or else the last
+/// section. A cover page and what follows it often share a section with the first chapter, with
+/// other margins than the sections of the chapters after it; then they keep a section of their own.
 ///
 /// A page ends with the first page break the file states: a page break within a line, a paragraph
 /// which starts on a new page, or the end of a section whose next section starts on a new page. Where
@@ -51,6 +52,13 @@ internal sealed class WordTemplatePages
     /// How many sections end within the front matter; their properties stay where they are.
     /// </summary>
     public int SectionsOfFrontMatter { get; private init; }
+
+    /// <summary>
+    /// Whether the front matter ends with a section of its own, a copy of the section in which it
+    /// ends in the template, since the main section is another one; the main section starts on a
+    /// new page after it.
+    /// </summary>
+    public bool FrontMatterEndsSection { get; private init; }
 
     /// <summary>
     /// The properties of the main section, which holds the text of the template; null when the body states no sections.
@@ -92,22 +100,30 @@ internal sealed class WordTemplatePages
         var sections = body.Descendants<W.SectionProperties>().ToList();
         var blocks = body.ChildElements.Where(element => element is not W.SectionProperties).ToList();
         var firstPage = PageFrom(blocks, 0, sections);
-        var firstHeading = blocks.FindIndex(firstPage.Count, block => block is W.Paragraph paragraph && styles.IsHeading(paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value));
+        var firstHeading = blocks.FindIndex(firstPage.Count, IsHeading);
+        var mainSection = firstHeading < 0 ? null : SectionOf(blocks, blocks.FindLastIndex(IsHeading), sections);
         if (!firstPage.Any(HasTextOfItsOwn))
         {
             var frontMatter = (firstHeading < 0 ? firstPage : blocks.Take(firstHeading)).ToList();
-            var sectionsOfFrontMatter = frontMatter.Count(EndsSection);
             EmptyTablesOfContents(frontMatter);
+
+            var frontMatterSection = firstHeading < 0 ? null : SectionOf(blocks, firstHeading, sections);
+            var endsSection = frontMatterSection is not null && mainSection is not null && frontMatterSection != mainSection;
+            if (endsSection)
+                EndWithSection(frontMatter, (W.SectionProperties)frontMatterSection!.CloneNode(true));
+
+            var sectionsOfFrontMatter = frontMatter.Count(EndsSection);
             return new WordTemplatePages
             {
                 FirstPageIsCover = true,
                 FrontMatter = frontMatter.Select(WithoutCommentsAndNotes).ToList(),
                 SectionsOfFrontMatter = sectionsOfFrontMatter,
-                MainSection = firstHeading >= 0 ? SectionOf(blocks, firstHeading, sections) : sections.ElementAtOrDefault(sectionsOfFrontMatter) ?? sections.LastOrDefault(),
+                FrontMatterEndsSection = endsSection,
+                MainSection = mainSection ?? sections.ElementAtOrDefault(sectionsOfFrontMatter) ?? sections.LastOrDefault(),
             };
         }
 
-        var mainSection = firstHeading < 0 ? sections.LastOrDefault() : SectionOf(blocks, firstHeading, sections);
+        mainSection ??= sections.LastOrDefault();
         var leadingEmptyParagraphs = firstPage.TakeWhile(IsEmpty).Cast<W.Paragraph>().ToList();
         var firstArea = WordTextArea.Of(sections.FirstOrDefault() ?? new W.SectionProperties());
         var textTop = firstArea.Top + leadingEmptyParagraphs.Sum(paragraph => estimate.HeightOf(paragraph, firstArea.ColumnWidth));
@@ -128,6 +144,34 @@ internal sealed class WordTemplatePages
             FirstPageShapes = WordShapes.DesignOf(firstPage, firstArea, textTop, estimate),
             NextPageShapes = nextPageShapes,
         };
+
+        bool IsHeading(OpenXmlElement block) => block is W.Paragraph paragraph && styles.IsHeading(paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value);
+    }
+
+    /// <summary>
+    /// Ends the front matter with a section of its own, so that it keeps the layout it has in the
+    /// template, while the answer takes the one of the main section.
+    /// </summary>
+    /// <remarks>
+    /// The main section starts on a new page then, so a page break at the end of the front matter
+    /// goes, which would leave an empty page.
+    /// </remarks>
+    /// <param name="frontMatter">The blocks of the front matter.</param>
+    /// <param name="section">The properties of the section the front matter ends with.</param>
+    private static void EndWithSection(List<OpenXmlElement> frontMatter, W.SectionProperties section)
+    {
+        if (frontMatter.Count > 1
+            && frontMatter[^1] is W.Paragraph last
+            && last.ParagraphProperties?.SectionProperties is null
+            && !HasTextOfItsOwn(last)
+            && !last.OwnDescendants<W.Drawing>().Any()
+            && last.OwnDescendants<W.Break>().Any(lineBreak => lineBreak.Type?.InnerText is "page"))
+            frontMatter.RemoveAt(frontMatter.Count - 1);
+
+        if (frontMatter[^1] is W.Paragraph paragraph && paragraph.ParagraphProperties?.SectionProperties is null)
+            (paragraph.ParagraphProperties ??= new W.ParagraphProperties()).SectionProperties = section;
+        else
+            frontMatter.Add(new W.Paragraph(new W.ParagraphProperties { SectionProperties = section }));
     }
 
     /// <summary>

@@ -143,6 +143,30 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
+    public void TheAnswerTakesTheLayoutOfTheChaptersAfterTheCoverPage()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(EmptyCoverPage: true, TableOfContents: true, SecondChapterSection: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var mainPart = document.MainDocumentPart!;
+        var body = mainPart.Document!.Body!;
+        var paragraphs = ParagraphsOf(document);
+        var sections = body.Descendants<W.SectionProperties>().ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(paragraphs.Select(TextOf), Is.EqualTo(new[] { string.Empty, string.Empty, string.Empty, string.Empty, "Mars is close to Earth." }), "The page break after the table of contents goes, since the answer starts on a new page anyway.");
+            Assert.That(sections, Has.Count.EqualTo(3), "The cover page, the table of contents, and the answer have sections of their own.");
+            Assert.That(paragraphs[3].ParagraphProperties?.SectionProperties, Is.SameAs(sections[1]), "The table of contents ends the section it shares with the first chapter in the template.");
+            Assert.That(sections[1].GetFirstChild<W.PageMargin>()!.Bottom?.Value, Is.EqualTo(TestWordTemplate.BOTTOM_MARGIN));
+            Assert.That(sections[2].GetFirstChild<W.PageMargin>()!.Bottom?.Value, Is.EqualTo(TestWordTemplate.CHAPTER_BOTTOM_MARGIN), "The answer takes the margins of the section with the last chapter.");
+            Assert.That(sections[2].GetFirstChild<W.SectionType>(), Is.Null, "The answer starts on a new page, although the second chapter continues the page in the template.");
+            Assert.That(sections.SelectMany(section => section.Elements<W.HeaderReference>()).Select(reference => reference.Id?.Value), Is.Unique, "No header belongs to two sections.");
+            Assert.That(mainPart.HeaderParts.Select(part => part.Header!.InnerText), Is.EquivalentTo(new[] { TestWordTemplate.COVER_HEADER_TEXT, TestWordTemplate.HEADER_TEXT }), "The answer inherits the header of the section before it.");
+        });
+    }
+
+    [Test]
     public void PagesAfterTheTextOfTheTemplateGo()
     {
         using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(AppendixPage: true));

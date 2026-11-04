@@ -68,9 +68,12 @@ numbers raised, rather than going to the foot of the page.
 - **Write only into the file the user chose.** Inside the Flatpak, the save dialog grants access to
   exactly that file. `TemplateCopy` keeps this rule; use it rather than a `FileStream` of your own.
 - **The pages of the answer take the layout of the main section.** The main section holds the text of
-  the template, which starts with its first heading after the first page (`WordTemplatePages.MainSection`).
-  Sections after it go with the sample text, e.g., pages of instructions with headers of their own,
-  which would otherwise show on every page. The last section becomes a copy of the main one.
+  the template up to its last heading after the first page (`WordTemplatePages.MainSection`), i.e.,
+  the layout of its chapters. Sections after it go with the sample text, e.g., pages of instructions
+  with headers of their own, which would otherwise show on every page. The last section becomes a
+  copy of the main one. When a cover page and what follows it share a section with the first
+  chapter, often with narrower margins than the sections of the chapters after it, they end with a
+  copy of that section, and the answer starts on a new page.
 - **The last section inherits what the removed sections state.** Corporate templates state their headers
   and footers once, in the first section, e.g., a cover page, and the sections after it inherit them, as
   Word lets a section without a header or footer of a kind do. `WordDocumentWriter.MergeSections` hands
