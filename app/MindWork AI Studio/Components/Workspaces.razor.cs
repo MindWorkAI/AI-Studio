@@ -27,7 +27,10 @@ public partial class Workspaces : MSGComponentBase
 
     [Inject]
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
-    
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }
     
@@ -46,18 +49,83 @@ public partial class Workspaces : MSGComponentBase
     public EventCallback<Guid> StartNewChatRequested { get; set; }
 
     [Parameter]
-    public bool ExpandRootNodes { get; set; } = true;
-
-    [Parameter]
     public bool SearchVisible { get; set; }
 
     [Parameter]
     public EventCallback<bool> SearchVisibleChanged { get; set; }
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
+
+    /// <summary>
+    /// Cuts a name which is too long for its row, instead of breaking it into several lines.
+    /// </summary>
+    private const string NAME_STYLE = "min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
+
+    /// <summary>
+    /// The hover effect and pointer of a clickable list item. The lists are read-only, because the
+    /// open chat is marked by the classes below rather than by a selection, and read-only lists
+    /// may leave these out.
+    /// </summary>
+    private const string CLICKABLE_ITEM_CLASSES = "mud-list-item-clickable";
+
+    /// <summary>
+    /// The mark of the open chat: MudBlazor's own look of a selected item, plus the class the list
+    /// scrolls to.
+    /// </summary>
+    private const string CURRENT_ITEM_CLASSES = "is-current mud-selected-item mud-primary-text mud-primary-hover";
+
     private readonly SemaphoreSlim treeLoadingSemaphore = new(1, 1);
-    private readonly List<TreeItemData<ITreeItem>> treeItems = [];
     private readonly HashSet<Guid> loadingWorkspaceChatLists = [];
+    private readonly HashSet<Guid> expandedWorkspaceIds = [];
+
+    private IReadOnlyList<WorkspaceTreeWorkspace> workspaces = [];
+    private IReadOnlyList<WorkspaceTreeChat> temporaryChats = [];
+
+    /// <summary>
+    /// Whether the list shows the results of a search instead of all workspaces and chats.
+    /// </summary>
+    /// <remarks>
+    /// Differs from <see cref="this.HasSearchQuery"/> while a search is still running: the list then
+    /// keeps showing what it showed before, and has to be drawn as such.
+    /// </remarks>
+    private bool isShowingSearchResults;
+
+    private ElementReference listElement;
+
+    /// <summary>
+    /// The markers right before the titles of the sections, where these titles sit while they do
+    /// not stick to the top of the list.
+    /// </summary>
+    private ElementReference workspacesSectionStart;
+
+    /// <inheritdoc cref="this.workspacesSectionStart"/>
+    private ElementReference temporaryChatsSectionStart;
+
+    /// <summary>
+    /// The start of a section opened from its title, which the list reveals once it shows the content
+    /// of the section, or null. See <see cref="this.TryRevealSectionAsync"/>.
+    /// </summary>
+    private ElementReference? sectionToReveal;
+
+    /// <summary>
+    /// Whether the script already watches which titles of the sections stick to the top of the list.
+    /// </summary>
+    private bool isWatchingStuckSections;
+
+    /// <summary>
+    /// The chat or workspace whose menu is open, or the empty ID.
+    /// </summary>
+    private Guid itemIdWithOpenMenu;
+
+    /// <summary>
+    /// The chat which was open when the list last looked, together with its workspace.
+    /// </summary>
+    private (Guid ChatId, Guid WorkspaceId) lastCurrentChat;
+
+    /// <summary>
+    /// Whether the list still has to scroll the open chat into view.
+    /// </summary>
+    private bool isScrollToCurrentChatPending;
 
     private CancellationTokenSource? prefetchCancellationTokenSource;
     private CancellationTokenSource? searchCancellationTokenSource;
@@ -76,6 +144,92 @@ public partial class Workspaces : MSGComponentBase
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED ]);
         this.LoadTreeItemsAsync(startPrefetch: true).Observe($"{nameof(Workspaces)}: loading the workspace tree");
+    }
+
+    /// <summary>
+    /// Follows the open chat: expands its workspace and has the list scroll to it.
+    /// </summary>
+    /// <remarks>
+    /// Only a chat which differs from the last one counts, or the same chat in another workspace.
+    /// Every other render leaves alone what the user expanded, collapsed, or scrolled to.
+    /// </remarks>
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        var currentChat = this.CurrentChatThread is { } chat ? (chat.ChatId, chat.WorkspaceId) : default;
+        if (currentChat == this.lastCurrentChat)
+            return;
+
+        this.lastCurrentChat = currentChat;
+        this.isScrollToCurrentChatPending = currentChat.ChatId != Guid.Empty;
+        if (currentChat.WorkspaceId != Guid.Empty && this.expandedWorkspaceIds.Add(currentChat.WorkspaceId))
+            await this.EnsureWorkspaceChatsLoadedAsync(currentChat.WorkspaceId);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        //
+        // A section opened from its title may unfold out of sight, above the visible part of the
+        // list while its title sticks, or with its open chat further below. The script scrolls only
+        // in these cases, so a section opened in plain sight leaves the list where it is:
+        //
+        if (this.sectionToReveal is { } sectionStart)
+        {
+            this.sectionToReveal = null;
+            await this.TryRevealSectionAsync(sectionStart);
+        }
+
+        //
+        // Only a title in its usual place shows its button under the pointer, since only there a
+        // click collapses the section. And a title carries the mark of the open chat while that
+        // chat is out of sight above or below, as a collapsed one does. CSS can tell neither, so
+        // the script marks such titles, as soon as the list exists:
+        //
+        if (!this.isWatchingStuckSections && !this.isInitialLoading)
+        {
+            this.isWatchingStuckSections = true;
+            try
+            {
+                await this.JsRuntime.InvokeVoidAsync("watchStuckSections", this.listElement);
+            }
+            catch (JSDisconnectedException)
+            {
+                // Nobody is left to see the list.
+            }
+            catch (JSException ex)
+            {
+                this.Logger.LogWarning(ex, "Failed to watch the titles of the sections.");
+            }
+        }
+
+        //
+        // The open chat may not be in the list yet: its workspace may still be loading, or the chat
+        // is new and reaches the disk only with its first message. Until then, it stays pending.
+        //
+        if (!this.isScrollToCurrentChatPending || this.isInitialLoading || !this.IsCurrentChatMarked())
+            return;
+
+        this.isScrollToCurrentChatPending = false;
+
+        //
+        // Scrolling is a convenience. An exception from here would end the whole circuit, though,
+        // and a browser which still runs a cached app.js from an older version lacks the function.
+        //
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync("scrollFirstMatchIntoView", this.listElement, ".is-current");
+        }
+        catch (JSDisconnectedException)
+        {
+            // Nobody is left to see the list.
+        }
+        catch (JSException ex)
+        {
+            this.Logger.LogWarning(ex, "Failed to scroll the open chat into view.");
+        }
     }
 
     #endregion
@@ -116,7 +270,14 @@ public partial class Workspaces : MSGComponentBase
 
     private bool HasSearchQuery => this.SearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
 
-    private string SearchPlaceholder => this.includeThreadContents ? T("Search chat names and contents") : T("Search chat names");
+    /// <summary>
+    /// The placeholder of the search field, which tells what the search covers.
+    /// </summary>
+    /// <remarks>
+    /// Kept short, since the field shares the narrow sidebar with the button that switches the
+    /// search of the contents. Everything in this list is a chat, so the texts leave that word out.
+    /// </remarks>
+    private string SearchPlaceholder => this.includeThreadContents ? T("Search names and contents") : T("Search names");
 
     private string GetAddChatToWorkspaceTooltip(string workspaceName) => string.Format(T("Start a new chat in workspace '{0}'"), workspaceName);
 
@@ -143,260 +304,237 @@ public partial class Workspaces : MSGComponentBase
 
     private void BuildTreeItems(WorkspaceTreeCacheSnapshot snapshot)
     {
-        this.treeItems.Clear();
+        this.workspaces = snapshot.Workspaces
+            .Select(workspace => workspace with { Chats = workspace.Chats.OrderByDescending(x => x.LastEditTime).ToList() })
+            .ToList();
 
-        var workspaceChildren = new List<TreeItemData<ITreeItem>>();
-        foreach (var workspace in snapshot.Workspaces)
-            workspaceChildren.Add(this.CreateWorkspaceTreeItem(workspace));
-
-        workspaceChildren.Add(new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, T("Add workspace"), Icons.Material.Filled.LibraryAdd, this.AddWorkspaceAsync),
-        });
-
-        this.treeItems.Add(new TreeItemData<ITreeItem>
-        {
-            Expanded = this.ExpandRootNodes,
-            Expandable = true,
-            Value = new TreeItemData
-            {
-                Depth = 0,
-                Branch = WorkspaceBranch.WORKSPACES,
-                Text = T("Workspaces"),
-                Icon = Icons.Material.Filled.Folder,
-                Expandable = true,
-                Path = "root",
-                Children = workspaceChildren,
-            },
-        });
-        
-        this.treeItems.Add(new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = new TreeDivider(),
-        });
-        
-        var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
-        foreach (var temporaryChat in snapshot.TemporaryChats.OrderByDescending(x => x.LastEditTime))
-            temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
-
-        this.treeItems.Add(new TreeItemData<ITreeItem>
-        {
-            Expanded = this.ExpandRootNodes,
-            Expandable = true,
-            Value = new TreeItemData
-            {
-                Depth = 0,
-                Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                Text = T("Disappearing Chats"),
-                Icon = Icons.Material.Filled.Timer,
-                Expandable = true,
-                Path = "temp",
-                Children = temporaryChatsChildren,
-            },
-        });
+        this.temporaryChats = snapshot.TemporaryChats.OrderByDescending(x => x.LastEditTime).ToList();
+        this.isShowingSearchResults = false;
     }
 
-    private TreeItemData<ITreeItem> CreateWorkspaceTreeItem(WorkspaceTreeWorkspace workspace)
-    {
-        var children = new List<TreeItemData<ITreeItem>>();
-        if (workspace.ChatsLoaded)
-        {
-            foreach (var workspaceChat in workspace.Chats.OrderByDescending(x => x.LastEditTime))
-                children.Add(this.CreateChatTreeItem(workspaceChat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
-        }
-        else if (this.loadingWorkspaceChatLists.Contains(workspace.WorkspaceId))
-            children.AddRange(this.CreateLoadingRows(workspace.WorkspacePath));
-
-        children.Add(new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, T("Add chat"), Icons.Material.Filled.AddComment, () => this.AddChatAsync(workspace.WorkspacePath)),
-        });
-
-        return new TreeItemData<ITreeItem>
-        {
-            Expandable = true,
-            Value = new TreeItemData
-            {
-                Type = TreeItemType.WORKSPACE,
-                Depth = 1,
-                Branch = WorkspaceBranch.WORKSPACES,
-                Text = workspace.Name,
-                Icon = Icons.Material.Filled.Description,
-                Expandable = true,
-                Path = workspace.WorkspacePath,
-                Children = children,
-            },
-        };
-    }
-
-    private IReadOnlyCollection<TreeItemData<ITreeItem>> CreateLoadingRows(string workspacePath)
-    {
-        return
-        [
-            this.CreateLoadingTreeItem(workspacePath, "loading_1"),
-            this.CreateLoadingTreeItem(workspacePath, "loading_2"),
-            this.CreateLoadingTreeItem(workspacePath, "loading_3"),
-        ];
-    }
-
-    private TreeItemData<ITreeItem> CreateLoadingTreeItem(string workspacePath, string suffix)
-    {
-        return new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = new TreeItemData
-            {
-                Type = TreeItemType.LOADING,
-                Depth = 2,
-                Branch = WorkspaceBranch.WORKSPACES,
-                Text = T("Loading chats..."),
-                Icon = Icons.Material.Filled.HourglassTop,
-                Expandable = false,
-                Path = Path.Join(workspacePath, suffix),
-            },
-        };
-    }
-
-    private TreeItemData<ITreeItem> CreateChatTreeItem(WorkspaceTreeChat chat, WorkspaceBranch branch, int depth, string icon)
-    {
-        return new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = new TreeItemData
-            {
-                Type = TreeItemType.CHAT,
-                Depth = depth,
-                Branch = branch,
-                Text = chat.Name,
-                Icon = icon,
-                DefaultIcon = icon,
-                Expandable = false,
-                Path = chat.ChatPath,
-                ChatId = chat.ChatId,
-                WorkspaceId = chat.WorkspaceId,
-                LastEditTime = chat.LastEditTime,
-            },
-        };
-    }
-
+    /// <summary>
+    /// Shows the results of a search, in the same shape as the whole list.
+    /// </summary>
+    /// <remarks>
+    /// The results keep the order the search gave them. Their workspaces count as loaded, because
+    /// they hold exactly the chats which matched.
+    /// </remarks>
     private void BuildSearchTreeItems(WorkspaceSearchSnapshot snapshot)
     {
-        this.treeItems.Clear();
+        this.workspaces = snapshot.Workspaces
+            .Select(workspace => new WorkspaceTreeWorkspace(workspace.WorkspaceId, workspace.WorkspacePath, workspace.Name, ChatsLoaded: true, workspace.Chats.Select(result => result.Chat).ToList()))
+            .ToList();
 
-        if (snapshot.Workspaces.Count == 0 && snapshot.TemporaryChats.Count == 0)
-        {
-            this.treeItems.Add(new TreeItemData<ITreeItem>
-            {
-                Expandable = false,
-                Value = new TreeItemData
-                {
-                    Depth = 0,
-                    Branch = WorkspaceBranch.NONE,
-                    Text = T("No chats found"),
-                    Icon = Icons.Material.Filled.Search,
-                    Expandable = false,
-                    Path = "search_empty",
-                },
-            });
+        this.temporaryChats = snapshot.TemporaryChats.Select(result => result.Chat).ToList();
+        this.isShowingSearchResults = true;
+    }
 
+    private bool IsWorkspacesSectionCollapsed => !this.isShowingSearchResults && this.SettingsManager.ConfigurationData.Workspace.IsWorkspacesSectionCollapsed;
+
+    private bool IsTemporaryChatsSectionCollapsed => !this.isShowingSearchResults && this.SettingsManager.ConfigurationData.Workspace.IsTemporaryChatsSectionCollapsed;
+
+    private static string GetSectionChevron(bool isCollapsed) => isCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore;
+
+    /// <summary>
+    /// Whether the titles of the sections stick to the top of the list while it scrolls.
+    /// </summary>
+    /// <remarks>
+    /// Not while the search is open: its bar sticks to the top already, and the results of a
+    /// search cannot be collapsed anyway.
+    /// </remarks>
+    private bool AreSectionTitlesSticky => !this.SearchVisible;
+
+    /// <summary>
+    /// The classes of a section's title. The second title sticks below the first one.
+    /// </summary>
+    private string GetSectionHeaderClasses(bool isSecond) => (this.AreSectionTitlesSticky, isSecond) switch
+    {
+        (false, _) => "workspace-section-header px-2 pt-2",
+        (true, false) => "workspace-section-header is-sticky px-2 pt-2",
+        (true, true) => "workspace-section-header is-sticky is-second px-2 pt-2",
+    };
+
+    /// <summary>
+    /// Shows what the title of a section points to, or else collapses or expands the section.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A section which holds the open chat out of sight marks its title, and a click on the title
+    /// scrolls to that chat. Otherwise, a title which sticks to the top or the bottom of the list
+    /// scrolls its section into its usual place: collapsing the section while the list shows its
+    /// middle, or before the list shows it at all, would pull the list away under the pointer. Only a
+    /// title in its usual place, whose section shows its open chat or has none, collapses the section
+    /// right away.
+    /// </para>
+    /// <para>
+    /// A collapsed section opens first, and the list reveals it once its content is drawn, see
+    /// <see cref="this.OnAfterRenderAsync"/>. A browser which still runs a cached app.js lacks the
+    /// script, and the title collapses or expands the section as before.
+    /// </para>
+    /// </remarks>
+    private async Task ClickSectionTitleAsync(ElementReference sectionStart, bool isCollapsed, Func<Task> toggle)
+    {
+        if (isCollapsed)
+            this.sectionToReveal = sectionStart;
+
+        else if (await this.TryRevealSectionAsync(sectionStart))
             return;
-        }
 
-        if (snapshot.Workspaces.Count > 0)
+        await toggle();
+    }
+
+    /// <summary>
+    /// Scrolls the list to the open chat of a section, when it is in the section but out of sight,
+    /// or else to the start of the section, when its title sticks to the top or the bottom of the list.
+    /// </summary>
+    /// <returns>True when the list scrolled, false when there was nothing to reveal.</returns>
+    private async Task<bool> TryRevealSectionAsync(ElementReference sectionStart)
+    {
+        try
         {
-            var workspaceChildren = new List<TreeItemData<ITreeItem>>();
-            foreach (var workspace in snapshot.Workspaces)
-                workspaceChildren.Add(this.CreateSearchWorkspaceTreeItem(workspace));
-
-            this.treeItems.Add(new TreeItemData<ITreeItem>
-            {
-                Expanded = true,
-                Expandable = true,
-                Value = new TreeItemData
-                {
-                    Depth = 0,
-                    Branch = WorkspaceBranch.WORKSPACES,
-                    Text = T("Workspaces"),
-                    Icon = Icons.Material.Filled.Folder,
-                    Expandable = true,
-                    Path = "search_workspaces",
-                    Children = workspaceChildren,
-                },
-            });
+            return await this.JsRuntime.InvokeAsync<bool>("revealSection", sectionStart);
         }
-
-        if (snapshot.Workspaces.Count > 0 && snapshot.TemporaryChats.Count > 0)
+        catch (JSDisconnectedException)
         {
-            this.treeItems.Add(new TreeItemData<ITreeItem>
-            {
-                Expandable = false,
-                Value = new TreeDivider(),
-            });
+            // Nobody is left to see the list.
+            return false;
         }
-
-        if (snapshot.TemporaryChats.Count > 0)
+        catch (JSException ex)
         {
-            var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
-            foreach (var temporaryChat in snapshot.TemporaryChats)
-                temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat.Chat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
-
-            this.treeItems.Add(new TreeItemData<ITreeItem>
-            {
-                Expanded = true,
-                Expandable = true,
-                Value = new TreeItemData
-                {
-                    Depth = 0,
-                    Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                    Text = T("Disappearing Chats"),
-                    Icon = Icons.Material.Filled.Timer,
-                    Expandable = true,
-                    Path = "search_temp",
-                    Children = temporaryChatsChildren,
-                },
-            });
+            this.Logger.LogWarning(ex, "Failed to reveal a section of the list.");
+            return false;
         }
     }
 
-    private TreeItemData<ITreeItem> CreateSearchWorkspaceTreeItem(WorkspaceSearchWorkspace workspace)
+    private async Task ToggleWorkspacesSectionAsync()
     {
-        var children = new List<TreeItemData<ITreeItem>>();
-        foreach (var chat in workspace.Chats)
-            children.Add(this.CreateChatTreeItem(chat.Chat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
+        this.SettingsManager.ConfigurationData.Workspace.IsWorkspacesSectionCollapsed = !this.SettingsManager.ConfigurationData.Workspace.IsWorkspacesSectionCollapsed;
+        await this.SettingsManager.StoreSettings();
+    }
 
-        return new TreeItemData<ITreeItem>
+    private async Task ToggleTemporaryChatsSectionAsync()
+    {
+        this.SettingsManager.ConfigurationData.Workspace.IsTemporaryChatsSectionCollapsed = !this.SettingsManager.ConfigurationData.Workspace.IsTemporaryChatsSectionCollapsed;
+        await this.SettingsManager.StoreSettings();
+    }
+
+    /// <summary>
+    /// Whether the chats of the given workspace are shown. The results of a search always show them.
+    /// </summary>
+    private bool IsWorkspaceExpanded(Guid workspaceId) => this.isShowingSearchResults || this.expandedWorkspaceIds.Contains(workspaceId);
+
+    /// <summary>
+    /// Expands or collapses a workspace, and loads its chats when they are missing.
+    /// </summary>
+    private async Task ToggleWorkspaceAsync(WorkspaceTreeWorkspace workspace)
+    {
+        if (this.isShowingSearchResults)
+            return;
+
+        if (this.expandedWorkspaceIds.Remove(workspace.WorkspaceId))
+            return;
+
+        this.expandedWorkspaceIds.Add(workspace.WorkspaceId);
+        await this.EnsureWorkspaceChatsLoadedAsync(workspace.WorkspaceId);
+    }
+
+    #region Highlighting the open chat
+
+    //
+    // The open chat is marked where the user can see it: on its own row, or else on the closest row
+    // which hides it -- its collapsed workspace, or the collapsed section. Whatever carries the mark
+    // gets the class "is-current", which is also what the list scrolls to.
+    //
+
+    private bool IsCurrentChat(WorkspaceTreeChat chat) => this.CurrentChatThread is { } openChat
+                                                          && chat.ChatId == openChat.ChatId
+                                                          && chat.WorkspaceId == openChat.WorkspaceId;
+
+    private bool IsWorkspaceOfCurrentChat(Guid workspaceId) => workspaceId != Guid.Empty && this.CurrentChatThread?.WorkspaceId == workspaceId;
+
+    private bool IsWorkspaceOfCurrentChatListed => this.workspaces.Any(workspace => this.IsWorkspaceOfCurrentChat(workspace.WorkspaceId));
+
+    private bool IsCurrentChatAmongTemporaryChats => this.temporaryChats.Any(this.IsCurrentChat);
+
+    /// <summary>
+    /// Whether some row of the list carries the mark of the open chat.
+    /// </summary>
+    private bool IsCurrentChatMarked()
+    {
+        if (this.CurrentChatThread is not { } openChat)
+            return false;
+
+        if (openChat.WorkspaceId == Guid.Empty)
+            return this.IsCurrentChatAmongTemporaryChats;
+
+        foreach (var workspace in this.workspaces)
         {
-            Expanded = true,
-            Expandable = true,
-            Value = new TreeItemData
-            {
-                Type = TreeItemType.WORKSPACE,
-                Depth = 1,
-                Branch = WorkspaceBranch.WORKSPACES,
-                Text = workspace.Name,
-                Icon = Icons.Material.Filled.Description,
-                Expandable = true,
-                Path = workspace.WorkspacePath,
-                Children = children,
-            },
-        };
+            if (workspace.WorkspaceId != openChat.WorkspaceId)
+                continue;
+
+            if (this.IsWorkspacesSectionCollapsed || !this.IsWorkspaceExpanded(workspace.WorkspaceId))
+                return true;
+
+            return workspace.ChatsLoaded && workspace.Chats.Any(this.IsCurrentChat);
+        }
+
+        return false;
     }
 
-    private string GetTreeItemIcon(TreeItemData treeItem)
+    /// <summary>
+    /// The classes of a workspace's list item.
+    /// </summary>
+    /// <remarks>
+    /// An expanded workspace of the open chat only takes the primary color, since the chat itself
+    /// carries the mark. A collapsed one carries the mark in its place.
+    /// </remarks>
+    private string GetWorkspaceItemClasses(WorkspaceTreeWorkspace workspace, bool isExpanded)
     {
-        if (treeItem.Type is not TreeItemType.CHAT)
-            return treeItem.Icon;
+        var classes = CLICKABLE_ITEM_CLASSES;
+        if (this.IsWorkspaceOfCurrentChat(workspace.WorkspaceId))
+            classes += isExpanded ? " mud-primary-text" : $" {CURRENT_ITEM_CLASSES}";
 
-        var defaultIcon = string.IsNullOrWhiteSpace(treeItem.DefaultIcon) ? treeItem.Icon : treeItem.DefaultIcon;
-        return this.GetChatTreeIcon(treeItem.ChatId, defaultIcon);
+        if (this.itemIdWithOpenMenu == workspace.WorkspaceId)
+            classes += " is-menu-open";
+
+        return classes;
     }
 
-    private bool IsChatTreeItemBusy(TreeItemData treeItem)
+    /// <summary>
+    /// The classes of a chat's list item.
+    /// </summary>
+    /// <remarks>
+    /// A chat inside a workspace is indented by one icon: its own icon starts where the folder icon
+    /// of its workspace ends, after the gutter of 16 pixels and the icon of 24.
+    /// </remarks>
+    private string GetChatItemClasses(WorkspaceTreeChat chat, bool isNested)
     {
-        return treeItem.Type is TreeItemType.CHAT && this.IsChatBusy(treeItem.ChatId);
+        var classes = $"{CLICKABLE_ITEM_CLASSES} workspace-chat";
+        if (isNested)
+            classes += " pl-10";
+
+        if (this.IsCurrentChat(chat))
+            classes += $" {CURRENT_ITEM_CLASSES}";
+
+        if (this.itemIdWithOpenMenu == chat.ChatId)
+            classes += " is-menu-open";
+
+        return classes;
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Keeps the buttons of a row visible while its menu is open, which the pointer leaves for the menu.
+    /// </summary>
+    /// <param name="itemId">The ID of the chat or workspace whose menu opened or closed.</param>
+    /// <param name="isOpen">Whether the menu is open now.</param>
+    private void ItemMenuOpenChanged(Guid itemId, bool isOpen)
+    {
+        if (isOpen)
+            this.itemIdWithOpenMenu = itemId;
+        else if (this.itemIdWithOpenMenu == itemId)
+            this.itemIdWithOpenMenu = Guid.Empty;
     }
 
     /// <summary>
@@ -405,60 +543,37 @@ public partial class Workspaces : MSGComponentBase
     /// <param name="chatId">The chat to check.</param>
     private bool IsChatBusy(Guid chatId) => this.AIJobService.IsChatGenerationActive(chatId) || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(chatId));
 
-    private string GetChatTreeItemTextStyle(TreeItemData treeItem)
+    /// <summary>
+    /// The color of a chat's name, which repeats the color of its icon, such as the one of a transcript's status.
+    /// </summary>
+    /// <remarks>
+    /// The name follows the icon instead of the states, so that a new state needs nothing but its
+    /// entry in <see cref="ChatIndicator"/>.
+    /// </remarks>
+    private static string GetChatNameColorStyle(ChatIndicator indicator) => indicator.Color switch
     {
-        var status = this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(treeItem.ChatId))?.Status;
-        var color = status switch
-        {
-            MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => " color: var(--mud-palette-info);",
-            MediaImportStatus.SUCCEEDED => " color: var(--mud-palette-success);",
-            MediaImportStatus.WARNING => " color: var(--mud-palette-warning);",
-            MediaImportStatus.FAILED => " color: var(--mud-palette-error);",
-            MediaImportStatus.CANCELLED => " color: var(--mud-palette-warning);",
-            _ => string.Empty,
-        };
-        
-        var weight = this.IsCurrentChatTreeItem(treeItem) ? " font-weight: 700;" : string.Empty;
-        return $"justify-self: start;{weight}{color}";
-    }
+        Color.Info => "color: var(--mud-palette-info);",
+        Color.Success => "color: var(--mud-palette-success);",
+        Color.Warning => "color: var(--mud-palette-warning);",
+        Color.Error => "color: var(--mud-palette-error);",
+        _ => string.Empty,
+    };
 
-    private bool IsCurrentChatTreeItem(TreeItemData treeItem)
-    {
-        return treeItem.Type is TreeItemType.CHAT
-               && this.CurrentChatThread is not null
-               && treeItem.ChatId == this.CurrentChatThread.ChatId
-               && treeItem.WorkspaceId == this.CurrentChatThread.WorkspaceId;
-    }
+    /// <summary>
+    /// The icon of a chat, which also tells what is going on in it: a transcript, or an answer being written.
+    /// </summary>
+    private ChatIndicator GetChatIndicator(Guid chatId) => ChatIndicator.Of(
+        this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(chatId))?.Status,
+        this.AIJobService.TryGetChatSnapshot(chatId)?.Status);
 
-    private string GetChatTreeIcon(Guid chatId, string defaultIcon)
-    {
-        var mediaStatus = this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(chatId))?.Status;
-        if (mediaStatus is not null)
-        {
-            return mediaStatus switch
-            {
-                MediaImportStatus.QUEUED => Icons.Material.Filled.HourglassTop,
-                MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => Icons.Material.Filled.ChangeCircle,
-                MediaImportStatus.SUCCEEDED => Icons.Material.Filled.TaskAlt,
-                MediaImportStatus.WARNING => Icons.Material.Filled.WarningAmber,
-                MediaImportStatus.FAILED => Icons.Material.Filled.Error,
-                MediaImportStatus.CANCELLED => Icons.Material.Filled.Cancel,
-                
-                _ => defaultIcon,
-            };
-        }
-
-        var snapshot = this.AIJobService.TryGetChatSnapshot(chatId);
-        if (snapshot is null || !snapshot.IsActive)
-            return defaultIcon;
-
-        return snapshot.Status switch
-        {
-            AIJobStatus.WAITING_FOR_REMOTE => Icons.Material.Filled.HourglassTop,
-            AIJobStatus.RUNNING => Icons.Material.Filled.ChangeCircle,
-            _ => defaultIcon,
-        };
-    }
+    /// <summary>
+    /// How much a chat's icon stands out.
+    /// </summary>
+    /// <remarks>
+    /// The plain chat icon is in almost every row, so it stays in the background unless its chat is
+    /// open. An icon telling a status stands out in full.
+    /// </remarks>
+    private string? GetChatIconStyle(WorkspaceTreeChat chat, ChatIndicator indicator) => indicator.IsStatus || this.IsCurrentChat(chat) ? null : "opacity: 0.6;";
 
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
@@ -558,14 +673,6 @@ public partial class Workspaces : MSGComponentBase
             await this.SearchWorkspaceItemsAsync();
     }
 
-    private async Task ClearSearchAsync()
-    {
-        this.searchText = string.Empty;
-        await this.CancelSearchAsync();
-        this.isSearchRunning = false;
-        await this.LoadTreeItemsAsync(startPrefetch: false);
-    }
-
     private async Task SearchWorkspaceItemsAsync()
     {
         await this.CancelSearchAsync();
@@ -606,17 +713,6 @@ public partial class Workspaces : MSGComponentBase
                 await this.SafeStateHasChanged();
             }
         }
-    }
-
-    private async Task OnWorkspaceClicked(TreeItemData treeItem)
-    {
-        if (treeItem.Type is not TreeItemType.WORKSPACE)
-            return;
-
-        if (!Guid.TryParse(Path.GetFileName(treeItem.Path), out var workspaceId))
-            return;
-
-        await this.EnsureWorkspaceChatsLoadedAsync(workspaceId);
     }
 
     private async Task EnsureWorkspaceChatsLoadedAsync(Guid workspaceId)

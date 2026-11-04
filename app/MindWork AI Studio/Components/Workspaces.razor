@@ -1,11 +1,13 @@
-﻿@inherits MSGComponentBase
+﻿@* The event directives such as @onclick exist only with this namespace. Without it, the compiler takes them for plain attributes. *@
+@using Microsoft.AspNetCore.Components.Web
+@inherits MSGComponentBase
 @if (this.isInitialLoading)
 {
     <MudStack Class="ma-3" Spacing="1">
-        <MudSkeleton Width="40%" Height="30px"/>
+        <MudSkeleton Width="40%" Height="24px"/>
         @for (var i = 0; i < 10; i++)
         {
-            <MudSkeleton Width="95%" Height="26px"/>
+            <MudSkeleton Width="95%" Height="24px"/>
         }
     </MudStack>
 }
@@ -13,143 +15,230 @@ else
 {
     @if (this.SearchVisible)
     {
-        <MudStack Class="mx-3 mt-2 mb-1" Spacing="1" Style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
-            <MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1">
+        <div class="workspace-search px-2 pt-1 pb-2" style="position: sticky; top: 0; z-index: 2; background-color: var(--workspace-list-background, var(--mud-palette-background));">
+            <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Wrap="Wrap.NoWrap" Spacing="1">
                 <MudTextField T="string"
                               Text="@this.searchText"
                               TextChanged="@this.OnSearchTextChanged"
                               Placeholder="@this.SearchPlaceholder"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
+                              Typo="Typo.body1"
                               Immediate="@true"
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"/>
-                <MudTooltip Text="@T("Clear search")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Medium" Color="Color.Inherit" Disabled="@(string.IsNullOrWhiteSpace(this.searchText))" OnClick="@this.ClearSearchAsync"/>
+                              Clearable="@true"
+                              Class="mt-0"/>
+                <MudTooltip Text="@T("Search chat contents")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                    <MudToggleIconButton Toggled="@this.includeThreadContents" ToggledChanged="@this.IncludeThreadContentsChanged" Icon="@Icons.Material.Outlined.ManageSearch" ToggledIcon="@Icons.Material.Outlined.ManageSearch" ToggledColor="Color.Primary" aria-label="@T("Search chat contents")"/>
                 </MudTooltip>
             </MudStack>
-
-            <MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1">
-                <MudSwitch T="bool" Value="@this.includeThreadContents" ValueChanged="@this.IncludeThreadContentsChanged" Color="Color.Primary">
-                    @T("Search chat contents")
-                </MudSwitch>
-                @if (this.isSearchRunning)
-                {
-                    <MudProgressCircular Size="Size.Small" Indeterminate="@true"/>
-                }
-            </MudStack>
-        </MudStack>
+            @if (this.isSearchRunning)
+            {
+                <MudProgressLinear Indeterminate="@true" Color="Color.Primary" Size="Size.Small" Class="mt-1"/>
+            }
+        </div>
     }
 
-    <MudTreeView T="ITreeItem" Items="@this.treeItems" SelectionMode="SelectionMode.SingleSelection" Hover="@true" ExpandOnClick="@true" Class="ma-3">
-        <ItemTemplate Context="item">
-            @switch (item.Value)
+    <div class="workspace-list" @ref="@this.listElement">
+        @if (this.isShowingSearchResults && this.workspaces.Count == 0 && this.temporaryChats.Count == 0)
+        {
+            <MudText Typo="Typo.body1" Class="px-4 py-2 mud-text-secondary">
+                @T("No chats found")
+            </MudText>
+        }
+        else
+        {
+            @if (!this.isShowingSearchResults || this.workspaces.Count > 0)
             {
-                case TreeDivider:
-                    <li style="min-height: 1em;">
-                        <MudDivider Style="margin-top: 1em; width: 90%; border-width: 3pt;"/>
-                    </li>
-                    break;
+                <div class="workspace-section-start" @ref="@this.workspacesSectionStart"></div>
+                @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, canAddWorkspace: true)
 
-                case TreeItemData treeItem:
-                    @if (treeItem.Type is TreeItemType.LOADING)
+                @if (!this.IsWorkspacesSectionCollapsed)
+                {
+                    @if (this.workspaces.Count == 0)
                     {
-                        <MudTreeViewItem T="ITreeItem" Icon="@this.GetTreeItemIcon(treeItem)" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@false" Items="@treeItem.Children">
-                            <BodyContent>
-                                <MudSkeleton Width="85%" Height="22px"/>
-                            </BodyContent>
-                        </MudTreeViewItem>
-                    }
-                    else if (treeItem.Type is TreeItemType.CHAT)
-                    {
-                        <MudTreeViewItem T="ITreeItem" Icon="@this.GetTreeItemIcon(treeItem)" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="@(() => this.LoadChatAsync(treeItem.Path, true))">
-                            <BodyContent>
-                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <MudText Style="@this.GetChatTreeItemTextStyle(treeItem)">
-                                        @if (string.IsNullOrWhiteSpace(treeItem.Text))
-                                        {
-                                            @T("Empty chat")
-                                        }
-                                        else
-                                        {
-                                            @treeItem.ShortenedText
-                                        }
-                                    </MudText>
-                                    <div style="justify-self: end;">
-
-                                        <MudTooltip Text="@T("Move to workspace")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                            <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Size="Size.Medium" Color="Color.Inherit" Disabled="@this.IsChatTreeItemBusy(treeItem)" OnClick="@(() => this.MoveChatFromTreeAsync(treeItem.Path))"/>
-                                        </MudTooltip>
-
-                                        <MudTooltip Text="@T("Copy chat")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Medium" Color="Color.Inherit" Disabled="@this.IsChatTreeItemBusy(treeItem)" OnClick="@(() => this.CopyChatFromTreeAsync(treeItem.Path))"/>
-                                        </MudTooltip>
-
-                                        <MudTooltip Text="@T("Rename")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" Disabled="@this.IsChatTreeItemBusy(treeItem)" OnClick="@(() => this.RenameChatAsync(treeItem.Path))"/>
-                                        </MudTooltip>
-
-                                        <MudTooltip Text="@T("Delete")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@this.IsChatTreeItemBusy(treeItem)" OnClick="@(() => this.DeleteChatAsync(treeItem.Path))"/>
-                                        </MudTooltip>
-                                    </div>
-                                </div>
-                            </BodyContent>
-                        </MudTreeViewItem>
-                    }
-                    else if (treeItem.Type is TreeItemType.WORKSPACE)
-                    {
-                        <MudTreeViewItem T="ITreeItem" Icon="@this.GetTreeItemIcon(treeItem)" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="@(() => this.OnWorkspaceClicked(treeItem))">
-                            <BodyContent>
-                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <MudText Style="justify-self: start;">
-                                        @treeItem.Text
-                                    </MudText>
-                                    @if (!this.HasSearchQuery)
-                                    {
-                                        <div style="justify-self: end;">
-                                            <MudTooltip Text="@this.GetAddChatToWorkspaceTooltip(treeItem.Text)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                                <MudIconButton Icon="@Icons.Material.Filled.AddComment" Size="Size.Medium" Color="Color.Inherit" OnClick="@(() => this.AddChatAsync(treeItem.Path))"/>
-                                            </MudTooltip>
-
-                                            <MudTooltip Text="@T("Rename")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" OnClick="@(() => this.RenameWorkspaceAsync(treeItem.Path))"/>
-                                            </MudTooltip>
-
-                                            <MudTooltip Text="@T("Delete")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => this.DeleteWorkspaceAsync(treeItem.Path))"/>
-                                            </MudTooltip>
-                                        </div>
-                                    }
-                                </div>
-                            </BodyContent>
-                        </MudTreeViewItem>
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Outlined.CreateNewFolder" Class="ml-2 mb-1" OnClick="@this.AddWorkspaceAsync">
+                            @T("Add workspace")
+                        </MudButton>
                     }
                     else
                     {
-                        <MudTreeViewItem T="ITreeItem" Icon="@this.GetTreeItemIcon(treeItem)" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
-                            <BodyContent>
-                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <MudText Style="justify-self: start;">
-                                        @treeItem.Text
-                                    </MudText>
-                                </div>
-                            </BodyContent>
-                        </MudTreeViewItem>
+                        <MudList T="string" Dense="@true" ReadOnly="@true">
+                            @foreach (var workspace in this.workspaces)
+                            {
+                                @this.RenderWorkspace(workspace)
+                            }
+                        </MudList>
                     }
-                    break;
-
-                case TreeButton treeButton:
-                    <li>
-                        <div class="mud-treeview-item-content" style="background-color: unset;">
-                            <div class="mud-treeview-item-arrow"></div>
-                            <MudButton StartIcon="@treeButton.Icon" Variant="Variant.Filled" OnClick="@treeButton.Action">
-                                @treeButton.Text
-                            </MudButton>
-                        </div>
-                    </li>
-                    break;
+                }
             }
-        </ItemTemplate>
-    </MudTreeView>
+
+            @if (!this.isShowingSearchResults || this.temporaryChats.Count > 0)
+            {
+                <div class="workspace-section-start" @ref="@this.temporaryChatsSectionStart"></div>
+                @this.RenderSectionHeader(T("Disappearing Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: true, canAddWorkspace: false)
+
+                @if (!this.IsTemporaryChatsSectionCollapsed)
+                {
+                    @if (this.temporaryChats.Count == 0)
+                    {
+                        <MudText Typo="Typo.body1" Class="px-4 py-1 mud-text-secondary">
+                            @T("No disappearing chats")
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudList T="string" Dense="@true" ReadOnly="@true">
+                            @foreach (var temporaryChat in this.temporaryChats)
+                            {
+                                @this.RenderChat(temporaryChat, isNested: false)
+                            }
+                        </MudList>
+                    }
+                }
+            }
+        }
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// The title of a section, with the button which collapses the section next to it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The whole title collapses the section, but only the button shows it: the button gets its
+    /// hover shadow while the pointer is anywhere on the title, and the title itself stays plain.
+    /// A MudBlazor button stops its click from reaching the title, so a click on the button
+    /// collapses the section once, not twice.
+    /// </para>
+    /// <para>
+    /// The titles stick to the top of the list while it scrolls, the second one below the first;
+    /// the second one also sticks to the bottom while its section still lies below. A click on a
+    /// title shows the open chat of its section when that chat is out of sight, and otherwise
+    /// scrolls a stuck title's section into its usual place, as a sticky title in an editor does;
+    /// only its button collapses the section right away, see <see cref="ClickSectionTitleAsync"/>.
+    /// </para>
+    /// <para>
+    /// While the section hides the open chat, its title carries the mark of the open chat. The
+    /// results of a search cannot be collapsed, so they have no button.
+    /// </para>
+    /// </remarks>
+    private RenderFragment RenderSectionHeader(string title, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle, Func<ElementReference> sectionStart, bool isSecond, bool canAddWorkspace) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Spacing="0" Class="@this.GetSectionHeaderClasses(isSecond)">
+        @if (this.isShowingSearchResults)
+        {
+            <MudText Typo="Typo.button" Class="px-2 py-1 mud-text-secondary">
+                @title
+            </MudText>
+        }
+        else
+        {
+            var isMarked = isCollapsed && containsCurrentChat;
+            <div class="@(isMarked ? "workspace-section-toggle d-flex align-center is-current" : "workspace-section-toggle d-flex align-center")" style="cursor: pointer;" @onclick="@(() => this.ClickSectionTitleAsync(sectionStart(), isCollapsed, toggle))">
+                <MudText Typo="Typo.button" Color="@(isMarked ? Color.Primary : Color.Default)" Class="px-2">
+                    @title
+                </MudText>
+                <MudIconButton Icon="@GetSectionChevron(isCollapsed)" Color="@(isMarked ? Color.Primary : Color.Default)" aria-label="@title" aria-expanded="@(isCollapsed ? "false" : "true")" OnClick="@toggle"/>
+            </div>
+            @if (canAddWorkspace)
+            {
+                <MudTooltip Text="@T("Add workspace")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Outlined.CreateNewFolder" aria-label="@T("Add workspace")" OnClick="@this.AddWorkspaceAsync"/>
+                </MudTooltip>
+            }
+        }
+    </MudStack>;
+
+    /// <summary>
+    /// A workspace, followed by its chats while it is expanded.
+    /// </summary>
+    /// <remarks>
+    /// The chats are rows of the same list, indented below the name of their workspace. A nested
+    /// list of MudBlazor would give every workspace an expand arrow, while the folder icon already
+    /// tells whether a workspace is open. It would also render the chats of collapsed workspaces,
+    /// which the prefetch loads for all of them.
+    /// </remarks>
+    private RenderFragment RenderWorkspace(WorkspaceTreeWorkspace workspace) => @<text>
+        @{
+            var isExpanded = this.IsWorkspaceExpanded(workspace.WorkspaceId);
+        }
+        <MudListItem T="string" Class="@this.GetWorkspaceItemClasses(workspace, isExpanded)" OnClick="@(() => this.ToggleWorkspaceAsync(workspace))">
+            <div class="d-flex align-center gap-2" style="min-width: 0; height: 24px;">
+                <MudIcon Icon="@(isExpanded ? AppIcons.FOLDER_OPEN_OUTLINED : Icons.Material.Outlined.Folder)"/>
+                <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@NAME_STYLE" title="@workspace.Name">
+                    @workspace.Name
+                </MudText>
+                @if (!this.isShowingSearchResults)
+                {
+                    <div class="workspace-item-actions flex-shrink-0" @onclick:stopPropagation="@true">
+                        <MudTooltip Text="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                            <MudIconButton Icon="@AppIcons.EDIT_SQUARE_OUTLINED" aria-label="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                        </MudTooltip>
+                        <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" AriaLabel="@T("Workspace options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(workspace.WorkspaceId, isOpen))">
+                            <MudMenuItem Icon="@AppIcons.EDIT_SQUARE_OUTLINED" Label="@T("Start a new chat")" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                            <MudMenuItem Icon="@Icons.Material.Outlined.Edit" Label="@T("Rename")" OnClick="@(() => this.RenameWorkspaceAsync(workspace.WorkspacePath))"/>
+                            <MudDivider/>
+                            <MudMenuItem Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" Label="@T("Delete")" OnClick="@(() => this.DeleteWorkspaceAsync(workspace.WorkspacePath))"/>
+                        </CompactMenu>
+                    </div>
+                }
+            </div>
+        </MudListItem>
+
+        @if (isExpanded)
+        {
+            @if (workspace.ChatsLoaded)
+            {
+                @foreach (var chat in workspace.Chats)
+                {
+                    @this.RenderChat(chat, isNested: true)
+                }
+            }
+            else if (this.loadingWorkspaceChatLists.Contains(workspace.WorkspaceId))
+            {
+                @for (var i = 0; i < 3; i++)
+                {
+                    <div class="pl-10 pe-4 py-2">
+                        <MudSkeleton Width="70%" Height="24px"/>
+                    </div>
+                }
+            }
+        }
+    </text>;
+
+    /// <summary>
+    /// One chat, either in a workspace or among the disappearing chats.
+    /// </summary>
+    private RenderFragment RenderChat(WorkspaceTreeChat chat, bool isNested) => @<text>
+        @{
+            var indicator = this.GetChatIndicator(chat.ChatId);
+            var name = string.IsNullOrWhiteSpace(chat.Name) ? T("Empty chat") : chat.Name;
+        }
+        <MudListItem T="string" Class="@this.GetChatItemClasses(chat, isNested)" OnClick="@(() => this.LoadChatAsync(chat.ChatPath, true))">
+            <div class="d-flex align-center gap-2" style="min-width: 0; height: 24px;">
+                @if (indicator.IsSpinning)
+                {
+                    <MudProgressCircular Indeterminate="@true" Size="Size.Small" Color="@indicator.Color" StrokeWidth="5" Class="workspace-chat-icon flex-shrink-0"/>
+                }
+                else
+                {
+                    <MudIcon Icon="@indicator.Icon" Color="@indicator.Color" Class="workspace-chat-icon flex-shrink-0" Style="@this.GetChatIconStyle(chat, indicator)"/>
+                }
+                <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@($"{NAME_STYLE} {GetChatNameColorStyle(indicator)}")" title="@name">
+                    @name
+                </MudText>
+                <div class="workspace-item-actions flex-shrink-0" @onclick:stopPropagation="@true">
+                    <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" AriaLabel="@T("Chat options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(chat.ChatId, isOpen))">
+                        @{
+                            var isBusy = this.IsChatBusy(chat.ChatId);
+                        }
+                        <MudMenuItem Disabled="@isBusy" Icon="@Icons.Material.Outlined.Edit" Label="@T("Rename")" OnClick="@(() => this.RenameChatAsync(chat.ChatPath))"/>
+                        <MudMenuItem Disabled="@isBusy" Icon="@Icons.Material.Outlined.DriveFileMove" Label="@T("Move to workspace")" OnClick="@(() => this.MoveChatFromTreeAsync(chat.ChatPath))"/>
+                        <MudMenuItem Disabled="@isBusy" Icon="@AppIcons.COPY_SQUARE_OUTLINED" Label="@T("Copy chat")" OnClick="@(() => this.CopyChatFromTreeAsync(chat.ChatPath))"/>
+                        <MudDivider/>
+                        <MudMenuItem Disabled="@isBusy" Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" Label="@T("Delete")" OnClick="@(() => this.DeleteChatAsync(chat.ChatPath))"/>
+                    </CompactMenu>
+                </div>
+            </div>
+        </MudListItem>
+    </text>;
 }

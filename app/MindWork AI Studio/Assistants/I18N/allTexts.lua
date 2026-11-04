@@ -6394,14 +6394,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T974954792"] = "The transc
 -- Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1047391993"] = "Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."
 
+-- Workspace options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1106891084"] = "Workspace options"
+
 -- Move chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1133040906"] = "Move chat"
 
 -- Copy Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1192756314"] = "Copy Chat"
 
--- Loading chats...
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1364857726"] = "Loading chats..."
+-- No disappearing chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1292207634"] = "No disappearing chats"
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1469573738"] = "Delete"
@@ -6409,26 +6412,26 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1469573738"] = "Delete"
 -- Rename Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1474303418"] = "Rename Workspace"
 
--- Clear search
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1511254342"] = "Clear search"
-
 -- Rename Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T156144855"] = "Rename Chat"
 
 -- Add workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1586005241"] = "Add workspace"
 
+-- Search names and contents
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1613054022"] = "Search names and contents"
+
 -- Start a new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1840064668"] = "Start a new chat in workspace '{0}'"
-
--- Add chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1874060138"] = "Add chat"
 
 -- No chats found
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1886517101"] = "No chats found"
 
 -- Please name your workspace:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T201482774"] = "Please name your workspace:"
+
+-- Start a new chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2017149536"] = "Start a new chat"
 
 -- Are you sure you want to load another chat? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2133593288"] = "Are you sure you want to load another chat? All unsaved changes will be lost."
@@ -6439,20 +6442,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2151341762"] = "Are you sure
 -- Please enter a chat name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2301651387"] = "Please enter a chat name."
 
--- Search chat names
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2411226637"] = "Search chat names"
-
 -- Workspace Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2446263209"] = "Workspace Name"
 
 -- Move to workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2509305748"] = "Move to workspace"
 
+-- Chat options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2573568521"] = "Chat options"
+
 -- Move Chat to Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Move Chat to Workspace"
-
--- Search chat names and contents
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3093910498"] = "Search chat names and contents"
 
 -- Please enter a new or edit the name for your workspace '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Please enter a new or edit the name for your workspace '{0}':"
@@ -6492,6 +6492,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3891063690"] = "Chat Name"
 
 -- Empty chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4019509364"] = "Empty chat"
+
+-- Search names
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4023527225"] = "Search names"
 
 -- Workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4048389951"] = "Workspaces"
@@ -11145,6 +11148,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T943132958"] = "Turn texts and doc
 
 -- Hide search
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1281128983"] = "Hide search"
+
+-- Options for your workspaces
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1668416121"] = "Options for your workspaces"
 
 -- Reload your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T194629703"] = "Reload your workspaces"

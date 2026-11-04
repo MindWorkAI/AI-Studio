@@ -136,6 +136,54 @@
 }
 
 /*
+   The menus of CompactMenu keep the spacing of a dense menu, but their text gets the size it has in
+   every other menu of the app. A dense MudMenu sets the text of its items to body2 and leaves their
+   icons at 24 pixels, so the text would look too small next to them. The icons get 20 pixels instead:
+   at 24, the outlined icons outweigh the text in a menu this compact. The menu opens in a popover
+   outside of every component, which is why these rules live here rather than with the component.
+*/
+.compact-menu-list .mud-menu-item-text {
+    font-size: var(--mud-typography-body1-size);
+    font-weight: var(--mud-typography-body1-weight);
+    line-height: var(--mud-typography-body1-lineheight);
+    letter-spacing: var(--mud-typography-body1-letterspacing);
+}
+
+.compact-menu-list .mud-menu-item-icon {
+    font-size: 1.25rem;
+}
+
+/*
+   A compact menu opens over rows which look just like its own entries: the same background, the same
+   text. MudBlazor's shadow falls mostly below a popover, so its upper edge would hardly show. The line
+   around it is the one of MudBlazor's outlined panels, in light and dark mode alike.
+*/
+.compact-menu-popover {
+    border: 1px solid var(--mud-palette-lines-default);
+    overflow: hidden;
+}
+
+/*
+   MudBlazor keeps four pixels of padding above and below the list of a menu, and four pixels of margin
+   around a divider in it. The highlight of an entry covers the entry alone, so these would stay as
+   strips above and below it. The entries take over that space as padding of their own instead, and
+   their highlight then reaches the divider and the edge of the menu, whose rounded corners clip it.
+*/
+.compact-menu-list.mud-menu-list {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.compact-menu-list.mud-menu-list > .mud-divider {
+    margin: 0;
+}
+
+.compact-menu-list .mud-menu-item {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+/*
    MudBlazor draws the thumb of a slider as a dot of 4px, scaled up five times. Zoomed to an interface
    size, the dot covers a fraction of a pixel, which the webview rounds to whole pixels before the
    scaling magnifies the error: the thumb turns into an uneven shape. These rules draw the thumb in its

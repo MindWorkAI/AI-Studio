@@ -56,6 +56,151 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
+// Scrolls the first element below the container which matches the selector into view, as far as
+// needed and no further: an element already in view stays where it is.
+window.scrollFirstMatchIntoView = function (container, selector) {
+    container?.querySelector(selector)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
+// The nearest element around the given one which scrolls, and with it the box sticky headers stick to.
+const findScrollingBox = function (element) {
+    let scrollingBox = element?.parentElement
+    while (scrollingBox && !['auto', 'scroll'].includes(getComputedStyle(scrollingBox).overflowY))
+        scrollingBox = scrollingBox.parentElement
+
+    return scrollingBox
+}
+
+// How far the usual place of a sticky header lies above the line it sticks to at the top, in pixels.
+// The usual place is that of the marker right before the header, which never sticks itself. Zero or
+// less means the header does not stick to the top. Scrolling the box up by this distance brings the
+// header to its usual place, and down by its negative brings a header which lies below there.
+const distanceAboveStickyLine = function (scrollingBox, sectionStart) {
+    const header = sectionStart.nextElementSibling
+    if (!header)
+        return 0
+
+    const stickyTop = parseFloat(getComputedStyle(header).top) || 0
+    return scrollingBox.getBoundingClientRect().top + stickyTop - sectionStart.getBoundingClientRect().top
+}
+
+// Whether a sticky header sticks to the bottom of the box, because its usual place lies below the
+// line it sticks to there. Only a header with a bottom of its own does.
+const sticksToBottom = function (scrollingBox, sectionStart) {
+    const header = sectionStart.nextElementSibling
+    const stickyBottom = header ? parseFloat(getComputedStyle(header).bottom) : NaN
+    if (Number.isNaN(stickyBottom))
+        return false
+
+    const usualBottom = sectionStart.getBoundingClientRect().top + header.offsetHeight
+    return usualBottom - (scrollingBox.getBoundingClientRect().bottom - stickyBottom) >= 1
+}
+
+// The row of the open chat in the section whose marker is given, the element with the class
+// is-current between the header after the marker and the next marker, or null.
+const currentRowOfSection = function (sectionStart) {
+    for (let element = sectionStart.nextElementSibling?.nextElementSibling; element && !element.classList.contains('workspace-section-start'); element = element.nextElementSibling) {
+        const currentRow = element.matches('.is-current') ? element : element.querySelector('.is-current')
+        if (currentRow)
+            return currentRow
+    }
+
+    return null
+}
+
+// Measures every section in the scrolling box: its marker, its header, how far the header's usual
+// place lies above the line it sticks to at the top, whether it sticks to the top or the bottom, the
+// row of the open chat in it, and whether that row is out of sight: above or behind the headers stuck
+// to the top, or below or behind those stuck to the bottom.
+const measureSections = function (scrollingBox) {
+    const sections = [...scrollingBox.querySelectorAll('.workspace-section-start')]
+        .map(sectionStart => ({ sectionStart, header: sectionStart.nextElementSibling }))
+        .filter(section => section.header)
+
+    for (const section of sections) {
+        section.distance = distanceAboveStickyLine(scrollingBox, section.sectionStart)
+        section.isStuckToTop = section.distance >= 1
+        section.isStuckToBottom = !section.isStuckToTop && sticksToBottom(scrollingBox, section.sectionStart)
+        section.isStuck = section.isStuckToTop || section.isStuckToBottom
+    }
+
+    // What lies above the lowest header stuck to the top, or below the highest one stuck to the
+    // bottom, is out of sight:
+    const boxBounds = scrollingBox.getBoundingClientRect()
+    const sightTop = Math.max(boxBounds.top, ...sections.filter(section => section.isStuckToTop).map(section => section.header.getBoundingClientRect().bottom))
+    const sightBottom = Math.min(boxBounds.bottom, ...sections.filter(section => section.isStuckToBottom).map(section => section.header.getBoundingClientRect().top))
+    for (const section of sections) {
+        section.currentRow = currentRowOfSection(section.sectionStart)
+        const currentRowBounds = section.currentRow?.getBoundingClientRect()
+        section.isCurrentRowOutOfSight = !!currentRowBounds && (currentRowBounds.bottom <= sightTop || currentRowBounds.top >= sightBottom)
+    }
+
+    return sections
+}
+
+// Shows what the header of a section points to, and tells whether it scrolled. When the open chat is
+// in the section but out of sight, the list scrolls it into the middle. Otherwise, when the header
+// sticks to the top or the bottom of the scrolling box, the list scrolls the start of the section to
+// the usual place of the header: back up, or down to a section which still lies below. A header in
+// its usual place, whose section shows its open chat or has none, leaves the list where it is, and
+// the caller collapses or expands the section instead.
+window.revealSection = function (sectionStart) {
+    const scrollingBox = findScrollingBox(sectionStart)
+    const section = scrollingBox ? measureSections(scrollingBox).find(candidate => candidate.sectionStart === sectionStart) : null
+    if (!section)
+        return false
+
+    if (section.isCurrentRowOutOfSight) {
+        section.currentRow.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        return true
+    }
+
+    if (!section.isStuck)
+        return false
+
+    scrollingBox.scrollBy({ top: -section.distance, behavior: 'smooth' })
+    return true
+}
+
+// Gives the header after every marker with the class workspace-section-start the attribute
+// data-stuck while it sticks to the top or the bottom of the scrolling box around the given list, and
+// also data-hides-current while the row of the open chat in its section is out of sight, beyond the
+// box or behind the stuck headers. Keeps both current while the box scrolls, changes its size,
+// or its content changes, e.g., when another chat opens. CSS cannot tell a header which sticks from
+// one in its usual place. Attributes rather than classes, since Blazor would overwrite a class it did
+// not render the next time it renders the header. Watching a box a second time changes nothing.
+window.watchStuckSections = function (list) {
+    const scrollingBox = findScrollingBox(list)
+    if (!scrollingBox || scrollingBox.dataset.stuckSectionsWatched)
+        return
+
+    scrollingBox.dataset.stuckSectionsWatched = 'true'
+    let isUpdateScheduled = false
+    const update = function () {
+        isUpdateScheduled = false
+        for (const section of measureSections(scrollingBox)) {
+            section.header.toggleAttribute('data-stuck', section.isStuck)
+            section.header.toggleAttribute('data-hides-current', section.isCurrentRowOutOfSight)
+        }
+    }
+
+    // At most once per frame, however many events the browser sends meanwhile:
+    const scheduleUpdate = function () {
+        if (isUpdateScheduled)
+            return
+
+        isUpdateScheduled = true
+        requestAnimationFrame(update)
+    }
+
+    scrollingBox.addEventListener('scroll', scheduleUpdate, { passive: true })
+    new ResizeObserver(scheduleUpdate).observe(scrollingBox)
+
+    // Opening another chat moves the class is-current, and expanding a section adds rows:
+    new MutationObserver(scheduleUpdate).observe(scrollingBox, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] })
+    update()
+}
+
 window.setDocumentLanguage = function (ietfTag) {
     document.documentElement.lang = ietfTag
 }

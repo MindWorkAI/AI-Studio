@@ -23,6 +23,16 @@ public sealed class DataWorkspace
     public bool IsSidebarVisible { get; set; } = true;
 
     /// <summary>
+    /// Whether the section with the workspaces is collapsed in the sidebar.
+    /// </summary>
+    public bool IsWorkspacesSectionCollapsed { get; set; }
+
+    /// <summary>
+    /// Whether the section with the disappearing chats is collapsed in the sidebar.
+    /// </summary>
+    public bool IsTemporaryChatsSectionCollapsed { get; set; }
+
+    /// <summary>
     /// The position of the splitter between the chat and the workspaces.
     /// </summary>
     public double SplitterPosition { get; set; } = 30;

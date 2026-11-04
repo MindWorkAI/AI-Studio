@@ -79,8 +79,8 @@ public partial class Chat : MSGComponentBase
     /// them. That render is pure waste: all it would contribute is the position the splitter just
     /// reported, and the splitter has it already -- it renders itself after its own event, which is
     /// what resizes the two panels. What this page rebuilds instead is everything else it holds,
-    /// the workspace tree above all, which has no render guard of its own and draws an item with
-    /// three buttons for every chat. That is what the user sees stutter while they drag.<br/><br/>
+    /// the workspace list above all, which has no render guard of its own and draws a row with a
+    /// button for every chat it shows. That is what the user sees stutter while they drag.<br/><br/>
     /// Dropping that one render costs nothing, because the splitter never needed it. Should a
     /// message from the bus ask for a render in the very same moment, this swallows it -- both sit
     /// on the same dispatcher and the render of a movement follows it without a gap, so the window
