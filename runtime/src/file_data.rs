@@ -128,6 +128,12 @@ pub enum Metadata {
     
     Document {
         page_number: Option<usize>,
+
+        /// Whether the page is one the file itself knows, such as a page of a OneNote section. The
+        /// pages of a Word or OpenDocument file are only estimated from its page breaks, since such
+        /// a file carries no fixed layout. The app tells the AI which of the two it reads.
+        page_is_exact: bool,
+
         image: Option<Base64Image>,
     },
 
@@ -1471,6 +1477,7 @@ async fn convert_with_pandoc(
             content,
             Metadata::Document {
                 page_number: None,
+                page_is_exact: false,
                 image: None,
             }
         ));
@@ -1625,6 +1632,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             }
             if tx.blocking_send(Ok(Chunk::new(content, Metadata::Document {
                 page_number: Some(page.page_number),
+                page_is_exact: false,
                 image: None,
             }))).is_err() {
                 return;
@@ -1640,6 +1648,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
                     let base64_image = Base64Image::new(image_id.clone(), base64_data[offset..end].to_string(), segment_index, end == base64_data.len(), Some(image.media_type.clone()));
                     if tx.blocking_send(Ok(Chunk::new(String::new(), Metadata::Document {
                         page_number: Some(page.page_number),
+                        page_is_exact: false,
                         image: Some(base64_image),
                     }))).is_err() {
                         return;
@@ -1929,6 +1938,7 @@ async fn stream_onenote_section(file_path: &str, extract_images: bool, stream_id
 
             if tx.blocking_send(Ok(Chunk::new(content, Metadata::Document {
                 page_number: Some(number_of_pages),
+                page_is_exact: true,
                 image: None,
             }))).is_err() {
                 return;
@@ -1953,6 +1963,7 @@ async fn stream_onenote_section(file_path: &str, extract_images: bool, stream_id
                     let base64_image = Base64Image::new(image_id.clone(), content, segment, is_end, Some(media_type.to_string()));
                     receiver_is_gone = tx.blocking_send(Ok(Chunk::new(String::new(), Metadata::Document {
                         page_number: Some(number_of_pages),
+                        page_is_exact: true,
                         image: Some(base64_image),
                     }))).is_err();
 
@@ -2474,6 +2485,18 @@ mod tests {
         assert!(content.starts_with("<!-- Section Metadata\nTitle: OneWithoutFileData\n-->\n\n# The OneNote file without file data\n\n<!-- Page Metadata\n"), "got: {content}");
         assert!(content.contains("\nCreated: 2019-01-14T06:59:10Z\nModified: 2019-01-14T06:59:44Z\n-->"), "got: {content}");
         assert!(content.ends_with("-->\n\nThis is a test file which does not contain the file data."), "got: {content}");
+    }
+
+    /// A page of a OneNote section is a page the file knows, not one estimated from page breaks.
+    #[tokio::test]
+    async fn the_pages_of_a_onenote_section_are_exact() {
+        let events = extracted_events(&onenote_fixture("OneWithoutFileData.one"), false).await;
+        let flags: Vec<_> = events.iter()
+            .filter_map(|event| event["metadata"].get("Document"))
+            .map(|document| document["page_is_exact"].clone())
+            .collect();
+
+        assert_eq!(flags, vec![serde_json::Value::Bool(true)]);
     }
 
     /// OneDrive hands out a section in a packaging of its own, cf. MS-ONESTORE 2.8.
