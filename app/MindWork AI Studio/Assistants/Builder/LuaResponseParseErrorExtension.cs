@@ -2,7 +2,7 @@ namespace AIStudio.Assistants.Builder;
 
 public static class LuaResponseParseErrorExtension
 {
-    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(LuaResponseParseError).Namespace, nameof(LuaResponseParseError));
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(LuaResponseParseErrorExtension).Namespace, nameof(LuaResponseParseErrorExtension));
 
     extension(LuaResponseParseError parseError)
     {
