@@ -14,7 +14,7 @@ public static partial class Pandoc
     private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(Pandoc).Namespace, nameof(Pandoc));
 
     // Pandoc is a program of its own, so it has to fit the machine, not the build of AI Studio:
-    private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
+    private static readonly RID CPU_ARCHITECTURE = RID.Current;
 
     private const string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download";
     private const string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";

@@ -25,20 +25,20 @@ public static class BatchProcessingCsvSeparatorExtensions
             BatchProcessingCsvSeparator.SEMICOLON => ';',
             BatchProcessingCsvSeparator.PIPE => '|',
             BatchProcessingCsvSeparator.TAB => '\t',
-            BatchProcessingCsvSeparator.CUSTOM when IsValidCustomSeparator(customSeparator) => customSeparator[0],
+            BatchProcessingCsvSeparator.CUSTOM when BatchProcessingCsvSeparator.IsValidCustomSeparator(customSeparator) => customSeparator[0],
 
             _ => DEFAULT_SEPARATOR,
         };
-    }
 
-    internal static bool IsValidCustomSeparator(string separator)
-    {
-        if (string.IsNullOrEmpty(separator) || separator.Length is not 1)
-            return false;
+        internal static bool IsValidCustomSeparator(string customSeparator)
+        {
+            if (string.IsNullOrEmpty(customSeparator) || customSeparator.Length is not 1)
+                return false;
 
-        var character = separator[0];
-        return !char.IsLetterOrDigit(character)
-               && !char.IsWhiteSpace(character)
-               && character is not '"' and not '\r' and not '\n';
+            var character = customSeparator[0];
+            return !char.IsLetterOrDigit(character)
+                   && !char.IsWhiteSpace(character)
+                   && character is not '"' and not '\r' and not '\n';
+        }
     }
 }

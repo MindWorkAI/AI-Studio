@@ -275,7 +275,7 @@ public record struct DataSourceERI_V1: IERIDataSource
         // its passages reach a chat, see DataSourceOutboundDataExtensions.GetEffectiveOutboundDataRestriction.
         //
         var outboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
-        if (table.TryGetValue("OutboundDataRestriction", out var outboundDataRestrictionValue) && !(outboundDataRestrictionValue.TryRead<string>(out var outboundDataRestrictionText) && EnumNames.TryParse(outboundDataRestrictionText, out outboundDataRestriction)))
+        if (table.TryGetValue("OutboundDataRestriction", out var outboundDataRestrictionValue) && !(outboundDataRestrictionValue.TryRead<string>(out var outboundDataRestrictionText) && OutboundDataRestriction.TryParseName(outboundDataRestrictionText, out outboundDataRestriction)))
         {
             LOGGER.LogWarning($"The configured data source {idx} does not contain a valid outbound data restriction, so the strictest one applies. (Plugin ID: {configPluginId})");
             outboundDataRestriction = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;

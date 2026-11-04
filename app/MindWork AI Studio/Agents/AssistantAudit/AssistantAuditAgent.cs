@@ -288,7 +288,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     private static AssistantAuditResult NormalizeResult(AssistantAuditResult result)
     {
         var normalizedFindings = result.Findings;
-        var parsedLevel = AssistantAuditLevelExtensions.Parse(result.Level);
+        var parsedLevel = AssistantAuditLevel.ParseOrUnknown(result.Level);
         var lowestFindingLevel = GetMostSevereFindingLevel(normalizedFindings);
         if (lowestFindingLevel != AssistantAuditLevel.UNKNOWN && (parsedLevel == AssistantAuditLevel.UNKNOWN || lowestFindingLevel < parsedLevel))
             parsedLevel = lowestFindingLevel;

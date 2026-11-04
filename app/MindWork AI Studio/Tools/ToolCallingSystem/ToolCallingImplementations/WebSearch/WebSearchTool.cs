@@ -694,7 +694,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     private static WebSearchBackendStrategy ReadBackendStrategy(IReadOnlyDictionary<string, string> settingsValues)
     {
         var configuredStrategy = settingsValues.GetValueOrDefault(BACKEND_STRATEGY_SETTING);
-        return EnumNames.TryParse<WebSearchBackendStrategy>(configuredStrategy, out var strategy) ? strategy : DEFAULT_BACKEND_STRATEGY;
+        return WebSearchBackendStrategy.TryParseName(configuredStrategy, out var strategy) ? strategy : DEFAULT_BACKEND_STRATEGY;
     }
 
     /// <summary>
@@ -708,7 +708,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     private static WebSearchBackend? ReadPrimaryBackend(IReadOnlyDictionary<string, string> settingsValues)
     {
         var configuredBackend = settingsValues.GetValueOrDefault(PRIMARY_BACKEND_SETTING);
-        return EnumNames.TryParse<WebSearchBackend>(configuredBackend, out var backend) ? backend : null;
+        return WebSearchBackend.TryParseName(configuredBackend, out var backend) ? backend : null;
     }
 
     private static JsonObject BuildResultJson(WebSearchPageResult result, WebPageModelContent sanitizedContent)
@@ -875,6 +875,6 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     private static SafeSearchPolicy? ReadSafeSearchPolicy(IReadOnlyDictionary<string, string> settingsValues)
     {
         var configuredPolicy = settingsValues.GetValueOrDefault(DEFAULT_SAFE_SEARCH_SETTING);
-        return EnumNames.TryParse<SafeSearchPolicy>(configuredPolicy, out var policy) ? policy : null;
+        return SafeSearchPolicy.TryParseName(configuredPolicy, out var policy) ? policy : null;
     }
 }

@@ -12,7 +12,7 @@ namespace AIStudio.Tools;
 /// Models do not agree on how they spell a language: Python comes as python, py, or Python3. The
 /// catalog therefore knows the usual aliases, the way GitHub Linguist and highlight.js spell them,
 /// in any case. The formats AI Studio writes as formats of their own, such as html, latex, markdown,
-/// or csv, are missing on purpose: FileExportFormatExtensions.TryFromCodeFenceLanguage reads them
+/// or csv, are missing on purpose: FileExportFormat.TryFromCodeFenceLanguage reads them
 /// first, and a file in one of them is treated apart from code, it takes the sources of the answer
 /// along, for example. Each language has exactly one extension; whoever needs another one renames
 /// the file.

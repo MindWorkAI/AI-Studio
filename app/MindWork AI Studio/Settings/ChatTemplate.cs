@@ -449,7 +449,7 @@ public record ChatTemplate(
         if (!optionsTable.TryGetValue("RetrievalMode", out var retrievalModeValue))
             return DataSourceRetrievalMode.SEMANTIC_SEARCH;
 
-        if (retrievalModeValue.TryRead<string>(out var retrievalModeText) && EnumNames.TryParse<DataSourceRetrievalMode>(retrievalModeText, out var retrievalMode))
+        if (retrievalModeValue.TryRead<string>(out var retrievalModeText) && DataSourceRetrievalMode.TryParseName(retrievalModeText, out var retrievalMode))
             return retrievalMode;
 
         LOGGER.LogWarning("The RetrievalMode of chat template {IdxChatTemplate} is not one of {RetrievalModes}. The template uses semantic search instead.", idx, string.Join(", ", Enum.GetNames<DataSourceRetrievalMode>()));

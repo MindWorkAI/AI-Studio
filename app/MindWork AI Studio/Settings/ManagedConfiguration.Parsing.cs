@@ -909,8 +909,8 @@ public static partial class ManagedConfiguration
                 // If both key and value were read successfully, parse and add them to the dictionary:
                 if (hadKey
                     && hadValue
-                    && EnumNames.TryParse<TKey>(keyText, out var key)
-                    && EnumNames.TryParse<TValue>(valueText, out var value))
+                    && EnumNames.TryParseName<TKey>(keyText, out var key)
+                    && EnumNames.TryParseName<TValue>(valueText, out var value))
                     configuredValue[key] = value;
             }
 
@@ -982,7 +982,7 @@ public static partial class ManagedConfiguration
                 var hadValue = pair.Value.TryRead<string>(out var valueText);
 
                 // If both were read successfully and the key names a member of the enum, add them to the dictionary:
-                if (hadKey && hadValue && EnumNames.TryParse<TKey>(keyText, out var key))
+                if (hadKey && hadValue && EnumNames.TryParseName<TKey>(keyText, out var key))
                     configuredValue[key] = valueText;
             }
 
@@ -1056,7 +1056,7 @@ public static partial class ManagedConfiguration
                 var hadValue = pair.Value.TryRead<string>(out var valueText);
 
                 // If both were read successfully and the value names a member of the enum, add them to the dictionary:
-                if (hadKey && hadValue && EnumNames.TryParse<TValue>(valueText, out var value))
+                if (hadKey && hadValue && EnumNames.TryParseName<TValue>(valueText, out var value))
                     configuredValue[key] = value;
 
                 // A dry run comes before the actual one, so only the actual one reports the entry:

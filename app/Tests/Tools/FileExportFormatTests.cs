@@ -27,7 +27,7 @@ public sealed class FileExportFormatTests
         // Whoever adds a format decides what its reader can follow, rather than inheriting an
         // assumption. This fails for a format which nobody thought about, because the list below
         // has to name it:
-        Assert.That(FileExportFormatExtensions.ANSWER_FORMATS, Is.EquivalentTo(new[]
+        Assert.That(FileExportFormat.AnswerFormats, Is.EquivalentTo(new[]
         {
             FileExportFormat.MICROSOFT_WORD,
             FileExportFormat.OPEN_DOCUMENT_TEXT,
@@ -81,7 +81,7 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.True);
+            Assert.That(FileExportFormat.TryFromCodeFenceLanguage(language, out var format), Is.True);
             Assert.That(format, Is.EqualTo(expectedFormat));
             Assert.That(format.IsPlainText, Is.True, "A code block holds text, so the export writes it as it is.");
         }
@@ -112,7 +112,7 @@ public sealed class FileExportFormatTests
         {
             Assert.That(FileExportFormat.SOURCE_CODE.FileExtension, Is.Empty, "Python and Rust share the format, but not the extension.");
             Assert.That(FileExportFormat.SOURCE_CODE.FileTypeFilter, Is.Null, "Without the language, the save dialog would offer the wrong files.");
-            Assert.That(FileExportFormatExtensions.ANSWER_FORMATS, Does.Not.Contain(FileExportFormat.SOURCE_CODE), "Code is one block out of an answer, never the answer itself.");
+            Assert.That(FileExportFormat.AnswerFormats, Does.Not.Contain(FileExportFormat.SOURCE_CODE), "Code is one block out of an answer, never the answer itself.");
         }
     }
 
@@ -124,7 +124,7 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.False);
+            Assert.That(FileExportFormat.TryFromCodeFenceLanguage(language, out var format), Is.False);
             Assert.That(format, Is.EqualTo(FileExportFormat.NONE));
         }
     }

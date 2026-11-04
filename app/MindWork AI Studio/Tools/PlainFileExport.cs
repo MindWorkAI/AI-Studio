@@ -153,7 +153,7 @@ public static class PlainFileExport
 
         var content = block.Lines.ToString();
         var language = CodeLanguageDetector.FenceLanguageOf(block.Info, content);
-        if (!FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format))
+        if (!FileExportFormat.TryFromCodeFenceLanguage(language, out var format))
             return new(string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage(language), content);
 
         if (!format.IsTabular)

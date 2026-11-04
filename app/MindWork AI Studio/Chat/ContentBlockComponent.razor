@@ -87,7 +87,7 @@
                 {
                     <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
                         <MudMenu Icon="@Icons.Material.Filled.Save" MaxHeight="@MenuDefaults.MAX_HEIGHT">
-                            @foreach (var documentFormat in FileExportFormatExtensions.DOCUMENT_FORMATS)
+                            @foreach (var documentFormat in FileExportFormat.DocumentFormats)
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@documentFormat.Name"/>
                             }
@@ -113,7 +113,7 @@
                                 }
                             }
                             <MudDivider/>
-                            @foreach (var textFormat in FileExportFormatExtensions.TEXT_FORMATS)
+                            @foreach (var textFormat in FileExportFormat.TextFormats)
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.Icon" Label="@textFormat.Name"/>
                             }

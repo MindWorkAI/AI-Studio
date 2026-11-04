@@ -94,7 +94,7 @@ public sealed record DataMailboxProvider : ILivePluginContent
         }
 
         var transportSecurity = MailboxTransportSecurity.SSL_ON_CONNECT;
-        if (table.TryGetValue("TransportSecurity", out var transportSecurityValue) && (!transportSecurityValue.TryRead<string>(out var transportSecurityText) || !EnumNames.TryParse(transportSecurityText, out transportSecurity) || transportSecurity is MailboxTransportSecurity.UNKNOWN))
+        if (table.TryGetValue("TransportSecurity", out var transportSecurityValue) && (!transportSecurityValue.TryRead<string>(out var transportSecurityText) || !MailboxTransportSecurity.TryParseName(transportSecurityText, out transportSecurity) || transportSecurity is MailboxTransportSecurity.UNKNOWN))
         {
             logger.LogWarning("The configured mailbox provider {ProviderIndex} does not contain a valid TransportSecurity field. Allowed values are SSL_ON_CONNECT and STARTTLS.", index);
             return false;

@@ -63,7 +63,7 @@ public partial class SettingsDialogBatchProcessing : SettingsDialogBase
 
     private static IReadOnlyList<ConfigurationSelectData<FileExportFormat>> ResultFileFormatData =>
     [
-        .. FileExportFormatExtensions.ANSWER_FORMATS
+        .. FileExportFormat.AnswerFormats
             .Select(value => new ConfigurationSelectData<FileExportFormat>(value.Name, value))
     ];
 
@@ -76,7 +76,7 @@ public partial class SettingsDialogBatchProcessing : SettingsDialogBase
 
     private string? ValidateCustomCsvSeparator(string separator)
     {
-        if (!BatchProcessingCsvSeparatorExtensions.IsValidCustomSeparator(separator))
+        if (!BatchProcessingCsvSeparator.IsValidCustomSeparator(separator))
             return T("Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.");
 
         return null;

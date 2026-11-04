@@ -23,38 +23,44 @@ public static class FileExportFormatExtensions
     private static readonly Encoding WITH_BYTE_ORDER_MARK = new UTF8Encoding(true);
     private static readonly Encoding WITHOUT_BYTE_ORDER_MARK = new UTF8Encoding(false);
 
-    /// <summary>
-    /// The formats which lay the text out as a document you would hand to somebody, in the order
-    /// the export menu shows them.
-    /// </summary>
-    public static readonly IReadOnlyList<FileExportFormat> DOCUMENT_FORMATS =
+    private static readonly IReadOnlyList<FileExportFormat> DOCUMENT_FORMATS =
     [
         FileExportFormat.MICROSOFT_WORD,
         FileExportFormat.OPEN_DOCUMENT_TEXT,
         FileExportFormat.LATEX,
     ];
 
-    /// <summary>
-    /// The formats which keep the text as text, in the order the export menu shows them.
-    /// </summary>
-    public static readonly IReadOnlyList<FileExportFormat> TEXT_FORMATS =
+    private static readonly IReadOnlyList<FileExportFormat> TEXT_FORMATS =
     [
         FileExportFormat.MARKDOWN,
         FileExportFormat.HTML,
     ];
 
-    /// <summary>
-    /// Every format an entire answer can be written as.
-    /// </summary>
-    /// <remarks>
-    /// The tabular formats are missing on purpose: they hold one table out of an answer, never the
-    /// answer itself. Whoever offers a table adds them.
-    /// </remarks>
-    public static readonly IReadOnlyList<FileExportFormat> ANSWER_FORMATS = [..DOCUMENT_FORMATS, ..TEXT_FORMATS];
+    private static readonly IReadOnlyList<FileExportFormat> ANSWER_FORMATS = [..DOCUMENT_FORMATS, ..TEXT_FORMATS];
 
     /// <param name="format">The format.</param>
     extension(FileExportFormat format)
     {
+        /// <summary>
+        /// The formats which lay the text out as a document you would hand to somebody, in the order
+        /// the export menu shows them.
+        /// </summary>
+        public static IReadOnlyList<FileExportFormat> DocumentFormats => DOCUMENT_FORMATS;
+
+        /// <summary>
+        /// The formats which keep the text as text, in the order the export menu shows them.
+        /// </summary>
+        public static IReadOnlyList<FileExportFormat> TextFormats => TEXT_FORMATS;
+
+        /// <summary>
+        /// Every format an entire answer can be written as.
+        /// </summary>
+        /// <remarks>
+        /// The tabular formats are missing on purpose: they hold one table out of an answer, never the
+        /// answer itself. Whoever offers a table adds them.
+        /// </remarks>
+        public static IReadOnlyList<FileExportFormat> AnswerFormats => ANSWER_FORMATS;
+
         /// <summary>
         /// Returns the name of the format as shown to the user.
         /// </summary>
@@ -260,37 +266,37 @@ public static class FileExportFormatExtensions
         /// </summary>
         /// <value>True, when Pandoc converts the message; false, when AI Studio writes the file itself.</value>
         public bool UsesPandoc => !string.IsNullOrWhiteSpace(format.PandocOutputFormat);
-    }
 
-    /// <summary>
-    /// Reads which format a model means when it names a language behind the opening fence of a
-    /// code block.
-    /// </summary>
-    /// <remarks>
-    /// A model which answers with a finished file puts it into a code block and names its language,
-    /// as in ```html. Models do not agree on the spelling, so we accept the usual names of a format
-    /// in any case. Only formats which are plain text appear here: a code block holds text, never
-    /// a Word document. A block in any other language, or in none, is code, see
-    /// SourceCodeLanguages.FromCodeFenceLanguage.
-    /// </remarks>
-    /// <param name="language">The language behind the opening fence, as Markdig reads it into
-    /// FencedCodeBlock.Info.</param>
-    /// <param name="format">The format the language names, or NONE when it names none of ours.</param>
-    /// <returns>True, when the language names a format AI Studio writes.</returns>
-    public static bool TryFromCodeFenceLanguage(string? language, out FileExportFormat format)
-    {
-        format = language?.Trim().ToLowerInvariant() switch
+        /// <summary>
+        /// Reads which format a model means when it names a language behind the opening fence of a
+        /// code block.
+        /// </summary>
+        /// <remarks>
+        /// A model which answers with a finished file puts it into a code block and names its language,
+        /// as in ```html. Models do not agree on the spelling, so we accept the usual names of a format
+        /// in any case. Only formats which are plain text appear here: a code block holds text, never
+        /// a Word document. A block in any other language, or in none, is code, see
+        /// SourceCodeLanguages.FromCodeFenceLanguage.
+        /// </remarks>
+        /// <param name="language">The language behind the opening fence, as Markdig reads it into
+        /// FencedCodeBlock.Info.</param>
+        /// <param name="namedFormat">The format the language names, or NONE when it names none of ours.</param>
+        /// <returns>True, when the language names a format AI Studio writes.</returns>
+        public static bool TryFromCodeFenceLanguage(string? language, out FileExportFormat namedFormat)
         {
-            "html" => FileExportFormat.HTML,
-            "latex" or "tex" => FileExportFormat.LATEX,
-            "markdown" or "md" => FileExportFormat.MARKDOWN,
-            "csv" => FileExportFormat.CSV,
-            "tsv" => FileExportFormat.TSV,
+            namedFormat = language?.Trim().ToLowerInvariant() switch
+            {
+                "html" => FileExportFormat.HTML,
+                "latex" or "tex" => FileExportFormat.LATEX,
+                "markdown" or "md" => FileExportFormat.MARKDOWN,
+                "csv" => FileExportFormat.CSV,
+                "tsv" => FileExportFormat.TSV,
 
-            _ => FileExportFormat.NONE,
-        };
+                _ => FileExportFormat.NONE,
+            };
 
-        return format is not FileExportFormat.NONE;
+            return namedFormat is not FileExportFormat.NONE;
+        }
     }
 
     /// <summary>

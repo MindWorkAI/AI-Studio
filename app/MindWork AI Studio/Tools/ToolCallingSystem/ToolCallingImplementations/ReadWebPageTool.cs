@@ -266,7 +266,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// turn into ON without anybody having written it, see EnumNames. The configuration check
     /// reports such a value anyway and keeps the tool out of use until somebody corrects it.
     /// </remarks>
-    internal static FreeAddressChoice ReadFreeAddressChoice(string? configuredValue) => EnumNames.TryParse<FreeAddressChoice>(configuredValue, out var freeAddressChoice) ? freeAddressChoice : DEFAULT_FREE_ADDRESS_CHOICE;
+    internal static FreeAddressChoice ReadFreeAddressChoice(string? configuredValue) => FreeAddressChoice.TryParseName(configuredValue, out var freeAddressChoice) ? freeAddressChoice : DEFAULT_FREE_ADDRESS_CHOICE;
 
     /// <summary>
     /// Words the rules the model follows when it reads web pages.
@@ -517,7 +517,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         if (string.IsNullOrWhiteSpace(configuredValue))
             return DEFAULT_INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION;
 
-        return EnumNames.TryParse<OutboundDataRestriction>(configuredValue, out var restriction) ? restriction : OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
+        return OutboundDataRestriction.TryParseName(configuredValue, out var restriction) ? restriction : OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
     }
 
     /// <summary>
