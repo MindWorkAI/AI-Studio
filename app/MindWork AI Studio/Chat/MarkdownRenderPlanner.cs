@@ -2,7 +2,8 @@ namespace AIStudio.Chat;
 
 /// <summary>
 /// Cuts the text of a message into the parts the chat renders one by one: Markdown, and the formulas
-/// between $$ or \[ and \] on lines of their own.
+/// between $$ or \[ and \] on lines of their own, or in a code block of latex, tex, or math which holds
+/// nothing but a formula, see LatexFormula.
 /// </summary>
 /// <remarks>
 /// MudMarkdown shows a formula as it is, and MathJax typesets only what the chat hands it as a
@@ -50,6 +51,10 @@ internal static class MarkdownRenderPlanner
         var activeMathBlockFenceType = MathBlockFenceType.NONE;
         var markdownSegmentStart = 0;
         var mathContentStart = 0;
+        var mathBlockStart = 0;
+        var codeFenceStart = 0;
+        var codeContentStart = 0;
+        var codeFenceLanguage = ReadOnlySpan<char>.Empty;
 
         for (var lineStart = 0; lineStart < normalizedSpan.Length;)
         {
@@ -68,8 +73,23 @@ internal static class MarkdownRenderPlanner
             }
 
             var trimmedLine = TrimWhitespace(normalizedSpan[lineStart..lineEnd]);
+            var wasInCodeBlock = activeCodeFenceMarker != '\0';
             if (activeMathBlockFenceType is MathBlockFenceType.NONE && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
             {
+                if (!wasInCodeBlock)
+                {
+                    codeFenceStart = lineStart;
+                    codeContentStart = nextLineStart;
+                    codeFenceLanguage = FenceLanguageOf(trimmedLine);
+                }
+                else if (activeCodeFenceMarker == '\0' && LatexFormula.TryFind(codeFenceLanguage, normalizedSpan[codeContentStart..lineStart], out var formula))
+                {
+                    var (formulaStart, formulaLength) = formula.GetOffsetAndLength(lineStart - codeContentStart);
+                    AddMarkdownSegment(markdownSegmentStart, codeFenceStart);
+                    segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, codeContentStart + formulaStart, formulaLength, codeFenceStart));
+                    markdownSegmentStart = nextLineStart;
+                }
+
                 lineStart = nextLineStart;
                 continue;
             }
@@ -85,6 +105,7 @@ internal static class MarkdownRenderPlanner
                 if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
                 {
                     AddMarkdownSegment(markdownSegmentStart, lineStart);
+                    mathBlockStart = lineStart;
                     mathContentStart = nextLineStart;
                     activeMathBlockFenceType = MathBlockFenceType.DOLLAR;
                     lineStart = nextLineStart;
@@ -94,20 +115,21 @@ internal static class MarkdownRenderPlanner
                 if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_OPEN.AsSpan()))
                 {
                     AddMarkdownSegment(markdownSegmentStart, lineStart);
+                    mathBlockStart = lineStart;
                     mathContentStart = nextLineStart;
                     activeMathBlockFenceType = MathBlockFenceType.BRACKET;
                 }
             }
             else if (activeMathBlockFenceType is MathBlockFenceType.DOLLAR && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
             {
-                segments.Add(MathSegment(normalizedSpan, mathContentStart, lineStart));
+                segments.Add(MathSegment(normalizedSpan, mathContentStart, lineStart, mathBlockStart));
 
                 markdownSegmentStart = nextLineStart;
                 activeMathBlockFenceType = MathBlockFenceType.NONE;
             }
             else if (activeMathBlockFenceType is MathBlockFenceType.BRACKET && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_CLOSE.AsSpan()))
             {
-                segments.Add(MathSegment(normalizedSpan, mathContentStart, lineStart));
+                segments.Add(MathSegment(normalizedSpan, mathContentStart, lineStart, mathBlockStart));
 
                 markdownSegmentStart = nextLineStart;
                 activeMathBlockFenceType = MathBlockFenceType.NONE;
@@ -117,11 +139,11 @@ internal static class MarkdownRenderPlanner
         }
 
         if (activeMathBlockFenceType is not MathBlockFenceType.NONE)
-            return new(normalized, [new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length)]);
+            return new(normalized, [new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length, 0)]);
 
         AddMarkdownSegment(markdownSegmentStart, normalized.Length);
         if (segments.Count == 0)
-            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length));
+            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length, 0));
 
         return new(normalized, segments);
 
@@ -130,7 +152,7 @@ internal static class MarkdownRenderPlanner
             if (end <= start)
                 return;
 
-            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, start, end - start));
+            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, start, end - start, start));
         }
     }
 
@@ -208,9 +230,22 @@ internal static class MarkdownRenderPlanner
     }
 
     /// <summary>
+    /// Reads the language behind an opening fence, such as latex in ```latex.
+    /// </summary>
+    private static ReadOnlySpan<char> FenceLanguageOf(ReadOnlySpan<char> fence)
+    {
+        var info = TrimWhitespace(fence.TrimStart(fence[0]));
+        var end = 0;
+        while (end < info.Length && !char.IsWhiteSpace(info[end]))
+            end++;
+
+        return info[..end];
+    }
+
+    /// <summary>
     /// The part of a formula block between its markers, without the line breaks around it.
     /// </summary>
-    private static MarkdownRenderSegment MathSegment(ReadOnlySpan<char> text, int start, int end)
+    private static MarkdownRenderSegment MathSegment(ReadOnlySpan<char> text, int start, int end, int blockStart)
     {
         while (start < end && text[start] is '\r' or '\n')
             start++;
@@ -218,7 +253,7 @@ internal static class MarkdownRenderPlanner
         while (end > start && text[end - 1] is '\r' or '\n')
             end--;
 
-        return new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start);
+        return new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start, blockStart);
     }
 
     private enum MathBlockFenceType

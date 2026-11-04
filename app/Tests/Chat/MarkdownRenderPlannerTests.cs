@@ -40,6 +40,53 @@ public sealed class MarkdownRenderPlannerTests
         Assert.That(Parts(text), Is.EqualTo(new[] { $"MARKDOWN: {text}" }));
     }
 
+    [TestCase("```latex")]
+    [TestCase("```tex")]
+    [TestCase("```math")]
+    [TestCase("```LaTeX")]
+    [TestCase("``` latex")]
+    [TestCase("~~~latex")]
+    public void ACodeBlockOfLatexWithNothingButAFormulaBecomesAFormula(string openingFence)
+    {
+        var parts = Parts($"The integral:\n{openingFence}\n\\iint_D f(x,y)\\,\\mathrm{{d}}x\\,\\mathrm{{d}}y\n{openingFence[..3]}\nover the area D.");
+
+        Assert.That(parts, Is.EqualTo(new[] { "MARKDOWN: The integral:\n", @"MATH_BLOCK: \iint_D f(x,y)\,\mathrm{d}x\,\mathrm{d}y", "MARKDOWN: over the area D." }));
+    }
+
+    [Test]
+    public void TheMarkersAroundAFormulaInACodeBlockOfLatexAreNoPartOfIt()
+    {
+        Assert.That(Parts("```latex\n$$\nE = mc^2\n$$\n```"), Is.EqualTo(new[] { "MATH_BLOCK: E = mc^2" }));
+    }
+
+    [TestCase("```latex\n\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}\n```", TestName = "A document")]
+    [TestCase("```latex\nThe value $x$ grows.\n```", TestName = "Text with a formula in it")]
+    [TestCase("```latex\n```", TestName = "An empty block")]
+    [TestCase("```python\nE = mc^2\n```", TestName = "Code in another language")]
+    [TestCase("```latex\nE = mc^2", TestName = "A block the model never closed")]
+    public void ACodeBlockOfLatexWithMoreThanAFormulaStaysCode(string text)
+    {
+        Assert.That(Parts(text), Is.EqualTo(new[] { $"MARKDOWN: {text}" }));
+    }
+
+    [Test]
+    public void EveryFormulaKnowsWhereItsBlockStarts()
+    {
+        var text = "First:\n$$\na = b\n$$\nSecond:\n\\[\nc = d\n\\]\nThird:\n```latex\ne = f\n```\nFourth:\n1. Item\n   $$\n   g = h\n   $$";
+
+        var formulas = MarkdownRenderPlanner.Build(text).Segments.Where(segment => segment.Type is MarkdownRenderSegmentType.MATH_BLOCK).Select(segment => segment.FileStart);
+
+        Assert.That(formulas, Is.EqualTo(new[] { text.IndexOf("$$", StringComparison.Ordinal), text.IndexOf(@"\[", StringComparison.Ordinal), text.IndexOf("```latex", StringComparison.Ordinal), text.IndexOf("   $$", StringComparison.Ordinal) }), "A formula starts with its markers, an indented one with the line of its marker.");
+    }
+
+    [Test]
+    public void MarkdownStartsWhereItsBlockStarts()
+    {
+        var plan = MarkdownRenderPlanner.Build("Before\n$$\na = b\n$$\nAfter");
+
+        Assert.That(plan.Segments.Where(segment => segment.Type is MarkdownRenderSegmentType.MARKDOWN).Select(segment => segment.FileStart - segment.Start), Is.All.Zero);
+    }
+
     [Test]
     public void AFormulaTheModelNeverClosedLeavesEverythingAsMarkdown()
     {

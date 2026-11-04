@@ -6,7 +6,9 @@ namespace AIStudio.Chat;
 /// <param name="type">What the part is.</param>
 /// <param name="start">Where the part starts in the source of its plan.</param>
 /// <param name="length">How long the part is.</param>
-internal sealed class MarkdownRenderSegment(MarkdownRenderSegmentType type, int start, int length)
+/// <param name="fileStart">Where the block of the part starts in the source, its markers included,
+/// such as the $$ before a formula. A formula finds its file by it, see PlainFileExport.ExtractFiles.</param>
+internal sealed class MarkdownRenderSegment(MarkdownRenderSegmentType type, int start, int length, int fileStart)
 {
     private string? cachedContent;
 
@@ -15,6 +17,8 @@ internal sealed class MarkdownRenderSegment(MarkdownRenderSegmentType type, int 
     public int Start { get; } = start;
 
     public int Length { get; } = length;
+
+    public int FileStart { get; } = fileStart;
 
     public int RenderKey { get; } = HashCode.Combine(type, start, length);
 
