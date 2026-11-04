@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using AIStudio.Assistants.Builder;
+using AIStudio.Assistants.VisualBriefing;
 
 namespace AIStudio.Tests.Serialization;
 
@@ -20,6 +21,7 @@ public sealed class DuplicatePropertyTests
     {
         yield return new TestCaseData(LuaResponse.JSON_OPTIONS).SetName("The plugins the Assistant Builder writes");
         yield return new TestCaseData(LauncherTextsResponse.JSON_OPTIONS).SetName("The texts the Assistant Builder writes for a chat launcher");
+        yield return new TestCaseData(VisualBriefingJson.Canonical).SetName("The answers of the model for a visual briefing");
     }
 
     [TestCaseSource(nameof(OptionsForAnswersFromOutside))]
