@@ -117,6 +117,67 @@ public static class MathFormatting
     }
 
     /// <summary>
+    /// A real or complex number, rounded to the given number of significant digits, as in 1.5 - 2i.
+    /// </summary>
+    /// <param name="value">The number.</param>
+    /// <param name="digits">How many significant digits to keep in each part.</param>
+    /// <returns>The decimal.</returns>
+    public static string FormatNumber(Entity.Number.Complex value, int digits)
+    {
+        var real = value.RealPart.EDecimal;
+        var imaginary = value.ImaginaryPart.EDecimal;
+        if (imaginary.IsZero)
+            return FormatDecimal(real, digits);
+
+        var imaginaryText = FormatDecimal(imaginary.Abs(), digits) + "i";
+        if (real.IsZero)
+            return imaginary.IsNegative ? "-" + imaginaryText : imaginaryText;
+
+        return $"{FormatDecimal(real, digits)} {(imaginary.IsNegative ? '-' : '+')} {imaginaryText}";
+    }
+
+    /// <summary>
+    /// How far apart two numbers lie, as the sum of the distances of their parts.
+    /// </summary>
+    /// <param name="first">One number.</param>
+    /// <param name="second">The other number.</param>
+    /// <returns>The distance, as a double.</returns>
+    public static double Distance(Entity.Number.Complex first, Entity.Number.Complex second)
+    {
+        var context = EContext.ForPrecision(20);
+        var real = first.RealPart.EDecimal.Subtract(second.RealPart.EDecimal, context).Abs();
+        var imaginary = first.ImaginaryPart.EDecimal.Subtract(second.ImaginaryPart.EDecimal, context).Abs();
+        return real.Add(imaginary, context).ToDouble();
+    }
+
+    /// <summary>
+    /// How many significant digits two real or complex values of the same quantity have in common,
+    /// measured against the larger of them, so a tiny imaginary part does not count for more than it is.
+    /// </summary>
+    /// <param name="first">One value.</param>
+    /// <param name="second">The other value.</param>
+    /// <param name="maximum">The most digits to report, for values which are equal.</param>
+    /// <returns>The number of digits, between 0 and maximum.</returns>
+    public static int CountMatchingDigits(Entity.Number.Complex first, Entity.Number.Complex second, int maximum)
+    {
+        if (first.ImaginaryPart.EDecimal.IsZero && second.ImaginaryPart.EDecimal.IsZero)
+            return CountMatchingDigits(first.RealPart.EDecimal, second.RealPart.EDecimal, maximum);
+
+        var context = EContext.ForPrecision(20);
+        var firstSize = first.RealPart.EDecimal.Abs().Add(first.ImaginaryPart.EDecimal.Abs(), context);
+        var secondSize = second.RealPart.EDecimal.Abs().Add(second.ImaginaryPart.EDecimal.Abs(), context);
+        var scale = EDecimal.Max(firstSize, secondSize).ToDouble();
+        var distance = Distance(first, second);
+        if (!double.IsFinite(distance) || !double.IsFinite(scale))
+            return 0;
+
+        if (distance <= 0)
+            return maximum;
+
+        return (int)Math.Clamp(Math.Floor(-Math.Log10(distance / scale)), 0, maximum);
+    }
+
+    /// <summary>
     /// How many significant digits two values of the same quantity have in common.
     /// </summary>
     /// <remarks>
