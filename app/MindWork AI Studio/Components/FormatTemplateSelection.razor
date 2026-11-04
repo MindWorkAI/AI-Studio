@@ -1,6 +1,7 @@
 @inherits MSGComponentBase
 
-<MudStack Row="true" AlignItems="AlignItems.Baseline" StretchItems="StretchItems.Start" Class="mb-3" Wrap="Wrap.NoWrap">
+@* Centered, as in SecretInputField: an icon button has no baseline of text to align with the select: *@
+<MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3" Wrap="Wrap.NoWrap">
     <MudSelect T="string" Strict="@true" Disabled="@this.Disabled" Value="@this.FilePath" ValueChanged="@this.SelectionChanged" ToStringFunc="@this.NameOf" Adornment="Adornment.Start" AdornmentIcon="@this.Icon" Margin="Margin.Dense" Label="@this.Label" Variant="Variant.Outlined" Validation="@this.Validation">
         @foreach (var option in this.Options)
         {
