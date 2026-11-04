@@ -2646,6 +2646,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1883918574
 -- These files are already attached as pictures for the slides and were removed from the documents: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1915311879"] = "Diese Dateien sind bereits als Bilder für die Folien angehängt und wurden aus den Dokumenten entfernt: {0}"
 
+-- The template file cannot be found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1941431282"] = "Die Vorlagendatei kann nicht gefunden werden."
+
 -- Please provide a text or at least one valid document or image.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2013746884"] = "Bitte geben Sie einen Text oder mindestens ein gültiges Dokument oder Bild an."
 
@@ -2669,6 +2672,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2384026372
 
 -- (Optional) Important Aspects
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T24391765"] = "(Optional) Wichtige Aspekte"
+
+-- Choose one of your PowerPoint templates (.pptx, .potx) whose layouts the slides should use. You add your templates with the button next to the list or in the app settings. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T244737996"] = "Wählen Sie eine Ihrer PowerPoint-Vorlagen (.pptx, .potx), deren Layouts die Folien verwenden sollen. Ihre Vorlagen fügen Sie über die Schaltfläche neben der Liste oder in den App-Einstellungen hinzu. Das LLM plant dann jede Folie für eines dieser Layouts, und Sie können eine PowerPoint-Datei (.pptx) im Design Ihrer Vorlage erstellen. Diese Datei öffnen auch andere Programme wie LibreOffice Impress. OpenDocument-Präsentationen (.odp, .otp) lassen sich noch nicht als Vorlage verwenden. Ohne Vorlage erhalten Sie eine Gliederung, die Sie kopieren oder exportieren können."
 
 -- The folder holds no PNG or JPEG pictures.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2452478824"] = "Der Ordner enthält keine PNG- oder JPEG-Bilder."
@@ -2712,9 +2718,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2823798965
 -- Pictures for the slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2882839332"] = "Bilder für die Folien"
 
--- Use no template
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2967784903"] = "Keine Vorlage verwenden"
-
 -- Please enter a title for the presentation. This will help the LLM to select more relevant content.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3013824309"] = "Bitte geben Sie einen Titel für die Präsentation ein. Dies hilft dem LLM, relevantere Inhalte auszuwählen."
 
@@ -2742,9 +2745,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3306802135
 -- Advanced Options
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3393521529"] = "Erweiterte Optionen"
 
--- Choose a PowerPoint presentation or template (.pptx, .potx) whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3447420430"] = "Wählen Sie eine PowerPoint-Präsentation oder -Vorlage (.pptx, .potx), deren Layouts die Folien verwenden sollen. Das LLM plant dann jede Folie für eines dieser Layouts, und Sie können eine PowerPoint-Datei (.pptx) im Design Ihrer Vorlage erstellen. Diese Datei öffnen auch andere Programme wie LibreOffice Impress. OpenDocument-Präsentationen (.odp, .otp) lassen sich noch nicht als Vorlage verwenden. Ohne Vorlage erhalten Sie eine Gliederung, die Sie kopieren oder exportieren können."
-
 -- Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3465256803"] = "Bitte geben Sie die Zielgruppe für die geplante Präsentation an. So kann das LLM eine Präsentation erstellen, die zu Ihren Anforderungen passt. Sie können das Profil der Zielgruppe, die Altersgruppe, die Organisationsebene und die Fachkenntnisse angeben. Sie müssen nicht alle diese Parameter festlegen; Sie können zum Beispiel nur das Profil der Zielgruppe angeben und die anderen Parameter bei ihren Standardwerten belassen."
 
@@ -2766,9 +2766,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3649769130
 -- Attach documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3666048746"] = "Dokumente anhängen"
 
--- Select a PowerPoint template
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3690748035"] = "PowerPoint-Vorlage auswählen"
-
 -- For each planning, the LLM gets a random {0} of them.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T382757370"] = "Bei jeder Planung erhält das LLM zufällig {0} davon."
 
@@ -2777,9 +2774,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3848935911
 
 -- Create PowerPoint file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3852632268"] = "PowerPoint-Datei erstellen"
-
--- The template file does not exist.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3882045083"] = "Die Vorlagendatei existiert nicht."
 
 -- Presentation title
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3893271035"] = "Präsentationstitel"
@@ -5031,6 +5025,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3093558555"] =
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3267849393"] = "Bearbeiten"
 
+-- Type
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3512062061"] = "Typ"
+
 -- Are you sure you want to delete the format template '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3671173081"] = "Sind Sie sicher, dass Sie die Dokumentvorlage „{0}“ löschen möchten?"
 
@@ -5046,11 +5043,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T4087833621"] =
 -- View Format Template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T4157017975"] = "Dokumentvorlage anzeigen"
 
+-- Add your templates here, for example the Word and PowerPoint templates of your organization. When you export a result to Word, you can choose one of your Word templates, and the Slide Assistant offers your PowerPoint templates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T532268102"] = "Fügen Sie hier Ihre Vorlagen hinzu, z. B. die Word- und PowerPoint-Vorlagen Ihrer Organisation. Wenn Sie ein Ergebnis nach Word exportieren, können Sie eine Ihrer Word-Vorlagen auswählen, und der Folien-Assistent bietet Ihre PowerPoint-Vorlagen an."
+
 -- File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T723007075"] = "Datei"
 
--- Add your templates here, for example the Word templates of your organization. When you export a result to Word, you can choose one of them.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T799944837"] = "Fügen Sie hier Ihre Vorlagen hinzu, z. B. die Word-Vorlagen Ihrer Organisation. Wenn Sie ein Ergebnis nach Word exportieren, können Sie eine davon auswählen."
+-- Manage your templates
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATESELECTION::T3058934130"] = "Verwalten Sie Ihre Vorlagen"
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs können Fehler machen. Überprüfen Sie wichtige Informationen."
@@ -8511,11 +8511,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4239698038"] = "Der N
 -- Select a format template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4261636653"] = "Dokumentvorlage auswählen"
 
+-- Add a template, for example a Word or PowerPoint template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T432948436"] = "Fügen Sie eine Vorlage hinzu, z. B. eine Word- oder PowerPoint-Vorlage Ihrer Organisation. AI Studio merkt sich den Speicherort der Datei, sodass eine neue Version der Vorlage sofort wirksam wird."
+
 -- Please enter a name for the format template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T454079616"] = "Bitte geben Sie einen Namen für die Dokumentvorlage ein."
-
--- Add a template, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T512889034"] = "Fügen Sie eine Vorlage hinzu, z. B. eine Word-Vorlage Ihrer Organisation. AI Studio merkt sich den Speicherort der Datei, sodass eine neue Version der Vorlage sofort wirksam wird."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T900713019"] = "Abbrechen"
@@ -10245,6 +10245,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T11500
 -- Slides of the template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1178900119"] = "Folien der Vorlage"
 
+-- The slides use the layouts of this PowerPoint template, and you can create a PowerPoint file (.pptx) from the result. The list offers the PowerPoint presentations and templates (.pptx, .potx) among your format templates, which you add in the app settings. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Choose no template to plan an outline only.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1297596126"] = "Die Folien verwenden die Layouts dieser PowerPoint-Vorlage, und Sie können aus dem Ergebnis eine PowerPoint-Datei (.pptx) erstellen. Die Liste bietet die PowerPoint-Präsentationen und -Vorlagen (.pptx, .potx) unter Ihren Dokumentvorlagen an, die Sie in den App-Einstellungen hinzufügen. OpenDocument-Präsentationen (.odp, .otp) lassen sich noch nicht als Vorlage verwenden. Wählen Sie „Keine Vorlage“, um nur eine Gliederung zu planen."
+
 -- Preselect the occasion
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1451545352"] = "Anlass vorauswählen"
 
@@ -10308,9 +10311,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T25714
 -- Preselect the audience age group
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2645589441"] = "Altersgruppe der Zielgruppe vorauswählen"
 
--- The slides use the layouts of this PowerPoint presentation or template (.pptx, .potx), and you can create a PowerPoint file (.pptx) from the result. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Leave it empty to plan an outline only.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2931578847"] = "Die Folien verwenden die Layouts dieser PowerPoint-Präsentation oder -Vorlage (.pptx, .potx), und Sie können aus dem Ergebnis eine PowerPoint-Datei (.pptx) erstellen. OpenDocument-Präsentationen (.odp, .otp) lassen sich noch nicht als Vorlage verwenden. Lassen Sie das Feld leer, um nur eine Gliederung zu planen."
-
 -- Preselect a readable template above to choose its layouts for kinds of slides.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3212897766"] = "Wählen Sie oben eine lesbare Vorlage aus, um ihre Layouts für Folienarten vorauszuwählen."
 
@@ -10340,9 +10340,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T35064
 
 -- Visual elements
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T366689306"] = "Visuelle Elemente"
-
--- Select a PowerPoint template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3690748035"] = "PowerPoint-Vorlage auswählen"
 
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3705987833"] = "Wichtige Aspekte vorauswählen"
@@ -12744,6 +12741,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2537778562
 -- Not yet specified
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2566503670"] = "Noch nicht angegeben"
 
+-- No template
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2655535264"] = "Keine Vorlage"
+
 -- No minimum confidence level chosen
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2828607242"] = "Kein Mindestvertrauensniveau ausgewählt"
 
@@ -13886,6 +13886,15 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T3371062811"] = "Bitte geben
 
 -- Please use only single asterisks as wildcards, e.g., *.txt or report-*.md.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949"] = "Bitte verwenden Sie als Platzhalter nur einzelne Sternchen, z. B. *.txt oder report-*.md."
+
+-- Unknown template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FORMATTEMPLATEEXTENSIONS::T2426101481"] = "Unbekannte Vorlage"
+
+-- PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FORMATTEMPLATEEXTENSIONS::T3472250354"] = "PowerPoint-Vorlage"
+
+-- Word template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FORMATTEMPLATEEXTENSIONS::T3743897861"] = "Word-Vorlage"
 
 -- The server could not be reached. Please check the host and the port, and whether you need a VPN connection.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1314233926"] = "Der Server konnte nicht erreicht werden. Bitte prüfen Sie Host und Port und ob Sie eine VPN-Verbindung benötigen."
