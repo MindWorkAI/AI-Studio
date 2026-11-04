@@ -11,9 +11,7 @@ namespace AIStudio.Tests.Analyzers;
 /// </summary>
 /// <remarks>
 /// AI Studio declares all its extension members in extension blocks, one per receiver. MWAIS0016 refuses the
-/// classic form while compiling, except for a method with a params parameter: for a member of an extension
-/// block, the compiler of the .NET 10.0.1xx SDK warns about every argument passed one by one to a params
-/// parameter (CS8620, dotnet/roslyn#80024).
+/// classic form while compiling.
 /// </remarks>
 [TestFixture]
 public sealed class ClassicExtensionMethodAnalyzerTests
@@ -24,6 +22,7 @@ public sealed class ClassicExtensionMethodAnalyzerTests
     [TestCase("public static T Echo<T>(this T value) where T : class => value;", "Echo", TestName = "A generic extension method")]
     [TestCase("public static void Bump(this ref int value) => value++;", "Bump", TestName = "An extension method with a ref receiver")]
     [TestCase("public static System.Threading.Tasks.Task<string> LabelAsync(this Meeting meeting) => System.Threading.Tasks.Task.FromResult(meeting.Name);", "LabelAsync", TestName = "An asynchronous extension method")]
+    [TestCase("public static string Label(this Meeting meeting, params string[] prefixes) => string.Concat(prefixes) + meeting.Name;", "Label", TestName = "An extension method with a params parameter")]
     public async Task AClassicExtensionMethodIsRefused(string member, string name)
     {
         var reported = await AnalyzeAsync(member);
@@ -39,7 +38,6 @@ public sealed class ClassicExtensionMethodAnalyzerTests
     [TestCase("extension(Meeting meeting) { public string Label() => meeting.Name; }", TestName = "A member of an extension block")]
     [TestCase("extension<T>(T value) where T : class { public T Echo() => value; }", TestName = "A member of a generic extension block")]
     [TestCase("public static string Label(Meeting meeting) => meeting.Name;", TestName = "A static method without a this parameter")]
-    [TestCase("public static string Label(this Meeting meeting, params string[] prefixes) => string.Concat(prefixes) + meeting.Name;", TestName = "An extension method with a params parameter")]
     public async Task AnythingElseIsLeftAlone(string member)
     {
         var reported = await AnalyzeAsync(member);

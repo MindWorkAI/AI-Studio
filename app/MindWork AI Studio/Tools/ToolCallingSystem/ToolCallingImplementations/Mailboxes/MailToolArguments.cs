@@ -49,32 +49,29 @@ internal static class MailToolArguments
 
     private static readonly string[] SPECIAL_FOLDER_VALUES = [SPECIAL_FOLDER_SENT, SPECIAL_FOLDER_DRAFTS];
 
-    /// <summary>
-    /// Adds the conditions to the arguments a mail tool describes.
-    /// </summary>
     /// <param name="builder">The schema of the tool.</param>
-    /// <param name="toolAction">What the tool does with the mails, e.g., "search", completing "the mailboxes to ...".</param>
-    /// <param name="mailboxIds">The ids of the mailboxes the tool offers, or none while no mailboxes are known.</param>
-    /// <returns>The schema, for further arguments.</returns>
-    /// <remarks>
-    /// A classic extension method instead of a member of an extension block: for those, the compiler of
-    /// the .NET 10.0.1xx SDK warns about every mailbox id passed one by one to the params parameter
-    /// (CS8620, dotnet/roslyn#80024). Move it once the SDK in metadata.txt carries the fix; MWAIS0016 makes
-    /// the same exception until then.
-    /// </remarks>
-    public static ToolParameterSchemaBuilder AddMailConditions(this ToolParameterSchemaBuilder builder, string toolAction, params string[] mailboxIds) => builder
-        .OptionalStringArray(MAILBOX_IDS_ARGUMENT, $"Optional IDs of the mailboxes to {toolAction}, out of those listed in the description of this tool. Leave it out to {toolAction} all of them.", mailboxIds)
-        .OptionalString(FROM_ARGUMENT, $"Optional part of the address or the name of the sender, such as 'alice@example.org', 'example.org', or 'Alice'. At most {MAX_ADDRESS_CHARACTERS} characters.")
-        .OptionalString(TO_ARGUMENT, $"Optional part of the address or the name of a recipient in To, Cc, or Bcc. At most {MAX_ADDRESS_CHARACTERS} characters.")
-        .OptionalString(AFTER_ARGUMENT, "Optional: only mails received at this point in time or later. A date such as 2026-09-01 stands for the beginning of that day in the time zone of the user. A date with a time of day such as 2026-09-01T14:30 is read in that time zone as well, unless it ends with an offset such as +02:00 or with Z.")
-        .OptionalString(BEFORE_ARGUMENT, "Optional: only mails received before this point in time, in the same forms as the argument after. A date stands for the beginning of that day, so before 2026-09-30 leaves that day out.")
-        .OptionalBoolean(IS_UNREAD_ARGUMENT, "Optional: true for unread mails only, false for read ones only.")
-        .OptionalBoolean(IS_FLAGGED_ARGUMENT, "Optional: true for flagged mails only, false for unflagged ones only.")
-        .OptionalBoolean(IS_ENCRYPTED_ARGUMENT, "Optional: true for encrypted mails only, false for unencrypted ones only. AI Studio cannot read the content of encrypted mails, only their header.")
-        .OptionalEnum(IMPORTANCE_ARGUMENT, "Optional importance the sender marked the mails with. Mails without such a mark count as normal.", IMPORTANCE_VALUES)
-        .OptionalBoolean(HAS_ATTACHMENTS_ARGUMENT, "Optional: true for mails with attachments only, false for mails without any.")
-        .OptionalString(FOLDER_ARGUMENT, $"Optional full path of the folder the mails lie in, exactly as results show it, such as 'INBOX' or 'Archive/2026'. Subfolders are not included. For the sent mails or the drafts, use {SPECIAL_FOLDER_ARGUMENT} instead.")
-        .OptionalEnum(SPECIAL_FOLDER_ARGUMENT, $"Optional: only the mails the user sent, or only the drafts of the user, however the server names these folders. Cannot be combined with {FOLDER_ARGUMENT}.", SPECIAL_FOLDER_VALUES);
+    extension(ToolParameterSchemaBuilder builder)
+    {
+        /// <summary>
+        /// Adds the conditions to the arguments a mail tool describes.
+        /// </summary>
+        /// <param name="toolAction">What the tool does with the mails, e.g., "search", completing "the mailboxes to ...".</param>
+        /// <param name="mailboxIds">The ids of the mailboxes the tool offers, or none while no mailboxes are known.</param>
+        /// <returns>The schema, for further arguments.</returns>
+        public ToolParameterSchemaBuilder AddMailConditions(string toolAction, params string[] mailboxIds) => builder
+            .OptionalStringArray(MAILBOX_IDS_ARGUMENT, $"Optional IDs of the mailboxes to {toolAction}, out of those listed in the description of this tool. Leave it out to {toolAction} all of them.", mailboxIds)
+            .OptionalString(FROM_ARGUMENT, $"Optional part of the address or the name of the sender, such as 'alice@example.org', 'example.org', or 'Alice'. At most {MAX_ADDRESS_CHARACTERS} characters.")
+            .OptionalString(TO_ARGUMENT, $"Optional part of the address or the name of a recipient in To, Cc, or Bcc. At most {MAX_ADDRESS_CHARACTERS} characters.")
+            .OptionalString(AFTER_ARGUMENT, "Optional: only mails received at this point in time or later. A date such as 2026-09-01 stands for the beginning of that day in the time zone of the user. A date with a time of day such as 2026-09-01T14:30 is read in that time zone as well, unless it ends with an offset such as +02:00 or with Z.")
+            .OptionalString(BEFORE_ARGUMENT, "Optional: only mails received before this point in time, in the same forms as the argument after. A date stands for the beginning of that day, so before 2026-09-30 leaves that day out.")
+            .OptionalBoolean(IS_UNREAD_ARGUMENT, "Optional: true for unread mails only, false for read ones only.")
+            .OptionalBoolean(IS_FLAGGED_ARGUMENT, "Optional: true for flagged mails only, false for unflagged ones only.")
+            .OptionalBoolean(IS_ENCRYPTED_ARGUMENT, "Optional: true for encrypted mails only, false for unencrypted ones only. AI Studio cannot read the content of encrypted mails, only their header.")
+            .OptionalEnum(IMPORTANCE_ARGUMENT, "Optional importance the sender marked the mails with. Mails without such a mark count as normal.", IMPORTANCE_VALUES)
+            .OptionalBoolean(HAS_ATTACHMENTS_ARGUMENT, "Optional: true for mails with attachments only, false for mails without any.")
+            .OptionalString(FOLDER_ARGUMENT, $"Optional full path of the folder the mails lie in, exactly as results show it, such as 'INBOX' or 'Archive/2026'. Subfolders are not included. For the sent mails or the drafts, use {SPECIAL_FOLDER_ARGUMENT} instead.")
+            .OptionalEnum(SPECIAL_FOLDER_ARGUMENT, $"Optional: only the mails the user sent, or only the drafts of the user, however the server names these folders. Cannot be combined with {FOLDER_ARGUMENT}.", SPECIAL_FOLDER_VALUES);
+    }
 
     /// <summary>
     /// The value of the importance argument which stands for the given importance.

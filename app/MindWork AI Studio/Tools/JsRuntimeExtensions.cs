@@ -3,16 +3,11 @@ using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools;
 
-//
-// The methods with a params parameter stay classic extension methods instead of moving into the
-// extension block: for a member of an extension block, the compiler of the .NET 10.0.1xx SDK warns
-// about every argument passed one by one to a params parameter (CS8620, dotnet/roslyn#80024). Move
-// them once the SDK in metadata.txt carries the fix; MWAIS0016 makes the same exception until then.
-//
 public static class JsRuntimeExtensions
 {
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(JsRuntimeExtensions));
 
+    /// <param name="jsRuntime">The JS runtime to call.</param>
     extension(IJSRuntime jsRuntime)
     {
         public async Task GenerateAndShowDiff(string text1, string text2)
@@ -24,115 +19,115 @@ public static class JsRuntimeExtensions
         {
             await jsRuntime.InvokeVoidAsync("clearDiv", divId);
         }
-    }
 
-    /// <summary>
-    /// Calls a JavaScript function which returns nothing, and tolerates a circuit which is already gone.
-    /// </summary>
-    /// <remarks>
-    /// Blazor cannot issue JS interop calls once the browser connection of a circuit is gone. That happens
-    /// during every reload and while a component gets disposed, so the failure is expected rather than
-    /// exceptional. Discarding such a call is not an option, though: the discarded task keeps the fault
-    /// until the finalizer reports it as an unobserved task exception, without any hint at its origin.
-    /// This method is the one place which knows how to await such a call and what to do with its failure.
-    /// </remarks>
-    /// <param name="jsRuntime">The JS runtime to call.</param>
-    /// <param name="identifier">The name of the JavaScript function.</param>
-    /// <param name="args">The arguments for the JavaScript function.</param>
-    /// <returns>True when the browser ran the function. Callers which remember what they told the browser
-    /// must check this: a call which never arrived leaves the browser in its previous state.</returns>
-    public static async ValueTask<bool> TryInvokeVoidAsync(this IJSRuntime jsRuntime, string identifier, params object?[]? args)
-    {
-        try
+        /// <summary>
+        /// Calls a JavaScript function which returns nothing, and tolerates a circuit which is already gone.
+        /// </summary>
+        /// <remarks>
+        /// Blazor cannot issue JS interop calls once the browser connection of a circuit is gone. That happens
+        /// during every reload and while a component gets disposed, so the failure is expected rather than
+        /// exceptional. Discarding such a call is not an option, though: the discarded task keeps the fault
+        /// until the finalizer reports it as an unobserved task exception, without any hint at its origin.
+        /// This method is the one place which knows how to await such a call and what to do with its failure.
+        /// </remarks>
+        /// <param name="identifier">The name of the JavaScript function.</param>
+        /// <param name="args">The arguments for the JavaScript function.</param>
+        /// <returns>True when the browser ran the function. Callers which remember what they told the browser
+        /// must check this: a call which never arrived leaves the browser in its previous state.</returns>
+        public async ValueTask<bool> TryInvokeVoidAsync(string identifier, params object?[]? args)
         {
-            await jsRuntime.InvokeVoidAsync(identifier, args);
-            return true;
-        }
-        catch (Exception exception)
-        {
-            LogInvocationFailure(exception, identifier);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Calls a JavaScript function which returns nothing, unless the circuit is known to be disconnected.
-    /// </summary>
-    /// <remarks>
-    /// Prefer this over the variant without a circuit state wherever the caller knows its circuit. While a
-    /// browser connection is gone, every single call would otherwise throw, which is needless work for
-    /// something we already know cannot succeed — a component of a disconnected circuit which keeps
-    /// rendering would produce one such exception per render.
-    /// </remarks>
-    /// <param name="jsRuntime">The JS runtime to call.</param>
-    /// <param name="circuitState">The circuit of the caller.</param>
-    /// <param name="identifier">The name of the JavaScript function.</param>
-    /// <param name="args">The arguments for the JavaScript function.</param>
-    /// <returns>True when the browser ran the function, false when it was skipped or failed.</returns>
-    public static async ValueTask<bool> TryInvokeVoidAsync(this IJSRuntime jsRuntime, CircuitStateService circuitState, string identifier, params object?[]? args)
-    {
-        if (!circuitState.IsConnected)
-        {
-            LOGGER.LogDebug("The JS call '{Identifier}' was skipped because the browser connection of the circuit '{CircuitId}' is down.", identifier, circuitState.CircuitId);
-            return false;
+            try
+            {
+                await jsRuntime.InvokeVoidAsync(identifier, args);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                LogInvocationFailure(exception, identifier);
+                return false;
+            }
         }
 
-        return await jsRuntime.TryInvokeVoidAsync(identifier, args);
-    }
-
-    /// <summary>
-    /// Calls a JavaScript function which returns a value, unless the circuit is known to be disconnected.
-    /// </summary>
-    /// <remarks>
-    /// The two parts of the result answer two different questions, and callers must keep them apart.
-    /// Whether the browser ran the function at all comes first: a call which never arrived says nothing
-    /// about the page, so nobody may act on an answer they did not get. What the function returned is the
-    /// second question, and there a null is a legitimate answer -- it means the browser looked and found
-    /// nothing.
-    /// </remarks>
-    /// <param name="jsRuntime">The JS runtime to call.</param>
-    /// <param name="circuitState">The circuit of the caller.</param>
-    /// <param name="identifier">The name of the JavaScript function.</param>
-    /// <param name="args">The arguments for the JavaScript function.</param>
-    /// <returns>Whether the browser ran the function, and what it returned.</returns>
-    public static async ValueTask<(bool WasInvoked, TValue? Value)> TryInvokeAsync<TValue>(this IJSRuntime jsRuntime, CircuitStateService circuitState, string identifier, params object?[]? args)
-    {
-        if (!circuitState.IsConnected)
+        /// <summary>
+        /// Calls a JavaScript function which returns nothing, unless the circuit is known to be disconnected.
+        /// </summary>
+        /// <remarks>
+        /// Prefer this over the variant without a circuit state wherever the caller knows its circuit. While a
+        /// browser connection is gone, every single call would otherwise throw, which is needless work for
+        /// something we already know cannot succeed — a component of a disconnected circuit which keeps
+        /// rendering would produce one such exception per render.
+        /// </remarks>
+        /// <param name="circuitState">The circuit of the caller.</param>
+        /// <param name="identifier">The name of the JavaScript function.</param>
+        /// <param name="args">The arguments for the JavaScript function.</param>
+        /// <returns>True when the browser ran the function, false when it was skipped or failed.</returns>
+        public async ValueTask<bool> TryInvokeVoidAsync(CircuitStateService circuitState, string identifier, params object?[]? args)
         {
-            LOGGER.LogDebug("The JS call '{Identifier}' was skipped because the browser connection of the circuit '{CircuitId}' is down.", identifier, circuitState.CircuitId);
-            return (false, default);
+            if (!circuitState.IsConnected)
+            {
+                LOGGER.LogDebug("The JS call '{Identifier}' was skipped because the browser connection of the circuit '{CircuitId}' is down.", identifier, circuitState.CircuitId);
+                return false;
+            }
+
+            return await jsRuntime.TryInvokeVoidAsync(identifier, args);
         }
 
-        try
+        /// <summary>
+        /// Calls a JavaScript function which returns a value, unless the circuit is known to be disconnected.
+        /// </summary>
+        /// <remarks>
+        /// The two parts of the result answer two different questions, and callers must keep them apart.
+        /// Whether the browser ran the function at all comes first: a call which never arrived says nothing
+        /// about the page, so nobody may act on an answer they did not get. What the function returned is the
+        /// second question, and there a null is a legitimate answer -- it means the browser looked and found
+        /// nothing.
+        /// </remarks>
+        /// <param name="circuitState">The circuit of the caller.</param>
+        /// <param name="identifier">The name of the JavaScript function.</param>
+        /// <param name="args">The arguments for the JavaScript function.</param>
+        /// <returns>Whether the browser ran the function, and what it returned.</returns>
+        public async ValueTask<(bool WasInvoked, TValue? Value)> TryInvokeAsync<TValue>(CircuitStateService circuitState, string identifier, params object?[]? args)
         {
-            return (true, await jsRuntime.InvokeAsync<TValue>(identifier, args));
-        }
-        catch (Exception exception)
-        {
-            LogInvocationFailure(exception, identifier);
-            return (false, default);
+            if (!circuitState.IsConnected)
+            {
+                LOGGER.LogDebug("The JS call '{Identifier}' was skipped because the browser connection of the circuit '{CircuitId}' is down.", identifier, circuitState.CircuitId);
+                return (false, default);
+            }
+
+            try
+            {
+                return (true, await jsRuntime.InvokeAsync<TValue>(identifier, args));
+            }
+            catch (Exception exception)
+            {
+                LogInvocationFailure(exception, identifier);
+                return (false, default);
+            }
         }
     }
 
-    /// <summary>
-    /// Calls a function of a JavaScript module which returns nothing, and tolerates a circuit which is
-    /// already gone. See the remarks on the JS runtime variant of this method.
-    /// </summary>
     /// <param name="module">The JavaScript module to call.</param>
-    /// <param name="identifier">The name of the function inside the module.</param>
-    /// <param name="args">The arguments for the function.</param>
-    /// <returns>True when the browser ran the function, false when it failed.</returns>
-    public static async ValueTask<bool> TryInvokeVoidAsync(this IJSObjectReference module, string identifier, params object?[]? args)
+    extension(IJSObjectReference module)
     {
-        try
+        /// <summary>
+        /// Calls a function of a JavaScript module which returns nothing, and tolerates a circuit which is
+        /// already gone. See the remarks on the JS runtime variant of this method.
+        /// </summary>
+        /// <param name="identifier">The name of the function inside the module.</param>
+        /// <param name="args">The arguments for the function.</param>
+        /// <returns>True when the browser ran the function, false when it failed.</returns>
+        public async ValueTask<bool> TryInvokeVoidAsync(string identifier, params object?[]? args)
         {
-            await module.InvokeVoidAsync(identifier, args);
-            return true;
-        }
-        catch (Exception exception)
-        {
-            LogInvocationFailure(exception, identifier);
-            return false;
+            try
+            {
+                await module.InvokeVoidAsync(identifier, args);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                LogInvocationFailure(exception, identifier);
+                return false;
+            }
         }
     }
 
