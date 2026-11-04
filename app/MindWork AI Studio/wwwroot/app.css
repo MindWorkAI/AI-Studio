@@ -306,6 +306,28 @@
     margin-right: 0 !important;
 }
 
+/* The buttons of a formula, such as copying and saving it, appear while the pointer is on it, as they do at a code block */
+.formula-block {
+    position: relative;
+}
+
+.formula-block > .formula-block-actions {
+    position: absolute;
+    display: none;
+    top: 0;
+    right: 0;
+}
+
+.formula-block:hover > .formula-block-actions {
+    display: flex;
+}
+
+/* The copy button stands in the row of the other buttons, not in the corner of a code block */
+.formula-block > .formula-block-actions .mud-markdown-code-highlight-copybtn {
+    position: static;
+    display: block;
+}
+
 .log-viewer-shell {
     min-width: 0;
 }
