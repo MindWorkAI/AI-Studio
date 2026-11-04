@@ -55,6 +55,7 @@ public sealed class ConfigurationSnippetParserTests
         PluginConfigurationObjectType.CHAT_TEMPLATE,
         PluginConfigurationObjectType.DATA_SOURCE,
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY,
+        PluginConfigurationObjectType.FORMAT_TEMPLATE,
     ];
 
     [TestCaseSource(nameof(EXPORTABLE_TYPES))]
@@ -248,6 +249,8 @@ public sealed class ConfigurationSnippetParserTests
             PreselectedProvider = Guid.NewGuid().ToString(),
             HidePolicyDefinition = true,
         }.ExportAsConfigurationSection(),
+
+        PluginConfigurationObjectType.FORMAT_TEMPLATE => new FormatTemplate(1, Guid.NewGuid().ToString(), QUOTED_TEXT, WINDOWS_PATH).ExportAsConfigurationSection(),
 
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "This test knows no export for this type."),
     };

@@ -53,6 +53,7 @@ public sealed partial class PluginInstallService
             ChatTemplates: CountObjects(PluginConfigurationObjectType.CHAT_TEMPLATE),
             Profiles: CountObjects(PluginConfigurationObjectType.PROFILE),
             DocumentAnalysisPolicies: CountObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY),
+            FormatTemplates: CountObjects(PluginConfigurationObjectType.FORMAT_TEMPLATE),
             LockedSettings: lockedSettings,
             MandatoryInfos: configurationPlugin.MandatoryInfos.Count,
             Introductions: configurationPlugin.Introductions.Count,

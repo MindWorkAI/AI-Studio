@@ -40,6 +40,7 @@ Therefore, before you plan, read, or change anything in one of these areas, read
 | anything under `app/MindWork AI Studio/Tools/Services/Indexing/`, or `DataSourceEmbeddingService` | `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/Databases/` | `app/MindWork AI Studio/Tools/Databases/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/PowerPoint/` or `app/Tests/Tools/PowerPoint/`, or the PowerPoint part of the Slide Assistant | `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md` |
+| anything under `app/MindWork AI Studio/Tools/Word/` or `app/Tests/Tools/Word/`, or the export into a Word template | `app/MindWork AI Studio/Tools/Word/AGENTS.md` |
 
 This file keeps only what applies to the whole repository. `app/AGENTS.md` keeps what applies to all of the
 .NET app, such as the rules for code which calls into one of the areas below it. Add instructions about a

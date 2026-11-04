@@ -70,6 +70,7 @@ public partial class PluginImportDialog : MSGComponentBase
             Add(summary.ChatTemplates, this.T("{0} chat template"), this.T("{0} chat templates"));
             Add(summary.Profiles, this.T("{0} profile"), this.T("{0} profiles"));
             Add(summary.DocumentAnalysisPolicies, this.T("{0} document analysis policy"), this.T("{0} document analysis policies"));
+            Add(summary.FormatTemplates, this.T("{0} format template"), this.T("{0} format templates"));
             Add(summary.MandatoryInfos, this.T("{0} mandatory information you have to accept before using AI Studio"), this.T("{0} mandatory information you have to accept before using AI Studio"));
             Add(summary.Introductions, this.T("{0} introduction on the welcome page"), this.T("{0} introductions on the welcome page"));
             Add(summary.MailboxProviders, this.T("{0} mail server offered for new mailboxes"), this.T("{0} mail servers offered for new mailboxes"));

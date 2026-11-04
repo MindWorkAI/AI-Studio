@@ -3741,6 +3741,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Möchte
 -- Removes this block
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Entfernt diesen Block"
 
+-- Export without template
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2233581051"] = "Ohne Vorlage exportieren"
+
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Nachricht neu generieren"
 
@@ -3758,6 +3761,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2822776450"] = "KI-Antw
 
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Anzahl der Anhänge"
+
+-- Manage your templates
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3058934130"] = "Verwalten Sie Ihre Vorlagen"
 
 -- Roll back to this response
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3132525321"] = "Zu dieser Antwort zurücksetzen"
@@ -4998,6 +5004,54 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T967949655"] = "Alle Dok
 -- Pattern help and examples
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1369669520"] = "Hilfe und Beispiele zu Dateimustern"
 
+-- Add Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEADDBUTTONS::T1076773091"] = "Dokumentvorlage hinzufügen"
+
+-- Import Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEADDBUTTONS::T2773597251"] = "Dokumentvorlage importieren"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1469573738"] = "Löschen"
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1582017048"] = "Anzeigen"
+
+-- The template file cannot be found.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1941431282"] = "Die Vorlagendatei kann nicht gefunden werden."
+
+-- No format templates configured yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T1955378082"] = "Noch keine Dokumentvorlagen konfiguriert."
+
+-- Edit Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T2823861742"] = "Dokumentvorlage bearbeiten"
+
+-- Format Template Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3093558555"] = "Name der Dokumentvorlage"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3267849393"] = "Bearbeiten"
+
+-- Are you sure you want to delete the format template '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3671173081"] = "Sind Sie sicher, dass Sie die Dokumentvorlage „{0}“ löschen möchten?"
+
+-- This format template is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3691770332"] = "Diese Dokumentvorlage wird von Ihrer Organisation verwaltet."
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T3865031940"] = "Aktionen"
+
+-- Delete Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T4087833621"] = "Dokumentvorlage löschen"
+
+-- View Format Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T4157017975"] = "Dokumentvorlage anzeigen"
+
+-- File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T723007075"] = "Datei"
+
+-- Add your templates here, for example the Word templates of your organization. When you export a result to Word, you can choose one of them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FORMATTEMPLATEMANAGEMENT::T799944837"] = "Fügen Sie hier Ihre Vorlagen hinzu, z. B. die Word-Vorlagen Ihrer Organisation. Wenn Sie ein Ergebnis nach Word exportieren, können Sie eine davon auswählen."
+
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs können Fehler machen. Überprüfen Sie wichtige Informationen."
 
@@ -5930,6 +5984,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T80509
 
 -- Example text to embed
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T816748904"] = "Beispieltext zum Einbetten"
+
+-- Configure Format Templates
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELFORMATTEMPLATES::T3602749709"] = "Dokumentvorlagen konfigurieren"
 
 -- Cannot export the encrypted API key: No enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T1832230847"] = "Der verschlüsselte API-Schlüssel kann nicht exportiert werden: Es ist kein Geheimnis für die Verschlüsselung konfiguriert."
@@ -7053,6 +7110,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T1238255445
 -- No
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T1642511898"] = "Nein"
 
+-- {0} format templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T1678803903"] = "{0} Dokumentvorlagen"
+
 -- {0} introductions on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2107991661"] = "{0} Einführungen auf der Willkommensseite"
 
@@ -7091,6 +7151,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T330559934"
 
 -- {0} LLM provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3410030691"] = "{0} LLM-Anbieter"
+
+-- {0} format template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3429007574"] = "{0} Dokumentvorlage"
 
 -- Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3616855807"] = "Möchten Sie das Konfigurations-Plugin „{0}“ wirklich löschen? Dadurch werden seine lokalen Plugin-Dateien dauerhaft gelöscht."
@@ -8412,6 +8475,51 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T1173984541"] = "Einb
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T3448155331"] = "Schließen"
 
+-- The name of the format template is mandatory, and each format template must have a unique name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1062147464"] = "Der Name der Dokumentvorlage ist erforderlich, und jede Dokumentvorlage muss einen eindeutigen Namen haben."
+
+-- Please select a template file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T11274556"] = "Bitte wählen Sie eine Vorlagendatei aus."
+
+-- The selected file is not a supported format template. Supported file types are: {0}.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1231150347"] = "Die ausgewählte Datei ist keine unterstützte Dokumentvorlage. Unterstützte Dateitypen sind: {0}."
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1847791252"] = "Aktualisieren"
+
+-- The template file cannot be found.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T1941431282"] = "Die Vorlagendatei kann nicht gefunden werden."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2646845972"] = "Hinzufügen"
+
+-- The name of the format template must not exceed 40 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T2793461942"] = "Der Name der Dokumentvorlage darf nicht länger als 40 Zeichen sein."
+
+-- Format Template Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3093558555"] = "Name der Dokumentvorlage"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3448155331"] = "Schließen"
+
+-- Template file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T3609077655"] = "Vorlagendatei"
+
+-- The name of the format template must be unique; the chosen name is already in use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4239698038"] = "Der Name der Dokumentvorlage muss eindeutig sein; der gewählte Name wird bereits verwendet."
+
+-- Select a format template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T4261636653"] = "Dokumentvorlage auswählen"
+
+-- Please enter a name for the format template.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T454079616"] = "Bitte geben Sie einen Namen für die Dokumentvorlage ein."
+
+-- Add a template, for example a Word template of your organization. AI Studio remembers where the file is located, so a new version of the template takes effect at once.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T512889034"] = "Fügen Sie eine Vorlage hinzu, z. B. eine Word-Vorlage Ihrer Organisation. AI Studio merkt sich den Speicherort der Datei, sodass eine neue Version der Vorlage sofort wirksam wird."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::FORMATTEMPLATEDIALOG::T900713019"] = "Abbrechen"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::INFORMATIONDIALOG::T3448155331"] = "Schließen"
 
@@ -8517,6 +8625,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1573770551"] = "Version
 -- Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1642243064"] = "Quelle"
 
+-- {0} format templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1678803903"] = "{0} Dokumentvorlagen"
+
 -- You are about to install a language plugin from a file.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1974491324"] = "Sie sind dabei, ein Sprach-Plugin aus einer Datei zu installieren."
 
@@ -8573,6 +8684,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3415610475"] = "Dies er
 
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3424652889"] = "Unbekannt"
+
+-- {0} format template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3429007574"] = "{0} Dokumentvorlage"
 
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3512062061"] = "Typ"
@@ -9776,6 +9890,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T36293728
 
 -- ERI server options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T488190224"] = "ERI-Serveroptionen sind vorausgewählt"
+
+-- Your Format Templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T1870172530"] = "Ihre Dokumentvorlagen"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGFORMATTEMPLATES::T3448155331"] = "Schließen"
 
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1417990312"] = "Zielsprache vorauswählen"
@@ -12189,6 +12309,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1714878838"] = "Vielen Dank, Peer
 -- Individual Contributors
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1874835680"] = "Einzelspender"
 
+-- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, for the protection against prompt injection, and for the export into Word templates.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2110420370"] = "Vielen Dank, Sabrina, dass du den Chat um Dateianhänge erweitert, den Folien-Assistenten und den SWOT-Analyse-Assistenten entwickelt, den Schutz vor Prompt-Injection eingebaut und den Export in Word-Vorlagen ermöglicht hast."
+
 -- The first 10 supporters who make a one-time contribution:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2410456125"] = "Die ersten 10 Spender, die einen einmaligen Beitrag geleistet haben:"
 
@@ -12212,9 +12335,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3061261435"] = "Finanzielle Unter
 
 -- Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3226413110"] = "Vielen Dank, Prodman, dass du LiteLLM als neuen Anbieter in AI Studio integriert hast."
-
--- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, and for the protection against prompt injection.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T32630309"] = "Vielen Dank, Sabrina, dass du den Chat um Dateianhänge erweitert, den Folien-Assistenten und den SWOT-Analyse-Assistenten entwickelt und den Schutz vor Prompt-Injection eingebaut hast."
 
 -- German Aerospace Center (DLR)
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3264998714"] = "Deutsches Zentrum für Luft- und Raumfahrt (DLR)"
@@ -13362,6 +13482,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Datenquelle
 -- The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "Der Index der Datenquelle „{0}“ kann nicht mehr gelesen werden. Bei einer Reparatur wird der Index vollständig neu erstellt: Alle bisher indexierten Daten werden verworfen und jedes Dokument dieser Datenquelle erneut an Ihren Einbettungsanbieter gesendet. Bei einem Cloud-Anbieter entstehen dadurch Kosten, und bei einer großen Datenquelle kann dies einige Zeit dauern. Möchten Sie diese Datenquelle jetzt reparieren?"
 
+-- The export into the format template '{0}' failed. Please check that the template can be read and that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1214642787"] = "Der Export in die Dokumentvorlage „{0}“ ist fehlgeschlagen. Bitte überprüfen Sie, ob die Vorlage lesbar ist und die Zieldatei nicht in einem anderen Programm geöffnet ist."
+
+-- The export succeeded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1713926719"] = "Der Export war erfolgreich."
+
+-- The export failed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T1895034475"] = "Der Export ist fehlgeschlagen."
+
+-- The file of the format template '{0}' cannot be found. Please check the template in the settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T2859252913"] = "Die Datei der Dokumentvorlage „{0}“ kann nicht gefunden werden. Bitte überprüfen Sie die Vorlage in den Einstellungen."
+
+-- Only text messages can be exported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTEXPORT::T3576815370"] = "Nur Textnachrichten können exportiert werden."
+
 -- Please drop a file, not a folder.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFILE::T1472251601"] = "Bitte legen Sie eine Datei ab, keinen Ordner."
 
@@ -13859,15 +13994,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T695293525"] = "AI Studio konnte die n
 
 -- AI Studio couldn't install Pandoc.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T932858631"] = "AI Studio konnte Pandoc nicht installieren."
-
--- The export succeeded.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1713926719"] = "Der Export war erfolgreich."
-
--- The export failed.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1895034475"] = "Der Export ist fehlgeschlagen."
-
--- Only text messages can be exported.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3576815370"] = "Nur Textnachrichten können exportiert werden."
 
 -- The export succeeded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1713926719"] = "Der Export war erfolgreich."
@@ -14381,6 +14507,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXT
 
 -- Transcription Provider
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T4094182084"] = "Transkriptionsanbieter"
+
+-- Format Template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T675897640"] = "Dokumentvorlage"
 
 -- Data Source
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T858938618"] = "Datenquelle"
@@ -15605,6 +15734,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Quellcodeähn
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
+
+-- Format template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T779618568"] = "Dokumentvorlage"
 
 -- Image for AI models
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T791951937"] = "Bild für KI-Modelle"

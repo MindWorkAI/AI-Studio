@@ -165,6 +165,21 @@ public static class FileExportFormatExtensions
         };
 
         /// <summary>
+        /// Returns which format templates the format can be exported into.
+        /// </summary>
+        /// <remarks>
+        /// A format with a filter gets a menu of its own in the export menu, which lists the format
+        /// templates of this kind; see FormatTemplate.Serves.
+        /// </remarks>
+        /// <value>The filter of the format templates, or null when the format takes none.</value>
+        public FileTypeFilter? FormatTemplateFilter => format switch
+        {
+            FileExportFormat.MICROSOFT_WORD => FileTypes.MS_WORD_TEMPLATE,
+
+            _ => null,
+        };
+
+        /// <summary>
         /// Returns the encoding the file gets written with.
         /// </summary>
         /// <remarks>

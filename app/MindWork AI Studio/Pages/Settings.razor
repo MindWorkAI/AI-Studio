@@ -29,6 +29,8 @@
                 <SettingsPanelDataSources/>
             }
 
+            <SettingsPanelFormatTemplates/>
+
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
                 <SettingsPanelAgentDataSourceSelection AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>

@@ -112,6 +112,14 @@ public static class ConfigurationSnippetImport
                 result = new(MakeLocal(profile), string.Empty, hints, []);
                 return true;
 
+            //
+            // The parser left the path untouched, so it may name a file which does not exist here.
+            // The form looks it up once the user asks to add the template:
+            //
+            case FormatTemplate formatTemplate:
+                result = new(MakeLocal(formatTemplate), string.Empty, hints, []);
+                return true;
+
             default:
                 throw new NotSupportedException($"Configuration objects of the type {type} cannot be imported yet.");
         }

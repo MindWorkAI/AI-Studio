@@ -89,7 +89,23 @@
                         <MudMenu Icon="@Icons.Material.Filled.Save" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                             @foreach (var documentFormat in FileExportFormat.DocumentFormats)
                             {
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@documentFormat.Name"/>
+                                if (documentFormat.FormatTemplateFilter is null)
+                                {
+                                    <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@documentFormat.Name"/>
+                                }
+                                else
+                                {
+                                    @* A format which takes templates opens a menu of its own, which also leads to managing them: *@
+                                    <MudMenu StartIcon="@documentFormat.Icon" Label="@documentFormat.Name" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                                        <MudMenuItem OnClick="@this.ManageFormatTemplates" Icon="@Icons.Material.Filled.Settings" Label="@T("Manage your templates")"/>
+                                        <MudDivider/>
+                                        <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@T("Export without template")"/>
+                                        @foreach (var formatTemplate in this.FormatTemplatesFor(documentFormat))
+                                        {
+                                            <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat, formatTemplate))" Icon="@(formatTemplate.IsEnterpriseConfiguration ? Icons.Material.Filled.Business : Icons.Material.Filled.Description)" Label="@formatTemplate.Name"/>
+                                        }
+                                    </MudMenu>
+                                }
                             }
                             @if (this.MessageFiles.Count > MAX_FILES_WITHOUT_SUBMENUS)
                             {
