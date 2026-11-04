@@ -3,18 +3,27 @@ using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools;
 
+//
+// The methods with a params parameter stay classic extension methods instead of moving into the
+// extension block: for a member of an extension block, the compiler of the .NET 10.0.1xx SDK warns
+// about every argument passed one by one to a params parameter (CS8620, dotnet/roslyn#80024). Move
+// them once the SDK in metadata.txt carries the fix; MWAIS0016 makes the same exception until then.
+//
 public static class JsRuntimeExtensions
 {
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(JsRuntimeExtensions));
 
-    public static async Task GenerateAndShowDiff(this IJSRuntime jsRuntime, string text1, string text2)
+    extension(IJSRuntime jsRuntime)
     {
-        await jsRuntime.InvokeVoidAsync("generateDiff", text1, text2, AssistantLowerBase.RESULT_DIV_ID, AssistantLowerBase.BEFORE_RESULT_DIV_ID);
-    }
+        public async Task GenerateAndShowDiff(string text1, string text2)
+        {
+            await jsRuntime.InvokeVoidAsync("generateDiff", text1, text2, AssistantLowerBase.RESULT_DIV_ID, AssistantLowerBase.BEFORE_RESULT_DIV_ID);
+        }
 
-    public static async Task ClearDiv(this IJSRuntime jsRuntime, string divId)
-    {
-        await jsRuntime.InvokeVoidAsync("clearDiv", divId);
+        public async Task ClearDiv(string divId)
+        {
+            await jsRuntime.InvokeVoidAsync("clearDiv", divId);
+        }
     }
 
     /// <summary>

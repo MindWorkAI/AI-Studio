@@ -14,60 +14,64 @@ internal static class FileExtractionResultExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExtractionResultExtensions).Namespace, nameof(FileExtractionResultExtensions));
 
-    /// <summary>
-    /// Gets the localized message which explains why a file could not be read.
-    /// </summary>
     /// <param name="result">The extraction result.</param>
-    /// <param name="fileName">The name of the file, as shown to the user.</param>
-    /// <returns>The localized message.</returns>
-    internal static string ToUserMessage(this FileExtractionResult result, string fileName)
+    extension(FileExtractionResult result)
     {
-        // When we know what the file really is, naming it beats a generic "not supported":
-        if (result.ErrorCode is FileExtractionErrorCode.UNSUPPORTED && result.DetectedFormat is not null)
-            return string.Format(TB("The file '{0}' is a {1}, which AI Studio cannot read, so it was not sent."), fileName, result.DetectedFormat);
+        /// <summary>
+        /// Gets the localized message which explains why a file could not be read.
+        /// </summary>
+        /// <param name="fileName">The name of the file, as shown to the user.</param>
+        /// <returns>The localized message.</returns>
+        internal string ToUserMessage(string fileName)
+        {
+            // When we know what the file really is, naming it beats a generic "not supported":
+            if (result.ErrorCode is FileExtractionErrorCode.UNSUPPORTED && result.DetectedFormat is not null)
+                return string.Format(TB("The file '{0}' is a {1}, which AI Studio cannot read, so it was not sent."), fileName, result.DetectedFormat);
 
-        return result.ErrorCode.ToUserMessage(fileName);
+            return result.ErrorCode.ToUserMessage(fileName);
+        }
+
+        /// <summary>
+        /// Gets the localized message for a file whose content does not match its file extension.
+        /// </summary>
+        /// <remarks>
+        /// This is a notice, not a failure: the file was read according to its content. We still tell
+        /// the user, because a wrong extension is a real problem for every other program as well.
+        /// </remarks>
+        /// <param name="fileName">The name of the file, as shown to the user.</param>
+        /// <returns>The localized message.</returns>
+        internal string ToExtensionMismatchUserMessage(string fileName) => string.Format(
+            TB("The file '{0}' is actually a {1} and was read as such. Please correct its file extension."),
+            fileName,
+            result.DetectedFormat);
+
+        /// <summary>
+        /// Gets the localized message for a file which was read, but lost some of its pages.
+        /// </summary>
+        /// <param name="fileName">The name of the file, as shown to the user.</param>
+        /// <returns>The localized message.</returns>
+        internal string ToPartialUserMessage(string fileName)
+        {
+            if (result.FailedPages.Count == 0)
+                return string.Format(TB("Parts of the file '{0}' could not be read. The remaining content was sent."), fileName);
+
+            return string.Format(TB("The pages {1} of the file '{0}' could not be read. The remaining content was sent."), fileName, string.Join(", ", result.FailedPages));
+        }
     }
 
-    /// <summary>
-    /// Gets the localized message for a file whose content does not match its file extension.
-    /// </summary>
-    /// <remarks>
-    /// This is a notice, not a failure: the file was read according to its content. We still tell
-    /// the user, because a wrong extension is a real problem for every other program as well.
-    /// </remarks>
-    /// <param name="result">The extraction result.</param>
-    /// <param name="fileName">The name of the file, as shown to the user.</param>
-    /// <returns>The localized message.</returns>
-    internal static string ToExtensionMismatchUserMessage(this FileExtractionResult result, string fileName) => string.Format(
-        TB("The file '{0}' is actually a {1} and was read as such. Please correct its file extension."),
-        fileName,
-        result.DetectedFormat);
-
-    /// <summary>
-    /// Gets the localized message which explains why a file could not be read.
-    /// </summary>
-    /// <remarks>
-    /// This overload exists for the places which know the reason before an extraction was even
-    /// attempted, so both ways of skipping a file tell the user the same thing.
-    /// </remarks>
     /// <param name="code">The stable failure code.</param>
-    /// <param name="fileName">The name of the file, as shown to the user.</param>
-    /// <returns>The localized message.</returns>
-    internal static string ToUserMessage(this FileExtractionErrorCode code, string fileName) => string.Format(ToUserMessageFormat(code), fileName);
-
-    /// <summary>
-    /// Gets the localized message for a file which was read, but lost some of its pages.
-    /// </summary>
-    /// <param name="result">The extraction result.</param>
-    /// <param name="fileName">The name of the file, as shown to the user.</param>
-    /// <returns>The localized message.</returns>
-    internal static string ToPartialUserMessage(this FileExtractionResult result, string fileName)
+    extension(FileExtractionErrorCode code)
     {
-        if (result.FailedPages.Count == 0)
-            return string.Format(TB("Parts of the file '{0}' could not be read. The remaining content was sent."), fileName);
-
-        return string.Format(TB("The pages {1} of the file '{0}' could not be read. The remaining content was sent."), fileName, string.Join(", ", result.FailedPages));
+        /// <summary>
+        /// Gets the localized message which explains why a file could not be read.
+        /// </summary>
+        /// <remarks>
+        /// This overload exists for the places which know the reason before an extraction was even
+        /// attempted, so both ways of skipping a file tell the user the same thing.
+        /// </remarks>
+        /// <param name="fileName">The name of the file, as shown to the user.</param>
+        /// <returns>The localized message.</returns>
+        internal string ToUserMessage(string fileName) => string.Format(ToUserMessageFormat(code), fileName);
     }
 
     private static string ToUserMessageFormat(FileExtractionErrorCode code) => code switch

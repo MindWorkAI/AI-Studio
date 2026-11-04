@@ -56,6 +56,12 @@ internal static class MailToolArguments
     /// <param name="toolAction">What the tool does with the mails, e.g., "search", completing "the mailboxes to ...".</param>
     /// <param name="mailboxIds">The ids of the mailboxes the tool offers, or none while no mailboxes are known.</param>
     /// <returns>The schema, for further arguments.</returns>
+    /// <remarks>
+    /// A classic extension method instead of a member of an extension block: for those, the compiler of
+    /// the .NET 10.0.1xx SDK warns about every mailbox id passed one by one to the params parameter
+    /// (CS8620, dotnet/roslyn#80024). Move it once the SDK in metadata.txt carries the fix; MWAIS0016 makes
+    /// the same exception until then.
+    /// </remarks>
     public static ToolParameterSchemaBuilder AddMailConditions(this ToolParameterSchemaBuilder builder, string toolAction, params string[] mailboxIds) => builder
         .OptionalStringArray(MAILBOX_IDS_ARGUMENT, $"Optional IDs of the mailboxes to {toolAction}, out of those listed in the description of this tool. Leave it out to {toolAction} all of them.", mailboxIds)
         .OptionalString(FROM_ARGUMENT, $"Optional part of the address or the name of the sender, such as 'alice@example.org', 'example.org', or 'Alice'. At most {MAX_ADDRESS_CHARACTERS} characters.")
