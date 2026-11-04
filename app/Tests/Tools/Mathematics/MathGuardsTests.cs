@@ -59,7 +59,7 @@ public sealed class MathGuardsTests
         using (Assert.EnterMultipleScope())
         {
             var refusal = Assert.Throws<MathComputationException>(() => MathGuards.CheckExpansion(Read("1 + (x + y)^500")))!;
-            Assert.That(refusal.Message, Is.EqualTo("'(x + y) ^ 500' raises a sum to the power of 500. Expanding is limited to exponents up to 200, since AngouriMath cannot stop a larger expansion midway."));
+            Assert.That(refusal.Message, Is.EqualTo("'(x + y) ^ 500' raises a sum to the power of 500. Where AngouriMath may expand, a sum is raised to exponents up to 200 only, since it cannot stop a larger expansion midway."));
             Assert.Throws<MathComputationException>(() => MathGuards.CheckExpansion(Read("(x - 1)^(-300)")));
 
             foreach (var text in new[] { "(x + y)^200", "x^500", "(x * y)^500", "(x + y)^n" })

@@ -65,6 +65,32 @@ public sealed class NumericCheckTests
     }
 
     [Test]
+    public void ChecksADerivativeByItsCentralDifference()
+    {
+        var x = MathS.Var("x");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("2*x*sin(x) + x^2*cos(x)", "derivative"), MathExpressionReader.Read("x^2*sin(x)", "function"), x), Is.EqualTo(NumericCheckOutcome.PASSED));
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("2*x + 1", "derivative"), MathExpressionReader.Read("x^2", "function"), x), Is.EqualTo(NumericCheckOutcome.FAILED));
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("a", "derivative"), MathExpressionReader.Read("a*x + C", "function"), x), Is.EqualTo(NumericCheckOutcome.PASSED), "Other variables, the constant of integration among them, take sample values.");
+        }
+    }
+
+    [Test]
+    public void GivesAnIntegerParameterIntegerValues()
+    {
+        var parameter = MathS.Var("n_1");
+        var values = Enumerable.Range(0, 6).Select(point => NumericCheck.SampleAssignment(point, [parameter])[parameter]).Distinct().ToList();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(values, Is.EquivalentTo(new Entity[] { -1, 0, 1 }));
+            Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n_12")), Is.True);
+            Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n")), Is.False);
+            Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n_x")), Is.False);
+        }
+    }
+
+    [Test]
     public void TheSamplePointsAreFixedAndDifferForEachVariable()
     {
         var variables = new[] { MathS.Var("x"), MathS.Var("y"), MathS.Var("z") };

@@ -51,7 +51,7 @@ public static class MathGuards
             if (exponent is null || Math.Abs(exponent.Value) <= MathLimits.MAX_EXPANSION_EXPONENT)
                 continue;
 
-            throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(power)}' raises a sum to the power of {exponent.Value:0.###}. Expanding is limited to exponents up to {MathLimits.MAX_EXPANSION_EXPONENT}, since AngouriMath cannot stop a larger expansion midway."));
+            throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(power)}' raises a sum to the power of {exponent.Value:0.###}. Where AngouriMath may expand, a sum is raised to exponents up to {MathLimits.MAX_EXPANSION_EXPONENT} only, since it cannot stop a larger expansion midway."));
         }
     }
 
