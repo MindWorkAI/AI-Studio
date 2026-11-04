@@ -17,4 +17,5 @@ public static class Identifier
     public const string MODEL_PATTERN_LITERAL_ANALYZER = $"{Tools.ID_PREFIX}0013";
     public const string MISSING_INTERPOLATION_ANALYZER = $"{Tools.ID_PREFIX}0014";
     public const string JSON_SOURCE_GENERATION_ANALYZER = $"{Tools.ID_PREFIX}0015";
+    public const string CLASSIC_EXTENSION_METHOD_ANALYZER = $"{Tools.ID_PREFIX}0016";
 }

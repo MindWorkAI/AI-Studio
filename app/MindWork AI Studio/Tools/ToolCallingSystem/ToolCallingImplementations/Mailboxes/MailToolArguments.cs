@@ -59,7 +59,8 @@ internal static class MailToolArguments
     /// <remarks>
     /// A classic extension method instead of a member of an extension block: for those, the compiler of
     /// the .NET 10.0.1xx SDK warns about every mailbox id passed one by one to the params parameter
-    /// (CS8620, dotnet/roslyn#80024). Move it once the SDK in metadata.txt carries the fix.
+    /// (CS8620, dotnet/roslyn#80024). Move it once the SDK in metadata.txt carries the fix; MWAIS0016 makes
+    /// the same exception until then.
     /// </remarks>
     public static ToolParameterSchemaBuilder AddMailConditions(this ToolParameterSchemaBuilder builder, string toolAction, params string[] mailboxIds) => builder
         .OptionalStringArray(MAILBOX_IDS_ARGUMENT, $"Optional IDs of the mailboxes to {toolAction}, out of those listed in the description of this tool. Leave it out to {toolAction} all of them.", mailboxIds)

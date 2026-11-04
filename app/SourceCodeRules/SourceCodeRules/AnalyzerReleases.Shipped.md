@@ -19,3 +19,4 @@
  MWAIS0013 | Usage    | Error    | ModelPatternLiteralAnalyzer
  MWAIS0014 | Usage    | Error    | MissingInterpolationAnalyzer
  MWAIS0015 | Usage    | Error    | JsonSourceGenerationAnalyzer
+ MWAIS0016 | Style    | Error    | ClassicExtensionMethodAnalyzer
