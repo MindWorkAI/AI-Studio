@@ -8,7 +8,15 @@ namespace AIStudio.Tools.ERIClient;
 public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
 {
     protected readonly IERIDataSource DataSource = dataSource;
-    
+
+    /// <summary>
+    /// How AI Studio writes its requests to an ERI server and reads the answers.
+    /// </summary>
+    /// <remarks>
+    /// An answer which names a field twice is refused, also when the two names differ only in case:
+    /// AI Studio would follow one of the values, such as the provider types a data source allows, while
+    /// the server may have meant the other.
+    /// </remarks>
     internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
@@ -17,6 +25,7 @@ public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        AllowDuplicateProperties = false,
         Converters =
         {
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper),

@@ -31,6 +31,9 @@ internal static class VisualBriefingJson
     /// here even though the persisted manifest writes their member names. Unlike other options of the app,
     /// these are not made read-only right here, because MWAIS0010 wants nothing but the object creation;
     /// System.Text.Json locks them with their first use anyway.
+    ///
+    /// The answers of the model are read with these options, too, which therefore refuse a field named
+    /// twice. That rule only concerns reading and changes no byte of the output.
     /// </remarks>
     [CanonicalJsonConfiguration]
     internal static JsonSerializerOptions Canonical { get; } = new()
@@ -40,6 +43,7 @@ internal static class VisualBriefingJson
         WriteIndented = false,
         Encoder = JavaScriptEncoder.Default,
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        AllowDuplicateProperties = false,
         TypeInfoResolver = VisualBriefingCanonicalJsonContext.Default,
     };
 

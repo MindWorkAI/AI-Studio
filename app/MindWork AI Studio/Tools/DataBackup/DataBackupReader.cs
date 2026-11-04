@@ -31,7 +31,7 @@ public static class DataBackupReader
         DataBackupManifest? manifest;
         try
         {
-            await using var manifestStream = manifestEntry.Open();
+            await using var manifestStream = await manifestEntry.OpenAsync(token);
             manifest = await JsonSerializer.DeserializeAsync<DataBackupManifest>(manifestStream, DataBackupFormat.JSON_OPTIONS, token);
         }
         catch (JsonException)

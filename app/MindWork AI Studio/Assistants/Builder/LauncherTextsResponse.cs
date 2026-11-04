@@ -14,12 +14,20 @@ internal sealed class LauncherTextsResponse
 {
     public const string SCHEMA_VERSION_VALUE = "assistant_builder_launcher_texts_v1";
 
+    /// <summary>
+    /// How the answer of the model is read.
+    /// </summary>
+    /// <remarks>
+    /// An answer which names a field twice leaves open which of the values the model meant, so it is
+    /// refused like any other invalid JSON.
+    /// </remarks>
     internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         AllowTrailingCommas = false,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         MaxDepth = 8,
+        AllowDuplicateProperties = false,
         TypeInfoResolver = LauncherTextsResponseJsonContext.Default,
     }.AsReadOnly();
 

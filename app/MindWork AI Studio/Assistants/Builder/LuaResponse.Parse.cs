@@ -4,12 +4,20 @@ namespace AIStudio.Assistants.Builder;
 
 internal sealed partial class LuaResponse
 {
+    /// <summary>
+    /// How the answer of the model is read.
+    /// </summary>
+    /// <remarks>
+    /// An answer which names a field twice leaves open which of the values the model meant, the Lua code
+    /// included, so it is refused like any other invalid JSON.
+    /// </remarks>
     internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         AllowTrailingCommas = false,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         MaxDepth = 32,
+        AllowDuplicateProperties = false,
         TypeInfoResolver = LuaResponseJsonContext.Default,
     }.AsReadOnly();
 
