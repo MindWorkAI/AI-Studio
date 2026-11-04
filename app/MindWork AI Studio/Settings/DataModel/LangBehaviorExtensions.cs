@@ -6,11 +6,14 @@ public static class LangBehaviorExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(LangBehaviorExtensions).Namespace, nameof(LangBehaviorExtensions));
     
-    public static string Name(this LangBehavior langBehavior) => langBehavior switch
+    extension(LangBehavior langBehavior)
     {
-        LangBehavior.AUTO => TB("Choose the language automatically, based on your system language."),
-        LangBehavior.MANUAL => TB("Choose the language manually."),
+        public string Name() => langBehavior switch
+        {
+            LangBehavior.AUTO => TB("Choose the language automatically, based on your system language."),
+            LangBehavior.MANUAL => TB("Choose the language manually."),
 
-        _ => TB("Unknown option")
-    };
+            _ => TB("Unknown option")
+        };
+    }
 }

@@ -9,18 +9,21 @@ public static class DataSourceTypeExtension
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceTypeExtension).Namespace, nameof(DataSourceTypeExtension));
     
-    /// <summary>
-    /// Get the display name of the data source type.
-    /// </summary>
     /// <param name="type">The data source type.</param>
-    /// <returns>The display name of the data source type.</returns>
-    public static string GetDisplayName(this DataSourceType type) => type switch
+    extension(DataSourceType type)
     {
-        DataSourceType.LOCAL_FILE => TB("Local File"),
-        DataSourceType.LOCAL_DIRECTORY => TB("Local Directory"),
-        DataSourceType.ERI_V1 => TB("External ERI Server (v1)"),
-        DataSourceType.MAILBOX => TB("Mailbox"),
+        /// <summary>
+        /// Get the display name of the data source type.
+        /// </summary>
+        /// <returns>The display name of the data source type.</returns>
+        public string GetDisplayName() => type switch
+        {
+            DataSourceType.LOCAL_FILE => TB("Local File"),
+            DataSourceType.LOCAL_DIRECTORY => TB("Local Directory"),
+            DataSourceType.ERI_V1 => TB("External ERI Server (v1)"),
+            DataSourceType.MAILBOX => TB("Mailbox"),
 
-        _ => TB("None"),
-    };
+            _ => TB("None"),
+        };
+    }
 }

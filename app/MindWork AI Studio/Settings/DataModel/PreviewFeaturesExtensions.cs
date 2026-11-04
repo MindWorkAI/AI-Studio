@@ -6,46 +6,49 @@ public static class PreviewFeaturesExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PreviewFeaturesExtensions).Namespace, nameof(PreviewFeaturesExtensions));
     
-    public static string GetPreviewDescription(this PreviewFeatures feature) => feature switch
-    {
-        PreviewFeatures.PRE_WRITER_MODE_2024 => TB("Writer Mode: Experiments about how to write long texts using AI"),
-        PreviewFeatures.PRE_RAG_2024 => TB("RAG: Preview of our RAG implementation where you can refer your files or integrate enterprise data within your company"),
-        
-        PreviewFeatures.PRE_PLUGINS_2025 => TB("Plugins: Preview of our plugin system where you can extend the functionality of the app"),
-        PreviewFeatures.PRE_READ_PDF_2025 => TB("Read PDF: Preview of our PDF reading system where you can read and extract text from PDF files"),
-        PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025 => TB("Document Analysis: Preview of our document analysis system where you can analyze and extract information from documents"),
-        PreviewFeatures.PRE_SPEECH_TO_TEXT_2026 => TB("Transcription: Convert recordings and audio files into text"),
-        PreviewFeatures.PRE_META_ASSISTANT_V1 => TB("Assistant Builder: Generate and install assistant plugins"),
-        PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026 => TB("Visual Briefing Assistant: Turn source material into an interactive briefing"),
-        PreviewFeatures.PRE_MAILBOXES_2026 => TB("Mailboxes: Let the AI search and read your e-mails, kept in a local index on your computer"),
-
-        _ => TB("Unknown preview feature")
-    };
-    
-    /// <summary>
-    /// Check if the preview feature is released or not.
-    /// </summary>
-    /// <remarks>
-    /// This metadata is necessary because we cannot remove the enum values from the list.
-    /// Otherwise, we could not deserialize old settings files that may contain these values.
-    /// </remarks>
     /// <param name="feature">The preview feature to check.</param>
-    /// <returns>True when the preview feature is released, false otherwise.</returns>
-    public static bool IsReleased(this PreviewFeatures feature) => feature switch
+    extension(PreviewFeatures feature)
     {
-        PreviewFeatures.PRE_READ_PDF_2025 => true,
-        PreviewFeatures.PRE_PLUGINS_2025 => true,
-        PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025 => true,
-        PreviewFeatures.PRE_SPEECH_TO_TEXT_2026 => true,
+        public string GetPreviewDescription() => feature switch
+        {
+            PreviewFeatures.PRE_WRITER_MODE_2024 => TB("Writer Mode: Experiments about how to write long texts using AI"),
+            PreviewFeatures.PRE_RAG_2024 => TB("RAG: Preview of our RAG implementation where you can refer your files or integrate enterprise data within your company"),
         
-        _ => false
-    };
-    
-    public static bool IsEnabled(this PreviewFeatures feature, SettingsManager settingsManager)
-    {
-        if(feature.IsReleased())
-            return true;
+            PreviewFeatures.PRE_PLUGINS_2025 => TB("Plugins: Preview of our plugin system where you can extend the functionality of the app"),
+            PreviewFeatures.PRE_READ_PDF_2025 => TB("Read PDF: Preview of our PDF reading system where you can read and extract text from PDF files"),
+            PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025 => TB("Document Analysis: Preview of our document analysis system where you can analyze and extract information from documents"),
+            PreviewFeatures.PRE_SPEECH_TO_TEXT_2026 => TB("Transcription: Convert recordings and audio files into text"),
+            PreviewFeatures.PRE_META_ASSISTANT_V1 => TB("Assistant Builder: Generate and install assistant plugins"),
+            PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026 => TB("Visual Briefing Assistant: Turn source material into an interactive briefing"),
+            PreviewFeatures.PRE_MAILBOXES_2026 => TB("Mailboxes: Let the AI search and read your e-mails, kept in a local index on your computer"),
+
+            _ => TB("Unknown preview feature")
+        };
+
+        /// <summary>
+        /// Check if the preview feature is released or not.
+        /// </summary>
+        /// <remarks>
+        /// This metadata is necessary because we cannot remove the enum values from the list.
+        /// Otherwise, we could not deserialize old settings files that may contain these values.
+        /// </remarks>
+        /// <returns>True when the preview feature is released, false otherwise.</returns>
+        public bool IsReleased() => feature switch
+        {
+            PreviewFeatures.PRE_READ_PDF_2025 => true,
+            PreviewFeatures.PRE_PLUGINS_2025 => true,
+            PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025 => true,
+            PreviewFeatures.PRE_SPEECH_TO_TEXT_2026 => true,
         
-        return settingsManager.ConfigurationData.App.EnabledPreviewFeatures.Contains(feature);
+            _ => false
+        };
+
+        public bool IsEnabled(SettingsManager settingsManager)
+        {
+            if(feature.IsReleased())
+                return true;
+        
+            return settingsManager.ConfigurationData.App.EnabledPreviewFeatures.Contains(feature);
+        }
     }
 }
