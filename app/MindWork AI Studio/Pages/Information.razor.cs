@@ -87,7 +87,9 @@ public partial class Information : MSGComponentBase
         }
     };
 
-    private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
+    private string VersionRust => string.IsNullOrWhiteSpace(this.RuntimeInfo.RustVersion)
+        ? $"{T("Used Rust compiler")}: {T("unknown")}"
+        : $"{T("Used Rust compiler")}: v{this.RuntimeInfo.RustVersion}";
     
     private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{DotnetRuntimeVersion.Current}";
     

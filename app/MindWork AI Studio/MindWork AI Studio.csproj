@@ -127,6 +127,7 @@
             metadata.txt names the .NET SDK which the pipeline pins, but a local build may use another
             one. Hence, we take the SDK which builds right now. Its .version file starts with the commit
             it was built from. The .NET runtime is not recorded at all: the app asks for it while it runs.
+            Neither is the Rust compiler, which the app learns from the runtime it built.
         -->
         <PropertyGroup>
             <DotnetSdkVersionFile>$(NetCoreRoot)sdk/$(NETCoreSdkVersion)/.version</DotnetSdkVersionFile>
@@ -142,7 +143,6 @@
             <MetaBuild>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 2 ])</MetaBuild>
             <MetaDotnetSdkVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 3 ])</MetaDotnetSdkVersion>
             <MetaDotnetSdkVersion Condition="'$(DotnetSdkVersionLines)' != ''">$(NETCoreSdkVersion) (commit $([System.String]::Copy( $(DotnetSdkVersionLines) ).Split( ';' )[ 0 ].Substring( 0, 10 )))</MetaDotnetSdkVersion>
-            <MetaRustVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 5 ])</MetaRustVersion>
             <MetaMudBlazorVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 6 ])</MetaMudBlazorVersion>
             <MetaTauriVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 7 ])</MetaTauriVersion>
             <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
@@ -170,10 +170,9 @@
                 <_Parameter3>$(MetaBuild)</_Parameter3>
                 <_Parameter3_TypeName>System.UInt32</_Parameter3_TypeName>
                 <_Parameter4>$(MetaDotnetSdkVersion)</_Parameter4>
-                <_Parameter5>$(MetaRustVersion)</_Parameter5>
-                <_Parameter6>$(MetaMudBlazorVersion)</_Parameter6>
-                <_Parameter7>$(MetaTauriVersion)</_Parameter7>
-                <_Parameter8>$(MetaAppCommitHash)</_Parameter8>
+                <_Parameter5>$(MetaMudBlazorVersion)</_Parameter5>
+                <_Parameter6>$(MetaTauriVersion)</_Parameter6>
+                <_Parameter7>$(MetaAppCommitHash)</_Parameter7>
             </AssemblyAttribute>
             <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataArchitecture">
                 <_Parameter1>$(MetaArchitecture)</_Parameter1>

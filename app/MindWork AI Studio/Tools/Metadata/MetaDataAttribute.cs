@@ -7,7 +7,6 @@ public class MetaDataAttribute(
     string buildTime,
     uint buildNum,
     string dotnetSdkVersion,
-    string rustVersion,
     string mudBlazorVersion,
     string tauriVersion,
     string appCommitHash
@@ -20,12 +19,11 @@ public class MetaDataAttribute(
     public uint BuildNum => buildNum;
     
     /// <summary>
-    /// Gets the .NET SDK which built the app. The .NET runtime which runs it is <see cref="DotnetRuntimeVersion.Current"/>.
+    /// Gets the .NET SDK which built the app. The .NET runtime which runs it is <see cref="DotnetRuntimeVersion.Current"/>,
+    /// and the Rust compiler which built the runtime is <see cref="Rust.RuntimeInfoResponse.RustVersion"/>.
     /// </summary>
     public string DotnetSdkVersion => dotnetSdkVersion;
-    
-    public string RustVersion => rustVersion;
-    
+
     public string MudBlazorVersion => mudBlazorVersion;
     
     public string TauriVersion => tauriVersion;
