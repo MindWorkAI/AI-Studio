@@ -281,7 +281,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
+            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<>)}: handling a form change");
         };
         
         this.MightPreselectValues();
@@ -321,7 +321,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     #endregion
 
-    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<TSettings>).Namespace, nameof(AssistantBase<TSettings>));
+    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
 
     private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
@@ -470,7 +470,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         Array.Resize(ref this.InputIssues, this.InputIssues.Length + 1);
         this.InputIssues[^1] = issue;
         this.InputIsValid = false;
-        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering an added input issue");
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<>)}: rendering an added input issue");
     }
     
     /// <summary>
@@ -480,7 +480,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.InputIssues = [];
         this.InputIsValid = true;
-        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering cleared input issues");
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<>)}: rendering cleared input issues");
     }
 
     protected void CreateChatThread()
@@ -1009,7 +1009,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            }).Observe($"{nameof(AssistantBase<TSettings>)}: consuming a media import outcome");
+            }).Observe($"{nameof(AssistantBase<>)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
