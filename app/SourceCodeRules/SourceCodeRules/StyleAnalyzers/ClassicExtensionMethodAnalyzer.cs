@@ -13,10 +13,7 @@ namespace SourceCodeRules.StyleAnalyzers;
 /// </summary>
 /// <remarks>
 /// AI Studio declares its extension members in extension blocks, one per receiver, so that all members of a
-/// receiver read alike and extension properties can join them. A method with a params parameter stays a
-/// classic one for now: for a member of an extension block, the compiler of the .NET 10.0.1xx SDK warns about
-/// every argument passed one by one to a params parameter (CS8620, dotnet/roslyn#80024). Drop that exception
-/// once the SDK in metadata.txt carries the fix.
+/// receiver read alike and extension properties can join them.
 /// </remarks>
 #pragma warning disable RS1038
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -29,7 +26,7 @@ public sealed class ClassicExtensionMethodAnalyzer : DiagnosticAnalyzer
 
     private const string MESSAGE_FORMAT = "Declare '{0}' as a member of an extension block for its receiver instead of with a this parameter";
 
-    private const string DESCRIPTION = "AI Studio declares its extension members in extension blocks, one per receiver. Only a method with a params parameter stays a classic extension method, until the SDK fixes dotnet/roslyn#80024.";
+    private const string DESCRIPTION = "AI Studio declares its extension members in extension blocks, one per receiver.";
 
     private const string CATEGORY = "Style";
 
@@ -53,9 +50,6 @@ public sealed class ClassicExtensionMethodAnalyzer : DiagnosticAnalyzer
 
         var thisKeyword = parameters[0].Modifiers.FirstOrDefault(modifier => modifier.IsKind(SyntaxKind.ThisKeyword));
         if (thisKeyword.IsKind(SyntaxKind.None))
-            return;
-
-        if (parameters.Any(parameter => parameter.Modifiers.Any(SyntaxKind.ParamsKeyword)))
             return;
 
         context.ReportDiagnostic(Diagnostic.Create(RULE, thisKeyword.GetLocation(), method.Identifier.Text));
