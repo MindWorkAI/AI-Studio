@@ -218,7 +218,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
 
     /// <summary>
-    /// The files this block holds, tables and code blocks, so that the export menu can offer each of them.
+    /// The files this block holds, tables, code blocks, and formulas, so that the export menu can offer each of them.
     /// </summary>
     /// <remarks>
     /// Cached the same way the Markdown render plan is: reading the files means parsing the whole
@@ -240,7 +240,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 return this.cachedMessageFiles;
 
             this.cachedMessageFilesInput = markdown;
-            this.cachedMessageFiles = PlainFileExport.ExtractFiles(this.GetMarkdownRenderPlan(markdown).Source, this.csvSeparator);
+            this.cachedMessageFiles = PlainFileExport.ExtractFiles(this.GetMarkdownRenderPlan(markdown), this.csvSeparator);
             return this.cachedMessageFiles;
         }
     }

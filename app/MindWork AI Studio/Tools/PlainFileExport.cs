@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Chat;
 using AIStudio.Tools.CodeHighlighting;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -22,7 +23,7 @@ public static class PlainFileExport
     /// Reads every file a message holds, in the order they appear in it.
     /// </summary>
     /// <remarks>
-    /// Two kinds of files end up in an answer. Almost always it is a Markdown table written with
+    /// Three kinds of files end up in an answer. Almost always it is a Markdown table written with
     /// pipes, which is what a model produces on its own; we turn its cells into a file. Besides,
     /// every fenced code block is a file. A model marks it as a format we write, such as html, latex,
     /// markdown, or csv, whenever it was asked for a web page, a document, or data; any other block
@@ -30,14 +31,16 @@ public static class PlainFileExport
     /// the finished file: we hand it through untouched rather than taking it apart and reassembling
     /// it. We do not judge what the block holds, either. A browser shows a fragment of HTML just as
     /// well as an entire page, and a LaTeX fragment or a few lines of code are still what the user
-    /// asked for.
+    /// asked for. Last, every formula the chat shows on its own is a file of LaTeX, see
+    /// MarkdownRenderPlanner, whether the model wrote it between $$ or into a code block of LaTeX.
     /// </remarks>
-    /// <param name="markdown">The Markdown text of the message, as the chat renders it: the position
-    /// of each file refers to this text.</param>
+    /// <param name="plan">The text of the message as the chat renders it: the position of each file
+    /// refers to its source.</param>
     /// <param name="separator">The separator to write a Markdown table with, see CsvWriter.SeparatorFor.</param>
     /// <returns>The files, or an empty list when the message holds none.</returns>
-    public static IReadOnlyList<MessageFile> ExtractFiles(string markdown, char separator)
+    internal static IReadOnlyList<MessageFile> ExtractFiles(MarkdownRenderPlan plan, char separator)
     {
+        var markdown = plan.Source;
         if (string.IsNullOrWhiteSpace(markdown))
             return [];
 
@@ -50,48 +53,51 @@ public static class PlainFileExport
 
         //
         // What a file is about stands above it, not in it: models introduce their tables and code
-        // blocks with a heading. We remember every heading with its line so that each file can take
-        // the last one before it. A table falls back to its own first column heading when there is
-        // none; a code block has nothing comparable and stays without a caption.
+        // blocks with a heading. We remember every heading with its position so that each file can
+        // take the last one before it. A table falls back to its own first column heading when there
+        // is none; a code block has nothing comparable and stays without a caption.
         //
         var headings = document.Descendants<HeadingBlock>()
-            .Select(heading => (heading.Line, Text: ToPlainText(heading)))
+            .Select(heading => (Position: heading.Span.Start, Text: ToPlainText(heading)))
             .Where(heading => !string.IsNullOrWhiteSpace(heading.Text))
-            .OrderBy(heading => heading.Line)
+            .OrderBy(heading => heading.Position)
             .ToList();
 
+        var formulas = plan.Segments.Where(segment => segment.Type is MarkdownRenderSegmentType.MATH_BLOCK).ToList();
         var tables = document.Descendants<Table>()
-            .Select(table => (table.Line, Position: table.Span.Start, File: Read(table, separator)));
+            .Select(table => (Position: table.Span.Start, File: Read(table, separator)));
 
         //
-        // Markdig reads a formula between $$ as a MathBlock, which is a fenced code block as well.
-        // Nobody saves a formula on its own, and as a block without a language, every formula of an
-        // answer would end up in the menu as a text file:
+        // Markdig reads a formula between $$ as a MathBlock, which is a fenced code block as well, and
+        // a code block of LaTeX the chat shows as a formula is a fenced code block, too. Each of them
+        // is a formula of the plan instead, which the chat renders with the button to save it:
         //
         var codeBlocks = document.Descendants<FencedCodeBlock>()
-            .Where(block => block is not MathBlock)
-            .Select(block => (block.Line, Position: block.Span.Start, File: Read(block)));
+            .Where(block => block is not MathBlock && !formulas.Any(formula => formula.FileStart <= block.Span.Start && block.Span.Start < formula.Start))
+            .Select(block => (Position: block.Span.Start, File: Read(block)));
+
+        var formulaFiles = formulas.Select(formula => (Position: formula.FileStart, File: (FoundFile?)ReadFormula(formula.GetContent(markdown))));
 
         //
-        // Tables and code blocks are counted apart. The menu falls back to that number when a
-        // heading cannot tell two files apart, and "Table 2" has to be the second table of the
-        // answer, not the second entry of the menu.
+        // Tables and code blocks are counted apart, formulas among the code blocks. The menu falls
+        // back to that number when a heading cannot tell two files apart, and "Table 2" has to be
+        // the second table of the answer, not the second entry of the menu.
         //
         var numberOfTables = 0;
         var numberOfCodeBlocks = 0;
-        return tables.Concat(codeBlocks)
+        return tables.Concat(codeBlocks).Concat(formulaFiles)
             .Where(entry => entry.File is not null)
-            .OrderBy(entry => entry.Line)
+            .OrderBy(entry => entry.Position)
             .Select(entry => new MessageFile(
                 entry.File!.Format.IsTabular() ? ++numberOfTables : ++numberOfCodeBlocks,
                 entry.Position,
-                Caption: HeadingAbove(entry.Line) is { Length: > 0 } heading ? heading : entry.File!.Fallback,
+                Caption: HeadingAbove(entry.Position) is { Length: > 0 } heading ? heading : entry.File!.Fallback,
                 entry.File!.Format,
                 entry.File!.Language,
                 entry.File!.Content))
             .ToList();
 
-        string HeadingAbove(int line) => headings.LastOrDefault(heading => heading.Line < line).Text ?? string.Empty;
+        string HeadingAbove(int position) => headings.LastOrDefault(heading => heading.Position < position).Text ?? string.Empty;
     }
 
     /// <summary>
@@ -102,6 +108,12 @@ public static class PlainFileExport
     /// <param name="Language">The language of the code, or NONE when the format is not SOURCE_CODE.</param>
     /// <param name="Content">The finished file content.</param>
     private sealed record FoundFile(string Fallback, FileExportFormat Format, SourceCodeLanguage Language, string Content);
+
+    /// <summary>
+    /// Turns a formula into a file of LaTeX, between \[ and \] as a formula of its own, so that it can be
+    /// pasted into a document as it is.
+    /// </summary>
+    private static FoundFile ReadFormula(string formula) => new(string.Empty, FileExportFormat.LATEX, SourceCodeLanguage.NONE, $@"\[{Environment.NewLine}{formula}{Environment.NewLine}\]");
 
     /// <summary>
     /// Turns a Markdown table into a file.

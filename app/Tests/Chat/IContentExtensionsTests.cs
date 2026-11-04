@@ -327,7 +327,7 @@ public sealed class IContentExtensionsTests
     private static IReadOnlyList<MessageFile> FilesOf(IContent content)
     {
         content.TryGetMarkdownText(out var markdown);
-        return PlainFileExport.ExtractFiles(markdown, ',');
+        return PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(markdown), ',');
     }
 
     /// <summary>
