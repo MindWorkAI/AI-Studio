@@ -15,6 +15,9 @@ namespace AIStudio.Tests.Analyzers;
 /// refuses the keyword. There, every instance member is reached through the name of the receiver, and a sibling
 /// member without it does not even compile. Should a later version of C# reach the receiver without its name,
 /// the analyzer would demand a <c>this.</c> which nobody can write, and the tests for extension blocks fail.
+///
+/// The same holds for the keyword <c>field</c> of a property: its backing field has no name which could follow
+/// <c>this.</c>, while every other member next to it still needs one.
 /// </remarks>
 [TestFixture]
 public sealed class ThisUsageAnalyzerTests
@@ -38,6 +41,28 @@ public sealed class ThisUsageAnalyzerTests
     public async Task AnInstanceMemberWithoutThisIsRefused(string expression)
     {
         var reported = await AnalyzeClassAsync(expression);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(reported, Has.Count.EqualTo(1));
+            Assert.That(reported.FirstOrDefault()?.Id, Is.EqualTo("MWAIS0005"));
+        }
+    }
+
+    [TestCase("get => field ?? this.Name; set => field = value;", TestName = "A getter and a setter which reach the backing field")]
+    [TestCase("get; set => field = value.Trim();", TestName = "A setter which reaches the backing field")]
+    [TestCase("get => field ??= this.Describe();", TestName = "A getter which fills the backing field on first use")]
+    public async Task TheBackingFieldOfAPropertyIsLeftAlone(string accessors)
+    {
+        var reported = await AnalyzePropertyAsync(accessors);
+
+        Assert.That(reported, Is.Empty);
+    }
+
+    [Test]
+    public async Task AMemberNextToTheBackingFieldStillNeedsThis()
+    {
+        var reported = await AnalyzePropertyAsync("get => field ?? Name; set => field = value;");
 
         using (Assert.EnterMultipleScope())
         {
@@ -135,6 +160,25 @@ public sealed class ThisUsageAnalyzerTests
                   private string Describe() => this.Name;
 
                   private static string Shorten(string text) => text[..1];
+              }
+              """;
+
+        return await CompilationHarness.AnalyzeAsync(source, new ThisUsageAnalyzer());
+    }
+
+    private static async Task<IReadOnlyList<Diagnostic>> AnalyzePropertyAsync(string accessors)
+    {
+        var source =
+            $$"""
+              namespace Sample;
+
+              public sealed class Meeting
+              {
+                  public string Name { get; set; } = "Kickoff";
+
+                  public string Title { {{accessors}} }
+
+                  private string Describe() => this.Name;
               }
               """;
 
