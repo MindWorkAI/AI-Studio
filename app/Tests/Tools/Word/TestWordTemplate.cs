@@ -103,6 +103,20 @@ internal static class TestWordTemplate
     public const string TITLE_COLOR = "FFFFFF";
 
     /// <summary>
+    /// How far the address in the footer reaches up from the bottom edge of the page, 3.35 cm,
+    /// while the bottom margin of the pages is 1.25 cm.
+    /// </summary>
+    public const int FOOTER_CLEARANCE = 1898;
+
+    /// <summary>
+    /// The bottom margin of the pages, 1.25 cm.
+    /// </summary>
+    public const int BOTTOM_MARGIN = 709;
+
+    public const string SAMPLE_CHAPTER = "Sample chapter";
+    public const string APPENDIX_TEXT = "Remove this page afterwards.";
+
+    /// <summary>
     /// How far the picture and the caption in the margin of the first page are from the left edge of the page, in EMU: ten points.
     /// </summary>
     public const long MARGIN_PICTURE_LEFT = 127_000;
@@ -220,21 +234,45 @@ internal static class TestWordTemplate
                 new W.Paragraph(new W.ParagraphProperties
                 {
                     SectionProperties = options.CoverPage
-                        ? CoverSectionOf(mainPart, headerPart, coverHeaderPart, firstPageLeft)
+                        ? CoverSectionOf(mainPart, headerPart, coverHeaderPart, firstPageLeft, options.FooterShapes)
                         : new W.SectionProperties(
                             new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(coverHeaderPart) },
                             PageSize(),
                             PageMarginOf(TOP_MARGIN, left: firstPageLeft)),
-                }),
+                }));
+
+            if (options.TableOfContents)
+            {
+                body.Append(TableOfContents());
+                body.Append(new W.Paragraph(new W.Run(new W.Break { Type = W.BreakValues.Page })));
+            }
+
+            if (options.TableOfContents || options.AppendixPage)
+                body.Append(new W.Paragraph(new W.ParagraphProperties { ParagraphStyleId = new W.ParagraphStyleId { Val = HEADING_1_STYLE_ID } }, new W.Run(new W.Text(SAMPLE_CHAPTER))));
+
+            body.Append(
                 sampleParagraph,
                 new W.Paragraph(new W.Run(PictureOf(mainPart.GetIdOfPart(imagePart)))),
-                new W.Paragraph(new W.Hyperlink(new W.Run(new W.Text("A sample link"))) { Id = link.Id }),
-                options.CoverPage
-                    ? new W.SectionProperties(PageSize(), PageMarginOf(TOP_MARGIN, right: otherPagesRight))
-                    : new W.SectionProperties(
-                        new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(headerPart) },
-                        PageSize(),
-                        PageMarginOf(TOP_MARGIN, right: otherPagesRight)));
+                new W.Paragraph(new W.Hyperlink(new W.Run(new W.Text("A sample link"))) { Id = link.Id }));
+
+            var mainSection = options.CoverPage
+                ? new W.SectionProperties(PageSize(), PageMarginOf(TOP_MARGIN, right: otherPagesRight))
+                : new W.SectionProperties(
+                    new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(headerPart) },
+                    PageSize(),
+                    PageMarginOf(TOP_MARGIN, right: otherPagesRight));
+
+            if (!options.AppendixPage)
+                body.Append(mainSection);
+            else
+            {
+                var appendixHeaderPart = mainPart.AddNewPart<HeaderPart>();
+                appendixHeaderPart.Header = new W.Header(new W.Paragraph(new W.Run(new W.Text(APPENDIX_TEXT))));
+                body.Append(
+                    new W.Paragraph(new W.ParagraphProperties { SectionProperties = mainSection }),
+                    new W.Paragraph(new W.Run(new W.Text(APPENDIX_TEXT))),
+                    new W.SectionProperties(new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(appendixHeaderPart) }, PageSize(), PageMarginOf(TOP_MARGIN)));
+            }
 
             mainPart.Document = new W.Document(body);
 
@@ -250,14 +288,18 @@ internal static class TestWordTemplate
     /// The first section of a corporate template, which states the headers and footers for every
     /// section after it, and a header of its own for its first page.
     /// </summary>
-    private static W.SectionProperties CoverSectionOf(MainDocumentPart mainPart, HeaderPart headerPart, HeaderPart coverHeaderPart, int left)
+    private static W.SectionProperties CoverSectionOf(MainDocumentPart mainPart, HeaderPart headerPart, HeaderPart coverHeaderPart, int left, bool footerShapes)
     {
         var footerPart = mainPart.AddNewPart<FooterPart>();
         var logoPart = footerPart.AddImagePart(ImagePartType.Png);
         using (var logo = new MemoryStream([137, 80, 78, 71]))
             logoPart.FeedData(logo);
 
-        footerPart.Footer = new W.Footer(new W.Paragraph(new W.Run(PictureOf(footerPart.GetIdOfPart(logoPart))), new W.Run(new W.Text(FOOTER_TEXT))));
+        var footerParagraph = new W.Paragraph(new W.Run(PictureOf(footerPart.GetIdOfPart(logoPart))), new W.Run(new W.Text(FOOTER_TEXT)));
+        if (footerShapes)
+            footerParagraph.Append(FooterShapes());
+
+        footerPart.Footer = new W.Footer(footerParagraph);
         return new W.SectionProperties(
             new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = mainPart.GetIdOfPart(headerPart) },
             new W.HeaderReference { Type = W.HeaderFooterValues.First, Id = mainPart.GetIdOfPart(coverHeaderPart) },
@@ -317,7 +359,7 @@ internal static class TestWordTemplate
     /// </summary>
     private static W.PageSize PageSize() => new() { Width = (uint)PAGE_WIDTH, Height = (uint)PAGE_HEIGHT };
 
-    private static W.PageMargin PageMarginOf(int top, int left = SIDE_MARGIN, int right = SIDE_MARGIN) => new() { Top = top, Right = (uint)right, Bottom = 709, Left = (uint)left, Header = 709U, Footer = 709U, Gutter = 0U };
+    private static W.PageMargin PageMarginOf(int top, int left = SIDE_MARGIN, int right = SIDE_MARGIN) => new() { Top = top, Right = (uint)right, Bottom = BOTTOM_MARGIN, Left = (uint)left, Header = 709U, Footer = 709U, Gutter = 0U };
 
     /// <summary>
     /// The shapes which float around the text of the first page: a picture with a caption in the
@@ -374,6 +416,53 @@ internal static class TestWordTemplate
             HorizontalOf(DW.HorizontalRelativePositionValues.Page, (PAGE_WIDTH - right + 200) * WordTextArea.EMU_PER_TWIP),
             VerticalOf(DW.VerticalRelativePositionValues.Paragraph, 0),
             marginWidth, marginWidth, false, new DW.WrapSquare { WrapText = DW.WrapTextValues.BothSides }, PictureGraphicOf(PictureIdOf(mainPart), marginWidth, marginWidth))));
+    }
+
+    /// <summary>
+    /// The shapes which float in the footer: a text box with the address across the text, which
+    /// reaches up FOOTER_CLEARANCE from the bottom edge of the page, and a logo higher up, but in
+    /// the right margin beside the text.
+    /// </summary>
+    private static IEnumerable<W.Run> FooterShapes()
+    {
+        const long WIDTH = 2_000_000;
+        var addressHeight = (FOOTER_CLEARANCE - 300) * WordTextArea.EMU_PER_TWIP;
+        yield return new W.Run(new W.Drawing(AnchorOf(
+            20, "Address",
+            HorizontalOf(DW.HorizontalRelativePositionValues.Column, 0),
+            VerticalOf(DW.VerticalRelativePositionValues.Page, (PAGE_HEIGHT - FOOTER_CLEARANCE) * WordTextArea.EMU_PER_TWIP),
+            WIDTH, addressHeight, false, new DW.WrapNone(),
+            TextBoxGraphicOf(WIDTH, addressHeight, new W.Paragraph(new W.Run(new W.Text("Street 1, 12345 Town")))))));
+
+        var logoSize = 200 * WordTextArea.EMU_PER_TWIP;
+        yield return new W.Run(new W.Drawing(AnchorOf(
+            21, "Logo",
+            HorizontalOf(DW.HorizontalRelativePositionValues.Page, (PAGE_WIDTH - 400) * WordTextArea.EMU_PER_TWIP),
+            VerticalOf(DW.VerticalRelativePositionValues.Page, (PAGE_HEIGHT - 2 * FOOTER_CLEARANCE) * WordTextArea.EMU_PER_TWIP),
+            logoSize, logoSize, true, new DW.WrapNone(),
+            TextBoxGraphicOf(logoSize, logoSize, new W.Paragraph()))));
+    }
+
+    /// <summary>
+    /// A table of contents, as a field with the result Word last computed, an entry for each of two
+    /// chapters. Each entry has a field of its own for the page number.
+    /// </summary>
+    private static IEnumerable<W.Paragraph> TableOfContents()
+    {
+        yield return new W.Paragraph(
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.Begin }),
+            new W.Run(new W.FieldCode(" TOC \\o \"1-3\" ") { Space = SpaceProcessingModeValues.Preserve }),
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.Separate }),
+            new W.Run(new W.Text(SAMPLE_CHAPTER)),
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.Begin }),
+            new W.Run(new W.FieldCode(" PAGEREF _Toc1 \\h ") { Space = SpaceProcessingModeValues.Preserve }),
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.Separate }),
+            new W.Run(new W.Text("2")),
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.End }));
+
+        yield return new W.Paragraph(
+            new W.Run(new W.Text("Another chapter")),
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.End }));
     }
 
     /// <summary>

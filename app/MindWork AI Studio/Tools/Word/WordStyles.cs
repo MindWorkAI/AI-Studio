@@ -213,6 +213,12 @@ internal sealed class WordStyles
     /// <returns>The indentation; null when the style states none.</returns>
     public W.Indentation? IndentationOf(string styleId) => this.ParagraphStyleOf(styleId)?.StyleParagraphProperties?.Indentation;
 
+    /// <summary>
+    /// Determines whether a paragraph style is one of the headings Word brings along, e.g., "heading 1".
+    /// </summary>
+    /// <param name="styleId">The ID of the paragraph style; null for the default style.</param>
+    public bool IsHeading(string? styleId) => styleId is not null && this.ParagraphStyleOf(styleId)?.StyleName?.Val?.Value is { } name && name.StartsWith("heading ", StringComparison.OrdinalIgnoreCase);
+
     private W.Style? ParagraphStyleOf(string styleId) => this.styles.Elements<W.Style>().FirstOrDefault(candidate => candidate.StyleId?.Value == styleId && IsOfType(candidate, "paragraph"));
 
     /// <summary>

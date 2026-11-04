@@ -101,6 +101,41 @@ internal static class WordShapes
     }
 
     /// <summary>
+    /// Returns how far up from the bottom edge of the page the shapes of a footer reach across the
+    /// text, e.g., an address in a text box.
+    /// </summary>
+    /// <remarks>
+    /// Word keeps the text clear of the text of a footer, but not of the shapes floating in it. Only
+    /// shapes in the lower half of the page count, as a footer places them at the foot of the page,
+    /// and only those across the columns of the text: a logo in a wide margin beside them is in
+    /// nobody's way. The paragraphs of the footer end where the footer distance of the section
+    /// says, so a shape placed in relation to one of them lies as far up as WordLayoutEstimate finds
+    /// the paragraph.
+    /// </remarks>
+    /// <param name="footer">The footer.</param>
+    /// <param name="area">The page and the text area of the section which shows the footer.</param>
+    /// <param name="footerDistance">The distance between the bottom edge of the page and the footer, in twentieths of a point.</param>
+    /// <param name="estimate">Estimates the height of the paragraphs of the footer.</param>
+    /// <returns>The distance between the bottom edge of the page and the top of the highest of these
+    /// shapes, together with the space it keeps from text, in twentieths of a point; 0 when there is none.</returns>
+    public static int FootOf(W.Footer footer, WordTextArea area, int footerDistance, WordLayoutEstimate estimate)
+    {
+        var blocks = footer.ChildElements.Where(element => element is W.Paragraph or W.Table).ToList();
+        var blockTop = area.PageHeight - footerDistance - blocks.Sum(block => estimate.HeightOf(block, area.ColumnWidth));
+        var foot = 0L;
+        foreach (var block in blocks)
+        {
+            foreach (var anchor in block.OwnDescendants<DW.Anchor>())
+                if (BoundsOf(anchor, area, blockTop) is { } bounds && bounds.Top >= Emu(area.PageHeight) / 2 && CrossesColumn(bounds.Left, bounds.Width, area))
+                    foot = Math.Max(foot, Emu(area.PageHeight) - bounds.Top + (anchor.DistanceFromTop?.Value ?? 0));
+
+            blockTop += estimate.HeightOf(block, area.ColumnWidth);
+        }
+
+        return (int)((foot + WordTextArea.EMU_PER_TWIP - 1) / WordTextArea.EMU_PER_TWIP);
+    }
+
+    /// <summary>
     /// Returns the paragraphs of a text box in the given style.
     /// </summary>
     private static IEnumerable<W.Paragraph> ParagraphsOf(W.TextBoxContent box, string? styleId) => styleId is null
@@ -117,18 +152,12 @@ internal static class WordShapes
     /// <returns>The copy; null for a shape of the sample text, or one whose position Word 2007 could not read.</returns>
     private static DW.Anchor? DesignShapeOf(DW.Anchor anchor, WordTextArea area, int textTop, int paragraphTop)
     {
-        var extent = anchor.GetFirstChild<DW.Extent>();
-        var width = extent?.Cx?.Value ?? 0;
-        var height = extent?.Cy?.Value ?? 0;
-        var isPlacedOnThePage = anchor.SimplePos?.Value is true;
-        var left = isPlacedOnThePage ? anchor.SimplePosition?.X?.Value : HorizontalPositionOf(anchor, width, area);
-        var top = isPlacedOnThePage ? anchor.SimplePosition?.Y?.Value : VerticalPositionOf(anchor, height, area, paragraphTop);
-        if (left is not { } x || top is not { } y)
+        if (BoundsOf(anchor, area, paragraphTop) is not { } bounds)
             return null;
 
+        var (x, y, width, height) = bounds;
         var isBackground = anchor.BehindDoc?.Value is true && anchor.GetFirstChild<DW.WrapNone>() is not null;
-        var isBesideText = x + width <= Emu(area.Left + area.Gutter)
-                           || x >= Emu(area.PageWidth - area.Right)
+        var isBesideText = !CrossesColumn(x, width, area)
                            || y + height <= Emu(textTop)
                            || y >= Emu(area.PageHeight - area.Bottom);
 
@@ -146,6 +175,29 @@ internal static class WordShapes
         shape.VerticalPosition = new DW.VerticalPosition(new DW.PositionOffset(y.ToString(CultureInfo.InvariantCulture))) { RelativeFrom = DW.VerticalRelativePositionValues.Page };
         return shape;
     }
+
+    /// <summary>
+    /// Returns where a shape lies on the page.
+    /// </summary>
+    /// <param name="anchor">The shape.</param>
+    /// <param name="area">The page and its text area.</param>
+    /// <param name="paragraphTop">Where the paragraph which anchors the shape starts, in twentieths of a point.</param>
+    /// <returns>The left and top edges and the size, in EMU; null when the shape states no position Word 2007 could read.</returns>
+    private static (long Left, long Top, long Width, long Height)? BoundsOf(DW.Anchor anchor, WordTextArea area, int paragraphTop)
+    {
+        var extent = anchor.GetFirstChild<DW.Extent>();
+        var width = extent?.Cx?.Value ?? 0;
+        var height = extent?.Cy?.Value ?? 0;
+        var isPlacedOnThePage = anchor.SimplePos?.Value is true;
+        var left = isPlacedOnThePage ? anchor.SimplePosition?.X?.Value : HorizontalPositionOf(anchor, width, area);
+        var top = isPlacedOnThePage ? anchor.SimplePosition?.Y?.Value : VerticalPositionOf(anchor, height, area, paragraphTop);
+        return left is { } x && top is { } y ? (x, y, width, height) : null;
+    }
+
+    /// <summary>
+    /// Determines whether a shape lies across the columns of the text, at whatever height, rather than in a margin beside them.
+    /// </summary>
+    private static bool CrossesColumn(long left, long width, WordTextArea area) => left + width > Emu(area.Left + area.Gutter) && left < Emu(area.PageWidth - area.Right);
 
     /// <summary>
     /// Returns how far the left edge of a shape is from the left edge of the page, in EMU.

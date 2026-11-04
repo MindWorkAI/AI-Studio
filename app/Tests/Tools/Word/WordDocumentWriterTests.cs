@@ -105,12 +105,57 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
-    public void ACoverPageWithoutTextLeavesNoEmptyParagraphs()
+    public void ACoverPageWithoutTextStaysAsItIs()
     {
         using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(LeadingEmptyParagraphs: 2, EmptyCoverPage: true));
         using var document = WordprocessingDocument.Open(file, false);
 
-        Assert.That(ParagraphsOf(document).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "Mars is close to Earth." }), "Otherwise the text would start where the cover page ends.");
+        var paragraphs = ParagraphsOf(document);
+        var mainPart = document.MainDocumentPart!;
+        var sections = mainPart.Document!.Body!.Descendants<W.SectionProperties>().ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(paragraphs.Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { string.Empty, string.Empty, string.Empty, string.Empty, "Mars is close to Earth." }), "Its placeholders are for somebody to fill in, and the text starts after it.");
+            Assert.That(paragraphs.Take(2).Select(paragraph => paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value), Is.All.EqualTo(TestWordTemplate.HEADING_1_STYLE_ID));
+            Assert.That(paragraphs[3].ParagraphProperties?.SectionProperties, Is.SameAs(sections[0]), "The cover page keeps its section, with its own header.");
+            Assert.That(mainPart.HeaderParts.Select(part => part.Header!.InnerText), Is.EquivalentTo(new[] { TestWordTemplate.COVER_HEADER_TEXT, TestWordTemplate.HEADER_TEXT }));
+            Assert.That(sections[1].Elements<W.HeaderReference>().Select(reference => mainPart.GetPartById(reference.Id!.Value!)).OfType<HeaderPart>().Select(part => part.Header!.InnerText), Is.EqualTo(new[] { TestWordTemplate.HEADER_TEXT }), "The pages of the text have the header of the template's text.");
+        });
+    }
+
+    [Test]
+    public void ATableOfContentsAfterTheCoverPageStays()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(EmptyCoverPage: true, TableOfContents: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var settings = document.MainDocumentPart!.DocumentSettingsPart?.Settings;
+        var paragraphs = ParagraphsOf(document);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(paragraphs.Select(TextOf), Is.EqualTo(new[] { string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, "Mars is close to Earth." }), "What the template places between its cover page and its first heading stays, the sample chapter goes.");
+            Assert.That(paragraphs[2].Descendants<W.FieldCode>().Select(code => code.Text.Trim()), Is.EqualTo(new[] { "TOC \\o \"1-3\"" }), "The table of contents keeps its field, without the entries for the chapters of the sample text.");
+            Assert.That(paragraphs.Skip(2).Take(2).SelectMany(paragraph => paragraph.Descendants<W.FieldChar>()).Select(mark => mark.FieldCharType?.InnerText), Is.EqualTo(new[] { "begin", "separate", "end" }));
+            Assert.That(settings?.GetFirstChild<W.UpdateFieldsOnOpen>()?.Val?.Value, Is.True, "Word lists the headings of the answer in the table of contents once it updates the field.");
+        });
+    }
+
+    [Test]
+    public void PagesAfterTheTextOfTheTemplateGo()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(AppendixPage: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var mainPart = document.MainDocumentPart!;
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(mainPart.Document!.Body!.Descendants<W.SectionProperties>().Count(), Is.EqualTo(1));
+            Assert.That(mainPart.HeaderParts.Select(part => part.Header!.InnerText), Is.EqualTo(new[] { TestWordTemplate.HEADER_TEXT }), "The pages take the header of the section with the text of the template, not the one of the instructions after it.");
+            Assert.That(ParagraphsOf(document).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "Mars is close to Earth." }));
+        });
     }
 
     [Test]
@@ -228,12 +273,50 @@ public sealed class WordDocumentWriterTests
     }
 
     [Test]
-    public void ACoverPageWithoutTextLeavesNoShapes()
+    public void TheTextStaysClearOfTheShapesOfTheFooter()
+    {
+        using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(CoverPage: true, FooterShapes: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var margin = document.MainDocumentPart!.Document!.Body!.Elements<W.SectionProperties>().Single().GetFirstChild<W.PageMargin>()!;
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(margin.Bottom?.Value, Is.EqualTo(TestWordTemplate.FOOTER_CLEARANCE), "The text ends above the address, which floats across it; the logo in the margin beside the text reaches higher, but is in nobody's way.");
+        });
+    }
+
+    [Test]
+    public void AFirstPageWithoutFooterKeepsItsBottomMargin()
+    {
+        var markdown = string.Join("\n\n", Enumerable.Range(1, 200).Select(number => $"Paragraph {number}."));
+        using var file = Write(markdown, new TestWordTemplateOptions(CoverPage: true, SidebarLayout: true, FooterShapes: true));
+        using var document = WordprocessingDocument.Open(file, false);
+
+        var sections = document.MainDocumentPart!.Document!.Body!.Descendants<W.SectionProperties>().ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(sections, Has.Count.EqualTo(2));
+            Assert.That(sections[0].GetFirstChild<W.PageMargin>()!.Bottom?.Value, Is.EqualTo(TestWordTemplate.BOTTOM_MARGIN), "The first page has a header of its own, but no footer, as in the template.");
+            Assert.That(sections[1].GetFirstChild<W.PageMargin>()!.Bottom?.Value, Is.EqualTo(TestWordTemplate.FOOTER_CLEARANCE), "The pages after it inherit the footer with the address.");
+        });
+    }
+
+    [Test]
+    public void ACoverPageWithoutTextKeepsItsShapesAsTheyAre()
     {
         using var file = Write("Mars is close to Earth.", new TestWordTemplateOptions(EmptyCoverPage: true, Shapes: true));
         using var document = WordprocessingDocument.Open(file, false);
 
-        Assert.That(document.MainDocumentPart!.Document!.Body!.Descendants<DW.Anchor>(), Is.Empty, "A cover page without text goes as a whole, apart from its header and footer.");
+        var body = document.MainDocumentPart!.Document!.Body!;
+        var marginPicture = body.Descendants<DW.Anchor>().Single(shape => ShapeNameOf(shape) == TestWordTemplate.MARGIN_PICTURE);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(body.Descendants<DW.Anchor>().Select(ShapeNameOf), Is.EquivalentTo(new[] { TestWordTemplate.MARGIN_PICTURE, TestWordTemplate.MARGIN_CAPTION, TestWordTemplate.BACKGROUND_PICTURE, TestWordTemplate.SAMPLE_PICTURE }), "The cover page stays as a whole; the picture of the next page goes with the sample text.");
+            Assert.That(marginPicture.GetFirstChild<DW.HorizontalPosition>()?.RelativeFrom?.InnerText, Is.EqualTo("column"), "The shapes stay where the template anchors them.");
+        });
     }
 
     [Test]

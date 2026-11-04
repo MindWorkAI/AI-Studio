@@ -23,4 +23,11 @@ namespace AIStudio.Tests.Tools.Word;
 /// and on the first page of the last section a picture in the right margin.</param>
 /// <param name="TitleBox">Whether a text box above the text of the first page holds a sample title of
 /// two lines in white letters, in the style "Title", and a subtitle.</param>
-internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false, bool SidebarLayout = false, bool Shapes = false, bool TitleBox = false);
+/// <param name="FooterShapes">Whether the footer of the cover page floats an address in a text box
+/// across the text at the foot of the page, and a logo higher up in the right margin; only together
+/// with CoverPage, which brings the footer along.</param>
+/// <param name="TableOfContents">Whether a table of contents follows the first section, as a field on
+/// a page of its own, and a heading of the first level starts the sample text, like in a report.</param>
+/// <param name="AppendixPage">Whether a heading of the first level starts the sample text, and a page
+/// of instructions follows it in a section with a header of its own, to remove before sending the document.</param>
+internal sealed record TestWordTemplateOptions(bool AsTemplate = false, bool CoverPage = false, bool ListNumbering = false, int NormalSpacingAfter = 160, int LeadingEmptyParagraphs = 0, bool EmptyCoverPage = false, bool SidebarLayout = false, bool Shapes = false, bool TitleBox = false, bool FooterShapes = false, bool TableOfContents = false, bool AppendixPage = false);
