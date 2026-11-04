@@ -169,7 +169,7 @@ public partial class FormatTemplateDialog : MSGComponentBase
             return string.Format(T("The selected file is not a supported format template. Supported file types are: {0}."), string.Join(", ", FileTypes.FORMAT_TEMPLATE.FlattenExtensions().Select(extension => $".{extension}")));
 
         if (!File.Exists(filePath))
-            return T("The template file does not exist.");
+            return T("The template file cannot be found.");
 
         return null;
     }
