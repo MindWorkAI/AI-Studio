@@ -4,8 +4,11 @@ namespace AIStudio.Tools;
 
 public static class ElementReferenceExtensions
 {
-    public static async ValueTask ScrollIntoViewAsync(this ElementReference elementReference, IJSRuntime jsRuntime)
+    extension(ElementReference elementReference)
     {
-        await jsRuntime.InvokeVoidAsync("scrollToBottom", elementReference);
+        public async ValueTask ScrollIntoViewAsync(IJSRuntime jsRuntime)
+        {
+            await jsRuntime.InvokeVoidAsync("scrollToBottom", elementReference);
+        }
     }
 }

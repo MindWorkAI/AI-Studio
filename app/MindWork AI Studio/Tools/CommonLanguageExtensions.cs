@@ -6,80 +6,83 @@ public static class CommonLanguageExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(CommonLanguageExtensions).Namespace, nameof(CommonLanguageExtensions));
     
-    public static string Name(this CommonLanguages language) => language switch
+    extension(CommonLanguages language)
     {
-        CommonLanguages.AS_IS => TB("Do not change the language"),
+        public string Name() => language switch
+        {
+            CommonLanguages.AS_IS => TB("Do not change the language"),
         
-        CommonLanguages.EN_US => TB("English (US)"),
-        CommonLanguages.EN_GB => TB("English (UK)"),
-        CommonLanguages.ZH_CN => TB("Chinese (Simplified)"),
-        CommonLanguages.HI_IN => TB("Hindi (India)"),
-        CommonLanguages.ES_ES => TB("Spanish (Spain)"),
-        CommonLanguages.FR_FR => TB("French (France)"),
-        CommonLanguages.DE_DE => TB("German (Germany)"),
-        CommonLanguages.DE_AT => TB("German (Austria)"),
-        CommonLanguages.DE_CH => TB("German (Switzerland)"),
-        CommonLanguages.JA_JP => TB("Japanese (Japan)"),
-        CommonLanguages.RU_RU => TB("Russian (Russia)"),
+            CommonLanguages.EN_US => TB("English (US)"),
+            CommonLanguages.EN_GB => TB("English (UK)"),
+            CommonLanguages.ZH_CN => TB("Chinese (Simplified)"),
+            CommonLanguages.HI_IN => TB("Hindi (India)"),
+            CommonLanguages.ES_ES => TB("Spanish (Spain)"),
+            CommonLanguages.FR_FR => TB("French (France)"),
+            CommonLanguages.DE_DE => TB("German (Germany)"),
+            CommonLanguages.DE_AT => TB("German (Austria)"),
+            CommonLanguages.DE_CH => TB("German (Switzerland)"),
+            CommonLanguages.JA_JP => TB("Japanese (Japan)"),
+            CommonLanguages.RU_RU => TB("Russian (Russia)"),
             
-        _ => TB("Other"),
-    };
-    
-    public static string ToIETFTag(this CommonLanguages language) => language switch
-    {
-        CommonLanguages.AS_IS => string.Empty,
+            _ => TB("Other"),
+        };
+
+        public string ToIETFTag() => language switch
+        {
+            CommonLanguages.AS_IS => string.Empty,
         
-        CommonLanguages.EN_US => "en-US",
-        CommonLanguages.EN_GB => "en-GB",
-        CommonLanguages.ZH_CN => "zh-CN",
-        CommonLanguages.HI_IN => "hi-IN",
-        CommonLanguages.ES_ES => "es-ES",
-        CommonLanguages.FR_FR => "fr-FR",
-        CommonLanguages.DE_DE => "de-DE",
-        CommonLanguages.DE_AT => "de-AT",
-        CommonLanguages.DE_CH => "de-CH",
-        CommonLanguages.JA_JP => "ja-JP",
-        CommonLanguages.RU_RU => "ru-RU",
+            CommonLanguages.EN_US => "en-US",
+            CommonLanguages.EN_GB => "en-GB",
+            CommonLanguages.ZH_CN => "zh-CN",
+            CommonLanguages.HI_IN => "hi-IN",
+            CommonLanguages.ES_ES => "es-ES",
+            CommonLanguages.FR_FR => "fr-FR",
+            CommonLanguages.DE_DE => "de-DE",
+            CommonLanguages.DE_AT => "de-AT",
+            CommonLanguages.DE_CH => "de-CH",
+            CommonLanguages.JA_JP => "ja-JP",
+            CommonLanguages.RU_RU => "ru-RU",
 
-        _ => string.Empty,
-    };
-    
-    public static string PromptSummarizing(this CommonLanguages language, string customLanguage) => language switch
-    {
-        CommonLanguages.AS_IS => "Use the language the text is written in for the summary.",
-        CommonLanguages.OTHER => $"Output your summary in {customLanguage}.",
+            _ => string.Empty,
+        };
 
-        _ => $"Output your summary in {language.Name()} ({language}).",
-    };
-    
-    public static string PromptTranslation(this CommonLanguages language, string customLanguage) => language switch
-    {
-        CommonLanguages.OTHER => $"Translate the source text to {customLanguage}.",
+        public string PromptSummarizing(string customLanguage) => language switch
+        {
+            CommonLanguages.AS_IS => "Use the language the text is written in for the summary.",
+            CommonLanguages.OTHER => $"Output your summary in {customLanguage}.",
 
-        _ => $"Translate the source text to {language.Name()} ({language}).",
-    };
-    
-    public static string PromptGeneralPurpose(this CommonLanguages language, string customLanguage) => language switch
-    {
-        CommonLanguages.AS_IS => "Use the language the user input is written in for the output.",
-        CommonLanguages.OTHER => $"use the language {customLanguage} for your output.",
+            _ => $"Output your summary in {language.Name()} ({language}).",
+        };
 
-        _ => $"Use the language {language.Name()} ({language}) for your output.",
-    };
+        public string PromptTranslation(string customLanguage) => language switch
+        {
+            CommonLanguages.OTHER => $"Translate the source text to {customLanguage}.",
 
-    public static string NameSelecting(this CommonLanguages language)
-    {
-        if(language is CommonLanguages.AS_IS)
-            return TB("Please select the target language");
+            _ => $"Translate the source text to {language.Name()} ({language}).",
+        };
+
+        public string PromptGeneralPurpose(string customLanguage) => language switch
+        {
+            CommonLanguages.AS_IS => "Use the language the user input is written in for the output.",
+            CommonLanguages.OTHER => $"use the language {customLanguage} for your output.",
+
+            _ => $"Use the language {language.Name()} ({language}) for your output.",
+        };
+
+        public string NameSelecting()
+        {
+            if(language is CommonLanguages.AS_IS)
+                return TB("Please select the target language");
         
-        return language.Name();
-    }
-    
-    public static string NameSelectingOptional(this CommonLanguages language)
-    {
-        if(language is CommonLanguages.AS_IS)
-            return TB("Do not specify the language");
+            return language.Name();
+        }
+
+        public string NameSelectingOptional()
+        {
+            if(language is CommonLanguages.AS_IS)
+                return TB("Do not specify the language");
         
-        return language.Name();
+            return language.Name();
+        }
     }
 }

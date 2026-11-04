@@ -52,61 +52,215 @@ public static class FileExportFormatExtensions
     /// </remarks>
     public static readonly IReadOnlyList<FileExportFormat> ANSWER_FORMATS = [..DOCUMENT_FORMATS, ..TEXT_FORMATS];
 
-    /// <summary>
-    /// Returns the name of the format as shown to the user.
-    /// </summary>
     /// <param name="format">The format.</param>
-    /// <returns>The name of the format.</returns>
-    public static string ToName(this FileExportFormat format) => format switch
+    extension(FileExportFormat format)
     {
-        FileExportFormat.MICROSOFT_WORD => TB("Microsoft Word (.docx)"),
-        FileExportFormat.OPEN_DOCUMENT_TEXT => TB("OpenDocument Text (.odt), e.g. LibreOffice"),
-        FileExportFormat.LATEX => TB("LaTeX (.tex)"),
-        FileExportFormat.MARKDOWN => TB("Markdown (.md)"),
-        FileExportFormat.HTML => TB("Webpage (.html)"),
-        FileExportFormat.CSV => TB("Table (.csv)"),
-        FileExportFormat.TSV => TB("Table (.tsv)"),
-        FileExportFormat.SOURCE_CODE => TB("Source code"),
+        /// <summary>
+        /// Returns the name of the format as shown to the user.
+        /// </summary>
+        /// <returns>The name of the format.</returns>
+        public string ToName() => format switch
+        {
+            FileExportFormat.MICROSOFT_WORD => TB("Microsoft Word (.docx)"),
+            FileExportFormat.OPEN_DOCUMENT_TEXT => TB("OpenDocument Text (.odt), e.g. LibreOffice"),
+            FileExportFormat.LATEX => TB("LaTeX (.tex)"),
+            FileExportFormat.MARKDOWN => TB("Markdown (.md)"),
+            FileExportFormat.HTML => TB("Webpage (.html)"),
+            FileExportFormat.CSV => TB("Table (.csv)"),
+            FileExportFormat.TSV => TB("Table (.tsv)"),
+            FileExportFormat.SOURCE_CODE => TB("Source code"),
 
-        _ => TB("Unknown format"),
-    };
+            _ => TB("Unknown format"),
+        };
 
-    /// <summary>
-    /// Returns the icon of the format.
-    /// </summary>
-    /// <param name="format">The format.</param>
-    /// <returns>The icon of the format.</returns>
-    public static string ToIcon(this FileExportFormat format) => format switch
-    {
-        FileExportFormat.MICROSOFT_WORD => Icons.Custom.FileFormats.FileWord,
-        FileExportFormat.OPEN_DOCUMENT_TEXT => Icons.Custom.FileFormats.FileDocument,
-        FileExportFormat.LATEX => Icons.Material.Filled.Functions,
-        FileExportFormat.MARKDOWN => Icons.Material.Filled.TextFields,
-        FileExportFormat.HTML => Icons.Material.Filled.Html,
-        FileExportFormat.CSV or FileExportFormat.TSV => Icons.Material.Filled.TableChart,
-        FileExportFormat.SOURCE_CODE => Icons.Material.Filled.Code,
+        /// <summary>
+        /// Returns the icon of the format.
+        /// </summary>
+        /// <returns>The icon of the format.</returns>
+        public string ToIcon() => format switch
+        {
+            FileExportFormat.MICROSOFT_WORD => Icons.Custom.FileFormats.FileWord,
+            FileExportFormat.OPEN_DOCUMENT_TEXT => Icons.Custom.FileFormats.FileDocument,
+            FileExportFormat.LATEX => Icons.Material.Filled.Functions,
+            FileExportFormat.MARKDOWN => Icons.Material.Filled.TextFields,
+            FileExportFormat.HTML => Icons.Material.Filled.Html,
+            FileExportFormat.CSV or FileExportFormat.TSV => Icons.Material.Filled.TableChart,
+            FileExportFormat.SOURCE_CODE => Icons.Material.Filled.Code,
 
-        _ => Icons.Material.Filled.Help,
-    };
+            _ => Icons.Material.Filled.Help,
+        };
 
-    /// <summary>
-    /// Returns the file extension of the format, including the leading dot.
-    /// </summary>
-    /// <param name="format">The format.</param>
-    /// <returns>The file extension, or an empty string when the format writes no file or, as code
-    /// does, takes the extension from its language.</returns>
-    public static string ToFileExtension(this FileExportFormat format) => format switch
-    {
-        FileExportFormat.MICROSOFT_WORD => ".docx",
-        FileExportFormat.OPEN_DOCUMENT_TEXT => ".odt",
-        FileExportFormat.LATEX => ".tex",
-        FileExportFormat.MARKDOWN => ".md",
-        FileExportFormat.HTML => ".html",
-        FileExportFormat.CSV => ".csv",
-        FileExportFormat.TSV => ".tsv",
+        /// <summary>
+        /// Returns the file extension of the format, including the leading dot.
+        /// </summary>
+        /// <returns>The file extension, or an empty string when the format writes no file or, as code
+        /// does, takes the extension from its language.</returns>
+        public string ToFileExtension() => format switch
+        {
+            FileExportFormat.MICROSOFT_WORD => ".docx",
+            FileExportFormat.OPEN_DOCUMENT_TEXT => ".odt",
+            FileExportFormat.LATEX => ".tex",
+            FileExportFormat.MARKDOWN => ".md",
+            FileExportFormat.HTML => ".html",
+            FileExportFormat.CSV => ".csv",
+            FileExportFormat.TSV => ".tsv",
 
-        _ => string.Empty,
-    };
+            _ => string.Empty,
+        };
+
+        /// <summary>
+        /// Determines whether the format holds a table rather than a text.
+        /// </summary>
+        /// <returns>True for the formats a spreadsheet opens.</returns>
+        public bool IsTabular() => format is FileExportFormat.CSV or FileExportFormat.TSV;
+
+        /// <summary>
+        /// Determines whether a file of the format is plain text, which AI Studio writes as it is.
+        /// </summary>
+        /// <remarks>
+        /// That holds for a web page and a LaTeX document as well, even though an entire answer needs
+        /// Pandoc to become one: the answer is Markdown, whereas a page the model wrote is a finished
+        /// file already. A Word or an OpenDocument file is an archive, and only Pandoc produces one. The
+        /// list is spelled out on purpose, so a format added later counts as plain text only once
+        /// somebody says so.
+        /// </remarks>
+        /// <returns>True, when a text written as it is makes a valid file of the format.</returns>
+        public bool IsPlainText() => format is FileExportFormat.LATEX or FileExportFormat.MARKDOWN or FileExportFormat.HTML or FileExportFormat.CSV or FileExportFormat.TSV or FileExportFormat.SOURCE_CODE;
+
+        /// <summary>
+        /// Returns the file name the save dialog starts with.
+        /// </summary>
+        /// <remarks>
+        /// Without a name, the dialog opens with an empty field and the user easily ends up with a
+        /// file which carries no extension at all. The fallback name is deliberately not translated:
+        /// a file name should survive being copied between systems and locales.
+        /// </remarks>
+        /// <param name="name">What the file is about, for example the heading above a table. Anything
+        /// a file name cannot hold is removed. Null or blank falls back to a generic name.</param>
+        /// <returns>The suggested file name, including its extension.</returns>
+        public string ToSuggestedFileName(string? name = null) => SuggestFileName(name, format.ToFileExtension());
+
+        /// <summary>
+        /// Returns the filter which the save dialog offers for the format.
+        /// </summary>
+        /// <returns>The filter, or null when the format cannot be written or, as code does, takes the
+        /// filter from its language.</returns>
+        public FileTypeFilter? ToFileTypeFilter() => format switch
+        {
+            FileExportFormat.MICROSOFT_WORD => FileTypes.MS_WORD,
+            FileExportFormat.OPEN_DOCUMENT_TEXT => FileTypes.ODT,
+            FileExportFormat.LATEX => FileTypes.TEX,
+            FileExportFormat.MARKDOWN => FileTypes.MARKDOWN,
+            FileExportFormat.HTML => FileTypes.HTML_DOCUMENT,
+            FileExportFormat.CSV => FileTypes.CSV,
+            FileExportFormat.TSV => FileTypes.TSV,
+
+            _ => null,
+        };
+
+        /// <summary>
+        /// Returns the encoding the file gets written with.
+        /// </summary>
+        /// <remarks>
+        /// Everything is UTF-8, the question is only whether the file starts with a byte order mark.
+        /// Tabular files get one, because Excel otherwise reads them in the local ANSI code page and
+        /// turns every umlaut into garbage. Text files get none: editors, compilers, and LaTeX have
+        /// no use for it and some of them stumble over it.
+        /// </remarks>
+        /// <returns>The encoding to write the file with.</returns>
+        public Encoding ToFileEncoding() => format switch
+        {
+            FileExportFormat.CSV or FileExportFormat.TSV => WITH_BYTE_ORDER_MARK,
+
+            _ => WITHOUT_BYTE_ORDER_MARK,
+        };
+
+        /// <summary>
+        /// Wraps a text into a comment of the format: whoever opens the file in an editor reads it,
+        /// while a browser or a LaTeX run skips it.
+        /// </summary>
+        /// <remarks>
+        /// A comment in HTML, and so in Markdown, ends at the first --> it holds, and a browser takes
+        /// --!> for the same; the rest of the text would spill onto the page from there. The title of
+        /// a web page may hold either, so a space goes in before the bracket, which keeps the text
+        /// readable and ends nothing. Every other pair of dashes stays, because a web address may carry
+        /// one, as in the xn-- of a domain with an umlaut. A LaTeX comment has no end to watch for: it
+        /// runs to the end of its line, so every line starts one.
+        /// </remarks>
+        /// <param name="text">The text to put into the comment.</param>
+        /// <param name="comment">The comment, or an empty string when the format has none.</param>
+        /// <returns>True, when the format knows comments.</returns>
+        public bool TryToComment(string text, out string comment)
+        {
+            var lines = text.TrimEnd().ReplaceLineEndings("\n").Split('\n');
+            switch (format)
+            {
+                case FileExportFormat.HTML or FileExportFormat.MARKDOWN:
+                    var commentText = string.Join(Environment.NewLine, lines).Replace("-->", "-- >").Replace("--!>", "--! >");
+                    comment = $"<!--{Environment.NewLine}{commentText}{Environment.NewLine}-->";
+                    return true;
+
+                case FileExportFormat.LATEX:
+                    comment = string.Join(Environment.NewLine, lines.Select(line => line.Length is 0 ? "%" : $"% {line}"));
+                    return true;
+
+                default:
+                    comment = string.Empty;
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether a link into a local file may name the page it points at.
+        /// </summary>
+        /// <remarks>
+        /// A page is named by the fragment of the link, the way the PDF open parameters call for. A
+        /// browser and a PDF reader follow that and open the document on the page; Word and LibreOffice
+        /// take the fragment for part of the file name, look for a file which does not exist, and refuse
+        /// the link altogether. There the page is dropped, so the link at least opens the document --
+        /// which page it was stays in the title of the source. Verified on 2026-09-15 with LibreOffice
+        /// on an exported .odt. A format added later keeps the page unless it is known to stumble too.
+        /// </remarks>
+        /// <returns>True, when a reader of this format follows such a link.</returns>
+        public bool FollowsPageAnchors() => format switch
+        {
+            FileExportFormat.MICROSOFT_WORD or FileExportFormat.OPEN_DOCUMENT_TEXT => false,
+
+            _ => true,
+        };
+
+        /// <summary>
+        /// Determines whether Pandoc has to be told the title of a document in the format.
+        /// </summary>
+        /// <remarks>
+        /// A web page shows its title in the browser tab. Without one, Pandoc names the page after its
+        /// input file, which is a temporary file of ours with a random name. Word and OpenDocument show
+        /// no such title, and handed one anyway, they keep it as a document property nobody asked for;
+        /// verified with Pandoc 3.8.3 on 2026-09-23. LaTeX ignores it.
+        /// </remarks>
+        /// <returns>True, when a document of this format needs a title besides its content.</returns>
+        public bool NeedsPageTitle() => format is FileExportFormat.HTML;
+
+        /// <summary>
+        /// Returns the name Pandoc knows the format by.
+        /// </summary>
+        /// <returns>The Pandoc output format, or an empty string when AI Studio writes the file itself.</returns>
+        public string ToPandocOutputFormat() => format switch
+        {
+            FileExportFormat.MICROSOFT_WORD => "docx",
+            FileExportFormat.OPEN_DOCUMENT_TEXT => "odt",
+            FileExportFormat.LATEX => "latex",
+            FileExportFormat.HTML => "html",
+
+            _ => string.Empty,
+        };
+
+        /// <summary>
+        /// Determines whether writing the format needs Pandoc.
+        /// </summary>
+        /// <returns>True, when Pandoc converts the message; false, when AI Studio writes the file itself.</returns>
+        public bool UsesPandoc() => !string.IsNullOrWhiteSpace(format.ToPandocOutputFormat());
+    }
 
     /// <summary>
     /// Reads which format a model means when it names a language behind the opening fence of a
@@ -138,41 +292,6 @@ public static class FileExportFormatExtensions
 
         return format is not FileExportFormat.NONE;
     }
-
-    /// <summary>
-    /// Determines whether the format holds a table rather than a text.
-    /// </summary>
-    /// <param name="format">The format.</param>
-    /// <returns>True for the formats a spreadsheet opens.</returns>
-    public static bool IsTabular(this FileExportFormat format) => format is FileExportFormat.CSV or FileExportFormat.TSV;
-
-    /// <summary>
-    /// Determines whether a file of the format is plain text, which AI Studio writes as it is.
-    /// </summary>
-    /// <remarks>
-    /// That holds for a web page and a LaTeX document as well, even though an entire answer needs
-    /// Pandoc to become one: the answer is Markdown, whereas a page the model wrote is a finished
-    /// file already. A Word or an OpenDocument file is an archive, and only Pandoc produces one. The
-    /// list is spelled out on purpose, so a format added later counts as plain text only once
-    /// somebody says so.
-    /// </remarks>
-    /// <param name="format">The format.</param>
-    /// <returns>True, when a text written as it is makes a valid file of the format.</returns>
-    public static bool IsPlainText(this FileExportFormat format) => format is FileExportFormat.LATEX or FileExportFormat.MARKDOWN or FileExportFormat.HTML or FileExportFormat.CSV or FileExportFormat.TSV or FileExportFormat.SOURCE_CODE;
-
-    /// <summary>
-    /// Returns the file name the save dialog starts with.
-    /// </summary>
-    /// <remarks>
-    /// Without a name, the dialog opens with an empty field and the user easily ends up with a
-    /// file which carries no extension at all. The fallback name is deliberately not translated:
-    /// a file name should survive being copied between systems and locales.
-    /// </remarks>
-    /// <param name="format">The format.</param>
-    /// <param name="name">What the file is about, for example the heading above a table. Anything
-    /// a file name cannot hold is removed. Null or blank falls back to a generic name.</param>
-    /// <returns>The suggested file name, including its extension.</returns>
-    public static string ToSuggestedFileName(this FileExportFormat format, string? name = null) => SuggestFileName(name, format.ToFileExtension());
 
     /// <summary>
     /// Returns the file name the save dialog starts with, for a file with the given extension.
@@ -236,132 +355,4 @@ public static class FileExportFormatExtensions
         // A trailing dot makes a file invisible on Unix and is dropped by Windows:
         return fragment.ToString().TrimEnd('.');
     }
-
-    /// <summary>
-    /// Returns the filter which the save dialog offers for the format.
-    /// </summary>
-    /// <param name="format">The format.</param>
-    /// <returns>The filter, or null when the format cannot be written or, as code does, takes the
-    /// filter from its language.</returns>
-    public static FileTypeFilter? ToFileTypeFilter(this FileExportFormat format) => format switch
-    {
-        FileExportFormat.MICROSOFT_WORD => FileTypes.MS_WORD,
-        FileExportFormat.OPEN_DOCUMENT_TEXT => FileTypes.ODT,
-        FileExportFormat.LATEX => FileTypes.TEX,
-        FileExportFormat.MARKDOWN => FileTypes.MARKDOWN,
-        FileExportFormat.HTML => FileTypes.HTML_DOCUMENT,
-        FileExportFormat.CSV => FileTypes.CSV,
-        FileExportFormat.TSV => FileTypes.TSV,
-
-        _ => null,
-    };
-
-    /// <summary>
-    /// Returns the encoding the file gets written with.
-    /// </summary>
-    /// <remarks>
-    /// Everything is UTF-8, the question is only whether the file starts with a byte order mark.
-    /// Tabular files get one, because Excel otherwise reads them in the local ANSI code page and
-    /// turns every umlaut into garbage. Text files get none: editors, compilers, and LaTeX have
-    /// no use for it and some of them stumble over it.
-    /// </remarks>
-    /// <param name="format">The format.</param>
-    /// <returns>The encoding to write the file with.</returns>
-    public static Encoding ToFileEncoding(this FileExportFormat format) => format switch
-    {
-        FileExportFormat.CSV or FileExportFormat.TSV => WITH_BYTE_ORDER_MARK,
-
-        _ => WITHOUT_BYTE_ORDER_MARK,
-    };
-
-    /// <summary>
-    /// Wraps a text into a comment of the format: whoever opens the file in an editor reads it,
-    /// while a browser or a LaTeX run skips it.
-    /// </summary>
-    /// <remarks>
-    /// A comment in HTML, and so in Markdown, ends at the first --> it holds, and a browser takes
-    /// --!> for the same; the rest of the text would spill onto the page from there. The title of
-    /// a web page may hold either, so a space goes in before the bracket, which keeps the text
-    /// readable and ends nothing. Every other pair of dashes stays, because a web address may carry
-    /// one, as in the xn-- of a domain with an umlaut. A LaTeX comment has no end to watch for: it
-    /// runs to the end of its line, so every line starts one.
-    /// </remarks>
-    /// <param name="format">The format.</param>
-    /// <param name="text">The text to put into the comment.</param>
-    /// <param name="comment">The comment, or an empty string when the format has none.</param>
-    /// <returns>True, when the format knows comments.</returns>
-    public static bool TryToComment(this FileExportFormat format, string text, out string comment)
-    {
-        var lines = text.TrimEnd().ReplaceLineEndings("\n").Split('\n');
-        switch (format)
-        {
-            case FileExportFormat.HTML or FileExportFormat.MARKDOWN:
-                var commentText = string.Join(Environment.NewLine, lines).Replace("-->", "-- >").Replace("--!>", "--! >");
-                comment = $"<!--{Environment.NewLine}{commentText}{Environment.NewLine}-->";
-                return true;
-
-            case FileExportFormat.LATEX:
-                comment = string.Join(Environment.NewLine, lines.Select(line => line.Length is 0 ? "%" : $"% {line}"));
-                return true;
-
-            default:
-                comment = string.Empty;
-                return false;
-        }
-    }
-
-    /// <summary>
-    /// Determines whether a link into a local file may name the page it points at.
-    /// </summary>
-    /// <remarks>
-    /// A page is named by the fragment of the link, the way the PDF open parameters call for. A
-    /// browser and a PDF reader follow that and open the document on the page; Word and LibreOffice
-    /// take the fragment for part of the file name, look for a file which does not exist, and refuse
-    /// the link altogether. There the page is dropped, so the link at least opens the document --
-    /// which page it was stays in the title of the source. Verified on 2026-09-15 with LibreOffice
-    /// on an exported .odt. A format added later keeps the page unless it is known to stumble too.
-    /// </remarks>
-    /// <param name="format">The format.</param>
-    /// <returns>True, when a reader of this format follows such a link.</returns>
-    public static bool FollowsPageAnchors(this FileExportFormat format) => format switch
-    {
-        FileExportFormat.MICROSOFT_WORD or FileExportFormat.OPEN_DOCUMENT_TEXT => false,
-
-        _ => true,
-    };
-
-    /// <summary>
-    /// Determines whether Pandoc has to be told the title of a document in the format.
-    /// </summary>
-    /// <remarks>
-    /// A web page shows its title in the browser tab. Without one, Pandoc names the page after its
-    /// input file, which is a temporary file of ours with a random name. Word and OpenDocument show
-    /// no such title, and handed one anyway, they keep it as a document property nobody asked for;
-    /// verified with Pandoc 3.8.3 on 2026-09-23. LaTeX ignores it.
-    /// </remarks>
-    /// <param name="format">The format.</param>
-    /// <returns>True, when a document of this format needs a title besides its content.</returns>
-    public static bool NeedsPageTitle(this FileExportFormat format) => format is FileExportFormat.HTML;
-
-    /// <summary>
-    /// Returns the name Pandoc knows the format by.
-    /// </summary>
-    /// <param name="format">The format.</param>
-    /// <returns>The Pandoc output format, or an empty string when AI Studio writes the file itself.</returns>
-    public static string ToPandocOutputFormat(this FileExportFormat format) => format switch
-    {
-        FileExportFormat.MICROSOFT_WORD => "docx",
-        FileExportFormat.OPEN_DOCUMENT_TEXT => "odt",
-        FileExportFormat.LATEX => "latex",
-        FileExportFormat.HTML => "html",
-
-        _ => string.Empty,
-    };
-
-    /// <summary>
-    /// Determines whether writing the format needs Pandoc.
-    /// </summary>
-    /// <param name="format">The format.</param>
-    /// <returns>True, when Pandoc converts the message; false, when AI Studio writes the file itself.</returns>
-    public static bool UsesPandoc(this FileExportFormat format) => !string.IsNullOrWhiteSpace(format.ToPandocOutputFormat());
 }

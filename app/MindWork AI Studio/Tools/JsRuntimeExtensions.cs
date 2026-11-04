@@ -3,6 +3,12 @@ using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools;
 
+//
+// These extension methods stay classic ones instead of moving into extension blocks like all
+// others: for a member of an extension block, the compiler of the .NET 10.0.1xx SDK warns about
+// every argument passed one by one to a params parameter (CS8620, dotnet/roslyn#80024). Move them
+// once the SDK in metadata.txt carries the fix.
+//
 public static class JsRuntimeExtensions
 {
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(JsRuntimeExtensions));

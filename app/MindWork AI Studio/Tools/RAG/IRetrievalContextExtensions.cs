@@ -90,85 +90,88 @@ public static class IRetrievalContextExtensions
         contextBuilder.AppendLine("Matched image content: an image matched here, but it is not shown to you. Do not guess what it shows. When it matters for the answer, tell the user that an image matched, and where to find it, using the path and the links above.");
     }
 
-    /// <summary>
-    /// Prepares retrieval contexts for the AI: filters them for prompt injections, writes out what
-    /// the AI is told about each, and keeps what the user is shown of it.
-    /// </summary>
-    /// <remarks>
-    /// A data source is as untrusted as any other external content: it may serve text written to
-    /// steer the model rather than to answer the query. So everything a data source wrote passes
-    /// the filter: the description of each context, its matched text, and each part of its
-    /// surrounding content. What the app writes around them, such as the labels and the fences,
-    /// does not need to.<br/><br/>
-    /// All contexts go to the runtime in one request, which also gives the user one report for all
-    /// of them. The passages are made from the filtered texts, so the user reads what the AI read.
-    /// </remarks>
     /// <param name="retrievalContexts">The contexts to prepare.</param>
-    /// <param name="guardService">The prompt injection filter.</param>
-    /// <param name="reportingScope">The action the contexts are retrieved for, or null when they are retrieved for none.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>One prepared context per context, in the order they came in.</returns>
-    public static async Task<IReadOnlyList<PreparedRetrievalContext>> PrepareForModelAsync(this IReadOnlyList<IRetrievalContext> retrievalContexts, PromptInjectionGuardService guardService, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    extension(IReadOnlyList<IRetrievalContext> retrievalContexts)
     {
-        if (retrievalContexts.Count is 0)
-            return [];
-
-        //
-        // The texts of all contexts in one list, each context with its description first, then its
-        // matched text, then its surrounding content. The answer comes back in the same order, and
-        // is read back below in the same way:
-        //
-        var texts = new List<PromptInjectionText>();
-        foreach (var retrievalContext in retrievalContexts)
+        /// <summary>
+        /// Prepares retrieval contexts for the AI: filters them for prompt injections, writes out what
+        /// the AI is told about each, and keeps what the user is shown of it.
+        /// </summary>
+        /// <remarks>
+        /// A data source is as untrusted as any other external content: it may serve text written to
+        /// steer the model rather than to answer the query. So everything a data source wrote passes
+        /// the filter: the description of each context, its matched text, and each part of its
+        /// surrounding content. What the app writes around them, such as the labels and the fences,
+        /// does not need to.<br/><br/>
+        /// All contexts go to the runtime in one request, which also gives the user one report for all
+        /// of them. The passages are made from the filtered texts, so the user reads what the AI read.
+        /// </remarks>
+        /// <param name="guardService">The prompt injection filter.</param>
+        /// <param name="reportingScope">The action the contexts are retrieved for, or null when they are retrieved for none.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>One prepared context per context, in the order they came in.</returns>
+        public async Task<IReadOnlyList<PreparedRetrievalContext>> PrepareForModelAsync(PromptInjectionGuardService guardService, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
         {
-            var source = PromptInjectionSource.RetrievalContext(retrievalContext.DataSourceName, retrievalContext.Path);
-            var description = new StringBuilder();
-            AppendContextDescription(description, retrievalContext);
-            texts.Add(new(description.ToString(), source));
+            if (retrievalContexts.Count is 0)
+                return [];
 
-            if (retrievalContext is not RetrievalTextContext textContext)
-                continue;
-
-            texts.Add(new(textContext.MatchedText, source));
-            foreach (var surrounding in textContext.SurroundingContent)
-                texts.Add(new(surrounding, source));
-        }
-
-        token.ThrowIfCancellationRequested();
-        var sanitizedTexts = await guardService.SanitizeAsync(texts, reportingScope);
-
-        var preparedContexts = new List<PreparedRetrievalContext>(retrievalContexts.Count);
-        var nextText = 0;
-        foreach (var retrievalContext in retrievalContexts)
-        {
-            var body = new StringBuilder();
-            body.Append(sanitizedTexts[nextText++]);
-
-            var matchedText = string.Empty;
-            IReadOnlyList<string> surroundingContent = [];
-            switch (retrievalContext)
+            //
+            // The texts of all contexts in one list, each context with its description first, then its
+            // matched text, then its surrounding content. The answer comes back in the same order, and
+            // is read back below in the same way:
+            //
+            var texts = new List<PromptInjectionText>();
+            foreach (var retrievalContext in retrievalContexts)
             {
-                case RetrievalTextContext textContext:
-                    matchedText = sanitizedTexts[nextText++];
-                    surroundingContent = sanitizedTexts.Skip(nextText).Take(textContext.SurroundingContent.Count).ToList();
-                    nextText += surroundingContent.Count;
-                    AppendTextMatch(body, matchedText, surroundingContent);
-                    break;
+                var source = PromptInjectionSource.RetrievalContext(retrievalContext.DataSourceName, retrievalContext.Path);
+                var description = new StringBuilder();
+                AppendContextDescription(description, retrievalContext);
+                texts.Add(new(description.ToString(), source));
 
-                case RetrievalImageContext:
-                    AppendImageMatch(body);
-                    break;
+                if (retrievalContext is not RetrievalTextContext textContext)
+                    continue;
 
-                default:
-                    LOGGER.LogWarning($"The retrieval content type '{retrievalContext.Type}' of data source '{retrievalContext.DataSourceName}' at location '{retrievalContext.Path}' is not supported yet.");
-                    break;
+                texts.Add(new(textContext.MatchedText, source));
+                foreach (var surrounding in textContext.SurroundingContent)
+                    texts.Add(new(surrounding, source));
             }
 
-            var sources = retrievalContext.ToSources();
-            preparedContexts.Add(new(retrievalContext, body.ToString(), sources, CreatePassage(retrievalContext, sources, matchedText, surroundingContent)));
-        }
+            token.ThrowIfCancellationRequested();
+            var sanitizedTexts = await guardService.SanitizeAsync(texts, reportingScope);
 
-        return preparedContexts;
+            var preparedContexts = new List<PreparedRetrievalContext>(retrievalContexts.Count);
+            var nextText = 0;
+            foreach (var retrievalContext in retrievalContexts)
+            {
+                var body = new StringBuilder();
+                body.Append(sanitizedTexts[nextText++]);
+
+                var matchedText = string.Empty;
+                IReadOnlyList<string> surroundingContent = [];
+                switch (retrievalContext)
+                {
+                    case RetrievalTextContext textContext:
+                        matchedText = sanitizedTexts[nextText++];
+                        surroundingContent = sanitizedTexts.Skip(nextText).Take(textContext.SurroundingContent.Count).ToList();
+                        nextText += surroundingContent.Count;
+                        AppendTextMatch(body, matchedText, surroundingContent);
+                        break;
+
+                    case RetrievalImageContext:
+                        AppendImageMatch(body);
+                        break;
+
+                    default:
+                        LOGGER.LogWarning($"The retrieval content type '{retrievalContext.Type}' of data source '{retrievalContext.DataSourceName}' at location '{retrievalContext.Path}' is not supported yet.");
+                        break;
+                }
+
+                var sources = retrievalContext.ToSources();
+                preparedContexts.Add(new(retrievalContext, body.ToString(), sources, CreatePassage(retrievalContext, sources, matchedText, surroundingContent)));
+            }
+
+            return preparedContexts;
+        }
     }
 
     /// <summary>
@@ -242,34 +245,37 @@ public static class IRetrievalContextExtensions
         };
     }
 
-    /// <summary>
-    /// The sources a retrieval context lends to an answer, as they are listed below it.
-    /// </summary>
-    /// <remarks>
-    /// The reference comes first: the title and link of the passage itself where the data source
-    /// names them, e.g., a local file with its page, and otherwise the data source and the path.
-    /// The further links of the context follow. Only what can be opened becomes a link, i.e., a
-    /// web address or a file with an absolute path. A relative path would point elsewhere depending
-    /// on where it is opened from.<br/><br/>
-    ///
-    /// A context which names nothing to open at all, e.g., by a path which only its ERI server knows,
-    /// still lends one source: the AI received it, and its passage needs a place to be read at. That
-    /// source is named as text, see SourceExtensions.CreateRetrievalSourceUrl.
-    /// </remarks>
     /// <param name="retrievalContext">The retrieval context.</param>
-    /// <returns>The sources; none only for a context which names neither a document nor its data source.</returns>
-    public static IReadOnlyList<Source> ToSources(this IRetrievalContext retrievalContext)
+    extension(IRetrievalContext retrievalContext)
     {
-        var sources = new List<Source>();
-        var referenceTitle = GetReferenceTitle(retrievalContext);
-        AddSource(sources, referenceTitle, GetReferenceLink(retrievalContext));
-        foreach (var link in retrievalContext.Links)
-            AddSource(sources, retrievalContext.DataSourceName, link);
+        /// <summary>
+        /// The sources a retrieval context lends to an answer, as they are listed below it.
+        /// </summary>
+        /// <remarks>
+        /// The reference comes first: the title and link of the passage itself where the data source
+        /// names them, e.g., a local file with its page, and otherwise the data source and the path.
+        /// The further links of the context follow. Only what can be opened becomes a link, i.e., a
+        /// web address or a file with an absolute path. A relative path would point elsewhere depending
+        /// on where it is opened from.<br/><br/>
+        ///
+        /// A context which names nothing to open at all, e.g., by a path which only its ERI server knows,
+        /// still lends one source: the AI received it, and its passage needs a place to be read at. That
+        /// source is named as text, see SourceExtensions.CreateRetrievalSourceUrl.
+        /// </remarks>
+        /// <returns>The sources; none only for a context which names neither a document nor its data source.</returns>
+        public IReadOnlyList<Source> ToSources()
+        {
+            var sources = new List<Source>();
+            var referenceTitle = GetReferenceTitle(retrievalContext);
+            AddSource(sources, referenceTitle, GetReferenceLink(retrievalContext));
+            foreach (var link in retrievalContext.Links)
+                AddSource(sources, retrievalContext.DataSourceName, link);
 
-        if (sources.Count is 0 && !string.IsNullOrWhiteSpace(referenceTitle))
-            sources.Add(new Source(referenceTitle, SourceExtensions.CreateRetrievalSourceUrl(referenceTitle, retrievalContext.Path), SourceOrigin.RAG));
+            if (sources.Count is 0 && !string.IsNullOrWhiteSpace(referenceTitle))
+                sources.Add(new Source(referenceTitle, SourceExtensions.CreateRetrievalSourceUrl(referenceTitle, retrievalContext.Path), SourceOrigin.RAG));
 
-        return sources;
+            return sources;
+        }
     }
 
     private static void AddSource(ICollection<Source> sources, string title, string link)
