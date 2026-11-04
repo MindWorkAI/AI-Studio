@@ -9,6 +9,7 @@ using AIStudio.Provider;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 
 using WritingStylesRewrite = AIStudio.Assistants.RewriteImprove.WritingStyles;
 using WritingStylesEMail = AIStudio.Assistants.EMail.WritingStyles;
@@ -280,6 +281,34 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var chatTemplate in chatTemplates.GetAllChatTemplates())
             yield return new(chatTemplate.GetSafeName(), chatTemplate.Id);
+    }
+
+    /// <summary>
+    /// Returns the format templates of a kind to choose from, by the paths of their files.
+    /// </summary>
+    /// <remarks>
+    /// A choice is stored as the path of the file, as the Slide Assistant has always stored its
+    /// template, so that configuration plugins which state the path of a template keep working.
+    /// The first entry chooses no template. A path which no format template of the kind names,
+    /// e.g., the template of an organization which only its configuration plugin states, or one
+    /// whose format template was deleted, stays as an entry of its own, named after its file:
+    /// nothing changes behind the back of the user.
+    /// </remarks>
+    /// <param name="formatTemplates">The format templates, e.g., those of the settings.</param>
+    /// <param name="kind">The kind of template, one of the children of FileTypes.FORMAT_TEMPLATE.</param>
+    /// <param name="currentPath">The path chosen now; empty for no template.</param>
+    /// <returns>The entries, each with the path of its file as its value; an empty path for no template.</returns>
+    public static IEnumerable<ConfigurationSelectData<string>> GetFormatTemplatesData(IEnumerable<FormatTemplate> formatTemplates, FileTypeFilter kind, string currentPath)
+    {
+        yield return new(TB("No template"), string.Empty);
+
+        var listedPaths = new HashSet<string>(StringComparer.Ordinal) { string.Empty };
+        foreach (var formatTemplate in formatTemplates.Serving(kind))
+            if (listedPaths.Add(formatTemplate.FilePath))
+                yield return new(formatTemplate.Name, formatTemplate.FilePath);
+
+        if (!string.IsNullOrWhiteSpace(currentPath) && listedPaths.Add(currentPath))
+            yield return new(Path.GetFileName(currentPath), currentPath);
     }
     
     public static IEnumerable<ConfigurationSelectData<ConfidenceSchemes>> GetConfidenceSchemesData()

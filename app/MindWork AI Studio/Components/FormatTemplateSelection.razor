@@ -1,0 +1,19 @@
+@inherits MSGComponentBase
+
+<MudStack Row="true" AlignItems="AlignItems.Baseline" StretchItems="StretchItems.Start" Class="mb-3" Wrap="Wrap.NoWrap">
+    <MudSelect T="string" Strict="@true" Disabled="@this.Disabled" Value="@this.FilePath" ValueChanged="@this.SelectionChanged" ToStringFunc="@this.NameOf" Adornment="Adornment.Start" AdornmentIcon="@this.Icon" Margin="Margin.Dense" Label="@this.Label" Variant="Variant.Outlined" Validation="@this.Validation">
+        @foreach (var option in this.Options)
+        {
+            <MudSelectItem Value="@option.Value">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@this.IconOf(option.Value)" Size="Size.Small"/>
+                    @option.Name
+                </MudStack>
+            </MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudTooltip Text="@T("Manage your templates")" Placement="Placement.Top">
+        <MudIconButton Disabled="@this.Disabled" Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialog"/>
+    </MudTooltip>
+</MudStack>
