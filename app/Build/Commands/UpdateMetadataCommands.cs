@@ -15,7 +15,7 @@ public sealed partial class UpdateMetadataCommands
     /// <summary>
     /// Creates the option "--action" of the commands which prepare a release.
     /// </summary>
-    private static Option<PrepareAction> CreateActionOption() => new("--action", "-a") { Description = "The release action: patch, minor, or major", DefaultValueFactory = _ => PrepareAction.NONE };
+    private static Option<PrepareAction> CreateActionOption() => new("--action", "-a") { Description = "The release action: build, month, or year, which raise the release, the month, or the year of the version, e.g., 26.11.1 becomes 26.11.2, 26.12.1, or 27.1.1", DefaultValueFactory = _ => PrepareAction.NONE };
 
     /// <summary>
     /// Creates the option "--version" of the commands which prepare a release.
