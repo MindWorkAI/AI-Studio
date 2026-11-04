@@ -114,21 +114,15 @@
 
 <MudText Typo="Typo.h5" Class="mb-1 mt-6"> @T("PowerPoint template")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @T("Choose a PowerPoint presentation or template (.pptx, .potx) whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export.")
+    @T("Choose one of your PowerPoint templates (.pptx, .potx) whose layouts the slides should use. You add your templates with the button next to the list or in the app settings. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file (.pptx) in the design of your template, which other programs such as LibreOffice Impress open as well. OpenDocument presentations (.odp, .otp) cannot serve as a template yet. Without a template, you get an outline, which you can copy or export.")
 </MudJustifiedText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @SlideAssistantTexts.WhatTheLLMKnowsOfLayouts
 </MudJustifiedText>
-<SelectFile File="@this.templatePath" FileChanged="@this.OnTemplateChanged" Label="@T("PowerPoint template")" FileDialogTitle="@T("Select a PowerPoint template")" Filter="@([FileTypes.POWER_POINT_TEMPLATE])" Validation="@this.ValidateTemplate" Disabled="@this.IsTemplateLocked" EnableDragDrop="true"/>
+<FormatTemplateSelection FilePath="@this.templatePath" FilePathChanged="@this.OnTemplateChanged" Kind="@FileTypes.POWER_POINT_TEMPLATE" Label="@T("PowerPoint template")" Icon="@Icons.Material.Filled.Slideshow" Validation="@this.ValidateTemplate" Disabled="@this.IsTemplateLocked"/>
 @if (this.IsLockedTemplateUnavailable)
 {
     <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@T("The PowerPoint template of your organization is not available right now, e.g., because its network drive cannot be reached. Until it is, the assistant plans an outline only.")</MudAlert>
-}
-@if (!string.IsNullOrWhiteSpace(this.templatePath) && !this.IsTemplateLocked)
-{
-    <MudButton StartIcon="@Icons.Material.Filled.LayersClear" Variant="Variant.Outlined" OnClick="@this.UseNoTemplate" Class="mb-3">
-        @T("Use no template")
-    </MudButton>
 }
 
 @* The select renders its items again on its own, e.g., while the form validates, when the template may be gone already: *@

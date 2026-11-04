@@ -312,8 +312,6 @@ public partial class SlideAssistant
     /// </summary>
     private string PromptChosenLayouts() => this.ChosenLayoutsOfTemplate.ToPromptRules();
 
-    private async Task UseNoTemplate() => await this.OnTemplateChanged(string.Empty);
-
     private string? ValidateTemplate(string path)
     {
         // The warning below the field explains this case, since the user cannot change the template:
@@ -321,7 +319,7 @@ public partial class SlideAssistant
             return null;
 
         if (!File.Exists(path))
-            return T("The template file does not exist.");
+            return T("The template file cannot be found.");
 
         if (this.template is null)
             return T("The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx).");
