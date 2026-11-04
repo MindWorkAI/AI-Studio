@@ -6,7 +6,7 @@ public static class SentenceStructureExtensions
     
     extension(SentenceStructure sentenceStructure)
     {
-        public string Name() => sentenceStructure switch
+        public string Name => sentenceStructure switch
         {
             SentenceStructure.ACTIVE => TB("Active voice"),
             SentenceStructure.PASSIVE => TB("Passive voice"),
@@ -14,7 +14,7 @@ public static class SentenceStructureExtensions
             _ => TB("Not Specified"),
         };
 
-        public string Prompt() => sentenceStructure switch
+        public string Prompt => sentenceStructure switch
         {
             SentenceStructure.ACTIVE => " Use an active voice for the sentence structure.",
             SentenceStructure.PASSIVE => " Use a passive voice for the sentence structure.",

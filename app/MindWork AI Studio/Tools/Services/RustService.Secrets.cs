@@ -24,7 +24,7 @@ public sealed partial class RustService
     private static DeleteSecretResponse TranslateSecretStoreIssue(DeleteSecretResponse response) =>
         response.Success ? response : response with { Issue = TranslateSecretStoreIssue(response.IssueCode, response.Issue) };
 
-    private static string SecretKey(ISecretId secretId, SecretStoreType storeType) => $"{storeType.Prefix()}::{secretId.SecretId}::{secretId.SecretName}";
+    private static string SecretKey(ISecretId secretId, SecretStoreType storeType) => $"{storeType.Prefix}::{secretId.SecretId}::{secretId.SecretName}";
 
     private static string LegacySecretKey(ISecretId secretId) => $"secret::{secretId.SecretId}::{secretId.SecretName}";
 

@@ -194,8 +194,8 @@ public partial class ToolSelection : MSGComponentBase
 
         return string.Format(
             this.T("This tool requires provider confidence {0}. The selected provider has {1}."),
-            GetMinimumProviderConfidence(item).GetName(),
-            this.ProviderConfidence.GetName());
+            GetMinimumProviderConfidence(item).Name,
+            this.ProviderConfidence.Name);
     }
 
     /// <summary>

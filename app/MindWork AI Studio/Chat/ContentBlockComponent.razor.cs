@@ -274,8 +274,8 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </remarks>
     private string ExportLabel(MessageFile file)
     {
-        var isTable = file.Format.IsTabular();
-        var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular() == isTable).ToList();
+        var isTable = file.Format.IsTabular;
+        var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular == isTable).ToList();
         var extensionOrName = file.ToFileExtensionOrName();
         var typeName = file.ToName();
 
@@ -308,7 +308,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// for the entire answer out of sight. Each submenu keeps the order of the answer, so "Code
     /// block 3" is the third entry of its submenu as well.
     /// </remarks>
-    private IEnumerable<IGrouping<bool, MessageFile>> MessageFilesByKind => this.MessageFiles.GroupBy(file => file.Format.IsTabular()).OrderByDescending(isTable => isTable.Key);
+    private IEnumerable<IGrouping<bool, MessageFile>> MessageFilesByKind => this.MessageFiles.GroupBy(file => file.Format.IsTabular).OrderByDescending(isTable => isTable.Key);
 
     /// <summary>
     /// Names the submenu of one kind of files in the export menu, with the number of its files.
@@ -322,7 +322,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// <summary>
     /// Returns the icon of the submenu of one kind of files in the export menu.
     /// </summary>
-    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.ToIcon() : FileExportFormat.SOURCE_CODE.ToIcon();
+    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.Icon : FileExportFormat.SOURCE_CODE.Icon;
 
     /// <summary>
     /// What the export offers, falling back to the chat wording when nobody named it.
@@ -649,7 +649,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
             var disclosureService = this.GetsAIGeneratedContentDisclosure ? this.DisclosureService : null;
-            if (format.UsesPandoc())
+            if (format.UsesPandoc)
                 await PandocExport.ToDocument(this.RustService, this.PandocAvailability, disclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
             else if (this.Content.TryGetExportMarkdown(out var markdown))
                 await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, disclosureService?.AddDisclosureToMarkdown(markdown) ?? markdown, this.ExportFileName);

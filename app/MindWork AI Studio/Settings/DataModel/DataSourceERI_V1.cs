@@ -170,7 +170,7 @@ public record struct DataSourceERI_V1: IERIDataSource
                                 Path = eriContext.Path ?? string.Empty,
                                 Type = eriContext.ToRetrievalContentType(),
                                 Links = eriContext.Links ?? [],
-                                Category = eriContext.Type.ToRetrievalContentCategory(),
+                                Category = eriContext.Type.RetrievalContentCategory,
                                 SourceCategory = eriContext.Category ?? string.Empty,
                                 MatchedText = eriContext.MatchedContent ?? string.Empty,
                                 DataSourceName = eriContext.Name ?? string.Empty,
@@ -185,7 +185,7 @@ public record struct DataSourceERI_V1: IERIDataSource
                                 Type = eriContext.ToRetrievalContentType(),
                                 Links = eriContext.Links ?? [],
                                 Source = eriContext.MatchedContent ?? string.Empty,
-                                Category = eriContext.Type.ToRetrievalContentCategory(),
+                                Category = eriContext.Type.RetrievalContentCategory,
                                 SourceCategory = eriContext.Category ?? string.Empty,
                                 SourceType = ContentImageSource.BASE64,
                                 DataSourceName = eriContext.Name ?? string.Empty,
@@ -275,7 +275,7 @@ public record struct DataSourceERI_V1: IERIDataSource
         // its passages reach a chat, see DataSourceOutboundDataExtensions.GetEffectiveOutboundDataRestriction.
         //
         var outboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
-        if (table.TryGetValue("OutboundDataRestriction", out var outboundDataRestrictionValue) && !(outboundDataRestrictionValue.TryRead<string>(out var outboundDataRestrictionText) && EnumNames.TryParse(outboundDataRestrictionText, out outboundDataRestriction)))
+        if (table.TryGetValue("OutboundDataRestriction", out var outboundDataRestrictionValue) && !(outboundDataRestrictionValue.TryRead<string>(out var outboundDataRestrictionText) && OutboundDataRestriction.TryParseName(outboundDataRestrictionText, out outboundDataRestriction)))
         {
             LOGGER.LogWarning($"The configured data source {idx} does not contain a valid outbound data restriction, so the strictest one applies. (Plugin ID: {configPluginId})");
             outboundDataRestriction = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;

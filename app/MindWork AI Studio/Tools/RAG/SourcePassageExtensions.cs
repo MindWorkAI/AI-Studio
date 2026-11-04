@@ -13,8 +13,8 @@ public static class SourcePassageExtensions
         /// <summary>
         /// Whether the passage comes from a transcript, e.g., of an audio or a video file.
         /// </summary>
-        /// <returns>True for a transcript.</returns>
-        public bool IsTranscript() => passage.Type is RetrievalContentType.TEXT_TRANSCRIPT;
+        /// <value>True for a transcript.</value>
+        public bool IsTranscript => passage.Type is RetrievalContentType.TEXT_TRANSCRIPT;
 
         /// <summary>
         /// What sort of content the passage is, as the provenance store files it.
@@ -23,8 +23,8 @@ public static class SourcePassageExtensions
         /// Told by what the content is rather than by where it came from: a mail is a mail, whether a
         /// mailbox data source or a tool handed it over.
         /// </remarks>
-        /// <returns>The kind of its entry.</returns>
-        public ProvenanceKind GetProvenanceKind() => passage.Type switch
+        /// <value>The kind of its entry.</value>
+        public ProvenanceKind ProvenanceKind => passage.Type switch
         {
             RetrievalContentType.TEXT_EMAIL => ProvenanceKind.MAIL,
             RetrievalContentType.TEXT_WEBSITE => ProvenanceKind.WEB_PAGE,
@@ -34,8 +34,8 @@ public static class SourcePassageExtensions
         /// <summary>
         /// Whether the passage holds texts which belong into the provenance store, see SourcePassage.ProvenanceId.
         /// </summary>
-        /// <returns>False once the texts are stored, and for a passage without any, such as an image.</returns>
-        public bool HoldsTextsToStore() => passage.ProvenanceId is null && (passage.Text.Length > 0 || passage.SurroundingContent.Count > 0);
+        /// <value>False once the texts are stored, and for a passage without any, such as an image.</value>
+        public bool HoldsTextsToStore => passage.ProvenanceId is null && (passage.Text.Length > 0 || passage.SurroundingContent.Count > 0);
 
         /// <summary>
         /// Names where the passage is in its document, e.g., "Page 4", "Pages 4–5", "Budget: rows 3–9", "Lines 40–85", or "Part 3".

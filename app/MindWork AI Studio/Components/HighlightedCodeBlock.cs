@@ -66,7 +66,7 @@ public sealed class HighlightedCodeBlock : ComponentBase
                     builder.AddContent(2, this.Code[position..token.Start]);
 
                 builder.OpenElement(3, "span");
-                builder.AddAttribute(4, "class", token.Kind.ToCssClass());
+                builder.AddAttribute(4, "class", token.Kind.CssClass);
                 builder.AddContent(5, this.Code.Substring(token.Start, token.Length));
                 builder.CloseElement();
                 position = token.Start + token.Length;

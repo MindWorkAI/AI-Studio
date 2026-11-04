@@ -9,7 +9,7 @@ public static class MailboxMaxAgeExtensions
     /// <param name="maxAge">The period.</param>
     extension(MailboxMaxAge maxAge)
     {
-        public string GetName() => maxAge switch
+        public string Name => maxAge switch
         {
             MailboxMaxAge.LAST_3_MONTHS => TB("The last 3 months"),
             MailboxMaxAge.LAST_6_MONTHS => TB("The last 6 months"),

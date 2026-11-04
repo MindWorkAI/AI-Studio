@@ -11,8 +11,8 @@ public static class SecretStoreTypeExtensions
         /// <remarks>
         /// LLM_PROVIDER uses the legacy "provider" prefix for backward compatibility.
         /// </remarks>
-        /// <returns>The corresponding prefix string.</returns>
-        public string Prefix() => type switch
+        /// <value>The corresponding prefix string.</value>
+        public string Prefix => type switch
         {
             SecretStoreType.LLM_PROVIDER => "provider",
             SecretStoreType.EMBEDDING_PROVIDER => "embedding",

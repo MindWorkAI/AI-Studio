@@ -795,7 +795,7 @@ public partial class ChatComponent : MSGComponentBase
         get
         {
             if (this.IsProviderSelected)
-                return string.Format(T("Your Prompt (use selected instance '{0}', provider '{1}')"), this.Provider.InstanceName, this.Provider.UsedLLMProvider.ToName());
+                return string.Format(T("Your Prompt (use selected instance '{0}', provider '{1}')"), this.Provider.InstanceName, this.Provider.UsedLLMProvider.Name);
             
             return this.T("Select a provider first");
         }

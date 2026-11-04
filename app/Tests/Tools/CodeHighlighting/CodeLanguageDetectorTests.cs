@@ -77,7 +77,7 @@ public sealed class CodeLanguageDetectorTests
     {
         using (Assert.EnterMultipleScope())
         {
-            var isFormat = FileExportFormatExtensions.TryFromCodeFenceLanguage(fenceLanguage, out _);
+            var isFormat = FileExportFormat.TryFromCodeFenceLanguage(fenceLanguage, out _);
             Assert.That(isFormat || SourceCodeLanguages.Aliases.Contains(fenceLanguage, StringComparer.OrdinalIgnoreCase), Is.True, "The export would save it as a text file.");
             Assert.That(CodeHighlighters.TryGetRules(fenceLanguage, out _) || LIBRARY_LANGUAGES.Contains(fenceLanguage), Is.True, "Nobody highlights it.");
         }

@@ -487,8 +487,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private IEnumerable<NavBarItem> GetNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
-        var activityIndicatorLightColor = this.ColorTheme.GetActivityIndicatorLightColor();
-        var activityIndicatorDarkColor = this.ColorTheme.GetActivityIndicatorDarkColor();
+        var activityIndicatorLightColor = this.ColorTheme.ActivityIndicatorLightColor;
+        var activityIndicatorDarkColor = this.ColorTheme.ActivityIndicatorDarkColor;
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
         var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();

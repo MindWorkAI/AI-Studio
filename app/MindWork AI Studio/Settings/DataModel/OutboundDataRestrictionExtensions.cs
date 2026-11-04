@@ -35,7 +35,7 @@ public static class OutboundDataRestrictionExtensions
         /// <returns>The restriction itself, or the strictest one when this version does not know it.</returns>
         public OutboundDataRestriction OrStrictestWhenUnknown() => Enum.IsDefined(restriction) ? restriction : OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
 
-        public string GetName() => restriction switch
+        public string Name => restriction switch
         {
             OutboundDataRestriction.ONLY_CONFIGURED_SERVICES => TB("Only services configured in AI Studio"),
             OutboundDataRestriction.ONLY_LINKS_FROM_CHAT => TB("Configured services and addresses from the chat"),
@@ -47,7 +47,7 @@ public static class OutboundDataRestrictionExtensions
         /// <summary>
         /// What a chat may still do on this level, once internal content entered it.
         /// </summary>
-        public string GetDescription() => restriction switch
+        public string Description => restriction switch
         {
             OutboundDataRestriction.ONLY_CONFIGURED_SERVICES => TB("The chat may only use services configured in AI Studio: your mailboxes, your data sources, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web."),
             OutboundDataRestriction.ONLY_LINKS_FROM_CHAT => TB("The chat may also read web pages whose addresses stand in the chat, written by you or returned by a tool, exactly as they stand there. It does not search the web, and the AI cannot choose addresses of its own outside the services configured in AI Studio."),

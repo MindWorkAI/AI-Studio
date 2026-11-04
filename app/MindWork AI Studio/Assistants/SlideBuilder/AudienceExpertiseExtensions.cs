@@ -6,7 +6,7 @@ public static class AudienceExpertiseExtensions
 
     extension(AudienceExpertise expertise)
     {
-        public string Name() => expertise switch
+        public string Name => expertise switch
         {
             AudienceExpertise.UNSPECIFIED => TB("Unspecified expertise"),
             AudienceExpertise.NON_EXPERTS => TB("No expertise"),
@@ -17,7 +17,7 @@ public static class AudienceExpertiseExtensions
             _ => TB("Unspecified expertise"),
         };
 
-        public string Prompt() => expertise switch
+        public string Prompt => expertise switch
         {
             AudienceExpertise.UNSPECIFIED => "Do not tailor the text to a specific expertise level.",
             AudienceExpertise.NON_EXPERTS => "Avoid jargon and explain specialized concepts plainly.",

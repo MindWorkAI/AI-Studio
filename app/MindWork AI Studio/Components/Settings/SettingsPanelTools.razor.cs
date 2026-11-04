@@ -107,7 +107,7 @@ public partial class SettingsPanelTools : SettingsPanelBase
     // minimum confidence; the long wording wraps into a tall block there:
     private string GetConfidenceLevelName(ConfidenceLevel confidenceLevel) => confidenceLevel is ConfidenceLevel.NONE
         ? this.T("No minimum")
-        : confidenceLevel.GetName();
+        : confidenceLevel.Name;
 
     private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item) =>
         $"background-color: {GetMinimumProviderConfidence(item).GetColor(this.SettingsManager)};";

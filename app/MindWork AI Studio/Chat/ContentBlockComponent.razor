@@ -6,14 +6,14 @@
 <MudCard Class="@this.CardClasses" Outlined="@true">
     <MudCardHeader>
         <CardHeaderAvatar>
-            <MudAvatar Color="@this.Role.ToColor()">
-                <MudIcon Icon="@this.Role.ToIcon()"/>
+            <MudAvatar Color="@this.Role.Color">
+                <MudIcon Icon="@this.Role.Icon"/>
             </MudAvatar>
         </CardHeaderAvatar>
         <CardHeaderContent>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudText Typo="Typo.body1">
-                    @this.Role.ToName() (@this.Time.LocalDateTime)
+                    @this.Role.Name (@this.Time.LocalDateTime)
                 </MudText>
                 @if (this.HasToolTrace)
                 {
@@ -87,9 +87,9 @@
                 {
                     <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
                         <MudMenu Icon="@Icons.Material.Filled.Save" MaxHeight="@MenuDefaults.MAX_HEIGHT">
-                            @foreach (var documentFormat in FileExportFormatExtensions.DOCUMENT_FORMATS)
+                            @foreach (var documentFormat in FileExportFormat.DocumentFormats)
                             {
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@documentFormat.Name"/>
                             }
                             @if (this.MessageFiles.Count > MAX_FILES_WITHOUT_SUBMENUS)
                             {
@@ -113,9 +113,9 @@
                                 }
                             }
                             <MudDivider/>
-                            @foreach (var textFormat in FileExportFormatExtensions.TEXT_FORMATS)
+                            @foreach (var textFormat in FileExportFormat.TextFormats)
                             {
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.ToIcon()" Label="@textFormat.ToName()"/>
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.Icon" Label="@textFormat.Name"/>
                             }
                         </MudMenu>
                     </MudTooltip>
@@ -126,7 +126,7 @@
                         <MudMenu Icon="@Icons.Material.Filled.Apps" Disabled="@(!this.IsSendToEnabled)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                             @foreach (var destination in this.SendToDestinations)
                             {
-                                <MudMenuItem OnClick="@(() => this.SendTo(destination))" Label="@destination.Name()"/>
+                                <MudMenuItem OnClick="@(() => this.SendTo(destination))" Label="@destination.Name"/>
                             }
                         </MudMenu>
                     </MudTooltip>

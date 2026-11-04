@@ -8,7 +8,7 @@ public static class ThemesExtensions
     
     extension(Themes theme)
     {
-        public string GetName() => theme switch
+        public string Name => theme switch
         {
             Themes.SYSTEM => TB("Synchronized with the operating system settings"),
             Themes.LIGHT => TB("Always use light theme"),

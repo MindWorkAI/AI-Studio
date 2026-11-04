@@ -14,12 +14,12 @@ public static class MudThemeExtensions
 
         public string GetActivityIndicatorColor(SettingsManager settingsManager) => settingsManager.IsDarkMode switch
         {
-            true => theme.GetActivityIndicatorDarkColor(),
-            false => theme.GetActivityIndicatorLightColor(),
+            true => theme.ActivityIndicatorDarkColor,
+            false => theme.ActivityIndicatorLightColor,
         };
 
-        public string GetActivityIndicatorLightColor() => theme.PaletteLight.Info.Value;
+        public string ActivityIndicatorLightColor => theme.PaletteLight.Info.Value;
 
-        public string GetActivityIndicatorDarkColor() => theme.PaletteDark.InfoLighten;
+        public string ActivityIndicatorDarkColor => theme.PaletteDark.InfoLighten;
     }
 }

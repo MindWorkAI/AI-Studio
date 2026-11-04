@@ -212,7 +212,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
     
     private string UserPromptMandatoryInformation()

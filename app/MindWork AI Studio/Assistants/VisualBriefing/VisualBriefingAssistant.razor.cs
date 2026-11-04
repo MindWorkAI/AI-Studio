@@ -147,7 +147,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         if (!this.SettingsManager.IsAssistantVisible(
                 ComponentKind.VISUAL_BRIEFING_ASSISTANT,
                 assistantName: T("Visual Briefing Assistant"),
-                requiredPreviewFeature: ComponentKind.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature()))
+                requiredPreviewFeature: ComponentKind.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature))
         {
             this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
             return;

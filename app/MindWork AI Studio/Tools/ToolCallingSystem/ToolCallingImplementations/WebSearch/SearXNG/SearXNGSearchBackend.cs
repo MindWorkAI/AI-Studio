@@ -76,7 +76,7 @@ public sealed class SearXNGSearchBackend : IWebSearchBackend
 
         // No configured policy sends nothing at all, which leaves the decision to the
         // instance's own configuration:
-        var safeSearch = query.SafeSearch?.ToSearXNGValue();
+        var safeSearch = query.SafeSearch?.SearXNGValue;
         var response = await this.searchClient.SearchAsync(new SearXNGSearchRequest(searchUri, query.Query, query.Language, query.TimeRange, query.Page, safeSearch, query.Limit, query.TimeoutSeconds), token);
 
         //

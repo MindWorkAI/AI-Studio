@@ -103,7 +103,7 @@ public sealed class VerifyCommand
         if (Directory.Exists(publishDirectory))
             Directory.Delete(publishDirectory, recursive: true);
 
-        var publishExitCode = await CommandRunner.RunAsync(directory, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --output \"{publishDirectory}\" --nologo");
+        var publishExitCode = await CommandRunner.RunAsync(directory, "dotnet", $"publish --configuration release --runtime {rid.MicrosoftRid} --output \"{publishDirectory}\" --nologo");
         if (publishExitCode is not 0)
             return publishExitCode;
 

@@ -219,7 +219,7 @@
                         else
                         {
                             <MudAlert Severity="@this.GetAuditResultSeverity()" Variant="Variant.Filled" Dense="true">
-                                <strong>@this.audit.Level.GetName()</strong><span>: @this.audit.Summary</span>
+                                <strong>@this.audit.Level.Name</strong><span>: @this.audit.Summary</span>
                             </MudAlert>
 
                             @if (this.IsActivationBlockedBySettings)
@@ -277,7 +277,7 @@
                                                 <MudStack Spacing="1" Style="width: 100%">
                                                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                                                         <MudText Typo="Typo.subtitle2">@finding.Category</MudText>
-                                                        <MudChip T="string" Variant="Variant.Text" Class="pt-n2" Size="Size.Small" Color="@severityUi.ChipColor">@finding.Severity.GetName()</MudChip>
+                                                        <MudChip T="string" Variant="Variant.Text" Class="pt-n2" Size="Size.Small" Color="@severityUi.ChipColor">@finding.Severity.Name</MudChip>
                                                     </MudStack>
                                                     <MudText Typo="Typo.caption" Class="mt-n3 mb-3">@finding.Location</MudText>
                                                     <MudText Typo="Typo.body2" Class="mt-n2 mb-2">@finding.Description</MudText>

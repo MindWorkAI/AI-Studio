@@ -22,23 +22,23 @@ internal static partial class LayoutPurposeExtensions
         /// <summary>
         /// The area the forms list a kind of slide in.
         /// </summary>
-        public LayoutPurposeArea Area() => Describe(purpose).Area;
+        public LayoutPurposeArea Area => Describe(purpose).Area;
 
         /// <summary>
         /// The short name of the choice, e.g., "Layout for chapters".
         /// </summary>
-        public string Label() => Describe(purpose).Label;
+        public string Label => Describe(purpose).Label;
 
         /// <summary>
         /// The question the choice answers, which says which slides it applies to.
         /// </summary>
-        public string Question() => Describe(purpose).Question;
+        public string Question => Describe(purpose).Question;
 
         /// <summary>
         /// Describes the slides of this kind for the model, so that it knows which of its slides a choice applies to.
         /// </summary>
-        /// <returns>The description, e.g., "timelines, e.g., the course of a project".</returns>
-        public string PromptDescription() => Describe(purpose).PromptDescription;
+        /// <value>The description, e.g., "timelines, e.g., the course of a project".</value>
+        public string PromptDescription => Describe(purpose).PromptDescription;
 
         /// <summary>
         /// Whether choosing a layout for this kind of slide also puts such a slide into the presentation.
@@ -48,13 +48,13 @@ internal static partial class LayoutPurposeExtensions
         /// presentation has one follows from its content. The slides which frame a presentation are
         /// different: whoever chooses a layout for the table of contents or the imprint expects them.
         /// </remarks>
-        public bool ChoiceAddsSlide() => purpose.PromptPlacement() is not null;
+        public bool ChoiceAddsSlide => purpose.PromptPlacement is not null;
 
         /// <summary>
         /// Where a slide goes which a choice puts into the presentation, and what it holds, for the model.
         /// </summary>
-        /// <returns>The rule, or null when a choice adds no slide of this kind.</returns>
-        public string? PromptPlacement() => purpose switch
+        /// <value>The rule, or null when a choice adds no slide of this kind.</value>
+        public string? PromptPlacement => purpose switch
         {
             LayoutPurpose.TABLE_OF_CONTENTS => "right after the title slide",
             LayoutPurpose.Q_AND_A => "near the end, before the closing slide; where the occasion suits it, e.g., in a lecture or a workshop, also at the end of chapters, then naming the topic of the chapter",
@@ -69,9 +69,9 @@ internal static partial class LayoutPurposeExtensions
         /// <summary>
         /// The help below the choice: its question, and whether a choice adds such a slide.
         /// </summary>
-        public string Help() => purpose.ChoiceAddsSlide()
-            ? $"{purpose.Question()} {TB("Choosing a layout also adds such a slide to the presentation.")}"
-            : purpose.Question();
+        public string Help => purpose.ChoiceAddsSlide
+            ? $"{purpose.Question} {TB("Choosing a layout also adds such a slide to the presentation.")}"
+            : purpose.Question;
     }
 
     private static LayoutPurposeInfo Describe(LayoutPurpose purpose) =>

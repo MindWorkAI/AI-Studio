@@ -17,7 +17,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     protected override string SystemPrompt => 
         $"""
         You are an automated system that writes emails. {this.SystemPromptHistory()} The user provides you with bullet points on what
-        he want to address in the response. Regarding the writing style of the email: {this.selectedWritingStyle.Prompt()}
+        he want to address in the response. Regarding the writing style of the email: {this.selectedWritingStyle.Prompt}
         {this.SystemPromptGreeting()} {this.SystemPromptName()} You write the email in the following language: {this.SystemPromptLanguage()}.
         """;
     
@@ -227,7 +227,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
     
     private string PromptFoci()

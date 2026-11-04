@@ -426,7 +426,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
                 - The planned duration is '{this.inputDuration}'.
                 - The planned start time is '{this.inputStartTime}'.
                 {this.PromptGettingToKnowEachOther()}
-                - The number of participants is '{this.numberParticipants.Name()}'.
+                - The number of participants is '{this.numberParticipants.Name}'.
                 {this.PromptActiveParticipation()}
                 {this.PromptVirtualMeeting()}
                 {this.PromptPhysicalMeeting()}
@@ -451,7 +451,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
     
     private string PromptPhysicalMeeting()

@@ -8,7 +8,7 @@ public static class SendToChatDataSourceBehaviorExtensions
     
     extension(SendToChatDataSourceBehavior behavior)
     {
-        public string Description() => behavior switch
+        public string Description => behavior switch
         {
             SendToChatDataSourceBehavior.NO_DATA_SOURCES => TB("Use no data sources, when sending an assistant result to a chat"),
             SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS => TB("Apply standard chat data source options, when sending an assistant result to a chat"),

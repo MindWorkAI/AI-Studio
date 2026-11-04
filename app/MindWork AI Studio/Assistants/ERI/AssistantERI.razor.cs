@@ -378,7 +378,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     /// <summary>
     /// Gets whether the selected ERI specification cannot be saved.
     /// </summary>
-    private bool IsSpecificationSavingDisabled => !this.selectedERIVersion.WasSpecificationSelected() || this.IsERIInputDisabled;
+    private bool IsSpecificationSavingDisabled => !this.selectedERIVersion.WasSpecificationSelected || this.IsERIInputDisabled;
 
     /// <summary>
     /// Lets the user save the selected ERI specification, a copy of the one the app carries.
@@ -389,7 +389,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     /// </remarks>
     private async Task SaveSpecificationAsync()
     {
-        var specificationPath = this.selectedERIVersion.SpecificationURL();
+        var specificationPath = this.selectedERIVersion.SpecificationURL;
         var response = await this.RustService.SaveFile(T("Save the ERI specification"), [FileTypes.JSON], Path.GetFileName(specificationPath));
         if (response.UserCancelled)
             return;

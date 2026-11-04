@@ -9,7 +9,7 @@ public static class PluginConfigurationObjectTypeExtensions
         /// <summary>
         /// The name of a type of configuration object, as users read it, e.g., in a message.
         /// </summary>
-        public string GetName() => type switch
+        public string Name => type switch
         {
             PluginConfigurationObjectType.LLM_PROVIDER => TB("LLM Provider"),
             PluginConfigurationObjectType.EMBEDDING_PROVIDER => TB("Embedding Provider"),

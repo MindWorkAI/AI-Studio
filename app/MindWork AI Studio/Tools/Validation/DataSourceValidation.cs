@@ -209,8 +209,8 @@ public sealed class DataSourceValidation
         if(confidenceLevel is ConfidenceLevel.NONE)
             return TB("Please select a required provider confidence level.");
 
-        if(!confidenceLevel.IsAllowedMailboxConfidence())
-            return string.Format(TB("A mailbox requires a provider confidence level from '{0}' to '{1}'."), ConfidenceLevel.VERY_LOW.GetName(), ConfidenceLevel.HIGH.GetName());
+        if(!confidenceLevel.IsAllowedMailboxConfidence)
+            return string.Format(TB("A mailbox requires a provider confidence level from '{0}' to '{1}'."), ConfidenceLevel.VERY_LOW.Name, ConfidenceLevel.HIGH.Name);
 
         return this.ValidateSelectedEmbeddingProviderAccess();
     }
@@ -305,7 +305,7 @@ public sealed class DataSourceValidation
 
         return string.Format(
             TB("The selected embedding provider has confidence '{0}', but this data source requires provider confidence '{1}'. Select an embedding provider with equal or higher confidence or lower the required confidence level."),
-            selectedEmbedding.GetConfidenceLevel(settingsManager).GetName(),
-            confidenceLevel.GetName());
+            selectedEmbedding.GetConfidenceLevel(settingsManager).Name,
+            confidenceLevel.Name);
     }
 }

@@ -19,7 +19,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         text. You can also correct spelling and grammar issues. You never add additional information. You never
         ask the user for additional information. Your response only contains the improved text. You do not explain
         your changes. If no changes are needed, you return the text unchanged.
-        The style of the text: {this.selectedWritingStyle.Prompt()}.{this.selectedSentenceStructure.Prompt()}
+        The style of the text: {this.selectedWritingStyle.Prompt}.{this.selectedSentenceStructure.Prompt}
         You follow the rules according to {this.SystemPromptLanguage()} in all your changes.
         """;
     
@@ -137,7 +137,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
             CommonLanguages.AS_IS => "the source language",
             CommonLanguages.OTHER => this.customTargetLanguage,
             
-            _ => $"{this.selectedTargetLanguage.Name()}",
+            _ => $"{this.selectedTargetLanguage.Name}",
         };
 
         if (string.IsNullOrWhiteSpace(lang))

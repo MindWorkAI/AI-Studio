@@ -7,7 +7,7 @@ internal static class TemplateSlideElementKindExtensions
         /// <summary>
         /// How the kind is called in the list of template slides the model reads.
         /// </summary>
-        public string CatalogName() => kind switch
+        public string CatalogName => kind switch
         {
             TemplateSlideElementKind.TEXT_BOX => "text box",
             TemplateSlideElementKind.SHAPE => "shape",

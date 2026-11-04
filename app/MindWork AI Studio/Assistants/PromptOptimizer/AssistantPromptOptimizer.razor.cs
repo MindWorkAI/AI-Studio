@@ -280,7 +280,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         {
             CommonLanguages.AS_IS => "the source language of the input prompt",
             CommonLanguages.OTHER => this.customTargetLanguage,
-            _ => this.selectedTargetLanguage.Name(),
+            _ => this.selectedTargetLanguage.Name,
         };
 
         if (string.IsNullOrWhiteSpace(language))

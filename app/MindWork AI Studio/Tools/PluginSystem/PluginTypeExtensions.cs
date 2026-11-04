@@ -6,7 +6,7 @@ public static class PluginTypeExtensions
     
     extension(PluginType type)
     {
-        public string GetName() => type switch
+        public string Name => type switch
         {
             PluginType.LANGUAGE => TB("Language plugin"),
             PluginType.ASSISTANT => TB("Assistant plugin"),
@@ -17,7 +17,7 @@ public static class PluginTypeExtensions
             _ => TB("Unknown plugin type"),
         };
 
-        public string GetDirectory() => type switch
+        public string Directory => type switch
         {
             PluginType.LANGUAGE => "languages",
             PluginType.ASSISTANT => "assistants",

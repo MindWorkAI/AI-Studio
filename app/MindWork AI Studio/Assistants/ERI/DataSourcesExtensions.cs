@@ -6,7 +6,7 @@ public static class DataSourcesExtensions
     
     extension(DataSources dataSource)
     {
-        public string Name() => dataSource switch
+        public string Name => dataSource switch
         {
             DataSources.NONE => TB("No data source selected"),
             DataSources.CUSTOM => TB("Custom description"),

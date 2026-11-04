@@ -21,7 +21,7 @@ public partial class AssistantBatchProcessing
         // hundreds of times, and starting without it would spend time and tokens on answers we
         // cannot write anywhere:
         //
-        if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES && this.resultFileFormat.UsesPandoc())
+        if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES && this.resultFileFormat.UsesPandoc)
         {
             var pandocState = await this.PandocAvailability.EnsureAvailabilityAsync(showSuccessMessage: false, showDialog: true);
             if (!pandocState.IsAvailable)
@@ -270,7 +270,7 @@ public partial class AssistantBatchProcessing
                 //
                 var resultText = this.DisclosureService.AddDisclosureToMarkdown(aiAnswer);
                 var resultFilePath = Path.Join(resolvedOutputDirectory, this.CreateResultFileName(fileResult.FileName));
-                if (this.resultFileFormat.UsesPandoc())
+                if (this.resultFileFormat.UsesPandoc)
                 {
                     //
                     // Pandoc reports a failure instead of throwing, because one document which
@@ -283,7 +283,7 @@ public partial class AssistantBatchProcessing
                     }
                 }
                 else
-                    await File.WriteAllTextAsync(resultFilePath, resultText, this.resultFileFormat.ToFileEncoding(), CancellationToken.None);
+                    await File.WriteAllTextAsync(resultFilePath, resultText, this.resultFileFormat.FileEncoding, CancellationToken.None);
 
                 this.FinishFileResult(fileResult, BatchProcessingFileStatus.DONE, Path.GetFileName(resultFilePath));
             }

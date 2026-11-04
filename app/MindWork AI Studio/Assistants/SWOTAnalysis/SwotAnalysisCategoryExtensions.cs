@@ -7,7 +7,7 @@ internal static class SwotAnalysisCategoryExtensions
         /// <summary>
         /// The name of the category in the JSON the models read and write, e.g., "strengths".
         /// </summary>
-        public string JsonName() => category switch
+        public string JsonName => category switch
         {
             SwotAnalysisCategory.STRENGTHS => "strengths",
             SwotAnalysisCategory.WEAKNESSES => "weaknesses",
@@ -20,7 +20,7 @@ internal static class SwotAnalysisCategoryExtensions
         /// <summary>
         /// The letter the factor IDs of the category start with, e.g., S1 for the first strength.
         /// </summary>
-        public string FactorIdPrefix() => category switch
+        public string FactorIdPrefix => category switch
         {
             SwotAnalysisCategory.STRENGTHS => "S",
             SwotAnalysisCategory.WEAKNESSES => "W",

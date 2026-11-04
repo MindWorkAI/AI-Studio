@@ -1573,7 +1573,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             form.Add(new StringContent("json"), "response_format");
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL);
             request.Content = form;
 
             // Handle the authorization header based on the provider:
@@ -1664,7 +1664,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             // Prepare the HTTP embedding request:
             var payload = new EmbeddingRequest(modelName, texts);
             var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
-            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL());
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL);
 
             // Handle the authorization header based on the provider:
             switch (this.Provider)

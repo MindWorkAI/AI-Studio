@@ -89,7 +89,7 @@ public static class PlainFileExport
             .Where(entry => entry.File is not null)
             .OrderBy(entry => entry.Position)
             .Select(entry => new MessageFile(
-                entry.File!.Format.IsTabular() ? ++numberOfTables : ++numberOfCodeBlocks,
+                entry.File!.Format.IsTabular ? ++numberOfTables : ++numberOfCodeBlocks,
                 entry.Position,
                 Caption: HeadingAbove(entry.Position) is { Length: > 0 } heading ? heading : entry.File!.Fallback,
                 entry.File!.Format,
@@ -153,10 +153,10 @@ public static class PlainFileExport
 
         var content = block.Lines.ToString();
         var language = CodeLanguageDetector.FenceLanguageOf(block.Info, content);
-        if (!FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format))
+        if (!FileExportFormat.TryFromCodeFenceLanguage(language, out var format))
             return new(string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage(language), content);
 
-        if (!format.IsTabular())
+        if (!format.IsTabular)
             return new(string.Empty, format, SourceCodeLanguage.NONE, content);
 
         var blockSeparator = format is FileExportFormat.TSV ? '\t' : ',';
@@ -239,10 +239,10 @@ public static class PlainFileExport
     /// <returns>True, when the file was written.</returns>
     public static async Task<bool> ToFile(RustService rustService, string dialogTitle, FileExportFormat format, string fileContent, string? fileName = null)
     {
-        if (!format.IsPlainText() || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!format.IsPlainText || format.FileTypeFilter is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
-        return await WriteFile(rustService, dialogTitle, format, fileTypeFilter, format.ToSuggestedFileName(fileName), format.ToFileEncoding(), fileContent);
+        return await WriteFile(rustService, dialogTitle, format, fileTypeFilter, format.ToSuggestedFileName(fileName), format.FileEncoding, fileContent);
     }
 
     /// <summary>
@@ -262,7 +262,7 @@ public static class PlainFileExport
     /// <returns>True, when the file was written.</returns>
     public static async Task<bool> ToFile(RustService rustService, string dialogTitle, MessageFile file, string fileContent, string? fileName = null)
     {
-        if (!file.Format.IsPlainText() || file.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!file.Format.IsPlainText || file.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(file), file.Format, "AI Studio cannot write this format itself.");
 
         return await WriteFile(rustService, dialogTitle, file.Format, fileTypeFilter, file.ToSuggestedFileName(fileName), file.ToFileEncoding(), fileContent);

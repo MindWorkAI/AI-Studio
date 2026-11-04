@@ -18,8 +18,8 @@ public static class ComponentsExtensions
         /// return <see cref="PreviewFeatures.NONE"/>. This is the single place that maps a component to
         /// its preview feature, so visibility checks never need to special-case one assistant.
         /// </summary>
-        /// <returns>The required preview feature.</returns>
-        public PreviewFeatures RequiredPreviewFeature() => component switch
+        /// <value>The required preview feature.</value>
+        public PreviewFeatures RequiredPreviewFeature => component switch
         {
             Components.VISUAL_BRIEFING_ASSISTANT => PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026,
 
@@ -37,8 +37,8 @@ public static class ComponentsExtensions
         /// component. All must be excluded from the single-slot checks, which is why this is a
         /// capability and not a component comparison.
         /// </remarks>
-        /// <returns><c>true</c> when the component owns exactly one session slot.</returns>
-        public bool HasSingleSessionSlot() => component switch
+        /// <value><c>true</c> when the component owns exactly one session slot.</value>
+        public bool HasSingleSessionSlot => component switch
         {
             Components.CHAT or Components.DYNAMIC_ASSISTANT => false,
             Components.VISUAL_BRIEFING_ASSISTANT => false,
@@ -49,15 +49,15 @@ public static class ComponentsExtensions
         /// <summary>
         /// Gets the kind of media-import owner a component creates for its attachments.
         /// </summary>
-        /// <returns>The media-import owner kind.</returns>
-        public MediaImportOwnerKind MediaOwnerKind() => component switch
+        /// <value>The media-import owner kind.</value>
+        public MediaImportOwnerKind MediaOwnerKind => component switch
         {
             Components.VISUAL_BRIEFING_ASSISTANT => MediaImportOwnerKind.VISUAL_BRIEFING,
 
             _ => MediaImportOwnerKind.ASSISTANT,
         };
 
-        public bool AllowSendTo() => component switch
+        public bool AllowSendTo => component switch
         {
             Components.NONE => false,
             Components.DYNAMIC_ASSISTANT => false,
@@ -81,7 +81,7 @@ public static class ComponentsExtensions
             _ => true,
         };
 
-        public string Name() => component switch
+        public string Name => component switch
         {
             Components.GRAMMAR_SPELLING_ASSISTANT => TB("Grammar & Spelling Assistant"),
             Components.TEXT_SUMMARIZER_ASSISTANT => TB("Text Summarizer Assistant"),

@@ -6,7 +6,7 @@ public static class BatchProcessingPromptSourceExtensions
 
     extension(BatchProcessingPromptSource promptSource)
     {
-        public string Name() => promptSource switch
+        public string Name => promptSource switch
         {
             BatchProcessingPromptSource.FREE_PROMPT => TB("Use a free prompt"),
             BatchProcessingPromptSource.POLICY => TB("Use a document analysis policy"),

@@ -8,7 +8,7 @@ public static class TranscriptionOpusBitrateExtensions
 
     extension(TranscriptionOpusBitrate bitrate)
     {
-        public string GetName() => bitrate switch
+        public string Name => bitrate switch
         {
             TranscriptionOpusBitrate.KBPS_32 => TB("32 kbps (smallest upload, lowest accuracy)"),
             TranscriptionOpusBitrate.KBPS_64 => TB("64 kbps"),
@@ -17,7 +17,7 @@ public static class TranscriptionOpusBitrateExtensions
             _ => TB("Unknown"),
         };
 
-        public uint GetBitsPerSecond() => bitrate switch
+        public uint BitsPerSecond => bitrate switch
         {
             TranscriptionOpusBitrate.KBPS_32 => 32_000,
             TranscriptionOpusBitrate.KBPS_64 => 64_000,

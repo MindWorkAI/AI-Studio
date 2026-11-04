@@ -10,15 +10,15 @@ public sealed partial class RustService
     // documentation/compatibility-shims/2026-06-self-hosted-secret-id.md
     private const string LEGACY_SELF_HOSTED_SECRET_ID_DE = "Selbst gehostet";
 
-    private static string APIKey(SecretStoreType storeType, ISecretId secretId) => $"{storeType.Prefix()}::{secretId.SecretId}::{secretId.SecretName}::api_key";
+    private static string APIKey(SecretStoreType storeType, ISecretId secretId) => $"{storeType.Prefix}::{secretId.SecretId}::{secretId.SecretName}::api_key";
 
     private static IEnumerable<string> LegacySelfHostedAPIKeys(ISecretId secretId, SecretStoreType storeType)
     {
         if (secretId.SecretId == SELF_HOSTED_SECRET_ID)
-            yield return $"{storeType.Prefix()}::{LEGACY_SELF_HOSTED_SECRET_ID_DE}::{secretId.SecretName}::api_key";
+            yield return $"{storeType.Prefix}::{LEGACY_SELF_HOSTED_SECRET_ID_DE}::{secretId.SecretName}::api_key";
 
         if (secretId.SecretId == $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{SELF_HOSTED_SECRET_ID}")
-            yield return $"{storeType.Prefix()}::{ISecretId.ENTERPRISE_KEY_PREFIX}::{LEGACY_SELF_HOSTED_SECRET_ID_DE}::{secretId.SecretName}::api_key";
+            yield return $"{storeType.Prefix}::{ISecretId.ENTERPRISE_KEY_PREFIX}::{LEGACY_SELF_HOSTED_SECRET_ID_DE}::{secretId.SecretName}::api_key";
     }
 
     /// <summary>

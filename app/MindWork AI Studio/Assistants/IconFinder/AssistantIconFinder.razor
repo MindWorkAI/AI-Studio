@@ -8,13 +8,13 @@
         @foreach (var source in Enum.GetValues<IconSources>())
         {
             <MudSelectItem Value="@source">
-                @source.Name()
+                @source.Name
             </MudSelectItem>
         }
     </MudSelect>
     @if (this.selectedIconSource is not IconSources.GENERIC)
     {
-        <MudButton Href="@this.selectedIconSource.URL()" Target="_blank" Variant="Variant.Filled" Size="Size.Medium">
+        <MudButton Href="@this.selectedIconSource.URL" Target="_blank" Variant="Variant.Filled" Size="Size.Medium">
             @T("Open website")
         </MudButton>
     }

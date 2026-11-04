@@ -136,7 +136,7 @@ public static class DataSourceSecurityTrustExtensions
         /// </remarks>
         public bool AllowsMailboxConfidenceLevel(ConfidenceLevel mailboxConfidenceLevel)
         {
-            if (!mailboxConfidenceLevel.IsAllowedMailboxConfidence())
+            if (!mailboxConfidenceLevel.IsAllowedMailboxConfidence)
                 return false;
 
             return providerConfidenceLevel >= mailboxConfidenceLevel;
@@ -153,7 +153,7 @@ public static class DataSourceSecurityTrustExtensions
         /// AllowsDataSourceConfidenceLevel, and UNTRUSTED and UNKNOWN do almost the same: both lie at or
         /// below the level of a provider nobody rated, so even such a provider would meet them.
         /// </remarks>
-        public bool IsAllowedMailboxConfidence() => confidenceLevel is ConfidenceLevel.VERY_LOW or ConfidenceLevel.LOW or ConfidenceLevel.MODERATE or ConfidenceLevel.MEDIUM or ConfidenceLevel.HIGH;
+        public bool IsAllowedMailboxConfidence => confidenceLevel is ConfidenceLevel.VERY_LOW or ConfidenceLevel.LOW or ConfidenceLevel.MODERATE or ConfidenceLevel.MEDIUM or ConfidenceLevel.HIGH;
     }
 
     extension(IEnumerable<IDataSource> dataSources)

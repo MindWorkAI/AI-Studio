@@ -6,7 +6,7 @@ public static class NumberParticipantsExtensions
     
     extension(NumberParticipants numberParticipants)
     {
-        public string Name() => numberParticipants switch
+        public string Name => numberParticipants switch
         {
             NumberParticipants.NOT_SPECIFIED => TB("Please select how many participants are expected"),
         

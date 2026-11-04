@@ -13,7 +13,7 @@ public static class WebSearchBackendExtensions
         /// worded for people — in the settings dropdown, in a note explaining which service
         /// answered, and in the result the model reads.
         /// </remarks>
-        public string ToName() => backend switch
+        public string Name => backend switch
         {
             WebSearchBackend.SEARXNG => "SearXNG",
             WebSearchBackend.STAAN => "Staan",

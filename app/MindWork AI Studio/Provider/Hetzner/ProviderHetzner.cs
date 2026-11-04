@@ -13,7 +13,7 @@ public sealed class ProviderHetzner() : BaseProvider(LLMProviders.HETZNER, new U
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.HETZNER.ToSecretId();
+    public override string Id => LLMProviders.HETZNER.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Hetzner (Experimental)";

@@ -58,7 +58,7 @@ internal sealed class ERIServerPrompt
         // Introduction
         // ---------------------------------
         //
-        var programmingLanguage = this.ProgrammingLanguage is ProgrammingLanguages.OTHER ? this.OtherProgrammingLanguage : this.ProgrammingLanguage.ToPrompt();
+        var programmingLanguage = this.ProgrammingLanguage is ProgrammingLanguages.OTHER ? this.OtherProgrammingLanguage : this.ProgrammingLanguage.Prompt;
         sb.Append($"""
                    # Introduction
                    You are an experienced {programmingLanguage} developer. Your task is to implement an API server in
@@ -172,7 +172,7 @@ internal sealed class ERIServerPrompt
         {
             sb.Append($"""
 
-                       - {auth.ToPrompt()}
+                       - {auth.Prompt}
                        """);
         }
 
@@ -192,7 +192,7 @@ internal sealed class ERIServerPrompt
         {
             sb.Append($"""
 
-                       The server will run on {this.OperatingSystem.ToPrompt()} operating systems. Keep
+                       The server will run on {this.OperatingSystem.Prompt} operating systems. Keep
                        this in mind when implementing the SSO with Kerberos.
                        """);
         }

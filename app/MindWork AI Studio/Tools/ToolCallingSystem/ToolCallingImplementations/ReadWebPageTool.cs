@@ -129,7 +129,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         MAX_CONTENT_CHARACTERS_SETTING => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
         ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
         FREE_ADDRESS_CHOICE_SETTING => TB("(Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. AI Studio refuses every other address. With it on, the AI may also choose addresses itself. Off is the default."),
-        INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING => string.Format(TB("(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName(), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()),
+        INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING => string.Format(TB("(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.Name, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.Name),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -266,7 +266,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// turn into ON without anybody having written it, see EnumNames. The configuration check
     /// reports such a value anyway and keeps the tool out of use until somebody corrects it.
     /// </remarks>
-    internal static FreeAddressChoice ReadFreeAddressChoice(string? configuredValue) => EnumNames.TryParse<FreeAddressChoice>(configuredValue, out var freeAddressChoice) ? freeAddressChoice : DEFAULT_FREE_ADDRESS_CHOICE;
+    internal static FreeAddressChoice ReadFreeAddressChoice(string? configuredValue) => FreeAddressChoice.TryParseName(configuredValue, out var freeAddressChoice) ? freeAddressChoice : DEFAULT_FREE_ADDRESS_CHOICE;
 
     /// <summary>
     /// Words the rules the model follows when it reads web pages.
@@ -517,7 +517,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         if (string.IsNullOrWhiteSpace(configuredValue))
             return DEFAULT_INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION;
 
-        return EnumNames.TryParse<OutboundDataRestriction>(configuredValue, out var restriction) ? restriction : OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
+        return OutboundDataRestriction.TryParseName(configuredValue, out var restriction) ? restriction : OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
     }
 
     /// <summary>

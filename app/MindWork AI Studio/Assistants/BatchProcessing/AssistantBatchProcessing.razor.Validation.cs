@@ -35,7 +35,7 @@ public partial class AssistantBatchProcessing
             || this.csvSeparator is not BatchProcessingCsvSeparator.CUSTOM)
             return null;
 
-        if (!BatchProcessingCsvSeparatorExtensions.IsValidCustomSeparator(separator))
+        if (!BatchProcessingCsvSeparator.IsValidCustomSeparator(separator))
             return T("Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.");
 
         return null;

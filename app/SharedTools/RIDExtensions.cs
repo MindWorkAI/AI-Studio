@@ -4,39 +4,42 @@ namespace SharedTools;
 
 public static class RIDExtensions
 {
-    /// <summary>
-    /// Detects the current Runtime Identifier (RID) at runtime based on OS and architecture.
-    /// </summary>
-    /// <remarks>
-    /// This is the machine which runs the code. The architecture in the metadata of AI Studio
-    /// is the platform AI Studio was built for instead; both can differ under emulation.
-    /// </remarks>
-    /// <returns>The detected RID for the current platform.</returns>
-    public static RID GetCurrentRID()
-    {
-        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-        var isMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-        var arch = RuntimeInformation.OSArchitecture;
-
-        return (isWindows, isLinux, isMacOS, arch) switch
-        {
-            (true, _, _, Architecture.X64) => RID.WIN_X64,
-            (true, _, _, Architecture.Arm64) => RID.WIN_ARM64,
-
-            (_, true, _, Architecture.X64) => RID.LINUX_X64,
-            (_, true, _, Architecture.Arm64) => RID.LINUX_ARM64,
-
-            (_, _, true, Architecture.X64) => RID.OSX_X64,
-            (_, _, true, Architecture.Arm64) => RID.OSX_ARM64,
-
-            _ => RID.NONE,
-        };
-    }
-
     extension(RID rid)
     {
-        public string AsMicrosoftRid() => rid switch
+        /// <summary>
+        /// Detects the current Runtime Identifier (RID) at runtime based on OS and architecture.
+        /// </summary>
+        /// <remarks>
+        /// This is the machine which runs the code. The architecture in the metadata of AI Studio
+        /// is the platform AI Studio was built for instead; both can differ under emulation.
+        /// </remarks>
+        /// <value>The detected RID for the current platform.</value>
+        public static RID Current
+        {
+            get
+            {
+                var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+                var isMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                var arch = RuntimeInformation.OSArchitecture;
+
+                return (isWindows, isLinux, isMacOS, arch) switch
+                {
+                    (true, _, _, Architecture.X64) => RID.WIN_X64,
+                    (true, _, _, Architecture.Arm64) => RID.WIN_ARM64,
+
+                    (_, true, _, Architecture.X64) => RID.LINUX_X64,
+                    (_, true, _, Architecture.Arm64) => RID.LINUX_ARM64,
+
+                    (_, _, true, Architecture.X64) => RID.OSX_X64,
+                    (_, _, true, Architecture.Arm64) => RID.OSX_ARM64,
+
+                    _ => RID.NONE,
+                };
+            }
+        }
+
+        public string MicrosoftRid => rid switch
         {
             RID.WIN_X64 => "win-x64",
             RID.WIN_ARM64 => "win-arm64",
@@ -50,7 +53,7 @@ public static class RIDExtensions
             _ => string.Empty,
         };
 
-        public string ToUserFriendlyName() => rid switch
+        public string UserFriendlyName => rid switch
         {
             RID.WIN_X64 => "Windows x64",
             RID.WIN_ARM64 => "Windows ARM64",

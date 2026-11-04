@@ -12,8 +12,8 @@ public static class ChatRoleExtensions
         /// <summary>
         /// Returns the name of the role.
         /// </summary>
-        /// <returns>The name of the role.</returns>
-        public string ToName() => role switch
+        /// <value>The name of the role.</value>
+        public string Name => role switch
         {
             ChatRole.SYSTEM => TB("System"),
             ChatRole.USER => TB("You"),
@@ -25,8 +25,8 @@ public static class ChatRoleExtensions
         /// <summary>
         /// Returns the color of the role.
         /// </summary>
-        /// <returns>The color of the role.</returns>
-        public Color ToColor() => role switch
+        /// <value>The color of the role.</value>
+        public Color Color => role switch
         {
             ChatRole.SYSTEM => Color.Info,
             ChatRole.USER => Color.Primary,
@@ -38,8 +38,8 @@ public static class ChatRoleExtensions
         /// <summary>
         /// Returns the icon of the role.
         /// </summary>
-        /// <returns>The icon of the role.</returns>
-        public string ToIcon() => role switch
+        /// <value>The icon of the role.</value>
+        public string Icon => role switch
         {
             ChatRole.SYSTEM => Icons.Material.Filled.Settings,
             ChatRole.USER => Icons.Material.Filled.Person,
@@ -51,8 +51,8 @@ public static class ChatRoleExtensions
         /// <summary>
         /// Returns the specific name of the role for the chat template.
         /// </summary>
-        /// <returns>The name of the role.</returns>
-        public string ToChatTemplateName() => role switch
+        /// <value>The name of the role.</value>
+        public string ChatTemplateName => role switch
         {
             ChatRole.SYSTEM => TB("System"),
             ChatRole.USER => TB("User"),

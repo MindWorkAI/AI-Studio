@@ -6,7 +6,7 @@ public static class PluginCategoryExtensions
     
     extension(PluginCategory type)
     {
-        public string GetName() => type switch
+        public string Name => type switch
         {
             PluginCategory.NONE => TB("None"),
             PluginCategory.CORE => TB("AI Studio Core"),

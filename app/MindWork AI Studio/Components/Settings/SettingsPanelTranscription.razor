@@ -29,7 +29,7 @@
                 <MudTh Class="provider-group-header" colspan="4">
                     @if (context.Key is LLMProviders llmProvider)
                     {
-                        <ProviderLabel ProviderType="@llmProvider" Text="@llmProvider.ToName()" />
+                        <ProviderLabel ProviderType="@llmProvider" Text="@llmProvider.Name" />
                     }
                 </MudTh>
             </GroupHeaderTemplate>
@@ -68,7 +68,7 @@
                         else
                         {
                             <MudTooltip Text="@T("Open Dashboard")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.DashboardURL" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard)"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditTranscriptionProvider(context))"/>

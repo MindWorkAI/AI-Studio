@@ -8,7 +8,7 @@ internal static class TemplateSlideUseExtensions
 
     extension(TemplateSlideUse use)
     {
-        public string Name() => use switch
+        public string Name => use switch
         {
             TemplateSlideUse.OMIT => TB("Leave out"),
             TemplateSlideUse.KEEP => TB("Keep unchanged"),

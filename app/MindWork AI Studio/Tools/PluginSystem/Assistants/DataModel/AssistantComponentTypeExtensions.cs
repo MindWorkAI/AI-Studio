@@ -6,7 +6,7 @@ public static class AssistantComponentTypeExtensions
 
     extension(AssistantComponentType type)
     {
-        public string GetDisplayName() => type switch
+        public string DisplayName => type switch
         {
             AssistantComponentType.FORM => TB("Root"),
             AssistantComponentType.TEXT_AREA => TB("Text Area"),
@@ -36,7 +36,7 @@ public static class AssistantComponentTypeExtensions
             _ => TB("Unknown Element")
         };
 
-        public string GetIcon() => type switch
+        public string Icon => type switch
         {
             AssistantComponentType.BUTTON => MudBlazor.Icons.Material.Filled.AdsClick,
             AssistantComponentType.BUTTON_GROUP => MudBlazor.Icons.Material.Filled.LinearScale,
