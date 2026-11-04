@@ -12037,6 +12037,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T906183311"] = "How to update"
 -- A test configuration is active. It acts like a configuration of your organization and may, for example, approve assistant plugins. AI Studio removes it the next time you start the app.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T923110805"] = "A test configuration is active. It acts like a configuration of your organization and may, for example, approve assistant plugins. AI Studio removes it the next time you start the app."
 
+-- We use this library to read the sections of OneNote notebooks. This allows us to insert OneNote pages into prompts and take them into account in RAG processes. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T938136536"] = "We use this library to read the sections of OneNote notebooks. This allows us to insert OneNote pages into prompts and take them into account in RAG processes. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio."
+
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Install Pandoc"
 
