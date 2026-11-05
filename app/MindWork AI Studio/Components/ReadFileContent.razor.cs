@@ -211,23 +211,6 @@ public partial class ReadFileContent : MSGComponentBase
         }
     }
 
-    private async Task<bool> EnsurePandocAvailability()
-    {
-        // Ensure that Pandoc is installed and ready:
-        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
-            showSuccessMessage: false,
-            showDialog: true);
-
-        // Check if Pandoc is available after the check / installation:
-        if (!pandocState.IsAvailable)
-        {
-            this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
-            return false;
-        }
-
-        return true;
-    }
-
     private async Task LoadFirstValidFile(List<string> paths)
     {
         var inaccessiblePaths = paths.Where(path => !File.Exists(path)).ToList();
@@ -264,9 +247,11 @@ public partial class ReadFileContent : MSGComponentBase
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO) || FileTypes.IsAllowedPath(filePath, FileTypes.VIDEO))
             return await this.LoadMediaTranscriptAsync(filePath);
 
-        if (!await this.EnsurePandocAvailability())
-            return false;
-
+        //
+        // No Pandoc check here: UserFile.LoadFileData asks for Pandoc itself, and only for the
+        // formats we convert with it. PDFs and the other document types are read by the Rust
+        // runtime, so they must stay loadable without Pandoc.
+        //
         if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.DIRECTLY_LOADING_CONTENT, filePath))
         {
             this.Logger.LogWarning("User attempted to load unsupported file: {FilePath}", filePath);
