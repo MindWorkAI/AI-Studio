@@ -181,7 +181,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             //
             // Trigger the retrieval part of the (R)AG process:
             //
-            var dataContexts = new List<IRetrievalContext>();
+            var dataContexts = new List<IReadOnlyList<IRetrievalContext>>();
             if (proceedWithRAG)
             {
                 //
@@ -193,7 +193,9 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             
                 //
                 // Wait for all retrieval tasks to finish, and count the passages of each data source.
-                // The tasks are in the order of the selected data sources:
+                // The tasks are in the order of the selected data sources. The passages stay with
+                // their data source, so that the augmentation can let the data sources take turns
+                // when not all of them fit:
                 //
                 var passageCounts = new int[retrievalTasks.Count];
                 for (var index = 0; index < retrievalTasks.Count; index++)
@@ -201,7 +203,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     try
                     {
                         var retrievedContexts = await retrievalTasks[index];
-                        dataContexts.AddRange(retrievedContexts);
+                        dataContexts.Add(retrievedContexts);
                         passageCounts[index] = retrievedContexts.Count;
                     }
                     catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -229,7 +231,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             if (proceedWithRAG)
             {
                 var augmentationProcess = new AugmentationOne();
-                var augmentation = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
+                var augmentation = await augmentationProcess.ProcessAsync(provider, chatModel, lastUserPrompt, chatThread, dataContexts, token);
                 chatThread = augmentation.ChatThread;
                 usedContexts = augmentation.UsedContexts;
             }
@@ -268,8 +270,8 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     /// contexts handed to it.
     /// </summary>
     /// <remarks>
-    /// Only those: a passage which the check of which passages fit left out never reached the AI,
-    /// and the answer does not rest on it. Only a text answer keeps passages; every answer keeps
+    /// Only those: a passage which the check of which passages fit left out, or which did not fit
+    /// into what the model can read, never reached the AI, and the answer does not rest on it. Only a text answer keeps passages; every answer keeps
     /// its sources.
     /// </remarks>
     /// <param name="aiAnswerContent">The content of the answer.</param>
@@ -290,7 +292,8 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     /// Semantic Search asks the same place, DataSourceRequirements, so that both ways of searching
     /// demand the same of the same data sources. Only the data sources with passages count: one
     /// which found nothing leaves the chat as it was. A passage the validation agent drops later
-    /// still counts, which is the safe side. The data security and the provider confidence were
+    /// still counts, and so does one which does not fit into what the model can read, see
+    /// PassageBudget: that is the safe side. The data security and the provider confidence were
     /// raised before the retrieval already, for every selected data source, because the agents see
     /// the passages as well; the data sources with passages are among them, so asking again would
     /// change nothing.<br/><br/>

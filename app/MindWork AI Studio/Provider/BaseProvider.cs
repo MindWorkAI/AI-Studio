@@ -1445,7 +1445,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// With the ID, the settings also know what the provider's own model list reported, e.g., the
     /// context window of a self-hosted model, see ProviderExtensions.GetAutomaticModelProfile. So
     /// the tools of a request and the way images are passed on see the model as the configured
-    /// provider does.
+    /// provider does.<br/><br/>
+    /// The tokenizer comes along as well, so that the classic RAG process counts its passages for
+    /// the model as the chat counts the conversation, see PassageBudget.
     /// </remarks>
     public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
@@ -1455,6 +1457,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         Model = chatModel,
         InstanceName = this.InstanceName,
         CapabilityOverrides = this.CapabilityOverrides,
+        TokenizerPath = this.TokenizerPath,
     };
 
     /// <summary>
