@@ -38,6 +38,15 @@ public sealed class DataPromptOptimizer(Expression<Func<Data, DataPromptOptimize
     public string PreselectedImportantAspects { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedImportantAspects, string.Empty);
 
     /// <summary>
+    /// The file with the prompt guide to preselect. An empty path preselects the default prompt guide.
+    /// </summary>
+    /// <remarks>
+    /// The path names a file of the user and therefore stays absolute. The assistant reads its current
+    /// content whenever it applies the preselections.
+    /// </remarks>
+    public string PreselectedCustomPromptGuidePath { get; set; } = string.Empty;
+
+    /// <summary>
     /// The minimum confidence level required for a provider to be considered.
     /// </summary>
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumProviderConfidence, ConfidenceLevel.NONE);

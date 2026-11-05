@@ -157,7 +157,43 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedTargetLanguage;
         this.customTargetLanguage = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedOtherLanguage;
         this.importantAspects = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedImportantAspects;
+        this.PreselectCustomPromptGuide();
         return true;
+    }
+
+    /// <summary>
+    /// Reads the preselected prompt guide, now that the preselections are in place.
+    /// </summary>
+    /// <remarks>
+    /// The guide is read anew whenever the preselections are applied, i.e., when the assistant opens
+    /// and when the form is reset. That way, a change to the file reaches the next optimization
+    /// without anybody having to choose the file again.
+    /// </remarks>
+    protected override async Task OnDefaultsAppliedAsync()
+    {
+        if (!this.useCustomPromptGuide || this.customPromptGuideFiles.Count == 0)
+            return;
+
+        await this.LoadCustomPromptGuidelineContentAsync(this.customPromptGuideFiles.First());
+    }
+
+    /// <summary>
+    /// Takes the prompt guide of the settings as the custom prompt guide, if the settings name one.
+    /// </summary>
+    /// <remarks>
+    /// Only the file is taken here. Its content follows in OnDefaultsAppliedAsync, because reading it
+    /// is asynchronous, while the preselections are not.
+    /// </remarks>
+    private void PreselectCustomPromptGuide()
+    {
+        var guidePath = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedCustomPromptGuidePath;
+        if (string.IsNullOrWhiteSpace(guidePath))
+            return;
+
+        this.useCustomPromptGuide = true;
+        this.customPromptGuideFiles = [ FileAttachment.FromPath(guidePath) ];
+        this.currentCustomPromptGuidePath = guidePath;
+        this.customPromptingGuidelineContent = string.Empty;
     }
 
     protected override async Task OnInitializedAsync()
@@ -190,13 +226,13 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private string recLanguageChoice = string.Empty;
 
     /// <summary>
-    /// The files a custom prompt guide can come from.
+    /// The files a custom prompt guide can come from, in the assistant and in its settings.
     /// </summary>
     /// <remarks>
     /// Documents only: an audio or a video file would be transcribed, and a transcript reports
     /// the name of its file rather than the path, which the preview of the guide needs.
     /// </remarks>
-    private static readonly FileTypeFilter[] CUSTOM_PROMPT_GUIDE_FILE_TYPES = [ FileTypes.DOCUMENT ];
+    internal static readonly FileTypeFilter[] CUSTOM_PROMPT_GUIDE_FILE_TYPES = [ FileTypes.DOCUMENT ];
 
     private static readonly AssistantSessionStateKey<string> INPUT_PROMPT_STATE_KEY = new(nameof(inputPrompt));
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
