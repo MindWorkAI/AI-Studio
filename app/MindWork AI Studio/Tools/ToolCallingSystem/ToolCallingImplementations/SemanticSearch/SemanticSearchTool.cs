@@ -68,12 +68,12 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// </summary>
     /// <remarks>
     /// A chunk is as long as the embedding model takes at once, by default 8,192 tokens, so a
-    /// single passage may already fill tens of thousands of characters. Passages are returned
-    /// whole, so nothing has to be filtered again after cutting it: a passage which does not fit
-    /// starts the next page instead, see SearchAsync. The limit is the one a web search has by
-    /// default, and it leaves room for about three searches within the budget of all tool results
-    /// of an answer, see ToolSelectionRules.MAX_TOOL_RESULT_CHARACTERS: a question with several
-    /// aspects gets one search per aspect.
+    /// single passage may already fill tens of thousands of characters. A passage which does not
+    /// fit starts the next page, see SearchAsync. Only a passage longer than a whole page is
+    /// shortened, and filtered again, see IRetrievalContextExtensions.ShortenToFitAsync. The limit
+    /// is the one a web search has by default, and it leaves room for about three searches within
+    /// the budget of all tool results of an answer, see ToolSelectionRules.MAX_TOOL_RESULT_CHARACTERS:
+    /// a question with several aspects gets one search per aspect.
     /// </remarks>
     internal const int MAX_RESULT_CHARACTERS = 100_000;
 
@@ -420,6 +420,10 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// more pages of the search, see CharacterPaging, and those are numbered on across the pages of
     /// the data source. Where everything fits, both are the same.
     /// </para>
+    /// <para>
+    /// A passage longer than a whole page would hold up every passage after it, so it is shortened
+    /// to fill a page of its own, see IRetrievalContextExtensions.ShortenToFitAsync.
+    /// </para>
     /// </remarks>
     /// <param name="request">The search to run.</param>
     /// <param name="retrievePage">Retrieves a page of a data source for the query, and reports the data source as not searched when that fails.</param>
@@ -462,8 +466,16 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
             if (retrievalPage.Gaps.Contains(RetrievalGap.NOT_SEARCHED))
                 return new(string.Empty, [], [], [new(dataSource, 0, false, gaps)]);
 
-            var preparedContexts = await retrievalPage.Contexts.PrepareForModelAsync(guardService, reportingScope, token);
-            var markdowns = preparedContexts.Select((preparedContext, index) => preparedContext.ToMarkdown(passagesBefore + index + 1)).ToList();
+            var preparedContexts = new List<PreparedRetrievalContext>();
+            var markdowns = new List<string>();
+            foreach (var preparedContext in await retrievalPage.Contexts.PrepareForModelAsync(guardService, reportingScope, token))
+            {
+                var number = passagesBefore + preparedContexts.Count + 1;
+                var fittingContext = await preparedContext.ShortenToFitAsync(MAX_RESULT_CHARACTERS, context => context.ToMarkdown(number).Length, guardService, reportingScope, token);
+                preparedContexts.Add(fittingContext);
+                markdowns.Add(fittingContext.ToMarkdown(number));
+            }
+
             var cuts = CharacterPaging.Cut(markdowns.Select(markdown => markdown.Length).ToList(), MAX_RESULT_CHARACTERS);
             if (page <= pagesBefore + cuts.Count)
             {
@@ -506,7 +518,9 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// and so on. Otherwise, the data source offered first would take the budget, and the others
     /// would get what it left over. A data source stops at its first passage which no longer fits,
     /// while the others go on: a shorter passage after it must not take its place, or a passage
-    /// would go missing in the middle of what the data source found.
+    /// would go missing in the middle of what the data source found. A passage longer than a whole
+    /// page is shortened first, as in a search of one data source, and then has to fit like any
+    /// other.
     /// </para>
     /// <para>
     /// Turning to a further page means something for a single data source only, as each of them
@@ -541,8 +555,9 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                 if (isFull[index] || rank >= retrievalPages[index].Contexts.Count)
                     continue;
 
-                var preparedContext = preparedContexts[firstOfPage[index] + rank];
-                var markdown = preparedContext.ToMarkdown(passageCount + 1);
+                var number = passageCount + 1;
+                var preparedContext = await preparedContexts[firstOfPage[index] + rank].ShortenToFitAsync(MAX_RESULT_CHARACTERS, context => context.ToMarkdown(number).Length, guardService, reportingScope, token);
+                var markdown = preparedContext.ToMarkdown(number);
                 if (textContent.Length + markdown.Length > MAX_RESULT_CHARACTERS)
                 {
                     isFull[index] = true;

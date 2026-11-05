@@ -41,6 +41,11 @@ public sealed partial class SemanticSearchToolPagingTests
     private const int SHORT = 1_000;
 
     /// <summary>
+    /// A length no page holds, so that a passage this long has to be shortened.
+    /// </summary>
+    private const int OVERLONG = 150_000;
+
+    /// <summary>
     /// How many pages a test turns at most before it gives up on the search ever ending.
     /// </summary>
     private const int MOST_PAGES = 100;
@@ -180,6 +185,87 @@ public sealed partial class SemanticSearchToolPagingTests
     }
 
     [Test]
+    public async Task APassageLongerThanAPageIsShortenedToFillAPageOfItsOwn()
+    {
+        var pages = await this.PageThroughAsync(HANDBOOK, Found([Passage(1, SHORT), Passage(2, OVERLONG), Passage(3, SHORT)]));
+        var shortened = pages[1];
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(pages.Select(NumbersOf), Is.EqualTo(new[] { new List<int> { 1 }, [2], [3] }), "Neither the passage itself nor those after it may go missing.");
+            Assert.That(shortened.TextContent.Length, Is.LessThanOrEqualTo(SemanticSearchTool.MAX_RESULT_CHARACTERS));
+            Assert.That(shortened.TextContent, Does.Contain("Matched text content, shortened to fit the size limit:"), "The model has to know that the passage goes on.");
+            Assert.That(shortened.Passages.Single().Text, Does.StartWith("Passage 002").And.Length.LessThan(OVERLONG), "The user is shown what the model read.");
+            Assert.That(shortened.TextContent, Does.Contain(shortened.Passages.Single().Text));
+        }
+    }
+
+    [Test]
+    public async Task AShortenedPassageIsFilteredAgain()
+    {
+        var result = await this.SearchAsync([HANDBOOK], 1, Found([Passage(1, OVERLONG, suspiciousWords: 10)]));
+        var shown = result.Passages.Single().Text;
+        var filteredShorterTexts = this.runtime.FilteredTexts.Where(text => text.StartsWith("Passage 001", StringComparison.Ordinal) && text.Length < OVERLONG);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(filteredShorterTexts.Select(text => text.Replace(SUSPICIOUS_WORD, FakeRuntime.REDACTION_MARKER, StringComparison.Ordinal)), Has.Member(shown), "The model reads exactly what the filter returned for the shortened text, not a cut of what it returned for the whole one.");
+            Assert.That(shown, Does.Contain(FakeRuntime.REDACTION_MARKER).And.Not.Contain(SUSPICIOUS_WORD));
+            Assert.That(result.TextContent.Length, Is.LessThanOrEqualTo(SemanticSearchTool.MAX_RESULT_CHARACTERS));
+        }
+    }
+
+    [Test]
+    public async Task TheSurroundingContentIsShortenedBeforeTheMatchedText()
+    {
+        const int LENGTH = 40_000;
+        var passage = Passage(1, LENGTH);
+        passage.SurroundingContent = [Text("Before ", LENGTH), Text("After ", LENGTH)];
+
+        var result = await this.SearchAsync([HANDBOOK], 1, Found([passage]));
+        var shown = result.Passages.Single();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(shown.Text, Is.EqualTo(passage.MatchedText), "The matched text is what the search found, so it is the last to be shortened.");
+            Assert.That(shown.SurroundingContent[0], Is.EqualTo(passage.SurroundingContent[0]));
+            Assert.That(shown.SurroundingContent[^1], Does.StartWith("After ").And.Length.LessThan(LENGTH), "The surrounding content is shortened from its end.");
+            Assert.That(result.TextContent, Does.Contain($"Matched text content:{Environment.NewLine}").And.Contain("Surrounding text content, shortened to fit the size limit:"));
+            Assert.That(result.TextContent.Length, Is.LessThanOrEqualTo(SemanticSearchTool.MAX_RESULT_CHARACTERS));
+        }
+    }
+
+    [Test]
+    public async Task SurroundingContentWhichHadToGoIsNamed()
+    {
+        var passage = Passage(1, OVERLONG);
+        passage.SurroundingContent = [Text("Before ", SHORT)];
+
+        var result = await this.SearchAsync([HANDBOOK], 1, Found([passage]));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Passages.Single().SurroundingContent, Is.Empty);
+            Assert.That(result.TextContent, Does.Contain("Matched text content, shortened to fit the size limit:").And.Contain("Surrounding text content: left out to fit the size limit."), "Otherwise, the model would take the passage for one without any.");
+        }
+    }
+
+    [Test]
+    public async Task InASearchOfSeveralDataSourcesAShortenedPassageStillHasToFit()
+    {
+        var handbook = Found(Passages(1, 10, LONG));
+        var minutes = Found([Passage(101, OVERLONG, "Minutes"), ..Passages(102, 9, SHORT, "Minutes")]);
+
+        var result = await this.SearchAsync([HANDBOOK, MINUTES], 1, (dataSource, page) => dataSource == HANDBOOK ? handbook(dataSource, page) : minutes(dataSource, page));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(NumbersOf(result), Is.EqualTo(new[] { 1, 2, 3 }), "Shortened to a whole page, the best passage of the minutes no longer fits after the first of the handbook.");
+            Assert.That(result.Outcomes.Select(outcome => (outcome.ResultCount, outcome.LeftOutCount, outcome.HasMore)), Is.EqualTo(new[] { (3, 7, true), (0, 10, true) }), "The minutes are left out with a way to them, searched alone.");
+        }
+    }
+
+    [Test]
     public async Task ADataSourceWhichFailsOnAnEarlierPageCountsAsNotSearched()
     {
         var result = await this.SearchAsync([HANDBOOK], 2, (_, _) => Task.FromResult(RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] }));
@@ -224,26 +310,31 @@ public sealed partial class SemanticSearchToolPagingTests
         : RetrievalPage.EMPTY);
 
     private static IReadOnlyList<IRetrievalContext> Passages(int firstNumber, int count, int length, string dataSourceName = "Handbook") =>
-        Enumerable.Range(firstNumber, count).Select(number => Passage(number, length, dataSourceName)).ToList();
+        Enumerable.Range(firstNumber, count).Select(IRetrievalContext (number) => Passage(number, length, dataSourceName)).ToList();
 
     /// <summary>
     /// A passage whose matched text starts with its number and is as long as asked for.
     /// </summary>
-    private static IRetrievalContext Passage(int number, int length, string dataSourceName = "Handbook", int suspiciousWords = 0)
+    private static RetrievalTextContext Passage(int number, int length, string dataSourceName = "Handbook", int suspiciousWords = 0) => new()
     {
-        var text = new StringBuilder($"Passage {number:D3} ");
+        DataSourceName = dataSourceName,
+        Category = RetrievalContentCategory.TEXT,
+        Type = RetrievalContentType.TEXT_DOCUMENT,
+        Path = Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"{dataSourceName}-{number}.md")),
+        MatchedText = Text($"Passage {number:D3} ", length, suspiciousWords),
+    };
+
+    /// <summary>
+    /// A text which starts as given, holds the suspicious word as often as asked for, and is as long as asked for.
+    /// </summary>
+    private static string Text(string start, int length, int suspiciousWords = 0)
+    {
+        var text = new StringBuilder(start);
         for (var word = 0; word < suspiciousWords; word++)
             text.Append(SUSPICIOUS_WORD).Append(' ');
 
         text.Append('x', Math.Max(0, length - text.Length));
-        return new RetrievalTextContext
-        {
-            DataSourceName = dataSourceName,
-            Category = RetrievalContentCategory.TEXT,
-            Type = RetrievalContentType.TEXT_DOCUMENT,
-            Path = Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"{dataSourceName}-{number}.md")),
-            MatchedText = text.ToString(),
-        };
+        return text.ToString();
     }
 
     /// <summary>
