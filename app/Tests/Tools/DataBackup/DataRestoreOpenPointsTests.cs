@@ -76,6 +76,7 @@ public sealed class DataRestoreOpenPointsTests
         settings.BatchProcessing.InputDirectory = missingFolder;
         settings.BatchProcessing.OutputDirectory = this.testDirectory;
         settings.BatchProcessing.PromptFilePath = missingFile;
+        settings.PromptOptimizer.PreselectedCustomPromptGuidePath = missingFile;
         settings.App.ExternalHttpCustomRootCertificatesEnabled = true;
         settings.App.ExternalHttpCustomRootCertificateBundlePath = missingFile;
         settings.ERI.ERIServers.Add(new DataERIServer { ServerName = "Wiki server", WriteToFilesystem = true, BaseDirectory = missingFolder });
@@ -89,6 +90,7 @@ public sealed class DataRestoreOpenPointsTests
             new(DataRestoreOpenPointKind.DATA_SOURCE_NOT_FOUND, "Handbook"),
             new(DataRestoreOpenPointKind.BATCH_PROCESSING_PATH_NOT_FOUND, missingFolder),
             new(DataRestoreOpenPointKind.BATCH_PROCESSING_PATH_NOT_FOUND, missingFile),
+            new(DataRestoreOpenPointKind.PROMPT_OPTIMIZER_GUIDE_NOT_FOUND, missingFile),
             new(DataRestoreOpenPointKind.CERTIFICATE_BUNDLE_NOT_FOUND, missingFile),
             new(DataRestoreOpenPointKind.ERI_SERVER_DIRECTORY_NOT_FOUND, "Wiki server"),
         }));

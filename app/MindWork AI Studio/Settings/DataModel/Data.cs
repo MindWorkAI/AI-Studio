@@ -202,7 +202,7 @@ public sealed class Data
     
     public DataRewriteImprove RewriteImprove { get; set; } = new();
     
-    public DataPromptOptimizer PromptOptimizer { get; set; } = new();
+    public DataPromptOptimizer PromptOptimizer { get; set; } = new(x => x.PromptOptimizer);
 
     public DataEMail EMail { get; set; } = new();
     

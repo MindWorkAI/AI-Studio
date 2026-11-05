@@ -75,6 +75,10 @@ public static class DataRestoreOpenPoints
         if (!string.IsNullOrWhiteSpace(batchProcessing.PromptFilePath) && !File.Exists(batchProcessing.PromptFilePath))
             openPoints.Add(new(DataRestoreOpenPointKind.BATCH_PROCESSING_PATH_NOT_FOUND, batchProcessing.PromptFilePath));
 
+        var promptGuidePath = settings.PromptOptimizer.PreselectedCustomPromptGuidePath;
+        if (!string.IsNullOrWhiteSpace(promptGuidePath) && !File.Exists(promptGuidePath))
+            openPoints.Add(new(DataRestoreOpenPointKind.PROMPT_OPTIMIZER_GUIDE_NOT_FOUND, promptGuidePath));
+
         var certificateBundlePath = settings.App.ExternalHttpCustomRootCertificateBundlePath;
         if (settings.App.ExternalHttpCustomRootCertificatesEnabled && !string.IsNullOrWhiteSpace(certificateBundlePath) && !File.Exists(certificateBundlePath))
             openPoints.Add(new(DataRestoreOpenPointKind.CERTIFICATE_BUNDLE_NOT_FOUND, certificateBundlePath));

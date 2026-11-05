@@ -56,6 +56,7 @@ public sealed class ManagedSettingsCoverageTests
     {
         ["DataSlideBuilder.TemplatePath"] = Path.Combine(Path.GetTempPath(), "Corporate.potx").Replace('\\', '/'),
         ["DataSlideBuilder.PreselectedPictureLibraryPath"] = Path.Combine(Path.GetTempPath(), "Pictures").Replace('\\', '/'),
+        ["DataPromptOptimizer.PreselectedCustomPromptGuidePath"] = Path.Combine(Path.GetTempPath(), "Prompting-Guide.md").Replace('\\', '/'),
     };
 
     /// <summary>
