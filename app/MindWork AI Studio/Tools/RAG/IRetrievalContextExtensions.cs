@@ -154,7 +154,7 @@ public static class IRetrievalContextExtensions
                         matchedText = sanitizedTexts[nextText++];
                         surroundingContent = sanitizedTexts.Skip(nextText).Take(textContext.SurroundingContent.Count).ToList();
                         nextText += surroundingContent.Count;
-                        AppendTextMatch(body, matchedText, surroundingContent);
+                        AppendTextMatch(body, textContext, matchedText, surroundingContent);
                         break;
 
                     case RetrievalImageContext:
@@ -174,25 +174,146 @@ public static class IRetrievalContextExtensions
         }
     }
 
+    /// <param name="preparedContext">The prepared context.</param>
+    extension(PreparedRetrievalContext preparedContext)
+    {
+        /// <summary>
+        /// Shortens a prepared context which does not fit into a size limit even on its own.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The texts the data source delivered are cut, never what the filter left of them, and the
+        /// shorter texts pass the filter again: the AI reads only text which the filter saw exactly
+        /// so. The filter may make a text longer, since its marker can be longer than what it
+        /// removed, so cutting repeats until the context fits or nothing is left to cut.
+        /// </para>
+        /// <para>
+        /// The surrounding content goes first, from its end, since the matched text is what the
+        /// search found. Each cut ends at a line end where possible, see CutAtLineEnd. The labels tell
+        /// the AI which of the texts are shorter, see AppendTextMatch, and the user is shown the
+        /// shorter passage, as that is what the AI read.
+        /// </para>
+        /// </remarks>
+        /// <param name="maxCharacters">How many characters the context may take.</param>
+        /// <param name="measure">How many characters the context takes as the caller writes it, e.g., with its header.</param>
+        /// <param name="guardService">The prompt injection filter.</param>
+        /// <param name="reportingScope">The action the context was retrieved for, or null when it was retrieved for none.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>The context itself when it fits. Otherwise, a shorter one, which exceeds the limit only when its description alone does.</returns>
+        public async Task<PreparedRetrievalContext> ShortenToFitAsync(int maxCharacters, Func<PreparedRetrievalContext, int> measure, PromptInjectionGuardService guardService, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+        {
+            var shortened = preparedContext;
+            var excess = measure(shortened) - maxCharacters;
+            while (excess > 0 && shortened.Context is RetrievalTextContext textContext && CutTexts(textContext, excess) is { } shorterContext)
+            {
+                IReadOnlyList<IRetrievalContext> shorterContexts = [shorterContext];
+                shortened = (await shorterContexts.PrepareForModelAsync(guardService, reportingScope, token))[0];
+                excess = measure(shortened) - maxCharacters;
+            }
+
+            return shortened;
+        }
+    }
+
+    /// <summary>
+    /// Cuts at least the given number of characters off the texts of a context: off its surrounding
+    /// content first, from the end, then off its matched text.
+    /// </summary>
+    /// <param name="textContext">The context.</param>
+    /// <param name="excess">How many characters to cut at least.</param>
+    /// <returns>The shorter context, or null when its texts are empty already.</returns>
+    private static RetrievalTextContext? CutTexts(RetrievalTextContext textContext, int excess)
+    {
+        var surroundingContent = textContext.SurroundingContent.ToList();
+        var toCut = excess;
+        while (toCut > 0 && surroundingContent.Count > 0)
+        {
+            var last = surroundingContent[^1];
+            if (last.Length <= toCut)
+            {
+                toCut -= last.Length;
+                surroundingContent.RemoveAt(surroundingContent.Count - 1);
+                continue;
+            }
+
+            surroundingContent[^1] = CutAtLineEnd(last, last.Length - toCut);
+            toCut = 0;
+        }
+
+        var matchedText = toCut > 0 ? CutAtLineEnd(textContext.MatchedText, textContext.MatchedText.Length - toCut) : textContext.MatchedText;
+        if (matchedText.Length == textContext.MatchedText.Length && surroundingContent.SequenceEqual(textContext.SurroundingContent))
+            return null;
+
+        return textContext.WithShorterTexts(matchedText, surroundingContent);
+    }
+
+    /// <summary>
+    /// How much of what would fit a cut gives up at most to end at a line end, as a share.
+    /// </summary>
+    /// <remarks>
+    /// A cut at a line end keeps a row of a table or an item of a list whole. A text whose only line
+    /// end lies near its beginning would lose nearly everything that way, though, so it is cut at
+    /// the limit instead.
+    /// </remarks>
+    private const double MAX_SHARE_GIVEN_UP_FOR_A_LINE_END = 0.5;
+
+    /// <summary>
+    /// Takes the beginning of a text, ending at a line end where possible.
+    /// </summary>
+    /// <remarks>
+    /// Never cuts between the two halves of a surrogate pair, which no JSON writer takes.
+    /// </remarks>
+    /// <param name="text">The text.</param>
+    /// <param name="maxLength">How many characters to keep at most.</param>
+    /// <returns>The text itself when it is short enough, otherwise its beginning, without the line end it was cut at.</returns>
+    internal static string CutAtLineEnd(string text, int maxLength)
+    {
+        if (text.Length <= maxLength)
+            return text;
+
+        if (maxLength <= 0)
+            return string.Empty;
+
+        var lineEnd = text.LastIndexOf('\n', maxLength - 1);
+        if (lineEnd >= maxLength * (1 - MAX_SHARE_GIVEN_UP_FOR_A_LINE_END))
+            return text[..lineEnd].TrimEnd('\r');
+
+        var end = char.IsHighSurrogate(text[maxLength - 1]) ? maxLength - 1 : maxLength;
+        return text[..end];
+    }
+
     /// <summary>
     /// Writes the content of a text context, after its description.
     /// </summary>
+    /// <remarks>
+    /// When AI Studio shortened a text, the label says so, rather than a marker inside the text:
+    /// the text is what the data source wrote, and the AI must not take the label for part of it.
+    /// </remarks>
     /// <param name="contextBuilder">The builder to write into.</param>
+    /// <param name="textContext">The context, which tells whether its texts were shortened.</param>
     /// <param name="matchedText">The matched text, filtered.</param>
     /// <param name="surroundingContent">The surrounding content, filtered.</param>
-    private static void AppendTextMatch(StringBuilder contextBuilder, string matchedText, IReadOnlyList<string> surroundingContent)
+    private static void AppendTextMatch(StringBuilder contextBuilder, RetrievalTextContext textContext, string matchedText, IReadOnlyList<string> surroundingContent)
     {
         contextBuilder.AppendLine();
-        contextBuilder.AppendLine("Matched text content:");
+        contextBuilder.AppendLine(textContext.IsMatchedTextShortened ? "Matched text content, shortened to fit the size limit:" : "Matched text content:");
         contextBuilder.AppendLine("````");
         contextBuilder.AppendLine(matchedText);
         contextBuilder.AppendLine("````");
 
         if (surroundingContent.Count is 0)
+        {
+            if (textContext.IsSurroundingContentShortened)
+            {
+                contextBuilder.AppendLine();
+                contextBuilder.AppendLine("Surrounding text content: left out to fit the size limit.");
+            }
+
             return;
+        }
 
         contextBuilder.AppendLine();
-        contextBuilder.AppendLine("Surrounding text content:");
+        contextBuilder.AppendLine(textContext.IsSurroundingContentShortened ? "Surrounding text content, shortened to fit the size limit:" : "Surrounding text content:");
         foreach (var surrounding in surroundingContent)
         {
             contextBuilder.AppendLine();
