@@ -5,6 +5,7 @@ using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -187,6 +188,16 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private string recStructureMarkers = string.Empty;
     private string recRoleDefinition = string.Empty;
     private string recLanguageChoice = string.Empty;
+
+    /// <summary>
+    /// The files a custom prompt guide can come from.
+    /// </summary>
+    /// <remarks>
+    /// Documents only: an audio or a video file would be transcribed, and a transcript reports
+    /// the name of its file rather than the path, which the preview of the guide needs.
+    /// </remarks>
+    private static readonly FileTypeFilter[] CUSTOM_PROMPT_GUIDE_FILE_TYPES = [ FileTypes.DOCUMENT ];
+
     private static readonly AssistantSessionStateKey<string> INPUT_PROMPT_STATE_KEY = new(nameof(inputPrompt));
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
@@ -549,29 +560,24 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             await this.LoadCustomPromptGuidelineContentAsync(fileAttachment);
     }
 
-    private async Task OnCustomPromptGuideFilesChanged(HashSet<FileAttachment> files)
+    /// <summary>
+    /// Takes the file whose content was just loaded as the custom prompt guide.
+    /// </summary>
+    /// <remarks>
+    /// The content has arrived already, through the binding of ReadFileContent, which reports it
+    /// before the path. A file without readable content never gets here.
+    /// </remarks>
+    /// <param name="filePath">The path of the file which was loaded.</param>
+    private async Task SetCustomPromptGuideFile(string filePath)
     {
-        if (files.Count == 0)
-        {
-            this.customPromptGuideFiles.Clear();
-            this.currentCustomPromptGuidePath = string.Empty;
-            this.customPromptingGuidelineContent = string.Empty;
-            return;
-        }
-
-        var selected = files.FirstOrDefault(file => !string.Equals(file.FilePath, this.currentCustomPromptGuidePath, StringComparison.OrdinalIgnoreCase))
-                       ?? files.First();
-
         var replacedPrevious = !string.IsNullOrWhiteSpace(this.currentCustomPromptGuidePath) &&
-                               !string.Equals(this.currentCustomPromptGuidePath, selected.FilePath, StringComparison.OrdinalIgnoreCase);
+                               !string.Equals(this.currentCustomPromptGuidePath, filePath, StringComparison.OrdinalIgnoreCase);
 
-        this.customPromptGuideFiles = [ selected ];
-        this.currentCustomPromptGuidePath = selected.FilePath;
+        this.customPromptGuideFiles = [ FileAttachment.FromPath(filePath) ];
+        this.currentCustomPromptGuidePath = filePath;
 
-        if (files.Count > 1 || replacedPrevious)
+        if (replacedPrevious)
             await this.MessageBus.SendInfo(new(Icons.Material.Filled.SwapHoriz, T("Replaced the previously selected custom prompt guide file.")));
-
-        await this.LoadCustomPromptGuidelineContentAsync(selected);
     }
 
     private async Task LoadCustomPromptGuidelineContentAsync(FileAttachment fileAttachment)
