@@ -6,6 +6,8 @@ using AIStudio.Chat;
 using AngouriMath;
 using AngouriMath.Core.Exceptions;
 
+using PeterO.Numbers;
+
 namespace AIStudio.Tools.Mathematics;
 
 /// <summary>
@@ -61,7 +63,13 @@ public static partial class MathExpressionReader
         try
         {
             using var explicitParsing = MathS.Settings.ExplicitParsingOnly.Set(true);
-            return MathS.FromString(text);
+            Entity parsed;
+
+            // Without the cache, an expression parsed elsewhere with other settings cannot come back here:
+            using (MathS.Settings.DowncastingEnabled.Set(false))
+                parsed = MathS.FromString(text, useCache: false);
+
+            return WithExactLiterals(parsed);
         }
         catch (MissingOperatorParseException exception)
         {
@@ -75,6 +83,28 @@ public static partial class MathExpressionReader
         {
             throw new MathComputationException(DescribeParseError(exception.Message, argumentName));
         }
+    }
+
+    /// <summary>
+    /// Turns every decimal literal into the fraction it writes, e.g., 1.5e-3 into 3/2000.
+    /// </summary>
+    /// <remarks>
+    /// AngouriMath downcasts while it parses: it reads 0.1 as 1/10, but 6.62607015e-34 as an inexact
+    /// decimal and 1e-60 as 0, see AngouriMathBehaviorTests. Simplifying then drops an inexact decimal
+    /// from a sum, so 1 + 1e-40 would be exactly 1. The reader therefore parses without downcasting,
+    /// which leaves every number a decimal, and turns each into its fraction or integer. A literal
+    /// with an exponent beyond MathLimits.MAX_EXACT_DIGITS stays a decimal.
+    /// </remarks>
+    private static Entity WithExactLiterals(Entity expression) => expression.Replace(node => node is Entity.Number.Real literal and not Entity.Number.Rational ? ExactValueOf(literal) : node);
+
+    private static Entity ExactValueOf(Entity.Number.Real literal)
+    {
+        var value = literal.EDecimal;
+        if (value.IsNaN() || value.IsInfinity() || value.Exponent.Abs().CompareTo(EInteger.FromInt32(MathLimits.MAX_EXACT_DIGITS)) > 0)
+            return literal;
+
+        var fraction = ERational.FromEDecimal(value);
+        return fraction.Denominator.Equals(EInteger.One) ? Entity.Number.Integer.Create(fraction.Numerator) : Entity.Number.Rational.Create(fraction.Numerator, fraction.Denominator);
     }
 
     private static string DescribeMissingOperator(string message, string argumentName)

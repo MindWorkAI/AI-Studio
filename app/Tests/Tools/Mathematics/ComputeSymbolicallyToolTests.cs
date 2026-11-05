@@ -146,9 +146,11 @@ public sealed class ComputeSymbolicallyToolTests
         var complex = await Compute(SymbolicOperation.SOLVE, "x^2 + 1 = 0");
         var periodic = await Compute(SymbolicOperation.SOLVE, "sin(x) = 1/2");
         var withoutEquals = await Compute(SymbolicOperation.SOLVE, "x^2 - 4");
+        var tiny = await Compute(SymbolicOperation.SOLVE, "1.5e30*x = 3");
         using (Assert.EnterMultipleScope())
         {
             Assert.That(quadratic["solutions"]!.AsArray().Select(solution => solution!["value"]!.GetValue<string>()), Is.EqualTo(new[] { "2", "3" }));
+            Assert.That(tiny["solutions"]![0]!["decimal"]!.GetValue<string>(), Is.EqualTo("2e-30"), "The decimal of a tiny solution keeps its digits, see NumericEvaluator.EvaluateAt.");
             Assert.That(quadratic["solutions"]![0]!["real"]!.GetValue<bool>(), Is.True);
             Assert.That(Text(quadratic, "verification"), Is.EqualTo("passed"));
             Assert.That(complex["solutions"]![0]!["real"]!.GetValue<bool>(), Is.False);

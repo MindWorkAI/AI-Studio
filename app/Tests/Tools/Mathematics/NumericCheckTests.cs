@@ -44,6 +44,22 @@ public sealed class NumericCheckTests
     }
 
     [Test]
+    public void TellsTinyValuesApart()
+    {
+        // With an absolute tolerance of 1e-30, any two values below it would pass for equal:
+        var x = MathS.Var("x");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Check("6.62607015e-34 * x", "6.62607015e-35 * x"), Is.EqualTo(NumericCheckOutcome.FAILED));
+            Assert.That(Check("6.62607015e-34 * sin(x)", "6.62607015e-34 * sin(x) * (1 + 1e-20)"), Is.EqualTo(NumericCheckOutcome.FAILED));
+            Assert.That(Check("6.62607015e-34 * x^2", "x * 6.62607015e-34 * x"), Is.EqualTo(NumericCheckOutcome.PASSED));
+            Assert.That(Check("sin(2*x) - 2*sin(x)*cos(x)", "0"), Is.EqualTo(NumericCheckOutcome.PASSED), "Against 0, the tolerance stays absolute, since terms which cancel leave their rounding noise.");
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("1.32521403e-33 * x", "derivative"), MathExpressionReader.Read("6.62607015e-34 * x^2", "function"), x), Is.EqualTo(NumericCheckOutcome.PASSED));
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("6.62607015e-34 * x", "derivative"), MathExpressionReader.Read("6.62607015e-34 * x^2", "function"), x), Is.EqualTo(NumericCheckOutcome.FAILED));
+        }
+    }
+
+    [Test]
     public void ComparesWhereAConditionHolds()
     {
         var simplified = MathExpressionReader.Read("(x^2 - 1)/(x - 1)", "expression").Simplify();

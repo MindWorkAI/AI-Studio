@@ -111,7 +111,7 @@ public static class NumericCheck
             if (claimed is null || above is null || below is null)
                 continue;
 
-            var difference = (((Entity)above - below) / TWO_DERIVATIVE_STEPS).EvalNumerical();
+            var difference = NumericEvaluator.EvaluateAt(((Entity)above - below) / TWO_DERIVATIVE_STEPS, DERIVATIVE_PRECISION);
             validPoints++;
             if (!AreClose(claimed, difference, DERIVATIVE_TOLERANCE))
                 return NumericCheckOutcome.FAILED;
@@ -171,7 +171,13 @@ public static class NumericCheck
             if (!substituted.EvaluableNumerical)
                 return null;
 
-            var number = substituted.EvalNumerical();
+            //
+            // A polynomial at a sample point stays exact. Anything else is evaluated without the downcasting which turns
+            // tiny values into 0, and so is an exact 0: simplifying takes a tiny value such as 6.62607015e-34 * sin(0.61)
+            // for 0 at this precision, see AngouriMathBehaviorTests:
+            //
+            var exact = NumericEvaluator.ExactValueOf(substituted);
+            var number = exact is not null && !IsZero(exact) ? exact : NumericEvaluator.EvaluateAt(substituted, MathS.Settings.DecimalPrecisionContext.Value.Precision.ToInt32Checked());
             return IsFinite(number) ? number : null;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -184,6 +190,8 @@ public static class NumericCheck
 
     private static bool IsFinite(Entity.Number.Complex number) => IsFinite(number.RealPart.EDecimal) && IsFinite(number.ImaginaryPart.EDecimal);
 
+    private static bool IsZero(Entity.Number.Complex number) => number.RealPart.EDecimal.IsZero && number.ImaginaryPart.EDecimal.IsZero;
+
     private static bool IsFinite(EDecimal value) => !value.IsNaN() && !value.IsInfinity();
 
     private static bool AreClose(Entity.Number.Complex left, Entity.Number.Complex right, EDecimal tolerance)
@@ -192,7 +200,13 @@ public static class NumericCheck
         var difference = left.RealPart.EDecimal.Subtract(right.RealPart.EDecimal, context).Abs().Add(left.ImaginaryPart.EDecimal.Subtract(right.ImaginaryPart.EDecimal, context).Abs(), context);
         var leftSize = left.RealPart.EDecimal.Abs().Add(left.ImaginaryPart.EDecimal.Abs(), context);
         var rightSize = right.RealPart.EDecimal.Abs().Add(right.ImaginaryPart.EDecimal.Abs(), context);
-        var scale = EDecimal.Max(EDecimal.One, EDecimal.Max(leftSize, rightSize));
+
+        //
+        // Against 0, the tolerance is absolute: an expression whose terms cancel, such as sin(2*x) - 2*sin(x)*cos(x),
+        // comes only as close as its rounding noise. Between two other values, it is relative, so that tiny values,
+        // such as those of a formula with the Planck constant, are still told apart:
+        //
+        var scale = leftSize.IsZero || rightSize.IsZero ? EDecimal.One : EDecimal.Max(leftSize, rightSize);
         return difference.CompareTo(tolerance.Multiply(scale, context)) <= 0;
     }
 }

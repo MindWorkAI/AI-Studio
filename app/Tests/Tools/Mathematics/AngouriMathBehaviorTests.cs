@@ -81,6 +81,55 @@ public sealed class AngouriMathBehaviorTests
     }
 
     [Test]
+    public void DowncastingTurnsTinyValuesIntoZero()
+    {
+        // The Boltzmann constant at 300 K, the energy of a photon of 500 nm, and e^-100:
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(MathS.Settings.DowncastingEnabled.Value, Is.True, "AngouriMath downcasts by default.");
+            Assert.That(DecimalOf("1.380649e-23 * 300", 30, 20), Is.EqualTo("0"), "Downcasting takes a tiny value for the integer 0, so NumericEvaluator.EvaluateAt does without it.");
+            Assert.That(DecimalOf("6.62607015e-34 * 299792458 / 500e-9", 40, 20), Is.EqualTo("0"));
+            Assert.That(DecimalOf("e^(-100)", 60, 20), Is.EqualTo("0"), "More digits only lower the bound below which a value vanishes.");
+
+            using var withoutDowncasting = MathS.Settings.DowncastingEnabled.Set(false);
+            Assert.That(DecimalOf("1.380649e-23 * 300", 30, 20), Is.EqualTo("4.14194700E-21"));
+            Assert.That(DecimalOf("6.62607015e-34 * 299792458 / 500e-9", 30, 20), Is.EqualTo("3.97289171430E-19"), "500e-9 is read as the fraction 1/2000000, and dividing by it rounds to 30 decimal places, see below.");
+            Assert.That(DecimalOf("6.62607015e-34 * 299792458 / 500e-9", 60, 20), Is.EqualTo("3.9728917142978574000E-19"));
+            Assert.That(DecimalOf("e^(-100)", 30, 20), Is.EqualTo("3.7200759760208359630E-44"));
+        }
+    }
+
+    [Test]
+    public void DowncastingWhileParsingLosesTinyLiterals()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Parse("1e-60"), Is.EqualTo(Entity.Number.Integer.Create(0)), "A literal below about 1e-50 is read as 0, so MathExpressionReader parses without downcasting.");
+            Assert.That(Parse("6.62607015e-34"), Is.TypeOf<Entity.Number.Real>(), "Unlike 0.1, a literal with a long denominator stays an inexact decimal.");
+            Assert.That(Parse("1 + 1e-40").InnerSimplified, Is.EqualTo(Entity.Number.Integer.Create(1)), "Simplifying drops an inexact decimal from a sum, so MathExpressionReader turns every literal into its fraction.");
+            Assert.That(Entity.Number.Rational.Create(EInteger.One, EInteger.FromInt32(10).Pow(200)).EDecimal.IsZero, Is.True, "A fraction converts to a fixed number of decimal places, so NumericEvaluator converts an exact value itself.");
+            Assert.That(Parse("pi/10^1500").InnerSimplified, Is.EqualTo(Entity.Number.Integer.Create(0)), "Simplifying takes a value below about 1e-1000 for 0, so NumericEvaluator checks an exact 0 numerically.");
+            Assert.That(Parse("pi/10^1000").InnerSimplified, Is.TypeOf<Entity.Divf>());
+
+            // Where it evaluates a function numerically, the bound lies near the precision instead:
+            using var lowerPrecision = MathS.Settings.DecimalPrecisionContext.Set(EContext.ForPrecision(50));
+            Assert.That(MathS.FromString("132521403/200000000000000000000000000000000000000000 * sin(61/100)", useCache: false).InnerSimplified, Is.EqualTo(Entity.Number.Integer.Create(0)), "So NumericCheck evaluates an exact 0 numerically.");
+        }
+    }
+
+    [Test]
+    public void WithoutDowncastingAQuotientOfIntegersIsRoundedToDecimalPlaces()
+    {
+        using var withoutDowncasting = MathS.Settings.DowncastingEnabled.Set(false);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(DecimalOf("3/10^50 * 7", 30, 20), Is.EqualTo("0E-30"), "At 30 digits, the quotient keeps 30 decimal places, so NumericEvaluator.EvaluateAt adds the leading zeros of the smallest fraction to the precision.");
+            Assert.That(DecimalOf("3/10^50 * 7", 80, 20), Is.EqualTo("2.1000000000000000000E-49"));
+            Assert.That(DecimalOf("2^(-200)", 30, 20), Is.EqualTo("6.2230152778611417071E-61"), "A power keeps its significant digits.");
+        }
+    }
+
+    [Test]
     public void SettingsBelongToTheFlowWhichSetsThem()
     {
         var inner = Task.Run(() =>

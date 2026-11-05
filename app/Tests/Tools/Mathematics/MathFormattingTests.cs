@@ -14,7 +14,7 @@ public sealed class MathFormattingTests
     [Test]
     public void WritesDecimalsWithTheirSignificantDigits()
     {
-        var quotient = ((Entity.Number.Rational)MathExpressionReader.Read("547 / 57576", "expression")).EDecimal;
+        var quotient = Entity.Number.Rational.Create(547, 57576).EDecimal;
         using (Assert.EnterMultipleScope())
         {
             Assert.That(MathFormatting.FormatDecimal(quotient, 20), Is.EqualTo("0.0095004863137418368765"));

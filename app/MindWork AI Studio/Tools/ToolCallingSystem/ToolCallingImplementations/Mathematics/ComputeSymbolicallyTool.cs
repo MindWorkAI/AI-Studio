@@ -51,6 +51,11 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
     /// </summary>
     private const double MIN_QUADRATURE_TOLERANCE = 1e-12;
 
+    /// <summary>
+    /// The precision of a value which ends up as a double, such as a bound of an integral.
+    /// </summary>
+    private const int DOUBLE_PRECISION = 30;
+
     private static readonly Dictionary<string, SymbolicOperation> OPERATIONS = new(StringComparer.Ordinal)
     {
         ["simplify"] = SymbolicOperation.SIMPLIFY,
@@ -328,7 +333,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
 
         try
         {
-            var value = integral.EvalNumerical();
+            var value = NumericEvaluator.EvaluateAt(integral, DOUBLE_PRECISION);
             if (!value.ImaginaryPart.EDecimal.IsZero)
                 return NumericCheckOutcome.NOT_POSSIBLE;
 
@@ -348,7 +353,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
 
     private static double BoundOf(Entity bound)
     {
-        var value = bound.EvalNumerical().RealPart.EDecimal;
+        var value = NumericEvaluator.EvaluateAt(bound, DOUBLE_PRECISION).RealPart.EDecimal;
         if (value.IsInfinity())
             return value.IsNegative ? double.NegativeInfinity : double.PositiveInfinity;
 

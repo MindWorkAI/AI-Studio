@@ -53,6 +53,20 @@ public static class MathematicsChecks
         });
 
         //
+        // A tiny value, which AngouriMath's downcasting would turn into 0, and one evaluated without it:
+        //
+        Expect(failures, "calculate the energy of a photon of 500 nm", Calculation("6.62607015e-34 * 299792458 / 500e-9", 20), new()
+        {
+            ["decimal"] = "3.9728917142978574e-19",
+            ["digits"] = "20",
+        });
+
+        Expect(failures, "calculate e^(-100) * pi", Calculation("e^(-100) * pi", 20), new()
+        {
+            ["decimal"] = "1.1686963357062938093e-43",
+        });
+
+        //
         // The numerical integration, whose integrand AngouriMath compiles:
         //
         Expect(failures, "check the integral of x^3/(e^x-1) from 0 to infinity", Calculation("integral(x^3/(e^x-1), x, 0, +oo) = pi^4/15", 20), new()
