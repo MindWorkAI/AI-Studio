@@ -12382,6 +12382,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3016479965"] = "The text was
 -- We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3049689432"] = "We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."
 
+-- We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T349154708"] = "We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'"
+
 -- Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3573577433"] = "Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"
 
@@ -12390,9 +12393,6 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T364882899"] = "The provider 
 
 -- We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3759732886"] = "We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"
-
--- We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4049517041"] = "We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"
 
 -- The provider '{0}' does not know the selected model. Please select another model.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T411393889"] = "The provider '{0}' does not know the selected model. Please select another model."
@@ -15520,8 +15520,11 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T3520350217"] = "Pi
 -- Standard augmentation process
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standard augmentation process"
 
--- This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T3240406069"] = "This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread."
+-- Not every passage found in your data sources fits into what the selected model can read. This answer had to do without {0} of them. To give the AI every passage, switch on Semantic Search for this chat, lower the token limit of your data sources, or choose fewer data sources.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T2379210749"] = "Not every passage found in your data sources fits into what the selected model can read. This answer had to do without {0} of them. To give the AI every passage, switch on Semantic Search for this chat, lower the token limit of your data sources, or choose fewer data sources."
+
+-- This is the standard augmentation process, which augments the chat thread with as many retrieval contexts as the selected model can read.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T312973328"] = "This is the standard augmentation process, which augments the chat thread with as many retrieval contexts as the selected model can read."
 
 -- The check of which passages fit your question failed. This answer uses all passages that were found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T392269104"] = "The check of which passages fit your question failed. This answer uses all passages that were found."

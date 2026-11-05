@@ -12384,6 +12384,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3016479965"] = "Der Text war
 -- We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3049689432"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Selbst nach {2} erneuten Versuchen gab es weiterhin Probleme mit der Anfrage. Die Meldung des Anbieters lautet: „{3}“."
 
+-- We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T349154708"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Die Daten des Chats, einschließlich aller Dateianhänge und der Textstellen aus Ihren Datenquellen, sind vermutlich zu groß für das ausgewählte Modell und den Anbieter. Die Nachricht des Anbieters lautet: „{2}“"
+
 -- Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3573577433"] = "Es wurde versucht, mit dem LLM-Anbieter „{0}“ zu kommunizieren. Dabei sind Probleme bei der Anfrage aufgetreten. Die Meldung des Anbieters lautet: „{1}“"
 
@@ -12392,9 +12395,6 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T364882899"] = "Der Anbieter 
 
 -- We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3759732886"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Das erforderliche Nachrichtenformat hat sich möglicherweise geändert. Die Nachricht des Anbieters lautet: „{2}“"
-
--- We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4049517041"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Die Daten des Chats, einschließlich aller Dateianhänge, sind vermutlich zu groß für das ausgewählte Modell und den Anbieter. Die Nachricht des Anbieters lautet: „{2}“"
 
 -- The provider '{0}' does not know the selected model. Please select another model.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T411393889"] = "Der Anbieter „{0}“ kennt das ausgewählte Modell nicht. Bitte wählen Sie ein anderes Modell aus."
@@ -15522,8 +15522,11 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T3520350217"] = "Bi
 -- Standard augmentation process
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standard-Erweiterungsprozess"
 
--- This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T3240406069"] = "Dies ist der Standard-Erweiterungsprozess, bei dem alle abgerufenen Kontexte verwendet werden, um den Chatverlauf zu ergänzen."
+-- Not every passage found in your data sources fits into what the selected model can read. This answer had to do without {0} of them. To give the AI every passage, switch on Semantic Search for this chat, lower the token limit of your data sources, or choose fewer data sources.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T2379210749"] = "Nicht alle Textstellen aus Ihren Datenquellen passen in das, was das ausgewählte Modell verarbeiten kann. Diese Antwort musste auf {0} davon verzichten. Damit die KI alle Textstellen erhält, schalten Sie die semantische Suche für diesen Chat ein, senken Sie das Token-Limit Ihrer Datenquellen oder wählen Sie weniger Datenquellen."
+
+-- This is the standard augmentation process, which augments the chat thread with as many retrieval contexts as the selected model can read.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T312973328"] = "Dies ist der Standard-Erweiterungsprozess, der den Chatverlauf um so viele abgerufene Kontexte ergänzt, wie das ausgewählte Modell verarbeiten kann."
 
 -- The check of which passages fit your question failed. This answer uses all passages that were found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T392269104"] = "Die Prüfung, welche Textstellen zu Ihrer Frage passen, ist fehlgeschlagen. Diese Antwort verwendet alle gefundenen Textstellen."
