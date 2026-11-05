@@ -241,6 +241,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     context.ChatThread.RequireDataSecurity(outcome.RequiredDataSecurity);
                     context.ChatThread.RequireOutboundDataRestriction(outcome.RequiredOutboundDataRestriction);
                     context.ChatThread.RuntimeWebAddressesFromTools.UnionWith(outcome.ReturnedWebAddresses);
+                    context.CurrentAssistantContent?.KeepWebAddressesFromTools(outcome.ReturnedWebAddresses);
                     toolSources.MergeSources(outcome.Sources);
                     toolPassages.MergePassages(outcome.Passages);
                     await context.AddToolInvocationAsync(outcome.Trace);

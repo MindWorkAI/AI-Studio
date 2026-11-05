@@ -58,6 +58,45 @@ public sealed class ContentText : IContent
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
 
     /// <summary>
+    /// The most web addresses one answer keeps of what its tools returned.
+    /// </summary>
+    /// <remarks>
+    /// Every link of every page a tool read counts, which may be hundreds per page. The cap keeps a
+    /// stored chat from growing without bound; an address beyond it still counts until the chat is
+    /// closed, through ChatThread.RuntimeWebAddressesFromTools.
+    /// </remarks>
+    public const int MAX_WEB_ADDRESSES_FROM_TOOLS = 1_000;
+
+    /// <summary>
+    /// The web addresses the tools returned while this answer came about, as request keys, see
+    /// WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// Stored with the answer, so that the model may read them again in a later message, also after
+    /// a restart, while its free address choice is off, see ChatThread.IsWebAddressGivenToTheModel.
+    /// A tool returned them, so the model neither made them up nor wrote anything of the chat into
+    /// them; addresses it wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.
+    /// Kept per answer rather than per chat: an answer which is deleted or generated anew takes its
+    /// addresses along.
+    /// </remarks>
+    public HashSet<string> WebAddressesFromTools { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Keeps the web addresses a tool returned for this answer, up to MAX_WEB_ADDRESSES_FROM_TOOLS.
+    /// </summary>
+    /// <param name="requestKeys">The addresses as request keys, see ToolCallOutcome.ReturnedWebAddresses.</param>
+    public void KeepWebAddressesFromTools(IEnumerable<string> requestKeys)
+    {
+        foreach (var requestKey in requestKeys)
+        {
+            if (this.WebAddressesFromTools.Count >= MAX_WEB_ADDRESSES_FROM_TOOLS)
+                return;
+
+            this.WebAddressesFromTools.Add(requestKey);
+        }
+    }
+
+    /// <summary>
     /// Optional structured data for a specialized visual presentation of this text.
     /// </summary>
     /// <remarks>
@@ -231,13 +270,14 @@ public sealed class ContentText : IContent
     /// Clears what the previous run of the tools left behind.
     /// </summary>
     /// <remarks>
-    /// Both parts at once, because both belong to one request: the traces the user reads and the
-    /// payload the counting needs. They were cleared separately for exactly as long as there was
-    /// only one of them.
+    /// All parts at once, because all belong to one request: the traces the user reads, the
+    /// payload the counting needs, and the web addresses the tools returned. They were cleared
+    /// separately for exactly as long as there was only one of them.
     /// </remarks>
     public void BeginToolRun()
     {
         this.ToolInvocations.Clear();
+        this.WebAddressesFromTools.Clear();
         this.PendingToolConversation = [];
     }
 
@@ -550,6 +590,7 @@ public sealed class ContentText : IContent
         Sources = [..this.Sources],
         SourcePassages = [..this.SourcePassages],
         FileAttachments = [..this.FileAttachments],
+        WebAddressesFromTools = new HashSet<string>(this.WebAddressesFromTools, StringComparer.Ordinal),
         Presentation = this.Presentation?.DeepClone(),
         ToolInvocations = [..this.ToolInvocations.Select(x => new ToolInvocationTrace
         {

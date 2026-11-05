@@ -271,8 +271,10 @@ public sealed record ChatThread
     /// </summary>
     /// <remarks>
     /// Addresses the model wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.
-    /// Not stored, like the results of the tools themselves: after a restart, a chat knows fewer
-    /// addresses, never more.
+    /// Not stored: each answer stores the addresses its own tools returned, see
+    /// ContentText.WebAddressesFromTools, so they outlast a restart. This set covers the runs
+    /// without an answer in the chat, such as those of the assistants, and the addresses beyond the
+    /// cap of an answer.
     /// </remarks>
     [JsonIgnore]
     public HashSet<string> RuntimeWebAddressesFromTools { get; } = new(StringComparer.Ordinal);
@@ -294,7 +296,8 @@ public sealed record ChatThread
     /// <remarks>
     /// Given means: it stands in the system prompt, see RuntimeSystemPromptWebAddresses, in a
     /// message of the user or a document attached to one, see ContentText.RuntimeAttachmentWebAddresses,
-    /// or a tool returned it, see RuntimeWebAddressesFromTools. What the model wrote itself never
+    /// or a tool returned it, see RuntimeWebAddressesFromTools and ContentText.WebAddressesFromTools
+    /// of the answers in this chat. What the model wrote itself never
     /// counts, its answers included, because the model could have put anything of the chat into it.
     /// Neither does what any model wrote and what reached this chat as a message of the user, such
     /// as an answer sent here from another chat, see WebAddressesWrittenByModels. The comparison is
@@ -309,6 +312,10 @@ public sealed record ChatThread
     {
         var requestKey = WebAddresses.CreateRequestKey(url);
         if (this.RuntimeWebAddressesFromTools.Contains(requestKey) || this.RuntimeSystemPromptWebAddresses.Contains(requestKey))
+            return true;
+
+        // A tool returned it for one of the answers, possibly before a restart:
+        if (this.Blocks.Any(block => block.Role is ChatRole.AI && block.Content is ContentText answer && answer.WebAddressesFromTools.Contains(requestKey)))
             return true;
 
         var messagesOfTheUser = this.Blocks

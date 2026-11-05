@@ -79,6 +79,58 @@ public sealed class ChatThreadWebAddressTests
     }
 
     [Test]
+    public void AnAddressAToolReturnedForAnAnswerOutlastsARestart()
+    {
+        var answer = new ContentText { Text = "The newsletter links to the program of the conference." };
+        answer.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))]);
+        var thread = Thread(
+            Block(ChatRole.USER, "What does the newsletter link to?", 1),
+            new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
+
+        var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded.IsWebAddressGivenToTheModel(new Uri("https://example.org/program")), Is.True, "A tool returned it, so the model neither made it up nor wrote anything of the chat into it.");
+            Assert.That(loaded.IsWebAddressGivenToTheModel(new Uri("https://example.org/program?mail=secret")), Is.False, "Only the address the tool returned counts.");
+        }
+    }
+
+    [Test]
+    public void AnAddressAToolReturnedForADeletedAnswerIsNoLongerGiven()
+    {
+        var answer = new ContentText { Text = "The newsletter links to the program of the conference." };
+        answer.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))]);
+        var thread = Thread(
+            Block(ChatRole.USER, "What does the newsletter link to?", 1),
+            new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
+
+        thread.Remove(answer);
+
+        Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/program")), Is.False);
+    }
+
+    [Test]
+    public void AnAnswerKeepsAtMostTheCapOfTheAddressesToolsReturned()
+    {
+        var answer = new ContentText();
+        answer.KeepWebAddressesFromTools(Enumerable.Range(0, ContentText.MAX_WEB_ADDRESSES_FROM_TOOLS + 5).Select(n => WebAddresses.CreateRequestKey(new Uri($"https://example.org/page-{n}"))));
+
+        Assert.That(answer.WebAddressesFromTools, Has.Count.EqualTo(ContentText.MAX_WEB_ADDRESSES_FROM_TOOLS));
+    }
+
+    [Test]
+    public void AnAddressAToolReturnedForAMessageOfTheUserIsNotGiven()
+    {
+        // Only answers of the model are filled by the tool calling loop. A message of the user holding the set came from elsewhere:
+        var message = new ContentText { Text = "Hello." };
+        message.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/chosen"))]);
+        var thread = Thread(new ContentBlock { Time = START, ContentType = ContentType.TEXT, Content = message, Role = ChatRole.USER });
+
+        Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False);
+    }
+
+    [Test]
     public void AnAddressInTheSystemPromptIsGivenOnceTheRequestWasPrepared()
     {
         // A chat template written by the user, and the content of a data source the RAG process found:

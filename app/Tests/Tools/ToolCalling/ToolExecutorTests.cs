@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using AIStudio.Chat;
@@ -187,6 +188,33 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task WhatAToolReturnedIsKnownToTheChatAfterARestart()
+    {
+        var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult { TextContent = "The newsletter links to https://example.org/newsletter/2026-10." });
+        var answer = new ContentText();
+        var thread = new ChatThread
+        {
+            Blocks =
+            [
+                new ContentBlock { ContentType = ContentType.TEXT, Role = ChatRole.USER, Content = new ContentText { Text = "What does the newsletter link to?" } },
+                new ContentBlock { ContentType = ContentType.TEXT, Role = ChatRole.AI, Content = answer },
+            ],
+        };
+
+        await foreach (var _ in new ToolCallingLoop(NullLogger<ToolCallingLoop>.Instance).RunAsync(new OneToolCallAdapter(), this.LoopContext(tool, thread, answer)))
+        {
+        }
+
+        var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(answer.WebAddressesFromTools, Is.EquivalentTo(new[] { WebAddresses.CreateRequestKey(new Uri("https://example.org/newsletter/2026-10")) }));
+            Assert.That(loaded.IsWebAddressGivenToTheModel(new Uri("https://example.org/newsletter/2026-10")), Is.True, "The user may ask after a restart to read the link again.");
+        }
+    }
+
+    [Test]
     public async Task ThePassagesOfAResultReachTheAnswer()
     {
         var passage = new SourcePassage { SourceUrl = "file:///C:/docs/handbook.pdf#page=11", DataSourceName = "handbook.pdf", Text = "A passage from the handbook.", PageNumber = 11 };
@@ -238,13 +266,13 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         Assert.That(outcome.Passages, Is.Empty, REASON);
     }
 
-    private ToolCallingLoopContext LoopContext(TestTool tool, ChatThread thread) => new()
+    private ToolCallingLoopContext LoopContext(TestTool tool, ChatThread thread, ContentText? answer = null) => new()
     {
         ChatThread = thread,
         RunnableTools = [(tool.GetDefinition(), tool)],
         ToolExecutor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance),
         Provider = new NoProvider(),
-        CurrentAssistantContent = null,
+        CurrentAssistantContent = answer,
         ProviderInstanceName = "Test provider",
         ProviderType = LLMProviders.NONE,
         ModelId = "test-model",
