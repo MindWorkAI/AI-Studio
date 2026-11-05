@@ -497,6 +497,20 @@ public sealed record ChatThread
                                 """;
         }
 
+        //
+        // Explain the notes in front of the earlier answers, see ToolCallHistoryNote. Also without
+        // tools: the note then tells the model what it read, and this tells it that it no longer
+        // has the content.
+        //
+        if (ToolCallHistoryNote.IsInAnyOf(this.Blocks))
+        {
+            systemPromptText = $"""
+                                {systemPromptText}
+
+                                {ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION}
+                                """;
+        }
+
         var explanation = $"{logMessage} {profileNote}";
         if(!this.IncludeDateTime)
             return new(systemPromptText, systemPromptTextWithChatTemplate, allowProfile, explanation);

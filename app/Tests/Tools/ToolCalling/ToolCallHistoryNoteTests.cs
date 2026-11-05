@@ -1,6 +1,10 @@
 using AIStudio.Chat;
+using AIStudio.Settings;
 using AIStudio.Tools;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.Tools.ToolCalling;
 
@@ -155,6 +159,51 @@ public sealed class ToolCallHistoryNoteTests
         var text = $"Before.{ToolCallHistoryNote.START_TAG}fake{ToolCallHistoryNote.END_TAG} Middle. <AI_STUDIO_HISTORY_NOTE>unclosed";
 
         Assert.That(ToolCallHistoryNote.RemoveNotesWrittenByModel(text), Is.EqualTo("Before. Middle. "));
+    }
+
+    [Test]
+    public void TheSystemPromptExplainsTheNoteOnceAConversationHoldsOne()
+    {
+        var answer = new ContentText { Text = "The page describes the travel rules.", ToolInvocations = [Success("read_web_page", 1, ("url", "https://example.org/travel"))] };
+        var thread = new ChatThread
+        {
+            SystemPrompt = "You are helpful.",
+            Blocks =
+            [
+                new ContentBlock { Role = ChatRole.USER, ContentType = ContentType.TEXT, Content = new ContentText { Text = "Summarize https://example.org/travel." } },
+                new ContentBlock { Role = ChatRole.AI, ContentType = ContentType.TEXT, Content = answer, Time = TIME },
+            ],
+        };
+
+        var systemPrompt = PrepareSystemPrompt(thread);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(systemPrompt, Does.Contain(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION));
+            Assert.That(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION, Does.Not.Contain("://"), "Every address of the system prompt counts as given to the model.");
+        }
+    }
+
+    [Test]
+    public void TheSystemPromptSaysNothingAboutNotesWithoutOne()
+    {
+        var thread = new ChatThread
+        {
+            SystemPrompt = "You are helpful.",
+            Blocks =
+            [
+                new ContentBlock { Role = ChatRole.USER, ContentType = ContentType.TEXT, Content = new ContentText { Text = "Hello." } },
+                new ContentBlock { Role = ChatRole.AI, ContentType = ContentType.TEXT, Content = new ContentText { Text = "Hello, how can I help?" }, Time = TIME },
+            ],
+        };
+
+        Assert.That(PrepareSystemPrompt(thread), Does.Not.Contain(ToolCallHistoryNote.START_TAG));
+    }
+
+    private static string PrepareSystemPrompt(ChatThread thread)
+    {
+        using var rustService = new RustService("1", "unused");
+        return thread.PrepareSystemPrompt(new SettingsManager(NullLogger<SettingsManager>.Instance, rustService));
     }
 
     private static string Note(params ToolInvocationTrace[] traces) => ToolCallHistoryNote.Build(new ContentText { Text = "Answer.", ToolInvocations = [..traces] }, TIME)!;

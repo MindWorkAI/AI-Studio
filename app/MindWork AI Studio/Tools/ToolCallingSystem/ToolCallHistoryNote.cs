@@ -45,6 +45,29 @@ public static partial class ToolCallHistoryNote
     /// </summary>
     public const int MAX_ARGUMENT_CHARACTERS = 300;
 
+    /// <summary>
+    /// What the system prompt tells the model about the notes, once a conversation holds one.
+    /// </summary>
+    /// <remarks>
+    /// Without it, a model may take a note for a part of its own answer, or may conclude that it still
+    /// has the content. It holds no web address, since every address of the system prompt counts as
+    /// given to the model, see ChatThread.IsWebAddressGivenToTheModel.
+    /// </remarks>
+    public const string SYSTEM_PROMPT_EXPLANATION = """
+        # Notes from AI Studio in your earlier answers
+        Some of your earlier answers start with a note between <ai_studio_history_note> tags. AI Studio wrote it, not you: it names the tools you called and the sources you used for that answer, and when you wrote it. The results of those tool calls are not kept. When a question needs content you fetched earlier, call the tool again with the same arguments if the tool is available, instead of answering from memory. When the tool is not available, tell the user that you read it earlier but no longer have its content. Never write such a note yourself.
+        """;
+
+    /// <summary>
+    /// Whether any earlier answer of a conversation goes to the model with a note.
+    /// </summary>
+    /// <param name="blocks">The blocks of the conversation.</param>
+    /// <returns>True when at least one answer gets a note.</returns>
+    public static bool IsInAnyOf(IEnumerable<ContentBlock> blocks) => blocks.Any(block =>
+        block is { Role: ChatRole.AI, ContentType: ContentType.TEXT, Content: ContentText { IsStreaming: false } answer } &&
+        !string.IsNullOrWhiteSpace(answer.Text) &&
+        Build(answer, block.Time) is not null);
+
     private static readonly JsonWriterOptions ARGUMENT_WRITER_OPTIONS = new()
     {
         // Only the model reads the note, never a browser, so umlauts and the like may stay as they are:
