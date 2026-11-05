@@ -297,6 +297,8 @@ The tools open no path for content from outside AI Studio. A result holds the ex
 
 `AngouriMathBehaviorTests` pins the behavior of AngouriMath which the tools build on, such as the traps of the parser, the digits of its functions, and the computations which ignore cancellation. The version is pinned exactly by `packages.lock.json`. Before raising it, read the release notes for silent breaking changes, and run these tests.
 
+AngouriMath is marked as trimmable, so a published build of AI Studio contains only the parts of it which the trimmer saw being used, and `Trimming.props` suppresses the warnings about the others. The trim smoke test of `dotnet run verify` therefore lets both tools compute a few expressions in a trimmed build, see `MathematicsChecks` in `app/TrimSmokeTest`. When a tool starts to use another part of AngouriMath, such as a new operation, add a check there.
+
 ## Checklist
 
 - Add the `IToolImplementation` class, including its `GetDefinition()`.

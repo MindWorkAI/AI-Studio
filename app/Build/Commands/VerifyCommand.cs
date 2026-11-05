@@ -86,7 +86,8 @@ public sealed class VerifyCommand
     /// <remarks>
     /// Debug builds and the tests are not trimmed, so only a published build shows that the trimmer
     /// removed code which System.Text.Json reaches by reflection. Then AI Studio can neither load nor
-    /// save, e.g., its chats, while everything looks fine during development.
+    /// save, e.g., its chats, while everything looks fine during development. The same holds for
+    /// AngouriMath, which the Mathematics tools compute with.
     /// </remarks>
     /// <returns>The exit code of the publishing, when that failed; otherwise the one of the smoke test.</returns>
     private static async Task<int> RunTrimSmokeTestAsync()
