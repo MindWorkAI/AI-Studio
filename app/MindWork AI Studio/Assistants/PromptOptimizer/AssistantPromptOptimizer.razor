@@ -95,17 +95,6 @@
         @T("Use custom prompt guide")
     </MudSwitch>
 
-    @if (this.useCustomPromptGuide)
-    {
-        <AttachDocuments Name="Custom Prompt Guide"
-                         @bind-DocumentPaths="@this.customPromptGuideFiles"
-                         OnChange="@this.OnCustomPromptGuideFilesChanged"
-                         CatchAllDocuments="false"
-                         UseSmallForm="true"
-                         ValidateMediaFileTypes="false"
-                         Provider="@this.ProviderSettings"/>
-    }
-
     <MudTextField T="string"
                   Text="@this.CustomPromptGuideFileName"
                   Label="@T("Custom prompt guide file")"
@@ -122,5 +111,14 @@
         @T("View")
     </MudButton>
 </MudStack>
+
+@if (this.useCustomPromptGuide)
+{
+    <ReadFileContent Text="@T("Load the prompt guide from file")"
+                     @bind-FileContent="@this.customPromptingGuidelineContent"
+                     FilePathLoaded="@this.SetCustomPromptGuideFile"
+                     Filter="@CUSTOM_PROMPT_GUIDE_FILE_TYPES"
+                     EnableDragDrop="true"/>
+}
 
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
