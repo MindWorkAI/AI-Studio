@@ -36,7 +36,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         if(retrievalContexts.Count == 0)
         {
             LOGGER.LogWarning("No retrieval contexts were issued. Skipping the augmentation process.");
-            return new(chatThread, []);
+            return new(chatThread, [], [..retrievalContextsByDataSource.Select(_ => 0)]);
         }
 
         //
@@ -106,9 +106,6 @@ public sealed class AugmentationOne : IAugmentationProcess
         var selection = await SelectWithinBudgetAsync(provider.CreateSettingsProvider(chatModel), ByDataSource(retrievalContextsByDataSource, preparedContexts, usedContexts), guardService, reportingScope, token);
         LOGGER.LogInformation($"Starting the augmentation process over {selection.Contexts.Count:###,###,###,##0} of {retrievalContexts.Count:###,###,###,##0} retrieved contexts; {selection.LeftOutCount:###,###,###,##0} of them did not fit into what the model can read.");
 
-        // Add the augmented data to the chat thread:
-        chatThread.AugmentedData = WriteAugmentedData(selection);
-
         //
         // The user learns about it with every answer: each answer rests on the passages it got,
         // and each one may miss something else.
@@ -116,7 +113,13 @@ public sealed class AugmentationOne : IAugmentationProcess
         if (selection.LeftOutCount > 0)
             await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ContentCut, string.Format(TB("Not every passage found in your data sources fits into what the selected model can read. This answer had to do without {0} of them. To give the AI every passage, switch on Semantic Search for this chat, lower the token limit of your data sources, or choose fewer data sources."), selection.LeftOutCount.CompactCount())));
 
-        return new(chatThread, selection.Contexts);
+        //
+        // Add the augmented data to the chat thread, as the very last step: the caller restricts
+        // the chat for these passages once this process returns, and a request whose RAG process
+        // failed goes on without it, so nothing may fail between the two:
+        //
+        chatThread.AugmentedData = WriteAugmentedData(selection);
+        return new(chatThread, selection.Contexts, selection.PassageCounts);
     }
 
     #endregion

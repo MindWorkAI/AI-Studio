@@ -92,7 +92,7 @@ public sealed class PassageBudget(int limit, Func<string, CancellationToken, Tas
     /// <param name="guardService">The prompt injection filter, for passages which have to be shortened.</param>
     /// <param name="reportingScope">The action the passages were retrieved for, or null when they were retrieved for none.</param>
     /// <param name="token">The cancellation token.</param>
-    /// <returns>The passages which fit, grouped by data source, and how many did not.</returns>
+    /// <returns>The passages which fit, grouped by data source, how many of each data source fit, and how many did not.</returns>
     public async Task<PassageSelection> SelectAsync(IReadOnlyList<IReadOnlyList<PreparedRetrievalContext>> contextsByDataSource, PromptInjectionGuardService guardService, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         var candidateCount = contextsByDataSource.Sum(contexts => contexts.Count);
@@ -134,7 +134,7 @@ public sealed class PassageBudget(int limit, Func<string, CancellationToken, Tas
             }
         }
 
-        return new([..selected.SelectMany(contexts => contexts)], leftOutCount);
+        return new([..selected.SelectMany(contexts => contexts)], [..selected.Select(contexts => contexts.Count)], leftOutCount);
     }
 
     /// <summary>

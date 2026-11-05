@@ -112,6 +112,7 @@ public sealed class PassageBudgetTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(selection.Contexts, Is.EqualTo(new[] { handbook[0], handbook[1], minutes[0] }), "The best passage of each data source comes before the second best of any; the model reads them by data source.");
+            Assert.That(selection.PassageCounts, Is.EqualTo(new[] { 2, 1 }));
             Assert.That(selection.LeftOutCount, Is.EqualTo(3));
         }
     }
@@ -159,6 +160,7 @@ public sealed class PassageBudgetTests
             Assert.That(withoutDataSources.Contexts, Is.Empty);
             Assert.That(withoutDataSources.LeftOutCount, Is.Zero);
             Assert.That(withoutPassages.Contexts, Is.Empty);
+            Assert.That(withoutPassages.PassageCounts, Is.EqualTo(new[] { 0, 0 }));
             Assert.That(withoutPassages.LeftOutCount, Is.Zero);
         }
     }
@@ -211,6 +213,7 @@ public sealed class PassageBudgetTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(selection.Contexts, Is.EqualTo(new[] { handbook[0] }), "The shortened passage fills a whole budget, of which the first passage took a part already.");
+            Assert.That(selection.PassageCounts, Is.EqualTo(new[] { 1, 0 }), "A data source none of whose passages fit counts none.");
             Assert.That(selection.LeftOutCount, Is.EqualTo(1));
         }
     }

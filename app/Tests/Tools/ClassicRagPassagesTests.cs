@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.RAG;
@@ -49,6 +50,9 @@ public sealed class ClassicRagPassagesTests
     /// The model which answers.
     /// </summary>
     private static readonly Model CHAT_MODEL = new("chat-model", "Chat model");
+
+    private static readonly IDataSource PUBLIC_PAPERS = new DataSourceLocalDirectory { Num = 1, Id = "11111111-1111-1111-1111-111111111111", Name = "Papers", MaxMatches = 10, OutboundDataRestriction = OutboundDataRestriction.UNRESTRICTED };
+    private static readonly IDataSource CONFIDENTIAL_MINUTES = new DataSourceLocalFile { Num = 2, Id = "22222222-2222-2222-2222-222222222222", Name = "Minutes", MaxMatches = 10, OutboundDataRestriction = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES };
 
     /// <summary>
     /// The length of the matched text of a long passage.
@@ -119,6 +123,7 @@ public sealed class ClassicRagPassagesTests
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(augmentation.UsedContexts.Select(context => context.Context), Is.EqualTo(new IRetrievalContext[] { handbookIntroduction, manual }), "The best passage of each data source fits; the second best of the handbook does not.");
+                Assert.That(augmentation.PassageCounts, Is.EqualTo(new[] { 1, 1 }));
                 Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain($"# Retrieval context 2 of 2{Environment.NewLine}"));
                 Assert.That(augmentation.ChatThread.AugmentedData, Does.Not.Contain("The results of the handbook."));
                 Assert.That(augmentation.ChatThread.AugmentedData, Does.EndWith($"1 did not fit into this request and was left out. An answer based on the data sources may therefore be incomplete.{Environment.NewLine}"), "The model learns that it did not read everything the search found.");
@@ -129,6 +134,28 @@ public sealed class ClassicRagPassagesTests
         finally
         {
             warnings.Unregister();
+        }
+    }
+
+    [Test]
+    public async Task ADataSourceNoneOfWhosePassagesFitDoesNotRestrictTheChat()
+    {
+        //
+        // The public papers fill the budget, and the passage of the confidential minutes stays out.
+        // The chat may then still send data wherever the papers allow:
+        //
+        var papers = TextContext("papers.pdf", "Results of the paper.".PadRight(LONG_PASSAGE * 2, 'x'));
+        var minutes = TextContext("minutes.pdf", LongText("The confidential minutes."));
+        var chatThread = new ChatThread { ChatId = Guid.NewGuid() };
+
+        var augmentation = await new AugmentationOne().ProcessAsync(new KnownWindowProvider(SMALL_CONTEXT_WINDOW), CHAT_MODEL, new ContentText { Text = "What did the board decide?" }, chatThread, [[papers], [minutes]]);
+        AISrcSelWithRetCtxVal.RequireOutboundDataRestriction(chatThread, [PUBLIC_PAPERS, CONFIDENTIAL_MINUTES], augmentation.PassageCounts, OutboundDataRestriction.UNRESTRICTED);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(augmentation.PassageCounts, Is.EqualTo(new[] { 1, 0 }));
+            Assert.That(augmentation.ChatThread.AugmentedData, Does.Not.Contain("The confidential minutes."));
+            Assert.That(chatThread.RequiredOutboundDataRestriction.Restriction, Is.EqualTo(OutboundDataRestriction.UNRESTRICTED), "No passage of the minutes reached the model, so nothing of them can leave the chat.");
         }
     }
 
@@ -149,6 +176,7 @@ public sealed class ClassicRagPassagesTests
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(augmentation.UsedContexts.Select(context => context.Context), Is.EqualTo(new IRetrievalContext[] { handbookIntroduction, handbookResults, manual }), "The model reads the passages by data source.");
+                Assert.That(augmentation.PassageCounts, Is.EqualTo(new[] { 2, 1 }));
                 Assert.That(augmentation.ChatThread.AugmentedData, Does.Not.Contain("did not fit"));
                 Assert.That(warnings.Messages, Is.Empty);
             }

@@ -192,19 +192,17 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     retrievalTasks.Add(dataSource.RetrieveDataAsync(lastUserPrompt, chatThreadWithoutWaitingAIBlock, token));
             
                 //
-                // Wait for all retrieval tasks to finish, and count the passages of each data source.
-                // The tasks are in the order of the selected data sources. The passages stay with
-                // their data source, so that the augmentation can let the data sources take turns
-                // when not all of them fit:
+                // Wait for all retrieval tasks to finish. The tasks are in the order of the selected
+                // data sources, and so are the passages: each data source keeps its place, also when
+                // it failed, so that the augmentation can let the data sources take turns when not all
+                // passages fit, and its counts match the data sources:
                 //
-                var passageCounts = new int[retrievalTasks.Count];
                 for (var index = 0; index < retrievalTasks.Count; index++)
                 {
+                    IReadOnlyList<IRetrievalContext> retrievedContexts = [];
                     try
                     {
-                        var retrievedContexts = await retrievalTasks[index];
-                        dataContexts.Add(retrievedContexts);
-                        passageCounts[index] = retrievedContexts.Count;
+                        retrievedContexts = await retrievalTasks[index];
                     }
                     catch (OperationCanceledException) when (token.IsCancellationRequested)
                     {
@@ -215,13 +213,9 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     {
                         LOGGER.LogError(e, "An error occurred during the retrieval process.");
                     }
-                }
 
-                //
-                // Right after the retrieval, before the augmentation: the passages are in the chat
-                // from here on, and a step below which ends early must not leave it unrestricted:
-                //
-                RequireOutboundDataRestriction(chatThread, selectedDataSources, passageCounts, settings.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction);
+                    dataContexts.Add(retrievedContexts);
+                }
             }
 
             //
@@ -234,6 +228,13 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 var augmentation = await augmentationProcess.ProcessAsync(provider, chatModel, lastUserPrompt, chatThread, dataContexts, token);
                 chatThread = augmentation.ChatThread;
                 usedContexts = augmentation.UsedContexts;
+
+                //
+                // Right after the augmentation, before anything else: the passages are in the chat
+                // from here on, and a step below which ends early must not leave it unrestricted.
+                // Only the passages the AI receives count:
+                //
+                RequireOutboundDataRestriction(chatThread, selectedDataSources, augmentation.PassageCounts, settings.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction);
             }
 
             //
@@ -286,14 +287,17 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     }
 
     /// <summary>
-    /// Restricts where the chat may still send data, because of the passages the retrieval brought in.
+    /// Restricts where the chat may still send data, because of the passages the AI received.
     /// </summary>
     /// <remarks>
     /// Semantic Search asks the same place, DataSourceRequirements, so that both ways of searching
-    /// demand the same of the same data sources. Only the data sources with passages count: one
-    /// which found nothing leaves the chat as it was. A passage the validation agent drops later
-    /// still counts, and so does one which does not fit into what the model can read, see
-    /// PassageBudget: that is the safe side. The data security and the provider confidence were
+    /// demand the same of the same data sources. Only the data sources whose passages reached the
+    /// AI count: one which found nothing leaves the chat as it was, and so does one whose passages
+    /// the validation agent dropped, or which did not fit into what the model can read, see
+    /// PassageBudget. Neither the model nor any of its tools ever saw those passages; the
+    /// validation agent did, but it has no tools. Otherwise, a data source of public papers could
+    /// fill the budget while the passages of a confidential one stayed out, and the chat would
+    /// still lose the web search for good. The data security and the provider confidence were
     /// raised before the retrieval already, for every selected data source, because the agents see
     /// the passages as well; the data sources with passages are among them, so asking again would
     /// change nothing.<br/><br/>
@@ -303,7 +307,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     /// </remarks>
     /// <param name="chatThread">The chat thread.</param>
     /// <param name="selectedDataSources">The data sources searched.</param>
-    /// <param name="passageCounts">How many passages each data source returned, in the same order.</param>
+    /// <param name="passageCounts">How many passages of each data source the AI received, in the same order.</param>
     /// <param name="organizationMinimum">The least strict outbound data restriction the organization allows.</param>
     internal static void RequireOutboundDataRestriction(ChatThread chatThread, IReadOnlyList<IDataSource> selectedDataSources, IReadOnlyList<int> passageCounts, OutboundDataRestriction organizationMinimum)
     {
