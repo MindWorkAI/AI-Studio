@@ -53,6 +53,14 @@ public static class MathematicsChecks
         });
 
         //
+        // Divisors, multiples, and a sum in closed form:
+        //
+        Expect(failures, "calculate gcd, lcm, and a sum", Calculation("gcd(12, 18) + lcm(4, 6) + sum(k^2, k, 1, 100)", 20), new()
+        {
+            ["exact"] = "338368",
+        });
+
+        //
         // A tiny value, which AngouriMath's downcasting would turn into 0, and one evaluated without it:
         //
         Expect(failures, "calculate the energy of a photon of 500 nm", Calculation("6.62607015e-34 * 299792458 / 500e-9", 20), new()

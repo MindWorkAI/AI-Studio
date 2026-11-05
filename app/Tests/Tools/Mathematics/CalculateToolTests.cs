@@ -220,6 +220,23 @@ public sealed class CalculateToolTests
             Assert.That(Refusal("1 < 2"), Does.Contain("is a statement, such as a comparison"));
             Assert.That(Refusal("(10^9)!"), Does.Contain("digits as an exact number"));
             Assert.That(() => Calculate("integral(x^2, x)"), Throws.InstanceOf<MathComputationException>());
+            Assert.That(Refusal("sum(1/k, k, 1, 1000)"), Is.EqualTo("'sum(1 / k, k, 1, 1000)' has no value AngouriMath can compute as a single number, as for a sum without a closed form, an infinite sum, or a matrix."), "AngouriMath sums only in closed form; its own message tells a developer to call EvaluableNumerical.");
+            Assert.That(Refusal("sum(1/k^2, k, 1, +oo)"), Does.Contain("has no value AngouriMath can compute as a single number"));
+            Assert.That(Refusal("[1, 2] + [3, 4]"), Does.Contain("has no value AngouriMath can compute as a single number"));
+        }
+    }
+
+    [Test]
+    public void ComputesDivisorsMultiplesAndSumsInClosedForm()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Text(Calculate("gcd(12, 18)"), "exact"), Is.EqualTo("6"));
+            Assert.That(Text(Calculate("lcm(4, 6, 10)"), "exact"), Is.EqualTo("60"), "Three arguments nest into two calls.");
+            Assert.That(Text(Calculate("gcd(2^100, 6^50)"), "exact"), Is.EqualTo("1125899906842624"));
+            Assert.That(Text(Calculate("sum(k^2, k, 1, 100)"), "exact"), Is.EqualTo("338350"));
+            Assert.That(Text(Calculate("sum(k, k, 1, 10^7)"), "exact"), Is.EqualTo("50000005000000"), "AngouriMath sums in closed form, never term by term.");
+            Assert.That(Text(Calculate("sum(k, k, 10, 1)"), "exact"), Is.EqualTo("0"), "An empty sum is 0.");
         }
     }
 

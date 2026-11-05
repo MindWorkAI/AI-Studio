@@ -67,7 +67,11 @@ public static class NumericEvaluator
         if (exact is not null)
             return new(exact, DecimalOf(exact, digits + GUARD_DIGITS), digits, false, null, issues);
 
-        var central = EvaluateAt(Substituted(withPlaceholders, integrals, 0), digits + GUARD_DIGITS);
+        var substituted = Substituted(withPlaceholders, integrals, 0);
+        if (!substituted.EvaluableNumerical)
+            throw new MathComputationException($"'{Show(expression)}' has no value AngouriMath can compute as a single number, as for a sum without a closed form, an infinite sum, or a matrix.");
+
+        var central = EvaluateAt(substituted, digits + GUARD_DIGITS);
         if (IsNaN(central))
             throw new MathComputationException($"'{Show(expression)}' has no value: AngouriMath evaluates it to NaN, as for a division by zero, a pole, or the factorial of a negative integer.");
 
@@ -101,7 +105,7 @@ public static class NumericEvaluator
 
             token.ThrowIfCancellationRequested();
             shift = wantedShift;
-            central = EvaluateAt(Substituted(withPlaceholders, integrals, 0), digits + GUARD_DIGITS + shift);
+            central = EvaluateAt(substituted, digits + GUARD_DIGITS + shift);
         }
 
         var low = integrals.Count == 0 ? central : EvaluateAt(Substituted(withPlaceholders, integrals, -1), digits + GUARD_DIGITS + shift);

@@ -266,6 +266,8 @@ Both tools read plain syntax, not LaTeX, which `CalculateTool.SYNTAX` describes 
 
 Every decimal literal is the fraction it writes, so `0.1 + 0.2` is exactly `3/10` and `6.62607015e-34` is exactly `132521403/200000000000000000000000000000000000000000`. AngouriMath alone does that for some literals only: it downcasts while parsing, keeps `6.62607015e-34` an inexact decimal, and reads `1e-60` as `0`. Simplifying then drops an inexact decimal from a sum, so `1 + 1e-40` would be exactly `1`. The reader therefore parses without downcasting and without AngouriMath's cache of parsed expressions, and turns each literal into its fraction itself.
 
+AngouriMath computes `sum(f, k, a, b)` only in closed form, as for powers of `k`, so `sum(k, k, 1, 10^7)` takes no time, while `sum(1/k, k, 1, 1000)` has no value. Such a sum, an infinite one, or a matrix is refused by `NumericEvaluator` in its own words, since AngouriMath's message addresses a developer.
+
 ### Honest Digits
 
 A decimal shows only the digits the computation vouches for. `NumericEvaluator` evaluates twice, with 10 and with 20 guard digits, and keeps the digits in which both agree, because composite expressions lose a digit or two at the end. When fewer digits remain than were asked for, `issues` says so.

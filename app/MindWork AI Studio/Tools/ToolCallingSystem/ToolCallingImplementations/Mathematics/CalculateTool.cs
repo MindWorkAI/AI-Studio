@@ -35,7 +35,7 @@ public sealed class CalculateTool(SettingsManager settingsManager, MathComputati
     /// <summary>
     /// The syntax both Mathematics tools read, described for the model.
     /// </summary>
-    internal const string SYNTAX = "Plain syntax, not LaTeX: + - * / ^ and ! for the factorial, with every multiplication written as *, e.g., 2*pi*x. Functions take their arguments in parentheses: sqrt, exp, ln, log(x) to base 10, log(b, x) to base b, sin, cos, tan, arcsin, arccos, arctan, sinh, cosh, tanh, abs, floor, ceil, gamma, binomial(n, k), erf. Constants are pi, e, and i; infinity is +oo or -oo. A definite integral is integral(f, x, a, b), a limit limit(f, x, a). Not-equal is written <>, and | is not an operator.";
+    internal const string SYNTAX = "Plain syntax, not LaTeX: + - * / ^ and ! for the factorial, with every multiplication written as *, e.g., 2*pi*x. Functions take their arguments in parentheses: sqrt, exp, ln, log(x) to base 10, log(b, x) to base b, sin, cos, tan, arcsin, arccos, arctan, sinh, cosh, tanh, abs, floor, ceil, gamma, binomial(n, k), gcd(a, b), lcm(a, b), erf. Constants are pi, e, and i; infinity is +oo or -oo. A definite integral is integral(f, x, a, b), a limit limit(f, x, a), and a sum sum(f, k, a, b) over the integers k from a to b. AngouriMath computes a sum only in closed form, such as for powers of k; any other sum has to be written out term by term. Not-equal is written <>, and | is not an operator.";
 
     public string ImplementationKey => ToolSelectionRules.CALCULATE_TOOL_ID;
 

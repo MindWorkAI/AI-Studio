@@ -163,6 +163,22 @@ public sealed class ComputeSymbolicallyToolTests
     }
 
     [Test]
+    public async Task WorksWithSumsAndDivisors()
+    {
+        var gauss = await Compute(SymbolicOperation.SOLVE, "sum(k, k, 1, n) = 55", "n");
+        var derivative = await Compute(SymbolicOperation.DIFFERENTIATE, "sum(k*x^k, k, 1, 3)", "x");
+        var divisor = await Compute(SymbolicOperation.SIMPLIFY, "gcd(12, 18) * x");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(gauss["solutions"]!.AsArray().Select(solution => solution!["value"]!.GetValue<string>()), Is.EqualTo(new[] { "10" }), "The closed form holds for n >= 0 only, so -11 is no solution.");
+            Assert.That(Text(gauss, "verification"), Is.EqualTo("passed"));
+            Assert.That(Text(derivative, "result"), Is.EqualTo("1 + 4 * x + 9 * x ^ 2"));
+            Assert.That(Text(derivative, "verification"), Is.EqualTo("passed"));
+            Assert.That(Text(divisor, "result"), Is.EqualTo("6 * x"));
+        }
+    }
+
+    [Test]
     public async Task SaysWhenThereIsNoSolutionInClosedForm()
     {
         var quintic = await Compute(SymbolicOperation.SOLVE, "x^5 + 3*x + 1 = 0");
