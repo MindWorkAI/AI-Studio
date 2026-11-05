@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Chat;
 
@@ -81,7 +82,7 @@ public static class ListContentBlockExtensions
                 return Task.Run(async () => new TextMessage
                 {
                     Role = roleTransformer(block.Role),
-                    Content = await text.PrepareTextContentForAI(reportingScope),
+                    Content = await PrepareTextAsync(block, text),
                 } as IMessageBase);
             }
         
@@ -100,11 +101,24 @@ public static class ListContentBlockExtensions
                         Role = roleTransformer(block.Role),
                         Content =
                         [
-                            textSubContentFactory(await text.PrepareTextContentForAI(reportingScope)),
+                            textSubContentFactory(await PrepareTextAsync(block, text)),
                             ..images.OfType<ISubContent>(),
                         ]
                     } as IMessageBase;
                 });
+            }
+
+            //
+            // Local function to prepare the text of one message. An earlier answer of the model gets the
+            // note of the tools and sources it rested on in front, see ToolCallHistoryNote; the answer
+            // being written right now does not, since its tool calls travel in the tool conversation.
+            //
+            async Task<string> PrepareTextAsync(ContentBlock block, ContentText text)
+            {
+                var prepared = await text.PrepareTextContentForAI(reportingScope);
+                return block.Role is ChatRole.AI && !text.IsStreaming
+                    ? WithHistoryNote(prepared, text, block.Time)
+                    : prepared;
             }
 
             //
@@ -160,6 +174,24 @@ public static class ListContentBlockExtensions
                 StandardRoleTransformer,
                 StandardTextSubContentFactory,
                 NestedImageSubContentFactory);
+    }
+
+    /// <summary>
+    /// Puts the note of the tools and sources an earlier answer rested on in front of its text.
+    /// </summary>
+    /// <remarks>
+    /// A note the model wrote into its answer itself goes in any case, see
+    /// ToolCallHistoryNote.RemoveNotesWrittenByModel.
+    /// </remarks>
+    /// <param name="preparedText">The text of the answer as prepared for the model.</param>
+    /// <param name="answer">The answer.</param>
+    /// <param name="time">When the answer was written.</param>
+    /// <returns>The text for the model.</returns>
+    internal static string WithHistoryNote(string preparedText, ContentText answer, DateTimeOffset time)
+    {
+        var text = ToolCallHistoryNote.RemoveNotesWrittenByModel(preparedText);
+        var note = ToolCallHistoryNote.Build(answer, time);
+        return note is null ? text : $"{note}{Environment.NewLine}{Environment.NewLine}{text}";
     }
 
     private static ISubContent StandardTextSubContentFactory(string text) => new SubContentText
