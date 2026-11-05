@@ -26,6 +26,7 @@ public static class PreviewVisibilityExtensions
             if (visibility >= PreviewVisibility.PROTOTYPE)
             {
                 features.Add(PreviewFeatures.PRE_MAILBOXES_2026);
+                features.Add(PreviewFeatures.PRE_MATHEMATICS_2026);
             }
 
             if (visibility >= PreviewVisibility.EXPERIMENTAL)

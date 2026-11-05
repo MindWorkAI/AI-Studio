@@ -11547,6 +11547,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1513592659"] = "Kopiert das zul�
 -- Waiting for the configuration plugin...
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1533382393"] = "Warten auf das Konfigurations-Plugin …"
 
+-- MailKit connects AI Studio to the mail servers of your mailboxes over IMAP. This is how AI Studio keeps a local index of your mails, which the AI can search, read, and count.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1538080625"] = "MailKit verbindet AI Studio über IMAP mit den Mailservern Ihrer Postfächer. So führt AI Studio einen lokalen Index Ihrer E-Mails, in dem die KI suchen, lesen und zählen kann."
+
 -- Encryption secret: is not configured
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1560776885"] = "Geheimnis für die Verschlüsselung: ist nicht konfiguriert"
 
@@ -11679,6 +11682,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "Installation vom
 -- Installed Pandoc version: Pandoc is not installed or not available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installierte Pandoc-Version: Pandoc ist nicht installiert oder nicht verfügbar."
 
+-- The Slide Assistant uses the Open XML SDK to read your PowerPoint templates and to write the presentations it plans with you as PowerPoint files.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2377050296"] = "Der Folien-Assistent verwendet das Open XML SDK, um Ihre PowerPoint-Vorlagen zu lesen und die Präsentationen, die er gemeinsam mit Ihnen plant, als PowerPoint-Dateien zu speichern."
+
 -- current installation location does not support automatic updates
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2401198677"] = "Der aktuelle Installationsort unterstützt keine automatischen Updates"
 
@@ -11759,6 +11765,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T285730904"] = "verwaltet; Update
 
 -- The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "Das .NET-Backend kann nicht als Desktop-App gestartet werden. Deshalb verwende ich ein zweites Backend in Rust, das ich „Runtime“ nenne. Mit Rust als Runtime kann Tauri genutzt werden, um eine typische Desktop-App zu realisieren. Dank Rust kann diese App für Windows-, macOS- und Linux-Desktops angeboten werden. Rust ist eine großartige Sprache für die Entwicklung sicherer und leistungsstarker Software."
+
+-- The Mathematics tools use AngouriMath to calculate exactly and to work with formulas: it keeps fractions exact, simplifies, differentiates, and integrates expressions, and solves equations, all locally on your computer.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2906898949"] = "Die Mathematik-Werkzeuge verwenden AngouriMath, um exakt zu rechnen und mit Formeln zu arbeiten: Die Bibliothek hält Brüche exakt, vereinfacht, differenziert und integriert Ausdrücke und löst Gleichungen, alles lokal auf Ihrem Rechner."
 
 -- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2924964415"] = "AI Studio wird mit Unternehmenskonfigurationen und Konfigurationsservern betrieben. Die Konfigurations-Plugins sind noch nicht verfügbar."
@@ -11945,6 +11954,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "Diese Bibliothek
 
 -- Ropus provides the Opus encoder and decoder used by the media pipeline.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4113556626"] = "Ropus stellt den Opus-Encoder und -Decoder bereit, die von der Medienpipeline verwendet werden."
+
+-- MimeKit reads the mails in your mailboxes, including their senders, recipients, and attachments, so that AI Studio can add them to the local index of your mailboxes.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4139338110"] = "MimeKit liest die E-Mails in Ihren Postfächern einschließlich ihrer Absender, Empfänger und Anhänge aus, damit AI Studio sie dem lokalen Index Ihrer Postfächer hinzufügen kann."
 
 -- Community & Code
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4158546761"] = "Community & Code"
@@ -12842,6 +12854,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T4678
 
 -- Assistant Builder: Generate and install assistant plugins
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T610184927"] = "Assistenten-Builder: Assistenten-Plugins generieren und installieren"
+
+-- Mathematics: Let the AI calculate exactly and work with formulas, right on your computer
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T842000463"] = "Mathematik: Die KI exakt rechnen und mit Formeln arbeiten lassen, direkt auf Ihrem Rechner"
 
 -- Use no data sources, when sending an assistant result to a chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::SENDTOCHATDATASOURCEBEHAVIOREXTENSIONS::T1223925477"] = "Keine Datenquellen vorauswählen, wenn ein Ergebnis von einem Assistenten an einen neuen Chat gesendet wird"
@@ -16499,6 +16514,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- Lets the AI search your mailboxes, list mails by sender, date, or flags, and quote what they say.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::SEARCHMAILSTOOL::T553285901"] = "Ermöglicht der KI, Ihre Postfächer zu durchsuchen, E-Mails nach Absender, Datum oder Status wie ungelesen oder gekennzeichnet aufzulisten und daraus zu zitieren."
+
+-- Lets the AI calculate exactly instead of guessing digits, e.g., fractions, roots, or integrals, and check an equation. Everything is computed on your computer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MATHEMATICS::CALCULATETOOL::T1801415227"] = "Ermöglicht der KI, etwa Brüche, Wurzeln oder Integrale exakt zu berechnen, statt Ziffern zu raten, und Gleichungen zu prüfen. Alle Berechnungen laufen auf Ihrem Rechner."
+
+-- Calculate
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MATHEMATICS::CALCULATETOOL::T3960340175"] = "Berechnen"
+
+-- Lets the AI work with formulas: simplify and factor them, differentiate and integrate them, take limits, and solve equations. Every result is checked numerically where possible, right on your computer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MATHEMATICS::COMPUTESYMBOLICALLYTOOL::T1552482768"] = "Ermöglicht der KI, mit Formeln zu arbeiten: sie zu vereinfachen und zu faktorisieren, abzuleiten und zu integrieren, Grenzwerte zu berechnen und Gleichungen zu lösen. Jedes Ergebnis wird, wo möglich, numerisch geprüft, direkt auf Ihrem Rechner."
+
+-- Compute Symbolically
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MATHEMATICS::COMPUTESYMBOLICALLYTOOL::T3797998120"] = "Symbolisch berechnen"
+
+-- Mathematics
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MATHEMATICS::MATHEMATICSTOOLCOLLECTION::T3403411261"] = "Mathematik"
+
+-- Lets the AI calculate exactly and work with formulas, such as solving equations or checking an integral, right on your computer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MATHEMATICS::MATHEMATICSTOOLCOLLECTION::T3783381480"] = "Ermöglicht der KI, exakt zu rechnen und mit Formeln zu arbeiten, etwa Gleichungen zu lösen oder ein Integral zu prüfen, direkt auf Ihrem Rechner."
 
 -- This chat holds internal content, such as e-mails, wiki pages, or internal web pages, so it may only read pages of the wiki and of the allowed private hosts configured in AI Studio. The requested address is not one of them. A new chat can read other web pages again.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1012489816"] = "Dieser Chat enthält interne Inhalte, etwa E-Mails, Wiki-Seiten oder interne Webseiten, und darf deshalb nur Seiten des Wikis und der zulässigen privaten Hosts lesen, die in AI Studio konfiguriert sind. Die angeforderte Adresse gehört nicht dazu. Ein neuer Chat kann wieder andere Webseiten lesen."

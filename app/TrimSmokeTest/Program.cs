@@ -3,7 +3,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace AIStudio.TrimSmokeTest;
 
 /// <summary>
-/// Checks whether a trimmed build can still read and write the JSON of AI Studio, see TrimSmokeTest.csproj.
+/// Checks whether a trimmed build can still read and write the JSON of AI Studio, and compute with the
+/// Mathematics tools, see TrimSmokeTest.csproj.
 /// </summary>
 public static class Program
 {
@@ -28,9 +29,11 @@ public static class Program
             failures.AddRange(JsonContractWalker.FindBrokenContracts(root));
 
         failures.AddRange(JsonRoundTrips.FindLosses());
+        failures.AddRange(MathematicsChecks.FindFailures());
         if (failures.Count is 0)
         {
             Console.WriteLine($"- All {roots.Count} JSON roots can be read and written.");
+            Console.WriteLine("- The Mathematics tools compute what they compute untrimmed.");
             return 0;
         }
 

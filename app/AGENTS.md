@@ -100,6 +100,8 @@ Code which decides something on behalf of a request — whether the classic RAG 
 **Area guide:** `app/MindWork AI Studio/Tools/ToolCallingSystem/AGENTS.md`, with how to add, change, or
 remove a tool and the rules every tool implementation follows.
 
+**Mathematics.** Code which computes with AngouriMath runs inside `MathComputationService.ComputeAsync` and reads expressions with `MathExpressionReader`, never by calling `MathS` or `Entity` on a thread of its own: the service gives it the stack deep expressions need, the time budget, and the settings the tools rely on, such as explicit parsing. Check exact values and expansions with `MathGuards` first, since AngouriMath ignores the cancellation there. Evaluate a value numerically with `NumericEvaluator.EvaluateAt`, not with `EvalNumerical`: by default, AngouriMath takes tiny values, such as those of physical constants, for 0. Never name AngouriMath in a text the model reads, such as a refusal or an issue; write "the tool" instead. See "Mathematics" in `documentation/Tools.md`.
+
 ## Model Capabilities
 
 **Documentation:** `documentation/Models.md`

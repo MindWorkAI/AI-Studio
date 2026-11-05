@@ -1091,6 +1091,7 @@ CONFIG["SETTINGS"] = {}
 -- whole collection or sets its confidence, and of several levels set for a collection and its
 -- tools, the highest applies.
 -- Collection IDs include: mailboxes (search_mails, read_mail, and count_mails; while the mailbox
+-- preview is enabled), mathematics (calculate and compute_symbolically; while the mathematics
 -- preview is enabled)
 
 -- Disable individual tools or tool collections by their stable ID. The default is an empty set.
@@ -1106,10 +1107,12 @@ CONFIG["SETTINGS"] = {}
 -- Configure the minimum provider confidence level required for individual tools or tool
 -- collections.
 -- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
--- Collection IDs include: mailboxes
+-- Collection IDs include: mailboxes, mathematics
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
--- semantic_search = NONE, mailboxes = VERY_LOW
+-- semantic_search = NONE, mailboxes = VERY_LOW, mathematics = NONE
+-- mathematics computes locally and sees nothing but what the model writes into its arguments,
+-- so it needs no minimum of its own.
 -- search_confluence always searches with a HIGH-confidence provider only, whatever value is
 -- set here.
 -- semantic_search offers a provider only the data sources whose own confidence level it meets,
@@ -1120,7 +1123,8 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page"] = "VERY_LOW",
 --     ["search_confluence"] = "HIGH",
 --     ["semantic_search"] = "NONE",
---     ["mailboxes"] = "VERY_LOW"
+--     ["mailboxes"] = "VERY_LOW",
+--     ["mathematics"] = "NONE"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -1564,7 +1568,7 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Collection IDs include: mailboxes
+--     -- Collection IDs include: mailboxes, mathematics
 --     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
 --     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
@@ -1734,7 +1738,7 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Collection IDs include: mailboxes
+--     -- Collection IDs include: mailboxes, mathematics
 --     -- Allowing search_confluence also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --

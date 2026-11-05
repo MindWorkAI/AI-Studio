@@ -2,8 +2,9 @@
 
     <!--
         Checks what only a published build of AI Studio lacks. The trimmer removes code of .NET which System.Text.Json
-        reaches by reflection only, while debug builds and the tests are not trimmed. Hence, this program has to run
-        published, trimmed by the same Trimming.props as the app; `dotnet run verify` does both.
+        reaches by reflection only, and the same holds for AngouriMath, which is marked as trimmable, while debug builds
+        and the tests are not trimmed. Hence, this program has to run published, trimmed by the same Trimming.props as
+        the app; `dotnet run verify` does both.
     -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>

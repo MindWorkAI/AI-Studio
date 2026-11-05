@@ -116,7 +116,7 @@ Three methods of the registry translate between both views:
 - `ToolRegistry.ExpandSelection` turns a selection into the tools which run. Preparing a request, counting its tokens, the security card of an assistant plugin, and its audit use it, because they are about what the model reads.
 - `ToolRegistry.GetCollectionId` names the collection of a tool.
 
-The settings of a tool stay with the tool, also inside a collection. An organization addresses them by `"<toolId>.<fieldName>"`, and the settings dialog of a collection shows one section per tool. `mailboxes` is the only declared collection so far, with `search_mails`, `read_mail`, and `count_mails`.
+The settings of a tool stay with the tool, also inside a collection. An organization addresses them by `"<toolId>.<fieldName>"`, and the settings dialog of a collection shows one section per tool. The declared collections so far are `mailboxes`, with `search_mails`, `read_mail`, and `count_mails`, and `mathematics`, with `calculate` and `compute_symbolically`.
 
 ## Switched-Off Tools
 
@@ -252,6 +252,60 @@ The tools offer the mailboxes which `MailboxRetrievalService.GetReadableMailboxe
 Mails are written by others. Everything of a mail which reaches the model, from the subject and the addresses to the passages and the names of attachments, goes through one `PromptInjectionGuardService` batch per call, as `PromptInjectionSource.MailContent`. Only the mailboxes whose content reached the model raise the requirements of the chat; of several, the strictest restriction wins, and the first mailbox demanding it is named. An organization's `DataMailboxes.MinimumOutboundDataRestriction` tightens a mailbox whose own level is less strict. Found and read mails become sources under `mailbox://<mailbox ID>/<mail ID>`, which the sources list shows as text without a link, see `SourceExtensions.IsMailSource`. AI Studio cannot read an encrypted mail, only its header, and the instructions tell the model to say so rather than guess.
 
 Logs name a mailbox and its ID, never a subject, a sender or recipient, a folder, or an attachment. `ToolExecutor` logs the message of every exception, so a mail tool must not throw with such a value either. A `folder` or a `special_folder` the mailboxes do not know is therefore answered in the result, together with the folders to choose from, rather than refused by an exception.
+
+## Mathematics
+
+`calculate` and `compute_symbolically` form the collection `mathematics`, behind the preview `PRE_MATHEMATICS_2026`. Both compute locally with AngouriMath, through the classes in `Tools/Mathematics/`. Nothing leaves AI Studio, so their `OutboundData` is `NONE`, and the collection asks for no provider confidence.
+
+- `calculate` evaluates an expression without free variables: exactly, where the value is rational, and as a decimal with up to 100 significant digits, 20 by default. An expression with `=` evaluates both sides and says in how many digits they agree.
+- `compute_symbolically` simplifies, expands, or factors an expression, differentiates it, integrates it with or without bounds, takes a limit, or solves an equation or an inequality. It refuses every argument which the operation does not use.
+
+### Syntax
+
+Both tools read plain syntax, not LaTeX, which `CalculateTool.SYNTAX` describes for both schemas. The chat renders LaTeX, so each result carries a LaTeX version besides. `MathExpressionReader` parses with `ExplicitParsingOnly`: otherwise AngouriMath reads `x2` as `x^2` and `foo(3)` as `foo * 3`, and the model would get an answer to a question it did not ask. Before parsing, the reader refuses what AngouriMath reads differently from what a model means: `!=`, which AngouriMath reads as `a! = b`, while not-equal is `<>`; `|`, which means "divides"; the variable `oo`, while infinity is `+oo` or `-oo`; and more than one `=`. It shortens the parser's messages, which list over 1,000 characters of tokens, to the column and the cause.
+
+Every decimal literal is the fraction it writes, so `0.1 + 0.2` is exactly `3/10` and `6.62607015e-34` is exactly `132521403/200000000000000000000000000000000000000000`. AngouriMath alone does that for some literals only: it downcasts while parsing, keeps `6.62607015e-34` an inexact decimal, and reads `1e-60` as `0`. Simplifying then drops an inexact decimal from a sum, so `1 + 1e-40` would be exactly `1`. The reader therefore parses without downcasting and without AngouriMath's cache of parsed expressions, and turns each literal into its fraction itself.
+
+AngouriMath computes `sum(f, k, a, b)` only in closed form, as for powers of `k`, so `sum(k, k, 1, 10^7)` takes no time, while `sum(1/k, k, 1, 1000)` has no value. Such a sum, an infinite one, or a matrix is refused by `NumericEvaluator` in its own words, since AngouriMath's message addresses a developer.
+
+No text the model reads names AngouriMath: neither the instructions and schemas of the tools, nor a refusal or an issue. Where a sentence needs someone who computes, it says "the tool", as in "The tool found no closed form for this integral.": a model would take the name of the library for something it may call or look up. The tests of both tools check their definitions for it.
+
+### Honest Digits
+
+A decimal shows only the digits the computation vouches for. `NumericEvaluator` evaluates twice, with 10 and with 20 guard digits, and keeps the digits in which both agree, because composite expressions lose a digit or two at the end. When fewer digits remain than were asked for, `issues` says so.
+
+Tiny values need care, as with the Planck constant. By default, AngouriMath downcasts while evaluating, too, and takes a value such as `1.380649e-23 * 300` for the integer `0`. `NumericEvaluator.EvaluateAt` evaluates without downcasting. Then AngouriMath rounds a quotient to as many decimal places as the precision has digits, so the precision grows by the leading zeros of the smallest fraction and of the value, up to 1,000 digits. Simplifying, too, takes a tiny value for `0`: below about `1e-1000`, or near the precision where it evaluates a function. An exact `0` is therefore checked numerically. Rounding noise, as for `sin(pi)`, changes with the precision; a tiny value keeps its digits and is reported as a decimal instead. A `0` that remains after 1,000 digits without being exact comes with a note in `issues` that it may stand for a tiny value.
+
+A definite integral always goes to `DoubleExponentialQuadrature`, never through an antiderivative, which gives wrong values when it jumps between the bounds, and never through `Evaled`, which turns constants into decimals even inside an integral it cannot solve. The quadrature works with doubles and estimates its error. The result is then `approximate`, with its `estimated_error`, and its digits drop to what the error allows, mostly 12 to 15. An integral which does not settle, or which has no finite value at a point, is refused rather than answered with a wrong number.
+
+### Checking Symbolic Results
+
+A symbolic answer is only as good as the library which gave it, and AngouriMath changes answers between releases. `compute_symbolically` therefore checks each result numerically where it can, and reports `passed`, `failed`, or `not_possible` in `verification`:
+
+- `simplify`, `expand`, and `factor`: the expression and the result are equal.
+- `differentiate`: each order agrees with a central difference of the order before, at 60 digits.
+- `integrate` without bounds: the derivative of the antiderivative is the integrand.
+- `integrate` with bounds: the value agrees with the quadrature.
+- `solve`: each solution satisfies the equation.
+- `limit`: not checked.
+
+`NumericCheck` compares at six fixed sample points. They are exact rationals, so a polynomial is evaluated exactly, however much the terms of its expansion cancel; everything else is evaluated at 50 digits, without downcasting. Two values agree within a relative tolerance, so tiny values, such as those of a formula with physical constants, are still told apart. Against `0`, the tolerance is absolute, because terms which cancel leave their rounding noise. The points are fixed, so the same call always gets the same verdict. Parameters which AngouriMath brings into a solution, such as `n_1` for any integer, take integer values there. Where AngouriMath finds no closed form, `complete` is false, and `result` still holds the integral, the limit, or the equation.
+
+### Limits
+
+AngouriMath does not stop every computation when asked to: `9^9^9`, `(10^9)!`, and the expansion of `(x+y)^500` run on whatever the cancellation token says. `MathGuards` therefore refuses before computing what would take too long. That is a power or a factorial whose exact value would have more than 20,000 digits, estimated from the inside out, and a power of a sum with an exponent above 200, wherever AngouriMath may expand it. An expression has at most 2,000 characters, and a result at most 20,000.
+
+`MathComputationService` runs every computation on a thread of its own with a stack of 64 MB. About 500 nested parentheses overflow the stack of a thread pool thread, and that ends the process. There, it switches off Newton's method for `solve`, whose inexact doubles would pass for exact solutions. It hands the cancellation to AngouriMath. The service has one slot, and a computation gets 10 seconds. The slot becomes free when the computation ends, not when the call gives up: a computation which does not stop holds up the next ones rather than taking more cores.
+
+### Why There Is No Prompt Injection Filter
+
+The tools open no path for content from outside AI Studio. A result holds the expression of the model as AngouriMath read it, and values computed from it; even a parse error repeats only the input of the model. Neither tool calls `PromptInjectionGuardService` or declares `ReturnsUntrustedExternalContent`. A tool of this collection which reads anything else, such as a file, would need both.
+
+### AngouriMath
+
+`AngouriMathBehaviorTests` pins the behavior of AngouriMath which the tools build on, such as the traps of the parser, the digits of its functions, and the computations which ignore cancellation. The version is pinned exactly by `packages.lock.json`. Before raising it, read the release notes for silent breaking changes, and run these tests.
+
+AngouriMath is marked as trimmable, so a published build of AI Studio contains only the parts of it which the trimmer saw being used, and `Trimming.props` suppresses the warnings about the others. The trim smoke test of `dotnet run verify` therefore lets both tools compute a few expressions in a trimmed build, see `MathematicsChecks` in `app/TrimSmokeTest`. When a tool starts to use another part of AngouriMath, such as a new operation, add a check there.
 
 ## Checklist
 
