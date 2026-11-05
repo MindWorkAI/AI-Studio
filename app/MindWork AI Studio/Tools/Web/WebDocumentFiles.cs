@@ -14,7 +14,8 @@ namespace AIStudio.Tools.Web;
 /// the content alone, which is the one thing a server cannot get wrong.<br/><br/>
 /// The files live in a directory of their own within the data directory, as the files of mail
 /// attachments do, so deleting what a crash left behind touches no file of another program. That
-/// happens before every download, for files older than any download and extraction may take, so a
+/// happens before the first download after the start and then once per LEFTOVER_AGE at most, see
+/// WebDocumentReader.CreatePath, for files older than any download and extraction may take, so a
 /// read which is still running keeps its file.
 /// </remarks>
 /// <param name="directory">The directory the files lie in.</param>
@@ -26,7 +27,7 @@ public sealed class WebDocumentFiles(string directory)
     /// The age from which a file counts as left behind. Well beyond the longest download and the
     /// longest extraction together.
     /// </summary>
-    private static readonly TimeSpan LEFTOVER_AGE = TimeSpan.FromHours(1);
+    internal static readonly TimeSpan LEFTOVER_AGE = TimeSpan.FromHours(1);
 
     /// <summary>
     /// The files within the data directory of AI Studio, or null while it is not known yet.

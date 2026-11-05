@@ -42,6 +42,11 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
     /// </summary>
     public IReadOnlyList<IReadOnlyList<string>> FilteredBatches => [..this.filteredBatches];
 
+    /// <summary>
+    /// How long reading a file takes before its text arrives, for a test of a timeout.
+    /// </summary>
+    public TimeSpan ReadDelay { get; set; } = TimeSpan.Zero;
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var uri = request.RequestUri!;
@@ -51,6 +56,7 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
                 var query = HttpUtility.ParseQueryString(uri.Query);
                 var path = query["path"] ?? string.Empty;
                 this.readFiles.Enqueue(path);
+                await Task.Delay(this.ReadDelay, cancellationToken);
 
                 var content = await File.ReadAllTextAsync(path, cancellationToken);
                 return Answer(this.StreamFile(query["stream_id"] ?? string.Empty, content), "text/event-stream");

@@ -31,6 +31,8 @@ public sealed class SearchHitReaderTests
     private RustService rustService = null!;
     private ServiceProvider serviceProvider = null!;
     private IServiceProvider previousServiceProvider = null!;
+    private PromptInjectionGuardService guardService = null!;
+    private ToolSettingsService toolSettingsService = null!;
     private SearchHitReader reader = null!;
 
     [SetUp]
@@ -39,14 +41,14 @@ public sealed class SearchHitReaderTests
         this.runtime = new FakeRuntime(SUSPICIOUS_PASSAGE);
         this.rustService = new RustService(this.runtime);
         var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, this.rustService);
-        var guardService = new PromptInjectionGuardService(this.rustService, settingsManager, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance);
-        var toolSettingsService = new ToolSettingsService(settingsManager, this.rustService, NullLogger<ToolSettingsService>.Instance);
+        this.guardService = new PromptInjectionGuardService(this.rustService, settingsManager, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance);
+        this.toolSettingsService = new ToolSettingsService(settingsManager, this.rustService, NullLogger<ToolSettingsService>.Instance);
 
         this.previousServiceProvider = Program.SERVICE_PROVIDER;
-        this.serviceProvider = new ServiceCollection().AddSingleton(guardService).AddSingleton(settingsManager).BuildServiceProvider();
+        this.serviceProvider = new ServiceCollection().AddSingleton(this.guardService).AddSingleton(settingsManager).BuildServiceProvider();
         Program.SERVICE_PROVIDER = this.serviceProvider;
 
-        this.reader = new SearchHitReader(new WebPageRetrievalService(new HTMLParser()), guardService, toolSettingsService, NullLogger<SearchHitReader>.Instance);
+        this.reader = new SearchHitReader(new WebPageRetrievalService(new HTMLParser()), this.guardService, this.toolSettingsService, NullLogger<SearchHitReader>.Instance);
     }
 
     [TearDown]
@@ -114,6 +116,31 @@ public sealed class SearchHitReaderTests
             Assert.That(contents[0].Markdown, Is.Empty);
             Assert.That(contents[1].Failure, Is.Null, "The other hits are read all the same.");
         });
+    }
+
+    [Test]
+    public async Task AnUnexpectedFailureCostsThatHitOnly()
+    {
+        using var server = new LoopbackWebServer(document: new("application/pdf", System.Text.Encoding.UTF8.GetBytes("The travel guideline.")));
+
+        // A folder for documents which the file system refuses, so the document fails in a way no page does:
+        var documentReader = new WebDocumentReader(this.rustService, NullLogger<WebDocumentReader>.Instance, new WebDocumentFiles("invalid\0folder"));
+        var reader = new SearchHitReader(new WebPageRetrievalService(new HTMLParser(), documentReader), this.guardService, this.toolSettingsService, NullLogger<SearchHitReader>.Instance);
+
+        var contents = await reader.ReadAsync([server.Address("/document"), server.Address("/page")], 10_000, (_, documents) => Options(documents));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(contents[0].Failure, Is.EqualTo("The hit could not be read."), "The search was read, and one hit must not cost it.");
+            Assert.That(contents[1].Failure, Is.Null, "The other hits are read all the same.");
+        });
+    }
+
+    [Test]
+    public void AFailureOfTheFileSystemNamesNoPath()
+    {
+        var failure = SearchHitReader.GetFailure(new UnauthorizedAccessException(@"Access to the path 'C:\Users\someone\webDocuments\1234' is denied."));
+        Assert.That(failure, Does.Not.Contain("someone"), "The model must not learn the paths of this computer.");
     }
 
     [Test]

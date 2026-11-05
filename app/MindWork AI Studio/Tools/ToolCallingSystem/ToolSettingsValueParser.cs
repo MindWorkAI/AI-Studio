@@ -2,36 +2,14 @@ namespace AIStudio.Tools.ToolCallingSystem;
 
 internal static class ToolSettingsValueParser
 {
-    public static int? ReadOptionalPositiveInt(IReadOnlyDictionary<string, string> settingsValues, string key)
-    {
-        if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
-            return null;
-
-        return int.TryParse(value, out var parsedValue) && parsedValue > 0 ? parsedValue : null;
-    }
+    public static int? ReadOptionalPositiveInt(IReadOnlyDictionary<string, string> settingsValues, string key) => ReadOptionalInt(settingsValues, key, minimum: 1);
 
     public static bool TryReadOptionalPositiveInt(
         IReadOnlyDictionary<string, string> settingsValues,
         string key,
         string invalidValueErrorFormat,
         out int? value,
-        out string error)
-    {
-        value = null;
-        error = string.Empty;
-
-        if (!settingsValues.TryGetValue(key, out var rawValue) || string.IsNullOrWhiteSpace(rawValue))
-            return true;
-
-        if (int.TryParse(rawValue, out var parsedValue) && parsedValue > 0)
-        {
-            value = parsedValue;
-            return true;
-        }
-
-        error = string.Format(invalidValueErrorFormat, key);
-        return false;
-    }
+        out string error) => TryReadOptionalInt(settingsValues, key, minimum: 1, invalidValueErrorFormat, out value, out error);
 
     public static bool TryReadBoundedOptionalPositiveInt(
         IReadOnlyDictionary<string, string> settingsValues,
@@ -40,29 +18,13 @@ internal static class ToolSettingsValueParser
         string invalidValueErrorFormat,
         string maximumErrorFormat,
         out int? value,
-        out string error)
-    {
-        if (!TryReadOptionalPositiveInt(settingsValues, key, invalidValueErrorFormat, out value, out error))
-            return false;
-
-        if (value is null || value <= maximum)
-            return true;
-
-        error = string.Format(maximumErrorFormat, key, maximum);
-        return false;
-    }
+        out string error) => TryReadBoundedOptionalInt(settingsValues, key, minimum: 1, maximum, invalidValueErrorFormat, maximumErrorFormat, out value, out error);
 
     /// <summary>
     /// Reads an optional count which may be zero, such as a number of items where zero switches
     /// something off. Null when it is not set or cannot be read.
     /// </summary>
-    public static int? ReadOptionalNonNegativeInt(IReadOnlyDictionary<string, string> settingsValues, string key)
-    {
-        if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
-            return null;
-
-        return int.TryParse(value, out var parsedValue) && parsedValue >= 0 ? parsedValue : null;
-    }
+    public static int? ReadOptionalNonNegativeInt(IReadOnlyDictionary<string, string> settingsValues, string key) => ReadOptionalInt(settingsValues, key, minimum: 0);
 
     /// <summary>
     /// Checks an optional count which may be zero and has an upper bound, see ReadOptionalNonNegativeInt.
@@ -75,19 +37,54 @@ internal static class ToolSettingsValueParser
         int maximum,
         string invalidValueErrorFormat,
         string maximumErrorFormat,
+        out string error) => TryReadBoundedOptionalInt(settingsValues, key, minimum: 0, maximum, invalidValueErrorFormat, maximumErrorFormat, out _, out error);
+
+    private static int? ReadOptionalInt(IReadOnlyDictionary<string, string> settingsValues, string key, int minimum)
+    {
+        if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return int.TryParse(value, out var parsedValue) && parsedValue >= minimum ? parsedValue : null;
+    }
+
+    private static bool TryReadOptionalInt(
+        IReadOnlyDictionary<string, string> settingsValues,
+        string key,
+        int minimum,
+        string invalidValueErrorFormat,
+        out int? value,
         out string error)
     {
+        value = null;
         error = string.Empty;
-        if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+
+        if (!settingsValues.TryGetValue(key, out var rawValue) || string.IsNullOrWhiteSpace(rawValue))
             return true;
 
-        if (!int.TryParse(value, out var parsedValue) || parsedValue < 0)
+        if (int.TryParse(rawValue, out var parsedValue) && parsedValue >= minimum)
         {
-            error = string.Format(invalidValueErrorFormat, key);
-            return false;
+            value = parsedValue;
+            return true;
         }
 
-        if (parsedValue <= maximum)
+        error = string.Format(invalidValueErrorFormat, key);
+        return false;
+    }
+
+    private static bool TryReadBoundedOptionalInt(
+        IReadOnlyDictionary<string, string> settingsValues,
+        string key,
+        int minimum,
+        int maximum,
+        string invalidValueErrorFormat,
+        string maximumErrorFormat,
+        out int? value,
+        out string error)
+    {
+        if (!TryReadOptionalInt(settingsValues, key, minimum, invalidValueErrorFormat, out value, out error))
+            return false;
+
+        if (value is null || value <= maximum)
             return true;
 
         error = string.Format(maximumErrorFormat, key, maximum);

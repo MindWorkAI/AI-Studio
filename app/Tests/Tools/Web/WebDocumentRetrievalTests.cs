@@ -69,9 +69,9 @@ public sealed class WebDocumentRetrievalTests
 
     private static LoopbackDocument Pdf(string text, string? fileName = null) => new("application/pdf", Encoding.UTF8.GetBytes(text), fileName);
 
-    private static WebPageRetrievalOptions Options(Func<Uri, bool, bool>? isAllowed = null, long maxBytes = 1024 * 1024, int maxCharacters = 10_000) => new()
+    private static WebPageRetrievalOptions Options(Func<Uri, bool, bool>? isAllowed = null, long maxBytes = 1024 * 1024, int maxCharacters = 10_000, int timeoutSeconds = 10) => new()
     {
-        TimeoutSeconds = 10,
+        TimeoutSeconds = timeoutSeconds,
         TargetChosenByUser = true,
         Documents = new WebDocumentOptions
         {
@@ -130,6 +130,49 @@ public sealed class WebDocumentRetrievalTests
         var retrieved = await this.service.RetrieveAsync(server.Address("/document"), Options());
 
         Assert.That(retrieved.ExtractedPage.Markdown, Is.EqualTo(DOCUMENT_TEXT));
+    }
+
+    [Test]
+    public async Task WithoutAMediaTypeAnAddressNamingADocumentIsReadAsOne()
+    {
+        using var server = new LoopbackWebServer(document: new(string.Empty, Encoding.UTF8.GetBytes(DOCUMENT_TEXT)));
+
+        var retrieved = await this.service.RetrieveAsync(server.Address("/document.pdf"), Options());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(retrieved.ContentKind, Is.EqualTo(WebContentKind.DOCUMENT), "A server which names no media type still names the file.");
+            Assert.That(retrieved.ExtractedPage.Markdown, Is.EqualTo(DOCUMENT_TEXT));
+        });
+    }
+
+    [Test]
+    public async Task WithoutAMediaTypeAnyOtherAddressIsReadAsAPage()
+    {
+        using var server = new LoopbackWebServer(document: new(string.Empty, Encoding.UTF8.GetBytes("<html><body><main><p>The travel policy of the intranet.</p></main></body></html>")));
+
+        var retrieved = await this.service.RetrieveAsync(server.Address("/document"), Options());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(retrieved.ContentKind, Is.EqualTo(WebContentKind.HTML_PAGE), "A response without a media type is a page, as before.");
+            Assert.That(this.runtime.ReadFiles, Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task ReadingTheTextHasTheTimeoutOfTheRequest()
+    {
+        using var server = new LoopbackWebServer(document: Pdf(DOCUMENT_TEXT));
+        this.runtime.ReadDelay = TimeSpan.FromSeconds(30);
+
+        var exception = await Assert.ThrowsAsync<TimeoutException>(() => this.service.RetrieveAsync(server.Address("/document"), Options(timeoutSeconds: 1)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(exception!.Message, Does.Contain("1 seconds"), "The runtime's own timeout of several minutes would hold up the chat far longer.");
+            Assert.That(this.LeftAFileBehind(), Is.False);
+        });
     }
 
     [Test]

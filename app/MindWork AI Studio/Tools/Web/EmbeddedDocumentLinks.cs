@@ -49,11 +49,23 @@ internal static class EmbeddedDocumentLinks
     /// </summary>
     /// <param name="root">The node whose descendants are replaced.</param>
     /// <param name="baseUrl">The address relative ones are resolved against.</param>
+    /// <remarks>
+    /// Outer elements come first: one which holds a document becomes a link together with its
+    /// fallback content. An element nested in one which holds none, such as a frame inside an object
+    /// of another kind, places its link before the outermost of them, since the extraction removes
+    /// that one with everything inside.
+    /// </remarks>
     public static void ReplaceWithLinks(HtmlNode root, Uri baseUrl)
     {
-        foreach (var node in root.Descendants().Where(node => node.Name is "iframe" or "embed" or "object").Reverse().ToList())
+        var replaced = new HashSet<HtmlNode>();
+        foreach (var node in root.Descendants().Where(IsEmbedding).ToList())
         {
-            if (node.ParentNode is not { } parent || FindDocumentUrl(node, baseUrl) is not { } documentUrl)
+            // Gone with an outer element which already became a link:
+            if (node.Ancestors().Any(replaced.Contains) || FindDocumentUrl(node, baseUrl) is not { } documentUrl)
+                continue;
+
+            var outermost = node.Ancestors().TakeWhile(ancestor => ancestor != root).LastOrDefault(IsEmbedding) ?? node;
+            if (outermost.ParentNode is not { } parent)
                 continue;
 
             var link = HtmlNode.CreateNode("<p><a></a></p>");
@@ -61,9 +73,13 @@ internal static class EmbeddedDocumentLinks
             // Escaped, because ToString() would turn %20 back into a space, which ends an address:
             anchor.SetAttributeValue("href", documentUrl.AbsoluteUri);
             anchor.InnerHtml = WebUtility.HtmlEncode($"Embedded document: {GetLinkText(node, documentUrl)}");
-            parent.ReplaceChild(link, node);
+            parent.InsertBefore(link, outermost);
+            node.Remove();
+            replaced.Add(node);
         }
     }
+
+    private static bool IsEmbedding(HtmlNode node) => node.Name is "iframe" or "embed" or "object";
 
     /// <summary>
     /// The address of the document an element embeds, or null when it embeds none.
@@ -93,7 +109,10 @@ internal static class EmbeddedDocumentLinks
         return null;
     }
 
-    private static bool NamesDocument(string path) => DOCUMENT_EXTENSIONS.Contains(Path.GetExtension(Uri.UnescapeDataString(path)));
+    /// <summary>
+    /// Whether the file name of an address path has the extension of a document, such as .pdf.
+    /// </summary>
+    internal static bool NamesDocument(string path) => DOCUMENT_EXTENSIONS.Contains(Path.GetExtension(Uri.UnescapeDataString(path)));
 
     private static bool TryResolve(Uri baseUrl, string value, [NotNullWhen(true)] out Uri? url) =>
         Uri.TryCreate(baseUrl, value, out url) && url is { Scheme: "http" or "https" };

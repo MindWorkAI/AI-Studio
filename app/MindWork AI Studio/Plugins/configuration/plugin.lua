@@ -1185,7 +1185,8 @@ CONFIG["SETTINGS"] = {}
 --   minContentCharactersPerResult    Per-result content allocation.
 --
 -- Field names of the Read Web Page tool:
---   timeoutSeconds        Page-loading timeout in seconds.
+--   timeoutSeconds        Page-loading timeout in seconds. Reading the text of a document has the
+--                         same timeout once more.
 --   maxContentCharacters  Content-character limit.
 --   freeAddressChoice     Whether the AI may read web addresses it chose itself. Allowed values are:
 --                           OFF -> the AI reads only addresses which appear in the chat, such as in
@@ -1247,8 +1248,9 @@ CONFIG["SETTINGS"] = {}
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
 --   readTopHits      How many of the best results the search reads right away, wiki pages and
 --                    attachments alike, as an integer string from 0 to 10. Default: 5, as many as
---                    web_search reads. 0 switches this off. Only results within the wiki are read,
---                    and documents follow read_web_page.documentAccess and
+--                    web_search reads. 0 switches this off, and so does switching read_web_page
+--                    off, since these are the pages it would read. Only results within the wiki
+--                    are read, and documents follow read_web_page.documentAccess and
 --                    read_web_page.maxDocumentMegabytes.
 --   maxHitContentCharacters
 --                    How many characters of content these results bring together, at most 200000.

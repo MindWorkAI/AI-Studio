@@ -1,3 +1,5 @@
+using AIStudio.Tools.Security;
+
 namespace AIStudio.Tools.Web;
 
 /// <summary>
@@ -24,4 +26,10 @@ public sealed class WebDocumentOptions
     /// How many characters of its text are kept at most, see FileExtractionResult.IsCutAtCharacterLimit.
     /// </summary>
     public required int MaxCharacters { get; init; }
+
+    /// <summary>
+    /// The action the document is read for, so the user hears of what the runtime filtered out of
+    /// it together with the rest of that action. Null reports it right away.
+    /// </summary>
+    public PromptInjectionReportingScope? ReportingScope { get; init; }
 }

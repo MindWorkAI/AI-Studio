@@ -76,9 +76,14 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// Also what a search applies when it reads its best hits itself, see SearchHitReader: the
     /// documents it reads are the ones this tool would read, and an organization sets them once.
     /// </remarks>
-    internal static async Task<(DocumentAccess Access, long MaxBytes)> ReadDocumentSettingsAsync(ToolSettingsService toolSettingsService)
+    internal static async Task<(DocumentAccess Access, long MaxBytes)> ReadDocumentSettingsAsync(ToolSettingsService toolSettingsService) =>
+        ReadDocumentSettings(await toolSettingsService.GetSettingsAsync(CreateDefinition()));
+
+    /// <summary>
+    /// From where documents are read and how large they may be, read from the stored values of this tool.
+    /// </summary>
+    private static (DocumentAccess Access, long MaxBytes) ReadDocumentSettings(IReadOnlyDictionary<string, string> settingsValues)
     {
-        var settingsValues = await toolSettingsService.GetSettingsAsync(CreateDefinition());
         var maxDocumentMegabytes = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(settingsValues, MAX_DOCUMENT_MEGABYTES_SETTING) ?? DEFAULT_MAX_DOCUMENT_MEGABYTES, MAX_DOCUMENT_MEGABYTES);
         return (ReadDocumentAccess(settingsValues.GetValueOrDefault(DOCUMENT_ACCESS_SETTING)), maxDocumentMegabytes * 1024L * 1024L);
     }
@@ -531,8 +536,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         var timeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, TIMEOUT_SECONDS_SETTING) ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
         var maxContentCharacters = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, MAX_CONTENT_CHARACTERS_SETTING) ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
-        var maxDocumentMegabytes = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, MAX_DOCUMENT_MEGABYTES_SETTING) ?? DEFAULT_MAX_DOCUMENT_MEGABYTES, MAX_DOCUMENT_MEGABYTES);
-        var documentAccess = ReadDocumentAccess(context.SettingsValues.GetValueOrDefault(DOCUMENT_ACCESS_SETTING));
+        var (documentAccess, maxDocumentBytes) = ReadDocumentSettings(context.SettingsValues);
 
         // Whatever the restriction, the wiki decides which content is internal:
         var configuredWiki = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService) : wiki;
@@ -544,6 +548,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             timeoutSeconds,
             maxContentCharacters);
 
+        // A document is filtered while the runtime reads it and its fields once more below; the user hears of both together:
+        await using var reportingScope = promptInjectionGuardService.BeginAction();
         RetrievedWebPage retrievedPage;
         try
         {
@@ -563,8 +569,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                     Documents = new WebDocumentOptions
                     {
                         IsAllowed = (finalUrl, reachedNonPublicAddress) => MayReadDocument(documentAccess, finalUrl, reachedNonPublicAddress, configuredWiki, context.ProviderConfidence),
-                        MaxBytes = maxDocumentMegabytes * 1024L * 1024L,
+                        MaxBytes = maxDocumentBytes,
                         MaxCharacters = maxContentCharacters,
+                        ReportingScope = reportingScope,
                     },
                 },
                 token);
@@ -627,7 +634,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         var modelContent = await WebPageContentSanitizer.SanitizeAsync(
             promptInjectionGuardService,
             WebPageModelContent.From(extractedPage, markdown),
-            PromptInjectionSource.WebContent(page.FinalUrl.ToString()));
+            PromptInjectionSource.WebContent(page.FinalUrl.ToString()),
+            reportingScope);
 
         logger.LogInformation(
             "Completed web page retrieval. ToolCallId={ToolCallId}, RequestedUrl={RequestedUrl}, FinalUrl={FinalUrl}, WasRedirected={WasRedirected}, ContentType={ContentType}, OriginalContentCharacters={OriginalContentCharacters}, ReturnedContentCharacters={ReturnedContentCharacters}, ContentTruncated={ContentTruncated}, RequiredProviderConfidence={RequiredProviderConfidence}",

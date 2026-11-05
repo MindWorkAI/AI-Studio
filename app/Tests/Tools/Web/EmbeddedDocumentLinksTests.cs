@@ -67,6 +67,20 @@ public sealed class EmbeddedDocumentLinksTests
     }
 
     [Test]
+    public void ADocumentInsideAnotherEmbeddingKeepsItsLink()
+    {
+        var markdown = ExtractMarkdown("""<object data="/player/viewer.swf"><iframe src="/files/guideline.pdf" title="Guideline"></iframe></object>""");
+        Assert.That(markdown, Does.Contain("[Embedded document: Guideline](https://intranet.example.org/files/guideline.pdf)"), "The outer object holds no document and is removed, but the link to the document inside must not go with it.");
+    }
+
+    [Test]
+    public void AnEmbeddedDocumentWithAFallbackBecomesOneLink()
+    {
+        var markdown = ExtractMarkdown("""<object data="/files/guideline.pdf" type="application/pdf" title="Guideline"><embed src="/files/guideline.pdf"></object>""");
+        Assert.That(markdown.Split("Embedded document").Length - 1, Is.EqualTo(1), "The fallback inside shows the same document and goes with the outer link.");
+    }
+
+    [Test]
     public void AScriptAddressNeverBecomesALink()
     {
         var markdown = ExtractMarkdown("""<iframe src="javascript:alert('x.pdf')"></iframe>""");

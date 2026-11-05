@@ -277,16 +277,21 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
         if (markdown.Length > MAX_CONTENT_CHARACTERS)
             markdown = MarkdownTruncator.Truncate(markdown, MAX_CONTENT_CHARACTERS);
 
+        // The search page and the results read along are one search, which the user hears of once:
+        await using var reportingScope = promptInjectionGuardService.BeginAction();
         var modelContent = await WebPageContentSanitizer.SanitizeAsync(
             promptInjectionGuardService,
             WebPageModelContent.From(retrievedPage.ExtractedPage, markdown),
-            PromptInjectionSource.WebContent(page.FinalUrl.ToString()));
+            PromptInjectionSource.WebContent(page.FinalUrl.ToString()),
+            reportingScope);
 
         //
         // The best results are read right away, under the rules of the search itself, so the
-        // model needs no call of Read Web Page per result:
+        // model needs no call of Read Web Page per result. That reads what Read Web Page would,
+        // so nothing is read once the user or the organization switched that tool off:
         //
-        var hitsToRead = Math.Min(ToolSettingsValueParser.ReadOptionalNonNegativeInt(context.SettingsValues, READ_TOP_HITS_SETTING) ?? SearchHitReader.DEFAULT_HITS_TO_READ, SearchHitReader.MAX_HITS_TO_READ);
+        var mayReadHits = Program.SERVICE_PROVIDER.GetRequiredService<ToolRegistry>().IsToolActive(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID);
+        var hitsToRead = mayReadHits ? Math.Min(ToolSettingsValueParser.ReadOptionalNonNegativeInt(context.SettingsValues, READ_TOP_HITS_SETTING) ?? SearchHitReader.DEFAULT_HITS_TO_READ, SearchHitReader.MAX_HITS_TO_READ) : 0;
         var hitContentCharacters = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, MAX_HIT_CONTENT_CHARACTERS_SETTING) ?? SearchHitReader.DEFAULT_CONTENT_CHARACTERS, SearchHitReader.MAX_CONTENT_CHARACTERS);
         List<Uri> hitUrls = hitsToRead is 0 ? [] : FindHitUrls(page.Body, baseUrl, page.FinalUrl).Take(hitsToRead).ToList();
         var readContents = await searchHitReader.ReadAsync(hitUrls, hitContentCharacters, (_, documents) => new WebPageRetrievalOptions
@@ -297,7 +302,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             IsPrivateHostAllowed = host => IsWikiHost(baseUrl, host),
             IsTargetAllowed = target => IsWithinWiki(baseUrl, target),
             Documents = documents,
-        }, token);
+        }, reportingScope, token);
 
         var readHits = new JsonArray();
         foreach (var content in readContents)

@@ -20,9 +20,11 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
     /// <remarks>
     /// A document is read only when the options allow documents for the address which returned
     /// it, see WebDocumentOptions. It streams into a file of its own, which the runtime reads and
-    /// which is deleted right after, whether reading succeeded, failed, or was cancelled. Whether
-    /// a response counts as a document is decided by its media type, as everything else is read
-    /// as HTML or text; what kind of document it is, the runtime decides by its content.
+    /// which is deleted right after, whether reading succeeded, failed, or was cancelled. Reading
+    /// its text has the timeout of the options, as the download has. Whether a response counts as
+    /// a document is decided by its media type, or by the file name of its address when it has
+    /// none, as everything else is read as HTML or text; what kind of document it is, the runtime
+    /// decides by its content.
     /// </remarks>
     public async Task<RetrievedWebPage> RetrieveAsync(
         Uri url,
@@ -55,7 +57,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
             {
                 // Pages and text formats are read as before, wherever they come from, and images,
                 // audio, or video are refused by the media type check before their body is downloaded:
-                if (WebContentTypeClassifier.Classify(mediaType) is not null || !MayBeDocument(mediaType))
+                if (!MayBeDocument(mediaType, finalUrl))
                     return null;
 
                 // The text names no address, so a caller may hand it on without repeating one:
@@ -118,7 +120,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
         }
 
         if (page.DocumentPath is { } downloadedPath && documentReader is not null && options.Documents is not null)
-            return await ReadDocumentAsync(documentReader, page, downloadedPath, options.Documents, requiredProviderConfidence, lastAddressIsNonPublic, token);
+            return await ReadDocumentAsync(documentReader, page, downloadedPath, options.Documents, options.TimeoutSeconds, requiredProviderConfidence, lastAddressIsNonPublic, token);
 
         return new RetrievedWebPage
         {
@@ -135,12 +137,20 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
         };
     }
 
-    private static async Task<RetrievedWebPage> ReadDocumentAsync(WebDocumentReader reader, HTMLParserWebPage page, string path, WebDocumentOptions documents, ConfidenceLevel requiredProviderConfidence, bool reachedNonPublicAddress, CancellationToken token)
+    private static async Task<RetrievedWebPage> ReadDocumentAsync(WebDocumentReader reader, HTMLParserWebPage page, string path, WebDocumentOptions documents, int timeoutSeconds, ConfidenceLevel requiredProviderConfidence, bool reachedNonPublicAddress, CancellationToken token)
     {
-        var extraction = await reader.ReadAsync(path, page.FinalUrl, documents.MaxCharacters, token);
+        //
+        // The runtime would take up to its own extraction timeout of several minutes, which would
+        // hold up the chat far beyond the timeout its user set for the tool:
+        //
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+        var extraction = await reader.ReadAsync(path, page.FinalUrl, documents.MaxCharacters, documents.ReportingScope, timeoutCts.Token);
         if (!extraction.HasUsableContent)
         {
             token.ThrowIfCancellationRequested();
+            if (timeoutCts.IsCancellationRequested)
+                throw new TimeoutException($"Reading the text of the document timed out after {timeoutSeconds} seconds.");
 
             // English, like every other failure here, because it reaches the model:
             throw new InvalidOperationException(extraction.ErrorCode switch
@@ -186,10 +196,19 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
     /// Documents arrive as application/*, often as application/octet-stream, and sometimes without
     /// any media type. The runtime decides by the content which of them it reads. An image, a
     /// recording, or a video is none, and downloading it first would cost up to the size limit of
-    /// documents before the runtime refused it.
+    /// documents before the runtime refused it. A response without a media type is read as HTML,
+    /// unless the file name of its address names a document, see EmbeddedDocumentLinks.NamesDocument.
     /// </remarks>
-    private static bool MayBeDocument(string mediaType) =>
-        mediaType.Length is 0 || mediaType.StartsWith("application/", StringComparison.OrdinalIgnoreCase);
+    /// <param name="mediaType">The media type of the response, or an empty one when it has none.</param>
+    /// <param name="finalUrl">The address which returned it, after every redirect.</param>
+    private static bool MayBeDocument(string mediaType, Uri finalUrl)
+    {
+        mediaType = mediaType.Trim();
+        if (mediaType.Length is 0)
+            return EmbeddedDocumentLinks.NamesDocument(finalUrl.AbsolutePath);
+
+        return WebContentTypeClassifier.Classify(mediaType) is null && mediaType.StartsWith("application/", StringComparison.OrdinalIgnoreCase);
+    }
 
     private static string GetFileName(Uri url)
     {

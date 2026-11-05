@@ -10,8 +10,8 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// </summary>
 /// <remarks>
 /// /redirect sends the client on, to /page of this server unless the test names another address,
-/// /document answers with the document the test hands in, and every other path answers with a
-/// small HTML page.
+/// /document, also with a file extension such as /document.pdf, answers with the document the test
+/// hands in, and every other path answers with a small HTML page.
 /// </remarks>
 internal sealed class LoopbackWebServer : IDisposable
 {
@@ -43,10 +43,11 @@ internal sealed class LoopbackWebServer : IDisposable
                 using var client = await this.listener.AcceptTcpClientAsync(this.stop.Token);
                 await using var stream = client.GetStream();
                 var request = await ReadRequestHeadAsync(stream, this.stop.Token);
-                if (this.document is { } served && request.StartsWith("GET /document ", StringComparison.Ordinal))
+                if (this.document is { } served && (request.StartsWith("GET /document ", StringComparison.Ordinal) || request.StartsWith("GET /document.", StringComparison.Ordinal)))
                 {
+                    var contentType = served.ContentType.Length is 0 ? string.Empty : $"Content-Type: {served.ContentType}\r\n";
                     var disposition = served.FileName is null ? string.Empty : $"Content-Disposition: attachment; filename=\"{served.FileName}\"\r\n";
-                    var head = $"HTTP/1.1 200 OK\r\nContent-Type: {served.ContentType}\r\nContent-Length: {served.Body.Length}\r\n{disposition}Connection: close\r\n\r\n";
+                    var head = $"HTTP/1.1 200 OK\r\n{contentType}Content-Length: {served.Body.Length}\r\n{disposition}Connection: close\r\n\r\n";
                     await stream.WriteAsync(Encoding.ASCII.GetBytes(head), this.stop.Token);
                     await stream.WriteAsync(served.Body, this.stop.Token);
                     continue;
@@ -94,7 +95,7 @@ internal sealed class LoopbackWebServer : IDisposable
 /// <summary>
 /// A document the LoopbackWebServer serves at /document.
 /// </summary>
-/// <param name="ContentType">The media type the server claims.</param>
+/// <param name="ContentType">The media type the server claims, or an empty one to send no Content-Type header.</param>
 /// <param name="Body">The bytes of the document.</param>
 /// <param name="FileName">The file name of the Content-Disposition header, or null for none.</param>
 internal sealed record LoopbackDocument(string ContentType, byte[] Body, string? FileName = null);

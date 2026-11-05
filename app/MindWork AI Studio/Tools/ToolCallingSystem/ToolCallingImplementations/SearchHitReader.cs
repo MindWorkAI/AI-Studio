@@ -20,9 +20,10 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 /// since they are the ones that tool would read; a hit within the site is internal, so the default
 /// reads them. The hits share one character budget, so a search of several hits does not grow
 /// larger than an ordinary page. Each hit is cut to its share, a document while it is read.<br/><br/>
-/// Every hit is filtered for prompt injections, all of them in one request, so the user hears of
-/// one search rather than of every page. A hit which cannot be read costs that hit only: the model
-/// learns why and may still open it with Read Web Page.
+/// Every hit is filtered for prompt injections, the pages in one request and the documents while
+/// the runtime reads them, all within the action of the search, so the user hears of one search
+/// rather than of every page. A hit which cannot be read costs that hit only, whatever went wrong:
+/// the model learns why and may still open it with Read Web Page.
 /// </remarks>
 public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalService, PromptInjectionGuardService promptInjectionGuardService, ToolSettingsService toolSettingsService, ILogger<SearchHitReader> logger)
 {
@@ -41,9 +42,10 @@ public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalServ
     /// <param name="hits">The hits to read, in the order of their relevance. All must lie within the searched site.</param>
     /// <param name="maxContentCharacters">The character budget of all hits together.</param>
     /// <param name="createOptions">Builds the options of the request for one hit, given the document options to pass on. They keep the request within the site.</param>
+    /// <param name="reportingScope">The action of the search, or null to report what the filter removed right away.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>What came of each hit, in the order of the hits.</returns>
-    public async Task<IReadOnlyList<SearchHitContent>> ReadAsync(IReadOnlyList<Uri> hits, int maxContentCharacters, Func<Uri, WebDocumentOptions, WebPageRetrievalOptions> createOptions, CancellationToken token = default)
+    public async Task<IReadOnlyList<SearchHitContent>> ReadAsync(IReadOnlyList<Uri> hits, int maxContentCharacters, Func<Uri, WebDocumentOptions, WebPageRetrievalOptions> createOptions, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         if (hits.Count is 0 || maxContentCharacters <= 0)
             return [];
@@ -56,6 +58,7 @@ public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalServ
             IsAllowed = (_, _) => ReadWebPageTool.IsDocumentAllowed(documentAccess, isInternal: true),
             MaxBytes = maxDocumentBytes,
             MaxCharacters = share,
+            ReportingScope = reportingScope,
         };
 
         using var semaphore = new SemaphoreSlim(MAX_PARALLEL_READS);
@@ -68,7 +71,8 @@ public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalServ
         var read = reads.Where(hit => hit.Content is not null).ToList();
         var sanitized = await WebPageContentSanitizer.SanitizeAsync(
             promptInjectionGuardService,
-            read.Select(hit => (hit.Content!, PromptInjectionSource.WebContent(hit.FinalUrl.AbsoluteUri))).ToList());
+            read.Select(hit => (hit.Content!, PromptInjectionSource.WebContent(hit.FinalUrl.AbsoluteUri))).ToList(),
+            reportingScope);
 
         var sanitizedByIndex = read.Select((hit, position) => (hit.Index, Content: sanitized[position])).ToDictionary(entry => entry.Index, entry => entry.Content);
         return reads.Select(hit => sanitizedByIndex.TryGetValue(hit.Index, out var content)
@@ -99,7 +103,8 @@ public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalServ
         {
             throw;
         }
-        catch (Exception exception) when (exception is WebPageAccessBlockedException or InvalidOperationException or TimeoutException or HttpRequestException or IOException)
+        // Anything else as well, such as a temporary file the data directory refuses: the search was read, and one hit must not cost it:
+        catch (Exception exception)
         {
             logger.LogInformation("Could not read a search hit. Index={Index}, Reason={Reason}, DurationMs={DurationMs}", index, exception.GetType().Name, stopwatch.ElapsedMilliseconds);
             return new HitRead(index, hit, hit, null, false, GetFailure(exception));
@@ -117,12 +122,15 @@ public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalServ
     /// A refused redirect names the address it would have led to. That address reaches the model
     /// nowhere else, and once it stands in a tool result, it counts as one given in the chat, which
     /// Read Web Page may open even while the free address choice is off. Its own text therefore
-    /// names none, as Read Web Page words it for the same refusal.
+    /// names none, as Read Web Page words it for the same refusal.<br/><br/>
+    /// Only the failures of reading a page or a document tell their own reason. Any other, such as
+    /// one of the file system, would name the paths of this computer to the model.
     /// </remarks>
     internal static string GetFailure(Exception exception) => exception switch
     {
         WebPageAccessBlockedException { Reason: WebPageAccessBlockReason.TARGET_NOT_ALLOWED } => "The site redirected this hit to an address outside of it, which is not followed.",
-        _ => exception.Message,
+        WebPageAccessBlockedException or InvalidOperationException or TimeoutException or HttpRequestException => exception.Message,
+        _ => "The hit could not be read.",
     };
 
     /// <summary>
