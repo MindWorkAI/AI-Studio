@@ -206,8 +206,17 @@ public sealed class ConversationTokenCounter(RustService rustService, DatabaseCl
     /// second copy of the whole conversation in memory. Hashing is not free, but it is two orders of
     /// magnitude cheaper than tokenizing the same bytes, so the trade pays for itself on the first
     /// repeat.
+    ///
+    /// The classic RAG process counts its passages here as well, see PassageBudget, so that they are
+    /// counted with the same tokenizer as the rest of the conversation, and a passage which comes up
+    /// with every message of a chat is counted once.
     /// </remarks>
-    private async Task<int> CountTextAsync(Provider provider, string text, CancellationToken token)
+    /// <param name="provider">The configured provider, which decides the tokenizer.</param>
+    /// <param name="text">The text to count.</param>
+    /// <param name="token">Ends the counting when nobody needs the answer anymore.</param>
+    /// <returns>The tokens of the text.</returns>
+    /// <exception cref="InvalidOperationException">The tokenizer did not answer.</exception>
+    public async Task<int> CountTextAsync(Provider provider, string text, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(text))
             return 0;
