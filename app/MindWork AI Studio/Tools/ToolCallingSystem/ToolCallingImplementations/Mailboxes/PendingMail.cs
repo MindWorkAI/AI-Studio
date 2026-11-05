@@ -14,9 +14,17 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
 /// A mail found, with its texts waiting to be filtered.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Whether the mail lies among the sent mails or the drafts is AI Studio's own value, so it needs no filtering.
+/// </para>
+/// <para>
+/// A result shows only a part of a mail: every text has a limit, and so has every list. Together,
+/// they keep a single mail far below a page of the search, see SearchMailsTool.MAX_RESULT_CHARACTERS,
+/// even when every character has to be escaped in JSON. Otherwise, a mail with hundreds of
+/// attachments would fill a page on its own. read_mail shows the whole mail.
+/// </para>
 /// </remarks>
-internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summary, int Subject, int From, int Sender, IReadOnlyList<int> Recipients, int MoreRecipients, IReadOnlyList<int> Folders, string? SpecialFolder, IReadOnlyList<int> Attachments, int? Passage, ChunkLocation? PassageLocation)
+internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summary, int Subject, int From, int Sender, IReadOnlyList<int> Recipients, int MoreRecipients, IReadOnlyList<int> Folders, int MoreFolders, string? SpecialFolder, IReadOnlyList<int> Attachments, int MoreAttachments, int? Passage, ChunkLocation? PassageLocation, int? PassageAttachment)
 {
     /// <summary>
     /// How much of the passage which matched best a result shows.
@@ -39,8 +47,31 @@ internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summar
     private const int MAX_LISTED_RECIPIENTS = 5;
 
     /// <summary>
+    /// How many folders of a mail a result names. A mail lies in one folder, as a rule, but a server
+    /// which shows labels as folders may put it into many.
+    /// </summary>
+    private const int MAX_LISTED_FOLDERS = 10;
+
+    /// <summary>
+    /// How many attachments of a mail a result names, as many as the index lists in the text of a mail, cf. MailTextBuilder.
+    /// </summary>
+    private const int MAX_LISTED_ATTACHMENTS = 20;
+
+    /// <summary>
+    /// How much of an address, of the name of a sender, of a folder, or of the name of an attachment a result shows.
+    /// </summary>
+    /// <remarks>
+    /// As much as of a subject. Nothing keeps a sender from writing a display name or a file name of any length.
+    /// </remarks>
+    private const int MAX_NAME_CHARACTERS = MAX_SUBJECT_CHARACTERS;
+
+    /// <summary>
     /// Registers everything a result shows of a mail with the texts to filter.
     /// </summary>
+    /// <remarks>
+    /// The attachment the passage is from is named even when the list of attachments ends before
+    /// it. Otherwise, the model would take the passage for one of the text of the mail.
+    /// </remarks>
     /// <param name="hit">The mail found.</param>
     /// <param name="mailbox">The mailbox it lies in.</param>
     /// <param name="mailboxFolders">The folders of the mailbox, to tell the sent mails and the drafts.</param>
@@ -51,20 +82,28 @@ internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summar
         var summary = hit.Summary;
         var sender = MailToolResults.FindSender(summary.Addresses);
         var recipients = summary.Addresses.Where(address => address.Role is MailAddressRole.TO or MailAddressRole.CC).ToList();
+        var attachments = summary.AttachmentNames.Take(MAX_LISTED_ATTACHMENTS).Select(name => texts.Add(name.Shorten(MAX_NAME_CHARACTERS), mailbox)).ToList();
+
+        int? passageAttachment = null;
+        if (hit is { Passage: not null, PassageLocation.AttachmentPosition: { } position } && position >= 0 && position < summary.AttachmentNames.Count)
+            passageAttachment = position < attachments.Count ? attachments[position] : texts.Add(summary.AttachmentNames[position].Shorten(MAX_NAME_CHARACTERS), mailbox);
 
         return new(
             mailbox,
             summary,
             texts.Add(string.IsNullOrWhiteSpace(summary.Subject) ? MailToolResults.NO_SUBJECT : summary.Subject.Shorten(MAX_SUBJECT_CHARACTERS), mailbox),
-            texts.Add(sender is null ? MailToolResults.UNKNOWN_SENDER : MailToolResults.FormatAddress(sender), mailbox),
-            texts.Add(MailToolResults.GetSenderName(sender), mailbox),
-            recipients.Take(MAX_LISTED_RECIPIENTS).Select(recipient => texts.Add(MailToolResults.FormatAddress(recipient), mailbox)).ToList(),
+            texts.Add(sender is null ? MailToolResults.UNKNOWN_SENDER : MailToolResults.FormatAddress(sender).Shorten(MAX_NAME_CHARACTERS), mailbox),
+            texts.Add(MailToolResults.GetSenderName(sender).Shorten(MAX_NAME_CHARACTERS), mailbox),
+            recipients.Take(MAX_LISTED_RECIPIENTS).Select(recipient => texts.Add(MailToolResults.FormatAddress(recipient).Shorten(MAX_NAME_CHARACTERS), mailbox)).ToList(),
             Math.Max(0, recipients.Count - MAX_LISTED_RECIPIENTS),
-            summary.FolderPaths.Select(folder => texts.Add(folder, mailbox)).ToList(),
+            summary.FolderPaths.Take(MAX_LISTED_FOLDERS).Select(folder => texts.Add(folder.Shorten(MAX_NAME_CHARACTERS), mailbox)).ToList(),
+            Math.Max(0, summary.FolderPaths.Count - MAX_LISTED_FOLDERS),
             MailToolResults.GetSpecialFolder(summary.FolderPaths, mailboxFolders),
-            summary.AttachmentNames.Select(name => texts.Add(name, mailbox)).ToList(),
+            attachments,
+            Math.Max(0, summary.AttachmentNames.Count - MAX_LISTED_ATTACHMENTS),
             hit.Passage is null ? null : texts.Add(hit.Passage.Shorten(MAX_PASSAGE_CHARACTERS), mailbox),
-            hit.PassageLocation);
+            hit.PassageLocation,
+            passageAttachment);
     }
 
     /// <summary>
@@ -104,6 +143,9 @@ internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summar
         if (this.MoreRecipients > 0)
             description["more_recipients"] = this.MoreRecipients;
 
+        if (this.MoreFolders > 0)
+            description["more_folders"] = this.MoreFolders;
+
         if (this.SpecialFolder is { } specialFolder)
             description[MailToolArguments.SPECIAL_FOLDER_ARGUMENT] = specialFolder;
 
@@ -112,6 +154,9 @@ internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summar
 
         if (this.Attachments.Count > 0)
             description["attachments"] = new JsonArray([..this.Attachments.Select(attachment => (JsonNode?)texts[attachment])]);
+
+        if (this.MoreAttachments > 0)
+            description["more_attachments"] = this.MoreAttachments;
 
         if (this.Passage is { } passage)
         {
@@ -170,11 +215,11 @@ internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summar
     /// <returns>The filtered name of the attachment, and where in it the passage is, if known; MailPassageAttachment.NONE when the passage is from no attachment.</returns>
     private MailPassageAttachment LocatePassageInAttachment(MailTexts texts)
     {
-        if (this.Passage is null || this.PassageLocation is not { AttachmentPosition: { } position } location || position < 0 || position >= this.Attachments.Count || position >= this.Summary.AttachmentNames.Count)
+        if (this.PassageAttachment is not { } attachment || this.PassageLocation is not { AttachmentPosition: { } position } location)
             return MailPassageAttachment.NONE;
 
         var type = DataSourceLocalRetrievalService.GetRetrievalContentType(Path.GetExtension(this.Summary.AttachmentNames[position]));
         var located = DataSourceLocalRetrievalService.LocatePassage(location, type, chunkNumber: 1);
-        return new(texts[this.Attachments[position]], IRetrievalContextExtensions.DescribeLocation(located.PageNumber, located.EndPageNumber, located.SheetName, located.StartRow, located.EndRow, located.StartLine, located.EndLine));
+        return new(texts[attachment], IRetrievalContextExtensions.DescribeLocation(located.PageNumber, located.EndPageNumber, located.SheetName, located.StartRow, located.EndRow, located.StartLine, located.EndLine));
     }
 }

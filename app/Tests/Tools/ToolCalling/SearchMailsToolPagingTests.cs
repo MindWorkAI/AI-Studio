@@ -3,6 +3,7 @@ using System.Text;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Mail;
 using AIStudio.Tools.RAG;
@@ -195,6 +196,61 @@ public sealed class SearchMailsToolPagingTests
         }
     }
 
+    [Test]
+    public async Task AMailAtItsLongestStaysFarBelowAPage()
+    {
+        // Every text far too long, of characters the model receives escaped, six for each of them:
+        var hit = new MailSearchHit(
+            new MailSummary(
+                "mail-001",
+                Escaped(10_000),
+                RECEIVED,
+                null,
+                string.Empty,
+                string.Empty,
+                [new MailAddressRecord(MailAddressRole.FROM, Escaped(10_000), Escaped(10_000)), ..Enumerable.Range(1, 50).Select(_ => new MailAddressRecord(MailAddressRole.TO, Escaped(1_000), Escaped(1_000)))],
+                [..Enumerable.Range(1, 50).Select(_ => Escaped(1_000))],
+                new MailFlags(IsSeen: true, IsFlagged: false, IsAnswered: false),
+                MailImportance.NORMAL,
+                MailEncryptionKind.NONE,
+                [..Enumerable.Range(1, 500).Select(_ => Escaped(1_000))]),
+            Escaped(100_000),
+            new ChunkLocation(AttachmentPosition: 499));
+
+        var result = await this.SearchAsync([Search(WORK)], 1, Found([hit]));
+        var mail = result.Outcomes.Single().Mails.SingleOrDefault();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(CharactersOf(result), Is.LessThan(SearchMailsTool.MAX_RESULT_CHARACTERS), "A single mail must never fill a page on its own.");
+            Assert.That(mail?["more_recipients"]?.GetValue<int>(), Is.EqualTo(45));
+            Assert.That(mail?["more_folders"]?.GetValue<int>(), Is.EqualTo(40));
+            Assert.That(mail?["more_attachments"]?.GetValue<int>(), Is.EqualTo(480), "The model learns that there are more attachments, and read_mail lists them all.");
+        }
+    }
+
+    [Test]
+    public async Task AMailNamesTheAttachmentItsPassageIsFromAlsoBeyondTheListedOnes()
+    {
+        var mail = Mail(1, isLong: false, suspiciousWords: 0);
+        var hit = mail with
+        {
+            Summary = mail.Summary with { AttachmentNames = [..Enumerable.Range(1, 30).Select(position => $"report-{position:D2}.txt")] },
+            PassageLocation = new ChunkLocation(StartLine: 3, EndLine: 4, AttachmentPosition: 25),
+        };
+
+        var result = await this.SearchAsync([Search(WORK)], 1, Found([hit]));
+        var description = result.Outcomes.Single().Mails.SingleOrDefault();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(description?["attachments"]?.AsArray(), Has.Count.EqualTo(20));
+            Assert.That(description?["more_attachments"]?.GetValue<int>(), Is.EqualTo(10));
+            Assert.That(description?["passage_location"]?.GetValue<string>(), Does.StartWith("attachment \"report-26.txt\""), "Otherwise, the model would take the passage for one of the text of the mail.");
+            Assert.That(result.Sources.SingleOrDefault()?.Title, Does.Contain("report-26.txt"));
+        }
+    }
+
     /// <summary>
     /// Turns the pages of a search in one mailbox, until it says there is nothing more.
     /// </summary>
@@ -266,6 +322,11 @@ public sealed class SearchMailsToolPagingTests
         text.Append('x', Math.Max(0, length - text.Length));
         return text.ToString();
     }
+
+    /// <summary>
+    /// A text of a control character, which JSON writes as an escape of six characters.
+    /// </summary>
+    private static string Escaped(int length) => new('\u0001', length);
 
     /// <summary>
     /// The numbers of the mails the model reads on a page, in the order it reads them.

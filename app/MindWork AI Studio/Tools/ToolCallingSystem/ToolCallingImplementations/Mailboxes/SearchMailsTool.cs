@@ -259,7 +259,8 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
     /// see RetrievalPaging. A page of the search is something else, namely as many mails as fit into
     /// MAX_RESULT_CHARACTERS. Each page of a mailbox is therefore cut into one or more pages of the
     /// search, see CharacterPaging, and those are numbered on across the pages of the mailbox. Where
-    /// everything fits, both are the same.
+    /// everything fits, both are the same. A result shows only a part of a mail, see PendingMail,
+    /// so a single mail stays far below a page.
     /// </para>
     /// </remarks>
     /// <param name="searches">The mailboxes to search, in the order they are offered.</param>
