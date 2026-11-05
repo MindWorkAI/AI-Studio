@@ -1,15 +1,14 @@
 /*
- * The words of a search, in the tint app.css defines for the chat search. It keeps the text readable in
- * light and dark mode alike, also on the dark background of a tooltip.
- *
- * The mark has the rounding of the app's controls and reaches 2 pixels beyond the word on each side, so
- * that it frames the word instead of cutting along its letters. The negative margin takes the room back,
- * so the text stays in its place when marks show up and go while the user types.
+ * The words of a search, in the yellow app.css defines for the chat search: square, as the painted
+ * matches in the open chat are, which cannot be rounded. The current result takes the full yellow,
+ * with dark text on it.
  */
 mark {
     background-color: var(--chat-search-highlight);
     color: inherit;
-    border-radius: var(--mud-default-borderradius);
-    padding: 0 2px;
-    margin: 0 -2px;
+}
+
+mark.is-strong {
+    background-color: var(--chat-search-highlight-strong);
+    color: var(--chat-search-on-strong);
 }

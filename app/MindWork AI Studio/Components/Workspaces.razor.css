@@ -146,15 +146,12 @@
 }
 
 /*
- * The words of a search look as SearchHighlightedText draws them. The result the user stepped to
- * carries a stronger tint, and a bar on its left, since a chat found inside has no words in its name.
+ * The words of a search look as SearchHighlightedText draws them, in the strong tint for the result
+ * the user stepped to. That result also carries a bar on its left, since a chat found inside has no
+ * words in its name.
  */
-.workspace-list ::deep .is-search-current mark {
-    background-color: var(--chat-search-highlight-strong);
-}
-
 .workspace-list ::deep .mud-list-item.is-search-current {
-    box-shadow: inset 3px 0 0 var(--mud-palette-warning);
+    box-shadow: inset 3px 0 0 var(--chat-search-highlight-strong);
 }
 
 /*

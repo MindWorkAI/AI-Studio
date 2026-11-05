@@ -4,39 +4,48 @@
 @inherits MSGComponentBase
 
 <InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" MinWidth="36em" Style="height: 100%">
-    <ChildContent>
-        @if (this.ChatThread is not null)
+    <HeaderContent>
+        @if (this.Search is not null)
         {
-            var blocks = this.ChatThread.Blocks.OrderBy(n => n.Time).ToList();
-            var sendToDestinations = this.AssistantLaunchService.GetDestinationsFor(Components.CHAT);
-            for (var i = 0; i < blocks.Count; i++)
+            <ChatFindBar Search="@this.Search" ChatId="@(this.ChatThread?.ChatId ?? Guid.Empty)" Messages="@(() => this.messagesElement)"/>
+        }
+    </HeaderContent>
+    <ChildContent>
+        @* The element around the messages is where the search of the sidebar finds its words, see ChatFindBar: *@
+        <div @ref="@this.messagesElement">
+            @if (this.ChatThread is not null)
             {
-                var block = blocks[i];
-                var isLastBlock = i == blocks.Count - 1;
-                var isSecondLastBlock = i == blocks.Count - 2;
-                @if (block is { HideFromUser: false, Content: not null })
+                var blocks = this.ChatThread.Blocks.OrderBy(n => n.Time).ToList();
+                var sendToDestinations = this.AssistantLaunchService.GetDestinationsFor(Components.CHAT);
+                for (var i = 0; i < blocks.Count; i++)
                 {
-                    <ContentBlockComponent
-                        @key="@block"
-                        Role="@block.Role"
-                        Type="@block.ContentType"
-                        Time="@block.Time"
-                        Content="@block.Content"
-                        ExportFileName="@this.ChatThread.Name"
-                        RemoveBlockFunc="@this.RemoveBlock"
-                        IsLastContentBlock="@isLastBlock"
-                        IsSecondToLastBlock="@isSecondLastBlock"
-                        RegenerateFunc="@this.RegenerateBlock"
-                        RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
-                        RollbackFunc="@this.RollbackBlock"
-                        BlockActionsEnabled="@(() => this.blockActions.AreAllowed(this.ChatThread))"
-                        EditLastBlockFunc="@this.EditLastBlock"
-                        EditLastUserBlockFunc="@this.EditLastUserBlock"
-                        SendToFunc="@this.SendBlockToAsync"
-                        SendToDestinations="@sendToDestinations"/>
+                    var block = blocks[i];
+                    var isLastBlock = i == blocks.Count - 1;
+                    var isSecondLastBlock = i == blocks.Count - 2;
+                    @if (block is { HideFromUser: false, Content: not null })
+                    {
+                        <ContentBlockComponent
+                            @key="@block"
+                            Role="@block.Role"
+                            Type="@block.ContentType"
+                            Time="@block.Time"
+                            Content="@block.Content"
+                            ExportFileName="@this.ChatThread.Name"
+                            RemoveBlockFunc="@this.RemoveBlock"
+                            IsLastContentBlock="@isLastBlock"
+                            IsSecondToLastBlock="@isSecondLastBlock"
+                            RegenerateFunc="@this.RegenerateBlock"
+                            RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
+                            RollbackFunc="@this.RollbackBlock"
+                            BlockActionsEnabled="@(() => this.blockActions.AreAllowed(this.ChatThread))"
+                            EditLastBlockFunc="@this.EditLastBlock"
+                            EditLastUserBlockFunc="@this.EditLastUserBlock"
+                            SendToFunc="@this.SendBlockToAsync"
+                            SendToDestinations="@sendToDestinations"/>
+                    }
                 }
             }
-        }
+        </div>
     </ChildContent>
     <FooterContent>
         <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>

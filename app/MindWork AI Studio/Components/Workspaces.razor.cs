@@ -65,13 +65,7 @@ public partial class Workspaces : MSGComponentBase
     /// <summary>
     /// Cuts a name which is too long for its row, instead of breaking it into several lines.
     /// </summary>
-    /// <remarks>
-    /// Cutting hides whatever lies beyond the box of the name, such as the room a mark of the search
-    /// takes around a word at the start or the end of the name, see SearchHighlightedText.razor.css. The
-    /// box therefore reaches 2 pixels further on each side, and its negative margin takes them back, so
-    /// the name stays in its place.
-    /// </remarks>
-    private const string NAME_STYLE = "min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; margin: 0 -2px;";
+    private const string NAME_STYLE = "min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
 
     /// <summary>
     /// The hover effect and pointer of a clickable list item. The lists are read-only, because the
@@ -792,13 +786,6 @@ public partial class Workspaces : MSGComponentBase
     /// words of the search.
     /// </summary>
     private ChatIndicator GetChatIcon(WorkspaceTreeChat chat, ChatIndicator state) => this.chatPassages.ContainsKey(chat.ChatId) ? ChatIndicator.FoundInChat(state) : state;
-
-    /// <summary>
-    /// Enlarges an icon whose drawing would look smaller than the chat bubble, see <see cref="ChatIndicator.Scale"/>.
-    /// </summary>
-    private static string? GetIconScaleStyle(ChatIndicator indicator) => Math.Abs(indicator.Scale - 1) < 0.001
-        ? null
-        : FormattableString.Invariant($"transform: scale({indicator.Scale:0.###});");
 
     #endregion
 

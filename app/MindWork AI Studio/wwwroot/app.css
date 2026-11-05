@@ -441,12 +441,31 @@ html[data-resizing-sidebar] * {
     color: var(--mud-palette-warning-text);
 }
 
-/* The colors of what the chat search found, in the workspace list and its tooltips: the words it marks,
-   see SearchHighlightedText, and the count of results a collapsed workspace hides. A tint of the warning
-   color keeps the text readable in light and dark mode. The current result carries the stronger one. */
+/* The color of the chat search: highlighter yellow, in the workspace list, its tooltips, and the open
+   chat, and never a second color. It comes in three strengths: the soft one marks what the search found,
+   the strong one the current result, and the faint one lies behind the row which finds in the open chat,
+   see ChatFindBar. The soft and faint ones blend a lemon yellow with the surface rather than lie over it,
+   so they stay calm in dark mode. The strong one is a deeper golden yellow, so the current result stands
+   out from the soft marks around it. Text on it is always dark, in light and dark mode, since light text
+   would not show on it. Yellow serves as a background only: as an icon or a thin line, it would hardly
+   show on white. */
 :root {
-    --chat-search-highlight: color-mix(in srgb, var(--mud-palette-warning) 35%, transparent);
-    --chat-search-highlight-strong: color-mix(in srgb, var(--mud-palette-warning) 70%, transparent);
+    --chat-search-yellow: #ffeb3b;
+    --chat-search-highlight: color-mix(in srgb, var(--chat-search-yellow) 45%, var(--mud-palette-surface));
+    --chat-search-highlight-strong: #ffd700;
+    --chat-search-highlight-faint: color-mix(in srgb, var(--chat-search-yellow) 14%, var(--mud-palette-surface));
+    --chat-search-on-strong: #212121;
+}
+
+/* The same colors for the matches in the open chat, which the script paints without changing the
+   messages, see setChatFind in app.js. */
+::highlight(chat-search) {
+    background-color: var(--chat-search-highlight);
+}
+
+::highlight(chat-search-current) {
+    background-color: var(--chat-search-highlight-strong);
+    color: var(--chat-search-on-strong);
 }
 
 .log-viewer-empty {

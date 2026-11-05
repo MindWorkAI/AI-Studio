@@ -26,22 +26,18 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     public ChatIndicatorBadge Badge { get; init; }
 
     /// <summary>
-    /// How much the icon is enlarged, for an icon whose drawing fills less of its box than the chat
-    /// bubble does, so that both look the same size. The bubble spans 20 of the 24 units of its box.
+    /// Whether the search found words in the chat, which the list shows with the sign of the search, see
+    /// SearchFoundIcon, rather than with <see cref="Icon"/>.
     /// </summary>
-    public double Scale { get; init; } = 1;
+    public bool IsFoundBySearch { get; init; }
 
     public static readonly ChatIndicator PLAIN = new(Icons.Material.Outlined.ChatBubbleOutline, IsSpinning: false, Color.Inherit, IsStatus: false);
 
     /// <summary>
-    /// A chat whose messages, attached files, or sources hold words of the search, in the color of the
-    /// found words. Its name may hold them as well, which its marked words show.
+    /// A chat whose messages, attached files, or sources hold words of the search: the magnifier on a disc
+    /// of the search's yellow. Its name may hold the words as well, which its marked words show.
     /// </summary>
-    /// <remarks>
-    /// The magnifier spans only 17.5 of the 24 units of its box, from its lens to the end of its handle,
-    /// and would look smaller than the chat bubbles around it.
-    /// </remarks>
-    public static readonly ChatIndicator FOUND_IN_CHAT = new(Icons.Material.Outlined.Search, IsSpinning: false, Color.Warning, IsStatus: true) { Scale = 20 / 17.5 };
+    public static readonly ChatIndicator FOUND_IN_CHAT = new(Icons.Material.Outlined.Search, IsSpinning: false, Color.Inherit, IsStatus: true) { IsFoundBySearch = true };
 
     /// <summary>
     /// What the icon of a chat shows whose messages, attached files, or sources hold words of the search,

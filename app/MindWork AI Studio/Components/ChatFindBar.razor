@@ -1,0 +1,20 @@
+@inherits MSGComponentBase
+
+@if (this.IsSearching)
+{
+    @* A slim row above the messages, which counts what it finds in this chat only. Its numbers belong to
+       the chat, while the field of the sidebar counts the results in the list. It has no close button of
+       its own: it ends with the search. *@
+    <div class="chat-find-bar">
+        <SearchFoundIcon/>
+        <MudText Typo="Typo.body2" Class="chat-find-bar-text">
+            @this.FindText
+        </MudText>
+        <MudTooltip Text="@T("Previous match in this chat")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
+            <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" Disabled="@(this.matchCount == 0)" aria-label="@T("Previous match in this chat")" OnClick="@(() => this.StepAsync(-1))"/>
+        </MudTooltip>
+        <MudTooltip Text="@T("Next match in this chat")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
+            <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Disabled="@(this.matchCount == 0)" aria-label="@T("Next match in this chat")" OnClick="@(() => this.StepAsync(1))"/>
+        </MudTooltip>
+    </div>
+}

@@ -1,0 +1,23 @@
+/*
+ * A slim row above the messages in the yellow of the search, see app.css, so that it stands out from
+ * the chat as long as the search runs: the faint yellow behind it and a bar of the full yellow on its
+ * left, as the current result in the workspace list carries, with the rounding of the app's controls.
+ */
+.chat-find-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 2px 4px 2px 10px;
+    border-radius: var(--mud-default-borderradius);
+    background-color: var(--chat-search-highlight-faint);
+    box-shadow: inset 3px 0 0 var(--chat-search-highlight-strong);
+}
+
+.chat-find-bar ::deep .chat-find-bar-text {
+    flex-grow: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

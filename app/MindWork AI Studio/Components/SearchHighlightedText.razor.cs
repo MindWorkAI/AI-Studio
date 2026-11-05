@@ -7,8 +7,8 @@ namespace AIStudio.Components;
 /// names of the workspace list, and in the passages of its tooltips.
 /// </summary>
 /// <remarks>
-/// Without words, it shows the plain text. The mark has its look here, so a tooltip outside the list
-/// shows it just like the list; a place may make it stronger, as the list does for its current result.
+/// Without words, it shows the plain text. The mark has its look here, in its soft and its strong tint,
+/// so a tooltip outside the list shows it just like the list.
 /// </remarks>
 public partial class SearchHighlightedText : ComponentBase
 {
@@ -23,4 +23,11 @@ public partial class SearchHighlightedText : ComponentBase
     /// </summary>
     [Parameter]
     public IReadOnlyList<string> Terms { get; set; } = [];
+
+    /// <summary>
+    /// Whether the marks take the strong tint: for the current result of the search, and on a dark
+    /// background such as a tooltip, where the soft tint hardly shows.
+    /// </summary>
+    [Parameter]
+    public bool IsStrong { get; set; }
 }

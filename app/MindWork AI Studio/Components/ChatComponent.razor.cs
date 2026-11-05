@@ -62,6 +62,23 @@ public partial class ChatComponent : MSGComponentBase
 
     [Parameter]
     public ChatComposerState ComposerState { get; set; } = new();
+
+    /// <summary>
+    /// The search of the workspace sidebar, whose words the chat finds in its messages while it is open,
+    /// see <see cref="ChatFindBar"/>. Without one, the chat finds nothing.
+    /// </summary>
+    [Parameter]
+    public WorkspaceSearch? Search { get; set; }
+
+    /// <summary>
+    /// The element around the messages, in which the search finds its words.
+    /// </summary>
+    private ElementReference messagesElement;
+
+    /// <summary>
+    /// Whether the chat still has to show where it stands after it loaded, see PositionLoadedChatAsync.
+    /// </summary>
+    private bool isPositionAfterLoadPending;
     
     [Inject]
     private ILogger<ChatComponent> Logger { get; set; } = null!;
@@ -465,20 +482,10 @@ public partial class ChatComponent : MSGComponentBase
             await this.PutTextIntoComposerAsync(deferredInput);
 
         //
-        // Check if the user wants to show the latest message after loading:
+        // The chat shows where it stands once it rendered, see PositionLoadedChatAsync:
         //
-        if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
-        {
-            //
-            // We cannot scroll to the bottom right now because the
-            // chat component is not rendered yet. We have to wait for
-            // the rendering process to finish. Thus, we set a flag
-            // to scroll to the bottom after the rendering process.:
-            //
-            this.mustScrollToBottomAfterRender = true;
-            this.scrollRenderCountdown = 4;
-            this.StateHasChanged();
-        }
+        this.isPositionAfterLoadPending = true;
+        this.StateHasChanged();
         
         //
         // Check if another component deferred the loading of a chat.
@@ -582,6 +589,12 @@ public partial class ChatComponent : MSGComponentBase
             this.StateHasChanged();
         }
         
+        if (this.isPositionAfterLoadPending)
+        {
+            this.isPositionAfterLoadPending = false;
+            await this.PositionLoadedChatAsync();
+        }
+
         if(this.mustScrollToBottomAfterRender)
         {
             if (--this.scrollRenderCountdown == 0)
@@ -768,6 +781,38 @@ public partial class ChatComponent : MSGComponentBase
         this.currentChatThreadId = chatThreadId;
         this.currentWorkspaceId = workspaceId;
         this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
+    }
+
+    /// <summary>
+    /// Shows where a chat stands after it loaded, once its messages are there.
+    /// </summary>
+    /// <remarks>
+    /// What decides is whether the chat holds a match of the search of the sidebar: then it shows its
+    /// last one, since a chat has its newest messages at the bottom. Otherwise, it shows its newest
+    /// message, when the user wants that after loading a chat. The script waits until the Markdown of the
+    /// messages rendered, and decides once, see <c>positionOpenedChat</c> in app.js.
+    /// </remarks>
+    private async Task PositionLoadedChatAsync()
+    {
+        var isNewestMessageShown = this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading;
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync("positionOpenedChat", this.messagesElement, isNewestMessageShown);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Nobody is left to see the chat.
+        }
+        catch (JSException ex)
+        {
+            //
+            // A browser which still runs a cached app.js from an older version lacks the function.
+            // The chat then shows its newest message at least, as it did before:
+            //
+            this.Logger.LogWarning(ex, "Failed to show where the loaded chat stands.");
+            if (isNewestMessageShown)
+                await this.scrollingArea.ScrollToBottom();
+        }
     }
 
     private async Task SyncForegroundChatAsync()
@@ -2221,12 +2266,7 @@ public partial class ChatComponent : MSGComponentBase
         }
 
         await this.SelectProviderWhenLoadingChat();
-        if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
-        {
-            this.mustScrollToBottomAfterRender = true;
-            this.scrollRenderCountdown = 2;
-        }
-        
+        this.isPositionAfterLoadPending = true;
         this.StateHasChanged();
     }
 

@@ -2,7 +2,7 @@
 {
     @if (part.IsMatch)
     {
-        <mark>@part.Text</mark>
+        <mark class="@(this.IsStrong ? "is-strong" : null)">@part.Text</mark>
     }
     else
     {

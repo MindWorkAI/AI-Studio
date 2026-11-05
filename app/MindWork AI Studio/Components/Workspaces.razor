@@ -129,7 +129,7 @@ else
                     <MudIcon Icon="@(isExpanded ? AppIcons.FOLDER_OPEN_OUTLINED : Icons.Material.Outlined.Folder)"/>
                 </MudBadge>
                 <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@NAME_STYLE">
-                    @this.RenderSearchText(workspace.Name, isResult: this.nameMatchedWorkspaceIds.Contains(workspace.WorkspaceId))
+                    @this.RenderSearchText(workspace.Name, isResult: this.nameMatchedWorkspaceIds.Contains(workspace.WorkspaceId), isCurrent: this.currentSearchResultId == workspace.WorkspaceId)
                 </MudText>
                 @if (this.isShowingSearchResults && !isExpanded && this.CountSearchResultsIn(workspace) is > 0 and var resultCount)
                 {
@@ -184,15 +184,14 @@ else
             <div class="d-flex align-center gap-2" style="min-width: 0; height: 24px;">
                 @if (this.chatPassages.TryGetValue(chat.ChatId, out var passage))
                 {
-                    @* A chat whose messages, attached files, or sources hold the words explains its magnifier under the pointer: *@
+                    @* A chat whose messages, attached files, or sources hold the words shows where under the pointer: *@
                     <MudTooltip Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT" Delay="@ChatSearchPassageView.TOOLTIP_DELAY" RootClass="d-flex align-center gap-2 flex-grow-1" RootStyle="min-width: 0;">
                         <ChildContent>
                             @this.RenderChatIconAndName(chat, state, indicator, name)
                         </ChildContent>
                         <TooltipContent>
                             <div style="@ChatSearchPassageView.TOOLTIP_CONTENT_STYLE">
-                                <div style="font-weight: 500;">@name</div>
-                                <ChatSearchPassageView Passage="@passage" IsAlso="@this.nameMatchedChatIds.Contains(chat.ChatId)" Terms="@this.searchTerms"/>
+                                <ChatSearchPassageView Passage="@passage" Terms="@this.searchTerms"/>
                             </div>
                         </TooltipContent>
                     </MudTooltip>
@@ -231,9 +230,13 @@ else
             {
                 <MudProgressCircular Indeterminate="@true" Size="Size.Small" Color="@indicator.Color" StrokeWidth="5"/>
             }
+            else if (indicator.IsFoundBySearch)
+            {
+                <SearchFoundIcon IsStrong="@(this.currentSearchResultId == chat.ChatId)"/>
+            }
             else
             {
-                <MudIcon Icon="@indicator.Icon" Color="@indicator.Color" Style="@GetIconScaleStyle(indicator)"/>
+                <MudIcon Icon="@indicator.Icon" Color="@indicator.Color"/>
             }
             @switch (indicator.Badge)
             {
@@ -251,7 +254,7 @@ else
             }
         </span>
         <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@($"{NAME_STYLE} {GetChatNameColorStyle(state)}")">
-            @this.RenderSearchText(name, isResult: this.searchResultChatIds.Contains(chat.ChatId))
+            @this.RenderSearchText(name, isResult: this.searchResultChatIds.Contains(chat.ChatId), isCurrent: this.currentSearchResultId == chat.ChatId)
         </MudText>
     </text>;
 
@@ -262,7 +265,8 @@ else
     /// Only a result marks its words. A name which holds some of the words without being a result would
     /// look found, while the field counts no such result.
     /// </remarks>
-    /// <param name="text">The name, or the passage of a result.</param>
-    /// <param name="isResult">Whether the text belongs to a result of the search.</param>
-    private RenderFragment RenderSearchText(string text, bool isResult) => @<SearchHighlightedText Text="@text" Terms="@this.GetTermsToMark(isResult)"/>;
+    /// <param name="text">The name.</param>
+    /// <param name="isResult">Whether the name belongs to a result of the search.</param>
+    /// <param name="isCurrent">Whether it is the current result, whose words take the strong tint.</param>
+    private RenderFragment RenderSearchText(string text, bool isResult, bool isCurrent) => @<SearchHighlightedText Text="@text" Terms="@this.GetTermsToMark(isResult)" IsStrong="@isCurrent"/>;
 }

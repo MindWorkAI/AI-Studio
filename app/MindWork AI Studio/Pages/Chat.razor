@@ -57,7 +57,8 @@
                 IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
                 ComposerState="@this.composerState"
                 Workspaces="@this.workspaces"
-                WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
+                WorkspaceName="name => this.UpdateWorkspaceName(name)"
+                Search="@this.workspaceSearch"/>
         </div>
     }
     else if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR)
@@ -85,7 +86,8 @@
                 IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
                 ComposerState="@this.composerState"
                 Workspaces="@this.workspaces"
-                WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
+                WorkspaceName="name => this.UpdateWorkspaceName(name)"
+                Search="@this.workspaceSearch"/>
         </MudStack>
     }
     else
@@ -98,7 +100,8 @@
             IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
             ComposerState="@this.composerState"
             Workspaces="@this.workspaces"
-            WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
+            WorkspaceName="name => this.UpdateWorkspaceName(name)"
+            Search="@this.workspaceSearch"/>
     }
 
     @if (

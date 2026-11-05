@@ -8,10 +8,12 @@ namespace AIStudio.Components;
 /// </summary>
 /// <remarks>
 /// It stays in place while the list below scrolls. It hands what the user types to the list through
-/// the search. Beside the field, it counts the results which the list marks, and its arrows, Enter, and
-/// Shift+Enter step from one result to the next. It shows a progress line while the list searches inside
-/// the chats. The clear button of the field and Escape take back the text; Escape in an empty field, or
-/// the magnifier button in the header of the sidebar, close the search.
+/// the search. Beside the field, it counts the results which the list marks, and its arrows step from
+/// one result to the next. Enter does nothing here on purpose: the composer of the chat sends a prompt
+/// with Enter, and a habit carried over from the field must never send a half-written one. It shows a
+/// progress line while the list searches inside the chats. The clear button of the field and Escape take
+/// back the text; Escape in an empty field, or the magnifier button in the header of the sidebar, close
+/// the search.
 /// </remarks>
 public partial class WorkspaceSearchBar : MSGComponentBase
 {
@@ -84,10 +86,6 @@ public partial class WorkspaceSearchBar : MSGComponentBase
 
             case "Escape":
                 await this.CloseRequested.InvokeAsync();
-                break;
-
-            case "Enter":
-                this.Search.Step(args.ShiftKey ? -1 : 1);
                 break;
         }
     }

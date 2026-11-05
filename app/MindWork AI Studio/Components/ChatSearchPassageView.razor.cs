@@ -3,9 +3,14 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Components;
 
 /// <summary>
-/// Where in a chat the search found its words, and the passage there with the words marked: the same in
-/// the tooltip of the chat in the workspace list and in the tooltip of the line below the search field.
+/// The passage of a chat in which the search found its words, with the words marked: the same in the
+/// tooltip of the chat in the workspace list and in the tooltip of the line below the search field.
 /// </summary>
+/// <remarks>
+/// Only the passage itself, whether from a message, the name of an attached file, or a source: the
+/// name of the chat and where the words are show elsewhere already. The marks take the strong tint,
+/// since the soft one hardly shows on the dark background of a tooltip.
+/// </remarks>
 public partial class ChatSearchPassageView : ComponentBase
 {
     /// <summary>
@@ -25,12 +30,6 @@ public partial class ChatSearchPassageView : ComponentBase
     /// </summary>
     [Parameter, EditorRequired]
     public ChatSearchPassage Passage { get; set; }
-
-    /// <summary>
-    /// Whether the chat was found by its name, so that this place holds the words as well.
-    /// </summary>
-    [Parameter]
-    public bool IsAlso { get; set; }
 
     /// <summary>
     /// The words of the search, which the passage marks.

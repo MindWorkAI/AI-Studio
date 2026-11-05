@@ -22,11 +22,11 @@
             <MudText Typo="Typo.caption" Class="mud-text-secondary text-no-wrap flex-shrink-0">
                 @this.ResultText
             </MudText>
-            <MudTooltip Text="@T("Previous result in the list (Shift+Enter)")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
-                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" Disabled="@(this.Search.ResultCount == 0)" aria-label="@T("Previous result in the list (Shift+Enter)")" OnClick="@(() => this.Search.Step(-1))"/>
+            <MudTooltip Text="@T("Previous result in the list")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
+                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" Disabled="@(this.Search.ResultCount == 0)" aria-label="@T("Previous result in the list")" OnClick="@(() => this.Search.Step(-1))"/>
             </MudTooltip>
-            <MudTooltip Text="@T("Next result in the list (Enter)")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
-                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Disabled="@(this.Search.ResultCount == 0)" aria-label="@T("Next result in the list (Enter)")" OnClick="@(() => this.Search.Step(1))"/>
+            <MudTooltip Text="@T("Next result in the list")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
+                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Disabled="@(this.Search.ResultCount == 0)" aria-label="@T("Next result in the list")" OnClick="@(() => this.Search.Step(1))"/>
             </MudTooltip>
         }
     </MudStack>
@@ -37,7 +37,7 @@
     <div class="workspace-search-reason mud-text-secondary">
         @if (this.Search.CurrentReason.IsInChat)
         {
-            <MudIcon Icon="@Icons.Material.Outlined.Search" Color="Color.Warning" Class="workspace-search-reason-icon"/>
+            <SearchFoundIcon/>
         }
         @if (this.HasReasonTooltip)
         {
@@ -50,7 +50,7 @@
                     <div style="@ChatSearchPassageView.TOOLTIP_CONTENT_STYLE">
                         @if (this.Search.CurrentReason.IsInChat)
                         {
-                            <ChatSearchPassageView Passage="@this.Search.CurrentReason.Passage" IsAlso="@(this.Search.CurrentReason.Kind is WorkspaceSearchReasonKind.ALSO_IN_CHAT)" Terms="@SearchText.ParseTerms(this.Search.Text)"/>
+                            <ChatSearchPassageView Passage="@this.Search.CurrentReason.Passage" Terms="@SearchText.ParseTerms(this.Search.Text)"/>
                         }
                         else
                         {

@@ -4135,6 +4135,18 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Show your 
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T857715435"] = "approx. {0} tokens"
 
+-- Next match in this chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFINDBAR::T1197277362"] = "Next match in this chat"
+
+-- “{0}” is not in this chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFINDBAR::T3221155632"] = "“{0}” is not in this chat"
+
+-- “{0}” in this chat: {1} of {2}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFINDBAR::T766390697"] = "“{0}” in this chat: {1} of {2}"
+
+-- Previous match in this chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFINDBAR::T875240946"] = "Previous match in this chat"
+
 -- Create template from current chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1112722156"] = "Create template from current chat"
 
@@ -6496,6 +6508,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T474393241"] = "Please select
 -- Delete Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T701874671"] = "Delete Workspace"
 
+-- Next result in the list
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1018901165"] = "Next result in the list"
+
 -- Search chats
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1615077202"] = "Search chats"
 
@@ -6507,9 +6522,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1746933036"] = "No c
 
 -- No chat or workspace holds this word
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2296834106"] = "No chat or workspace holds this word"
-
--- Next result in the list (Enter)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2380199316"] = "Next result in the list (Enter)"
 
 -- Put words in quotes to find an exact phrase
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2598527810"] = "Put words in quotes to find an exact phrase"
@@ -6526,11 +6538,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T4123347636"] = "Foun
 -- {0}/{1} in list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T55151488"] = "{0}/{1} in list"
 
+-- Previous result in the list
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T604854253"] = "Previous result in the list"
+
 -- Found in the name of the workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T651470427"] = "Found in the name of the workspace"
-
--- Previous result in the list (Shift+Enter)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T962086857"] = "Previous result in the list (Shift+Enter)"
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTDRAFTDIALOG::T3267849393"] = "Edit"
