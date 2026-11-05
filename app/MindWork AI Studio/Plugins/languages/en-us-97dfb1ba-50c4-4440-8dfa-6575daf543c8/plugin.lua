@@ -2280,6 +2280,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 -- Optimize prompt
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1857716344"] = "Optimize prompt"
 
+-- The prompt guide of your organization could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1909702735"] = "The prompt guide of your organization could not be loaded."
+
 -- Break the task into numbered steps if order matters.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2185953360"] = "Break the task into numbered steps if order matters."
 
@@ -2294,6 +2297,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 
 -- Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2466607250"] = "Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt."
+
+-- Use the prompt recommendations from the prompt guide of your organization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2660819035"] = "Use the prompt recommendations from the prompt guide of your organization."
 
 -- Replaced the previously selected custom prompt guide file.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2698103422"] = "Replaced the previously selected custom prompt guide file."
@@ -7215,6 +7221,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3430781520"] = "En
 -- Technical details: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3436390766"] = "Technical details: {0}"
 
+-- The Prompt Optimizer uses the prompt guide '{0}', which does not exist on this computer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3445391882"] = "The Prompt Optimizer uses the prompt guide '{0}', which does not exist on this computer."
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3448155331"] = "Close"
 
@@ -10047,11 +10056,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T55364659"
 -- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T56359901"] = "Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile."
 
+-- Preselect a custom prompt guide
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1075392178"] = "Preselect a custom prompt guide"
+
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1417990312"] = "Preselect the target language"
 
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1462295644"] = "Preselect another target language"
+
+-- Leave this empty to use the default prompt guide. The assistant loads the current content of this file whenever it applies your preselections.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T155885829"] = "Leave this empty to use the default prompt guide. The assistant loads the current content of this file whenever it applies your preselections."
 
 -- Assistant: Prompt Optimizer Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2309650422"] = "Assistant: Prompt Optimizer Options"
@@ -10079,6 +10094,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T35
 
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3705987833"] = "Preselect important aspects"
+
+-- Select a prompt guide
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T4252279140"] = "Select a prompt guide"
 
 -- Which writing style should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1173034744"] = "Which writing style should be preselected?"
