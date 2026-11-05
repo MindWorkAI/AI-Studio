@@ -22,7 +22,7 @@ public sealed class MathGuardsTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(ExactSizeRefusal("9^9^9"), Is.EqualTo("'9 ^ 9 ^ 9' would have about 369,693,100 digits as an exact number; its decimal logarithm is about 369693099.632. AngouriMath computes such a number in full and cannot stop midway, so exact numbers are limited to 20,000 digits."));
+            Assert.That(ExactSizeRefusal("9^9^9"), Is.EqualTo("'9 ^ 9 ^ 9' would have about 369,693,100 digits as an exact number; its decimal logarithm is about 369693099.632. The tool computes such a number in full and cannot stop midway, so exact numbers are limited to 20,000 digits."));
             Assert.That(ExactSizeRefusal("9^9^9^9"), Does.StartWith("'9 ^ 9 ^ 9' would have"), "The inner power is judged first, before its value is needed.");
             Assert.That(ExactSizeRefusal("1 + 10^20001"), Does.StartWith("'10 ^ 20001' would have about 20,001 digits"));
             Assert.That(ExactSizeRefusal("(1/2)^100000"), Does.Contain("would have about 30,103 digits"), "Numerator and denominator count.");
@@ -59,7 +59,7 @@ public sealed class MathGuardsTests
         using (Assert.EnterMultipleScope())
         {
             var refusal = Assert.Throws<MathComputationException>(() => MathGuards.CheckExpansion(Read("1 + (x + y)^500")))!;
-            Assert.That(refusal.Message, Is.EqualTo("'(x + y) ^ 500' raises a sum to the power of 500. Where AngouriMath may expand, a sum is raised to exponents up to 200 only, since it cannot stop a larger expansion midway."));
+            Assert.That(refusal.Message, Is.EqualTo("'(x + y) ^ 500' raises a sum to the power of 500. Where the tool may expand, a sum is raised to exponents up to 200 only, since it cannot stop a larger expansion midway."));
             Assert.Throws<MathComputationException>(() => MathGuards.CheckExpansion(Read("(x - 1)^(-300)")));
 
             foreach (var text in new[] { "(x + y)^200", "x^500", "(x * y)^500", "(x + y)^n" })

@@ -69,11 +69,11 @@ public static class NumericEvaluator
 
         var substituted = Substituted(withPlaceholders, integrals, 0);
         if (!substituted.EvaluableNumerical)
-            throw new MathComputationException($"'{Show(expression)}' has no value AngouriMath can compute as a single number, as for a sum without a closed form, an infinite sum, or a matrix.");
+            throw new MathComputationException($"'{Show(expression)}' has no value the tool can compute as a single number, as for a sum without a closed form, an infinite sum, or a matrix.");
 
         var central = EvaluateAt(substituted, digits + GUARD_DIGITS);
         if (IsNaN(central))
-            throw new MathComputationException($"'{Show(expression)}' has no value: AngouriMath evaluates it to NaN, as for a division by zero, a pole, or the factorial of a negative integer.");
+            throw new MathComputationException($"'{Show(expression)}' has no value: it evaluates to NaN, as for a division by zero, a pole, or the factorial of a negative integer.");
 
         if (IsInfinite(central))
         {
@@ -115,7 +115,7 @@ public static class NumericEvaluator
         if (IsZero(central) && integrals.Count == 0)
         {
             certainDigits = 0;
-            issues.Add(string.Create(CultureInfo.InvariantCulture, $"AngouriMath evaluates the value to 0 with {digits + GUARD_DIGITS + shift} digits but cannot show that it is exactly 0: a value too small for that many digits comes out as 0, too."));
+            issues.Add(string.Create(CultureInfo.InvariantCulture, $"The value evaluates to 0 with {digits + GUARD_DIGITS + shift} digits, but the tool cannot show that it is exactly 0: a value too small for that many digits comes out as 0, too."));
         }
         else if (certainDigits == 0)
             issues.Add(string.Create(CultureInfo.InvariantCulture, $"No digit of the value is certain: it lies within about {MathFormatting.FormatDecimal(MathFormatting.Distance(low, high), 2)} of the decimal."));

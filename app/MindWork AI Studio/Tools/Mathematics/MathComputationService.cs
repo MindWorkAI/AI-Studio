@@ -119,7 +119,7 @@ public sealed class MathComputationService(ILogger<MathComputationService> logge
         catch (AngouriMathBaseException exception)
         {
             logger.LogInformation("AngouriMath could not compute an expression: {Message}", exception.Message);
-            completion.TrySetException(new MathComputationException($"AngouriMath could not compute this: {exception.Message.Shorten(MAX_MESSAGE_LENGTH)}"));
+            completion.TrySetException(new MathComputationException($"The tool could not compute this:{exception.Message.Shorten(MAX_MESSAGE_LENGTH)}"));
         }
         catch (Exception exception)
         {

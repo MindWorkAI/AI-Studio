@@ -35,7 +35,7 @@ public sealed class CalculateTool(SettingsManager settingsManager, MathComputati
     /// <summary>
     /// The syntax both Mathematics tools read, described for the model.
     /// </summary>
-    internal const string SYNTAX = "Plain syntax, not LaTeX: + - * / ^ and ! for the factorial, with every multiplication written as *, e.g., 2*pi*x. Functions take their arguments in parentheses: sqrt, exp, ln, log(x) to base 10, log(b, x) to base b, sin, cos, tan, arcsin, arccos, arctan, sinh, cosh, tanh, abs, floor, ceil, gamma, binomial(n, k), gcd(a, b), lcm(a, b), erf. Constants are pi, e, and i; infinity is +oo or -oo. A definite integral is integral(f, x, a, b), a limit limit(f, x, a), and a sum sum(f, k, a, b) over the integers k from a to b. AngouriMath computes a sum only in closed form, such as for powers of k; any other sum has to be written out term by term. Not-equal is written <>, and | is not an operator.";
+    internal const string SYNTAX = "Plain syntax, not LaTeX: + - * / ^ and ! for the factorial, with every multiplication written as *, e.g., 2*pi*x. Functions take their arguments in parentheses: sqrt, exp, ln, log(x) to base 10, log(b, x) to base b, sin, cos, tan, arcsin, arccos, arctan, sinh, cosh, tanh, abs, floor, ceil, gamma, binomial(n, k), gcd(a, b), lcm(a, b), erf. Constants are pi, e, and i; infinity is +oo or -oo. A definite integral is integral(f, x, a, b), a limit limit(f, x, a), and a sum sum(f, k, a, b) over the integers k from a to b. A sum is computed only in closed form, such as for powers of k; any other sum has to be written out term by term. Not-equal is written <>, and | is not an operator.";
 
     public string ImplementationKey => ToolSelectionRules.CALCULATE_TOOL_ID;
 
@@ -52,7 +52,7 @@ public sealed class CalculateTool(SettingsManager settingsManager, MathComputati
                                    - Give the decimal with the digits returned, never more. `exact` is the exact value of a rational result.
                                    - When `approximate` is true, a definite integral was integrated numerically: say so, together with its `estimated_error`.
                                    - For an equation, `numerically_equal` means that both sides agree in all `matching_digits`. That supports the equation, but does not prove it; say so. Only when both sides are exact, `exactly_equal` settles it.
-                                   - When the tool refuses an expression, its message says how AngouriMath reads it and how it is written instead.
+                                   - When the tool refuses an expression, its message says how the tool reads it and how it is written instead.
                                    """,
         Function = new()
         {

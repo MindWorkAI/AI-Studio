@@ -60,7 +60,7 @@ public sealed class ComputeSymbolicallyToolTests
         {
             Assert.That(Text(expanded, "result"), Is.EqualTo("1 + 3 * x + 3 * x ^ 2 + x ^ 3"));
             Assert.That(Text(expanded, "verification"), Is.EqualTo("passed"));
-            Assert.That(Issues(unchanged), Has.Some.StartsWith("AngouriMath left the expression as it is"));
+            Assert.That(Issues(unchanged), Has.Some.StartsWith("The tool left the expression as it is"));
             Assert.That(Text(factored, "result"), Is.EqualTo("(x + 1) * (x - 1) * (x ^ 2 + 1)"));
             Assert.That(Text(factored, "verification"), Is.EqualTo("passed"));
         }
@@ -96,7 +96,7 @@ public sealed class ComputeSymbolicallyToolTests
             Assert.That(Issues(power), Has.Member("C stands for any constant."));
             Assert.That(withoutClosedForm["complete"]!.GetValue<bool>(), Is.False);
             Assert.That(Text(withoutClosedForm, "verification"), Is.EqualTo("not_possible"));
-            Assert.That(Issues(withoutClosedForm), Has.Member("AngouriMath found no antiderivative in closed form."));
+            Assert.That(Issues(withoutClosedForm), Has.Member("The tool found no antiderivative in closed form."));
         }
     }
 
@@ -114,9 +114,9 @@ public sealed class ComputeSymbolicallyToolTests
             Assert.That(Text(arctangent, "result"), Is.EqualTo("pi / 2"));
             Assert.That(Text(arctangent, "verification"), Is.EqualTo("passed"));
             Assert.That(bose["complete"]!.GetValue<bool>(), Is.False, "AngouriMath finds no closed form for pi^4/15.");
-            Assert.That(Issues(bose), Has.Member("AngouriMath found no closed form for this integral."));
+            Assert.That(Issues(bose), Has.Member("The tool found no closed form for this integral."));
             Assert.That(Text(pole, "result"), Is.EqualTo("NaN"));
-            Assert.That(Issues(pole), Has.Some.StartsWith("AngouriMath answers NaN"));
+            Assert.That(Issues(pole), Has.Some.StartsWith("The result is NaN: the integral has no value"));
             Assert.That(Text(pole, "verification"), Is.EqualTo("not_possible"));
         }
     }
@@ -135,7 +135,7 @@ public sealed class ComputeSymbolicallyToolTests
             Assert.That(Text(fromTheRight, "result"), Is.EqualTo("+oo"));
             Assert.That(Text(fromTheRight, "direction"), Is.EqualTo("right"));
             Assert.That(Text(fromBothSides, "result"), Is.EqualTo("NaN"));
-            Assert.That(Issues(fromBothSides), Has.Some.StartsWith("AngouriMath answers NaN, which it gives where the limit does not exist"));
+            Assert.That(Issues(fromBothSides), Has.Some.StartsWith("The result is NaN, which the tool gives where the limit does not exist"));
         }
     }
 
@@ -243,5 +243,17 @@ public sealed class ComputeSymbolicallyToolTests
         var tool = new ComputeSymbolicallyTool(null!, SERVICE);
         var result = await tool.ExecuteAsync(Arguments("""{"operation": "factor", "expression": "x^2 - 5*x + 6"}"""), null!);
         Assert.That(result.JsonContent!["result"]!.GetValue<string>(), Is.EqualTo("(x - 3) * (x - 2)"));
+    }
+
+    [Test]
+    public void TellsTheModelNothingAboutTheLibrary()
+    {
+        var definition = new ComputeSymbolicallyTool(null!, SERVICE).GetDefinition();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(definition.SystemPromptInstructions, Does.Not.Contain("AngouriMath"), "A model would take the name for something it may call or look up.");
+            Assert.That(definition.Function.DescriptionForLLM, Does.Not.Contain("AngouriMath"));
+            Assert.That(definition.Function.Parameters.GetRawText(), Does.Not.Contain("AngouriMath"));
+        }
     }
 }

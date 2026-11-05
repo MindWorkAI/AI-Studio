@@ -90,7 +90,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
                                    Use `compute_symbolically` to simplify, expand, or factor an expression, to differentiate or integrate it, to take a limit, or to solve an equation or an inequality, instead of doing the algebra yourself.
                                    - It reads the same plain syntax as `calculate`, not LaTeX.
                                    - `result` is the answer in plain syntax, and `result_latex` the same for your reply. A `condition` says where the result holds, e.g., `not x - 1 = 0`; mention it.
-                                   - When `complete` is false, AngouriMath found no closed form, and `result` still holds the integral, the limit, or the equation. Never present it as an answer; `calculate` gives a definite integral numerically.
+                                   - When `complete` is false, the tool found no closed form, and `result` still holds the integral, the limit, or the equation. Never present it as an answer; `calculate` gives a definite integral numerically.
                                    - `verification` says whether the result was checked numerically: `passed`, `failed`, or `not_possible`. Never present a result with `failed` as correct, and say when the check was `not_possible`.
                                    - Solutions may be complex; `real` tells for each one with a value. n_1 stands for any integer, r_1 for any real number, and C for any constant.
                                    """,
@@ -202,15 +202,15 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
         switch (request.Operation)
         {
             case SymbolicOperation.SIMPLIFY:
-                Transformed(json, issues, expression, expression.Simplify(), "AngouriMath found nothing to simplify.");
+                Transformed(json, issues, expression, expression.Simplify(), "The tool found nothing to simplify.");
                 break;
 
             case SymbolicOperation.EXPAND:
-                Transformed(json, issues, expression, expression.Expand(), "AngouriMath left the expression as it is, e.g., since its expansion would have more than 2,000 terms.");
+                Transformed(json, issues, expression, expression.Expand(), "The tool left the expression as it is, e.g., since its expansion would have more than 2,000 terms.");
                 break;
 
             case SymbolicOperation.FACTOR:
-                Transformed(json, issues, expression, expression.Factorize(), "AngouriMath found no factorization.");
+                Transformed(json, issues, expression, expression.Factorize(), "The tool found no factorization.");
                 break;
 
             case SymbolicOperation.DIFFERENTIATE:
@@ -299,7 +299,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
             json["complete"] = complete;
             json["verification"] = Verification(complete ? NumericCheck.IsDerivativeOf(expression, antiderivative, variable) : NumericCheckOutcome.NOT_POSSIBLE);
             if (!complete)
-                issues.Add("AngouriMath found no antiderivative in closed form.");
+                issues.Add("The tool found no antiderivative in closed form.");
 
             return;
         }
@@ -316,9 +316,9 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
         Result(json, issues, expression, integral);
         json["complete"] = closed;
         if (!closed)
-            issues.Add("AngouriMath found no closed form for this integral.");
+            issues.Add("The tool found no closed form for this integral.");
         else if (IsNaN(integral))
-            issues.Add("AngouriMath answers NaN: the integral has no value, e.g., since it diverges across a pole.");
+            issues.Add("The result is NaN: the integral has no value, e.g., since it diverges across a pole.");
 
         json["verification"] = Verification(closed ? CheckByQuadrature(integral, expression, variable, lower, upper) : NumericCheckOutcome.NOT_POSSIBLE);
     }
@@ -374,9 +374,9 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
         json["complete"] = complete;
         json["verification"] = Verification(NumericCheckOutcome.NOT_POSSIBLE);
         if (!complete)
-            issues.Add("AngouriMath could not determine this limit.");
+            issues.Add("The tool could not determine this limit.");
         else if (IsNaN(limit))
-            issues.Add("AngouriMath answers NaN, which it gives where the limit does not exist, e.g., where the one-sided limits differ.");
+            issues.Add("The result is NaN, which the tool gives where the limit does not exist, e.g., where the one-sided limits differ.");
     }
 
     private static void Solve(JsonObject json, List<string> issues, Entity expression, Entity.Variable variable)
@@ -398,7 +398,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
         {
             json["complete"] = false;
             json["verification"] = Verification(NumericCheckOutcome.NOT_POSSIBLE);
-            issues.Add("AngouriMath found no solution in closed form; the result restates the equation as a set.");
+            issues.Add("The tool found no solution in closed form; the result restates the equation as a set.");
             return;
         }
 

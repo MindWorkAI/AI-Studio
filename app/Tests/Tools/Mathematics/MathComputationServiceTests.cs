@@ -112,7 +112,7 @@ public sealed class MathComputationServiceTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(exception.Message, Does.StartWith("AngouriMath could not compute this: `x + 1` evaluates to `x + 1`"));
+            Assert.That(exception.Message, Does.StartWith("The tool could not compute this:`x + 1` evaluates to `x + 1`"));
             Assert.That(await service.ComputeAsync(_ => 4), Is.EqualTo(4));
         }
     }

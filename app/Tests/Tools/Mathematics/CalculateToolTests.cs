@@ -148,7 +148,7 @@ public sealed class CalculateToolTests
         {
             Assert.That(Text(result, "decimal"), Is.EqualTo("0"));
             Assert.That(result["digits"]!.GetValue<int>(), Is.Zero);
-            Assert.That(result["issues"]!.AsArray().Select(issue => issue!.GetValue<string>()), Has.Some.StartsWith("AngouriMath evaluates the value to 0 with ").And.Some.Contains("cannot show that it is exactly 0"));
+            Assert.That(result["issues"]!.AsArray().Select(issue => issue!.GetValue<string>()), Has.Some.StartsWith("The value evaluates to 0 with ").And.Some.Contains("cannot show that it is exactly 0"));
         }
     }
 
@@ -214,15 +214,15 @@ public sealed class CalculateToolTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(Refusal("1/0"), Does.Contain("has no value: AngouriMath evaluates it to NaN"));
+            Assert.That(Refusal("1/0"), Does.Contain("has no value: it evaluates to NaN"));
             Assert.That(Refusal("x + 1"), Does.Contain("contains the variable x, so it has no numeric value. compute_symbolically works with variables."));
             Assert.That(Refusal("a*b"), Does.Contain("contains the variables a, b,"));
             Assert.That(Refusal("1 < 2"), Does.Contain("is a statement, such as a comparison"));
             Assert.That(Refusal("(10^9)!"), Does.Contain("digits as an exact number"));
             Assert.That(() => Calculate("integral(x^2, x)"), Throws.InstanceOf<MathComputationException>());
-            Assert.That(Refusal("sum(1/k, k, 1, 1000)"), Is.EqualTo("'sum(1 / k, k, 1, 1000)' has no value AngouriMath can compute as a single number, as for a sum without a closed form, an infinite sum, or a matrix."), "AngouriMath sums only in closed form; its own message tells a developer to call EvaluableNumerical.");
-            Assert.That(Refusal("sum(1/k^2, k, 1, +oo)"), Does.Contain("has no value AngouriMath can compute as a single number"));
-            Assert.That(Refusal("[1, 2] + [3, 4]"), Does.Contain("has no value AngouriMath can compute as a single number"));
+            Assert.That(Refusal("sum(1/k, k, 1, 1000)"), Is.EqualTo("'sum(1 / k, k, 1, 1000)' has no value the tool can compute as a single number, as for a sum without a closed form, an infinite sum, or a matrix."), "AngouriMath sums only in closed form; its own message tells a developer to call EvaluableNumerical.");
+            Assert.That(Refusal("sum(1/k^2, k, 1, +oo)"), Does.Contain("has no value the tool can compute as a single number"));
+            Assert.That(Refusal("[1, 2] + [3, 4]"), Does.Contain("has no value the tool can compute as a single number"));
         }
     }
 
@@ -270,6 +270,18 @@ public sealed class CalculateToolTests
         {
             Assert.That(() => tool.ExecuteAsync(tooMany, null!), Throws.ArgumentException.With.Message.EqualTo("Argument 'digits' must be at most 100, but was 101. Leave it out to get 20 significant digits."));
             Assert.That(() => tool.ExecuteAsync(none, null!), Throws.ArgumentException);
+        }
+    }
+
+    [Test]
+    public void TellsTheModelNothingAboutTheLibrary()
+    {
+        var definition = new CalculateTool(null!, new MathComputationService(NullLogger<MathComputationService>.Instance)).GetDefinition();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(definition.SystemPromptInstructions, Does.Not.Contain("AngouriMath"), "A model would take the name for something it may call or look up.");
+            Assert.That(definition.Function.DescriptionForLLM, Does.Not.Contain("AngouriMath"));
+            Assert.That(definition.Function.Parameters.GetRawText(), Does.Not.Contain("AngouriMath"));
         }
     }
 }

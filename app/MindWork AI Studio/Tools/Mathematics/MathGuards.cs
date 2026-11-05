@@ -51,7 +51,7 @@ public static class MathGuards
             if (exponent is null || Math.Abs(exponent.Value) <= MathLimits.MAX_EXPANSION_EXPONENT)
                 continue;
 
-            throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(power)}' raises a sum to the power of {exponent.Value:0.###}. Where AngouriMath may expand, a sum is raised to exponents up to {MathLimits.MAX_EXPANSION_EXPONENT} only, since it cannot stop a larger expansion midway."));
+            throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(power)}' raises a sum to the power of {exponent.Value:0.###}. Where the tool may expand, a sum is raised to exponents up to {MathLimits.MAX_EXPANSION_EXPONENT} only, since it cannot stop a larger expansion midway."));
         }
     }
 
@@ -73,7 +73,7 @@ public static class MathGuards
         };
 
         if (digits > MathLimits.MAX_EXACT_DIGITS)
-            throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(node)}' would have about {digits:N0} digits as an exact number. AngouriMath computes such a number in full and cannot stop midway, so exact numbers are limited to {MathLimits.MAX_EXACT_DIGITS:N0} digits."));
+            throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(node)}' would have about {digits:N0} digits as an exact number. The tool computes such a number in full and cannot stop midway, so exact numbers are limited to {MathLimits.MAX_EXACT_DIGITS:N0} digits."));
 
         return digits;
     }
@@ -95,7 +95,7 @@ public static class MathGuards
             var size = Log10(rational.ERational.Numerator) + Log10(rational.ERational.Denominator);
             var digits = magnitude * size;
             if (digits > MathLimits.MAX_EXACT_DIGITS && rational.ERational.Sign > 0)
-                throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(power)}' would have about {digits:N0} digits as an exact number; its decimal logarithm is about {exponent.Value * (Log10(rational.ERational.Numerator) - Log10(rational.ERational.Denominator)):0.###}. AngouriMath computes such a number in full and cannot stop midway, so exact numbers are limited to {MathLimits.MAX_EXACT_DIGITS:N0} digits."));
+                throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(power)}' would have about {digits:N0} digits as an exact number; its decimal logarithm is about {exponent.Value * (Log10(rational.ERational.Numerator) - Log10(rational.ERational.Denominator)):0.###}. The tool computes such a number in full and cannot stop midway, so exact numbers are limited to {MathLimits.MAX_EXACT_DIGITS:N0} digits."));
 
             return digits;
         }

@@ -42,18 +42,18 @@ public static partial class MathExpressionReader
             throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"Argument '{argumentName}' has {text.Length:N0} characters, but at most {MathLimits.MAX_EXPRESSION_LENGTH:N0} are read."));
 
         if (text.Contains("!=", StringComparison.Ordinal))
-            throw new MathComputationException($"Argument '{argumentName}' contains '!=', which AngouriMath reads as a factorial followed by '='. Not-equal is written '<>'.");
+            throw new MathComputationException($"Argument '{argumentName}' contains '!=', which the tool reads as a factorial followed by '='. Not-equal is written '<>'.");
 
         if (text.Contains('|'))
-            throw new MathComputationException($"Argument '{argumentName}' contains '|', which AngouriMath reads as divisibility. The absolute value is written abs(x), and 'or' joins two statements.");
+            throw new MathComputationException($"Argument '{argumentName}' contains '|', which the tool reads as divisibility. The absolute value is written abs(x), and 'or' joins two statements.");
 
         var equalsSigns = CountEqualsSigns(text);
         if (equalsSigns > 1)
-            throw new MathComputationException($"Argument '{argumentName}' contains {equalsSigns} equals signs, but an expression holds one equation at most. AngouriMath would read a chain of them as several equations joined by 'and'.");
+            throw new MathComputationException($"Argument '{argumentName}' contains {equalsSigns} equals signs, but an expression holds one equation at most. The tool would read a chain of them as several equations joined by 'and'.");
 
         var expression = Parse(text, argumentName);
         if (expression.Vars.Any(variable => variable.Name == "oo"))
-            throw new MathComputationException($"Argument '{argumentName}' uses 'oo', which AngouriMath reads as a variable. Infinity is written +oo or -oo.");
+            throw new MathComputationException($"Argument '{argumentName}' uses 'oo', which the tool reads as a variable. Infinity is written +oo or -oo.");
 
         return expression;
     }
@@ -117,7 +117,7 @@ public static partial class MathExpressionReader
         var right = match.Groups["right"].Value;
         var column = int.Parse(match.Groups["column"].Value, CultureInfo.InvariantCulture) + 1;
         if (right == "(" && IsName(left))
-            return $"Argument '{argumentName}' has no operator between '{left}' and '(' at column {column}. AngouriMath knows no function named '{left}', so it would read the name as a variable times the parentheses. Multiplication is written '*'.";
+            return $"Argument '{argumentName}' has no operator between '{left}' and '(' at column {column}. The tool knows no function named '{left}', so it would read the name as a variable times the parentheses. Multiplication is written '*'.";
 
         return $"Argument '{argumentName}' has no operator between '{left}' and '{right}' at column {column}. Multiplication is written '*', as in 2*x, and a function takes its argument in parentheses, as in sin(x).";
     }

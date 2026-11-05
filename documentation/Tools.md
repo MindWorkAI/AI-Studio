@@ -268,6 +268,8 @@ Every decimal literal is the fraction it writes, so `0.1 + 0.2` is exactly `3/10
 
 AngouriMath computes `sum(f, k, a, b)` only in closed form, as for powers of `k`, so `sum(k, k, 1, 10^7)` takes no time, while `sum(1/k, k, 1, 1000)` has no value. Such a sum, an infinite one, or a matrix is refused by `NumericEvaluator` in its own words, since AngouriMath's message addresses a developer.
 
+No text the model reads names AngouriMath: neither the instructions and schemas of the tools, nor a refusal or an issue. Where a sentence needs someone who computes, it says "the tool", as in "The tool found no closed form for this integral.": a model would take the name of the library for something it may call or look up. The tests of both tools check their definitions for it.
+
 ### Honest Digits
 
 A decimal shows only the digits the computation vouches for. `NumericEvaluator` evaluates twice, with 10 and with 20 guard digits, and keeps the digits in which both agree, because composite expressions lose a digit or two at the end. When fewer digits remain than were asked for, `issues` says so.
