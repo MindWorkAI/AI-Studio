@@ -41,10 +41,11 @@ public sealed class DataPromptOptimizer(Expression<Func<Data, DataPromptOptimize
     /// The file with the prompt guide to preselect. An empty path preselects the default prompt guide.
     /// </summary>
     /// <remarks>
-    /// The path names a file of the user and therefore stays absolute. The assistant reads its current
-    /// content whenever it applies the preselections.
+    /// The path names a file of the user and therefore stays absolute. A configuration plugin may give
+    /// a path relative to itself, which is resolved before it lands here. The assistant reads the
+    /// current content of the file whenever it applies the preselections.
     /// </remarks>
-    public string PreselectedCustomPromptGuidePath { get; set; } = string.Empty;
+    public string PreselectedCustomPromptGuidePath { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedCustomPromptGuidePath, string.Empty);
 
     /// <summary>
     /// The minimum confidence level required for a provider to be considered.

@@ -528,6 +528,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedTargetLanguage, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedOtherLanguage, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedImportantAspects, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedCustomPromptGuidePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
         ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 

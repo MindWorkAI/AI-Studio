@@ -1031,6 +1031,25 @@ CONFIG["SETTINGS"] = {}
 -- answer or constraints.
 -- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedImportantAspects"] = ""
 --
+-- Configure the prompt guide of your organization. The Prompt Optimizer then optimizes prompts
+-- along this guide instead of its default one, and it reads the current content of the file
+-- whenever it opens. Lock it so that users cannot choose another guide in the assistant; lock
+-- PreselectOptions as well, because the guide applies only while preselection is enabled.
+-- An empty path stands for the default guide: locked, it makes everybody use the default guide.
+--
+-- The simplest way is to ship the guide with this plugin: put the file, e.g., a Markdown, PDF,
+-- or Word document, next to this plugin.lua, or into a folder below it, and give its path
+-- relative to this plugin.lua. The path must stay inside the plugin directory, i.e., no '..'
+-- segments and no links pointing out of it. When the file is missing or the path is rejected,
+-- AI Studio logs a warning, and this plugin does not manage the guide: users keep the one they
+-- chose, or the default guide.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath"] = "Prompting-Guide.md"
+--
+-- An absolute path works as well. It must be readable on every machine, e.g., on a network
+-- share or in a folder your software distribution fills; for Flatpak installations, it must
+-- be readable inside the sandbox.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath"] = "C:\\Guides\\Prompting-Guide.md"
+--
 -- Configure the minimum provider confidence required to optimize prompts.
 -- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Providers below this level cannot be selected in the Prompt Optimizer. This minimum applies
@@ -1046,6 +1065,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedTargetLanguage.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedOtherLanguage.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedImportantAspects.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataPromptOptimizer.MinimumProviderConfidence.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedProvider.AllowUserOverride"] = true
 

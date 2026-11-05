@@ -79,7 +79,11 @@
     </MudGrid>
 } 
 
-@if (this.useCustomPromptGuide)
+@if (this.useCustomPromptGuide && this.IsCustomPromptGuideLocked)
+{
+<MudJustifiedText Class="mb-3">@T("Use the prompt recommendations from the prompt guide of your organization.")</MudJustifiedText>
+}
+else if (this.useCustomPromptGuide)
 {
 <MudJustifiedText Class="mb-3">@T("Use the prompt recommendations from the custom prompt guide.")</MudJustifiedText>
 }
@@ -91,7 +95,7 @@
         @T("View default prompt guide")
     </MudButton>
 
-    <MudSwitch T="bool" Value="@this.useCustomPromptGuide" ValueChanged="@this.SetUseCustomPromptGuide" Color="Color.Primary" Class="mx-1">
+    <MudSwitch T="bool" Value="@this.useCustomPromptGuide" ValueChanged="@this.SetUseCustomPromptGuide" Disabled="@this.IsCustomPromptGuideLocked" Color="Color.Primary" Class="mx-1">
         @T("Use custom prompt guide")
     </MudSwitch>
 
@@ -112,7 +116,7 @@
     </MudButton>
 </MudStack>
 
-@if (this.useCustomPromptGuide)
+@if (this.useCustomPromptGuide && !this.IsCustomPromptGuideLocked)
 {
     <ReadFileContent Text="@T("Load the prompt guide from file")"
                      @bind-FileContent="@this.customPromptingGuidelineContent"
