@@ -84,6 +84,23 @@ public sealed class ConversationPartsTests
     }
 
     [Test]
+    public void AnEarlierAnswerCountsWithTheNoteOfTheToolsItUsed()
+    {
+        var answer = new ContentText
+        {
+            Text = "The page describes the travel rules.",
+            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" } }],
+        };
+
+        var time = new DateTimeOffset(2026, 11, 5, 14, 32, 0, TimeSpan.Zero);
+        var thread = new ChatThread { Blocks = [new ContentBlock { Role = ChatRole.AI, ContentType = ContentType.TEXT, Content = answer, Time = time }] };
+
+        var parts = ConversationParts.Of(thread, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
+
+        Assert.That(parts.Texts, Is.EqualTo(new[] { $"{ToolCallHistoryNote.Build(answer, time)}{Environment.NewLine}{Environment.NewLine}{answer.Text}" }), "The message builder sends the note in front of the answer.");
+    }
+
+    [Test]
     public void AnAnswerWhichIsFinishedStandsLikeAnyOtherMessage()
     {
         var finished = Block("The whole answer.");
