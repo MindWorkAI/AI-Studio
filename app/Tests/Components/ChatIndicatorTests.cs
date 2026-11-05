@@ -110,6 +110,49 @@ public sealed class ChatIndicatorTests
     }
 
     [Test]
+    public void AChatFoundInsideShowsTheSearchIcon()
+    {
+        var indicator = ChatIndicator.FoundInChat(ChatIndicator.PLAIN);
+        Assert.That(indicator, Is.EqualTo(ChatIndicator.FOUND_IN_CHAT));
+    }
+
+    [Test]
+    public void AnUnreadAnswerGivesTheSearchIconNoBadge()
+    {
+        var indicator = ChatIndicator.FoundInChat(ChatIndicator.ANSWER_UNREAD);
+        Assert.That(indicator.Badge, Is.EqualTo(ChatIndicatorBadge.NONE));
+    }
+
+    [Test]
+    public void WorkGoingOnStaysVisibleAsTheBadgeOfTheSearchIcon([Values] bool isTranscript)
+    {
+        var state = isTranscript
+            ? ChatIndicator.Of(MediaImportStatus.RUNNING, answerState: null)
+            : ChatIndicator.Of(transcriptState: null, AIJobStatus.RUNNING);
+
+        var indicator = ChatIndicator.FoundInChat(state);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(indicator.Icon, Is.EqualTo(ChatIndicator.FOUND_IN_CHAT.Icon));
+            Assert.That(indicator.IsSpinning, Is.False);
+            Assert.That(indicator.Badge, Is.EqualTo(ChatIndicatorBadge.WORK_GOING_ON));
+        }
+    }
+
+    [Test]
+    public void AFailureStaysVisibleAsTheBadgeOfTheSearchIcon([Values] bool isTranscript)
+    {
+        var state = isTranscript
+            ? ChatIndicator.Of(MediaImportStatus.FAILED, answerState: null)
+            : ChatIndicator.Of(transcriptState: null, AIJobStatus.FAILED, isAnswerOutcomeSeen: false);
+
+        var indicator = ChatIndicator.FoundInChat(state);
+
+        Assert.That(indicator.Badge, Is.EqualTo(ChatIndicatorBadge.FAILED));
+    }
+
+    [Test]
     public void AChatWithoutAnyWorkShowsThePlainIcon()
     {
         var indicator = ChatIndicator.Of(transcriptState: null, answerState: null);

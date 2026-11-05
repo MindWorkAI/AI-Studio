@@ -1,0 +1,24 @@
+/*
+ * The line below the field, which tells why the search found the current result. It always takes the
+ * height of one line of small text and cuts what is longer, so the list below never moves.
+ */
+.workspace-search-reason {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 20px;
+    margin-top: 4px;
+    font-size: 0.75rem;
+}
+
+.workspace-search-reason ::deep .workspace-search-reason-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.workspace-search-reason-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -45,7 +45,7 @@
                         @this.RenderWorkspaceSidebarHeader(canHide: this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR, canClose: false)
                     </HeaderContent>
                     <ChildContent>
-                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
+                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
                     </ChildContent>
                 </InnerScrolling>
                 <div class="chat-sidebar-handle" role="separator" aria-orientation="vertical" @ref="this.sidebarHandle"></div>
@@ -110,7 +110,7 @@
                 @this.RenderWorkspaceSidebarHeader(canHide: false, canClose: true)
             </MudDrawerHeader>
             <MudDrawerContainer>
-                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
+                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
             </MudDrawerContainer>
         </MudDrawer>
     }
@@ -118,11 +118,22 @@
 
 @code {
     /// <summary>
-    /// The row above the workspace list, which is the same in the sidebar and in the overlay.
+    /// The header above the workspace list, which is the same in the sidebar and in the overlay: a row
+    /// of buttons, and the field of the search below it while the search is open. Both stay in place
+    /// while the list scrolls.
     /// </summary>
     /// <param name="canHide">Whether the row offers to hide the sidebar.</param>
     /// <param name="canClose">Whether the row offers to close the overlay.</param>
-    private RenderFragment RenderWorkspaceSidebarHeader(bool canHide, bool canClose) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Wrap="Wrap.NoWrap" Spacing="0" Class="px-1 pt-1" Style="width: 100%;">
+    private RenderFragment RenderWorkspaceSidebarHeader(bool canHide, bool canClose) => @<div style="width: 100%;">
+        @this.RenderWorkspaceSidebarButtons(canHide, canClose)
+        @if (this.workspaceSearchVisible)
+        {
+            <WorkspaceSearchBar Search="@this.workspaceSearch" CloseRequested="@this.CloseWorkspaceSearch"/>
+        }
+    </div>;
+
+    /// <inheritdoc cref="RenderWorkspaceSidebarHeader"/>
+    private RenderFragment RenderWorkspaceSidebarButtons(bool canHide, bool canClose) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Wrap="Wrap.NoWrap" Spacing="0" Class="px-1 pt-1" Style="width: 100%;">
         <MudTooltip Text="@this.WorkspaceSearchTooltip" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
             <MudIconButton Icon="@this.WorkspaceSearchIcon" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
         </MudTooltip>

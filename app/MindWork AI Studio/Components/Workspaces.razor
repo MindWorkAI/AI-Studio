@@ -13,88 +13,49 @@
 }
 else
 {
-    @if (this.SearchVisible)
-    {
-        <div class="workspace-search px-2 pt-1 pb-2" style="position: sticky; top: 0; z-index: 2; background-color: var(--workspace-list-background, var(--mud-palette-background));">
-            <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Wrap="Wrap.NoWrap" Spacing="1">
-                <MudTextField T="string"
-                              Text="@this.searchText"
-                              TextChanged="@this.OnSearchTextChanged"
-                              Placeholder="@this.SearchPlaceholder"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Typo="Typo.body1"
-                              Immediate="@true"
-                              Clearable="@true"
-                              Class="mt-0"/>
-                <MudTooltip Text="@T("Search chat contents")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                    <MudToggleIconButton Toggled="@this.includeThreadContents" ToggledChanged="@this.IncludeThreadContentsChanged" Icon="@Icons.Material.Outlined.ManageSearch" ToggledIcon="@Icons.Material.Outlined.ManageSearch" ToggledColor="Color.Primary" aria-label="@T("Search chat contents")"/>
-                </MudTooltip>
-            </MudStack>
-            @if (this.isSearchRunning)
-            {
-                <MudProgressLinear Indeterminate="@true" Color="Color.Primary" Size="Size.Small" Class="mt-1"/>
-            }
-        </div>
-    }
-
     <div class="workspace-list" @ref="@this.listElement">
-        @if (this.isShowingSearchResults && this.workspaces.Count == 0 && this.temporaryChats.Count == 0)
-        {
-            <MudText Typo="Typo.body1" Class="px-4 py-2 mud-text-secondary">
-                @T("No chats found")
-            </MudText>
-        }
-        else
-        {
-            @if (!this.isShowingSearchResults || this.workspaces.Count > 0)
-            {
-                <div class="workspace-section-start" @ref="@this.workspacesSectionStart"></div>
-                @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, canAddWorkspace: true)
+        @* A search leaves every workspace and chat in its place and only marks what it found: *@
+        <div class="workspace-section-start" @ref="@this.workspacesSectionStart"></div>
+        @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, canAddWorkspace: true)
 
-                @if (!this.IsWorkspacesSectionCollapsed)
-                {
-                    @if (this.workspaces.Count == 0)
-                    {
-                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Outlined.CreateNewFolder" Class="ml-2 mb-1" OnClick="@this.AddWorkspaceAsync">
-                            @T("Add workspace")
-                        </MudButton>
-                    }
-                    else
-                    {
-                        <MudList T="string" Dense="@true" ReadOnly="@true">
-                            @foreach (var workspace in this.workspaces)
-                            {
-                                @this.RenderWorkspace(workspace)
-                            }
-                        </MudList>
-                    }
-                }
+        @if (!this.IsWorkspacesSectionCollapsed)
+        {
+            @if (this.workspaces.Count == 0)
+            {
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Outlined.CreateNewFolder" Class="ml-2 mb-1" OnClick="@this.AddWorkspaceAsync">
+                    @T("Add workspace")
+                </MudButton>
             }
-
-            @if (!this.isShowingSearchResults || this.temporaryChats.Count > 0)
+            else
             {
-                <div class="workspace-section-start" @ref="@this.temporaryChatsSectionStart"></div>
-                @this.RenderSectionHeader(T("Disappearing Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: true, canAddWorkspace: false)
+                <MudList T="string" Dense="@true" ReadOnly="@true">
+                    @foreach (var workspace in this.workspaces)
+                    {
+                        @this.RenderWorkspace(workspace)
+                    }
+                </MudList>
+            }
+        }
 
-                @if (!this.IsTemporaryChatsSectionCollapsed)
-                {
-                    @if (this.temporaryChats.Count == 0)
+        <div class="workspace-section-start" @ref="@this.temporaryChatsSectionStart"></div>
+        @this.RenderSectionHeader(T("Disappearing Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: true, canAddWorkspace: false)
+
+        @if (!this.IsTemporaryChatsSectionCollapsed)
+        {
+            @if (this.temporaryChats.Count == 0)
+            {
+                <MudText Typo="Typo.body1" Class="px-4 py-1 mud-text-secondary">
+                    @T("No disappearing chats")
+                </MudText>
+            }
+            else
+            {
+                <MudList T="string" Dense="@true" ReadOnly="@true">
+                    @foreach (var temporaryChat in this.temporaryChats)
                     {
-                        <MudText Typo="Typo.body1" Class="px-4 py-1 mud-text-secondary">
-                            @T("No disappearing chats")
-                        </MudText>
+                        @this.RenderChat(temporaryChat, isNested: false)
                     }
-                    else
-                    {
-                        <MudList T="string" Dense="@true" ReadOnly="@true">
-                            @foreach (var temporaryChat in this.temporaryChats)
-                            {
-                                @this.RenderChat(temporaryChat, isNested: false)
-                            }
-                        </MudList>
-                    }
-                }
+                </MudList>
             }
         }
     </div>
@@ -123,10 +84,10 @@ else
     /// results of a search cannot be collapsed, so they have no button.
     /// </para>
     /// </remarks>
-    private RenderFragment RenderSectionHeader(string title, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle, Func<ElementReference> sectionStart, bool isSecond, bool canAddWorkspace) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Spacing="0" Class="@this.GetSectionHeaderClasses(isSecond)">
+    private RenderFragment RenderSectionHeader(string title, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle, Func<ElementReference> sectionStart, bool isSecond, bool canAddWorkspace) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Spacing="0" Class="@GetSectionHeaderClasses(isSecond)">
         @if (this.isShowingSearchResults)
         {
-            <MudText Typo="Typo.button" Class="px-2 py-1 mud-text-secondary" title="@title">
+            <MudText Typo="Typo.button" Class="px-2 py-1 mud-text-secondary">
                 @title
             </MudText>
         }
@@ -134,7 +95,7 @@ else
         {
             var isMarked = isCollapsed && containsCurrentChat;
             <div class="@(isMarked ? "workspace-section-toggle d-flex align-center is-current" : "workspace-section-toggle d-flex align-center")" style="cursor: pointer;" @onclick="@(() => this.ClickSectionTitleAsync(sectionStart(), isCollapsed, toggle))">
-                <MudText Typo="Typo.button" Color="@(isMarked ? Color.Primary : Color.Default)" Class="px-2" title="@title">
+                <MudText Typo="Typo.button" Color="@(isMarked ? Color.Primary : Color.Default)" Class="px-2">
                     @title
                 </MudText>
                 <MudIconButton Icon="@GetSectionChevron(isCollapsed)" Color="@(isMarked ? Color.Primary : Color.Default)" aria-label="@title" aria-expanded="@(isCollapsed ? "false" : "true")" OnClick="@toggle"/>
@@ -167,23 +128,25 @@ else
                 <MudBadge Dot="@true" Overlap="@true" Bordered="@true" Visible="@(markColor is not null)" Color="@(markColor ?? Color.Default)" Class="d-flex flex-shrink-0">
                     <MudIcon Icon="@(isExpanded ? AppIcons.FOLDER_OPEN_OUTLINED : Icons.Material.Outlined.Folder)"/>
                 </MudBadge>
-                <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@NAME_STYLE" title="@workspace.Name">
-                    @workspace.Name
+                <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@NAME_STYLE">
+                    @this.RenderSearchText(workspace.Name, isResult: this.nameMatchedWorkspaceIds.Contains(workspace.WorkspaceId))
                 </MudText>
-                @if (!this.isShowingSearchResults)
+                @if (this.isShowingSearchResults && !isExpanded && this.CountSearchResultsIn(workspace) is > 0 and var resultCount)
                 {
-                    <div class="workspace-item-actions flex-shrink-0" @onclick:stopPropagation="@true">
-                        <MudTooltip Text="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                            <MudIconButton Icon="@AppIcons.EDIT_SQUARE_OUTLINED" aria-label="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
-                        </MudTooltip>
-                        <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" AriaLabel="@T("Workspace options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(workspace.WorkspaceId, isOpen))">
-                            <MudMenuItem Icon="@AppIcons.EDIT_SQUARE_OUTLINED" Label="@T("Start a new chat")" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
-                            <MudMenuItem Icon="@Icons.Material.Outlined.Edit" Label="@T("Rename")" OnClick="@(() => this.RenameWorkspaceAsync(workspace.WorkspacePath))"/>
-                            <MudDivider/>
-                            <MudMenuItem Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" Label="@T("Delete")" OnClick="@(() => this.DeleteWorkspaceAsync(workspace.WorkspacePath))"/>
-                        </CompactMenu>
-                    </div>
+                    @* A collapsed workspace tells how many results of the search it hides: *@
+                    <span class="workspace-result-count flex-shrink-0">@resultCount</span>
                 }
+                <div class="workspace-item-actions flex-shrink-0" @onclick:stopPropagation="@true">
+                    <MudTooltip Text="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                        <MudIconButton Icon="@AppIcons.EDIT_SQUARE_OUTLINED" aria-label="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                    </MudTooltip>
+                    <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" AriaLabel="@T("Workspace options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(workspace.WorkspaceId, isOpen))">
+                        <MudMenuItem Icon="@AppIcons.EDIT_SQUARE_OUTLINED" Label="@T("Start a new chat")" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                        <MudMenuItem Icon="@Icons.Material.Outlined.Edit" Label="@T("Rename")" OnClick="@(() => this.RenameWorkspaceAsync(workspace.WorkspacePath))"/>
+                        <MudDivider/>
+                        <MudMenuItem Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" Label="@T("Delete")" OnClick="@(() => this.DeleteWorkspaceAsync(workspace.WorkspacePath))"/>
+                    </CompactMenu>
+                </div>
             </div>
         </MudListItem>
 
@@ -213,25 +176,31 @@ else
     /// </summary>
     private RenderFragment RenderChat(WorkspaceTreeChat chat, bool isNested) => @<text>
         @{
-            var indicator = this.GetChatIndicator(chat.ChatId);
+            var state = this.GetChatIndicator(chat.ChatId);
+            var indicator = this.GetChatIcon(chat, state);
             var name = string.IsNullOrWhiteSpace(chat.Name) ? T("Empty chat") : chat.Name;
         }
-        <MudListItem T="string" Class="@this.GetChatItemClasses(chat, isNested)" OnClick="@(() => this.LoadChatAsync(chat.ChatPath, true))">
+        <MudListItem T="string" Class="@this.GetChatItemClasses(chat, isNested)" OnClick="@(() => this.OpenChatAsync(chat))">
             <div class="d-flex align-center gap-2" style="min-width: 0; height: 24px;">
-                @* The slot gives whatever shows the chat's state its size, see Workspaces.razor.css: *@
-                <span class="workspace-chat-icon flex-shrink-0" style="@this.GetChatIconStyle(chat, indicator)">
-                    @if (indicator.IsSpinning)
-                    {
-                        <MudProgressCircular Indeterminate="@true" Size="Size.Small" Color="@indicator.Color" StrokeWidth="5"/>
-                    }
-                    else
-                    {
-                        <MudIcon Icon="@indicator.Icon" Color="@indicator.Color"/>
-                    }
-                </span>
-                <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@($"{NAME_STYLE} {GetChatNameColorStyle(indicator)}")" title="@name">
-                    @name
-                </MudText>
+                @if (this.chatPassages.TryGetValue(chat.ChatId, out var passage))
+                {
+                    @* A chat whose messages, attached files, or sources hold the words explains its magnifier under the pointer: *@
+                    <MudTooltip Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT" Delay="@ChatSearchPassageView.TOOLTIP_DELAY" RootClass="d-flex align-center gap-2 flex-grow-1" RootStyle="min-width: 0;">
+                        <ChildContent>
+                            @this.RenderChatIconAndName(chat, state, indicator, name)
+                        </ChildContent>
+                        <TooltipContent>
+                            <div style="@ChatSearchPassageView.TOOLTIP_CONTENT_STYLE">
+                                <div style="font-weight: 500;">@name</div>
+                                <ChatSearchPassageView Passage="@passage" IsAlso="@this.nameMatchedChatIds.Contains(chat.ChatId)" Terms="@this.searchTerms"/>
+                            </div>
+                        </TooltipContent>
+                    </MudTooltip>
+                }
+                else
+                {
+                    @this.RenderChatIconAndName(chat, state, indicator, name)
+                }
                 <div class="workspace-item-actions flex-shrink-0" @onclick:stopPropagation="@true">
                     <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" AriaLabel="@T("Chat options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(chat.ChatId, isOpen))">
                         @{
@@ -247,4 +216,53 @@ else
             </div>
         </MudListItem>
     </text>;
+
+    /// <summary>
+    /// The icon and the name of a chat, which a chat found in its messages wraps in its tooltip.
+    /// </summary>
+    /// <param name="chat">The chat.</param>
+    /// <param name="state">What the icon would show without a search, whose color the name repeats.</param>
+    /// <param name="indicator">What the icon shows.</param>
+    /// <param name="name">The name of the chat.</param>
+    private RenderFragment RenderChatIconAndName(WorkspaceTreeChat chat, ChatIndicator state, ChatIndicator indicator, string name) => @<text>
+        @* The slot gives whatever shows the chat's state its size, see Workspaces.razor.css: *@
+        <span class="workspace-chat-icon flex-shrink-0" style="@this.GetChatIconStyle(chat, indicator)">
+            @if (indicator.IsSpinning)
+            {
+                <MudProgressCircular Indeterminate="@true" Size="Size.Small" Color="@indicator.Color" StrokeWidth="5"/>
+            }
+            else
+            {
+                <MudIcon Icon="@indicator.Icon" Color="@indicator.Color" Style="@GetIconScaleStyle(indicator)"/>
+            }
+            @switch (indicator.Badge)
+            {
+                case ChatIndicatorBadge.WORK_GOING_ON:
+                    <span class="workspace-chat-badge">
+                        <MudProgressCircular Indeterminate="@true" Size="Size.Small" Color="Color.Default" StrokeWidth="6"/>
+                    </span>
+                    break;
+
+                case ChatIndicatorBadge.FAILED:
+                    <span class="workspace-chat-badge">
+                        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                    </span>
+                    break;
+            }
+        </span>
+        <MudText Typo="Typo.body1" Class="flex-grow-1" Style="@($"{NAME_STYLE} {GetChatNameColorStyle(state)}")">
+            @this.RenderSearchText(name, isResult: this.searchResultChatIds.Contains(chat.ChatId))
+        </MudText>
+    </text>;
+
+    /// <summary>
+    /// A name of the list, with the words of the search marked while the list shows its results.
+    /// </summary>
+    /// <remarks>
+    /// Only a result marks its words. A name which holds some of the words without being a result would
+    /// look found, while the field counts no such result.
+    /// </remarks>
+    /// <param name="text">The name, or the passage of a result.</param>
+    /// <param name="isResult">Whether the text belongs to a result of the search.</param>
+    private RenderFragment RenderSearchText(string text, bool isResult) => @<SearchHighlightedText Text="@text" Terms="@this.GetTermsToMark(isResult)"/>;
 }

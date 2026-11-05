@@ -1,0 +1,11 @@
+@foreach (var part in SearchText.Highlight(this.Text, this.Terms))
+{
+    @if (part.IsMatch)
+    {
+        <mark>@part.Text</mark>
+    }
+    else
+    {
+        @part.Text
+    }
+}

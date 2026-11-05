@@ -6418,14 +6418,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T156144855"] = "Rename Chat"
 -- Add workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1586005241"] = "Add workspace"
 
--- Search names and contents
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1613054022"] = "Search names and contents"
-
 -- Start a new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1840064668"] = "Start a new chat in workspace '{0}'"
-
--- No chats found
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1886517101"] = "No chats found"
 
 -- Please name your workspace:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T201482774"] = "Please name your workspace:"
@@ -6472,9 +6466,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3355849203"] = "Rename"
 -- Please enter a new or edit the name for your chat '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3419791373"] = "Please enter a new or edit the name for your chat '{0}':"
 
--- Search chat contents
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3436662033"] = "Search chat contents"
-
 -- Load Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3555709365"] = "Load Chat"
 
@@ -6493,9 +6484,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3891063690"] = "Chat Name"
 -- Empty chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4019509364"] = "Empty chat"
 
--- Search names
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4023527225"] = "Search names"
-
 -- Workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4048389951"] = "Workspaces"
 
@@ -6507,6 +6495,42 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T474393241"] = "Please select
 
 -- Delete Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T701874671"] = "Delete Workspace"
+
+-- Search chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1615077202"] = "Search chats"
+
+-- None in list
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1739405746"] = "None in list"
+
+-- No chat or workspace holds all of these words
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1746933036"] = "No chat or workspace holds all of these words"
+
+-- No chat or workspace holds this word
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2296834106"] = "No chat or workspace holds this word"
+
+-- Next result in the list (Enter)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2380199316"] = "Next result in the list (Enter)"
+
+-- Put words in quotes to find an exact phrase
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2598527810"] = "Put words in quotes to find an exact phrase"
+
+-- Searching inside the chats …
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2601633055"] = "Searching inside the chats …"
+
+-- Searches the names of chats and workspaces, their messages, and the names of attached files and sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T3297609252"] = "Searches the names of chats and workspaces, their messages, and the names of attached files and sources."
+
+-- Found in the name of the chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T4123347636"] = "Found in the name of the chat"
+
+-- {0}/{1} in list
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T55151488"] = "{0}/{1} in list"
+
+-- Found in the name of the workspace
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T651470427"] = "Found in the name of the workspace"
+
+-- Previous result in the list (Shift+Enter)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T962086857"] = "Previous result in the list (Shift+Enter)"
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTDRAFTDIALOG::T3267849393"] = "Edit"
@@ -11146,14 +11170,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Localization"
 -- Turn texts and documents into slides, also as a PowerPoint file in the design of your template.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T943132958"] = "Turn texts and documents into slides, also as a PowerPoint file in the design of your template."
 
--- Hide search
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1281128983"] = "Hide search"
-
 -- Options for your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1668416121"] = "Options for your workspaces"
 
 -- Reload your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T194629703"] = "Reload your workspaces"
+
+-- Close the search
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T216507668"] = "Close the search"
 
 -- Hide your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2351468526"] = "Hide your workspaces"
@@ -12960,6 +12984,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATARCHIVE::CHATARCHIVEIMPORTER::T3123318432"
 
 -- Imported workspace
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATARCHIVE::CHATARCHIVEIMPORTER::T722364324"] = "Imported workspace"
+
+-- Found in its name and in a source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T188293899"] = "Found in its name and in a source"
+
+-- Found in one of its sources
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T2147359535"] = "Found in one of its sources"
+
+-- Found in its messages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T3108260760"] = "Found in its messages"
+
+-- Found in the name of an attached file
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T3431587698"] = "Found in the name of an attached file"
+
+-- Found in its name and its messages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T3907694920"] = "Found in its name and its messages"
+
+-- Found in its name and in an attached file
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T4101235486"] = "Found in its name and in an attached file"
 
 -- Spanish (Spain)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T1269145091"] = "Spanish (Spain)"

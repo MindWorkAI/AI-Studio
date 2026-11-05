@@ -48,18 +48,30 @@ public partial class Workspaces : MSGComponentBase
     [Parameter]
     public EventCallback<Guid> StartNewChatRequested { get; set; }
 
+    /// <summary>
+    /// The search, whose field sits in the header of the sidebar. While it holds a text, the list shows
+    /// the chats it found instead of all workspaces and chats.
+    /// </summary>
     [Parameter]
-    public bool SearchVisible { get; set; }
-
-    [Parameter]
-    public EventCallback<bool> SearchVisibleChanged { get; set; }
+    public WorkspaceSearch? Search { get; set; }
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
 
     /// <summary>
+    /// The pause in typing after which the list also searches the contents of the chats.
+    /// </summary>
+    private static readonly TimeSpan CONTENT_SEARCH_DELAY = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
     /// Cuts a name which is too long for its row, instead of breaking it into several lines.
     /// </summary>
-    private const string NAME_STYLE = "min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
+    /// <remarks>
+    /// Cutting hides whatever lies beyond the box of the name, such as the room a mark of the search
+    /// takes around a word at the start or the end of the name, see SearchHighlightedText.razor.css. The
+    /// box therefore reaches 2 pixels further on each side, and its negative margin takes them back, so
+    /// the name stays in its place.
+    /// </remarks>
+    private const string NAME_STYLE = "min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; margin: 0 -2px;";
 
     /// <summary>
     /// The hover effect and pointer of a clickable list item. The lists are read-only, because the
@@ -82,13 +94,59 @@ public partial class Workspaces : MSGComponentBase
     private IReadOnlyList<WorkspaceTreeChat> temporaryChats = [];
 
     /// <summary>
-    /// Whether the list shows the results of a search instead of all workspaces and chats.
+    /// Whether the list shows what a search found.
     /// </summary>
     /// <remarks>
-    /// Differs from <see cref="this.HasSearchQuery"/> while a search is still running: the list then
-    /// keeps showing what it showed before, and has to be drawn as such.
+    /// The list keeps showing all workspaces and chats in their usual places, so that nothing jumps while
+    /// the user types. A search only marks what it found: the words in the names, and the icon of a chat
+    /// found in its messages. Differs from <see cref="this.HasSearchQuery"/> while the first step of a
+    /// search still runs: the list then keeps showing what it showed before.
     /// </remarks>
     private bool isShowingSearchResults;
+
+    /// <summary>
+    /// The words of the search whose results the list shows, which the names mark.
+    /// </summary>
+    private IReadOnlyList<string> searchTerms = [];
+
+    /// <summary>
+    /// The workspaces which the search found by their own names.
+    /// </summary>
+    private readonly HashSet<Guid> nameMatchedWorkspaceIds = [];
+
+    /// <summary>
+    /// The chats which the search found, each by what it holds itself: its name, messages, attached files,
+    /// and sources.
+    /// </summary>
+    private readonly HashSet<Guid> searchResultChatIds = [];
+
+    /// <summary>
+    /// For the chats which hold words of the search in their messages, attached files, or sources, where
+    /// they hold the first one, which shows when the pointer rests on the chat.
+    /// </summary>
+    private readonly Dictionary<Guid, ChatSearchPassage> chatPassages = [];
+
+    /// <summary>
+    /// The chats which the search found by their own names, so that their messages, attached files, or
+    /// sources only hold the words as well, rather than being why the chat was found.
+    /// </summary>
+    private readonly HashSet<Guid> nameMatchedChatIds = [];
+
+    /// <summary>
+    /// The workspaces the user expanded or collapsed while the list shows the results of a search. This
+    /// lasts until the search ends and leaves the state of the whole list alone.
+    /// </summary>
+    private readonly Dictionary<Guid, bool> searchExpandedWorkspaces = [];
+
+    /// <summary>
+    /// The result of the search which the user stepped to, a workspace or a chat, or null.
+    /// </summary>
+    private Guid? currentSearchResultId;
+
+    /// <summary>
+    /// Whether the list still has to scroll the current result of the search into view.
+    /// </summary>
+    private bool isScrollToSearchResultPending;
 
     private ElementReference listElement;
 
@@ -131,16 +189,19 @@ public partial class Workspaces : MSGComponentBase
     private CancellationTokenSource? searchCancellationTokenSource;
     private bool isInitialLoading = true;
     private bool isDisposed;
-    private bool includeThreadContents;
-    private bool isSearchRunning;
-    private string searchText = string.Empty;
     private long searchRevision;
-    
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        if (this.Search is not null)
+        {
+            this.Search.TextChanged += this.OnSearchTextChanged;
+            this.Search.StepRequested += this.OnSearchStepRequested;
+        }
+
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED ]);
         this.LoadTreeItemsAsync(startPrefetch: true).Observe($"{nameof(Workspaces)}: loading the workspace tree");
@@ -206,6 +267,27 @@ public partial class Workspaces : MSGComponentBase
         }
 
         //
+        // The current result of the search scrolls into view when it is out of sight, after the user
+        // stepped to it, or when the search found a new first one:
+        //
+        if (this.isScrollToSearchResultPending && !this.isInitialLoading)
+        {
+            this.isScrollToSearchResultPending = false;
+            try
+            {
+                await this.JsRuntime.InvokeVoidAsync("scrollFirstMatchIntoView", this.listElement, ".is-search-current");
+            }
+            catch (JSDisconnectedException)
+            {
+                // Nobody is left to see the list.
+            }
+            catch (JSException ex)
+            {
+                this.Logger.LogWarning(ex, "Failed to scroll the current result of the search into view.");
+            }
+        }
+
+        //
         // The open chat may not be in the list yet: its workspace may still be loading, or the chat
         // is new and reaches the disk only with its first message. Until then, it stays pending.
         //
@@ -234,9 +316,14 @@ public partial class Workspaces : MSGComponentBase
 
     #endregion
 
-    private async Task LoadTreeItemsAsync(bool startPrefetch = true, bool forceReload = false)
+    /// <summary>
+    /// Loads the workspaces and chats into the list.
+    /// </summary>
+    /// <param name="startPrefetch">Whether to load the chats of all workspaces in the background afterward.</param>
+    /// <param name="forceReload">Whether to read everything from the disk anew.</param>
+    /// <param name="searchAgain">Whether a running search looks at the list anew, which may have changed under it.</param>
+    private async Task LoadTreeItemsAsync(bool startPrefetch = true, bool forceReload = false, bool searchAgain = true)
     {
-        var shouldRunSearch = false;
         await this.treeLoadingSemaphore.WaitAsync();
         try
         {
@@ -247,11 +334,7 @@ public partial class Workspaces : MSGComponentBase
                 await WorkspaceBehaviour.ForceReloadWorkspaceTreeAsync();
 
             var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-            if (this.HasSearchQuery)
-                shouldRunSearch = true;
-            else
-                this.BuildTreeItems(snapshot);
-
+            this.BuildTreeItems(snapshot);
             this.isInitialLoading = false;
         }
         finally
@@ -259,25 +342,21 @@ public partial class Workspaces : MSGComponentBase
             this.treeLoadingSemaphore.Release();
         }
 
-        if (shouldRunSearch)
-            await this.SearchWorkspaceItemsAsync();
-        else
-            await this.SafeStateHasChanged();
+        await this.SafeStateHasChanged();
+
+        //
+        // The list changed under a running search, so the search runs anew. In the background, since
+        // reading the contents of the chats may take a while, and whoever reloaded the list should
+        // not wait for that:
+        //
+        if (searchAgain && this.HasSearchQuery)
+            this.SearchAsync(isTyping: false).Observe($"{nameof(Workspaces)}: searching the chats anew");
 
         if (startPrefetch)
             await this.StartPrefetchAsync();
     }
 
-    private bool HasSearchQuery => this.SearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
-
-    /// <summary>
-    /// The placeholder of the search field, which tells what the search covers.
-    /// </summary>
-    /// <remarks>
-    /// Kept short, since the field shares the narrow sidebar with the button that switches the
-    /// search of the contents. Everything in this list is a chat, so the texts leave that word out.
-    /// </remarks>
-    private string SearchPlaceholder => this.includeThreadContents ? T("Search names and contents") : T("Search names");
+    private bool HasSearchQuery => !string.IsNullOrWhiteSpace(this.Search?.Text);
 
     private string GetAddChatToWorkspaceTooltip(string workspaceName) => string.Format(T("Start a new chat in workspace '{0}'"), workspaceName);
 
@@ -309,25 +388,199 @@ public partial class Workspaces : MSGComponentBase
             .ToList();
 
         this.temporaryChats = snapshot.TemporaryChats.OrderByDescending(x => x.LastEditTime).ToList();
-        this.isShowingSearchResults = false;
     }
 
     /// <summary>
-    /// Shows the results of a search, in the same shape as the whole list.
+    /// Marks what a search found in the list, which keeps showing all workspaces and chats.
     /// </summary>
     /// <remarks>
-    /// The results keep the order the search gave them. Their workspaces count as loaded, because
-    /// they hold exactly the chats which matched.
+    /// The result the user stepped to stays the current one, as long as the search still finds it.
+    /// Otherwise, the first result becomes the current one, and the list scrolls to it when it is out
+    /// of sight; it opens no workspace for it, though, so that nothing moves while the user types. Then
+    /// the field learns how many results there are.
     /// </remarks>
-    private void BuildSearchTreeItems(WorkspaceSearchSnapshot snapshot)
+    /// <param name="snapshot">What the search found.</param>
+    /// <param name="terms">The words of the search.</param>
+    private void ShowSearchResults(WorkspaceSearchSnapshot snapshot, IReadOnlyList<string> terms)
     {
-        this.workspaces = snapshot.Workspaces
-            .Select(workspace => new WorkspaceTreeWorkspace(workspace.WorkspaceId, workspace.WorkspacePath, workspace.Name, ChatsLoaded: true, workspace.Chats.Select(result => result.Chat).ToList()))
-            .ToList();
-
-        this.temporaryChats = snapshot.TemporaryChats.Select(result => result.Chat).ToList();
         this.isShowingSearchResults = true;
+        this.searchTerms = terms;
+
+        this.nameMatchedWorkspaceIds.Clear();
+        this.searchResultChatIds.Clear();
+        this.chatPassages.Clear();
+        this.nameMatchedChatIds.Clear();
+        foreach (var workspace in snapshot.Workspaces)
+        {
+            if (workspace.NameMatched)
+                this.nameMatchedWorkspaceIds.Add(workspace.WorkspaceId);
+
+            foreach (var result in workspace.Chats)
+                this.AddSearchResult(result);
+        }
+
+        foreach (var result in snapshot.TemporaryChats)
+            this.AddSearchResult(result);
+
+        var results = this.GetSearchResultsInOrder();
+        if (this.currentSearchResultId is not { } current || !results.Contains(current))
+        {
+            this.currentSearchResultId = results.Count > 0 ? results[0] : null;
+            this.isScrollToSearchResultPending = this.currentSearchResultId is not null;
+        }
+
+        this.PublishSearchResults(results);
     }
+
+    /// <summary>
+    /// Adds a chat which the search found, see <see cref="this.searchResultChatIds"/>.
+    /// </summary>
+    private void AddSearchResult(WorkspaceSearchResult result)
+    {
+        this.searchResultChatIds.Add(result.Chat.ChatId);
+        if (result.Passage is { } passage)
+            this.chatPassages[result.Chat.ChatId] = passage;
+
+        if (result.NameMatched)
+            this.nameMatchedChatIds.Add(result.Chat.ChatId);
+    }
+
+    /// <summary>
+    /// Takes the marks of a search from the list, which shows all workspaces and chats as before.
+    /// </summary>
+    private void ClearSearchResults()
+    {
+        this.isShowingSearchResults = false;
+        this.searchTerms = [];
+        this.nameMatchedWorkspaceIds.Clear();
+        this.searchResultChatIds.Clear();
+        this.chatPassages.Clear();
+        this.nameMatchedChatIds.Clear();
+        this.searchExpandedWorkspaces.Clear();
+        this.currentSearchResultId = null;
+        this.isScrollToSearchResultPending = false;
+        this.PublishSearchResults([]);
+    }
+
+    /// <summary>
+    /// The results of the search in the order the list shows them: each workspace found by its name,
+    /// followed by the chats of the workspace which count as results, and then the disappearing chats.
+    /// </summary>
+    private List<Guid> GetSearchResultsInOrder()
+    {
+        var results = new List<Guid>();
+        foreach (var workspace in this.workspaces)
+        {
+            if (this.nameMatchedWorkspaceIds.Contains(workspace.WorkspaceId))
+                results.Add(workspace.WorkspaceId);
+
+            results.AddRange(workspace.Chats.Where(chat => this.searchResultChatIds.Contains(chat.ChatId)).Select(chat => chat.ChatId));
+        }
+
+        results.AddRange(this.temporaryChats.Where(chat => this.searchResultChatIds.Contains(chat.ChatId)).Select(chat => chat.ChatId));
+        return results;
+    }
+
+    /// <summary>
+    /// The words a text of the list marks: the words of the search, but only for a result.
+    /// </summary>
+    private IReadOnlyList<string> GetTermsToMark(bool isResult) => isResult && this.isShowingSearchResults ? this.searchTerms : [];
+
+    /// <summary>
+    /// How many of the results of the search lie in the chats of the given workspace.
+    /// </summary>
+    private int CountSearchResultsIn(WorkspaceTreeWorkspace workspace) => workspace.Chats.Count(chat => this.searchResultChatIds.Contains(chat.ChatId));
+
+    /// <summary>
+    /// Tells the field how many results the search has, which of them is the current one, and why the
+    /// search found it.
+    /// </summary>
+    private void PublishSearchResults(List<Guid> results)
+    {
+        var position = this.currentSearchResultId is { } current ? results.IndexOf(current) + 1 : 0;
+        this.Search?.SetResults(results.Count, position, this.GetCurrentSearchReason());
+    }
+
+    /// <summary>
+    /// Why the search found the current result, see <see cref="WorkspaceSearchReasonKind"/>.
+    /// </summary>
+    private WorkspaceSearchReason GetCurrentSearchReason()
+    {
+        if (this.currentSearchResultId is not { } current)
+            return WorkspaceSearchReason.NONE;
+
+        if (this.nameMatchedWorkspaceIds.Contains(current))
+            return new(WorkspaceSearchReasonKind.WORKSPACE_NAME);
+
+        if (this.chatPassages.TryGetValue(current, out var passage))
+            return new(this.nameMatchedChatIds.Contains(current) ? WorkspaceSearchReasonKind.ALSO_IN_CHAT : WorkspaceSearchReasonKind.IN_CHAT, passage);
+
+        return new(WorkspaceSearchReasonKind.CHAT_NAME);
+    }
+
+    /// <summary>
+    /// Steps to the next or the previous result of the search, after the last one to the first again.
+    /// </summary>
+    /// <param name="direction">1 for the next result, -1 for the previous one.</param>
+    private async Task StepToSearchResultAsync(int direction)
+    {
+        var results = this.GetSearchResultsInOrder();
+        if (results.Count == 0)
+            return;
+
+        var index = this.currentSearchResultId is { } current ? results.IndexOf(current) : -1;
+        index = index < 0
+            ? direction > 0 ? 0 : results.Count - 1
+            : (index + direction + results.Count) % results.Count;
+
+        this.currentSearchResultId = results[index];
+        this.isScrollToSearchResultPending = true;
+        this.ShowCurrentSearchResultInItsWorkspace();
+        this.PublishSearchResults(results);
+        await this.SafeStateHasChanged();
+    }
+
+    /// <summary>
+    /// Expands the workspace of the current result, when the result is a chat in a collapsed workspace.
+    /// </summary>
+    private void ShowCurrentSearchResultInItsWorkspace()
+    {
+        if (this.currentSearchResultId is not { } current)
+            return;
+
+        foreach (var workspace in this.workspaces)
+            if (workspace.Chats.Any(chat => chat.ChatId == current) && !this.IsWorkspaceExpanded(workspace.WorkspaceId))
+                this.searchExpandedWorkspaces[workspace.WorkspaceId] = true;
+    }
+
+    /// <summary>
+    /// Makes the given chat or workspace the current result of the search, when it is one: the user
+    /// clicked it, so the counter shows its number, and the arrows go on from there. The list does not
+    /// scroll, since the result is where the user just clicked.
+    /// </summary>
+    private void SelectSearchResult(Guid id)
+    {
+        if (!this.isShowingSearchResults || this.currentSearchResultId == id)
+            return;
+
+        var results = this.GetSearchResultsInOrder();
+        if (!results.Contains(id))
+            return;
+
+        this.currentSearchResultId = id;
+        this.PublishSearchResults(results);
+    }
+
+    /// <summary>
+    /// Opens a chat the user clicked in the list, which becomes the current result of a search when it is one.
+    /// </summary>
+    private async Task OpenChatAsync(WorkspaceTreeChat chat)
+    {
+        this.SelectSearchResult(chat.ChatId);
+        await this.LoadChatAsync(chat.ChatPath, true);
+    }
+
+    private void OnSearchStepRequested(int direction) => this.InvokeAsync(() => this.StepToSearchResultAsync(direction)).Observe($"{nameof(Workspaces)}: stepping to a result of the search");
 
     private bool IsWorkspacesSectionCollapsed => !this.isShowingSearchResults && this.SettingsManager.ConfigurationData.Workspace.IsWorkspacesSectionCollapsed;
 
@@ -336,23 +589,12 @@ public partial class Workspaces : MSGComponentBase
     private static string GetSectionChevron(bool isCollapsed) => isCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore;
 
     /// <summary>
-    /// Whether the titles of the sections stick to the top of the list while it scrolls.
+    /// The classes of a section's title, which sticks to the top of the list while it scrolls, also
+    /// while it shows the results of a search. The second title sticks below the first one.
     /// </summary>
-    /// <remarks>
-    /// Not while the search is open: its bar sticks to the top already, and the results of a
-    /// search cannot be collapsed anyway.
-    /// </remarks>
-    private bool AreSectionTitlesSticky => !this.SearchVisible;
-
-    /// <summary>
-    /// The classes of a section's title. The second title sticks below the first one.
-    /// </summary>
-    private string GetSectionHeaderClasses(bool isSecond) => (this.AreSectionTitlesSticky, isSecond) switch
-    {
-        (false, _) => "workspace-section-header px-2 pt-2",
-        (true, false) => "workspace-section-header is-sticky px-2 pt-2",
-        (true, true) => "workspace-section-header is-sticky is-second px-2 pt-2",
-    };
+    private static string GetSectionHeaderClasses(bool isSecond) => isSecond
+        ? "workspace-section-header is-sticky is-second px-2 pt-2"
+        : "workspace-section-header is-sticky px-2 pt-2";
 
     /// <summary>
     /// Shows what the title of a section points to, or else collapses or expands the section.
@@ -419,17 +661,34 @@ public partial class Workspaces : MSGComponentBase
     }
 
     /// <summary>
-    /// Whether the chats of the given workspace are shown. The results of a search always show them.
+    /// Whether the chats of the given workspace are shown.
     /// </summary>
-    private bool IsWorkspaceExpanded(Guid workspaceId) => this.isShowingSearchResults || this.expandedWorkspaceIds.Contains(workspaceId);
+    /// <remarks>
+    /// A search leaves every workspace as the user left it, so that nothing moves while they type; a
+    /// collapsed one tells how many results it holds. A workspace opens only when the user steps to a
+    /// result inside it. Whatever the user expands or collapses during the search counts from then on,
+    /// until the search ends, and leaves the state of the whole list alone.
+    /// </remarks>
+    private bool IsWorkspaceExpanded(Guid workspaceId)
+    {
+        if (this.isShowingSearchResults && this.searchExpandedWorkspaces.TryGetValue(workspaceId, out var isExpanded))
+            return isExpanded;
+
+        return this.expandedWorkspaceIds.Contains(workspaceId);
+    }
 
     /// <summary>
     /// Expands or collapses a workspace, and loads its chats when they are missing.
     /// </summary>
     private async Task ToggleWorkspaceAsync(WorkspaceTreeWorkspace workspace)
     {
+        // The results of a search hold the chats of their workspaces already:
         if (this.isShowingSearchResults)
+        {
+            this.SelectSearchResult(workspace.WorkspaceId);
+            this.searchExpandedWorkspaces[workspace.WorkspaceId] = !this.IsWorkspaceExpanded(workspace.WorkspaceId);
             return;
+        }
 
         if (this.expandedWorkspaceIds.Remove(workspace.WorkspaceId))
             return;
@@ -497,6 +756,9 @@ public partial class Workspaces : MSGComponentBase
         if (this.itemIdWithOpenMenu == workspace.WorkspaceId)
             classes += " is-menu-open";
 
+        if (this.currentSearchResultId == workspace.WorkspaceId)
+            classes += " is-search-current";
+
         return classes;
     }
 
@@ -519,8 +781,24 @@ public partial class Workspaces : MSGComponentBase
         if (this.itemIdWithOpenMenu == chat.ChatId)
             classes += " is-menu-open";
 
+        if (this.currentSearchResultId == chat.ChatId)
+            classes += " is-search-current";
+
         return classes;
     }
+
+    /// <summary>
+    /// What the icon of a chat shows: its state, or that its messages, attached files, or sources hold
+    /// words of the search.
+    /// </summary>
+    private ChatIndicator GetChatIcon(WorkspaceTreeChat chat, ChatIndicator state) => this.chatPassages.ContainsKey(chat.ChatId) ? ChatIndicator.FoundInChat(state) : state;
+
+    /// <summary>
+    /// Enlarges an icon whose drawing would look smaller than the chat bubble, see <see cref="ChatIndicator.Scale"/>.
+    /// </summary>
+    private static string? GetIconScaleStyle(ChatIndicator indicator) => Math.Abs(indicator.Scale - 1) < 0.001
+        ? null
+        : FormattableString.Invariant($"transform: scale({indicator.Scale:0.###});");
 
     #endregion
 
@@ -654,23 +932,7 @@ public partial class Workspaces : MSGComponentBase
         }
     }
 
-    public async Task ToggleSearchAsync()
-    {
-        var searchVisible = !this.SearchVisible;
-        this.SearchVisible = searchVisible;
-        await this.SearchVisibleChanged.InvokeAsync(searchVisible);
-
-        if (this.SearchVisible)
-        {
-            await this.SafeStateHasChanged();
-            return;
-        }
-
-        await this.CancelSearchAsync();
-        this.searchText = string.Empty;
-        this.isSearchRunning = false;
-        await this.LoadTreeItemsAsync(startPrefetch: false);
-    }
+    private void OnSearchTextChanged() => this.InvokeAsync(() => this.SearchAsync(isTyping: true)).Observe($"{nameof(Workspaces)}: searching the chats");
 
     private async Task CancelSearchAsync()
     {
@@ -683,64 +945,81 @@ public partial class Workspaces : MSGComponentBase
         }
     }
 
-    private async Task OnSearchTextChanged(string? value)
+    /// <summary>
+    /// Searches the chats for the text of the search, in two steps, and marks what it found.
+    /// </summary>
+    /// <remarks>
+    /// The names come first, right away and with every key the user types, since they are in memory.
+    /// The messages of the chats have to be read from the disk, so their search waits until the user
+    /// paused typing and runs in the background, while the field shows a progress line; a key typed
+    /// meanwhile cancels it. The list itself stays as it is, see <see cref="this.isShowingSearchResults"/>.
+    /// An empty text takes the marks away again.
+    /// </remarks>
+    /// <param name="isTyping">Whether the user changed the text, rather than the list changing under
+    /// the search. Only typing waits for a pause before the contents are searched.</param>
+    private async Task SearchAsync(bool isTyping)
     {
-        this.searchText = value ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(this.searchText))
+        await this.CancelSearchAsync();
+        if (this.Search is not { } search || !this.HasSearchQuery)
         {
-            await this.CancelSearchAsync();
-            this.isSearchRunning = false;
-            await this.LoadTreeItemsAsync(startPrefetch: false);
+            this.Search?.SetSearchingContents(false);
+            this.ClearSearchResults();
+            await this.SafeStateHasChanged();
             return;
         }
 
-        await this.SearchWorkspaceItemsAsync();
-    }
-
-    private async Task IncludeThreadContentsChanged(bool value)
-    {
-        this.includeThreadContents = value;
-        if (this.HasSearchQuery)
-            await this.SearchWorkspaceItemsAsync();
-    }
-
-    private async Task SearchWorkspaceItemsAsync()
-    {
-        await this.CancelSearchAsync();
-
-        var text = this.searchText;
-        if (string.IsNullOrWhiteSpace(text))
-            return;
-
+        var text = search.Text;
+        var terms = SearchText.ParseTerms(text);
         this.searchCancellationTokenSource = new CancellationTokenSource();
         var token = this.searchCancellationTokenSource.Token;
         var revision = ++this.searchRevision;
-
-        this.isSearchRunning = true;
-        await this.SafeStateHasChanged();
+        bool IsOutdated() => this.isDisposed || token.IsCancellationRequested || revision != this.searchRevision;
 
         try
         {
-            var snapshot = await WorkspaceBehaviour.SearchWorkspaceChatsAsync(text, this.includeThreadContents, token);
-            if (this.isDisposed || token.IsCancellationRequested || revision != this.searchRevision)
+            var nameMatches = await WorkspaceBehaviour.SearchWorkspaceChatsAsync(text, includeThreadContents: false, token);
+            if (IsOutdated())
                 return;
 
-            this.BuildSearchTreeItems(snapshot);
+            //
+            // The search loaded the chats of all workspaces, which the list may not show yet. A workspace
+            // which opens to show what was found would otherwise wait for its chats:
+            //
+            await this.LoadTreeItemsAsync(startPrefetch: false, searchAgain: false);
+            if (IsOutdated())
+                return;
+
+            this.ShowSearchResults(nameMatches, terms);
+            await this.SafeStateHasChanged();
+
+            if (isTyping)
+                await Task.Delay(CONTENT_SEARCH_DELAY, token);
+
+            search.SetSearchingContents(true);
+            var allMatches = await WorkspaceBehaviour.SearchWorkspaceChatsAsync(text, includeThreadContents: true, token);
+            if (IsOutdated())
+                return;
+
+            this.ShowSearchResults(allMatches, terms);
         }
         catch (OperationCanceledException)
         {
-            // Expected when the user keeps typing or hides the search row.
+            // Expected when the user keeps typing or closes the search.
         }
         catch (Exception ex)
         {
             this.Logger.LogWarning(ex, "Failed while searching workspace chats.");
-            this.BuildSearchTreeItems(new([], []));
+            if (!IsOutdated())
+                this.ShowSearchResults(new([], []), terms);
         }
         finally
         {
+            //
+            // A newer search tells the field about its own progress, and an empty text ended it:
+            //
             if (revision == this.searchRevision)
             {
-                this.isSearchRunning = false;
+                search.SetSearchingContents(false);
                 await this.SafeStateHasChanged();
             }
         }
@@ -1226,6 +1505,12 @@ public partial class Workspaces : MSGComponentBase
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        if (this.Search is not null)
+        {
+            this.Search.TextChanged -= this.OnSearchTextChanged;
+            this.Search.StepRequested -= this.OnSearchStepRequested;
+        }
+
         this.isDisposed = true;
         this.prefetchCancellationTokenSource?.Cancel();
         this.prefetchCancellationTokenSource?.Dispose();

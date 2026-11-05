@@ -39,6 +39,7 @@ public partial class Chat : MSGComponentBase
 
     private bool workspaceOverlayVisible;
     private bool workspaceSearchVisible;
+    private readonly WorkspaceSearch workspaceSearch = new();
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
     private ChatComponent? chatComponent;
@@ -104,7 +105,7 @@ public partial class Chat : MSGComponentBase
 
     private string WorkspaceSearchIcon => this.workspaceSearchVisible ? Icons.Material.Filled.SearchOff : Icons.Material.Filled.Search;
 
-    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Hide search") : T("Search your workspaces");
+    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Close the search") : T("Search your workspaces");
 
     private bool AreWorkspacesVisible => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                                          && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
@@ -169,12 +170,21 @@ public partial class Chat : MSGComponentBase
         await this.workspaces.ForceRefreshFromDiskAsync();
     }
 
-    private async Task ToggleWorkspaceSearch()
+    private void ToggleWorkspaceSearch()
     {
-        if (this.workspaces is null)
-            return;
+        if (this.workspaceSearchVisible)
+            this.CloseWorkspaceSearch();
+        else
+            this.workspaceSearchVisible = true;
+    }
 
-        await this.workspaces.ToggleSearchAsync();
+    /// <summary>
+    /// Closes the search of the workspaces, after which the list shows all workspaces and chats again.
+    /// </summary>
+    private void CloseWorkspaceSearch()
+    {
+        this.workspaceSearchVisible = false;
+        this.workspaceSearch.SetText(string.Empty);
     }
 
     /// <summary>

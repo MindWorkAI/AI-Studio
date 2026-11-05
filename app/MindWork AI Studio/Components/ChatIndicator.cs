@@ -19,7 +19,49 @@ namespace AIStudio.Components;
 /// </remarks>
 internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Color Color, bool IsStatus)
 {
+    /// <summary>
+    /// A small mark in the bottom-left corner of the icon, which tells the state of the chat while the
+    /// icon itself tells something else, such as that a search found the chat.
+    /// </summary>
+    public ChatIndicatorBadge Badge { get; init; }
+
+    /// <summary>
+    /// How much the icon is enlarged, for an icon whose drawing fills less of its box than the chat
+    /// bubble does, so that both look the same size. The bubble spans 20 of the 24 units of its box.
+    /// </summary>
+    public double Scale { get; init; } = 1;
+
     public static readonly ChatIndicator PLAIN = new(Icons.Material.Outlined.ChatBubbleOutline, IsSpinning: false, Color.Inherit, IsStatus: false);
+
+    /// <summary>
+    /// A chat whose messages, attached files, or sources hold words of the search, in the color of the
+    /// found words. Its name may hold them as well, which its marked words show.
+    /// </summary>
+    /// <remarks>
+    /// The magnifier spans only 17.5 of the 24 units of its box, from its lens to the end of its handle,
+    /// and would look smaller than the chat bubbles around it.
+    /// </remarks>
+    public static readonly ChatIndicator FOUND_IN_CHAT = new(Icons.Material.Outlined.Search, IsSpinning: false, Color.Warning, IsStatus: true) { Scale = 20 / 17.5 };
+
+    /// <summary>
+    /// What the icon of a chat shows whose messages, attached files, or sources hold words of the search,
+    /// given what it would show otherwise.
+    /// </summary>
+    /// <remarks>
+    /// The search comes first while it runs: it is what the user looks for right now. What needs their
+    /// attention stays visible as the badge, though: work going on, and work which failed. Everything else,
+    /// such as an unread answer, shows again once the search ends.
+    /// </remarks>
+    /// <param name="state">What the icon of the chat would show without the search.</param>
+    public static ChatIndicator FoundInChat(ChatIndicator state) => FOUND_IN_CHAT with
+    {
+        Badge = state switch
+        {
+            { IsSpinning: true } => ChatIndicatorBadge.WORK_GOING_ON,
+            { Color: Color.Error } => ChatIndicatorBadge.FAILED,
+            _ => ChatIndicatorBadge.NONE,
+        },
+    };
 
     private static readonly ChatIndicator ANSWER_GOING_ON = new(string.Empty, IsSpinning: true, Color.Inherit, IsStatus: true);
 

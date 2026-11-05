@@ -441,6 +441,14 @@ html[data-resizing-sidebar] * {
     color: var(--mud-palette-warning-text);
 }
 
+/* The colors of what the chat search found, in the workspace list and its tooltips: the words it marks,
+   see SearchHighlightedText, and the count of results a collapsed workspace hides. A tint of the warning
+   color keeps the text readable in light and dark mode. The current result carries the stronger one. */
+:root {
+    --chat-search-highlight: color-mix(in srgb, var(--mud-palette-warning) 35%, transparent);
+    --chat-search-highlight-strong: color-mix(in srgb, var(--mud-palette-warning) 70%, transparent);
+}
+
 .log-viewer-empty {
     display: flex;
     min-height: 20rem;

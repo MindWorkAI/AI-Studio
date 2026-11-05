@@ -26,7 +26,6 @@
  * of 12 pixels would make them 48 pixels tall, though, half again as tall as a row. With 4 pixels of
  * padding, a button fills its row from top to bottom.
  */
-.workspace-search ::deep .mud-icon-button,
 .workspace-list ::deep .mud-icon-button {
     padding: 4px;
 }
@@ -104,6 +103,7 @@
  * in it with it. The fix for SVG icons in app.css is not needed here.
  */
 .workspace-list ::deep .workspace-chat-icon {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -117,9 +117,66 @@
     height: 100%;
 }
 
-.workspace-list ::deep .workspace-chat-icon > :not(.mud-icon-root) {
+.workspace-list ::deep .workspace-chat-icon > :not(.mud-icon-root, .workspace-chat-badge) {
     width: calc(100% * 20 / 24);
     height: calc(100% * 20 / 24);
+}
+
+/*
+ * The badge of an icon, such as the one of a chat which a search found, tells the state of the chat
+ * in its bottom-left corner: the magnifier of the search keeps its handle on the right free. A ring in
+ * the color of the list sets it apart from the icon below.
+ */
+.workspace-list ::deep .workspace-chat-badge {
+    position: absolute;
+    left: -1px;
+    bottom: -1px;
+    width: 50%;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--workspace-list-background, var(--mud-palette-background));
+}
+
+.workspace-list ::deep .workspace-chat-badge > * {
+    width: 100%;
+    height: 100%;
+}
+
+/*
+ * The words of a search look as SearchHighlightedText draws them. The result the user stepped to
+ * carries a stronger tint, and a bar on its left, since a chat found inside has no words in its name.
+ */
+.workspace-list ::deep .is-search-current mark {
+    background-color: var(--chat-search-highlight-strong);
+}
+
+.workspace-list ::deep .mud-list-item.is-search-current {
+    box-shadow: inset 3px 0 0 var(--mud-palette-warning);
+}
+
+/*
+ * How many results a collapsed workspace hides, in the tint of the chat search, see app.css. It makes
+ * room for the buttons of its row while they show.
+ */
+.workspace-list ::deep .workspace-result-count {
+    min-width: 18px;
+    padding: 0 6px;
+    border-radius: 9px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 18px;
+    text-align: center;
+    background-color: var(--chat-search-highlight);
+}
+
+.workspace-list ::deep .mud-list-item:hover .workspace-result-count,
+.workspace-list ::deep .mud-list-item:focus-visible .workspace-result-count,
+.workspace-list ::deep .mud-list-item:has(:focus-visible) .workspace-result-count,
+.workspace-list ::deep .is-menu-open .workspace-result-count {
+    display: none;
 }
 
 /*
