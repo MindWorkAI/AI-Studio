@@ -523,6 +523,14 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedOtherOutputLanguage, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
+        // Config: Prompt Optimizer defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedTargetLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedOtherLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedImportantAspects, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 

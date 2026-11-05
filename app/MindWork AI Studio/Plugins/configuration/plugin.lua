@@ -1013,6 +1013,42 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.MinimumProviderConfidence.AllowUserOverride"] = true
 
+-- Configure defaults for the Prompt Optimizer.
+-- These settings need AI Studio v26.11.1 or newer; older versions ignore them.
+-- Preselection must be enabled for the remaining Prompt Optimizer settings to take effect.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectOptions"] = true
+--
+-- Configure the language of the optimized prompt.
+-- Allowed values are: AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT,
+--   JA_JP, RU_RU, OTHER
+-- AS_IS keeps the language of the prompt the user enters.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedTargetLanguage"] = "AS_IS"
+--
+-- Configure a free-form language, used only when PreselectedTargetLanguage is "OTHER".
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedOtherLanguage"] = ""
+--
+-- Configure the aspects the optimized prompt should emphasize, such as the structure of the
+-- answer or constraints.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedImportantAspects"] = ""
+--
+-- Configure the minimum provider confidence required to optimize prompts.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Providers below this level cannot be selected in the Prompt Optimizer. This minimum applies
+-- only while preselection is enabled; the app-wide minimum confidence applies in any case.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.MinimumProviderConfidence"] = "NONE"
+--
+-- Configure the preselected provider for optimizing prompts.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Allow users to change individual managed Prompt Optimizer defaults locally.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedTargetLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedOtherLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedImportantAspects.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.MinimumProviderConfidence.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedProvider.AllowUserOverride"] = true
+
 -- Configure enterprise approvals for assistant plugins.
 -- Each approval is matched only by the current SHA-256 hash over all Lua files
 -- in the assistant plugin folder, in canonical sorted order.
