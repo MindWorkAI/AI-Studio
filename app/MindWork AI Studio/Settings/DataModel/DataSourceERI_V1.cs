@@ -98,11 +98,13 @@ public record struct DataSourceERI_V1: IERIDataSource
 
     /// <inheritdoc />
     /// <remarks>
-    /// An ERI data source has a single page. ERI v1 knows no offset, so a further page would have
-    /// to ask the server for all pages before it as well. A server may refuse more matches than its
-    /// retrieval process allows, which often is the very number configured here: it would refuse
-    /// every further page, and the model would hear that the data source could not be searched
-    /// rather than that there is nothing more.
+    /// An ERI data source has a single page of matches. ERI v1 knows no offset, so a further page
+    /// would have to ask the server for all pages before it as well. A server may refuse more
+    /// matches than its retrieval process allows, which often is the very number configured here:
+    /// it would refuse every further page, and the model would hear that the data source could not
+    /// be searched rather than that there is nothing more.<br/><br/>
+    /// Semantic Search still turns pages within these matches, when they are too long for a single
+    /// search: it cuts them into pages by their length, and asks the server again for each of them.
     /// </remarks>
     public int GetLastPage() => 1;
 

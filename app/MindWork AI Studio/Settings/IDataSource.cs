@@ -37,7 +37,9 @@ public interface IDataSource : IDataSourceBase
     /// <remarks>
     /// By default, as many pages as RetrievalPaging.GetLastPage allows for the page size. A data
     /// source which cannot page that far says so itself. It is a method rather than a property, so
-    /// that it never ends up in the settings.
+    /// that it never ends up in the settings.<br/><br/>
+    /// These pages hold a number of matches each. Semantic Search cuts them into pages of its own,
+    /// by the length of the passages, see SemanticSearchTool.SearchAsync.
     /// </remarks>
     /// <returns>The number of the last page, which is at least 1.</returns>
     public int GetLastPage() => RetrievalPaging.GetLastPage(this.MaxMatches);
