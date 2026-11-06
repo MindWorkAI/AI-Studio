@@ -850,23 +850,21 @@ public partial class ChatComponent : MSGComponentBase
                                      && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)
                                      && WorkspaceBehaviour.IsChatExisting(new LoadChat(this.ChatThread.WorkspaceId, this.ChatThread.ChatId));
 
+    private bool HasSentFileAttachments => this.ChatThread?.HasSentFileAttachments() ?? false;
+
     /// <summary>
-    /// The files attached to the messages of this chat which were already sent, each one once.
+    /// Shows the files of all sent messages, each version of a file once, see ChatThread.CollectSentFileAttachments.
     /// </summary>
     /// <remarks>
-    /// Told apart by their path rather than as records: a file which changed in size between two
-    /// messages would otherwise appear twice. The draft is left out, because the paperclip right
-    /// beside the overview already shows it.
+    /// Without removing: the overview gathers several messages, and a removal could not tell which one it belongs to.
     /// </remarks>
-    private HashSet<FileAttachment> SentFileAttachments => this.ChatThread?.Blocks
-        .Where(block => !block.HideFromUser && block.Content is not null)
-        .SelectMany(block => block.Content!.FileAttachments)
-        .DistinctBy(attachment => attachment.FilePath)
-        .ToHashSet() ?? [];
+    private async Task ShowSentFileAttachments()
+    {
+        if (this.ChatThread is null)
+            return;
 
-    private bool HasSentFileAttachments => this.ChatThread?.Blocks.Any(block => !block.HideFromUser && block.Content?.FileAttachments.Count > 0) ?? false;
-
-    private async Task ShowSentFileAttachments() => await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.SentFileAttachments, canRemove: false);
+        await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.ChatThread.CollectSentFileAttachments(), canRemove: false);
+    }
 
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 

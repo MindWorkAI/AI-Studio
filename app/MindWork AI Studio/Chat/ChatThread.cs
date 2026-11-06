@@ -725,6 +725,39 @@ public sealed record ChatThread
     }
 
     /// <summary>
+    /// Whether one of the messages the chat shows went with attached files.
+    /// </summary>
+    /// <remarks>
+    /// Asked with every rendering of the chat, so it stops at the first such message instead of
+    /// collecting them, cf. CollectSentFileAttachments.
+    /// </remarks>
+    public bool HasSentFileAttachments() => this.BlocksShownToTheUser().Any(block => block.Content!.FileAttachments.Count > 0);
+
+    /// <summary>
+    /// Collects the files attached to the messages the chat shows, once for each version of a file that was sent.
+    /// </summary>
+    /// <remarks>
+    /// Every message keeps the text its documents were sent with, see FileAttachment.ProvenanceId, and
+    /// the AI receives all of these texts with every request. A file which changed between two messages
+    /// therefore reached the AI in two versions, and both are collected; the state of the file their
+    /// texts were read from, FileAttachment.Version, tells them apart. A file sent again unchanged is
+    /// collected once, with the entry of its latest message. Attachments without a noted state, such
+    /// as images and documents which every request reads anew, are told apart by their path alone.
+    /// The draft is left out, since the paperclip shows it, and so are the messages the chat hides.
+    /// </remarks>
+    /// <returns>The attachments, each version of a file once.</returns>
+    public HashSet<FileAttachment> CollectSentFileAttachments() => this.BlocksShownToTheUser()
+        .OrderByDescending(block => block.Time)
+        .SelectMany(block => block.Content!.FileAttachments)
+        .DistinctBy(attachment => (attachment.FilePath, attachment.Version))
+        .ToHashSet();
+
+    /// <summary>
+    /// The messages the chat shows: the same ones the chat component renders.
+    /// </summary>
+    private IEnumerable<ContentBlock> BlocksShownToTheUser() => this.Blocks.Where(block => block is { HideFromUser: false, Content: not null });
+
+    /// <summary>
     /// Replaces every file path the chat stores with what the given function makes of it.
     /// </summary>
     /// <remarks>
