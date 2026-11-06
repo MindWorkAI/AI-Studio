@@ -160,7 +160,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         if (!assistantTable.TryGetValue("SubmitText", out var assistantSubmitTextValue) ||
             !assistantSubmitTextValue.TryRead<string>(out var assistantSubmitText))
         {
-            message = TB("The ASSISTANT table does not contain a valid system prompt.");
+            message = TB("The provided ASSISTANT lua table does not contain a valid submit text.");
             return false;
         }
         
