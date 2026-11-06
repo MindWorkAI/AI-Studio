@@ -141,6 +141,7 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
                 })
                 .build(),
         )
+        .plugin(context_menu_guard())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .on_page_load(|webview, payload| {
@@ -436,6 +437,18 @@ fn register_linux_permission_request_handler(window: &WebviewWindow) {
     }) {
         error!(Source = "Tauri"; "Failed to register the Linux WebKit permission request handler: {error}");
     }
+}
+
+/// Limits the right-click menu to text fields and selected text in every frame, see
+/// context_menu_guard.js. Development builds keep the menu, since it opens the developer tools,
+/// which Tauri offers in these builds only.
+fn context_menu_guard() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    let plugin = tauri::plugin::Builder::<tauri::Wry, ()>::new("context-menu-guard");
+    if cfg!(debug_assertions) {
+        return plugin.build();
+    }
+
+    plugin.js_init_script_on_all_frames(include_str!("context_menu_guard.js")).build()
 }
 
 /// The address of the app, once the window shows it.

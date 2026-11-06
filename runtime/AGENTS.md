@@ -58,6 +58,11 @@ it cannot show the app, since it lacks the session cookie. Therefore:
   `shell:allow-open` stays, since the link script of the shell plugin opens the external links with a
   target.
 
+**The right-click menu shows only in text fields and on selected text,** never on a link: its other
+entries, such as going back, reloading, or opening a link in a new window, make no sense in the app.
+`context_menu_guard.js` hides it everywhere else, in every frame, but only in release builds, since
+development builds need the menu to open the developer tools.
+
 **Runtime API handlers never block.** All calls of the .NET app share one HTTP/2 connection, and the
 task driving it may wait on exactly the Tokio worker which a blocking handler occupies, so a single
 blocking handler can hold up the whole app. Therefore:
