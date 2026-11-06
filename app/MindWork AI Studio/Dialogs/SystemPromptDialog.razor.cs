@@ -1,3 +1,4 @@
+using AIStudio.Assistants;
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Settings;
@@ -12,7 +13,8 @@ namespace AIStudio.Dialogs;
 /// Shows the system prompt a chat sends, part by part, each under the name of where it comes from.
 /// </summary>
 /// <remarks>
-/// Nobody types this prompt as it is sent. A chat template replaces the default, a profile, the
+/// Nobody types this prompt as it is sent. A chat template or an assistant whose conversation the chat
+/// continues replaces the default, a profile, the
 /// retrieved data of a data source, and the policy of the selected tools are added to it, and the
 /// date goes in front. Each part stands under its own heading, in the order of the prompt, so a
 /// person does not have to work out from the text alone where a paragraph came from.<br/><br/>
@@ -100,6 +102,10 @@ public partial class SystemPromptDialog : MSGComponentBase
     private Section SectionOf(SystemPromptPart part) => part.Kind switch
     {
         SystemPromptPartKind.DATE_TIME => new(T("Current date and time"), part.Text, string.Empty),
+
+        // A prompt which an assistant wrote for the chat is not the one it created its result with, which the heading must not hide:
+        SystemPromptPartKind.BASE_PROMPT when part.Origin is { Source: ChatSystemPromptSource.CUSTOM } origin => new(string.Format(T("Chat prompt of the assistant '{0}'"), origin.AssistantName), part.Text, string.Format(T("The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result."), origin.AssistantName)),
+        SystemPromptPartKind.BASE_PROMPT when part.Origin is { } origin => new(string.Format(T("System prompt of the assistant '{0}'"), origin.AssistantName), part.Text, string.Empty),
         SystemPromptPartKind.BASE_PROMPT when part.Text == SystemPrompts.DEFAULT => new(T("Default prompt of AI Studio"), part.Text, string.Empty),
         SystemPromptPartKind.BASE_PROMPT => new(T("System prompt of this chat"), part.Text, string.Empty),
         SystemPromptPartKind.CHAT_TEMPLATE => new(string.Format(T("Chat template '{0}'"), part.SourceName), part.Text, string.Empty),

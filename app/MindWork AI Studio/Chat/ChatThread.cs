@@ -242,6 +242,15 @@ public sealed record ChatThread
     public string SystemPrompt { get; set; } = string.Empty;
 
     /// <summary>
+    /// Which assistant chose the system prompt of this chat, and how; null when the chat got its prompt elsewhere.
+    /// </summary>
+    /// <remarks>
+    /// Set when a chat continues the conversation of an assistant, see AssistantBase.ChatSystemPrompt, so that
+    /// the dialog showing the system prompt names the assistant rather than calling it the prompt of this chat.
+    /// </remarks>
+    public ChatSystemPromptOrigin? SystemPromptOrigin { get; set; }
+
+    /// <summary>
     /// The content blocks of the chat thread.
     /// </summary>
     public List<ContentBlock> Blocks { get; set; } = [];
@@ -414,7 +423,7 @@ public sealed record ChatThread
 
         parts.Add(usesChatTemplate
             ? new(SystemPromptPartKind.CHAT_TEMPLATE, systemPromptTextWithChatTemplate) { SourceName = chatTemplate.Name }
-            : new(SystemPromptPartKind.BASE_PROMPT, systemPromptTextWithChatTemplate));
+            : new(SystemPromptPartKind.BASE_PROMPT, systemPromptTextWithChatTemplate) { Origin = this.SystemPromptOrigin });
 
         //
         // Add augmented data, if available:

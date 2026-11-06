@@ -12,6 +12,9 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     
     protected override string Description => T("Check the grammar and spelling of a text.");
     
+    // The prompt of this assistant forbids explanations, so the chat gets a prompt of its own, which keeps the rules of the language:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
+
     protected override string SystemPrompt => 
         $"""
         You are an expert in languages and their rules. For example, you know how US and UK English or German in
@@ -20,6 +23,21 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
         never ask the user for additional information. You do not attempt to improve the wording of the text.
         Your response includes only the corrected text. Do not explain your changes. If no changes are needed,
         you return the text unchanged.
+        """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues a check of spelling and grammar, for follow-up questions about it.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You are an expert in languages and their rules. For example, you know how US and UK English or German in
+        Germany and German in Austria differ. The user had a text checked for spelling and grammar according to the
+        rules of {this.SystemPromptLanguage()}: the conversation so far holds the text and its corrected version.
+        Now you answer the user's follow-up questions about the corrections, e.g., which rule applies or why a sentence
+        changed, and you check further texts or revise the corrected text when the user asks for it. When you correct a
+        text, you correct only its spelling and grammar and keep its wording, unless the user asks otherwise.
+
+        Answer questions in the language the user writes in.
         """;
     
     protected override bool AllowProfiles => false;
