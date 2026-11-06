@@ -93,7 +93,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     }
 
     /// <summary>
-    /// The attachments, sorted by their folder and, within it, by their file name.
+    /// The attachments, sorted by their folder and, within it, by their file name, the latest version of a file first.
     /// </summary>
     /// <remarks>
     /// The list below starts a new heading whenever the folder changes from one attachment to the
@@ -105,7 +105,37 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     /// </remarks>
     private IEnumerable<FileAttachment> OrderedAttachments => this.DocumentPaths
         .OrderBy(attachment => Path.GetDirectoryName(attachment.FilePath) ?? string.Empty, StringComparer.OrdinalIgnoreCase)
-        .ThenBy(attachment => attachment.FileName, StringComparer.OrdinalIgnoreCase);
+        .ThenBy(attachment => attachment.FileName, StringComparer.OrdinalIgnoreCase)
+        .ThenByDescending(attachment => attachment.Version?.LastWriteUtc);
+
+    /// <summary>
+    /// The paths which the list holds more than once, i.e., the files which were sent in several versions.
+    /// </summary>
+    /// <remarks>
+    /// Only the overview of all files of a chat holds a file more than once, see
+    /// ChatThread.CollectSentFileAttachments: the draft and a single message hold each file once, see
+    /// SetFileAttachmentExtensions.AttachInPlaceOfSameFile. The other uses of this dialog therefore
+    /// stay as they were. Asked once for each rendering, not once for each attachment.
+    /// </remarks>
+    private IReadOnlySet<string> PathsWithSeveralVersions => this.DocumentPaths
+        .GroupBy(attachment => attachment.FilePath)
+        .Where(group => group.Count() > 1)
+        .Select(group => group.Key)
+        .ToHashSet();
+
+    /// <summary>
+    /// Tells apart the versions of a file which the list holds more than once, by the time their file was saved.
+    /// </summary>
+    /// <param name="attachment">The attachment.</param>
+    /// <param name="pathsWithSeveralVersions">The paths which the list holds more than once, see PathsWithSeveralVersions.</param>
+    /// <returns>The label, or null for a file listed once, and for a version whose state AI Studio did not note.</returns>
+    private string? VersionLabel(FileAttachment attachment, IReadOnlySet<string> pathsWithSeveralVersions)
+    {
+        if (attachment.Version is not { } version || !pathsWithSeveralVersions.Contains(attachment.FilePath))
+            return null;
+
+        return string.Format(T("Version from {0}"), CommonTools.FormatTimestampToGeneral(version.LastWriteUtc.ToLocalTime(), I18N.I.Culture));
+    }
 
     /// <summary>
     /// Attaches what the user dropped onto this dialog and answers which files that became.

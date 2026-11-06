@@ -38,8 +38,10 @@
 
             @{
                 var currentFolder = string.Empty;
+                var pathsWithSeveralVersions = this.PathsWithSeveralVersions;
                 foreach (var fileAttachment in this.OrderedAttachments)
                 {
+                    var versionLabel = this.VersionLabel(fileAttachment, pathsWithSeveralVersions);
                     var folderPath = Path.GetDirectoryName(fileAttachment.FilePath);
                     if (folderPath != currentFolder)
                     {
@@ -62,6 +64,12 @@
                                         <MudText Style="white-space: nowrap;">
                                             @fileAttachment.FileName
                                         </MudText>
+                                        @if (versionLabel is not null)
+                                        {
+                                            <MudText Typo="Typo.body2" Class="ml-2 mud-text-secondary" Style="white-space: nowrap;">
+                                                @versionLabel
+                                            </MudText>
+                                        }
                                     </span>
                                 </MudTooltip>
                             </div>
@@ -94,6 +102,12 @@
                                         <MudText Style="white-space: nowrap;">
                                             <s>@fileAttachment.FileName</s>
                                         </MudText>
+                                        @if (versionLabel is not null)
+                                        {
+                                            <MudText Typo="Typo.body2" Class="ml-2 mud-text-secondary" Style="white-space: nowrap;">
+                                                @versionLabel
+                                            </MudText>
+                                        }
                                     </span>
                                 </MudTooltip>
                             </div>
