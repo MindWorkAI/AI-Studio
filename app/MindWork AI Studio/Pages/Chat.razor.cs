@@ -1,10 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Pages;
 
@@ -149,18 +149,9 @@ public partial class Chat : MSGComponentBase
         this.StateHasChanged();
     }
 
-    private async Task OpenChatSettingsDialog()
-    {
-        var dialogParameters = new DialogParameters();
-        
-        await this.DialogService.ShowAsync<SettingsDialogChat>(T("Open Chat Options"), dialogParameters, DialogOptions.FULLSCREEN);
-    }
-    
-    private async Task OpenWorkspacesSettingsDialog()
-    {
-        var dialogParameters = new DialogParameters();
-        await this.DialogService.ShowAsync<SettingsDialogWorkspaces>(T("Open Workspaces Configuration"), dialogParameters, DialogOptions.FULLSCREEN);
-    }
+    private Task OpenChatSettingsDialog() => SettingsWindow.OpenAsync(this.DialogService, SettingsPath.CHAT);
+
+    private Task OpenWorkspacesSettingsDialog() => SettingsWindow.OpenAsync(this.DialogService, SettingsPath.WORKSPACES);
 
     private async Task RefreshWorkspaces()
     {

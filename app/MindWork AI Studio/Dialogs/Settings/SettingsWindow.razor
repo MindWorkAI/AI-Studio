@@ -1,0 +1,57 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2"/>
+            @T("Settings")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @* A pane which leads to another one navigates through the window it gets here, see NavigateTo: *@
+        <CascadingValue Value="@this" IsFixed="@true">
+            <div class="settings-window">
+                @* The list sits in a box like the sidebar of the chat page. A search over the settings would
+                   be the first child of this box, above the entries, and stay in place while they scroll: *@
+                <nav class="settings-window-list border border-solid mud-border-lines-default rounded-lg">
+                    <div class="settings-window-entries">
+                        <MudList T="SettingsPath" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@this.FirstLevelPath" Color="Color.Primary" Dense="@true">
+                            @foreach (var firstLevelPane in SettingsPanes.FirstLevel(this.IsAvailable))
+                            {
+                                var path = firstLevelPane.Path;
+                                <MudListItem T="SettingsPath" Value="@path" Text="@firstLevelPane.Title()" OnClick="@(() => this.NavigateTo(path))">
+                                    <AvatarContent>
+                                        <MudAvatar Color="@firstLevelPane.IconColor" Variant="Variant.Filled" Rounded="@true" Size="Size.Small" Style="@GetIconScaleStyle(firstLevelPane)">
+                                            <MudIcon Icon="@firstLevelPane.Icon"/>
+                                        </MudAvatar>
+                                    </AvatarContent>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </div>
+                </nav>
+                <section class="settings-window-pane">
+                    @* The title row stays in place while the options scroll. The title sits in its middle, and
+                       the back button of a deeper pane at its left edge, so the title never moves: *@
+                    <div class="settings-window-title">
+                        @if (this.ParentPane is { } parentPane)
+                        {
+                            <div class="settings-window-back">
+                                <MudTooltip Text="@this.GetBackText(parentPane)" Placement="Placement.Bottom">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" aria-label="@this.GetBackText(parentPane)" OnClick="@(() => this.NavigateTo(parentPane.Path))"/>
+                                </MudTooltip>
+                            </div>
+                        }
+                        <MudText Typo="Typo.h6" Align="Align.Center">
+                            @this.pane.Title()
+                        </MudText>
+                    </div>
+                    <div class="settings-window-options">
+                        <DynamicComponent @key="@this.pane.Path" Type="@this.pane.Component" Parameters="@this.paneParameters"/>
+                    </div>
+                </section>
+            </div>
+        </CascadingValue>
+    </DialogContent>
+</MudDialog>

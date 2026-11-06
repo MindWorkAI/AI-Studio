@@ -1,0 +1,106 @@
+/*
+ * The list of panes on the left and the chosen pane on the right. The window keeps one height for all
+ * panes, so it does not jump while the user goes through them: as tall as the window of the app allows,
+ * leaving room for the title of the dialog, but never less than 20rem or more than 60rem. Both sides
+ * end on the same line, with the same space below them as the dialog keeps at its sides.
+ */
+.settings-window {
+    display: flex;
+    gap: 24px;
+    height: clamp(20rem, calc(100vh - 10rem), 60rem);
+    margin-bottom: 16px;
+}
+
+/*
+ * The list sits in a box of its own, like the sidebar of the chat page. The box holds no padding, so the
+ * marked entry fills the box from side to side. Only the entries scroll, so whatever comes above them,
+ * such as a search, stays in place.
+ */
+.settings-window-list {
+    flex: 0 0 15rem;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.settings-window-entries {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* The avatar of an entry takes the place MudBlazor keeps for it, without the wide gap it leaves before the text. */
+.settings-window-list ::deep .mud-list-item-avatar {
+    min-width: 0;
+    margin-right: 12px;
+}
+
+/*
+ * The icon takes three quarters of its avatar, as MudBlazor sizes the fallback icon of an avatar, times
+ * the scale of its pane: an icon which Material draws fuller than others, such as the chat bubble, gets
+ * a smaller one, so all icons look alike in size, see SettingsPane.IconScale.
+ */
+.settings-window-list ::deep .mud-avatar .mud-icon-root {
+    width: calc(75% * var(--settings-window-icon-scale, 1));
+    height: calc(75% * var(--settings-window-icon-scale, 1));
+}
+
+/*
+ * The chosen pane: its title row on top, which stays in place, and below it the options, which scroll.
+ */
+.settings-window-pane {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/*
+ * The title sits in the middle of its row. The row keeps the height of the back button and leaves room
+ * for it on both sides, so neither the title nor the options move when a deeper pane shows the button.
+ */
+.settings-window-title {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 48px;
+    margin-bottom: 12px;
+}
+
+.settings-window-title ::deep .mud-typography {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The back button of a deeper pane: at the left edge of the row, its arrow lined up with the options below. */
+.settings-window-back {
+    position: absolute;
+    top: 50%;
+    left: -12px;
+    transform: translateY(-50%);
+}
+
+.settings-window-options {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/*
+ * The values of the fields and the labels of the switches take the size of the text in the list,
+ * which is smaller than MudBlazor gives them. Only the text itself shrinks: the labels above the
+ * fields and the help below them keep their sizes, and so do the same fields outside of this window.
+ */
+.settings-window-pane ::deep .mud-input {
+    --mud-typography-subtitle1-size: var(--mud-typography-body2-size);
+}
+
+.settings-window-pane ::deep .mud-switch {
+    --mud-typography-body1-size: var(--mud-typography-body2-size);
+}

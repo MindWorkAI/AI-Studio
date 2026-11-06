@@ -5392,6 +5392,81 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T1984243691"] = "You can also
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Choose File"
 
+-- Files are sent as they were first read
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1320692831"] = "Files are sent as they were first read"
+
+-- Preselect one of your chat templates?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1402022556"] = "Preselect one of your chat templates?"
+
+-- Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T172255919"] = "Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat."
+
+-- Shortcut to send input
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1773585398"] = "Shortcut to send input"
+
+-- Provider selection when creating new chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T189306836"] = "Provider selection when creating new chats"
+
+-- Choose whether chats should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1915793195"] = "Choose whether chats should use the app default profile, no profile, or a specific profile."
+
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2322771068"] = "Preselect a profile"
+
+-- Apply default data source option when sending assistant results to chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2510376349"] = "Apply default data source option when sending assistant results to chat"
+
+-- Control how the LLM provider for added chats is selected.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T263621180"] = "Control how the LLM provider for added chats is selected."
+
+-- Changed files are read again for the next message
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T264953820"] = "Changed files are read again for the next message"
+
+-- Provider selection when loading a chat and sending assistant results to chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
+
+-- Show the latest message after loading?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2913693228"] = "Show the latest message after loading?"
+
+-- Do you want to use any shortcut to send your input?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2936560092"] = "Do you want to use any shortcut to send your input?"
+
+-- Read changed attachments again?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3079510748"] = "Read changed attachments again?"
+
+-- Would you like to set one of your chat templates as the default for chats?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3234927721"] = "Would you like to set one of your chat templates as the default for chats?"
+
+-- No chat options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3383186996"] = "No chat options are preselected"
+
+-- First (oldest) message is shown, after loading a chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3507181366"] = "First (oldest) message is shown, after loading a chat"
+
+-- Preselect chat options?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3728624759"] = "Preselect chat options?"
+
+-- Chat options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3730599555"] = "Chat options are preselected"
+
+-- Latest message is shown, after loading a chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3755993611"] = "Latest message is shown, after loading a chat"
+
+-- Do you want to apply the default data source options when sending assistant results to chat?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T4033153439"] = "Do you want to apply the default data source options when sending assistant results to chat?"
+
+-- When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T4060508809"] = "When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone."
+
+-- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
+
+-- You can set default data sources and options for new chats. You can change these settings later for each individual chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T492357592"] = "You can set default data sources and options for new chats. You can change these settings later for each individual chat."
+
+-- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T582516016"] = "When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."
+
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "External Assistants rated below this audit level are treated as insufficiently reviewed."
 
@@ -6132,6 +6207,24 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 
 -- Are you sure you want to delete the transcription provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T789660305"] = "Are you sure you want to delete the transcription provider '{0}'?"
+
+-- If and when should we delete your temporary chats?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T1014418451"] = "If and when should we delete your temporary chats?"
+
+-- Workspace display behavior
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T2151409362"] = "Workspace display behavior"
+
+-- Workspace behavior
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T2562846516"] = "Workspace behavior"
+
+-- How should we display your workspaces?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T3566924898"] = "How should we display your workspaces?"
+
+-- Should we store your chats?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T3942969162"] = "Should we store your chats?"
+
+-- Workspace maintenance
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T49653413"] = "Workspace maintenance"
 
 -- Transcript of an audio file
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T1797766177"] = "Transcript of an audio file"
@@ -9598,87 +9691,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T82
 -- Restore default
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T913168756"] = "Restore default"
 
--- Files are sent as they were first read
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1320692831"] = "Files are sent as they were first read"
-
--- Preselect one of your chat templates?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1402022556"] = "Preselect one of your chat templates?"
-
--- Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T172255919"] = "Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat."
-
--- Chat Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1757092713"] = "Chat Options"
-
--- Shortcut to send input
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1773585398"] = "Shortcut to send input"
-
--- Provider selection when creating new chats
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T189306836"] = "Provider selection when creating new chats"
-
--- Choose whether chats should use the app default profile, no profile, or a specific profile.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1915793195"] = "Choose whether chats should use the app default profile, no profile, or a specific profile."
-
--- Preselect a profile
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2322771068"] = "Preselect a profile"
-
--- Apply default data source option when sending assistant results to chat
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] = "Apply default data source option when sending assistant results to chat"
-
--- Control how the LLM provider for added chats is selected.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] = "Control how the LLM provider for added chats is selected."
-
--- Changed files are read again for the next message
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T264953820"] = "Changed files are read again for the next message"
-
--- Provider selection when loading a chat and sending assistant results to chat
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
-
--- Show the latest message after loading?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2913693228"] = "Show the latest message after loading?"
-
--- Do you want to use any shortcut to send your input?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Do you want to use any shortcut to send your input?"
-
--- Read changed attachments again?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3079510748"] = "Read changed attachments again?"
-
--- Would you like to set one of your chat templates as the default for chats?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3234927721"] = "Would you like to set one of your chat templates as the default for chats?"
-
--- No chat options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3383186996"] = "No chat options are preselected"
-
--- Close
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3448155331"] = "Close"
-
--- First (oldest) message is shown, after loading a chat
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3507181366"] = "First (oldest) message is shown, after loading a chat"
-
--- Preselect chat options?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3728624759"] = "Preselect chat options?"
-
--- Chat options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3730599555"] = "Chat options are preselected"
-
--- Latest message is shown, after loading a chat
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] = "Latest message is shown, after loading a chat"
-
--- Do you want to apply the default data source options when sending assistant results to chat?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Do you want to apply the default data source options when sending assistant results to chat?"
-
--- When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4060508809"] = "When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone."
-
--- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
-
--- You can set default data sources and options for new chats. You can change these settings later for each individual chat.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T492357592"] = "You can set default data sources and options for new chats. You can change these settings later for each individual chat."
-
--- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] = "When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."
-
 -- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them."
 
@@ -10594,30 +10606,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T956
 -- Default audience profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T963676741"] = "Default audience profile"
 
--- If and when should we delete your temporary chats?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T1014418451"] = "If and when should we delete your temporary chats?"
-
--- Workspace display behavior
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T2151409362"] = "Workspace display behavior"
-
--- Workspace behavior
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T2562846516"] = "Workspace behavior"
-
--- Close
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T3448155331"] = "Close"
-
--- How should we display your workspaces?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T3566924898"] = "How should we display your workspaces?"
-
--- Should we store your chats?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T3942969162"] = "Should we store your chats?"
-
--- Your Workspaces Configuration
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T404802870"] = "Your Workspaces Configuration"
-
--- Workspace maintenance
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T49653413"] = "Workspace maintenance"
-
 -- Which writing style should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1173034744"] = "Which writing style should be preselected?"
 
@@ -10662,6 +10650,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3547
 
 -- Preselect e-mail options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3832719342"] = "Preselect e-mail options?"
+
+-- Back to {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSWINDOW::T1010555781"] = "Back to {0}"
+
+-- Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSWINDOW::T1258653480"] = "Settings"
 
 -- Save
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T1294818664"] = "Save"
@@ -11194,9 +11188,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T216507668"] = "Close the search"
 -- Hide your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2351468526"] = "Hide your workspaces"
 
--- Open Chat Options
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2813205227"] = "Open Chat Options"
-
 -- Disappearing Chat
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3046519404"] = "Disappearing Chat"
 
@@ -11208,9 +11199,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3586092784"] = "Configure your workspac
 
 -- Your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3745240468"] = "Your workspaces"
-
--- Open Workspaces Configuration
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T383344787"] = "Open Workspaces Configuration"
 
 -- Show the chat options
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T4132756393"] = "Show the chat options"
@@ -12915,6 +12903,12 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::TRANSCRIPTIONOPUSBITRATEEXTENSIO
 
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::PROFILE::T2205839602"] = "Use no profile"
+
+-- Workspaces
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::SETTINGSPANES::T4048389951"] = "Workspaces"
+
+-- Chat
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::SETTINGSPANES::T578410699"] = "Chat"
 
 -- The selected model is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T1578005752"] = "The selected model is not available."
