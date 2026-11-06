@@ -2516,8 +2516,8 @@ public partial class ChatComponent : MSGComponentBase
         {
             { x => x.SystemPrompt, prepared.Text },
             { x => x.ChatTemplateName, chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? string.Empty : chatTemplate.Name },
-            { x => x.ProfileName, !prepared.ProfileIsAllowed || profile == Profile.NO_PROFILE ? string.Empty : profile.Name },
-            { x => x.IsProfileForbiddenByChatTemplate, !prepared.ProfileIsAllowed },
+            { x => x.ProfileName, prepared.SwitchedOffProfile != Profile.NO_PROFILE || profile == Profile.NO_PROFILE ? string.Empty : profile.Name },
+            { x => x.IsProfileForbiddenByChatTemplate, prepared.SwitchedOffProfile != Profile.NO_PROFILE },
             { x => x.HasRetrievedData, !string.IsNullOrWhiteSpace(thread.AugmentedData) },
             { x => x.ToolNames, toolNames },
             { x => x.IncludesDateTime, thread.IncludeDateTime },
