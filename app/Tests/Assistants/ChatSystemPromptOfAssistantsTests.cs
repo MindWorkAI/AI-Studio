@@ -65,7 +65,7 @@ public sealed class ChatSystemPromptOfAssistantsTests
         [typeof(AssistantPromptOptimizer)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
         [typeof(AssistantRewriteImprove)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantSWOTAnalysis)] = ChatSystemPromptSource.CUSTOM,
-        [typeof(SlideAssistant)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
+        [typeof(SlideAssistant)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantSynonyms)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantTextSummarizer)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantTranslation)] = ChatSystemPromptSource.CUSTOM,

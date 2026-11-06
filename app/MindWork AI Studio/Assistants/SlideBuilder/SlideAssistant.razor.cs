@@ -17,7 +17,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     protected override string Description => T("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also limit the number of bullet points per slide. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.");
     
-    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+    // The prompt of this assistant demands JSON for the layouts, so the chat gets a prompt of its own, which keeps the limits of the slides:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
 
     protected override string SystemPrompt =>
         $$$"""
@@ -102,7 +103,47 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - Your output must be in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}, without any comment, note, or marker about it. Never translate the JSON field names, the layout IDs, or the names of slots and elements.
         """;
-    
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues a planning, for follow-up questions about the slides.
+    /// </summary>
+    /// <remarks>
+    /// The limits go along, so that the chat can explain the plan by them, e.g., why a slide has only five
+    /// points. The layouts stay out: their names are content of the template file, which belongs into a
+    /// request rather than into a system prompt.
+    /// </remarks>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You are a professional presentation editor and writer. The user had the slides of a presentation planned: the
+        conversation so far holds the source material, i.e., the title, the content, and the attached documents and
+        pictures, and the plan of the slides as an outline. Now you answer the user's follow-up questions about the
+        slides, e.g., why a slide has only a few points, why some content is missing, or how to present a slide, and you
+        revise slides when the user asks for it.
+
+        The slides follow the settings and limits below, which the user chose. Explain the plan by them where they
+        apply, and keep to them when you revise slides, unless the user asks otherwise. The conversation does not hold
+        the layouts the slides use, which also limit how much text fits on a slide.
+
+        # Slides
+        {this.PromptSlideCount()}
+
+        # Bullet points (per text slot)
+        {this.PromptBulletPoints()}
+        {this.PromptImportantAspects()}
+
+        # Occasion
+            - {this.selectedOccasion.Prompt(this.customOccasion)}
+
+        # Audience
+        {this.PromptAudience()}
+
+        # Answers
+            - Answer in Markdown. Write revised slides as an outline, with the title of each slide as a heading and its points as a list. Never answer in JSON.
+            - You cannot create or change a PowerPoint file in this chat. The user creates the file with the Slide Assistant.
+            - Write the texts of slides in: {this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}
+            - Answer questions in the language the user writes in.
+        """;
+
     protected override bool AllowProfiles => true;
     
     protected override IReadOnlyList<IButtonData> FooterButtons =>
