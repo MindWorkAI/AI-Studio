@@ -48,18 +48,18 @@ public sealed class ChatSystemPromptOfAssistantsTests
 
     private static readonly Dictionary<Type, ChatSystemPromptSource> DECISIONS = new()
     {
-        [typeof(AssistantAgenda)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
+        [typeof(AssistantAgenda)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantBatchProcessing)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
         [typeof(BiasOfTheDayAssistant)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(AssistantBuilder)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
         [typeof(AssistantCoding)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(DocumentAnalysisAssistant)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
-        [typeof(AssistantEMail)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
+        [typeof(AssistantEMail)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantERI)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(AssistantGrammarSpelling)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantI18N)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
         [typeof(AssistantIconFinder)] = ChatSystemPromptSource.ASSISTANT,
-        [typeof(AssistantJobPostings)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
+        [typeof(AssistantJobPostings)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantLegalCheck)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(AssistantMyTasks)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(AssistantPromptOptimizer)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,

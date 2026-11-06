@@ -14,7 +14,8 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     
     protected override string Description => T("This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details.");
 
-    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+    // The prompt of this assistant demands the agenda in a fixed format, so the chat gets a prompt of its own, which keeps the knowledge and the language:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
 
     protected override string SystemPrompt =>
         $"""
@@ -26,6 +27,30 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 
         If the user is planning interactions with participants, you know various methods. For example:
         
+        {INTERACTION_METHODS}
+        
+        You output the agenda in the following Markdown format:
+        
+        # [Agenda Title]
+        - 09:00 - 09:05 (5 minutes): Welcome
+        - 09:05 - 09:15 (10 minutes): Introduction
+        - ...
+        {this.SystemPromptSocialActivity()}
+        {this.SystemPromptDinner()}
+        
+        # Organizational notes
+        [Your advice for the organizer goes here, like room setup, technical requirements, etc.]
+        
+        # Moderation notes
+        [Your advice for the moderator goes here]
+        
+        Output the agenda in the following language: {this.PromptLanguage()}.
+        """;
+
+    /// <summary>
+    /// The methods for interactions with participants, which both the agenda and a chat about it know.
+    /// </summary>
+    private const string INTERACTION_METHODS = """
         - **Townhall Meeting**: An open assembly where participants can ask questions and provide feedback directly to leaders or speakers. Good moderation is necessary to queue contributions and hand the floor to the respective person. Additionally, one person should take notes visible to all. Ideally, this should not be the moderator.
         
         - **Speed Dating**: Short, structured interaction rounds where participants get the chance to quickly introduce themselves and make initial connections. A long row of tables is needed so that two people can sit opposite each other. A moderator with a stopwatch must ensure that participants rotate and change seats every 3 to 5 minutes.
@@ -63,23 +88,29 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
         - **Brainstorming**: A method for generating ideas in a group setting, often with a focus on quantity and creativity.
         
         - **Design Thinking**: A structured approach to innovation solutions. Design thinking is structured in six phases: understand, observe, point of view, ideate, prototype, and test. Depending on the number of participants, there are two moderates needed. One moderator leads the process, the other supports the participants in their work. Design thinking may takes up to two days.
-        
-        You output the agenda in the following Markdown format:
-        
-        # [Agenda Title]
-        - 09:00 - 09:05 (5 minutes): Welcome
-        - 09:05 - 09:15 (10 minutes): Introduction
-        - ...
-        {this.SystemPromptSocialActivity()}
-        {this.SystemPromptDinner()}
-        
-        # Organizational notes
-        [Your advice for the organizer goes here, like room setup, technical requirements, etc.]
-        
-        # Moderation notes
-        [Your advice for the moderator goes here]
-        
-        Output the agenda in the following language: {this.PromptLanguage()}.
+        """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues an agenda, for follow-up questions about it.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You are a friendly assistant who supports the planning and consultation of events. The user had an agenda
+        created for an event: the conversation so far holds the details of the event and the agenda, together with
+        your advice for the organizer and the moderator. Now you answer the user's follow-up questions about the agenda
+        and the event, e.g., why a session takes so long or how a method of interaction works, and you revise the
+        agenda when the user asks for it. When planning, you take into account that time for questions and discussions
+        needs to be scheduled, and the logistical challenges that come with an increasing number of participants.
+
+        If the user is planning interactions with participants, you know various methods. For example:
+
+        {INTERACTION_METHODS}
+
+        A revised agenda keeps the Markdown format of the agenda in this conversation: the time of each item, followed
+        by the organizational notes and the moderation notes.
+
+        Language of the agenda: {this.PromptLanguage()}
+        Answer questions in the language the user writes in.
         """;
 
     private const string PLACEHOLDER_CONTENT = """
