@@ -4098,6 +4098,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Profile u
 -- The selected provider is not allowed in this chat due to data security or confidence-level requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2672162875"] = "The selected provider is not allowed in this chat due to data security or confidence-level requirements."
 
+-- Show the complete system prompt the AI receives
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2931983492"] = "Show the complete system prompt the AI receives"
+
 -- Bulleted List
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2957125464"] = "Bulleted List"
 
@@ -4136,6 +4139,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4231005109"] = "Heading"
 
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T474393241"] = "Please select the workspace where you want to move the chat to."
+
+-- Complete system prompt of this chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T544159998"] = "Complete system prompt of this chat"
 
 -- Move the chat to a workspace, or to another if it is already in one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Move the chat to a workspace, or to another if it is already in one."
@@ -10808,6 +10814,57 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T406940705"] = "This i
 
 -- Passages
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T4291613392"] = "Passages"
+
+-- When the AI reaches the limit of tool calls for one answer, AI Studio adds one more instruction at the end: to answer with what the tools have returned so far.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1014606529"] = "When the AI reaches the limit of tool calls for one answer, AI Studio adds one more instruction at the end: to answer with what the tools have returned so far."
+
+-- Data from your data sources
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1629973648"] = "Data from your data sources"
+
+-- The AI searches your data sources itself whenever a question calls for it. What it finds reaches the AI as the result of that search, not as part of this prompt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1948716844"] = "The AI searches your data sources itself whenever a question calls for it. What it finds reaches the AI as the result of that search, not as part of this prompt."
+
+-- AI Studio sent this data with your last message. When you send your next message, AI Studio works out this part anew.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1989325201"] = "AI Studio sent this data with your last message. When you send your next message, AI Studio works out this part anew."
+
+-- Profile '{0}'
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2068735836"] = "Profile '{0}'"
+
+-- System prompt of this chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2172559741"] = "System prompt of this chat"
+
+-- Chat template '{0}'
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2327622141"] = "Chat template '{0}'"
+
+-- These are the instructions the AI receives ahead of your conversation, the system prompt of this chat. AI Studio assembles it from the parts below, in the order in which the AI reads them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2763249726"] = "These are the instructions the AI receives ahead of your conversation, the system prompt of this chat. AI Studio assembles it from the parts below, in the order in which the AI reads them."
+
+-- this part
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2810340110"] = "this part"
+
+-- AI Studio retrieved this data for your last message. When you send your next message, AI Studio searches your data sources again and replaces this data with what it finds then.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T299624105"] = "AI Studio retrieved this data for your last message. When you send your next message, AI Studio searches your data sources again and replaces this data with what it finds then."
+
+-- Copy the complete prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3233146612"] = "Copy the complete prompt"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3448155331"] = "Close"
+
+-- Default prompt of AI Studio
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3895504389"] = "Default prompt of AI Studio"
+
+-- Instructions for your tools: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T472942707"] = "Instructions for your tools: {0}"
+
+-- Current date and time
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T556236372"] = "Current date and time"
+
+-- The chat template does not allow profiles, so your selected profile is not part of the prompt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T565876250"] = "The chat template does not allow profiles, so your selected profile is not part of the prompt."
+
+-- When you send your next message, AI Studio searches your data sources and adds what it finds here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T920703436"] = "When you send your next message, AI Studio searches your data sources and adds what it finds here."
 
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
