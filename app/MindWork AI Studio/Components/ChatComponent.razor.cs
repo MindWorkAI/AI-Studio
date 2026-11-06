@@ -850,6 +850,22 @@ public partial class ChatComponent : MSGComponentBase
                                      && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)
                                      && WorkspaceBehaviour.IsChatExisting(new LoadChat(this.ChatThread.WorkspaceId, this.ChatThread.ChatId));
 
+    private bool HasSentFileAttachments => this.ChatThread?.HasSentFileAttachments() ?? false;
+
+    /// <summary>
+    /// Shows the files of all sent messages, each version of a file once, see ChatThread.CollectSentFileAttachments.
+    /// </summary>
+    /// <remarks>
+    /// Without removing: the overview gathers several messages, and a removal could not tell which one it belongs to.
+    /// </remarks>
+    private async Task ShowSentFileAttachments()
+    {
+        if (this.ChatThread is null)
+            return;
+
+        await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.ChatThread.CollectSentFileAttachments(), canRemove: false);
+    }
+
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
