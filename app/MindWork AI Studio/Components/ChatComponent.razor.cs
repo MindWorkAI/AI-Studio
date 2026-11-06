@@ -386,11 +386,12 @@ public partial class ChatComponent : MSGComponentBase
             this.ApplyToolSelectionOfLoadedChat();
 
             //
-            // Apply the chat template of the incoming chat to the composer. Like everywhere else,
-            // a draft the user typed themselves wins: we must not discard it just because someone
-            // started a preconfigured chat in the meantime.
+            // Apply the chat template of the incoming chat to the composer, which replaces what the
+            // chat template preselected for new chats put there: a chat from an assistant uses none.
+            // Like everywhere else, a draft the user typed themselves wins: we must not discard it
+            // just because someone started a preconfigured chat in the meantime.
             //
-            if (deferredRequest.ApplySelectedChatTemplateToComposer && !this.ComposerState.HasUserDraft)
+            if (!this.ComposerState.HasUserDraft)
                 this.ComposerState.ApplyTemplate(this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate));
 
             // That draft is the message of the incoming chat now:
@@ -1167,13 +1168,9 @@ public partial class ChatComponent : MSGComponentBase
         }
         else
         {
-            this.currentProfile = string.IsNullOrWhiteSpace(this.ChatThread.SelectedProfile)
-                ? this.SettingsManager.GetProfileById(this.currentProfile.Id)
-                : this.SettingsManager.GetProfileById(this.ChatThread.SelectedProfile);
-
-            this.currentChatTemplate = string.IsNullOrWhiteSpace(this.ChatThread.SelectedChatTemplate)
-                ? this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id)
-                : this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate);
+            // What the thread selected, read as the thread reads it, so that an empty selection is none:
+            this.currentProfile = this.SettingsManager.GetProfileById(this.ChatThread.SelectedProfile);
+            this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate);
         }
 
         if (!this.ComposerState.HasUserDraft && previousChatTemplate != this.currentChatTemplate)
@@ -2273,13 +2270,16 @@ public partial class ChatComponent : MSGComponentBase
 
         await this.ProviderChanged.InvokeAsync(this.Provider);
 
-        // Try to select the profile:
-        if (!string.IsNullOrWhiteSpace(chatProfile))
+        //
+        // A chat shows the profile and the chat template its thread uses. The thread reads an empty
+        // selection as none (see ChatThread.BuildSystemPrompt), e.g., in a chat started from an
+        // assistant, so the chat must not keep those preselected for new chats instead:
+        //
+        if (this.ChatThread is not null)
+        {
             this.currentProfile = this.SettingsManager.GetProfileById(chatProfile);
-        
-        // Try to select the chat template:
-        if (!string.IsNullOrWhiteSpace(chatChatTemplate))
             this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(chatChatTemplate);
+        }
     }
 
     private async Task ToggleWorkspaceOverlay()
