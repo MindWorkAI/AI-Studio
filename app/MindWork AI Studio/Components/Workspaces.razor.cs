@@ -88,6 +88,20 @@ public partial class Workspaces : MSGComponentBase
     private IReadOnlyList<WorkspaceTreeChat> temporaryChats = [];
 
     /// <summary>
+    /// Whether the list shows the workspaces, as it did when it was built last.
+    /// </summary>
+    /// <remarks>
+    /// While workspaces are switched off, the list holds no workspace at all, so that neither the search
+    /// nor stepping through its results finds one. The chats in the workspaces stay where they are.
+    /// </remarks>
+    private bool areWorkspacesShown = true;
+
+    /// <summary>
+    /// Whether a new chat can start in a workspace, which needs stored chats besides workspaces.
+    /// </summary>
+    private bool CanChatsGoIntoWorkspaces => this.SettingsManager.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces;
+
+    /// <summary>
     /// Whether the list shows what a search found.
     /// </summary>
     /// <remarks>
@@ -197,7 +211,7 @@ public partial class Workspaces : MSGComponentBase
         }
 
         await base.OnInitializedAsync();
-        this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED ]);
+        this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED, Event.CONFIGURATION_CHANGED ]);
         this.LoadTreeItemsAsync(startPrefetch: true).Observe($"{nameof(Workspaces)}: loading the workspace tree");
     }
 
@@ -377,7 +391,8 @@ public partial class Workspaces : MSGComponentBase
 
     private void BuildTreeItems(WorkspaceTreeCacheSnapshot snapshot)
     {
-        this.workspaces = snapshot.Workspaces
+        this.areWorkspacesShown = this.SettingsManager.ConfigurationData.Workspace.UsesWorkspaces;
+        this.workspaces = !this.areWorkspacesShown ? [] : snapshot.Workspaces
             .Select(workspace => workspace with { Chats = workspace.Chats.OrderByDescending(x => x.LastEditTime).ToList() })
             .ToList();
 
@@ -1479,6 +1494,20 @@ public partial class Workspaces : MSGComponentBase
 
             case Event.WORKSPACE_CREATED:
                 await this.LoadTreeItemsAsync(startPrefetch: false);
+                break;
+
+            //
+            // The user changed the settings, perhaps the workspaces or the storing of chats. When
+            // workspaces were switched on or off, the list builds itself anew from what it read already,
+            // and a running search runs anew over what the list holds now. Otherwise, the buttons for a
+            // new chat in a workspace may have to show or hide:
+            //
+            case Event.CONFIGURATION_CHANGED:
+                if (this.areWorkspacesShown != this.SettingsManager.ConfigurationData.Workspace.UsesWorkspaces)
+                    await this.LoadTreeItemsAsync(startPrefetch: false);
+                else
+                    await this.SafeStateHasChanged();
+
                 break;
 
             case Event.AI_JOB_CHANGED:

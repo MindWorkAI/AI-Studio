@@ -1,0 +1,7 @@
+/*
+ * Each further group starts with the space the data source dialogs leave above a section. Should the
+ * options become calmer rows one day, a small grey title, as the sidebar has, would do.
+ */
+.settings-group + .settings-group {
+    margin-top: 24px;
+}

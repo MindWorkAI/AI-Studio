@@ -5398,6 +5398,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1320692831"]
 -- Preselect one of your chat templates?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1402022556"] = "Preselect one of your chat templates?"
 
+-- Delete disappearing chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1479376834"] = "Delete disappearing chats"
+
 -- Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T172255919"] = "Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat."
 
@@ -5409,6 +5412,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T189306836"] 
 
 -- Choose whether chats should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1915793195"] = "Choose whether chats should use the app default profile, no profile, or a specific profile."
+
+-- Store chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2204478405"] = "Store chats"
 
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2322771068"] = "Preselect a profile"
@@ -5422,6 +5428,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T263621180"] 
 -- Changed files are read again for the next message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T264953820"] = "Changed files are read again for the next message"
 
+-- Input
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2677268763"] = "Input"
+
+-- Disappearing chats are the stored chats outside of a workspace. When should we delete them, counted from their last change?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2744189961"] = "Disappearing chats are the stored chats outside of a workspace. When should we delete them, counted from their last change?"
+
 -- Provider selection when loading a chat and sending assistant results to chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
 
@@ -5434,6 +5446,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T2936560092"]
 -- Read changed attachments again?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3079510748"] = "Read changed attachments again?"
 
+-- Opening chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3091652376"] = "Opening chats"
+
 -- Would you like to set one of your chat templates as the default for chats?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3234927721"] = "Would you like to set one of your chat templates as the default for chats?"
 
@@ -5442,6 +5457,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3383186996"]
 
 -- First (oldest) message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3507181366"] = "First (oldest) message is shown, after loading a chat"
+
+-- Should we store your chats? This applies to every chat, also to the disappearing chats outside of a workspace: stored chats appear in the sidebar, where you can open them again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T351731280"] = "Should we store your chats? This applies to every chat, also to the disappearing chats outside of a workspace: stored chats appear in the sidebar, where you can open them again."
 
 -- Preselect chat options?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3728624759"] = "Preselect chat options?"
@@ -5458,6 +5476,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T4033153439"]
 -- When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T4060508809"] = "When enabled, AI Studio reads an attached file again when it changed since it was sent, and the AI receives the new content with the next message. Viewing the attachment then shows the content that was sent last. When disabled, the AI keeps receiving the content a file had when it was first sent, also when the file changed or is gone."
 
+-- Private: your chats are never stored. A chat exists only while it is open, and once you start a new chat or close AI Studio, it is gone.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T4284326705"] = "Private: your chats are never stored. A chat exists only while it is open, and once you start a new chat or close AI Studio, it is gone."
+
 -- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
 
@@ -5466,6 +5487,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T492357592"] 
 
 -- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T582516016"] = "When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."
+
+-- New chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T9864746"] = "New chats"
+
+-- Chat history
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T996713843"] = "Chat history"
 
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "External Assistants rated below this audit level are treated as insufficiently reviewed."
@@ -6208,23 +6235,29 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 -- Are you sure you want to delete the transcription provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T789660305"] = "Are you sure you want to delete the transcription provider '{0}'?"
 
--- If and when should we delete your temporary chats?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T1014418451"] = "If and when should we delete your temporary chats?"
+-- Use workspaces?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T1984817939"] = "Use workspaces?"
 
 -- Workspace display behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T2151409362"] = "Workspace display behavior"
 
--- Workspace behavior
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T2562846516"] = "Workspace behavior"
+-- Sidebar
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T2732971879"] = "Sidebar"
+
+-- No workspaces are used
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T3436445131"] = "No workspaces are used"
 
 -- How should we display your workspaces?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T3566924898"] = "How should we display your workspaces?"
 
--- Should we store your chats?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T3942969162"] = "Should we store your chats?"
+-- When enabled, you can sort your chats into workspaces, where they stay until you delete them. When disabled, the sidebar lists your disappearing chats only; chats already in a workspace are kept and come back when you enable workspaces again. While your chats are not stored, no new chat goes into a workspace.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T385967611"] = "When enabled, you can sort your chats into workspaces, where they stay until you delete them. When disabled, the sidebar lists your disappearing chats only; chats already in a workspace are kept and come back when you enable workspaces again. While your chats are not stored, no new chat goes into a workspace."
 
--- Workspace maintenance
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T49653413"] = "Workspace maintenance"
+-- Workspaces
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T4048389951"] = "Workspaces"
+
+-- Workspaces are used
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANEWORKSPACES::T4082708950"] = "Workspaces are used"
 
 -- Transcript of an audio file
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCEPASSAGEVIEW::T1797766177"] = "Transcript of an audio file"
@@ -7027,9 +7060,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2719480499"] = "The mes
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T275026390"] = "Chat Template Name"
 
--- Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2828180414"] = "Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on."
-
 -- Please relink the attachment '{0}' to a file on this computer or remove it before you save.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Please relink the attachment '{0}' to a file on this computer or remove it before you save."
 
@@ -7056,6 +7086,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T313529011"] = "A chat t
 
 -- The profile this chat template preselects does not exist on this computer. Chats started with it keep their usual profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3170335831"] = "The profile this chat template preselects does not exist on this computer. Chats started with it keep their usual profile."
+
+-- Right now, no new chat goes into a workspace: workspaces are switched off, or your chats are not stored. Meanwhile, chats with this template belong to no workspace, and they do not move into one later. You can change this choice once new chats go into workspaces again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3208614424"] = "Right now, no new chat goes into a workspace: workspaces are switched off, or your chats are not stored. Meanwhile, chats with this template belong to no workspace, and they do not move into one later. You can change this choice once new chats go into workspaces again."
 
 -- Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3227981830"] = "Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here."
@@ -12682,8 +12715,8 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3569059463
 -- Use app default profile
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3587225583"] = "Use app default profile"
 
--- Disable workspaces
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3612390107"] = "Disable workspaces"
+-- Don't store chats
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3702835599"] = "Don't store chats"
 
 -- Toggle the sidebar: show the workspaces next to the chat when desired
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3711207137"] = "Toggle the sidebar: show the workspaces next to the chat when desired"

@@ -59,7 +59,7 @@ public partial class Chat : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.WORKSPACE_TOGGLE_OVERLAY ]);
+        this.ApplyFilters([], [ Event.WORKSPACE_TOGGLE_OVERLAY, Event.CONFIGURATION_CHANGED ]);
         await base.OnInitializedAsync();
     }
 
@@ -69,7 +69,7 @@ public partial class Chat : MSGComponentBase
         // The sidebar and its handle are created anew whenever the sidebar shows up again, and the
         // script then has to watch the new handle:
         //
-        if (!this.AreWorkspacesVisible)
+        if (!this.IsSidebarShown)
             this.isSidebarResizeWatched = false;
 
         else if (!this.isSidebarResizeWatched)
@@ -107,9 +107,13 @@ public partial class Chat : MSGComponentBase
 
     private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Close the search") : T("Search your workspaces");
 
-    private bool AreWorkspacesVisible => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
-                                         && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
-                                         || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
+    /// <summary>
+    /// Whether the sidebar shows beside the chat. It shows whenever it has something to list, the stored
+    /// chats or the workspaces, and the user did not hide it.
+    /// </summary>
+    private bool IsSidebarShown => this.SettingsManager.ConfigurationData.Workspace.IsChatListShown
+                                   && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
+                                   || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
 
     private async Task ToggleWorkspaceSidebar()
     {
@@ -211,6 +215,14 @@ public partial class Chat : MSGComponentBase
         {
             case Event.WORKSPACE_TOGGLE_OVERLAY:
                 this.ToggleWorkspacesOverlay();
+                break;
+
+            //
+            // Whether chats are stored and whether workspaces are used decide whether the sidebar shows,
+            // and the user may change both in the settings window while the chat page lies behind it:
+            //
+            case Event.CONFIGURATION_CHANGED:
+                this.StateHasChanged();
                 break;
         }
 

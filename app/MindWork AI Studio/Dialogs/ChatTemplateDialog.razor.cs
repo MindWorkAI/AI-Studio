@@ -265,17 +265,18 @@ public partial class ChatTemplateDialog : MSGComponentBase
                                                   && this.SettingsManager.GetChatTemplateProvider(this.selectedProviderId) == AIStudio.Settings.Provider.NONE;
 
     /// <summary>
-    /// Whether workspaces are switched off, so that a workspace of this template has no effect for now.
+    /// Whether no new chat goes into a workspace right now, because workspaces are switched off or no
+    /// chat is stored, so that a workspace of this template has no effect for now.
     /// </summary>
-    private bool AreWorkspacesDisabled => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES;
+    private bool AreWorkspacesDisabled => !this.SettingsManager.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces;
 
     /// <summary>
     /// Whether the workspace of this template can be changed right now.
     /// </summary>
     /// <remarks>
-    /// Not while workspaces are switched off: a choice made then would take effect for no chat,
-    /// and nothing in the chat would say so. A workspace the template already names stays as it
-    /// is, so it applies again once workspaces are back.
+    /// Not while no new chat goes into a workspace: a choice made then would take effect for no chat,
+    /// and nothing in the chat would say so. A workspace the template already names stays as it is, so
+    /// it applies again once new chats go into workspaces again.
     /// </remarks>
     private bool IsWorkspaceChoiceLocked => this.IsReadOnly || this.AreWorkspacesDisabled;
 

@@ -14,31 +14,35 @@
 else
 {
     <div class="workspace-list" @ref="@this.listElement">
-        @* A search leaves every workspace and chat in its place and only marks what it found: *@
-        <div class="workspace-section-start" @ref="@this.workspacesSectionStart"></div>
-        @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, canAddWorkspace: true)
-
-        @if (!this.IsWorkspacesSectionCollapsed)
+        @* A search leaves every workspace and chat in its place and only marks what it found. While
+           workspaces are switched off, the list holds the disappearing chats only: *@
+        @if (this.areWorkspacesShown)
         {
-            @if (this.workspaces.Count == 0)
+            <div class="workspace-section-start" @ref="@this.workspacesSectionStart"></div>
+            @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, canAddWorkspace: true)
+
+            @if (!this.IsWorkspacesSectionCollapsed)
             {
-                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Outlined.CreateNewFolder" Class="ml-2 mb-1" OnClick="@this.AddWorkspaceAsync">
-                    @T("Add workspace")
-                </MudButton>
-            }
-            else
-            {
-                <MudList T="string" Dense="@true" ReadOnly="@true">
-                    @foreach (var workspace in this.workspaces)
-                    {
-                        @this.RenderWorkspace(workspace)
-                    }
-                </MudList>
+                @if (this.workspaces.Count == 0)
+                {
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Outlined.CreateNewFolder" Class="ml-2 mb-1" OnClick="@this.AddWorkspaceAsync">
+                        @T("Add workspace")
+                    </MudButton>
+                }
+                else
+                {
+                    <MudList T="string" Dense="@true" ReadOnly="@true">
+                        @foreach (var workspace in this.workspaces)
+                        {
+                            @this.RenderWorkspace(workspace)
+                        }
+                    </MudList>
+                }
             }
         }
 
         <div class="workspace-section-start" @ref="@this.temporaryChatsSectionStart"></div>
-        @this.RenderSectionHeader(T("Disappearing Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: true, canAddWorkspace: false)
+        @this.RenderSectionHeader(T("Disappearing Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: this.areWorkspacesShown, canAddWorkspace: false)
 
         @if (!this.IsTemporaryChatsSectionCollapsed)
         {
@@ -137,11 +141,18 @@ else
                     <span class="workspace-result-count flex-shrink-0">@resultCount</span>
                 }
                 <div class="workspace-item-actions flex-shrink-0" @onclick:stopPropagation="@true">
-                    <MudTooltip Text="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                        <MudIconButton Icon="@AppIcons.EDIT_SQUARE_OUTLINED" aria-label="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
-                    </MudTooltip>
+                    @* While no chat is stored, a new chat would go into a workspace without being kept there: *@
+                    @if (this.CanChatsGoIntoWorkspaces)
+                    {
+                        <MudTooltip Text="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                            <MudIconButton Icon="@AppIcons.EDIT_SQUARE_OUTLINED" aria-label="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                        </MudTooltip>
+                    }
                     <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" AriaLabel="@T("Workspace options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(workspace.WorkspaceId, isOpen))">
-                        <MudMenuItem Icon="@AppIcons.EDIT_SQUARE_OUTLINED" Label="@T("Start a new chat")" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                        @if (this.CanChatsGoIntoWorkspaces)
+                        {
+                            <MudMenuItem Icon="@AppIcons.EDIT_SQUARE_OUTLINED" Label="@T("Start a new chat")" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                        }
                         <MudMenuItem Icon="@Icons.Material.Outlined.Edit" Label="@T("Rename")" OnClick="@(() => this.RenameWorkspaceAsync(workspace.WorkspacePath))"/>
                         <MudDivider/>
                         <MudMenuItem Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" Label="@T("Delete")" OnClick="@(() => this.DeleteWorkspaceAsync(workspace.WorkspacePath))"/>
@@ -206,7 +217,10 @@ else
                             var isBusy = this.IsChatBusy(chat.ChatId);
                         }
                         <MudMenuItem Disabled="@isBusy" Icon="@Icons.Material.Outlined.Edit" Label="@T("Rename")" OnClick="@(() => this.RenameChatAsync(chat.ChatPath))"/>
-                        <MudMenuItem Disabled="@isBusy" Icon="@Icons.Material.Outlined.DriveFileMove" Label="@T("Move to workspace")" OnClick="@(() => this.MoveChatFromTreeAsync(chat.ChatPath))"/>
+                        @if (this.areWorkspacesShown)
+                        {
+                            <MudMenuItem Disabled="@isBusy" Icon="@Icons.Material.Outlined.DriveFileMove" Label="@T("Move to workspace")" OnClick="@(() => this.MoveChatFromTreeAsync(chat.ChatPath))"/>
+                        }
                         <MudMenuItem Disabled="@isBusy" Icon="@AppIcons.COPY_SQUARE_OUTLINED" Label="@T("Copy chat")" OnClick="@(() => this.CopyChatFromTreeAsync(chat.ChatPath))"/>
                         <MudDivider/>
                         <MudMenuItem Disabled="@isBusy" Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" Label="@T("Delete")" OnClick="@(() => this.DeleteChatAsync(chat.ChatPath))"/>

@@ -19,7 +19,7 @@
         </MudText>
         
         <MudToolBar WrapContent="false" Gutters="false">
-            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            @if (!this.SettingsManager.ConfigurationData.Workspace.IsChatListShown)
             {
                 <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenWorkspacesSettingsDialog())"/>
@@ -34,7 +34,7 @@
     <CascadingValue Value="Components.CHAT">
         <ProviderSelection @bind-ProviderSettings="@this.providerSettings" Disabled="@this.isAnswerBeingWritten"/>
     </CascadingValue>
-    @if (this.AreWorkspacesVisible)
+    @if (this.IsSidebarShown)
     {
         // Case: Sidebar is visible, either always or until it is hidden. It keeps the width the user
         // dragged its right border to, within limits, see Chat.razor.css and watchSidebarResize in app.js:
@@ -61,7 +61,7 @@
                 Search="@this.workspaceSearch"/>
         </div>
     }
-    else if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR)
+    else if (this.SettingsManager.ConfigurationData.Workspace.IsChatListShown && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR)
     {
         // Case: Sidebar can be toggled and is currently hidden
         <MudStack Row="@true" Style="width: 100%; overflow: hidden; height: 100%; flex-grow: 1; min-height: 0;">
@@ -105,7 +105,7 @@
     }
 
     @if (
-        this.SettingsManager.ConfigurationData.Workspace.StorageBehavior != WorkspaceStorageBehavior.DISABLE_WORKSPACES
+        this.SettingsManager.ConfigurationData.Workspace.IsChatListShown
         && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
     {
         <MudDrawer @bind-Open="@this.workspaceOverlayVisible" Width="26em" Height="100%" Anchor="Anchor.Start" Variant="DrawerVariant.Temporary" Elevation="1" Style="--workspace-list-background: var(--mud-palette-drawer-background);">

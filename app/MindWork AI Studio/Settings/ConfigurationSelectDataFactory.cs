@@ -81,11 +81,11 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Install updates automatically"), UpdateInstallation.AUTOMATIC);
     }
     
-    public static IEnumerable<ConfigurationSelectData<WorkspaceStorageBehavior>> GetWorkspaceStorageBehaviorData()
+    public static IEnumerable<ConfigurationSelectData<WorkspaceStorageBehavior>> GetChatStorageBehaviorData()
     {
-        yield return new(TB("Disable workspaces"), WorkspaceStorageBehavior.DISABLE_WORKSPACES);
         yield return new(TB("Store chats automatically"), WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
         yield return new(TB("Store chats manually"), WorkspaceStorageBehavior.STORE_CHATS_MANUALLY);
+        yield return new(TB("Don't store chats"), WorkspaceStorageBehavior.DISABLE_WORKSPACES);
     }
     
     public static IEnumerable<ConfigurationSelectData<WorkspaceStorageTemporaryMaintenancePolicy>> GetWorkspaceStorageTemporaryMaintenancePolicyData()
