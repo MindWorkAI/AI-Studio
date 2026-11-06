@@ -61,8 +61,9 @@ it cannot show the app, since it lacks the session cookie. Therefore:
   from the page. On a link of the app, the click does nothing; on any other link, it goes on to the
   webview, whose request for a new window or a navigation reaches the runtime. Therefore, give a link
   with a target no click handler of its own: no script of the page sees its click.
-- No script of the page may open anything, so `capabilities/default.json` grants neither the opener
-  plugin nor `shell:allow-open`.
+- No script of the page may open or start anything, so `capabilities/default.json` grants the opener
+  and shell plugins nothing. The runtime calls both from Rust, which needs no permission, e.g., to
+  start the .NET server in `dotnet.rs`.
 
 **The right-click menu shows only in text fields and on selected text,** never on a link: its other
 entries, such as going back, reloading, or opening a link in a new window, make no sense in the app.

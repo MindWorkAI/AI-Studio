@@ -12,16 +12,6 @@
   ],
   "permissions": [
     "core:default",
-    "updater:default",
-    {
-      "identifier": "shell:allow-spawn",
-      "allow": [
-        {
-          "name": "mindworkAIStudioServer",
-          "sidecar": true,
-          "args": true
-        }
-      ]
-    }
+    "updater:default"
   ]
 }
