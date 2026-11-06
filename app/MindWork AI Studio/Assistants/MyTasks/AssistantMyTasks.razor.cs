@@ -14,7 +14,8 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     protected override string Description => T("You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.");
     
-    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+    // This prompt gives advice in the chosen language, which suits the follow-up questions of the chat:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
 
     protected override string SystemPrompt =>
         $"""

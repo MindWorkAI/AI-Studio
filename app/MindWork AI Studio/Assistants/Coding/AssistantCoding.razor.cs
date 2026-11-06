@@ -15,7 +15,8 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     
     protected override string Description => T("This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.");
     
-    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+    // This prompt describes a developer for any coding question, which suits the follow-up questions of the chat:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
 
     protected override string SystemPrompt =>
         """
