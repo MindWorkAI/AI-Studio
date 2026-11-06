@@ -53,7 +53,7 @@ public sealed class ChatSystemPromptOfAssistantsTests
         [typeof(BiasOfTheDayAssistant)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(AssistantBuilder)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
         [typeof(AssistantCoding)] = ChatSystemPromptSource.ASSISTANT,
-        [typeof(DocumentAnalysisAssistant)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
+        [typeof(DocumentAnalysisAssistant)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantEMail)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantERI)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(AssistantGrammarSpelling)] = ChatSystemPromptSource.CUSTOM,

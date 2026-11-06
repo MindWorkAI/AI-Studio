@@ -1806,7 +1806,9 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Optional: hide the policy definition section in the UI.
 --     -- When set to true, users will only see the document selection interface
 --     -- and cannot view or modify the policy settings.
---     -- This is useful for enterprise configurations where policy details should remain hidden.
+--     -- This is useful for enterprise configurations where users would find the policy details overwhelming.
+--     -- It keeps the assistant simple, but it does not keep the policy a secret: a chat which continues
+--     -- an analysis gets the whole policy as its system prompt, and users can read it there.
 --     -- Allowed values are: true, false (default: false)
 --     ["HidePolicyDefinition"] = false
 -- }
