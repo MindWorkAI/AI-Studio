@@ -48,6 +48,9 @@ it cannot show the app, since it lacks the session cookie. Therefore:
 - `should_open_in_system_browser` in `app_window.rs` alone decides which address goes to the system: a
   website, another local server, or a `mailto:` or `tel:` link, but never an address of the app. The
   handlers for navigations and for new windows both ask it.
+- On Linux, `open_in_system_browser` hands such an address to the desktop portal, as the Flatpak does
+  anyway; the opener plugin only steps in when there is no portal. Started from an AppImage, xdg-open
+  inherits the environment of the AppImage, and the browser stays closed without any error.
 - The handler for new windows always denies the window. Only a window which `setup` builds itself can
   have that handler, which is why `tauri.conf.json` sets `"create": false`.
 - Keep the link script of the opener plugin switched off (`open_js_links_on_click(false)`): it opens

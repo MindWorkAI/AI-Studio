@@ -491,7 +491,58 @@ fn should_open_in_system_browser(url: &tauri::Url, approved_app_url: Option<&tau
 }
 
 /// Hands an address outside the app to the system, see `should_open_in_system_browser`.
+///
+/// On Linux, the desktop portal opens it, as it does for the Flatpak anyway. The opener plugin
+/// starts the xdg-open of the system with the environment of AI Studio, which an AppImage points
+/// at its own GTK and GIO modules: the browser then stays closed, and no error tells why. The
+/// opener plugin remains for systems without a portal.
 fn open_in_system_browser<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>, url: &tauri::Url) {
+    #[cfg(target_os = "linux")]
+    {
+        use crate::file_actions::LinuxPortalError;
+
+        let app_handle = app_handle.clone();
+        let url = url.clone();
+        tauri::async_runtime::spawn(async move {
+            match open_url_with_linux_portal(&url).await {
+                Ok(()) => {
+                    info!(Source = "Tauri"; "Opening external URL through the desktop portal: {url}");
+                },
+                Err(LinuxPortalError::RequestFailed(error)) => {
+                    error!(Source = "Tauri"; "Failed to open external URL '{url}' through the desktop portal: {error}");
+                },
+                Err(LinuxPortalError::Unavailable(error)) => {
+                    warn!(Source = "Tauri"; "The desktop portal cannot open external URL '{url}', so the opener plugin opens it: {error}");
+                    open_with_opener(&app_handle, &url);
+                },
+            }
+        });
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    open_with_opener(app_handle, url);
+}
+
+/// Opens an address outside the app through the desktop portal, see `open_in_system_browser`.
+#[cfg(target_os = "linux")]
+async fn open_url_with_linux_portal(url: &tauri::Url) -> Result<(), crate::file_actions::LinuxPortalError> {
+    use ashpd::desktop::open_uri::OpenFileRequest;
+    use crate::file_actions::LinuxPortalError;
+
+    let uri = ashpd::Uri::parse(url.as_str())
+        .map_err(|error| LinuxPortalError::RequestFailed(format!("The desktop portal cannot take the address: {error}")))?;
+
+    let request = OpenFileRequest::default()
+        .send_uri(&uri)
+        .await
+        .map_err(|error| LinuxPortalError::Unavailable(format!("Desktop portal invocation failed: {error}")))?;
+
+    request.response()
+        .map_err(|error| LinuxPortalError::RequestFailed(format!("Desktop portal request failed: {error}")))
+}
+
+/// Opens an address outside the app with the opener plugin, see `open_in_system_browser`.
+fn open_with_opener<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>, url: &tauri::Url) {
     match app_handle.opener().open_url(url.as_str(), None::<&str>) {
         Ok(_) => {
             info!(Source = "Tauri"; "Opening external URL in system browser: {url}");
