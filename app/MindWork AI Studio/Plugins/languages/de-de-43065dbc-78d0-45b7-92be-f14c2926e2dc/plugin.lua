@@ -10815,47 +10815,56 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T406940705"] = "Genau 
 -- Passages
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T4291613392"] = "Textstellen"
 
--- Included, retrieved for an earlier message
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1359693360"] = "Enthalten, abgerufen für eine frühere Nachricht"
+-- When the AI reaches the limit of tool calls for one answer, AI Studio adds one more instruction at the end: to answer with what the tools have returned so far.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1014606529"] = "Erreicht die KI bei einer Antwort die Höchstzahl an Werkzeugaufrufen, fügt AI Studio am Ende eine weitere Anweisung hinzu: mit dem zu antworten, was die Werkzeuge bis dahin geliefert haben."
 
 -- Data from your data sources
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1629973648"] = "Daten aus Ihren Datenquellen"
 
--- Date and time
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2054731205"] = "Datum und Uhrzeit"
+-- The AI searches your data sources itself whenever a question calls for it. What it finds reaches the AI as the result of that search, not as part of this prompt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1948716844"] = "Die KI durchsucht Ihre Datenquellen selbst, sobald eine Frage es erfordert. Was sie findet, erhält sie als Ergebnis dieser Suche, nicht als Teil dieses Prompts."
 
--- Included
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3098410457"] = "Enthalten"
+-- AI Studio sent this data with your last message. When you send your next message, AI Studio works out this part anew.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1989325201"] = "AI Studio hat diese Daten mit Ihrer letzten Nachricht gesendet. Wenn Sie Ihre nächste Nachricht senden, stellt AI Studio diesen Teil neu zusammen."
 
--- This is the complete system prompt the AI receives with your next message. AI Studio assembles it from the parts listed here.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3315883870"] = "Dies ist der vollständige System-Prompt, den die KI mit Ihrer nächsten Nachricht erhält. AI Studio setzt ihn aus den hier aufgeführten Teilen zusammen."
+-- Profile '{0}'
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2068735836"] = "Profil „{0}“"
 
--- Profile
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3440849550"] = "Profil"
+-- System prompt of this chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2172559741"] = "System-Prompt dieses Chats"
+
+-- Chat template '{0}'
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2327622141"] = "Chat-Vorlage „{0}“"
+
+-- These are the instructions the AI receives ahead of your conversation, the system prompt of this chat. AI Studio assembles it from the parts below, in the order in which the AI reads them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2763249726"] = "Dies sind die Anweisungen, die die KI vor Ihrer Unterhaltung erhält: der System-Prompt dieses Chats. AI Studio setzt ihn aus den folgenden Teilen zusammen, in der Reihenfolge, in der die KI sie liest."
+
+-- this part
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2810340110"] = "Diesen Teil"
+
+-- AI Studio retrieved this data for your last message. When you send your next message, AI Studio searches your data sources again and replaces this data with what it finds then.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T299624105"] = "AI Studio hat diese Daten für Ihre letzte Nachricht abgerufen. Wenn Sie Ihre nächste Nachricht senden, durchsucht AI Studio Ihre Datenquellen erneut und ersetzt diese Daten durch das, was es dann findet."
+
+-- Copy the complete prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3233146612"] = "Vollständigen Prompt kopieren"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3448155331"] = "Schließen"
 
--- Complete system prompt
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3725933563"] = "Vollständiger System-Prompt"
+-- Default prompt of AI Studio
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3895504389"] = "Standard-Prompt von AI Studio"
 
--- Switched off by the chat template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3728646729"] = "Von der Chat-Vorlage deaktiviert"
+-- Instructions for your tools: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T472942707"] = "Anweisungen für Ihre Werkzeuge: {0}"
 
--- Tool instructions
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4067010756"] = "Anweisungen für Werkzeuge"
+-- Current date and time
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T556236372"] = "Aktuelles Datum und aktuelle Uhrzeit"
 
--- the complete system prompt
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T471427542"] = "Den vollständigen System-Prompt"
+-- The chat template does not allow profiles, so your selected profile is not part of the prompt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T565876250"] = "Die Chat-Vorlage erlaubt keine Profile, daher ist Ihr ausgewähltes Profil nicht Teil des Prompts."
 
--- None
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T810547195"] = "Keine"
-
--- Not included
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T885651534"] = "Nicht enthalten"
-
--- Chat template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T923285303"] = "Chat-Vorlage"
+-- When you send your next message, AI Studio searches your data sources and adds what it finds here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T920703436"] = "Wenn Sie Ihre nächste Nachricht senden, durchsucht AI Studio Ihre Datenquellen und fügt hier hinzu, was es findet."
 
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1085481431"] = "Hugging-Face-Inferenzanbieter"
