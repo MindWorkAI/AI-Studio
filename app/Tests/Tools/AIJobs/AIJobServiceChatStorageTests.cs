@@ -120,15 +120,28 @@ public sealed class AIJobServiceChatStorageTests
         Assert.That(stored.Blocks.Select(block => block.Content).OfType<ContentText>().Select(text => text.Text), Does.Contain("What is the capital of France?"), "The stored chat has to hold the message which was sent.");
     }
 
+    [Test]
+    public async Task AChatInAWorkspaceIsStoredByTheChoiceForWorkspaces()
+    {
+        var chat = NewChat("What is the capital of France?");
+        chat.WorkspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync("Capitals");
+
+        await this.AnswerAsync(chat, WorkspaceStorageBehavior.DISABLE_WORKSPACES, workspaceChatsStorageBehavior: WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
+
+        Assert.That(WorkspaceBehaviour.IsChatExisting(new LoadChat(chat.WorkspaceId, chat.ChatId)), Is.True, "Chats in workspaces follow a choice of their own, also while no other chat is stored.");
+    }
+
     /// <summary>
     /// Lets the AI job answer the given chat, like sending a message does, and waits until the job is done.
     /// </summary>
     /// <param name="chat">The chat, with the message to answer as its last block.</param>
-    /// <param name="storageBehavior">How the user wants their chats stored.</param>
-    private async Task AnswerAsync(ChatThread chat, WorkspaceStorageBehavior storageBehavior)
+    /// <param name="storageBehavior">How the user wants their chats outside of workspaces stored.</param>
+    /// <param name="workspaceChatsStorageBehavior">How the user wants their chats in workspaces stored, or null for the same.</param>
+    private async Task AnswerAsync(ChatThread chat, WorkspaceStorageBehavior storageBehavior, WorkspaceStorageBehavior? workspaceChatsStorageBehavior = null)
     {
         var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
         settingsManager.ConfigurationData.Workspace.StorageBehavior = storageBehavior;
+        settingsManager.ConfigurationData.Workspace.WorkspaceChatsStorageBehavior = workspaceChatsStorageBehavior;
 
         var aiText = new ContentText { InitialRemoteWait = true };
         chat.Blocks.Add(new ContentBlock

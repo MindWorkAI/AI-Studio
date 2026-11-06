@@ -60,8 +60,10 @@
     flex-shrink: 0;
 }
 
+/* A title is no text to select: it shows the plain arrow, unless a click on it moves the list, see below. */
 .workspace-list ::deep .workspace-section-toggle {
     min-width: 0;
+    cursor: default;
 }
 
 .workspace-list ::deep .workspace-section-header .mud-typography {
@@ -186,13 +188,16 @@
 }
 
 /*
- * The whole title of a section collapses it, but only its button shows that, with the shadow it
- * has under the pointer. The title itself stays plain. A title which sticks to the top or the bottom
- * of the list scrolls to its section instead, so it leaves its button alone; the script in app.js
- * marks such a title with data-stuck. The button itself still shows its shadow under the pointer.
+ * A click on the title of a section only moves the list: to the open chat of the section while that
+ * is out of sight, or to the start of the section while its title sticks to the top or the bottom of
+ * the list. The script in app.js marks such titles with data-hides-current and data-stuck; a collapsed
+ * section which holds the open chat has the class is-current. Only these titles take the pointer, since
+ * only these do something. Collapsing and expanding is the job of the button beside the title alone.
  */
-.workspace-list ::deep .workspace-section-header:not([data-stuck]) .workspace-section-toggle:hover .mud-icon-button {
-    background-color: var(--mud-palette-action-default-hover);
+.workspace-list ::deep .workspace-section-header[data-stuck] .workspace-section-toggle,
+.workspace-list ::deep .workspace-section-header[data-hides-current] .workspace-section-toggle,
+.workspace-list ::deep .workspace-section-toggle.is-current {
+    cursor: pointer;
 }
 
 /*

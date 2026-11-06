@@ -82,14 +82,14 @@
                 </MudTooltip>
             }
 
-            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
+            @if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
             {
                 <MudTooltip Text="@T("Save chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@(() => this.SaveThread())" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)"/>
                 </MudTooltip>
             }
 
-            <MudTooltip Text="@T("Start temporary chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+            <MudTooltip Text="@T("Start a new chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                 <MudIconButton Icon="@Icons.Material.Filled.AddComment" OnClick="@(() => this.StartNewChat(useSameWorkspace: false))"/>
             </MudTooltip>
 
@@ -103,7 +103,7 @@
             <ChatTemplateSelection MarginLeft="" CanChatThreadBeUsedForTemplate="@this.CanThreadBecomeTemplate" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             
 
-            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            @if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 <MudTooltip Text="@T("Delete this chat & start a new one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep" Color="Color.Error" OnClick="@(() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true))" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)"/>
@@ -117,7 +117,7 @@
                 </MudTooltip>
             }
 
-            @if (this.SettingsManager.ConfigurationData.Workspace.AreChatsStored)
+            @if (this.ChatStorage is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
             {
                 <MudTooltip Text="@T("Copy this chat & continue in the copy.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanThreadBeCopied)" OnClick="@this.CopyCurrentChat"/>

@@ -265,8 +265,8 @@ public partial class ChatTemplateDialog : MSGComponentBase
                                                   && this.SettingsManager.GetChatTemplateProvider(this.selectedProviderId) == AIStudio.Settings.Provider.NONE;
 
     /// <summary>
-    /// Whether no new chat goes into a workspace right now, because workspaces are switched off or no
-    /// chat is stored, so that a workspace of this template has no effect for now.
+    /// Whether no new chat goes into a workspace right now, because workspaces are switched off or chats
+    /// in workspaces are not stored, so that a workspace of this template has no effect for now.
     /// </summary>
     private bool AreWorkspacesDisabled => !this.SettingsManager.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces;
 

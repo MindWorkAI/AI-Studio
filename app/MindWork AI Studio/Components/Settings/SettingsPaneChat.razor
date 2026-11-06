@@ -29,15 +29,20 @@
     }
 </SettingsGroup>
 
-@* Whether and how long chats are kept belongs to the chats, not to the workspaces, which only sort the stored chats: *@
+@* Whether and how long the chats outside of workspaces are kept. Chats in workspaces have a choice of their own, see SettingsPaneWorkspaces: *@
 <SettingsGroup Title="@T("Chat history")">
-    <ConfigurationSelect OptionDescription="@T("Store chats")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior)" Data="@ConfigurationSelectDataFactory.GetChatStorageBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = selectedValue)" OptionHelp="@T("Should we store your chats? This applies to every chat, also to the disappearing chats outside of a workspace: stored chats appear in the sidebar, where you can open them again.")"/>
-    @if (!this.SettingsManager.ConfigurationData.Workspace.AreChatsStored)
+    <ConfigurationSelect OptionDescription="@T("Store chats")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.GetChoice(isInWorkspace: false))" Data="@ConfigurationSelectDataFactory.GetChatStorageChoiceData()" SelectionUpdate="@(choice => this.SettingsManager.ConfigurationData.Workspace.SetChoice(isInWorkspace: false, choice))" OptionHelp="@T("Whether and how long we keep your chats outside of workspaces. Stored chats appear in the sidebar, where you can open them again. Chats in workspaces have a choice of their own in the workspace settings.")"/>
+    @switch (this.SettingsManager.ConfigurationData.Workspace.GetChoice(isInWorkspace: false))
     {
-        @* Not storing chats is a matter of privacy, which the user should see at a glance: *@
-        <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.PrivacyTip" Class="mb-6">
-            @T("Private: your chats are never stored. A chat exists only while it is open, and once you start a new chat or close AI Studio, it is gone.")
-        </MudAlert>
+        case ChatStorageChoice.STORE_TEMPORARILY:
+            <ConfigurationSelect OptionDescription="@T("For how long")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.GetDuration(isInWorkspace: false))" Data="@ConfigurationSelectDataFactory.GetChatDurationData()" SelectionUpdate="@(duration => this.SettingsManager.ConfigurationData.Workspace.SetDuration(isInWorkspace: false, duration))" OptionHelp="@T("A chat outside of a workspace is deleted this long after its last change. This applies to all of them, however they were stored before.")"/>
+            break;
+
+        case ChatStorageChoice.DO_NOT_STORE:
+            @* Not storing chats is a matter of privacy, which the user should see at a glance: *@
+            <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.PrivacyTip" Class="mb-6">
+                @this.PrivacyNote
+            </MudAlert>
+            break;
     }
-    <ConfigurationSelect OptionDescription="@T("Delete disappearing chats")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageTemporaryMaintenancePolicyData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy = selectedValue)" OptionHelp="@T("Disappearing chats are the stored chats outside of a workspace. When should we delete them, counted from their last change?")"/>
 </SettingsGroup>

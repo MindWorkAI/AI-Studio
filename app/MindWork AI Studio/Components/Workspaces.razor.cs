@@ -252,9 +252,9 @@ public partial class Workspaces : MSGComponentBase
         }
 
         //
-        // Only a title in its usual place shows its button under the pointer, since only there a
-        // click collapses the section. And a title carries the mark of the open chat while that
-        // chat is out of sight above or below, as a collapsed one does. CSS can tell neither, so
+        // Only a title which sticks, or whose section hides the open chat, does something on a click,
+        // and only such a title takes the pointer. And a title carries the mark of the open chat while
+        // that chat is out of sight above or below, as a collapsed one does. CSS can tell neither, so
         // the script marks such titles, as soon as the list exists:
         //
         if (!this.isWatchingStuckSections && !this.isInitialLoading)
@@ -606,31 +606,34 @@ public partial class Workspaces : MSGComponentBase
         : "workspace-section-header is-sticky px-2 pt-2";
 
     /// <summary>
-    /// Shows what the title of a section points to, or else collapses or expands the section.
+    /// Shows what the title of a section points to.
     /// </summary>
     /// <remarks>
     /// <para>
     /// A section which holds the open chat out of sight marks its title, and a click on the title
     /// scrolls to that chat. Otherwise, a title which sticks to the top or the bottom of the list
-    /// scrolls its section into its usual place: collapsing the section while the list shows its
-    /// middle, or before the list shows it at all, would pull the list away under the pointer. Only a
-    /// title in its usual place, whose section shows its open chat or has none, collapses the section
-    /// right away.
+    /// scrolls its section into its usual place. A title in its usual place, whose section shows its
+    /// open chat or has none, does nothing: collapsing and expanding is the job of the button beside
+    /// the title alone, so that a click on the title only ever moves the list.
     /// </para>
     /// <para>
-    /// A collapsed section opens first, and the list reveals it once its content is drawn, see
-    /// <see cref="this.OnAfterRenderAsync"/>. A browser which still runs a cached app.js lacks the
-    /// script, and the title collapses or expands the section as before.
+    /// A collapsed section which holds the open chat opens to show it, as its marked title promises,
+    /// and the list reveals the chat once the content of the section is drawn, see
+    /// <see cref="this.OnAfterRenderAsync"/>.
     /// </para>
     /// </remarks>
-    private async Task ClickSectionTitleAsync(ElementReference sectionStart, bool isCollapsed, Func<Task> toggle)
+    private async Task ClickSectionTitleAsync(ElementReference sectionStart, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle)
     {
-        if (isCollapsed)
-            this.sectionToReveal = sectionStart;
+        if (!isCollapsed)
+        {
+            await this.TryRevealSectionAsync(sectionStart);
+            return;
+        }
 
-        else if (await this.TryRevealSectionAsync(sectionStart))
+        if (!containsCurrentChat)
             return;
 
+        this.sectionToReveal = sectionStart;
         await toggle();
     }
 
@@ -1420,12 +1423,12 @@ public partial class Workspaces : MSGComponentBase
     /// here, though, since the tree draws what it has built before and would otherwise keep showing
     /// the chat in its old place.<br/><br/>
     ///
-    /// What the user did not save reaches the new place only while chats are stored automatically,
-    /// see WorkspaceBehaviour.MoveChatAsync.
+    /// What the user did not save reaches the new place only while that place stores chats
+    /// automatically, see WorkspaceBehaviour.MoveChatAsync.
     /// </remarks>
     public async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
     {
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId, this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId, this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(targetWorkspaceId));
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 

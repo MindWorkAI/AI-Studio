@@ -95,5 +95,138 @@ public sealed class WorkspaceSettingsTests
         }
     }
 
+    [TestCase(ChatStorageChoice.DO_NOT_STORE)]
+    [TestCase(ChatStorageChoice.STORE_ON_SAVE)]
+    [TestCase(ChatStorageChoice.STORE_TEMPORARILY)]
+    [TestCase(ChatStorageChoice.STORE_INDEFINITELY)]
+    public void EveryChoiceReadsBackAsChosen(ChatStorageChoice choice)
+    {
+        var workspace = new DataWorkspace();
+        workspace.SetChoice(isInWorkspace: false, choice);
+        workspace.SetChoice(isInWorkspace: true, choice);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(workspace.GetChoice(isInWorkspace: false), Is.EqualTo(choice));
+            Assert.That(workspace.GetChoice(isInWorkspace: true), Is.EqualTo(choice));
+        }
+    }
+
+    [Test]
+    public void ASettingsFileWithoutAChoiceForWorkspacesKeepsTheirChats()
+    {
+        var workspace = Read("""{ "StorageBehavior": "STORE_CHATS_AUTOMATICALLY", "StorageTemporaryMaintenancePolicy": "DELETE_OLDER_THAN_30_DAYS" }""");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(workspace.GetChoice(isInWorkspace: false), Is.EqualTo(ChatStorageChoice.STORE_TEMPORARILY));
+            Assert.That(workspace.GetChoice(isInWorkspace: true), Is.EqualTo(ChatStorageChoice.STORE_INDEFINITELY), "Chats in workspaces were never deleted before they had a choice of their own.");
+            Assert.That(workspace.GetDeletionPolicy(isInWorkspace: true), Is.EqualTo(WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE));
+        }
+    }
+
+    [Test]
+    public void ChoosingForAllChatsLeavesTheWorkspacesAsTheyWere()
+    {
+        var workspace = new DataWorkspace();
+        var choiceOfWorkspaces = workspace.GetChoice(isInWorkspace: true);
+
+        workspace.SetChoice(isInWorkspace: false, ChatStorageChoice.DO_NOT_STORE);
+
+        Assert.That(workspace.GetChoice(isInWorkspace: true), Is.EqualTo(choiceOfWorkspaces), "Whoever changes how chats are kept in general does not mean to change the workspaces as well.");
+    }
+
+    [Test]
+    public void SameAsForAllChatsTakesOverWhatTheyGetAtThatMoment()
+    {
+        var workspace = new DataWorkspace();
+        workspace.SetChoice(isInWorkspace: false, ChatStorageChoice.STORE_TEMPORARILY);
+        workspace.SetDuration(isInWorkspace: false, WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS);
+
+        workspace.SetChoice(isInWorkspace: true, ChatStorageChoice.SAME_AS_ALL_CHATS);
+        var choiceTakenOver = workspace.GetChoice(isInWorkspace: true);
+        var durationTakenOver = workspace.GetDuration(isInWorkspace: true);
+
+        workspace.SetChoice(isInWorkspace: false, ChatStorageChoice.DO_NOT_STORE);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(choiceTakenOver, Is.EqualTo(ChatStorageChoice.STORE_TEMPORARILY));
+            Assert.That(durationTakenOver, Is.EqualTo(WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS));
+            Assert.That(workspace.GetChoice(isInWorkspace: true), Is.EqualTo(ChatStorageChoice.STORE_TEMPORARILY), "The same as for all chats is a starting point, not a link.");
+        }
+    }
+
+    [Test]
+    public void ChatsSavedByHandAreNeverDeleted()
+    {
+        var workspace = new DataWorkspace
+        {
+            StorageBehavior = WorkspaceStorageBehavior.STORE_CHATS_MANUALLY,
+            StorageTemporaryMaintenancePolicy = WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS,
+        };
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(workspace.GetChoice(isInWorkspace: false), Is.EqualTo(ChatStorageChoice.STORE_ON_SAVE));
+            Assert.That(workspace.GetDeletionPolicy(isInWorkspace: false), Is.EqualTo(WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE), "A chat the user saved on purpose stays until they delete it.");
+        }
+    }
+
+    [Test]
+    public void StoringTemporarilyAgainKeepsTheDurationChosenBefore()
+    {
+        var workspace = new DataWorkspace();
+        workspace.SetChoice(isInWorkspace: false, ChatStorageChoice.STORE_TEMPORARILY);
+        workspace.SetDuration(isInWorkspace: false, WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS);
+
+        workspace.SetChoice(isInWorkspace: false, ChatStorageChoice.STORE_ON_SAVE);
+        workspace.SetChoice(isInWorkspace: false, ChatStorageChoice.STORE_TEMPORARILY);
+
+        Assert.That(workspace.GetDuration(isInWorkspace: false), Is.EqualTo(WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS));
+    }
+
+    [Test]
+    public void TheChoiceForWorkspacesSurvivesStoring()
+    {
+        var workspace = new DataWorkspace();
+        workspace.SetChoice(isInWorkspace: true, ChatStorageChoice.STORE_TEMPORARILY);
+        workspace.SetDuration(isInWorkspace: true, WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS);
+
+        var stored = Read(JsonSerializer.Serialize(workspace, SettingsManager.JSON_OPTIONS));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(stored.WorkspaceChatsStorageBehavior, Is.EqualTo(WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY));
+            Assert.That(stored.WorkspaceChatsMaintenancePolicy, Is.EqualTo(WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS));
+        }
+    }
+
+    [Test]
+    public void AChoiceNotMadeYetStaysOne()
+    {
+        var stored = Read(JsonSerializer.Serialize(new DataWorkspace(), SettingsManager.JSON_OPTIONS));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(stored.WorkspaceChatsStorageBehavior, Is.Null);
+            Assert.That(stored.WorkspaceChatsMaintenancePolicy, Is.Null);
+        }
+    }
+
+    [Test]
+    public void AnUnreadableChoiceCountsAsNotMade()
+    {
+        var workspace = Read("""{ "WorkspaceChatsStorageBehavior": "SOMETHING_NEWER" }""");
+        Assert.That(workspace.WorkspaceChatsStorageBehavior, Is.Null, "A value nobody chose must not turn into the first choice of the list.");
+    }
+
+    [Test]
+    public void TheWholeSettingsFileCanBeRead()
+    {
+        var settings = JsonSerializer.Deserialize<Data>("""{ "Workspace": { "WorkspaceChatsStorageBehavior": "STORE_CHATS_MANUALLY" } }""", SettingsManager.JSON_OPTIONS);
+        Assert.That(settings?.Workspace.WorkspaceChatsStorageBehavior, Is.EqualTo(WorkspaceStorageBehavior.STORE_CHATS_MANUALLY), "Every type of the settings needs a converter which can read it, or no settings file can be read at all.");
+    }
+
     private static DataWorkspace Read(string json) => JsonSerializer.Deserialize<DataWorkspace>(json, SettingsManager.JSON_OPTIONS) ?? throw new InvalidOperationException("The workspace settings could not be read.");
 }

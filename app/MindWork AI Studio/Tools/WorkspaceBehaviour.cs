@@ -1530,7 +1530,7 @@ public static partial class WorkspaceBehaviour
                 {
                     x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                     {
-                        true => string.Format(TB("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
+                        true => string.Format(TB("Are you sure you want to delete the chat '{0}'?"), chat.Name),
                         false => string.Format(TB("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
                     }
                 },

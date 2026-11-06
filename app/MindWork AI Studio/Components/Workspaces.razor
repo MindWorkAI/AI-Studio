@@ -42,14 +42,15 @@ else
         }
 
         <div class="workspace-section-start" @ref="@this.temporaryChatsSectionStart"></div>
-        @this.RenderSectionHeader(T("Disappearing Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: this.areWorkspacesShown, canAddWorkspace: false)
+        @* Chats outside of workspaces disappear only while the user chose to store them temporarily, so the section says what they are, not what happens to them: *@
+        @this.RenderSectionHeader(T("Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: this.areWorkspacesShown, canAddWorkspace: false)
 
         @if (!this.IsTemporaryChatsSectionCollapsed)
         {
             @if (this.temporaryChats.Count == 0)
             {
                 <MudText Typo="Typo.body1" Class="px-4 py-1 mud-text-secondary">
-                    @T("No disappearing chats")
+                    @(this.areWorkspacesShown ? T("No chats outside of workspaces") : T("No chats yet"))
                 </MudText>
             }
             else
@@ -71,17 +72,15 @@ else
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The whole title collapses the section, but only the button shows it: the button gets its
-    /// hover shadow while the pointer is anywhere on the title, and the title itself stays plain.
-    /// A MudBlazor button stops its click from reaching the title, so a click on the button
-    /// collapses the section once, not twice.
+    /// Only the button collapses and expands the section. A MudBlazor button stops its click from
+    /// reaching the title, so a click on the button does nothing else.
     /// </para>
     /// <para>
     /// The titles stick to the top of the list while it scrolls, the second one below the first;
     /// the second one also sticks to the bottom while its section still lies below. A click on a
-    /// title shows the open chat of its section when that chat is out of sight, and otherwise
-    /// scrolls a stuck title's section into its usual place, as a sticky title in an editor does;
-    /// only its button collapses the section right away, see <see cref="ClickSectionTitleAsync"/>.
+    /// title only moves the list: it shows the open chat of its section when that chat is out of
+    /// sight, and otherwise scrolls a stuck title's section into its usual place, as a sticky title
+    /// in an editor does, see <see cref="ClickSectionTitleAsync"/>.
     /// </para>
     /// <para>
     /// While the section hides the open chat, its title carries the mark of the open chat. The
@@ -98,7 +97,7 @@ else
         else
         {
             var isMarked = isCollapsed && containsCurrentChat;
-            <div class="@(isMarked ? "workspace-section-toggle d-flex align-center is-current" : "workspace-section-toggle d-flex align-center")" style="cursor: pointer;" @onclick="@(() => this.ClickSectionTitleAsync(sectionStart(), isCollapsed, toggle))">
+            <div class="@(isMarked ? "workspace-section-toggle d-flex align-center is-current" : "workspace-section-toggle d-flex align-center")" @onclick="@(() => this.ClickSectionTitleAsync(sectionStart(), isCollapsed, containsCurrentChat, toggle))">
                 <MudText Typo="Typo.button" Color="@(isMarked ? Color.Primary : Color.Default)" Class="px-2">
                     @title
                 </MudText>

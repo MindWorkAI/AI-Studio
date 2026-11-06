@@ -315,14 +315,15 @@ public sealed class MediaTranscriptionService(
                 }
 
                 //
-                // Only while chats are stored automatically, the transcript goes right into a stored chat,
-                // which is stored along with it. Otherwise, storing would put whatever the user did not save
-                // on the disk, so the transcript waits in the staging area until the user saves the chat:
+                // Only while the place of the chat stores chats automatically, the transcript goes right into
+                // a stored chat, which is stored along with it. Otherwise, storing would put whatever the
+                // user did not save on the disk, so the transcript waits in the staging area until the user
+                // saves the chat:
                 //
                 var persistentStorage = transcriptStorages.FirstOrDefault(storage => storage.CanStore(target.Owner));
                 var isPersistedChat = persistentStorage is null &&
                                       ownerChat is not null &&
-                                      settingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY &&
+                                      settingsManager.ConfigurationData.Workspace.IsStoredAutomatically(ownerChat.WorkspaceId) &&
                                       WorkspaceBehaviour.IsChatExisting(new LoadChat(ownerChat.WorkspaceId, ownerChat.ChatId));
                 
                 var attachment = persistentStorage is not null
