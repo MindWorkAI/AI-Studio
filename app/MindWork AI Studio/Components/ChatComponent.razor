@@ -4,39 +4,48 @@
 @inherits MSGComponentBase
 
 <InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" MinWidth="36em" Style="height: 100%">
-    <ChildContent>
-        @if (this.ChatThread is not null)
+    <HeaderContent>
+        @if (this.Search is not null)
         {
-            var blocks = this.ChatThread.Blocks.OrderBy(n => n.Time).ToList();
-            var sendToDestinations = this.AssistantLaunchService.GetDestinationsFor(Components.CHAT);
-            for (var i = 0; i < blocks.Count; i++)
+            <ChatFindBar Search="@this.Search" ChatId="@(this.ChatThread?.ChatId ?? Guid.Empty)" Messages="@(() => this.messagesElement)"/>
+        }
+    </HeaderContent>
+    <ChildContent>
+        @* The element around the messages is where the search of the sidebar finds its words, see ChatFindBar: *@
+        <div @ref="@this.messagesElement">
+            @if (this.ChatThread is not null)
             {
-                var block = blocks[i];
-                var isLastBlock = i == blocks.Count - 1;
-                var isSecondLastBlock = i == blocks.Count - 2;
-                @if (block is { HideFromUser: false, Content: not null })
+                var blocks = this.ChatThread.Blocks.OrderBy(n => n.Time).ToList();
+                var sendToDestinations = this.AssistantLaunchService.GetDestinationsFor(Components.CHAT);
+                for (var i = 0; i < blocks.Count; i++)
                 {
-                    <ContentBlockComponent
-                        @key="@block"
-                        Role="@block.Role"
-                        Type="@block.ContentType"
-                        Time="@block.Time"
-                        Content="@block.Content"
-                        ExportFileName="@this.ChatThread.Name"
-                        RemoveBlockFunc="@this.RemoveBlock"
-                        IsLastContentBlock="@isLastBlock"
-                        IsSecondToLastBlock="@isSecondLastBlock"
-                        RegenerateFunc="@this.RegenerateBlock"
-                        RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
-                        RollbackFunc="@this.RollbackBlock"
-                        BlockActionsEnabled="@(() => this.blockActions.AreAllowed(this.ChatThread))"
-                        EditLastBlockFunc="@this.EditLastBlock"
-                        EditLastUserBlockFunc="@this.EditLastUserBlock"
-                        SendToFunc="@this.SendBlockToAsync"
-                        SendToDestinations="@sendToDestinations"/>
+                    var block = blocks[i];
+                    var isLastBlock = i == blocks.Count - 1;
+                    var isSecondLastBlock = i == blocks.Count - 2;
+                    @if (block is { HideFromUser: false, Content: not null })
+                    {
+                        <ContentBlockComponent
+                            @key="@block"
+                            Role="@block.Role"
+                            Type="@block.ContentType"
+                            Time="@block.Time"
+                            Content="@block.Content"
+                            ExportFileName="@this.ChatThread.Name"
+                            RemoveBlockFunc="@this.RemoveBlock"
+                            IsLastContentBlock="@isLastBlock"
+                            IsSecondToLastBlock="@isSecondLastBlock"
+                            RegenerateFunc="@this.RegenerateBlock"
+                            RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
+                            RollbackFunc="@this.RollbackBlock"
+                            BlockActionsEnabled="@(() => this.blockActions.AreAllowed(this.ChatThread))"
+                            EditLastBlockFunc="@this.EditLastBlock"
+                            EditLastUserBlockFunc="@this.EditLastUserBlock"
+                            SendToFunc="@this.SendBlockToAsync"
+                            SendToDestinations="@sendToDestinations"/>
+                    }
                 }
             }
-        }
+        </div>
     </ChildContent>
     <FooterContent>
         <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>
@@ -65,7 +74,7 @@
         <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey; gap: 2px;">
             
             @if (
-                this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
+                this.SettingsManager.ConfigurationData.Workspace.IsChatListShown
                 && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
             {
                 <MudTooltip Text="@T("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
@@ -73,14 +82,14 @@
                 </MudTooltip>
             }
 
-            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
+            @if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
             {
                 <MudTooltip Text="@T("Save chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@(() => this.SaveThread())" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)"/>
                 </MudTooltip>
             }
 
-            <MudTooltip Text="@T("Start temporary chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+            <MudTooltip Text="@T("Start a new chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                 <MudIconButton Icon="@Icons.Material.Filled.AddComment" OnClick="@(() => this.StartNewChat(useSameWorkspace: false))"/>
             </MudTooltip>
 
@@ -94,19 +103,22 @@
             <ChatTemplateSelection MarginLeft="" CanChatThreadBeUsedForTemplate="@this.CanThreadBecomeTemplate" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             
 
-            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            @if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 <MudTooltip Text="@T("Delete this chat & start a new one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep" Color="Color.Error" OnClick="@(() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true))" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)"/>
                 </MudTooltip>
             }
 
-            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            @if (this.SettingsManager.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces)
             {
                 <MudTooltip Text="@T("Move the chat to a workspace, or to another if it is already in one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeMoved)" OnClick="@this.MoveChatToWorkspace"/>
                 </MudTooltip>
+            }
 
+            @if (this.ChatStorage is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            {
                 <MudTooltip Text="@T("Copy this chat & continue in the copy.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanThreadBeCopied)" OnClick="@this.CopyCurrentChat"/>
                 </MudTooltip>

@@ -13,15 +13,27 @@ namespace AIStudio.Settings;
 /// <br/><br/>
 /// We assume that enum names are in UPPER_SNAKE_CASE, and the JSON strings may be
 /// in any case style (e.g., camelCase, PascalCase, snake_case, UPPER_SNAKE_CASE, etc.)
+/// <br/><br/>
+/// A nullable enum holds null for a choice the user did not make yet. It keeps null, and a value it
+/// cannot read becomes null as well rather than the default value, since that would be a choice
+/// nobody made. Without handling nullable enums here, the serializer could not even set up a model
+/// holding one, and reading the whole settings file would fail.
 /// </remarks>
 public sealed class TolerantEnumConverter : JsonConverter<object>
 {
     private static readonly ILogger<TolerantEnumConverter> LOG = Program.LOGGER_FACTORY.CreateLogger<TolerantEnumConverter>();
-    
-    public override bool CanConvert(Type typeToConvert) => typeToConvert.IsEnum;
 
-    public override object? Read(ref Utf8JsonReader reader, Type enumType, JsonSerializerOptions options)
+    public override bool CanConvert(Type typeToConvert) => GetEnumType(typeToConvert) is not null;
+
+    public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        var enumType = GetEnumType(typeToConvert)!;
+        var isNullable = enumType != typeToConvert;
+
+        // A choice not made yet stays one:
+        if (isNullable && reader.TokenType == JsonTokenType.Null)
+            return null;
+
         // Is this token a string?
         if (reader.TokenType == JsonTokenType.String)
         {
@@ -36,13 +48,14 @@ public sealed class TolerantEnumConverter : JsonConverter<object>
                 return result;
         }
 
-        // In any other case, we will return the default enum value:
+        // In any other case, we will return the default enum value, or no value for a nullable enum:
         LOG.LogWarning($"Cannot read '{reader.GetString()}' as '{enumType.Name}' enum; token type: {reader.TokenType}");
-        return Activator.CreateInstance(enumType);
+        return isNullable ? null : Activator.CreateInstance(enumType);
     }
 
-    public override object ReadAsPropertyName(ref Utf8JsonReader reader, Type enumType, JsonSerializerOptions options)
+    public override object ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        var enumType = GetEnumType(typeToConvert)!;
         // Is this token a property name?
         if (reader.TokenType == JsonTokenType.PropertyName)
         {
@@ -62,8 +75,14 @@ public sealed class TolerantEnumConverter : JsonConverter<object>
         return Activator.CreateInstance(enumType)!;
     }
 
-    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
     {
+        if (value is null)
+        {
+            writer.WriteNullValue();
+            return;
+        }
+
         writer.WriteStringValue(value.ToString());
     }
     
@@ -72,6 +91,19 @@ public sealed class TolerantEnumConverter : JsonConverter<object>
         writer.WritePropertyName(value.ToString()!);
     }
     
+    /// <summary>
+    /// The enum type a property holds: the type itself, or the one inside a nullable enum.
+    /// </summary>
+    /// <param name="typeToConvert">The type of the property.</param>
+    /// <returns>The enum type, or null when the property holds no enum.</returns>
+    private static Type? GetEnumType(Type typeToConvert)
+    {
+        if (typeToConvert.IsEnum)
+            return typeToConvert;
+
+        return Nullable.GetUnderlyingType(typeToConvert) is { IsEnum: true } enumType ? enumType : null;
+    }
+
     /// <summary>
     /// Converts a string to UPPER_SNAKE_CASE.
     /// </summary>

@@ -1,0 +1,234 @@
+/*
+ * Layout and colors of the workspace list come from MudBlazor. What it has no means for are the
+ * buttons of a row, which show up only where the user is: under the pointer, on the row reached
+ * with the keyboard, on the open chat, and while the row's menu is open. Without this file, they
+ * are simply always shown, and the rows are a little taller.
+ *
+ * Hovering is left to CSS on purpose. A Blazor handler for the mouse would make a round trip to the
+ * server for every row the pointer crosses.
+ *
+ * MudBlazor renders the list items itself, so their elements carry no scope attribute of this
+ * component. The rules reach them through ::deep, from the list container this component renders.
+ */
+
+/*
+ * A dense list item puts four pixels of margin above and below its text, on top of its own padding.
+ * Without them, a row is 32 pixels tall instead of 40: the 24 of its icon and its name, and the
+ * padding.
+ */
+.workspace-list ::deep .mud-list-item-text {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/*
+ * The buttons have icons of the usual 24 pixels, like everywhere else in the app. Their usual padding
+ * of 12 pixels would make them 48 pixels tall, though, half again as tall as a row. With 4 pixels of
+ * padding, a button fills its row from top to bottom.
+ */
+.workspace-list ::deep .mud-icon-button {
+    padding: 4px;
+}
+
+/*
+ * The titles of the sections stick to the top of the list while it scrolls, the second one right
+ * below the first, so that both stay at hand while the user scrolls through the chats. The second
+ * title also sticks to the bottom while its section still lies below the visible part of the list:
+ * the first title is the first thing in the list and never lies below. A title has a fixed height for
+ * that: its padding of 8 pixels and a button of 32. It covers the rows scrolling beneath it with the
+ * background of the list, which the drawer of the chat page sets to its own.
+ *
+ * A row scrolled into view, such as the open chat, stops below both titles at the top, and above the
+ * second one at the bottom, instead of behind them.
+ */
+.workspace-list {
+    --workspace-section-header-height: 40px;
+}
+
+.workspace-list ::deep .workspace-section-header {
+    height: var(--workspace-section-header-height);
+    box-sizing: border-box;
+}
+
+/*
+ * The fixed height leaves room for one line only, so a title never wraps. The chat page keeps the
+ * sidebar wide enough for the titles we ship, see Chat.razor.css. A longer one, in another language or
+ * a sidebar narrowed some other way, ends with an ellipsis, and its buttons keep their size.
+ */
+.workspace-list ::deep .workspace-section-header > .mud-tooltip-root,
+.workspace-list ::deep .workspace-section-toggle .mud-icon-button {
+    flex-shrink: 0;
+}
+
+/* A title is no text to select: it shows the plain arrow, unless a click on it moves the list, see below. */
+.workspace-list ::deep .workspace-section-toggle {
+    min-width: 0;
+    cursor: default;
+}
+
+.workspace-list ::deep .workspace-section-header .mud-typography {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workspace-list ::deep .workspace-section-header.is-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--workspace-list-background, var(--mud-palette-background));
+}
+
+.workspace-list ::deep .workspace-section-header.is-sticky.is-second {
+    top: var(--workspace-section-header-height);
+    bottom: 0;
+}
+
+.workspace-list ::deep .mud-list-item {
+    scroll-margin-top: calc(2 * var(--workspace-section-header-height));
+    scroll-margin-bottom: var(--workspace-section-header-height);
+}
+
+/*
+ * Whatever shows the state of a chat sits in a slot of 20 pixels, in the 24 of a folder's icon. The
+ * outlined chat bubble fills more of its box than the folder does, and at the same size it looks the
+ * larger one. The margin keeps the names of chats and workspaces in line, and the fixed size keeps a
+ * name in its place while the icon in front of it changes.
+ *
+ * The slot sizes its content, so that a new state needs no rule of its own. A Material icon fills the
+ * slot, since it draws within the inner 20 of its 24 units and brings its padding along. Anything else,
+ * such as the spinner, fills its whole box and therefore gets those inner 20 units only: it is as large
+ * as the drawing of an icon.
+ *
+ * The slot is an HTML element, so its size follows the interface size on every system, and the icon
+ * in it with it. The fix for SVG icons in app.css is not needed here.
+ */
+.workspace-list ::deep .workspace-chat-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0 2px;
+}
+
+.workspace-list ::deep .workspace-chat-icon > .mud-icon-root {
+    width: 100%;
+    height: 100%;
+}
+
+.workspace-list ::deep .workspace-chat-icon > :not(.mud-icon-root, .workspace-chat-badge) {
+    width: calc(100% * 20 / 24);
+    height: calc(100% * 20 / 24);
+}
+
+/*
+ * The badge of an icon, such as the one of a chat which a search found, tells the state of the chat
+ * in its bottom-left corner: the magnifier of the search keeps its handle on the right free. A ring in
+ * the color of the list sets it apart from the icon below.
+ */
+.workspace-list ::deep .workspace-chat-badge {
+    position: absolute;
+    left: -1px;
+    bottom: -1px;
+    width: 50%;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--workspace-list-background, var(--mud-palette-background));
+}
+
+.workspace-list ::deep .workspace-chat-badge > * {
+    width: 100%;
+    height: 100%;
+}
+
+/*
+ * The words of a search look as SearchHighlightedText draws them, in the strong tint for the result
+ * the user stepped to. That result also carries a bar on its left, since a chat found inside has no
+ * words in its name.
+ */
+.workspace-list ::deep .mud-list-item.is-search-current {
+    box-shadow: inset 3px 0 0 var(--chat-search-highlight-strong);
+}
+
+/*
+ * How many results a collapsed workspace hides, in the tint of the chat search, see app.css. It makes
+ * room for the buttons of its row while they show.
+ */
+.workspace-list ::deep .workspace-result-count {
+    min-width: 18px;
+    padding: 0 6px;
+    border-radius: 9px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 18px;
+    text-align: center;
+    background-color: var(--chat-search-highlight);
+}
+
+.workspace-list ::deep .mud-list-item:hover .workspace-result-count,
+.workspace-list ::deep .mud-list-item:focus-visible .workspace-result-count,
+.workspace-list ::deep .mud-list-item:has(:focus-visible) .workspace-result-count,
+.workspace-list ::deep .is-menu-open .workspace-result-count {
+    display: none;
+}
+
+/*
+ * A clicked list item keeps the focus, and MudBlazor gives a focused item the background of a hovered
+ * one until the user clicks elsewhere. That background is meant for the keyboard. A click on a
+ * workspace would otherwise leave its row looking hovered, so only focus from the keyboard keeps it.
+ */
+.workspace-list ::deep .mud-list-item-clickable:focus:not(:focus-visible):not(:hover):not(.mud-selected-item) {
+    background-color: transparent;
+}
+
+/*
+ * A click on the title of a section only moves the list: to the open chat of the section while that
+ * is out of sight, or to the start of the section while its title sticks to the top or the bottom of
+ * the list. The script in app.js marks such titles with data-hides-current and data-stuck; a collapsed
+ * section which holds the open chat has the class is-current. Only these titles take the pointer, since
+ * only these do something. Collapsing and expanding is the job of the button beside the title alone.
+ */
+.workspace-list ::deep .workspace-section-header[data-stuck] .workspace-section-toggle,
+.workspace-list ::deep .workspace-section-header[data-hides-current] .workspace-section-toggle,
+.workspace-list ::deep .workspace-section-toggle.is-current {
+    cursor: pointer;
+}
+
+/*
+ * A collapsed section which holds the open chat shows that in its title, in the primary color. An
+ * expanded section does the same while the open chat in it is out of sight, beyond the visible part
+ * of the list or behind the stuck titles; the script in app.js marks such a title with
+ * data-hides-current.
+ */
+.workspace-list ::deep .workspace-section-header[data-hides-current] .workspace-section-toggle .mud-typography,
+.workspace-list ::deep .workspace-section-header[data-hides-current] .workspace-section-toggle .mud-icon-button {
+    color: var(--mud-palette-primary);
+}
+
+/*
+ * Hidden buttons take no space, so that a name uses the whole width of its row. Only a row which
+ * shows its buttons cuts its name shorter. The content of a row has the fixed height of a button,
+ * see the markup: the tooltip and the menu around the buttons are a little taller than they are,
+ * and the row would otherwise grow and push the rows below when the buttons show up.
+ */
+.workspace-list ::deep .workspace-item-actions {
+    display: none;
+}
+
+/*
+ * Of the rows which carry the mark of the open chat, only the chat itself shows its buttons. A
+ * collapsed workspace which carries the mark in its place shows them on hover, like every other one.
+ */
+.workspace-list ::deep .mud-list-item:hover .workspace-item-actions,
+.workspace-list ::deep .mud-list-item:focus-visible .workspace-item-actions,
+.workspace-list ::deep .mud-list-item:has(:focus-visible) .workspace-item-actions,
+.workspace-list ::deep .workspace-chat.is-current .workspace-item-actions,
+.workspace-list ::deep .is-menu-open .workspace-item-actions {
+    display: flex;
+}

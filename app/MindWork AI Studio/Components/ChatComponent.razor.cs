@@ -62,6 +62,23 @@ public partial class ChatComponent : MSGComponentBase
 
     [Parameter]
     public ChatComposerState ComposerState { get; set; } = new();
+
+    /// <summary>
+    /// The search of the workspace sidebar, whose words the chat finds in its messages while it is open,
+    /// see <see cref="ChatFindBar"/>. Without one, the chat finds nothing.
+    /// </summary>
+    [Parameter]
+    public WorkspaceSearch? Search { get; set; }
+
+    /// <summary>
+    /// The element around the messages, in which the search finds its words.
+    /// </summary>
+    private ElementReference messagesElement;
+
+    /// <summary>
+    /// Whether the chat still has to show where it stands after it loaded, see PositionLoadedChatAsync.
+    /// </summary>
+    private bool isPositionAfterLoadPending;
     
     [Inject]
     private ILogger<ChatComponent> Logger { get; set; } = null!;
@@ -193,6 +210,26 @@ public partial class ChatComponent : MSGComponentBase
     /// forgotten as soon as the chat was stored or left.
     /// </remarks>
     private ChatThread? unstoredChat;
+
+    /// <summary>
+    /// Whether the open chat lies in a workspace. For a new chat without a thread: whether it is about
+    /// to go into one, the workspace shown or the one of its chat template.
+    /// </summary>
+    private bool IsChatInWorkspace => this.ChatThread is { } chat
+        ? chat.WorkspaceId != Guid.Empty
+        : this.IsNewChatGoingIntoWorkspace;
+
+    /// <summary>
+    /// Whether a new chat without a thread goes into a workspace with its first message: the workspace
+    /// shown, or the one of its chat template, see ResolveWorkspaceOfFirstThreadAsync.
+    /// </summary>
+    private bool IsNewChatGoingIntoWorkspace => this.currentWorkspaceId != Guid.Empty || this.SettingsManager.GetChatTemplateWorkspaceName(this.currentChatTemplate) is not null;
+
+    /// <summary>
+    /// How the open chat is stored: chats in workspaces and all other chats may be stored differently,
+    /// see DataWorkspace.GetStorageBehavior.
+    /// </summary>
+    private WorkspaceStorageBehavior ChatStorage => this.SettingsManager.ConfigurationData.Workspace.GetStorageBehavior(this.IsChatInWorkspace);
 
     /// <summary>
     /// Lets this component store a new chat before the user leaves the chat page.
@@ -433,7 +470,7 @@ public partial class ChatComponent : MSGComponentBase
                 //
                 // Check if the user wants to store the chat automatically:
                 //
-                if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+                if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                 {
                     this.autoSaveEnabled = true;
                     this.mustStoreChat = true;
@@ -465,20 +502,10 @@ public partial class ChatComponent : MSGComponentBase
             await this.PutTextIntoComposerAsync(deferredInput);
 
         //
-        // Check if the user wants to show the latest message after loading:
+        // The chat shows where it stands once it rendered, see PositionLoadedChatAsync:
         //
-        if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
-        {
-            //
-            // We cannot scroll to the bottom right now because the
-            // chat component is not rendered yet. We have to wait for
-            // the rendering process to finish. Thus, we set a flag
-            // to scroll to the bottom after the rendering process.:
-            //
-            this.mustScrollToBottomAfterRender = true;
-            this.scrollRenderCountdown = 4;
-            this.StateHasChanged();
-        }
+        this.isPositionAfterLoadPending = true;
+        this.StateHasChanged();
         
         //
         // Check if another component deferred the loading of a chat.
@@ -582,6 +609,12 @@ public partial class ChatComponent : MSGComponentBase
             this.StateHasChanged();
         }
         
+        if (this.isPositionAfterLoadPending)
+        {
+            this.isPositionAfterLoadPending = false;
+            await this.PositionLoadedChatAsync();
+        }
+
         if(this.mustScrollToBottomAfterRender)
         {
             if (--this.scrollRenderCountdown == 0)
@@ -675,7 +708,7 @@ public partial class ChatComponent : MSGComponentBase
 
         var leftChatHadNoThread = !isFirstChat && this.loadedParameterChatId == Guid.Empty;
         if (!isFirstChat)
-            await this.StopAnswerOfLeftChatAsync(this.loadedParameterChatId);
+            await this.StopAnswerOfLeftChatAsync(this.loadedParameterChatId, this.loadedParameterWorkspaceId);
 
         this.loadedParameterChatId = chatId;
         this.loadedParameterWorkspaceId = workspaceId;
@@ -768,6 +801,38 @@ public partial class ChatComponent : MSGComponentBase
         this.currentChatThreadId = chatThreadId;
         this.currentWorkspaceId = workspaceId;
         this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
+    }
+
+    /// <summary>
+    /// Shows where a chat stands after it loaded, once its messages are there.
+    /// </summary>
+    /// <remarks>
+    /// What decides is whether the chat holds a match of the search of the sidebar: then it shows its
+    /// last one, since a chat has its newest messages at the bottom. Otherwise, it shows its newest
+    /// message, when the user wants that after loading a chat. The script waits until the Markdown of the
+    /// messages rendered, and decides once, see <c>positionOpenedChat</c> in app.js.
+    /// </remarks>
+    private async Task PositionLoadedChatAsync()
+    {
+        var isNewestMessageShown = this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading;
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync("positionOpenedChat", this.messagesElement, isNewestMessageShown);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Nobody is left to see the chat.
+        }
+        catch (JSException ex)
+        {
+            //
+            // A browser which still runs a cached app.js from an older version lacks the function.
+            // The chat then shows its newest message at least, as it did before:
+            //
+            this.Logger.LogWarning(ex, "Failed to show where the loaded chat stands.");
+            if (isNewestMessageShown)
+                await this.scrollingArea.ScrollToBottom();
+        }
     }
 
     private async Task SyncForegroundChatAsync()
@@ -1220,7 +1285,7 @@ public partial class ChatComponent : MSGComponentBase
         {
             this.hasUnsavedChanges = true;
             this.ChatThread.DataSourceOptions = updatedOptions;
-            if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            if(this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 await this.SaveThread();
                 this.hasUnsavedChanges = false;
@@ -1318,7 +1383,7 @@ public partial class ChatComponent : MSGComponentBase
             return;
 
         this.MirrorComposerIntoDraft(this.ChatThread);
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             this.draftAutosave?.Schedule(this.ChatThread);
     }
 
@@ -1398,13 +1463,14 @@ public partial class ChatComponent : MSGComponentBase
         var unstoredChatBeingLeft = this.unstoredChat;
         this.unstoredChat = null;
 
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
-            return;
-
         ChatThread chat;
         if (hadNoThread)
         {
-            if (!this.ComposerState.HasVisibleUserDraft)
+            //
+            // The chat goes where the composer would have put it, and only a place which stores chats
+            // automatically keeps it. The open thread may already be the next chat, so it tells nothing:
+            //
+            if (!this.ComposerState.HasVisibleUserDraft || this.SettingsManager.ConfigurationData.Workspace.GetStorageBehavior(this.IsNewChatGoingIntoWorkspace) is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                 return;
 
             //
@@ -1418,7 +1484,9 @@ public partial class ChatComponent : MSGComponentBase
             this.ComposerState.Clear();
             chat.WorkspaceId = await this.ResolveWorkspaceOfFirstThreadAsync();
         }
-        else if (unstoredChatBeingLeft is not null && (!unstoredChatBeingLeft.Draft.IsEmpty || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(unstoredChatBeingLeft.ChatId))))
+        else if (unstoredChatBeingLeft is not null
+                 && this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(unstoredChatBeingLeft.WorkspaceId)
+                 && (!unstoredChatBeingLeft.Draft.IsEmpty || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(unstoredChatBeingLeft.ChatId))))
         {
             // Deleting the workspace took the chat along. Storing it would bring the workspace back, as an unnamed one:
             if (!WorkspaceBehaviour.IsWorkspaceExisting(unstoredChatBeingLeft.WorkspaceId))
@@ -1458,14 +1526,14 @@ public partial class ChatComponent : MSGComponentBase
     /// waits for its handlers, while the bus hands a message over without waiting, so the page could
     /// be gone before the chat is stored.<br/><br/>
     ///
-    /// Only while chats are stored automatically. Otherwise, nothing is preserved anyway, and the
-    /// navigation may still be canceled after the user was asked about unsaved changes, so the new
-    /// chat has to stay as it is.
+    /// Only while the open chat is stored automatically where it lies or goes. Otherwise, nothing is
+    /// preserved anyway, and the navigation may still be canceled after the user was asked about
+    /// unsaved changes, so the new chat has to stay as it is.
     /// </remarks>
     /// <param name="context">The navigation which is about to happen.</param>
     private async ValueTask OnLocationChangingAsync(LocationChangingContext context)
     {
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if (this.ChatStorage is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             return;
 
         // Opening the chat page again keeps the page, and the composer with it:
@@ -1622,7 +1690,7 @@ public partial class ChatComponent : MSGComponentBase
         // lists the new chat right away, together with the progress of the transcription, instead
         // of only after the first message was sent:
         //
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if (this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(chat.WorkspaceId))
             await this.StoreAndListChatAsync(chat);
         else
             this.hasUnsavedChanges = true;
@@ -1713,7 +1781,7 @@ public partial class ChatComponent : MSGComponentBase
             });
 
             // Save the chat:
-            if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 await this.SaveThread();
                 this.hasUnsavedChanges = false;
@@ -1811,9 +1879,10 @@ public partial class ChatComponent : MSGComponentBase
     /// workspace sidebar is shown or hidden, while the chat stays.
     /// </remarks>
     /// <param name="chatId">The chat being left.</param>
-    private async Task StopAnswerOfLeftChatAsync(Guid chatId)
+    /// <param name="workspaceId">The workspace the chat lies in, which decides how it is stored.</param>
+    private async Task StopAnswerOfLeftChatAsync(Guid chatId, Guid workspaceId)
     {
-        if (chatId == Guid.Empty || this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if (chatId == Guid.Empty || this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(workspaceId))
             return;
 
         await this.AIJobService.CancelChatGenerationAsync(chatId);
@@ -1926,7 +1995,7 @@ public partial class ChatComponent : MSGComponentBase
         // about possible data loss. An answer still being written is lost as well, whenever chats are
         // not stored automatically, since leaving stops it, see StopAnswerOfLeftChatAsync:
         //
-        var storageBehavior = this.SettingsManager.ConfigurationData.Workspace.StorageBehavior;
+        var storageBehavior = this.ChatStorage;
         if ((storageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges) || (storageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY && this.IsCurrentChatStreaming))
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
@@ -1980,7 +2049,7 @@ public partial class ChatComponent : MSGComponentBase
         }
 
         if (this.ChatThread is not null)
-            await this.StopAnswerOfLeftChatAsync(this.ChatThread.ChatId);
+            await this.StopAnswerOfLeftChatAsync(this.ChatThread.ChatId, this.ChatThread.WorkspaceId);
 
         //
         // Reset our state:
@@ -2112,7 +2181,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.Workspaces is not null)
             await this.Workspaces.MoveChatAsync(this.ChatThread!, workspaceId);
         else
-            await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId, this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
+            await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId, this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(workspaceId));
 
         await this.FollowMovedChatAsync(previousWorkspaceId);
     }
@@ -2219,12 +2288,7 @@ public partial class ChatComponent : MSGComponentBase
         }
 
         await this.SelectProviderWhenLoadingChat();
-        if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
-        {
-            this.mustScrollToBottomAfterRender = true;
-            this.scrollRenderCountdown = 2;
-        }
-        
+        this.isPositionAfterLoadPending = true;
         this.StateHasChanged();
     }
 
@@ -2246,7 +2310,7 @@ public partial class ChatComponent : MSGComponentBase
         await this.FlushDraftAsync();
         await this.PreserveNewChatDraftAsync(this.ChatThread is null);
         if (this.ChatThread is not null)
-            await this.StopAnswerOfLeftChatAsync(this.ChatThread.ChatId);
+            await this.StopAnswerOfLeftChatAsync(this.ChatThread.ChatId, this.ChatThread.WorkspaceId);
 
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
@@ -2329,7 +2393,7 @@ public partial class ChatComponent : MSGComponentBase
 
         // Like every other change, stored right away only while chats are stored automatically:
         this.hasUnsavedChanges = true;
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             await this.SaveThread();
 
         this.StateHasChanged();
@@ -2360,7 +2424,7 @@ public partial class ChatComponent : MSGComponentBase
 
         // Like every other change, stored right away only while chats are stored automatically:
         this.hasUnsavedChanges = true;
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             await this.SaveThread();
 
         this.tokenTracker?.Nudge();
@@ -2713,7 +2777,7 @@ public partial class ChatComponent : MSGComponentBase
                     if (!snapshot.IsActive)
                     {
                         // The job stored the answer only while chats are stored automatically, see AIJobService.CheckpointChatAsync:
-                        this.hasUnsavedChanges = this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
+                        this.hasUnsavedChanges = this.ChatStorage is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
                         this.previousInputForbidden = true;
                     }
 
@@ -2729,7 +2793,7 @@ public partial class ChatComponent : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.HAS_CHAT_UNSAVED_CHANGES:
-                if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+                if(this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                     return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) false));
 
                 // Nothing stores an answer being written now, and leaving stops it, see StopAnswerOfLeftChatAsync:
@@ -2771,7 +2835,7 @@ public partial class ChatComponent : MSGComponentBase
         //
         await this.PreserveNewChatDraftAsync(hadNoThread: false);
 
-        if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if(this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();
             this.hasUnsavedChanges = false;

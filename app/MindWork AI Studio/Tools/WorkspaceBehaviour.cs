@@ -260,33 +260,55 @@ public static partial class WorkspaceBehaviour
             chats.RemoveAt(existingIndex);
     }
 
-    private static IReadOnlyList<string> ParseSearchTerms(string searchText) => searchText
-        .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .Where(term => !string.IsNullOrWhiteSpace(term))
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToList();
-
-    private static IReadOnlyList<string> GetMissingTerms(string text, IReadOnlyList<string> terms) => terms
-        .Where(term => text.IndexOf(term, StringComparison.OrdinalIgnoreCase) < 0)
-        .ToList();
-
-    private static bool ChatThreadContainsTerms(ChatThread thread, IReadOnlyList<string> terms)
+    /// <summary>
+    /// Looks for the given words in what the user sees of a thread: the text of its messages, the names
+    /// of the files attached to them, and the titles and addresses of their sources.
+    /// </summary>
+    /// <remarks>
+    /// The words may be spread over all of these. What shows where they are prefers the text of a
+    /// message, which tells the most, over the name of a file and the title of a source; of each kind
+    /// it comes from the first place, in the order the chat shows its messages.
+    /// </remarks>
+    /// <param name="thread">The thread to search.</param>
+    /// <param name="terms">The words to look for.</param>
+    /// <param name="requireAll">Whether the thread has to hold all words, or one of them is enough.</param>
+    /// <returns>Where the thread holds the first word found, when it holds the words; otherwise null.</returns>
+    private static ChatSearchPassage? FindTermsInThread(ChatThread thread, IReadOnlyList<string> terms, bool requireAll)
     {
         var matchedTerms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var block in thread.Blocks)
+        ChatSearchPassage? messagePassage = null;
+        ChatSearchPassage? filePassage = null;
+        ChatSearchPassage? sourcePassage = null;
+
+        foreach (var block in thread.Blocks.OrderBy(block => block.Time))
         {
-            if (block.HideFromUser || block.Content is not ContentText textContent || string.IsNullOrWhiteSpace(textContent.Text))
+            if (block.HideFromUser || block.Content is not { } content)
                 continue;
 
-            foreach (var term in terms)
-                if (textContent.Text.Contains(term, StringComparison.OrdinalIgnoreCase))
-                    matchedTerms.Add(term);
+            if (content is ContentText { Text: { } text } && !string.IsNullOrWhiteSpace(text) && FindTerms(text) is { Count: > 0 } wordsInText)
+                messagePassage ??= new(ChatSearchPassageKind.MESSAGE, SearchText.FindPassage(text, wordsInText));
 
-            if (matchedTerms.Count == terms.Count)
-                return true;
+            foreach (var file in content.FileAttachments ?? [])
+                if (FindTerms(file.FileName).Count > 0)
+                    filePassage ??= new(ChatSearchPassageKind.ATTACHED_FILE, file.FileName);
+
+            foreach (var source in content.Sources ?? [])
+            {
+                var titleAndAddress = string.IsNullOrWhiteSpace(source.Title) ? source.URL : $"{source.Title} ({source.URL})";
+                if (FindTerms(titleAndAddress).Count > 0)
+                    sourcePassage ??= new(ChatSearchPassageKind.SOURCE, titleAndAddress);
+            }
         }
 
-        return false;
+        var isFound = requireAll ? matchedTerms.Count == terms.Count : matchedTerms.Count > 0;
+        return isFound ? messagePassage ?? filePassage ?? sourcePassage : null;
+
+        List<string> FindTerms(string place)
+        {
+            var found = terms.Where(term => place.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
+            matchedTerms.UnionWith(found);
+            return found;
+        }
     }
 
     private static bool WorkspaceNameExistsCore(string workspaceName, Guid excludedWorkspaceId = default)
@@ -296,22 +318,23 @@ public static partial class WorkspaceBehaviour
             string.Equals(workspace.WorkspaceName.Trim(), workspaceName, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static async Task<bool> ThreadContainsTermsAsync(WorkspaceTreeChat chat, IReadOnlyList<string> terms, CancellationToken token)
+    /// <inheritdoc cref="FindTermsInThread"/>
+    private static async Task<ChatSearchPassage?> FindTermsInThreadAsync(WorkspaceTreeChat chat, IReadOnlyList<string> terms, bool requireAll, CancellationToken token)
     {
-        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(ThreadContainsTermsAsync));
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(FindTermsInThreadAsync));
         if (!acquired)
-            return false;
+            return null;
 
         try
         {
             var threadPath = Path.Join(chat.ChatPath, "thread.json");
             if (!File.Exists(threadPath))
-                return false;
+                return null;
 
             var chatData = await File.ReadAllTextAsync(threadPath, Encoding.UTF8, token);
             token.ThrowIfCancellationRequested();
             var thread = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
-            return thread is not null && ChatThreadContainsTerms(thread, terms);
+            return thread is null ? null : FindTermsInThread(thread, terms, requireAll);
         }
         catch (OperationCanceledException)
         {
@@ -320,7 +343,7 @@ public static partial class WorkspaceBehaviour
         catch (Exception ex)
         {
             LOG.LogWarning(ex, "Failed to search chat thread for workspace '{WorkspaceId}', chat '{ChatId}'.", chat.WorkspaceId, chat.ChatId);
-            return false;
+            return null;
         }
         finally
         {
@@ -328,6 +351,18 @@ public static partial class WorkspaceBehaviour
         }
     }
 
+    /// <summary>
+    /// Finds the chats which hold the given words, in their own names or, when asked for, inside: in their
+    /// messages, the names of their attached files, and their sources.
+    /// </summary>
+    /// <remarks>
+    /// When the insides are searched, a chat found by its name gets a passage too, as soon as it holds
+    /// any of the words inside: the user sees that the words are in it as well.
+    /// </remarks>
+    /// <param name="chats">The chats to search.</param>
+    /// <param name="terms">The words to find.</param>
+    /// <param name="includeThreadContents">Whether to search the insides, which have to be read from the disk.</param>
+    /// <param name="token">Cancels the search.</param>
     private static async Task<List<WorkspaceSearchResult>> SearchChatsAsync(IReadOnlyList<WorkspaceTreeChat> chats, IReadOnlyList<string> terms, bool includeThreadContents, CancellationToken token)
     {
         var results = new List<WorkspaceSearchResult>();
@@ -335,19 +370,20 @@ public static partial class WorkspaceBehaviour
         {
             token.ThrowIfCancellationRequested();
 
-            var missingTerms = GetMissingTerms(chat.Name, terms);
+            var missingTerms = SearchText.MissingTerms(chat.Name, terms);
             if (missingTerms.Count == 0)
             {
-                results.Add(new(chat, NameMatched: true, ThreadMatched: false));
+                var alsoInMessages = includeThreadContents ? await FindTermsInThreadAsync(chat, terms, requireAll: false, token) : null;
+                results.Add(new(chat, NameMatched: true, alsoInMessages));
                 continue;
             }
 
             if (!includeThreadContents)
                 continue;
 
-            var threadMatched = await ThreadContainsTermsAsync(chat, missingTerms, token);
-            if (threadMatched)
-                results.Add(new(chat, NameMatched: false, ThreadMatched: true));
+            var passage = await FindTermsInThreadAsync(chat, missingTerms, requireAll: true, token);
+            if (passage is not null)
+                results.Add(new(chat, NameMatched: false, passage));
         }
 
         return results;
@@ -524,9 +560,20 @@ public static partial class WorkspaceBehaviour
         }
     }
 
+    /// <summary>
+    /// Finds the chats which hold every word of the search, see <see cref="SearchText"/>.
+    /// </summary>
+    /// <remarks>
+    /// Workspaces and chats are found each on their own. A workspace is found when its name holds all
+    /// words. A chat is found when they are spread over its own name and what it holds: its messages, the
+    /// names of its attached files, and its sources. The name of its workspace does not count for it.
+    /// </remarks>
+    /// <param name="searchText">What the user typed.</param>
+    /// <param name="includeThreadContents">Whether to search the messages too, which have to be read from the disk.</param>
+    /// <param name="token">Cancels the search.</param>
     public static async Task<WorkspaceSearchSnapshot> SearchWorkspaceChatsAsync(string searchText, bool includeThreadContents, CancellationToken token = default)
     {
-        var terms = ParseSearchTerms(searchText);
+        var terms = SearchText.ParseTerms(searchText);
         if (terms.Count == 0)
             return new([], []);
 
@@ -564,9 +611,11 @@ public static partial class WorkspaceBehaviour
         foreach (var workspace in workspaces)
         {
             token.ThrowIfCancellationRequested();
+
+            var isNameMatched = SearchText.MissingTerms(workspace.Name, terms).Count == 0;
             var matchingChats = await SearchChatsAsync(workspace.Chats, terms, includeThreadContents, token);
-            if (matchingChats.Count > 0)
-                matchingWorkspaces.Add(new(workspace.WorkspaceId, workspace.WorkspacePath, workspace.Name, matchingChats));
+            if (matchingChats.Count > 0 || isNameMatched)
+                matchingWorkspaces.Add(new(workspace.WorkspaceId, workspace.WorkspacePath, workspace.Name, matchingChats, isNameMatched));
         }
 
         var matchingTemporaryChats = await SearchChatsAsync(temporaryChats, terms, includeThreadContents, token);
@@ -1482,7 +1531,7 @@ public static partial class WorkspaceBehaviour
                 {
                     x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                     {
-                        true => string.Format(TB("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
+                        true => string.Format(TB("Are you sure you want to delete the chat '{0}'?"), chat.Name),
                         false => string.Format(TB("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
                     }
                 },

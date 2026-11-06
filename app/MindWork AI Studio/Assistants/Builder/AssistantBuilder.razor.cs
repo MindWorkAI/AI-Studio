@@ -596,7 +596,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     // usually flip the switch before typing anything, so the Builder offers a starting point they
     // can edit or replace. The workspace is picked after that, hence the suggestion is refreshed
     // whenever the workspace changes — including when it is cleared again, which turns the tile
-    // into one that opens a disappearing chat:
+    // into one that opens a chat outside of the workspaces:
     //
     private void SuggestLauncherDescription()
     {
@@ -605,7 +605,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
         var suggestion = T("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
         suggestion = string.IsNullOrWhiteSpace(this.launcherWorkspaceName)
-            ? $"{suggestion} {T("The chat opens as a disappearing chat, without a workspace.")}"
+            ? $"{suggestion} {T("The chat opens outside of the workspaces.")}"
             : $"{suggestion} {string.Format(T("Workspace: {0}"), this.launcherWorkspaceName.Trim())}";
 
         this.assistantDescription = suggestion;

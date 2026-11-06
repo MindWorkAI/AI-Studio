@@ -81,21 +81,45 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Install updates automatically"), UpdateInstallation.AUTOMATIC);
     }
     
-    public static IEnumerable<ConfigurationSelectData<WorkspaceStorageBehavior>> GetWorkspaceStorageBehaviorData()
+    /// <summary>
+    /// Whether and how long chats are kept, for the chats outside of workspaces.
+    /// </summary>
+    public static IEnumerable<ConfigurationSelectData<ChatStorageChoice>> GetChatStorageChoiceData()
     {
-        yield return new(TB("Disable workspaces"), WorkspaceStorageBehavior.DISABLE_WORKSPACES);
-        yield return new(TB("Store chats automatically"), WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
-        yield return new(TB("Store chats manually"), WorkspaceStorageBehavior.STORE_CHATS_MANUALLY);
+        yield return new(TB("Don't store chats"), ChatStorageChoice.DO_NOT_STORE);
+        yield return new(TB("Store chats when I click save"), ChatStorageChoice.STORE_ON_SAVE);
+        yield return new(TB("Store chats temporarily"), ChatStorageChoice.STORE_TEMPORARILY);
+        yield return new(TB("Store chats automatically and keep them"), ChatStorageChoice.STORE_INDEFINITELY);
     }
-    
-    public static IEnumerable<ConfigurationSelectData<WorkspaceStorageTemporaryMaintenancePolicy>> GetWorkspaceStorageTemporaryMaintenancePolicyData()
+
+    /// <summary>
+    /// Whether and how long chats are kept, for the chats in workspaces.
+    /// </summary>
+    /// <remarks>
+    /// The first entry takes over what all other chats get. It names that choice, so the user need not
+    /// look it up, and the same choice is left out further down, since the first entry covers it.
+    /// </remarks>
+    /// <param name="choiceOfAllChats">What all chats outside of workspaces get right now.</param>
+    public static IEnumerable<ConfigurationSelectData<ChatStorageChoice>> GetWorkspaceChatStorageChoiceData(ChatStorageChoice choiceOfAllChats)
     {
-        yield return new(TB("No automatic maintenance for disappearing chats; old chats will never be deleted"), WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE);
-        yield return new(TB("Delete disappearing chats older than 7 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS);
-        yield return new(TB("Delete disappearing chats older than 30 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS);
-        yield return new(TB("Delete disappearing chats older than 90 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS);
-        yield return new(TB("Delete disappearing chats older than 180 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS);
-        yield return new(TB("Delete disappearing chats older than 1 year"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_365_DAYS);
+        var choices = GetChatStorageChoiceData().ToList();
+        var choiceOfAllChatsName = choices.FirstOrDefault(data => data.Value == choiceOfAllChats).Name;
+        yield return new(string.Format(TB("Same as for all chats: {0}"), choiceOfAllChatsName), ChatStorageChoice.SAME_AS_ALL_CHATS);
+
+        foreach (var choice in choices.Where(data => data.Value != choiceOfAllChats))
+            yield return choice;
+    }
+
+    /// <summary>
+    /// How long chats stay while they are stored temporarily, counted from their last change.
+    /// </summary>
+    public static IEnumerable<ConfigurationSelectData<WorkspaceStorageTemporaryMaintenancePolicy>> GetChatDurationData()
+    {
+        yield return new(TB("7 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS);
+        yield return new(TB("30 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS);
+        yield return new(TB("90 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS);
+        yield return new(TB("180 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS);
+        yield return new(TB("1 year"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_365_DAYS);
     }
     
     public static IEnumerable<ConfigurationSelectData<WorkspaceDisplayBehavior>> GetWorkspaceDisplayBehaviorData()

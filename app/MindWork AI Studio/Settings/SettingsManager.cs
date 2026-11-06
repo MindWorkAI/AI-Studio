@@ -1058,7 +1058,7 @@ public sealed class SettingsManager
     /// <returns>The trimmed name of the workspace, or null to keep the chat where it would go anyway.</returns>
     public string? GetChatTemplateWorkspaceName(ChatTemplate chatTemplate)
     {
-        if (string.IsNullOrWhiteSpace(chatTemplate.WorkspaceName) || this.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+        if (string.IsNullOrWhiteSpace(chatTemplate.WorkspaceName) || !this.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces)
             return null;
 
         return chatTemplate.WorkspaceName.Trim();

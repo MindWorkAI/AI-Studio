@@ -1,0 +1,14 @@
+/*
+ * The words of a search, in the yellow app.css defines for the chat search: square, as the painted
+ * matches in the open chat are, which cannot be rounded. The current result takes the full yellow,
+ * with dark text on it.
+ */
+mark {
+    background-color: var(--chat-search-highlight);
+    color: inherit;
+}
+
+mark.is-strong {
+    background-color: var(--chat-search-highlight-strong);
+    color: var(--chat-search-on-strong);
+}

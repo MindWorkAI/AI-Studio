@@ -173,6 +173,15 @@ internal sealed class Program
             // Since MudBlazor 9, a click outside an open menu or select also reaches the page behind
             // it. We keep both modal, so that such a click only closes them:
             config.PopoverOptions.ModalOverlay = true;
+
+            //
+            // A popover flips to the other side of its anchor once it is taller than the space left
+            // on its side, but it shrinks with a scrollbar already once it comes closer than
+            // OverflowPadding to the edge of the window. Within that band, a menu near the bottom
+            // would shrink instead of opening above its button. The same margin for flipping makes
+            // both thresholds meet, so that such a menu flips:
+            //
+            config.PopoverOptions.FlipMargin = config.PopoverOptions.OverflowPadding;
         });
 
         builder.Services.AddMudMarkdownServices();

@@ -190,13 +190,13 @@
                 @T("Workspace")
             </MudText>
             <MudJustifiedText Class="mb-3" Typo="Typo.body1">
-                @T("A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise be a disappearing chat, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace.")
+                @T("A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise go into no workspace, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace.")
             </MudJustifiedText>
-            @* While workspaces are off, nothing goes into a workspace, so choosing one here would promise what no chat does: *@
+            @* While no new chat goes into a workspace, choosing one here would promise what no chat does: *@
             @if (this.AreWorkspacesDisabled)
             {
                 <MudAlert Severity="Severity.Warning" Class="mb-3">
-                    @T("Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on.")
+                    @T("Right now, no new chat goes into a workspace: workspaces are switched off, or chats in workspaces are not stored. Meanwhile, chats with this template belong to no workspace, and they do not move into one later. You can change this choice once new chats go into workspaces again.")
                 </MudAlert>
             }
             <MudTextSwitch @bind-Value="@this.preselectWorkspace" Color="Color.Primary" Label="@T("Does this chat template keep its chats in a workspace?")" LabelOn="@T("Yes, chats with this template go into a workspace")" LabelOff="@T("No, chats go where they would go anyway")" Disabled="@this.IsWorkspaceChoiceLocked"/>

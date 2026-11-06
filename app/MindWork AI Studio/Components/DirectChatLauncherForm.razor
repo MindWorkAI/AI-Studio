@@ -7,7 +7,7 @@
    chosen right now instead of only explaining that both are possible. *@
 <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
     @(this.OpensTemporaryChat
-        ? T("Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.")
+        ? T("Without a workspace, the tile opens a chat outside of the workspaces, which is kept as your chat settings say.")
         : T("The tile opens its chat in this workspace and creates the workspace when it does not exist yet."))
 </MudText>
 @if (this.OpensTemporaryChat && this.SettingsManager.GetChatTemplateWorkspaceName(this.SelectedChatTemplate) is { } templateWorkspaceName)

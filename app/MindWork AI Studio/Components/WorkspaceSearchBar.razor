@@ -1,0 +1,73 @@
+@inherits MSGComponentBase
+
+@* The progress line takes the room of the padding below the field, so the header keeps its height
+   when the line shows up and goes. *@
+<div class="px-2 pt-1 pb-2" style="position: relative;">
+    <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Wrap="Wrap.NoWrap" Spacing="1">
+        <MudTextField T="string"
+                      Text="@this.Search.Text"
+                      TextChanged="@this.TextChanged"
+                      OnKeyDown="@this.KeyDownAsync"
+                      Placeholder="@T("Search chats")"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Typo="Typo.body1"
+                      Immediate="@true"
+                      AutoFocus="@true"
+                      Clearable="@true"
+                      Class="mt-0"
+                      Style="min-width: 0;"/>
+        @if (!string.IsNullOrWhiteSpace(this.Search.Text))
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary text-no-wrap flex-shrink-0">
+                @this.ResultText
+            </MudText>
+            <MudTooltip Text="@T("Previous result in the list")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
+                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" Disabled="@(this.Search.ResultCount == 0)" aria-label="@T("Previous result in the list")" OnClick="@(() => this.Search.Step(-1))"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Next result in the list")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
+                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Disabled="@(this.Search.ResultCount == 0)" aria-label="@T("Next result in the list")" OnClick="@(() => this.Search.Step(1))"/>
+            </MudTooltip>
+        }
+    </MudStack>
+
+    @* Where the search found the current result, or a tip before the user types. One short line of
+       fixed height, so the list below never moves when its text changes. The passage itself shows in
+       the tooltip of the chat, where there is room for it: *@
+    <div class="workspace-search-reason mud-text-secondary">
+        @if (this.Search.CurrentReason.IsInChat)
+        {
+            <SearchFoundIcon/>
+        }
+        @if (this.HasReasonTooltip)
+        {
+            @* The tooltip gives what the line has no room for, like the tooltip of a found chat: *@
+            <MudTooltip Placement="Placement.Bottom" Delay="@ChatSearchPassageView.TOOLTIP_DELAY" RootStyle="display: flex; min-width: 0;">
+                <ChildContent>
+                    <span class="workspace-search-reason-text">@this.ReasonText</span>
+                </ChildContent>
+                <TooltipContent>
+                    <div style="@ChatSearchPassageView.TOOLTIP_CONTENT_STYLE">
+                        @if (this.Search.CurrentReason.IsInChat)
+                        {
+                            <ChatSearchPassageView Passage="@this.Search.CurrentReason.Passage" Terms="@SearchText.ParseTerms(this.Search.Text)"/>
+                        }
+                        else
+                        {
+                            <div>@T("Searches the names of chats and workspaces, their messages, and the names of attached files and sources.")</div>
+                            <div>@this.ReasonText</div>
+                        }
+                    </div>
+                </TooltipContent>
+            </MudTooltip>
+        }
+        else
+        {
+            <span class="workspace-search-reason-text">@this.ReasonText</span>
+        }
+    </div>
+    @if (this.Search.IsSearchingContents)
+    {
+        <MudProgressLinear Indeterminate="@true" Color="Color.Primary" Size="Size.Small" Style="position: absolute; left: 8px; right: 8px; bottom: 2px; width: auto;"/>
+    }
+</div>

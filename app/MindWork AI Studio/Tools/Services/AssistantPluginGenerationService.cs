@@ -520,7 +520,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
               - Explain omitted provider, profile, template, data-source, or tool values as using the normal chat defaults.
               - In the {{TB("Tools")}} section, say what the preselected tools let the chat do and that users may change the selection once the chat is open.
               - Explain the empty profile/template GUID as explicitly selecting no profile/template.
-              - When the ChatLaunch names no workspace, write in the {{TB("Workspace")}} section that the tile opens a chat without a workspace: it is kept among the temporary chats and is deleted by the maintenance the user configured for them. Never invent a workspace name.
+              - When the ChatLaunch names no workspace, write in the {{TB("Workspace")}} section that the tile opens a chat without a workspace: it is kept among the chats outside of workspaces, as the user's chat settings say. Never invent a workspace name.
               - Do not propose UI components, submit behavior, BuildPrompt, or a plugin SystemPrompt for a chat launcher.
               """;
 

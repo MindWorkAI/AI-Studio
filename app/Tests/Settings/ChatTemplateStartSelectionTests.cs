@@ -152,13 +152,18 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
         var whileUsed = this.SettingsManager.GetChatTemplateWorkspaceName(template);
 
-        this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = WorkspaceStorageBehavior.DISABLE_WORKSPACES;
+        this.SettingsManager.ConfigurationData.Workspace.AreWorkspacesEnabled = false;
         var whileSwitchedOff = this.SettingsManager.GetChatTemplateWorkspaceName(template);
+
+        this.SettingsManager.ConfigurationData.Workspace.AreWorkspacesEnabled = true;
+        this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = WorkspaceStorageBehavior.DISABLE_WORKSPACES;
+        var whileNoChatIsStored = this.SettingsManager.GetChatTemplateWorkspaceName(template);
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(whileUsed, Is.EqualTo("Mails"));
             Assert.That(whileSwitchedOff, Is.Null, "Without workspaces, a template must not bring one back for its chats.");
+            Assert.That(whileNoChatIsStored, Is.Null, "Without stored chats, putting a chat into a workspace would store it after all.");
             Assert.That(this.SettingsManager.GetChatTemplateWorkspaceName(NewTemplate()), Is.Null);
         }
     }

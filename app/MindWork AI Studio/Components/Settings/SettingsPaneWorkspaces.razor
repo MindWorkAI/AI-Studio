@@ -1,0 +1,25 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@inherits SettingsPanelBase
+
+<SettingsGroup Title="@T("Workspaces")">
+    <ConfigurationOption OptionDescription="@T("Use workspaces?")" LabelOn="@T("Workspaces are used")" LabelOff="@T("No workspaces are used")" State="@(() => this.SettingsManager.ConfigurationData.Workspace.UsesWorkspaces)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Workspace.AreWorkspacesEnabled = updatedState)" OptionHelp="@T("When enabled, you can sort your chats into workspaces. When disabled, the sidebar lists only your chats outside of workspaces; chats already in a workspace are kept and come back when you enable workspaces again.")"/>
+
+    @* Chats in workspaces are kept by a choice of their own, independent of all other chats: *@
+    @if (this.SettingsManager.ConfigurationData.Workspace.UsesWorkspaces)
+    {
+        <ConfigurationSelect OptionDescription="@T("Store chats in workspaces")" SelectedValue="@(() => this.WorkspaceChoiceShown)" Data="@ConfigurationSelectDataFactory.GetWorkspaceChatStorageChoiceData(this.ChoiceOfAllChats)" SelectionUpdate="@(choice => this.SettingsManager.ConfigurationData.Workspace.SetChoice(isInWorkspace: true, choice))" OptionHelp="@T("Whether and how long we keep the chats in your workspaces. When you change the choice for all other chats later, this one stays as it is.")"/>
+        @if (this.SettingsManager.ConfigurationData.Workspace.GetChoice(isInWorkspace: true) is ChatStorageChoice.STORE_TEMPORARILY)
+        {
+            <ConfigurationSelect OptionDescription="@T("For how long")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.GetDuration(isInWorkspace: true))" Data="@ConfigurationSelectDataFactory.GetChatDurationData()" SelectionUpdate="@(duration => this.SettingsManager.ConfigurationData.Workspace.SetDuration(isInWorkspace: true, duration))" OptionHelp="@T("A chat in a workspace is deleted this long after its last change. This applies to all of them, however they were stored before.")"/>
+        }
+    }
+</SettingsGroup>
+
+@* The sidebar shows whenever it has something to list, the stored chats or the workspaces: *@
+@if (this.SettingsManager.ConfigurationData.Workspace.IsChatListShown)
+{
+    <SettingsGroup Title="@T("Sidebar")">
+        <ConfigurationSelect OptionDescription="@T("Workspace display behavior")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceDisplayBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior = selectedValue)" OptionHelp="@T("How should we display your workspaces?")"/>
+    </SettingsGroup>
+}

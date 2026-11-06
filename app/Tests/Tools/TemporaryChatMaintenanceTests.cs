@@ -92,15 +92,66 @@ public sealed class TemporaryChatMaintenanceTests
         }
     }
 
-    /// <summary>
-    /// Stores a temporary chat whose file was written the given time ago.
-    /// </summary>
-    private static async Task<ChatThread> StoreTemporaryChatAsync(string name, TimeSpan age)
+    [Test]
+    public async Task ChatsInWorkspacesStayWhileTheyHaveNoChoiceOfTheirOwn()
     {
-        var chat = new ChatThread { WorkspaceId = Guid.Empty, ChatId = Guid.NewGuid(), Name = name };
+        var workspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync("Projects");
+        var oldChat = await StoreTemporaryChatAsync("Old", TimeSpan.FromDays(400), workspaceId);
+
+        var settings = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
+        settings.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy = WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS;
+        await new TemporaryChatService(NullLogger<TemporaryChatService>.Instance, settings).StartMaintenanceAsync();
+
+        Assert.That(Directory.Exists(WorkspaceBehaviour.GetChatDirectory(workspaceId, oldChat.ChatId)), Is.True, "Settings written before chats in workspaces had a choice of their own keep them, as before.");
+    }
+
+    [Test]
+    public async Task ChatsInWorkspacesGoByTheirOwnDuration()
+    {
+        var workspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync("Projects");
+        var expiredWorkspaceChat = await StoreTemporaryChatAsync("Expired", TimeSpan.FromDays(10), workspaceId);
+        var recentWorkspaceChat = await StoreTemporaryChatAsync("Recent", TimeSpan.FromDays(1), workspaceId);
+        var oldDisappearingChat = await StoreTemporaryChatAsync("Old", TimeSpan.FromDays(400));
+
+        var settings = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
+        settings.ConfigurationData.Workspace.SetChoice(isInWorkspace: false, ChatStorageChoice.STORE_INDEFINITELY);
+        settings.ConfigurationData.Workspace.SetChoice(isInWorkspace: true, ChatStorageChoice.STORE_TEMPORARILY);
+        settings.ConfigurationData.Workspace.SetDuration(isInWorkspace: true, WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS);
+        await new TemporaryChatService(NullLogger<TemporaryChatService>.Instance, settings).StartMaintenanceAsync();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Directory.Exists(WorkspaceBehaviour.GetChatDirectory(workspaceId, expiredWorkspaceChat.ChatId)), Is.False, "The chat in the workspace stayed unchanged longer than the workspaces keep chats.");
+            Assert.That(Directory.Exists(WorkspaceBehaviour.GetChatDirectory(workspaceId, recentWorkspaceChat.ChatId)), Is.True, "The recent chat in the workspace should stay.");
+            Assert.That(Directory.Exists(WorkspaceBehaviour.GetChatDirectory(Guid.Empty, oldDisappearingChat.ChatId)), Is.True, "Chats outside of workspaces follow their own choice, which keeps them.");
+        }
+    }
+
+    [Test]
+    public async Task AChatSavedByHandStays()
+    {
+        var oldChat = await StoreTemporaryChatAsync("Saved", TimeSpan.FromDays(400));
+
+        var settings = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
+        settings.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy = WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS;
+        settings.ConfigurationData.Workspace.StorageBehavior = WorkspaceStorageBehavior.STORE_CHATS_MANUALLY;
+        await new TemporaryChatService(NullLogger<TemporaryChatService>.Instance, settings).StartMaintenanceAsync();
+
+        Assert.That(Directory.Exists(WorkspaceBehaviour.GetChatDirectory(Guid.Empty, oldChat.ChatId)), Is.True, "Whoever stores chats by clicking save keeps them until they delete them.");
+    }
+
+    /// <summary>
+    /// Stores a chat whose file was written the given time ago.
+    /// </summary>
+    /// <param name="name">The name of the chat.</param>
+    /// <param name="age">How long ago the chat changed last.</param>
+    /// <param name="workspaceId">The workspace of the chat, or none for a disappearing chat.</param>
+    private static async Task<ChatThread> StoreTemporaryChatAsync(string name, TimeSpan age, Guid workspaceId = default)
+    {
+        var chat = new ChatThread { WorkspaceId = workspaceId, ChatId = Guid.NewGuid(), Name = name };
         Assert.That(await WorkspaceBehaviour.StoreChatAsync(chat), Is.True, $"The chat '{name}' could not be stored.");
 
-        var chatFile = Path.Join(WorkspaceBehaviour.GetChatDirectory(Guid.Empty, chat.ChatId), "thread.json");
+        var chatFile = Path.Join(WorkspaceBehaviour.GetChatDirectory(workspaceId, chat.ChatId), "thread.json");
         File.SetLastWriteTimeUtc(chatFile, DateTime.UtcNow - age);
         return chat;
     }

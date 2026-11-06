@@ -220,21 +220,41 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         await this.CancelAsync(jobId);
     }
 
+    /// <summary>
+    /// Tells the running jobs of a subject, such as a chat, whether it is in the foreground.
+    /// </summary>
+    /// <remarks>
+    /// A subject coming to the foreground also shows how its finished jobs ended, so these count as
+    /// seen from then on, see <see cref="AIJobSnapshot.IsOutcomeSeen"/>.
+    /// </remarks>
     public async Task SetForegroundAsync(AIJobKind kind, Guid subjectId, bool isForeground)
     {
         var matchingJobs = this.jobs.Values
-            .Where(job => job.Snapshot.Kind == kind && job.Snapshot.SubjectId == subjectId && job.Snapshot.IsActive)
+            .Where(job => job.Snapshot.Kind == kind && job.Snapshot.SubjectId == subjectId)
+            .Where(job => job.Snapshot.IsActive || (isForeground && !job.Snapshot.IsOutcomeSeen))
             .ToList();
 
         foreach (var job in matchingJobs)
         {
+            //
+            // Decided under the lock, since a job may have finished since the query above. One which
+            // finished in the meantime counts as seen only when its subject comes to the foreground:
+            //
             lock (job.SyncRoot)
             {
-                job.Snapshot = job.Snapshot with
-                {
-                    IsForeground = isForeground,
-                    UpdatedAt = DateTimeOffset.Now,
-                };
+                if (job.Snapshot.IsActive)
+                    job.Snapshot = job.Snapshot with
+                    {
+                        IsForeground = isForeground,
+                        UpdatedAt = DateTimeOffset.Now,
+                    };
+
+                // Not a change of the job itself, which is why the time of its last update stays:
+                else if (isForeground)
+                    job.Snapshot = job.Snapshot with { IsOutcomeSeen = true };
+
+                else
+                    continue;
             }
 
             await this.NotifyChangedAsync(job);
@@ -390,6 +410,9 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 Status = status,
                 ErrorMessage = errorMessage,
                 UpdatedAt = DateTimeOffset.Now,
+
+                // The open chat shows how its answer ended; any other learns it once it opens, see SetForegroundAsync:
+                IsOutcomeSeen = state.Snapshot.IsForeground,
             };
         }
 
@@ -510,11 +533,11 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
     /// Stores the chat of a job, at most once per <see cref="CHECKPOINT_MIN_TIME"/> unless forced.
     /// </summary>
     /// <remarks>
-    /// Only while chats are stored automatically. Whoever stores chats manually decides when a chat
-    /// reaches the disk, with its save button, and whoever disabled the workspaces wants no chat on the
-    /// disk at all. Storing it here anyway would put every message on the disk the moment it is sent,
-    /// and overwrite what the user saved by hand with what they did not save. The chat marks the answer
-    /// as unsaved instead, once the job is done.<br/><br/>
+    /// Only while the place of the chat, a workspace or not, stores chats automatically. Whoever stores
+    /// chats manually decides when a chat reaches the disk, with its save button, and whoever stores no
+    /// chat wants none on the disk at all. Storing it here anyway would put every message on the disk
+    /// the moment it is sent, and overwrite what the user saved by hand with what they did not save. The
+    /// chat marks the answer as unsaved instead, once the job is done.<br/><br/>
     ///
     /// The storage mode is read every time rather than once for the job: whoever changes it while an
     /// answer is being written gets what the chat reads when the answer is done.
@@ -523,15 +546,12 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
     /// <param name="force">True stores the chat even when the last checkpoint was just now.</param>
     private async Task CheckpointChatAsync(AIJobState state, bool force = false)
     {
-        if (settingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        var request = state.ChatGenerationRequest;
+        if (request is null || !settingsManager.ConfigurationData.Workspace.IsStoredAutomatically(request.ChatThread.WorkspaceId))
             return;
 
         var now = DateTimeOffset.Now;
         if (!force && now - state.LastCheckpoint < CHECKPOINT_MIN_TIME)
-            return;
-
-        var request = state.ChatGenerationRequest;
-        if (request is null)
             return;
 
         state.LastCheckpoint = now;
