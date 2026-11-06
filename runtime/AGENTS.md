@@ -42,6 +42,22 @@ the window as an HttpOnly session cookie before the window opens the app (`chang
   `APP_HOST` and in `Program.cs` together, since no test compares them. `AppAccessRuntimeAgreementTests`
   only checks that both sides use the same cookie name and environment variable.
 
+**Only the runtime lets links leave the window.** AI Studio shows a single window, and a browser outside
+it cannot show the app, since it lacks the session cookie. Therefore:
+
+- `should_open_in_system_browser` in `app_window.rs` alone decides which address goes to the system: a
+  website, another local server, or a `mailto:` or `tel:` link, but never an address of the app. The
+  handlers for navigations and for new windows both ask it.
+- The handler for new windows always denies the window. Only a window which `setup` builds itself can
+  have that handler, which is why `tauri.conf.json` sets `"create": false`.
+- Keep the link script of the opener plugin switched off (`open_js_links_on_click(false)`): it opens
+  every link clicked while holding Shift or Ctrl in the system browser, links of the app included.
+  `link_guard.js` replaces it. It stops every click which would open a link of the app somewhere else,
+  before the link script of the shell plugin, which cannot be switched off, opens links with a target.
+- No script of the page calls the opener plugin, so `capabilities/default.json` grants it nothing.
+  `shell:allow-open` stays, since the link script of the shell plugin opens the external links with a
+  target.
+
 **Runtime API handlers never block.** All calls of the .NET app share one HTTP/2 connection, and the
 task driving it may wait on exactly the Tokio worker which a blocking handler occupies, so a single
 blocking handler can hold up the whole app. Therefore:

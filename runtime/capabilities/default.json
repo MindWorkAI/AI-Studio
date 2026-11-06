@@ -13,7 +13,6 @@
   "permissions": [
     "core:default",
     "updater:default",
-    "opener:default",
     "shell:allow-open",
     {
       "identifier": "shell:allow-spawn",

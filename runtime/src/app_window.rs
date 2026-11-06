@@ -121,9 +121,15 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_opener::init())
+        //
+        // The link script of the opener plugin opens every link clicked while holding Shift or
+        // Ctrl in the system browser, links of the app included. Our own script replaces it,
+        // see link_guard.js:
+        //
+        .plugin(tauri_plugin_opener::Builder::new().open_js_links_on_click(false).build())
         .plugin(
             tauri::plugin::Builder::<tauri::Wry, ()>::new("external-link-handler")
+                .js_init_script(include_str!("link_guard.js"))
                 .on_navigation(|webview, url| {
                     let current_url = webview.url().ok();
                     if !should_open_in_system_browser(url, approved_app_url().as_ref(), current_url.as_ref()) {
