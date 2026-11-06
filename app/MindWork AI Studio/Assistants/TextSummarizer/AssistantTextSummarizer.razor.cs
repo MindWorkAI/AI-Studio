@@ -12,6 +12,8 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     
     protected override string Description => T("Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.");
     
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         $"""
          You get a long text as input. The text is marked with ```. The user wants to get a summary of the text.

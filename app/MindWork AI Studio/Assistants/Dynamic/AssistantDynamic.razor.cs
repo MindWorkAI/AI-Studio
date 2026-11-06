@@ -29,6 +29,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     
     protected override string Title => this.title;
     protected override string Description => this.description;
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
     protected override string SystemPrompt => this.systemPrompt;
     protected override bool AllowProfiles => this.allowProfiles;
     protected override bool ShowProfileSelection => this.showFooterProfileSelection;

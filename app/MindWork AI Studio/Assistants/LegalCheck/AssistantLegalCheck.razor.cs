@@ -12,6 +12,8 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override string Description => T("Provide a legal document and ask a question about it. This assistant does not replace legal advice. Consult a lawyer to get professional advice. Remember that LLMs can invent answers and facts. Please do not rely on this answers.");
     
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         """
         You are an expert in legal matters. You have studied international law and are familiar with the law in

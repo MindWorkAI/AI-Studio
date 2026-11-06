@@ -164,7 +164,26 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
     }
 
+    /// <summary>
+    /// The thread with which a chat continues the conversation of this assistant.
+    /// </summary>
+    /// <remarks>
+    /// It decides what the chat holds, not its system prompt: SendToAssistant sets that afterward from
+    /// ChatSystemPrompt, whichever thread an assistant builds here.
+    /// </remarks>
     protected virtual ChatThread ConvertToChatThread => this.CreateSendToChatThread();
+
+    /// <summary>
+    /// Which system prompt a chat gets which continues the conversation of this assistant: the default prompt
+    /// of AI Studio, the prompt of this assistant, or a prompt this assistant writes for the chat.
+    /// </summary>
+    /// <remarks>
+    /// There is no default on purpose, so that every assistant decides this itself. Its own prompt may
+    /// forbid follow-up questions or demand JSON, and the default prompt of AI Studio knows nothing about its
+    /// role and its settings. An assistant which starts no chat from its conversation chooses the default
+    /// prompt of AI Studio.
+    /// </remarks>
+    protected abstract ChatSystemPromptChoice ChatSystemPrompt { get; }
 
     /// <summary>
     /// Takes over a text which another assistant or a chat sent to this assistant.
@@ -831,10 +850,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         var originalChatThread = this.ChatThread ?? new ChatThread();
         if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
-            return originalChatThread with
-            {
-                SystemPrompt = SystemPrompts.DEFAULT,
-            };
+            return originalChatThread;
 
         var transferredBlocks = originalChatThread.Blocks
             .Select(block => block.Role is ChatRole.USER
@@ -845,9 +861,29 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         transferredBlocks.Insert(0, this.CreateSendToChatPrompt(originalChatThread.Blocks));
         return originalChatThread with
         {
-            SystemPrompt = SystemPrompts.DEFAULT,
             Blocks = transferredBlocks,
         };
+    }
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues the conversation of this assistant, as the
+    /// assistant chose in ChatSystemPrompt.
+    /// </summary>
+    /// <remarks>
+    /// The prompt of this assistant is the one its conversation ran with: the form may have changed since.
+    /// A prompt which turns out empty is a mistake of the assistant; the chat then gets the default prompt
+    /// of AI Studio rather than none at all.
+    /// </remarks>
+    /// <returns>The system prompt of the chat.</returns>
+    private string CreateChatSystemPrompt()
+    {
+        var promptOfAssistant = this.ChatThread?.SystemPrompt is { } threadPrompt && !string.IsNullOrWhiteSpace(threadPrompt) ? threadPrompt : this.SystemPrompt;
+        var prompt = this.ChatSystemPrompt.CreatePrompt(promptOfAssistant);
+        if (!string.IsNullOrWhiteSpace(prompt))
+            return prompt;
+
+        this.Logger.LogError("The system prompt which the assistant '{Component}' chose for the chat ({Source}) is empty. The chat gets the default prompt of AI Studio instead.", this.Component, this.ChatSystemPrompt.Source);
+        return SystemPrompts.DEFAULT;
     }
 
     /// <summary>
@@ -913,7 +949,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         if (destination is Tools.Components.CHAT && !sendToButton.SendToChatAsInput)
         {
             var convertedChatThread = this.ConvertToChatThread;
-            convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
+            convertedChatThread = convertedChatThread with
+            {
+                SelectedProvider = this.ProviderSettings.Id,
+                SystemPrompt = this.CreateChatSystemPrompt(),
+            };
 
             //
             // The chat holds what this assistant held, whichever thread the assistant builds it from: some

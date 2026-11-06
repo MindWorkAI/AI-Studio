@@ -12,6 +12,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     
     protected override string Description => T("Translate text from one language to another.");
     
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         """
         You are a translation engine.

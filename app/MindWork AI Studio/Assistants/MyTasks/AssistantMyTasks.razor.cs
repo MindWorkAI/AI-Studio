@@ -14,7 +14,9 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     protected override string Description => T("You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.");
     
-    protected override string SystemPrompt => 
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
+    protected override string SystemPrompt =>
         $"""
         You are a friendly and professional business expert. You receive business emails, protocols,
         reports, etc. as text input and/or attached documents. Additionally, you know the user's role
@@ -44,12 +46,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
         {
             var originalChatThread = this.ChatThread ?? new ChatThread();
             if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
-            {
-                return originalChatThread with
-                {
-                    SystemPrompt = SystemPrompts.DEFAULT,
-                };
-            }
+                return originalChatThread;
 
             var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
             var visiblePromptTime = earliestBlock is null
@@ -80,7 +77,6 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
             return originalChatThread with
             {
                 ChatId = Guid.NewGuid(),
-                SystemPrompt = SystemPrompts.DEFAULT,
                 Blocks = transferredBlocks,
             };
         }

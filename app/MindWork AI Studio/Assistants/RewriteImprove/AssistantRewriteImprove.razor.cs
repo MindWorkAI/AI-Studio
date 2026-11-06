@@ -12,6 +12,8 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     protected override string Description => T("Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.");
     
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt =>
         $"""
         You are an expert in language and style. You receive a text as input. First, you review the text. If no

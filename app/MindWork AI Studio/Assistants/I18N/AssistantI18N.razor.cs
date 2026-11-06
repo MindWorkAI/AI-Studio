@@ -23,6 +23,9 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     protected override string Description => T("Translate MindWork AI Studio text content into another language.");
     
+    // This assistant writes language plugins, so no chat continues its conversation:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         $"""
         # Assignment

@@ -7,6 +7,8 @@ namespace AIStudio.Assistants.SWOTAnalysis;
 /// </summary>
 public partial class AssistantSWOTAnalysis
 {
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     /// <summary>
     /// The chat gets the visible request and the result only, not the hidden request behind it.
     /// </summary>
@@ -36,7 +38,6 @@ public partial class AssistantSWOTAnalysis
     /// <returns>The thread of the chat, with the visible request and the visible result as its only blocks.</returns>
     internal static ChatThread CreateChatThreadForResult(ChatThread assistantThread, ContentBlock? visiblePrompt, ContentBlock? result) => assistantThread with
     {
-        SystemPrompt = SystemPrompts.DEFAULT,
         Blocks = visiblePrompt is null || result is null
             ? []
 

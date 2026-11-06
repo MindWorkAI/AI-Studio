@@ -12,6 +12,8 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     
     protected override string Description => T("Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.");
     
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         $"""
         You are an experienced specialist in personnel matters. You write job postings.

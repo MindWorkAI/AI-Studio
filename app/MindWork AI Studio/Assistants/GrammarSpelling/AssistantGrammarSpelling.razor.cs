@@ -12,6 +12,8 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     
     protected override string Description => T("Check the grammar and spelling of a text.");
     
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         $"""
         You are an expert in languages and their rules. For example, you know how US and UK English or German in

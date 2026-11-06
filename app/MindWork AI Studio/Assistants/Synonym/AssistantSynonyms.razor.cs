@@ -12,6 +12,8 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     
     protected override string Description => T("Find synonyms for words or phrases.");
     
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         $"""
         You have a PhD in linguistics. Therefore, you are an expert in the {this.SystemPromptLanguage()} language.

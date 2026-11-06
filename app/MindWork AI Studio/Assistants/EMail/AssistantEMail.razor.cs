@@ -14,6 +14,8 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     
     protected override string Description => T("Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.");
     
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         $"""
         You are an automated system that writes emails. {this.SystemPromptHistory()} The user provides you with bullet points on what

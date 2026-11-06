@@ -15,7 +15,9 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     
     protected override string Description => T("This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.");
     
-    protected override string SystemPrompt => 
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
+    protected override string SystemPrompt =>
         """
         You are a friendly, helpful senior software developer with extensive experience in various programming languages
         and concepts. You are familiar with principles like DRY, KISS, YAGNI, and SOLID and can apply and explain them.
@@ -48,12 +50,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         {
             var originalChatThread = this.ChatThread ?? new ChatThread();
             if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
-            {
-                return originalChatThread with
-                {
-                    SystemPrompt = SystemPrompts.DEFAULT,
-                };
-            }
+                return originalChatThread;
 
             var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
             var visiblePromptTime = earliestBlock is null
@@ -85,7 +82,6 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
             {
                 ChatId = Guid.NewGuid(),
                 Name = T("Coding Assistant Session"),
-                SystemPrompt = SystemPrompts.DEFAULT,
                 Blocks = transferredBlocks,
             };
         }

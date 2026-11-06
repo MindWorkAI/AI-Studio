@@ -14,6 +14,8 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     
     protected override string Description => T("This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details.");
 
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt =>
         $"""
         You are a friendly assistant who supports the planning and consultation of events. You receive

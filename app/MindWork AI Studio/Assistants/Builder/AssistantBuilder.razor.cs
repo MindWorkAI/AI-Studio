@@ -36,6 +36,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     
     protected override string Description => T("Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.");
     
+    // This assistant generates a plugin and has no conversation for a chat to continue:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt =>
         $"""
          You are the Assistant Builder inside MindWork AI Studio.
