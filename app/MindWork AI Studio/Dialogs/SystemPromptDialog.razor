@@ -3,38 +3,28 @@
 <MudDialog>
     <DialogContent>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("This is the complete system prompt the AI receives with your next message. AI Studio assembles it from the parts listed here.")
+            @T("These are the instructions the AI receives ahead of your conversation, the system prompt of this chat. AI Studio assembles it from the parts below, in the order in which the AI reads them.")
         </MudJustifiedText>
 
-        @* In the order in which the parts appear in the prompt below: *@
-        <MudSimpleTable Dense="@true" Class="mb-6">
-            <tbody>
-                <tr>
-                    <td>@T("Date and time")</td>
-                    <td>@this.DateTimeText</td>
-                </tr>
-                <tr>
-                    <td>@T("Chat template")</td>
-                    <td>@this.ChatTemplateText</td>
-                </tr>
-                <tr>
-                    <td>@T("Data from your data sources")</td>
-                    <td>@this.RetrievedDataText</td>
-                </tr>
-                <tr>
-                    <td>@T("Profile")</td>
-                    <td>@this.ProfileText</td>
-                </tr>
-                <tr>
-                    <td>@T("Tool instructions")</td>
-                    <td>@this.ToolNamesText</td>
-                </tr>
-            </tbody>
-        </MudSimpleTable>
+        @foreach (var section in this.sections)
+        {
+            <MudText Typo="Typo.h6" Class="mt-4 mb-2">@section.Heading</MudText>
 
-        <TextInfoLines Label="@T("Complete system prompt")" MaxLines="20" Value="@this.SystemPrompt" ClipboardTooltipSubject="@T("the complete system prompt")"/>
+            @if (!string.IsNullOrWhiteSpace(section.Notice))
+            {
+                <MudAlert Severity="Severity.Info" Dense="@true" Class="mb-2">@section.Notice</MudAlert>
+            }
+
+            @if (!string.IsNullOrEmpty(section.Text))
+            {
+                <TextInfoLines Lines="1" MaxLines="12" Value="@section.Text" ClipboardTooltipSubject="@T("this part")"/>
+            }
+        }
     </DialogContent>
     <DialogActions>
+        <MudButton OnClick="@this.CopyCompletePrompt" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ContentCopy">
+            @T("Copy the complete prompt")
+        </MudButton>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
             @T("Close")
         </MudButton>

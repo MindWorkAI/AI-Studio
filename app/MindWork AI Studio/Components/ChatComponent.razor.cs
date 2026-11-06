@@ -2496,33 +2496,28 @@ public partial class ChatComponent : MSGComponentBase
     /// a dialog which promises the prompt as the AI receives it has to show the instructions as the
     /// request words them, see GetOfferedToolDefinitionsAsync.
     ///
-    /// The parts are read from the same values the prompt is built from, but the decisions are the
-    /// ones ChatThread.BuildSystemPrompt makes: should it ever weigh them differently, the list has
-    /// to follow, while the text is always right.
+    /// What the prompt is made of comes from ChatThread.BuildSystemPrompt, which decides it; only
+    /// the names of the tools are looked up here, because the thread does not know the registry.
+    /// How the next message searches the data sources comes along, since the retrieved data in the
+    /// prompt belongs to the last message, and the dialog has to say what happens with the next.
     /// </remarks>
     private async Task ShowSystemPrompt()
     {
         var thread = this.ChatThread ?? this.NewChatThread(string.Empty, this.currentWorkspaceId);
         var toolDefinitions = await this.GetOfferedToolDefinitionsAsync(thread);
+        var retrievalMode = await this.GetRetrievalModeOfNextRequestAsync();
         var prepared = thread.BuildSystemPrompt(this.SettingsManager, toolDefinitions);
-
-        var chatTemplate = this.SettingsManager.GetChatTemplateById(thread.SelectedChatTemplate);
-        var profile = this.SettingsManager.GetProfileById(thread.SelectedProfile);
-        var toolNames = toolDefinitions
-            .Where(definition => !string.IsNullOrWhiteSpace(definition.SystemPromptInstructions))
+        var toolNames = prepared.Parts
+            .SelectMany(part => part.Tools)
             .Select(definition => this.ToolRegistry.GetImplementation(definition.ImplementationKey)?.GetDisplayName() ?? definition.Function.Name)
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
         var dialogParameters = new DialogParameters<SystemPromptDialog>
         {
-            { x => x.SystemPrompt, prepared.Text },
-            { x => x.ChatTemplateName, chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? string.Empty : chatTemplate.Name },
-            { x => x.ProfileName, prepared.SwitchedOffProfile != Profile.NO_PROFILE || profile == Profile.NO_PROFILE ? string.Empty : profile.Name },
-            { x => x.IsProfileForbiddenByChatTemplate, prepared.SwitchedOffProfile != Profile.NO_PROFILE },
-            { x => x.HasRetrievedData, !string.IsNullOrWhiteSpace(thread.AugmentedData) },
+            { x => x.Prompt, prepared },
             { x => x.ToolNames, toolNames },
-            { x => x.IncludesDateTime, thread.IncludeDateTime },
+            { x => x.RetrievalMode, retrievalMode },
         };
 
         await this.DialogService.ShowAsync<SystemPromptDialog>(T("Complete system prompt of this chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -2622,14 +2617,25 @@ public partial class ChatComponent : MSGComponentBase
     /// there, the number the provider reported takes over anyway, see ChatThread.ReportedHistoryFor.
     /// </remarks>
     /// <returns>True when the next request offers Semantic Search, as far as can be told.</returns>
-    private async Task<bool> OffersSemanticSearchAsync()
+    private async Task<bool> OffersSemanticSearchAsync() => await this.GetRetrievalModeOfNextRequestAsync() is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+    /// <summary>
+    /// How the next request searches the data sources of the chat.
+    /// </summary>
+    /// <remarks>
+    /// The same questions the RAG process asks when a message is sent: whether data sources are
+    /// switched on for the chat at all, and then how they are searched, see
+    /// ToolRegistry.GetEffectiveRetrievalModeAsync.
+    /// </remarks>
+    /// <returns>How the data sources are searched, or null when the next request searches none.</returns>
+    private async Task<DataSourceRetrievalMode?> GetRetrievalModeOfNextRequestAsync()
     {
         var options = this.GetCurrentDataSourceOptions();
         if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager) || !options.IsEnabled())
-            return false;
+            return null;
 
         var retrievalMode = await this.ToolRegistry.GetEffectiveRetrievalModeAsync(options, this.Provider, Tools.Components.CHAT);
-        return retrievalMode.Mode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+        return retrievalMode.Mode;
     }
 
     /// <summary>
