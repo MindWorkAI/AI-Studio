@@ -164,7 +164,26 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
     }
 
+    /// <summary>
+    /// The thread with which a chat continues the conversation of this assistant.
+    /// </summary>
+    /// <remarks>
+    /// It decides what the chat holds, not its system prompt: SendToAssistant sets that afterward from
+    /// ChatSystemPrompt, whichever thread an assistant builds here.
+    /// </remarks>
     protected virtual ChatThread ConvertToChatThread => this.CreateSendToChatThread();
+
+    /// <summary>
+    /// Which system prompt a chat gets which continues the conversation of this assistant: the default prompt
+    /// of AI Studio, the prompt of this assistant, or a prompt this assistant writes for the chat.
+    /// </summary>
+    /// <remarks>
+    /// There is no default on purpose, so that every assistant decides this itself. Its own prompt may
+    /// forbid follow-up questions or demand JSON, and the default prompt of AI Studio knows nothing about its
+    /// role and its settings. An assistant which starts no chat from its conversation chooses the default
+    /// prompt of AI Studio.
+    /// </remarks>
+    protected abstract ChatSystemPromptChoice ChatSystemPrompt { get; }
 
     /// <summary>
     /// Takes over a text which another assistant or a chat sent to this assistant.
@@ -188,6 +207,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// They stay until the form is reset, which removes the text as well.
     /// </remarks>
     private ChatRestrictions transferredRestrictions = ChatRestrictions.NONE;
+
+    /// <summary>
+    /// The prompt this assistant wrote for a chat which continues its conversation, built when that
+    /// conversation started; null when the assistant chose no prompt of its own or ran no conversation yet.
+    /// </summary>
+    /// <remarks>
+    /// It follows the settings of the run, not the form as it is when the user sends the result on: the
+    /// user may have changed the form since, e.g., the target language, without running the assistant
+    /// again. The prompt of the assistant itself comes from its thread for the same reason, see
+    /// WithChatSystemPrompt.
+    /// </remarks>
+    private string? customChatSystemPromptOfRun;
 
     /// <summary>
     /// What everything this assistant holds demands: the text sent to it and what its current thread read.
@@ -498,6 +529,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
 
         this.AssignRuntimeIdentity(this.ChatThread);
+        this.RememberCustomChatSystemPrompt();
     }
 
     protected Guid CreateChatThread(Guid workspaceId, string name)
@@ -516,8 +548,15 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
         
         this.AssignRuntimeIdentity(this.ChatThread);
+        this.RememberCustomChatSystemPrompt();
         return chatId;
     }
+
+    /// <summary>
+    /// Builds the prompt this assistant writes for a chat which continues its conversation, when it chose
+    /// one, from the settings of the run which starts now.
+    /// </summary>
+    private void RememberCustomChatSystemPrompt() => this.customChatSystemPromptOfRun = this.ChatSystemPrompt is { Source: ChatSystemPromptSource.CUSTOM } choice ? choice.BuildCustomPrompt() : null;
 
     /// <summary>
     /// Sets who runs the given thread: this assistant's component and, for an assistant plugin, its name.
@@ -831,10 +870,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         var originalChatThread = this.ChatThread ?? new ChatThread();
         if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
-            return originalChatThread with
-            {
-                SystemPrompt = SystemPrompts.DEFAULT,
-            };
+            return originalChatThread;
 
         var transferredBlocks = originalChatThread.Blocks
             .Select(block => block.Role is ChatRole.USER
@@ -845,8 +881,41 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         transferredBlocks.Insert(0, this.CreateSendToChatPrompt(originalChatThread.Blocks));
         return originalChatThread with
         {
-            SystemPrompt = SystemPrompts.DEFAULT,
             Blocks = transferredBlocks,
+        };
+    }
+
+    /// <summary>
+    /// Gives a chat which continues the conversation of this assistant the system prompt this assistant
+    /// chose in ChatSystemPrompt, together with where it comes from.
+    /// </summary>
+    /// <remarks>
+    /// The prompt of this assistant is the one its conversation ran with, and a prompt it wrote for the
+    /// chat is the one built when that conversation started: the form may have changed since. Only a
+    /// conversation restored without that prompt gets one built now. A prompt which turns out empty is a mistake of the assistant; the chat then gets the default prompt
+    /// of AI Studio rather than none at all.
+    /// </remarks>
+    /// <param name="chatThread">The thread of the chat, which this assistant built in ConvertToChatThread.</param>
+    /// <returns>A copy of the thread with the system prompt of the chat.</returns>
+    private ChatThread WithChatSystemPrompt(ChatThread chatThread)
+    {
+        var choice = this.ChatSystemPrompt;
+        var promptOfAssistant = this.ChatThread?.SystemPrompt is { } threadPrompt && !string.IsNullOrWhiteSpace(threadPrompt) ? threadPrompt : this.SystemPrompt;
+        var prompt = choice.Source is ChatSystemPromptSource.CUSTOM && this.customChatSystemPromptOfRun is { } promptOfRun ? promptOfRun : choice.CreatePrompt(promptOfAssistant);
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            this.Logger.LogError("The system prompt which the assistant '{Component}' chose for the chat ({Source}) is empty. The chat gets the default prompt of AI Studio instead.", this.Component, choice.Source);
+            return chatThread with { SystemPrompt = SystemPrompts.DEFAULT, SystemPromptOrigin = null };
+        }
+
+        return chatThread with
+        {
+            SystemPrompt = prompt,
+            SystemPromptOrigin = choice.Source is ChatSystemPromptSource.AI_STUDIO_DEFAULT ? null : new ChatSystemPromptOrigin
+            {
+                Source = choice.Source,
+                AssistantName = this.Title,
+            },
         };
     }
 
@@ -912,8 +981,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         // The chat starts from the conversation of this assistant, unless it only takes the text for the next message:
         if (destination is Tools.Components.CHAT && !sendToButton.SendToChatAsInput)
         {
-            var convertedChatThread = this.ConvertToChatThread;
-            convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
+            var convertedChatThread = this.WithChatSystemPrompt(this.ConvertToChatThread with { SelectedProvider = this.ProviderSettings.Id });
 
             //
             // The chat holds what this assistant held, whichever thread the assistant builds it from: some
@@ -949,6 +1017,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         // The text sent here is gone with the form, and what it demanded goes with it:
         this.transferredRestrictions = ChatRestrictions.NONE;
+        this.customChatSystemPromptOfRun = null;
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);
@@ -1194,6 +1263,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
         state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.SelectedToolIds);
         state.Set(TRANSFERRED_RESTRICTIONS_STATE_KEY, this.transferredRestrictions);
+        state.Set(CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY, this.customChatSystemPromptOfRun);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -1223,6 +1293,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
         reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(value));
         reader.Restore(TRANSFERRED_RESTRICTIONS_STATE_KEY, value => this.transferredRestrictions = value);
+        reader.Restore(CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY, value => this.customChatSystemPromptOfRun = value);
         this.RestoreCustomAssistantSessionState(reader);
     }
 

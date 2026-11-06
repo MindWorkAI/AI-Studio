@@ -386,11 +386,12 @@ public partial class ChatComponent : MSGComponentBase
             this.ApplyToolSelectionOfLoadedChat();
 
             //
-            // Apply the chat template of the incoming chat to the composer. Like everywhere else,
-            // a draft the user typed themselves wins: we must not discard it just because someone
-            // started a preconfigured chat in the meantime.
+            // Apply the chat template of the incoming chat to the composer, which replaces what the
+            // chat template preselected for new chats put there: a chat from an assistant uses none.
+            // Like everywhere else, a draft the user typed themselves wins: we must not discard it
+            // just because someone started a preconfigured chat in the meantime.
             //
-            if (deferredRequest.ApplySelectedChatTemplateToComposer && !this.ComposerState.HasUserDraft)
+            if (!this.ComposerState.HasUserDraft)
                 this.ComposerState.ApplyTemplate(this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate));
 
             // That draft is the message of the incoming chat now:
@@ -1185,13 +1186,9 @@ public partial class ChatComponent : MSGComponentBase
         }
         else
         {
-            this.currentProfile = string.IsNullOrWhiteSpace(this.ChatThread.SelectedProfile)
-                ? this.SettingsManager.GetProfileById(this.currentProfile.Id)
-                : this.SettingsManager.GetProfileById(this.ChatThread.SelectedProfile);
-
-            this.currentChatTemplate = string.IsNullOrWhiteSpace(this.ChatThread.SelectedChatTemplate)
-                ? this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id)
-                : this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate);
+            // What the thread selected, read as the thread reads it, so that an empty selection is none:
+            this.currentProfile = this.SettingsManager.GetProfileById(this.ChatThread.SelectedProfile);
+            this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate);
         }
 
         if (!this.ComposerState.HasUserDraft && previousChatTemplate != this.currentChatTemplate)
@@ -1793,7 +1790,7 @@ public partial class ChatComponent : MSGComponentBase
         this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
         this.ChatThread.RuntimeAssistantName = string.Empty;
         this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
-        this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds, this.ChatThread.RequiredOutboundDataRestriction.Restriction);
+        this.ChatThread.RuntimeSelectedToolIds = this.GetSelectedToolIdsForRequest(this.ChatThread);
 
         // From here on, the AI job stores the chat, while chats are stored automatically:
         this.unstoredChat = null;
@@ -2291,13 +2288,16 @@ public partial class ChatComponent : MSGComponentBase
 
         await this.ProviderChanged.InvokeAsync(this.Provider);
 
-        // Try to select the profile:
-        if (!string.IsNullOrWhiteSpace(chatProfile))
+        //
+        // A chat shows the profile and the chat template its thread uses. The thread reads an empty
+        // selection as none (see ChatThread.BuildSystemPrompt), e.g., in a chat started from an
+        // assistant, so the chat must not keep those preselected for new chats instead:
+        //
+        if (this.ChatThread is not null)
+        {
             this.currentProfile = this.SettingsManager.GetProfileById(chatProfile);
-        
-        // Try to select the chat template:
-        if (!string.IsNullOrWhiteSpace(chatChatTemplate))
             this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(chatChatTemplate);
+        }
     }
 
     private async Task ToggleWorkspaceOverlay()
@@ -2469,7 +2469,7 @@ public partial class ChatComponent : MSGComponentBase
             // of it would tell a person their window is empty while their first message is not.
             //
             var thread = this.ChatThread ?? this.NewChatThread(string.Empty, this.currentWorkspaceId);
-            var toolDefinitions = this.GetRunnableToolDefinitions(offersSemanticSearch);
+            var toolDefinitions = this.GetRunnableToolDefinitions(thread, offersSemanticSearch);
             provider = this.Provider;
             parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread, toolDefinitions), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput(), toolDefinitions);
             reported = thread.ReportedHistoryFor(provider.Model);
@@ -2504,6 +2504,44 @@ public partial class ChatComponent : MSGComponentBase
     private string BuildSystemPromptFor(ChatThread thread, IReadOnlyList<ToolDefinition> toolDefinitions) => thread.BuildSystemPrompt(this.SettingsManager, toolDefinitions).Text;
 
     /// <summary>
+    /// Shows the system prompt the next request would send, and what it was assembled from.
+    /// </summary>
+    /// <remarks>
+    /// Before the first message there is no thread yet, and the one a new chat would start with
+    /// stands in for it, as it does for the token count.
+    ///
+    /// The tools are asked for the way a request asks for them, not the way the token count does:
+    /// a dialog which promises the prompt as the AI receives it has to show the instructions as the
+    /// request words them, see GetOfferedToolDefinitionsAsync.
+    ///
+    /// What the prompt is made of comes from ChatThread.BuildSystemPrompt, which decides it; only
+    /// the names of the tools are looked up here, because the thread does not know the registry.
+    /// How the next message searches the data sources comes along, since the retrieved data in the
+    /// prompt belongs to the last message, and the dialog has to say what happens with the next.
+    /// </remarks>
+    private async Task ShowSystemPrompt()
+    {
+        var thread = this.ChatThread ?? this.NewChatThread(string.Empty, this.currentWorkspaceId);
+        var toolDefinitions = await this.GetOfferedToolDefinitionsAsync(thread);
+        var retrievalMode = await this.GetRetrievalModeOfNextRequestAsync();
+        var prepared = thread.BuildSystemPrompt(this.SettingsManager, toolDefinitions);
+        var toolNames = prepared.Parts
+            .SelectMany(part => part.Tools)
+            .Select(definition => this.ToolRegistry.GetImplementation(definition.ImplementationKey)?.GetDisplayName() ?? definition.Function.Name)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        var dialogParameters = new DialogParameters<SystemPromptDialog>
+        {
+            { x => x.Prompt, prepared },
+            { x => x.ToolNames, toolNames },
+            { x => x.RetrievalMode, retrievalMode },
+        };
+
+        await this.DialogService.ShowAsync<SystemPromptDialog>(T("Complete system prompt of this chat"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+
+    /// <summary>
     /// The tools the next request would offer the model.
     /// </summary>
     /// <remarks>
@@ -2527,12 +2565,12 @@ public partial class ChatComponent : MSGComponentBase
     /// private hosts configured, leaves Read Web Page nothing to offer, and only the request finds
     /// that out, see ReadWebPageTool.ResolveFunctionAsync.
     /// </remarks>
+    /// <param name="thread">The thread the next request continues.</param>
     /// <param name="offersSemanticSearch">Whether the next request offers Semantic Search, see OffersSemanticSearchAsync.</param>
     /// <returns>The definitions of the selected tools, and of Semantic Search when it is offered.</returns>
-    private IReadOnlyList<ToolDefinition> GetRunnableToolDefinitions(bool offersSemanticSearch)
+    private IReadOnlyList<ToolDefinition> GetRunnableToolDefinitions(ChatThread thread, bool offersSemanticSearch)
     {
-        var outboundDataRestriction = (this.ChatThread?.RequiredOutboundDataRestriction ?? OutboundDataRequirement.NONE).Restriction;
-        var definitions = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds, outboundDataRestriction)
+        var definitions = this.GetSelectedToolIdsForRequest(thread)
             .Select(this.ToolRegistry.GetDefinition)
             .Where(definition => definition is not null)
             .Select(definition => definition!)
@@ -2545,6 +2583,50 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
+    /// The tools the next request offers the model, each as that request words it.
+    /// </summary>
+    /// <remarks>
+    /// Asked the way the providers ask right before sending: the same selection, the same provider
+    /// settings and trust, the chat as the request finds it. Only then do the tools answer what
+    /// they offer and how they word their instructions, see ToolRegistry.GetRunnableToolsAsync.
+    /// So a tool which is not configured, or has nothing to offer in this chat, stays out, and
+    /// Read Web Page, Search Confluence, Search Mails, and Semantic Search state the rules which
+    /// actually apply.
+    ///
+    /// Unlike GetRunnableToolDefinitions, this may ask the servers of ERI data sources, which is
+    /// fine when somebody opens a dialog, but not while somebody types. In the chat, the tool
+    /// selection is always visible, so the request may always run tools.
+    /// </remarks>
+    /// <param name="thread">The thread the next request continues.</param>
+    /// <returns>The definitions of the tools as the next request offers them.</returns>
+    private async Task<IReadOnlyList<ToolDefinition>> GetOfferedToolDefinitionsAsync(ChatThread thread)
+    {
+        var context = new ToolResolutionContext
+        {
+            Provider = this.Provider,
+            Component = Tools.Components.CHAT,
+            ProviderConfidence = this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level,
+            ChatThread = thread,
+        };
+
+        var mayRunTools = this.SettingsManager.IsToolSelectionVisible(Tools.Components.CHAT);
+        var offeredTools = await this.ToolRegistry.GetRunnableToolsAsync(context, this.GetSelectedToolIdsForRequest(thread), mayRunTools);
+        return offeredTools.Select(tool => tool.Definition).ToList();
+    }
+
+    /// <summary>
+    /// The tools the user selected, as far as the next request may offer them.
+    /// </summary>
+    /// <remarks>
+    /// Left out are tools the provider is not trusted enough for and tools the internal content of
+    /// the chat keeps back. Sending, the token count, and the system prompt dialog all start from
+    /// this one selection.
+    /// </remarks>
+    /// <param name="thread">The thread the next request continues.</param>
+    /// <returns>The IDs of the selected tools the next request may offer.</returns>
+    private HashSet<string> GetSelectedToolIdsForRequest(ChatThread thread) => this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds, thread.RequiredOutboundDataRestriction.Restriction);
+
+    /// <summary>
     /// Whether the next request offers the model Semantic Search, as far as this can be told without asking the data sources.
     /// </summary>
     /// <remarks>
@@ -2553,14 +2635,25 @@ public partial class ChatComponent : MSGComponentBase
     /// there, the number the provider reported takes over anyway, see ChatThread.ReportedHistoryFor.
     /// </remarks>
     /// <returns>True when the next request offers Semantic Search, as far as can be told.</returns>
-    private async Task<bool> OffersSemanticSearchAsync()
+    private async Task<bool> OffersSemanticSearchAsync() => await this.GetRetrievalModeOfNextRequestAsync() is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+    /// <summary>
+    /// How the next request searches the data sources of the chat.
+    /// </summary>
+    /// <remarks>
+    /// The same questions the RAG process asks when a message is sent: whether data sources are
+    /// switched on for the chat at all, and then how they are searched, see
+    /// ToolRegistry.GetEffectiveRetrievalModeAsync.
+    /// </remarks>
+    /// <returns>How the data sources are searched, or null when the next request searches none.</returns>
+    private async Task<DataSourceRetrievalMode?> GetRetrievalModeOfNextRequestAsync()
     {
         var options = this.GetCurrentDataSourceOptions();
         if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager) || !options.IsEnabled())
-            return false;
+            return null;
 
         var retrievalMode = await this.ToolRegistry.GetEffectiveRetrievalModeAsync(options, this.Provider, Tools.Components.CHAT);
-        return retrievalMode.Mode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+        return retrievalMode.Mode;
     }
 
     /// <summary>

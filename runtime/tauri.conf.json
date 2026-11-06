@@ -61,6 +61,8 @@
     
     "windows": [
       {
+        "label": "main",
+        "create": false,
         "fullscreen": false,
         "resizable": true,
         "title": "MindWork AI Studio",

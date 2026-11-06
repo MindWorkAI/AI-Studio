@@ -12,6 +12,9 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
     
     protected override string Description => T("""Finding the right icon for a context, such as for a piece of text, is not easy. The first challenge: You need to extract a concept from your context, such as from a text. Let's take an example where your text contains statements about multiple departments. The sought-after concept could be "departments." The next challenge is that we need to anticipate the bias of the icon designers: under the search term "departments," there may be no relevant icons or only unsuitable ones. Depending on the icon source, it might be more effective to search for "buildings," for instance. LLMs assist you with both steps.""");
     
+    // The chat continues the search for icons, which this prompt describes:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
+
     protected override string SystemPrompt => 
         """
         I can search for icons using US English keywords. Please help me come up with the right search queries.

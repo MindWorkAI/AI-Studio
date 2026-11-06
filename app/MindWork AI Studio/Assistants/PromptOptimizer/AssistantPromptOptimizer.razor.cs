@@ -37,6 +37,9 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override string Description => T("Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.");
 
+    // Sending to a new chat puts the optimized prompt into its input field, so no chat continues this conversation:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt =>
         $"""
         # Task description
@@ -125,11 +128,6 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     protected override Func<Task> SubmitAction => this.OptimizePromptAsync;
 
     protected override bool SubmitDisabled => this.useCustomPromptGuide && this.customPromptGuideFiles.Count == 0;
-
-    protected override ChatThread ConvertToChatThread => (this.ChatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
 
     protected override void ResetForm()
     {

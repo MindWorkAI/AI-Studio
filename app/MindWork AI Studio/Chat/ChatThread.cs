@@ -242,6 +242,15 @@ public sealed record ChatThread
     public string SystemPrompt { get; set; } = string.Empty;
 
     /// <summary>
+    /// Which assistant chose the system prompt of this chat, and how; null when the chat got its prompt elsewhere.
+    /// </summary>
+    /// <remarks>
+    /// Set when a chat continues the conversation of an assistant, see AssistantBase.ChatSystemPrompt, so that
+    /// the dialog showing the system prompt names the assistant rather than calling it the prompt of this chat.
+    /// </remarks>
+    public ChatSystemPromptOrigin? SystemPromptOrigin { get; set; }
+
+    /// <summary>
     /// The content blocks of the chat thread.
     /// </summary>
     public List<ContentBlock> Blocks { get; set; } = [];
@@ -390,43 +399,31 @@ public sealed record ChatThread
     /// request which is never sent.
     ///
     /// Nothing here writes to the thread and nothing logs, because this runs while somebody types.
+    ///
+    /// Each part is recorded as it is added, in the order of the text, so that the dialog showing
+    /// the prompt names the parts from the decisions made here rather than repeating them.
     /// </remarks>
     /// <param name="settingsManager">The settings manager instance to use.</param>
     /// <param name="runnableToolDefinitions">The tools which may run in this thread. Null when the thread runs without tools.</param>
     /// <returns>The system prompt and what building it decided.</returns>
     public PreparedSystemPrompt BuildSystemPrompt(SettingsManager settingsManager, IEnumerable<ToolDefinition>? runnableToolDefinitions = null)
     {
-        var allowProfile = true;
+        var parts = new List<SystemPromptPart>();
 
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
         //
-        string systemPromptTextWithChatTemplate;
-        var logMessage = $"Using no chat template for chat thread '{this.Name}'.";
-        if (string.IsNullOrWhiteSpace(this.SelectedChatTemplate))
-            systemPromptTextWithChatTemplate = this.SystemPrompt;
-        else
-        {
-            if(!Guid.TryParse(this.SelectedChatTemplate, out var chatTemplateId))
-                systemPromptTextWithChatTemplate = this.SystemPrompt;
-            else
-            {
-                if(this.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTemplateId == Guid.Empty)
-                    systemPromptTextWithChatTemplate = this.SystemPrompt;
-                else
-                {
-                    var chatTemplate = settingsManager.GetChatTemplateById(this.SelectedChatTemplate);
-                    if(chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE)
-                        systemPromptTextWithChatTemplate = this.SystemPrompt;
-                    else
-                    {
-                        logMessage = $"Using chat template '{chatTemplate.Name}' for chat thread '{this.Name}'.";
-                        allowProfile = chatTemplate.AllowProfileUsage;
-                        systemPromptTextWithChatTemplate = chatTemplate.ToSystemPrompt();
-                    }
-                }
-            }
-        }
+        var chatTemplate = this.GetSelectedChatTemplate(settingsManager);
+        var usesChatTemplate = chatTemplate != ChatTemplate.NO_CHAT_TEMPLATE;
+        var allowProfile = !usesChatTemplate || chatTemplate.AllowProfileUsage;
+        var systemPromptTextWithChatTemplate = usesChatTemplate ? chatTemplate.ToSystemPrompt() : this.SystemPrompt;
+        var logMessage = usesChatTemplate
+            ? $"Using chat template '{chatTemplate.Name}' for chat thread '{this.Name}'."
+            : $"Using no chat template for chat thread '{this.Name}'.";
+
+        parts.Add(usesChatTemplate
+            ? new(SystemPromptPartKind.CHAT_TEMPLATE, systemPromptTextWithChatTemplate) { SourceName = chatTemplate.Name }
+            : new(SystemPromptPartKind.BASE_PROMPT, systemPromptTextWithChatTemplate) { Origin = this.SystemPromptOrigin });
 
         //
         // Add augmented data, if available:
@@ -436,51 +433,50 @@ public sealed record ChatThread
         {
             true => $"""
                      {systemPromptTextWithChatTemplate}
-                     
+
                      {this.AugmentedData}
                      """,
 
             false => systemPromptTextWithChatTemplate,
         };
-        
+
+        if (isAugmentedDataAvailable)
+            parts.Add(new(SystemPromptPartKind.RETRIEVED_DATA, this.AugmentedData));
+
         logMessage = isAugmentedDataAvailable
             ? $"{logMessage} Augmented data is available for the chat thread."
             : $"{logMessage} No augmented data is available for the chat thread.";
 
         //
-        // Add information from the profile if available and allowed:
+        // Add information from the profile if available and allowed. A selected profile which the
+        // chat template does not allow is reported, so that nobody wonders where it went:
         //
         string systemPromptText;
         var profileNote = $"Using no profile for chat thread '{this.Name}'.";
-        if (string.IsNullOrWhiteSpace(this.SelectedProfile) || !allowProfile)
+        var profile = this.GetSelectedProfile(settingsManager);
+        var switchedOffProfile = Profile.NO_PROFILE;
+        if (profile == Profile.NO_PROFILE)
             systemPromptText = systemPromptWithAugmentedData;
+        else if (!allowProfile)
+        {
+            systemPromptText = systemPromptWithAugmentedData;
+            switchedOffProfile = profile;
+        }
         else
         {
-            if(!Guid.TryParse(this.SelectedProfile, out var profileId))
-                systemPromptText = systemPromptWithAugmentedData;
-            else
-            {
-                if(this.SelectedProfile == Profile.NO_PROFILE.Id || profileId == Guid.Empty)
-                    systemPromptText = systemPromptWithAugmentedData;
-                else
-                {
-                    var profile = settingsManager.GetProfileById(this.SelectedProfile);
-                    if(profile == Profile.NO_PROFILE)
-                        systemPromptText = systemPromptWithAugmentedData;
-                    else
-                    {
-                        profileNote = $"Using profile '{profile.Name}' for chat thread '{this.Name}'.";
-                        systemPromptText = $"""
-                                            {systemPromptWithAugmentedData}
+            var profilePrompt = profile.ToSystemPrompt();
+            profileNote = $"Using profile '{profile.Name}' for chat thread '{this.Name}'.";
+            systemPromptText = $"""
+                                {systemPromptWithAugmentedData}
 
-                                            {profile.ToSystemPrompt()}
-                                            """;
-                    }
-                }
-            }
+                                {profilePrompt}
+                                """;
+
+            parts.Add(new(SystemPromptPartKind.PROFILE, profilePrompt) { SourceName = profile.Name });
         }
 
-        var toolPolicy = ToolSelectionRules.BuildToolPolicyPrompt(runnableToolDefinitions ?? []);
+        var instructedTools = ToolSelectionRules.GetInstructedTools(runnableToolDefinitions ?? []);
+        var toolPolicy = ToolSelectionRules.BuildToolPolicyPrompt(instructedTools);
         if (!string.IsNullOrWhiteSpace(toolPolicy))
         {
             systemPromptText = $"""
@@ -488,11 +484,13 @@ public sealed record ChatThread
 
                                 {toolPolicy}
                                 """;
+
+            parts.Add(new(SystemPromptPartKind.TOOL_INSTRUCTIONS, toolPolicy) { Tools = instructedTools });
         }
 
         var explanation = $"{logMessage} {profileNote}";
         if(!this.IncludeDateTime)
-            return new(systemPromptText, systemPromptTextWithChatTemplate, allowProfile, explanation);
+            return new(systemPromptText, systemPromptTextWithChatTemplate, explanation, parts, switchedOffProfile);
 
         //
         // Prepend the current date and time to the system prompt:
@@ -510,7 +508,49 @@ public sealed record ChatThread
                             {systemPromptText}
                             """;
 
-        return new(withDateTime, systemPromptTextWithChatTemplate, allowProfile, explanation);
+        parts.Insert(0, new(SystemPromptPartKind.DATE_TIME, currentDateTime));
+        return new(withDateTime, systemPromptTextWithChatTemplate, explanation, parts, switchedOffProfile);
+    }
+
+    /// <summary>
+    /// The chat template selected for this thread, or ChatTemplate.NO_CHAT_TEMPLATE when there is none.
+    /// </summary>
+    /// <remarks>
+    /// A selection which is no ID, the ID of no chat template, or that of a chat template which no
+    /// longer exists counts as none, so the thread falls back to its own system prompt.
+    /// </remarks>
+    /// <param name="settingsManager">The settings manager instance to use.</param>
+    /// <returns>The selected chat template, or ChatTemplate.NO_CHAT_TEMPLATE.</returns>
+    private ChatTemplate GetSelectedChatTemplate(SettingsManager settingsManager)
+    {
+        if (string.IsNullOrWhiteSpace(this.SelectedChatTemplate) || !Guid.TryParse(this.SelectedChatTemplate, out var chatTemplateId))
+            return ChatTemplate.NO_CHAT_TEMPLATE;
+
+        if (this.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTemplateId == Guid.Empty)
+            return ChatTemplate.NO_CHAT_TEMPLATE;
+
+        return settingsManager.GetChatTemplateById(this.SelectedChatTemplate);
+    }
+
+    /// <summary>
+    /// The profile selected for this thread, or Profile.NO_PROFILE when there is none.
+    /// </summary>
+    /// <remarks>
+    /// The same rules as for the chat template: a selection which is no ID, the ID of no profile, or
+    /// that of a profile which no longer exists counts as none. Whether the chat template lets the
+    /// profile take part is decided by BuildSystemPrompt.
+    /// </remarks>
+    /// <param name="settingsManager">The settings manager instance to use.</param>
+    /// <returns>The selected profile, or Profile.NO_PROFILE.</returns>
+    private Profile GetSelectedProfile(SettingsManager settingsManager)
+    {
+        if (string.IsNullOrWhiteSpace(this.SelectedProfile) || !Guid.TryParse(this.SelectedProfile, out var profileId))
+            return Profile.NO_PROFILE;
+
+        if (this.SelectedProfile == Profile.NO_PROFILE.Id || profileId == Guid.Empty)
+            return Profile.NO_PROFILE;
+
+        return settingsManager.GetProfileById(this.SelectedProfile);
     }
 
     /// <summary>
