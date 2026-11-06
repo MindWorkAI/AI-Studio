@@ -12,7 +12,8 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     protected override string Description => T("Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.");
     
-    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+    // The prompt of this assistant forbids explanations, so the chat gets a prompt of its own, which keeps the style of the text:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
 
     protected override string SystemPrompt =>
         $"""
@@ -23,6 +24,23 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         your changes. If no changes are needed, you return the text unchanged.
         The style of the text: {this.selectedWritingStyle.Prompt}.{this.selectedSentenceStructure.Prompt}
         You follow the rules according to {this.SystemPromptLanguage()} in all your changes.
+        """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues an improved text, for follow-up questions about it.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You are an expert in language and style. The user had a text improved: the conversation so far holds the text
+        and its improved version. Now you answer the user's follow-up questions about the changes, e.g., why a sentence
+        reads better now, and you revise the text further when the user asks for it. You never add information which
+        the text does not contain, unless the user asks for it.
+
+        The user chose these settings for the text, which a revised text keeps unless the user asks otherwise:
+        The style of the text: {this.selectedWritingStyle.Prompt}.{this.selectedSentenceStructure.Prompt}
+        You follow the rules according to {this.SystemPromptLanguage()} in all your changes.
+
+        Answer questions in the language the user writes in.
         """;
     
     protected override bool AllowProfiles => false;

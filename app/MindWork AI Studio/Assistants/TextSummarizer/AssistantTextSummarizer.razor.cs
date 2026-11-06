@@ -12,7 +12,8 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     
     protected override string Description => T("Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.");
     
-    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+    // The prompt of this assistant asks for the summary only, so the chat gets a prompt of its own, which keeps the settings of the summary:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
 
     protected override string SystemPrompt => 
         $"""
@@ -21,6 +22,24 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
          {this.selectedComplexity.Prompt(this.expertInField)}
          {this.PromptImportantAspects()}
          In any case, only use information that is provided in the text for the summary.
+         """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues a summary, for follow-up questions about it.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+         You are an expert in summarizing texts. The user had a long text summarized: the conversation so far holds the
+         text and its summary. Now you answer the user's follow-up questions about the text and the summary, e.g., what
+         a passage means or why the summary leaves something out, and you revise the summary when the user asks for it.
+         A summary uses only information which the text provides. When an answer goes beyond the text, say so.
+
+         The user chose these settings for the summary, which a revised summary keeps unless the user asks otherwise:
+         {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
+         {this.selectedComplexity.Prompt(this.expertInField)}
+         {this.PromptImportantAspects()}
+
+         Answer questions in the language the user writes in.
          """;
     
     protected override bool AllowProfiles => false;

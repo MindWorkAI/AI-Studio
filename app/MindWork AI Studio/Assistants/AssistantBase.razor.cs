@@ -209,6 +209,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private ChatRestrictions transferredRestrictions = ChatRestrictions.NONE;
 
     /// <summary>
+    /// The prompt this assistant wrote for a chat which continues its conversation, built when that
+    /// conversation started; null when the assistant chose no prompt of its own or ran no conversation yet.
+    /// </summary>
+    /// <remarks>
+    /// It follows the settings of the run, not the form as it is when the user sends the result on: the
+    /// user may have changed the form since, e.g., the target language, without running the assistant
+    /// again. The prompt of the assistant itself comes from its thread for the same reason, see
+    /// WithChatSystemPrompt.
+    /// </remarks>
+    private string? customChatSystemPromptOfRun;
+
+    /// <summary>
     /// What everything this assistant holds demands: the text sent to it and what its current thread read.
     /// </summary>
     private ChatRestrictions CurrentRestrictions => this.ChatThread?.CaptureRestrictions().StricterOf(this.transferredRestrictions) ?? this.transferredRestrictions;
@@ -517,6 +529,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
 
         this.AssignRuntimeIdentity(this.ChatThread);
+        this.RememberCustomChatSystemPrompt();
     }
 
     protected Guid CreateChatThread(Guid workspaceId, string name)
@@ -535,8 +548,15 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
         
         this.AssignRuntimeIdentity(this.ChatThread);
+        this.RememberCustomChatSystemPrompt();
         return chatId;
     }
+
+    /// <summary>
+    /// Builds the prompt this assistant writes for a chat which continues its conversation, when it chose
+    /// one, from the settings of the run which starts now.
+    /// </summary>
+    private void RememberCustomChatSystemPrompt() => this.customChatSystemPromptOfRun = this.ChatSystemPrompt is { Source: ChatSystemPromptSource.CUSTOM } choice ? choice.BuildCustomPrompt() : null;
 
     /// <summary>
     /// Sets who runs the given thread: this assistant's component and, for an assistant plugin, its name.
@@ -870,8 +890,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// chose in ChatSystemPrompt, together with where it comes from.
     /// </summary>
     /// <remarks>
-    /// The prompt of this assistant is the one its conversation ran with: the form may have changed since.
-    /// A prompt which turns out empty is a mistake of the assistant; the chat then gets the default prompt
+    /// The prompt of this assistant is the one its conversation ran with, and a prompt it wrote for the
+    /// chat is the one built when that conversation started: the form may have changed since. Only a
+    /// conversation restored without that prompt gets one built now. A prompt which turns out empty is a mistake of the assistant; the chat then gets the default prompt
     /// of AI Studio rather than none at all.
     /// </remarks>
     /// <param name="chatThread">The thread of the chat, which this assistant built in ConvertToChatThread.</param>
@@ -880,7 +901,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         var choice = this.ChatSystemPrompt;
         var promptOfAssistant = this.ChatThread?.SystemPrompt is { } threadPrompt && !string.IsNullOrWhiteSpace(threadPrompt) ? threadPrompt : this.SystemPrompt;
-        var prompt = choice.CreatePrompt(promptOfAssistant);
+        var prompt = choice.Source is ChatSystemPromptSource.CUSTOM && this.customChatSystemPromptOfRun is { } promptOfRun ? promptOfRun : choice.CreatePrompt(promptOfAssistant);
         if (string.IsNullOrWhiteSpace(prompt))
         {
             this.Logger.LogError("The system prompt which the assistant '{Component}' chose for the chat ({Source}) is empty. The chat gets the default prompt of AI Studio instead.", this.Component, choice.Source);
@@ -996,6 +1017,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         // The text sent here is gone with the form, and what it demanded goes with it:
         this.transferredRestrictions = ChatRestrictions.NONE;
+        this.customChatSystemPromptOfRun = null;
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);
@@ -1241,6 +1263,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
         state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.SelectedToolIds);
         state.Set(TRANSFERRED_RESTRICTIONS_STATE_KEY, this.transferredRestrictions);
+        state.Set(CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY, this.customChatSystemPromptOfRun);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -1270,6 +1293,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
         reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(value));
         reader.Restore(TRANSFERRED_RESTRICTIONS_STATE_KEY, value => this.transferredRestrictions = value);
+        reader.Restore(CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY, value => this.customChatSystemPromptOfRun = value);
         this.RestoreCustomAssistantSessionState(reader);
     }
 
