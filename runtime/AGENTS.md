@@ -54,12 +54,15 @@ it cannot show the app, since it lacks the session cookie. Therefore:
 - The handler for new windows always denies the window. Only a window which `setup` builds itself can
   have that handler, which is why `tauri.conf.json` sets `"create": false`.
 - Keep the link script of the opener plugin switched off (`open_js_links_on_click(false)`): it opens
-  every link clicked while holding Shift or Ctrl in the system browser, links of the app included.
-  `link_guard.js` replaces it. It stops every click which would open a link of the app somewhere else,
-  before the link script of the shell plugin, which cannot be switched off, opens links with a target.
-- No script of the page calls the opener plugin, so `capabilities/default.json` grants it nothing.
-  `shell:allow-open` stays, since the link script of the shell plugin opens the external links with a
-  target.
+  every link clicked while holding Shift or Ctrl in the system browser, links of the app included. The
+  shell plugin has a link script as well, which cannot be switched off and opens every link with a
+  target the same way.
+- `link_guard.js` takes every click which would open a link somewhere else away from both scripts and
+  from the page. On a link of the app, the click does nothing; on any other link, it goes on to the
+  webview, whose request for a new window or a navigation reaches the runtime. Therefore, give a link
+  with a target no click handler of its own: no script of the page sees its click.
+- No script of the page may open anything, so `capabilities/default.json` grants neither the opener
+  plugin nor `shell:allow-open`.
 
 **The right-click menu shows only in text fields and on selected text,** never on a link: its other
 entries, such as going back, reloading, or opening a link in a new window, make no sense in the app.
