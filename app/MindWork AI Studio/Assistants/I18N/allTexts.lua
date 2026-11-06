@@ -10816,6 +10816,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SOURCEPASSAGESDIALOG::T4291613392"] = "Passa
 -- When the AI reaches the limit of tool calls for one answer, AI Studio adds one more instruction at the end: to answer with what the tools have returned so far.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1014606529"] = "When the AI reaches the limit of tool calls for one answer, AI Studio adds one more instruction at the end: to answer with what the tools have returned so far."
 
+-- Chat prompt of the assistant '{0}'
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1433996929"] = "Chat prompt of the assistant '{0}'"
+
 -- Data from your data sources
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1629973648"] = "Data from your data sources"
 
@@ -10849,8 +10852,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3233146612"] = "Copy th
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3448155331"] = "Close"
 
+-- System prompt of the assistant '{0}'
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3462500758"] = "System prompt of the assistant '{0}'"
+
 -- Default prompt of AI Studio
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3895504389"] = "Default prompt of AI Studio"
+
+-- The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4245380559"] = "The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result."
 
 -- Instructions for your tools: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T472942707"] = "Instructions for your tools: {0}"
@@ -14050,6 +14059,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANT
 -- The ASSISTANT table contains an invalid LaunchBehavior value.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T109828905"] = "The ASSISTANT table contains an invalid LaunchBehavior value."
 
+-- The ASSISTANT table contains an invalid ChatSystemPrompt value. Expected 'AI_STUDIO_DEFAULT', 'ASSISTANT', or 'CUSTOM'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1137512428"] = "The ASSISTANT table contains an invalid ChatSystemPrompt value. Expected 'AI_STUDIO_DEFAULT', 'ASSISTANT', or 'CUSTOM'."
+
 -- The ASSISTANT table contains an unsupported LaunchBehavior value.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1194373781"] = "The ASSISTANT table contains an unsupported LaunchBehavior value."
 
@@ -14064,6 +14076,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1
 
 -- The provided ASSISTANT lua table does not contain a valid description.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2514141654"] = "The provided ASSISTANT lua table does not contain a valid description."
+
+-- The ASSISTANT table contains a CustomChatSystemPrompt, but its ChatSystemPrompt is not 'CUSTOM', so no chat would use that prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2604626466"] = "The ASSISTANT table contains a CustomChatSystemPrompt, but its ChatSystemPrompt is not 'CUSTOM', so no chat would use that prompt."
 
 -- The provided ASSISTANT lua table does not contain a valid title.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2814605990"] = "The provided ASSISTANT lua table does not contain a valid title."
@@ -14083,17 +14098,20 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3
 -- The ASSISTANT table contains invalid ToolIds. Expected a non-empty list of unique, non-empty tool IDs.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3416855489"] = "The ASSISTANT table contains invalid ToolIds. Expected a non-empty list of unique, non-empty tool IDs."
 
--- The ASSISTANT table does not contain a valid system prompt.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "The ASSISTANT table does not contain a valid system prompt."
-
 -- The ASSISTANT table contains the LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME' but no valid WorkspaceName.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T4215554842"] = "The ASSISTANT table contains the LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME' but no valid WorkspaceName."
+
+-- The ASSISTANT table contains the ChatSystemPrompt 'CUSTOM' but no valid CustomChatSystemPrompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T5566406"] = "The ASSISTANT table contains the ChatSystemPrompt 'CUSTOM' but no valid CustomChatSystemPrompt."
 
 -- ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T683382975"] = "ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax."
 
 -- The ASSISTANT table contains invalid DataSourceIds. Expected a non-empty list of unique, non-empty GUIDs.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T712020466"] = "The ASSISTANT table contains invalid DataSourceIds. Expected a non-empty list of unique, non-empty GUIDs."
+
+-- The provided ASSISTANT lua table does not contain a valid submit text.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T768628705"] = "The provided ASSISTANT lua table does not contain a valid submit text."
 
 -- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles."
