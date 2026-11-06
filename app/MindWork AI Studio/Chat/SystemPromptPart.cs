@@ -20,6 +20,12 @@ public sealed record SystemPromptPart(SystemPromptPartKind Kind, string Text)
     public string SourceName { get; init; } = string.Empty;
 
     /// <summary>
+    /// Which assistant chose the base prompt, and how, when the chat continues the conversation of an
+    /// assistant; null for every other part.
+    /// </summary>
+    public ChatSystemPromptOrigin? Origin { get; init; }
+
+    /// <summary>
     /// The tools whose usage policy the part states; empty for every other part.
     /// </summary>
     public IReadOnlyList<ToolDefinition> Tools { get; init; } = [];

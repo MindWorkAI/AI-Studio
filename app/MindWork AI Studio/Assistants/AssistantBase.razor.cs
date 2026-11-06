@@ -866,24 +866,36 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>
-    /// Creates the system prompt of a chat which continues the conversation of this assistant, as the
-    /// assistant chose in ChatSystemPrompt.
+    /// Gives a chat which continues the conversation of this assistant the system prompt this assistant
+    /// chose in ChatSystemPrompt, together with where it comes from.
     /// </summary>
     /// <remarks>
     /// The prompt of this assistant is the one its conversation ran with: the form may have changed since.
     /// A prompt which turns out empty is a mistake of the assistant; the chat then gets the default prompt
     /// of AI Studio rather than none at all.
     /// </remarks>
-    /// <returns>The system prompt of the chat.</returns>
-    private string CreateChatSystemPrompt()
+    /// <param name="chatThread">The thread of the chat, which this assistant built in ConvertToChatThread.</param>
+    /// <returns>A copy of the thread with the system prompt of the chat.</returns>
+    private ChatThread WithChatSystemPrompt(ChatThread chatThread)
     {
+        var choice = this.ChatSystemPrompt;
         var promptOfAssistant = this.ChatThread?.SystemPrompt is { } threadPrompt && !string.IsNullOrWhiteSpace(threadPrompt) ? threadPrompt : this.SystemPrompt;
-        var prompt = this.ChatSystemPrompt.CreatePrompt(promptOfAssistant);
-        if (!string.IsNullOrWhiteSpace(prompt))
-            return prompt;
+        var prompt = choice.CreatePrompt(promptOfAssistant);
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            this.Logger.LogError("The system prompt which the assistant '{Component}' chose for the chat ({Source}) is empty. The chat gets the default prompt of AI Studio instead.", this.Component, choice.Source);
+            return chatThread with { SystemPrompt = SystemPrompts.DEFAULT, SystemPromptOrigin = null };
+        }
 
-        this.Logger.LogError("The system prompt which the assistant '{Component}' chose for the chat ({Source}) is empty. The chat gets the default prompt of AI Studio instead.", this.Component, this.ChatSystemPrompt.Source);
-        return SystemPrompts.DEFAULT;
+        return chatThread with
+        {
+            SystemPrompt = prompt,
+            SystemPromptOrigin = choice.Source is ChatSystemPromptSource.AI_STUDIO_DEFAULT ? null : new ChatSystemPromptOrigin
+            {
+                Source = choice.Source,
+                AssistantName = this.Title,
+            },
+        };
     }
 
     /// <summary>
@@ -948,12 +960,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         // The chat starts from the conversation of this assistant, unless it only takes the text for the next message:
         if (destination is Tools.Components.CHAT && !sendToButton.SendToChatAsInput)
         {
-            var convertedChatThread = this.ConvertToChatThread;
-            convertedChatThread = convertedChatThread with
-            {
-                SelectedProvider = this.ProviderSettings.Id,
-                SystemPrompt = this.CreateChatSystemPrompt(),
-            };
+            var convertedChatThread = this.WithChatSystemPrompt(this.ConvertToChatThread with { SelectedProvider = this.ProviderSettings.Id });
 
             //
             // The chat holds what this assistant held, whichever thread the assistant builds it from: some

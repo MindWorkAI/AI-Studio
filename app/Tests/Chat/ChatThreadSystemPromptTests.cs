@@ -1,5 +1,9 @@
+using System.Text.Json;
+
+using AIStudio.Assistants;
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
 
@@ -37,6 +41,42 @@ public sealed class ChatThreadSystemPromptTests
             Assert.That(prepared.Text, Is.EqualTo(BASE_PROMPT));
             Assert.That(prepared.Parts.Select(part => part.Kind), Is.EqualTo(new[] { SystemPromptPartKind.BASE_PROMPT }));
             Assert.That(prepared.SwitchedOffProfile, Is.EqualTo(Profile.NO_PROFILE));
+            Assert.That(prepared.Parts[0].Origin, Is.Null, "Only a chat which continues the conversation of an assistant names one.");
+        }
+    }
+
+    [Test]
+    public void TheBasePromptNamesTheAssistantWhichChoseIt()
+    {
+        using var rustService = new RustService("1", "unused");
+        var settings = Settings(rustService, allowProfileUsage: true);
+        var origin = new ChatSystemPromptOrigin { Source = ChatSystemPromptSource.CUSTOM, AssistantName = "Translation" };
+        var thread = Thread();
+        thread.SystemPromptOrigin = origin;
+
+        var prepared = thread.BuildSystemPrompt(settings);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prepared.Parts.Single().Kind, Is.EqualTo(SystemPromptPartKind.BASE_PROMPT));
+            Assert.That(prepared.Parts.Single().Origin, Is.EqualTo(origin));
+            Assert.That(prepared.Text, Is.EqualTo(BASE_PROMPT), "Naming the assistant must not change the prompt.");
+        }
+    }
+
+    [Test]
+    public void AStoredChatKeepsWhichAssistantChoseItsPrompt()
+    {
+        var thread = Thread();
+        thread.SystemPromptOrigin = new ChatSystemPromptOrigin { Source = ChatSystemPromptSource.CUSTOM, AssistantName = "Translation" };
+
+        var json = JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS);
+        var stored = JsonSerializer.Deserialize<ChatThread>(json, WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(json, Does.Contain("\"CUSTOM\""), "The source is stored by its name, which assistant plugins use as well.");
+            Assert.That(stored.SystemPromptOrigin, Is.EqualTo(thread.SystemPromptOrigin));
         }
     }
 
