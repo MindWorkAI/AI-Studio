@@ -193,6 +193,9 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             #[cfg(target_os = "linux")]
             register_linux_permission_request_handler(&window);
 
+            #[cfg(target_os = "macos")]
+            disable_link_previews(&window);
+
             // Register a callback for window events, such as file drops. We have to use
             // this handler in addition to the app event handler, because file drop events
             // are only available in the window event handler (is a bug, cf. https://github.com/tauri-apps/tauri/issues/14338):
@@ -363,6 +366,28 @@ fn should_allow_audio_capture(
         && approved_app_url
             .zip(current_webview_url)
             .is_some_and(|(approved, current)| same_origin(approved, current))
+}
+
+/// Switches off the preview which macOS shows when somebody force-clicks a link or looks it up.
+/// wry switches it on, and Tauri offers no setting for it. The preview would show a page of the app
+/// outside the window, and a click on it may open the page in the system browser, which cannot
+/// show it; see link_guard.js.
+#[cfg(target_os = "macos")]
+fn disable_link_previews(window: &WebviewWindow) {
+    use objc2::msg_send;
+    use objc2::runtime::{AnyObject, Bool};
+
+    if let Err(error) = window.with_webview(|platform_webview| {
+        let webview = platform_webview.inner().cast::<AnyObject>();
+
+        // Safety: on macOS, the handle is the WKWebView of the window, and Tauri calls this closure
+        // on the main thread, as AppKit requires:
+        unsafe {
+            let _: () = msg_send![webview, setAllowsLinkPreview: Bool::NO];
+        }
+    }) {
+        error!(Source = "Tauri"; "Failed to switch off the link previews: {error}");
+    }
 }
 
 #[cfg(target_os = "linux")]
