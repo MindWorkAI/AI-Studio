@@ -14,8 +14,8 @@ use pdfium_render::prelude::Pdfium;
 use serde::{Deserialize, Serialize};
 use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent};
 use tauri::path::PathResolver;
-use tauri::webview::PageLoadEvent;
-use tauri::WebviewWindow;
+use tauri::webview::{NewWindowResponse, PageLoadEvent};
+use tauri::{WebviewWindow, WebviewWindowBuilder};
 use tauri::PhysicalPosition;
 use tauri_plugin_updater::{UpdaterExt, Update};
 use tauri_plugin_opener::OpenerExt;
@@ -125,18 +125,12 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
         .plugin(
             tauri::plugin::Builder::<tauri::Wry, ()>::new("external-link-handler")
                 .on_navigation(|webview, url| {
-                    if !should_open_in_system_browser(webview, url) {
+                    let current_url = webview.url().ok();
+                    if !should_open_in_system_browser(url, approved_app_url().as_ref(), current_url.as_ref()) {
                         return true;
                     }
 
-                    match webview.app_handle().opener().open_url(url.as_str(), None::<&str>) {
-                        Ok(_) => {
-                            info!(Source = "Tauri"; "Opening external URL in system browser: {url}");
-                        },
-                        Err(error) => {
-                            error!(Source = "Tauri"; "Failed to open external URL '{url}' in system browser: {error}");
-                        },
-                    }
+                    open_in_system_browser(webview.app_handle(), url);
                     false
                 })
                 .build(),
@@ -160,8 +154,35 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
         })
         .setup(move |app| {
 
-            // Get the main window:
-            let window = app.get_webview_window("main").expect("Failed to get main window.");
+            //
+            // We create the main window ourselves rather than letting Tauri create it from the
+            // configuration, where "create" is false therefore. Only a window built here can get a
+            // handler for new windows; neither the configuration nor a plugin can set one.
+            //
+            // AI Studio shows a single window. Whatever asks for another one opens nothing in the
+            // app: a link with a target, a click with Shift or the middle mouse button, or
+            // window.open. An address outside the app goes to the system browser instead, after the
+            // same check as a navigation. The window shows the app as soon as a link can be clicked,
+            // so the approved address of the app decides, and the current address is not needed:
+            //
+            let window_config = app.config().app.windows.iter()
+                .find(|config| config.label == "main")
+                .expect("The configuration lacks the main window.");
+
+            let new_window_app_handle = app.handle().clone();
+            let window = WebviewWindowBuilder::from_config(app.handle(), window_config)
+                .expect("Failed to read the configuration of the main window.")
+                .on_new_window(move |url, _| {
+                    if should_open_in_system_browser(&url, approved_app_url().as_ref(), None) {
+                        open_in_system_browser(&new_window_app_handle, &url);
+                    } else {
+                        info!(Source = "Tauri"; "Denied a new window for '{url}'.");
+                    }
+
+                    NewWindowResponse::Deny
+                })
+                .build()
+                .expect("Failed to create the main window.");
 
             #[cfg(target_os = "linux")]
             register_linux_permission_request_handler(&window);
@@ -386,7 +407,18 @@ fn register_linux_permission_request_handler(window: &WebviewWindow) {
     }
 }
 
-fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>, url: &tauri::Url) -> bool {
+/// The address of the app, once the window shows it.
+fn approved_app_url() -> Option<tauri::Url> {
+    APPROVED_APP_URL.lock().unwrap().clone()
+}
+
+/// Decides whether an address leaves the window for the system: a website for the browser, or a
+/// `mailto:` or `tel:` link for the mail or phone app. Navigations and requests for new windows
+/// both ask here, so that one rule decides what leaves the window.
+///
+/// An address of the app never leaves: a browser outside the window has no session cookie, see
+/// app_access.rs. Another local server, such as a local LLM, leaves once the window shows the app.
+fn should_open_in_system_browser(url: &tauri::Url, approved_app_url: Option<&tauri::Url>, current_url: Option<&tauri::Url>) -> bool {
     match url.scheme() {
         "mailto" | "tel" => return true,
         "http" | "https" => {},
@@ -397,7 +429,7 @@ fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>,
         return false;
     }
 
-    if let Some(approved_app_url) = APPROVED_APP_URL.lock().unwrap().as_ref() {
+    if let Some(approved_app_url) = approved_app_url {
         if same_origin(approved_app_url, url) {
             return false;
         }
@@ -407,11 +439,23 @@ fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>,
         }
     }
 
-    if let Ok(current_url) = webview.url() && same_origin(&current_url, url) {
+    if current_url.is_some_and(|current_url| same_origin(current_url, url)) {
         return false;
     }
 
     !is_local_host(url.host_str())
+}
+
+/// Hands an address outside the app to the system, see `should_open_in_system_browser`.
+fn open_in_system_browser<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>, url: &tauri::Url) {
+    match app_handle.opener().open_url(url.as_str(), None::<&str>) {
+        Ok(_) => {
+            info!(Source = "Tauri"; "Opening external URL in system browser: {url}");
+        },
+        Err(error) => {
+            error!(Source = "Tauri"; "Failed to open external URL '{url}' in system browser: {error}");
+        },
+    }
 }
 
 /// Our event API endpoint for Tauri events. We try to send an endless stream of events to the client.
@@ -1363,6 +1407,75 @@ mod tests {
 
         assert!(!is_tauri_asset_url(&url));
         assert!(!is_local_http_url(&url));
+    }
+
+    #[test]
+    fn app_url_never_opens_in_system_browser() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        for address in [
+            "http://127.0.0.1:12345/",
+            "http://127.0.0.1:12345/chat",
+            "http://127.0.0.1:12345/settings?section=providers",
+            "http://127.0.0.1:12345/about#licenses",
+        ] {
+            let url = tauri::Url::parse(address).unwrap();
+
+            assert!(!should_open_in_system_browser(&url, Some(&approved), None), "{address}");
+            assert!(!should_open_in_system_browser(&url, Some(&approved), Some(&approved)), "{address}");
+        }
+    }
+
+    #[test]
+    fn app_url_stays_in_window_before_it_is_approved() {
+        let current = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        let url = tauri::Url::parse("http://127.0.0.1:12345/chat").unwrap();
+
+        assert!(!should_open_in_system_browser(&url, None, None));
+        assert!(!should_open_in_system_browser(&url, None, Some(&current)));
+    }
+
+    #[test]
+    fn external_website_opens_in_system_browser() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        let url = tauri::Url::parse("https://example.com/docs").unwrap();
+
+        assert!(should_open_in_system_browser(&url, Some(&approved), None));
+        assert!(should_open_in_system_browser(&url, None, None));
+    }
+
+    #[test]
+    fn mail_and_phone_links_open_in_system() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        for address in ["mailto:someone@example.com", "tel:+490000000"] {
+            let url = tauri::Url::parse(address).unwrap();
+
+            assert!(should_open_in_system_browser(&url, Some(&approved), None), "{address}");
+        }
+    }
+
+    #[test]
+    fn other_local_server_opens_in_system_browser_once_app_is_approved() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        let url = tauri::Url::parse("http://localhost:11434/").unwrap();
+
+        assert!(should_open_in_system_browser(&url, Some(&approved), None));
+        assert!(!should_open_in_system_browser(&url, None, None));
+    }
+
+    #[test]
+    fn other_schemes_never_open_in_system_browser() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        for address in [
+            "file:///etc/passwd",
+            "javascript:alert(1)",
+            "data:text/html,hello",
+            "tauri://localhost/index.html",
+            "https://tauri.localhost/index.html",
+        ] {
+            let url = tauri::Url::parse(address).unwrap();
+
+            assert!(!should_open_in_system_browser(&url, Some(&approved), None), "{address}");
+        }
     }
 
     #[test]
