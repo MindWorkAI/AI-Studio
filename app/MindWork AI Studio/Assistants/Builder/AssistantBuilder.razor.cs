@@ -75,7 +75,10 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override bool ShowResult => false;
     
     protected override bool ShowEntireChatThread => false;
-    
+
+    // Nothing to send: the plugin is installed by this assistant, and there is no conversation for a chat to continue:
+    protected override bool ShowSendTo => false;
+
     protected override bool AllowProfiles => false;
     
     protected override bool ShowProfileSelection => false;
