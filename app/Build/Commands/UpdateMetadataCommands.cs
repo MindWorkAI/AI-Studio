@@ -281,6 +281,16 @@ public sealed partial class UpdateMetadataCommands
                 throw new CommandExitedException(1);
             }
 
+            try
+            {
+                await EnsureMetainfoReleaseCanBeWritten(appVersion.VersionText);
+            }
+            catch (InvalidOperationException exception)
+            {
+                Console.WriteLine($"- Error: {exception.Message}");
+                throw new CommandExitedException(1);
+            }
+
             await this.UpdateAppVersion(appVersion);
             var buildNumber = await this.IncreaseBuildNumber();
             var buildTimeText = await this.UpdateBuildTime();
@@ -660,13 +670,8 @@ public sealed partial class UpdateMetadataCommands
         var nextChangelog = nextChangelogCandidates[0];
 
         // The release entry itself is written by ApplyRebuildReleaseState, which adds it when it is
-        // missing and moves it to the top otherwise. Here, we only ensure that there is a file to write to:
-        var metainfoPath = GetMetainfoPath();
-        if (!File.Exists(metainfoPath))
-            throw new InvalidOperationException("The AppStream metainfo file does not exist.");
-
-        if (!ReleasesStartRegex().IsMatch(await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8)))
-            throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
+        // missing and moves it to the top otherwise. Here, we only ensure that it can be written:
+        await EnsureMetainfoReleaseCanBeWritten(appVersion);
 
         var headCommitHash = (await this.ReadCommandOutput(Environment.GetAIStudioDirectory(), "git", "rev-parse HEAD")).Text.Trim();
         if (!GitCommitHashRegex().IsMatch(headCommitHash))
@@ -744,13 +749,7 @@ public sealed partial class UpdateMetadataCommands
         const string RELEASE_INDENT = "    ";
 
         var metainfoPath = GetMetainfoPath();
-        if (!File.Exists(metainfoPath))
-            throw new InvalidOperationException("The AppStream metainfo file does not exist.");
-
-        var metainfo = await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8);
-        if (!ReleasesStartRegex().IsMatch(metainfo))
-            throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
-
+        var metainfo = await ReadMetainfo();
         var changelogEntries = await ReadChangelogEntries(appVersion);
 
         // Drop any earlier entry of this version, so that the version stays unique and moves to the top.
@@ -782,6 +781,34 @@ public sealed partial class UpdateMetadataCommands
         metainfo = metainfo.Insert(insertionPoint, releaseBlock.ToString());
         await File.WriteAllTextAsync(metainfoPath, metainfo, Environment.UTF8_NO_BOM);
         Console.WriteLine($"- Updated the AppStream metainfo for v{appVersion}, released on {releaseDate}, with {changelogEntries.Count} changelog entries.");
+    }
+
+    /// <summary>
+    /// Checks everything WriteMetainfoRelease needs for the given version, without writing anything.
+    /// </summary>
+    /// <remarks>
+    /// Preparing a release writes the AppStream entry last, after the metadata and the changelogs were changed. When
+    /// it failed only there, e.g., because the changelog has no entry yet, it would leave a half-prepared release
+    /// behind. Hence, the commands call this before they write anything.
+    /// </remarks>
+    /// <param name="appVersion">The version whose release entry will be written.</param>
+    private static async Task EnsureMetainfoReleaseCanBeWritten(string appVersion)
+    {
+        await ReadMetainfo();
+        await ReadChangelogEntries(appVersion);
+    }
+
+    private static async Task<string> ReadMetainfo()
+    {
+        var metainfoPath = GetMetainfoPath();
+        if (!File.Exists(metainfoPath))
+            throw new InvalidOperationException("The AppStream metainfo file does not exist.");
+
+        var metainfo = await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8);
+        if (!ReleasesStartRegex().IsMatch(metainfo))
+            throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
+
+        return metainfo;
     }
 
     private static async Task<IReadOnlyList<string>> ReadChangelogEntries(string appVersion)
