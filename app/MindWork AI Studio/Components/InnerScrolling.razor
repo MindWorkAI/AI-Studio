@@ -7,11 +7,13 @@
             @this.HeaderContent
         </div>
     }
-    <div class="flex-auto overflow-auto mb-3">
-        @this.ChildContent
-        
-        <div style="max-height: 0.1em;" @ref="@this.AnchorAfterChildContent">
-            &nbsp;
+    <div class="flex-auto overflow-auto mb-3" @ref="@this.ScrollContainer">
+        <div @ref="@this.ScrollContent">
+            @this.ChildContent
+
+            <div style="max-height: 0.1em;" @ref="@this.AnchorAfterChildContent">
+                &nbsp;
+            </div>
         </div>
     </div>
 

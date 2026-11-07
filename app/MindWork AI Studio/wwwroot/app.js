@@ -56,6 +56,60 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
+// How long the content has to keep its height before we consider its layout done, and how long we follow at most.
+const FOLLOW_END_SETTLE_MS = 500
+const FOLLOW_END_MAX_MS = 8000
+
+// The user interactions which end following: whoever scrolls, drags the scrollbar, or uses the keyboard wants to decide where to look.
+const FOLLOW_END_USER_EVENTS = ['wheel', 'touchstart', 'mousedown', 'keydown']
+
+// The running follow of each scroll container, so that a new one, e.g., after opening another chat, replaces the old one.
+const followEndStops = new WeakMap()
+
+// Scrolls the container to its very end and keeps it there until the layout of its content is done.
+//
+// A single scroll is not enough for long chats: Markdown, the syntax highlighting of code blocks, and math
+// are rendered by JavaScript after Blazor has rendered, so the content grows for a while after the first
+// scroll. A smooth scroll would not help either, because the browser fixes its target when the animation
+// starts. Therefore, we jump without animation and jump again whenever the content changes its size. Since
+// the view already is at the end, the user does not notice these jumps.
+//
+// Following ends as soon as the content keeps its height for a moment, the user starts to scroll, the next
+// follow of the same container replaces it, or the upper time limit is reached. The limit matters while an
+// answer is being generated: it keeps the content growing all the time.
+window.scrollToEndAndFollow = function (container, content) {
+    followEndStops.get(container)?.()
+
+    const pin = () => container.scrollTop = container.scrollHeight
+    let settleTimer
+    const observer = new ResizeObserver(() => {
+        pin()
+        clearTimeout(settleTimer)
+        settleTimer = setTimeout(() => stop(), FOLLOW_END_SETTLE_MS)
+    })
+
+    const maxTimer = setTimeout(() => stop(), FOLLOW_END_MAX_MS)
+    const onUserInteraction = () => stop()
+
+    const stop = function () {
+        observer.disconnect()
+        clearTimeout(settleTimer)
+        clearTimeout(maxTimer)
+        for (const eventName of FOLLOW_END_USER_EVENTS)
+            container.removeEventListener(eventName, onUserInteraction)
+
+        if (followEndStops.get(container) === stop)
+            followEndStops.delete(container)
+    }
+
+    for (const eventName of FOLLOW_END_USER_EVENTS)
+        container.addEventListener(eventName, onUserInteraction, { passive: true })
+
+    followEndStops.set(container, stop)
+    pin()
+    observer.observe(content)
+}
+
 window.setDocumentLanguage = function (ietfTag) {
     document.documentElement.lang = ietfTag
 }

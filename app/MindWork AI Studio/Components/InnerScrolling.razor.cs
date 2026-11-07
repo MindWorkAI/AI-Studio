@@ -31,7 +31,13 @@ public partial class InnerScrolling : MSGComponentBase
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
     
+    private const string SCROLL_TO_END_AND_FOLLOW_FUNCTION = "scrollToEndAndFollow";
+
     private ElementReference AnchorAfterChildContent { get; set; }
+
+    private ElementReference ScrollContainer { get; set; }
+
+    private ElementReference ScrollContent { get; set; }
 
     #region Overrides of ComponentBase
 
@@ -70,5 +76,18 @@ public partial class InnerScrolling : MSGComponentBase
     public async Task ScrollToBottom()
     {
         await this.AnchorAfterChildContent.ScrollIntoViewAsync(this.JsRuntime);
+    }
+
+    /// <summary>
+    /// Scrolls to the end and stays there while the content is still being laid out.
+    /// </summary>
+    /// <remarks>
+    /// Unlike ScrollToBottom, this reaches the end even when the content keeps growing after the call,
+    /// e.g., while the code blocks of a long chat get highlighted. Following ends by itself once the
+    /// layout is done or the user starts to scroll.
+    /// </remarks>
+    public async Task ScrollToEndAndFollow()
+    {
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, SCROLL_TO_END_AND_FOLLOW_FUNCTION, this.ScrollContainer, this.ScrollContent);
     }
 }
