@@ -79,10 +79,10 @@ Changes which touch only the documentation, such as the README or the files in `
 ## Create a release
 In order to create a release:
 1. To create a new release, you need to be a maintainer of the repository—see step 8.
-2. Make sure there's a changelog file for the version you want to create in the `/app/MindWork AI Studio/wwwroot/changelog` directory. Name the file `vX.Y.Z.md` and include all release changes—your updates and any others included in this version.
+2. Make sure there's a changelog file for the version you want to create in the `/app/MindWork AI Studio/wwwroot/changelog` directory. Name the file `vX.Y.Z.md` and include all release changes—your updates and any others included in this version. Keep its first line, the placeholder which the previous release created, such as `# v26.11.2, build 261 (2026-11-xx xx:xx UTC)`; when you rename the file for another version, change the version in that line as well. The release fills in the build time and refuses to start when the line names another version or build.
 3. After you have created the changelog file, you must commit the changes to the repository.
 4. To prepare a new release, open a terminal, go to `/app/Build` and run `dotnet run release --action <ACTION>`, where `<ACTION>` raises one part of the version, which reads year.month.release: `build` raises the release (26.11.1 becomes 26.11.2), `month` the month (26.12.1), and `year` the year (27.1.1). When a month passed without a release, set the version directly instead, e.g., `dotnet run release --version 27.2.1`.
-5. Now wait until all process steps have been completed. Among other things, the version number will be incremented, the new changelog registered, and the version numbers of central dependencies updated, etc.
+5. Now wait until all process steps have been completed. Among other things, the version number will be incremented, the build time written into the header of the new changelog, the changelog registered, and the version numbers of central dependencies updated, etc.
 6. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
 7. Your proposed changes will be reviewed and merged.
 8. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.

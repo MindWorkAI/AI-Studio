@@ -270,12 +270,25 @@ public sealed partial class UpdateMetadataCommands
                 throw new CommandExitedException(1);
             }
 
+            // The previous release created the changelog with a placeholder in its first line, which
+            // reserved the build number of this release. We fill in the build time below, so check now,
+            // before anything is written, that the placeholder is still there:
+            var changelogPlaceholderHeader = GetFirstLine(await File.ReadAllTextAsync(changelogPath, Encoding.UTF8));
+            var expectedBuildNumber = await ReadBuildNumber() + 1;
+            if (!IsChangelogPlaceholderHeader(changelogPlaceholderHeader, appVersion.VersionText, expectedBuildNumber))
+            {
+                Console.WriteLine($"- Error: The first line of '{Path.GetFileName(changelogPath)}' must be the placeholder '# v{appVersion.VersionText}, build {expectedBuildNumber} (YYYY-MM-xx xx:xx UTC)', but it is '{changelogPlaceholderHeader}'.");
+                throw new CommandExitedException(1);
+            }
+
             await this.UpdateAppVersion(appVersion);
             var buildNumber = await this.IncreaseBuildNumber();
-            var buildTime = await this.UpdateBuildTime();
-            await this.UpdateChangelog(buildNumber, appVersion.VersionText, buildTime);
+            var buildTimeText = await this.UpdateBuildTime();
+            var buildTime = ParseMetadataBuildTime(buildTimeText);
+            await UpdateChangelogHeader(changelogPath, changelogPlaceholderHeader, appVersion.VersionText, buildNumber, buildTime);
+            await this.UpdateChangelog(buildNumber, appVersion.VersionText, buildTimeText);
             await this.CreateNextChangelog(buildNumber, appVersion);
-            await WriteMetainfoRelease(appVersion.VersionText, ParseMetadataBuildTime(buildTime));
+            await WriteMetainfoRelease(appVersion.VersionText, buildTime);
             await this.UpdateProjectCommitHash();
             await this.UpdateReleaseDependenciesAndLicence();
             Console.WriteLine();
@@ -853,6 +866,37 @@ public sealed partial class UpdateMetadataCommands
         return $"# v{appVersion}, build {buildNumber} ({buildTime.ToUniversalTime():yyyy-MM-dd HH:mm} UTC)";
     }
 
+    /// <summary>
+    /// Whether a changelog header is the placeholder which the previous release created for this version and build.
+    /// </summary>
+    /// <remarks>
+    /// The month of the placeholder is only a guess of when the release would happen, so any month matches.
+    /// </remarks>
+    /// <param name="changelogHeader">The first line of the changelog.</param>
+    /// <param name="appVersion">The version of the release.</param>
+    /// <param name="buildNumber">The build number of the release.</param>
+    /// <returns>True, when the header is the placeholder.</returns>
+    private static bool IsChangelogPlaceholderHeader(string changelogHeader, string appVersion, int buildNumber)
+    {
+        return Regex.IsMatch(changelogHeader, $"^# v{Regex.Escape(appVersion)}, build {buildNumber} \\(20[0-9]{{2}}-[0-9]{{2}}-xx xx:xx UTC\\)$");
+    }
+
+    /// <summary>
+    /// Replaces the placeholder in the first line of a changelog with the header of the release.
+    /// </summary>
+    /// <param name="changelogPath">The path of the changelog.</param>
+    /// <param name="placeholderHeader">The placeholder, as checked before anything was written.</param>
+    /// <param name="appVersion">The version of the release.</param>
+    /// <param name="buildNumber">The build number of the release.</param>
+    /// <param name="buildTime">The build time of the release.</param>
+    private static async Task UpdateChangelogHeader(string changelogPath, string placeholderHeader, string appVersion, int buildNumber, DateTime buildTime)
+    {
+        var changelogContent = await File.ReadAllTextAsync(changelogPath, Encoding.UTF8);
+        var updatedChangelog = ReplaceExactlyOnce(changelogContent, placeholderHeader, FormatChangelogHeader(appVersion, buildNumber, buildTime));
+        await File.WriteAllTextAsync(changelogPath, updatedChangelog, Environment.UTF8_NO_BOM);
+        Console.WriteLine($"- Updated the header of '{Path.GetFileName(changelogPath)}'.");
+    }
+
     private static string FormatChangelogLogEntry(string appVersion, int buildNumber, DateTime buildTime, string changelogFilename)
     {
         return $"new ({buildNumber}, \"v{appVersion}, build {buildNumber} ({buildTime.ToUniversalTime():yyyy-MM-dd HH:mm} UTC)\", \"{changelogFilename}\"),";
@@ -1263,6 +1307,13 @@ public sealed partial class UpdateMetadataCommands
         return new(sb.ToString(), process.ExitCode);
     }
     
+    private static async Task<int> ReadBuildNumber()
+    {
+        const int BUILD_NUMBER_INDEX = 2;
+        var lines = await File.ReadAllLinesAsync(Environment.GetMetadataPath(), Encoding.UTF8);
+        return int.Parse(lines[BUILD_NUMBER_INDEX]);
+    }
+
     private async Task<int> IncreaseBuildNumber()
     {
         const int BUILD_NUMBER_INDEX = 2;
