@@ -23,6 +23,8 @@ Regardless of whether you want to build the app locally for yourself (not trusti
 
 This is necessary because the build script and the Tauri framework assume that the .NET app is available as a so-called "sidecar." Although the sidecar is only necessary for the final release and shipping, Tauri requires it to be present during development as well.
 
+The build also downloads the PDF library Pdfium in the version which `metadata.txt` names, and downloads it again only when that version changes. `dotnet run build --offline` skips the download and uses the library which is already present.
+
 ## The quality gate
 One command checks that what you are about to build is sound:
 
