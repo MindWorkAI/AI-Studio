@@ -992,10 +992,17 @@ public static partial class WorkspaceBehaviour
     /// <summary>
     /// Copies a chat into a new chat of the same workspace, including its managed transcript files.
     /// </summary>
+    /// <remarks>
+    /// A caller which wants the copy to differ from the original, such as compressing a chat, see
+    /// ChatCompression.TurnIntoContinuation, changes it before anything of it is written: only the
+    /// transcripts the changed copy still refers to are copied, and the copy reaches the disk only
+    /// once, as it is meant to be. When the change fails, nothing of the copy stays behind.
+    /// </remarks>
     /// <param name="sourceChat">The chat to copy. Its own files and state stay untouched.</param>
     /// <param name="name">The name of the copy.</param>
+    /// <param name="reshape">Changes the copy before it is stored, or null to keep it as the original is.</param>
     /// <returns>The persisted copy.</returns>
-    internal static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat, string name)
+    internal static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat, string name, Action<ChatThread>? reshape = null)
     {
         var serializedChat = JsonSerializer.Serialize(sourceChat, JSON_OPTIONS);
         var copiedChat = JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS)
@@ -1009,6 +1016,7 @@ public static partial class WorkspaceBehaviour
         var targetDirectory = GetChatDirectory(copiedChat.WorkspaceId, copiedChat.ChatId);
         try
         {
+            reshape?.Invoke(copiedChat);
             CopyManagedTranscriptAttachments(copiedChat, targetDirectory);
 
             //

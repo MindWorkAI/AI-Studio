@@ -704,6 +704,24 @@ public partial class Workspaces : MSGComponentBase
         return copy;
     }
 
+    /// <summary>
+    /// Copies the given chat under the given name, changes the copy before it is stored, and shows the copy in the tree.
+    /// </summary>
+    /// <remarks>
+    /// For a caller which already knows the name, such as compressing a chat. Like
+    /// CopyChatAsync(ChatThread), it neither asks about unsaved changes nor opens the copy.
+    /// </remarks>
+    /// <param name="sourceChat">The chat to copy, as it stands in memory.</param>
+    /// <param name="name">The name of the copy.</param>
+    /// <param name="reshape">Changes the copy before it is stored, see WorkspaceBehaviour.CopyChatAsync.</param>
+    /// <returns>The persisted copy.</returns>
+    public async Task<ChatThread> CopyChatAsync(ChatThread sourceChat, string name, Action<ChatThread> reshape)
+    {
+        var copy = await WorkspaceBehaviour.CopyChatAsync(sourceChat, name, reshape);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+        return copy;
+    }
+
     private async Task<ChatThread?> LoadChatAsync(string? chatPath, bool switchToChat)
     {
         if (string.IsNullOrWhiteSpace(chatPath))
