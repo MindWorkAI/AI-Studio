@@ -1,0 +1,21 @@
+@attribute [Route(Routes.ASSISTANT_BEYOND_FACTS_LAB)]
+@inherits MSGComponentBase
+
+<CascadingValue Value="Components.BEYOND_FACTS_LAB_ASSISTANT">
+    @* The lab does not inherit AssistantBase, so it sets up the inner scrolling itself, the way the
+       Visual Briefing assistant does. *@
+    <div class="inner-scrolling-context">
+        <PreviewPrototype ApplyInnerScrollingFix="true"/>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3 mr-3" StretchItems="StretchItems.Start">
+            <MudText Typo="Typo.h3">@T("BeyondFacts Lab")</MudText>
+            <MudSpacer/>
+            <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialogAsync"/>
+        </MudStack>
+
+        <InnerScrolling>
+            <MudText Typo="Typo.body1" Class="mb-3 mr-3">
+                @T("Prepare a challenging appearance as a researcher step by step, e.g., a panel discussion, an interview, or a hearing. Each preparation belongs to one event and has its own steps, chats, and work states.")
+            </MudText>
+        </InnerScrolling>
+    </div>
+</CascadingValue>

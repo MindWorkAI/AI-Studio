@@ -1,4 +1,5 @@
 using AIStudio.Assistants.Agenda;
+using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.Coding;
 using AIStudio.Assistants.IconFinder;
 using AIStudio.Assistants.RewriteImprove;
@@ -313,6 +314,27 @@ public static class ConfigurationSelectDataFactory
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Gets the minimum confidence levels the BeyondFacts Lab offers: none below its floor.
+    /// </summary>
+    /// <param name="settingsManager">The settings, whose enforced global minimum may lift the floor.</param>
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetBeyondFactsLabConfidenceLevelsData(SettingsManager settingsManager)
+    {
+        var minimumLevel = DataBeyondFactsLab.MINIMUM_CONFIDENCE_FLOOR;
+        if (settingsManager.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true } && settingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence > minimumLevel)
+            minimumLevel = settingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence;
+
+        foreach (var level in Enum.GetValues<ConfidenceLevel>())
+            if (level >= minimumLevel)
+                yield return new(level.Name, level);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<BflAddressForm>> GetBeyondFactsLabAddressFormData()
+    {
+        foreach (var addressForm in Enum.GetValues<BflAddressForm>())
+            yield return new(addressForm.Name, addressForm);
     }
 
     public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetDataSourceConfidenceLevelsData()
