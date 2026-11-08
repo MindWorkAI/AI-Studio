@@ -16,6 +16,84 @@
             <MudText Typo="Typo.body1" Class="mb-3 mr-3">
                 @T("Prepare a challenging appearance as a researcher step by step, e.g., a panel discussion, an interview, or a hearing. Each preparation belongs to one event and has its own steps, chats, and work states.")
             </MudText>
+
+            <MudText Typo="Typo.h5" Class="mb-1">@T("Your preparations")</MudText>
+            @if (this.projects.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Class="mb-3">@T("You have no preparations yet. Create one for the event you want to prepare for.")</MudText>
+            }
+            else
+            {
+                <MudList T="Guid"
+                         Color="Color.Primary"
+                         Class="mb-1"
+                         SelectedValue="@(this.selectedProject?.ProjectId ?? Guid.Empty)"
+                         SelectedValueChanged="@this.SelectProjectAsync">
+                    @foreach (var project in this.projects)
+                    {
+                        <MudListItem T="Guid" @key="project.ProjectId" Value="@project.ProjectId" Icon="@ProjectIcon(project)">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.body1">@this.ProjectDisplayName(project)</MudText>
+                                <MudText Typo="Typo.caption">@this.ProjectCaption(project)</MudText>
+                                @if (!project.IsAvailable)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Error">@this.ProjectStatusName(project.Status)</MudText>
+                                }
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@this.CreateProjectAsync" Disabled="@this.isBusy" Class="mt-1">
+                @T("New preparation")
+            </MudButton>
+
+            <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6"/>
+
+            @if (this.selectedProject is { IsAvailable: false } unavailableProject)
+            {
+                <MudPaper Outlined="true" Class="pa-6 mr-3">
+                    <MudStack Spacing="3">
+                        <MudText Typo="Typo.h4">@this.ProjectDisplayName(unavailableProject)</MudText>
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                            @this.ProjectRecoveryMessage(unavailableProject.Status)
+                        </MudAlert>
+                        <MudText Typo="Typo.body1">@T("AI Studio has left the files of this preparation unchanged. A future update may make it accessible again.")</MudText>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudText Typo="Typo.body2"><strong>@T("Preparation ID"):</strong> @unavailableProject.ProjectId.ToString("D")</MudText>
+                            <MudCopyClipboardButton TooltipMessage="@T("Copy preparation ID")" StringContent="@unavailableProject.ProjectId.ToString("D")"/>
+                        </MudStack>
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+            }
+            else if (this.selectedProject?.Project is { } project)
+            {
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3 mr-3">
+                    <MudText Typo="Typo.h4">@project.Name</MudText>
+                    <MudStack Row="true" Spacing="1">
+                        <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameProjectAsync" Disabled="@this.isBusy">@T("Rename")</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
+                    </MudStack>
+                </MudStack>
+
+                <MudSwitch T="bool" Value="@(project.HappenedAtUtc is not null)" ValueChanged="@this.SetHappenedAsync" Disabled="@this.isBusy" Color="Color.Primary" Class="mx-1">
+                    @T("The event has taken place")
+                </MudSwitch>
+                @if (project.HappenedAtUtc is { } happenedAtUtc)
+                {
+                    <MudText Typo="Typo.caption" Class="mx-1">@string.Format(Culture, T("Marked on {0}."), happenedAtUtc.ToLocalTime().ToString("d", Culture))</MudText>
+                }
+            }
+            else
+            {
+                <MudPaper Outlined="true" Class="pa-6 mr-3">
+                    <MudText Typo="Typo.h5">@T("Create a preparation to begin.")</MudText>
+                </MudPaper>
+            }
         </InnerScrolling>
     </div>
 </CascadingValue>

@@ -23,6 +23,12 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
 
+    [Inject]
+    private BeyondFactsLabStore Store { get; init; } = null!;
+
+    [Inject]
+    private ILogger<BeyondFactsLabAssistant> Logger { get; init; } = null!;
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
@@ -34,6 +40,7 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
         }
 
         this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
+        await this.RunStoreActionAsync(() => this.ReloadProjectsAsync(null));
     }
 
     /// <inheritdoc />
