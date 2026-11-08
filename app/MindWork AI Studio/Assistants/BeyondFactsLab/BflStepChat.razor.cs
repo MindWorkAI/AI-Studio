@@ -1,5 +1,7 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -44,6 +46,24 @@ public partial class BflStepChat : MSGComponentBase
     [Inject]
     private ILogger<BflStepChat> Logger { get; init; } = null!;
 
+    [Inject]
+    private ConversationTokenCounter TokenCounter { get; init; } = null!;
+
+    /// <summary>
+    /// Ends a count when the component goes away.
+    /// </summary>
+    private readonly CancellationTokenSource countCancellation = new();
+
+    /// <summary>
+    /// What the next request carries, as far as it was counted.
+    /// </summary>
+    private ConversationTokens tokens = ConversationTokens.UNAVAILABLE;
+
+    /// <summary>
+    /// The provider the tokens were counted for, to count again when the parent chooses another one.
+    /// </summary>
+    private string countedProviderId = string.Empty;
+
     /// <summary>
     /// The chat shown, or null while it loads.
     /// </summary>
@@ -61,7 +81,9 @@ public partial class BflStepChat : MSGComponentBase
 
     private bool IsRunning => this.conversation?.IsRunning ?? false;
 
-    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null;
+    private BflTokenBudgetState Budget => BflTokenBudget.Of(this.tokens);
+
+    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null && this.Budget is not BflTokenBudgetState.FULL;
 
     private bool CanSendMessage => this.CanSend && !string.IsNullOrWhiteSpace(this.userInput);
 
@@ -76,27 +98,111 @@ public partial class BflStepChat : MSGComponentBase
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        if (this.shownLocation == this.Location)
-            return;
-
-        this.shownLocation = this.Location;
-        this.conversation = null;
-        this.userInput = string.Empty;
-        this.conversation = await this.ConversationService.GetAsync(this.Location);
+        if (this.shownLocation != this.Location)
+        {
+            this.shownLocation = this.Location;
+            this.conversation = null;
+            this.userInput = string.Empty;
+            this.conversation = await this.ConversationService.GetAsync(this.Location);
+            await this.RecountAsync();
+        }
+        else if (this.countedProviderId != this.Provider.Id)
+            await this.RecountAsync();
     }
 
     /// <inheritdoc />
     protected override void DisposeResources()
     {
         this.ConversationService.ConversationChanged -= this.OnConversationChangedAsync;
+        this.countCancellation.Cancel();
+        this.countCancellation.Dispose();
         base.DisposeResources();
     }
 
     /// <summary>
-    /// Renders the chat again when the service changed it.
+    /// Renders the chat again when the service changed it, and counts again once an answer is complete.
     /// </summary>
     /// <param name="location">The step whose chat changed.</param>
-    private Task OnConversationChangedAsync(BflThreadLocation location) => location == this.Location ? this.InvokeAsync(this.StateHasChanged) : Task.CompletedTask;
+    private Task OnConversationChangedAsync(BflThreadLocation location)
+    {
+        if (location != this.Location)
+            return Task.CompletedTask;
+
+        return this.InvokeAsync(async () =>
+        {
+            if (!this.IsRunning)
+                await this.RecountAsync();
+
+            this.StateHasChanged();
+        });
+    }
+
+    /// <summary>
+    /// Counts what the next request of the chat carries: the system prompt with the guide, and the conversation.
+    /// </summary>
+    /// <remarks>
+    /// Only while no answer runs: the request appends to the conversation which the count reads. The message being
+    /// written is left out; the reserve of the budget keeps room for it.
+    /// </remarks>
+    private async Task RecountAsync()
+    {
+        this.countedProviderId = this.Provider.Id;
+        if (this.conversation is not { Thread: { } thread, IsRunning: false } || this.ProviderIssue is not null)
+        {
+            this.tokens = ConversationTokens.UNAVAILABLE;
+            return;
+        }
+
+        try
+        {
+            var systemPrompt = await this.ConversationService.ComposeSystemPromptAsync(this.Location);
+            var parts = ConversationParts.Of(thread, systemPrompt, string.Empty, null, false, null);
+            this.tokens = await this.TokenCounter.CountAsync(this.Provider, parts, thread.ReportedHistoryFor(this.Provider.Model), this.countCancellation.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // The component went away.
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
+        {
+            // Sending reports the same problem; the count only stays unknown:
+            this.Logger.LogDebug(exception, "Could not count the tokens of a chat in the BeyondFacts Lab.");
+            this.tokens = ConversationTokens.UNAVAILABLE;
+        }
+    }
+
+    /// <summary>
+    /// Gets how full the context of the model is, or null when nothing could be counted.
+    /// </summary>
+    private string? TokenBudgetText
+    {
+        get
+        {
+            if (!this.tokens.IsKnown)
+                return null;
+
+            var culture = Tools.PluginSystem.I18N.I.Culture;
+            var counted = TokenAmount.Format(this.tokens.Tokens, culture);
+            if (!this.tokens.Window.IsKnown)
+                return string.Format(T("approx. {0} tokens; the context window of this model is unknown"), counted);
+
+            var window = TokenAmount.Format(this.tokens.Window.DefaultTokens, culture);
+            var budget = string.Format(this.tokens.IsEstimate && !this.tokens.HistoryIsReported ? T("approx. {0} of {1} tokens") : T("{0} of {1} tokens"), counted, window);
+            return this.Budget switch
+            {
+                BflTokenBudgetState.FULL => $"{budget}. {TA("This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.")}",
+                BflTokenBudgetState.WARNING => $"{budget}. {TA("This conversation fills most of the context window of the model. Soon, you will have to start it over.")}",
+                _ => budget,
+            };
+        }
+    }
+
+    private Color TokenBudgetColor => this.Budget switch
+    {
+        BflTokenBudgetState.FULL => Color.Error,
+        BflTokenBudgetState.WARNING => Color.Warning,
+        _ => Color.Default,
+    };
 
     /// <summary>
     /// Lets the model open the conversation of the step.

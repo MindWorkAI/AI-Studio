@@ -265,13 +265,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
 
     /// <summary>
     /// Puts together the system prompt of a step, anew for every request, so that changed details and a changed form
-    /// of address count right away.
+    /// of address count right away. The chat also uses it to count what the next request carries.
     /// </summary>
     /// <param name="location">The step of the preparation.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
     /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
-    private async Task<string> ComposeSystemPromptAsync(BflThreadLocation location)
+    public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location)
     {
         var forms = await store.LoadFormsAsync(location.ProjectId);
         var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm);

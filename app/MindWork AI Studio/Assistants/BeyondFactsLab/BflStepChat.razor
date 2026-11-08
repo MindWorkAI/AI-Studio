@@ -40,6 +40,11 @@ else
         <MudText Typo="Typo.body2" Color="Color.Warning" Class="mb-2">@issue</MudText>
     }
 
+    @if (this.TokenBudgetText is { } budgetText)
+    {
+        <MudText Typo="Typo.caption" Color="@this.TokenBudgetColor" Class="mt-2">@budgetText</MudText>
+    }
+
     <MudStack Row="true" AlignItems="AlignItems.End" Class="mt-2" StretchItems="StretchItems.Start">
         <MudTextField T="string" @bind-Value="@this.userInput" Immediate="true" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Variant="Variant.Outlined" Label="@TA("Your message")" Disabled="@(!this.conversation.IsAvailable || this.IsRunning)"/>
         @if (this.IsRunning)
