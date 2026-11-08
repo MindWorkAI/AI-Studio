@@ -12,12 +12,16 @@ public static class AddressFormExtensions
         /// <summary>
         /// Gets the name of the form of address, as the settings show it.
         /// </summary>
+        /// <remarks>
+        /// The settings offer the choice only in languages which have both forms, so the translations name the
+        /// pronoun of their language, such as "Sie" and "du" in German.
+        /// </remarks>
         public string Name => addressForm switch
         {
-            AddressForm.FORMAL => TB("Formal address (Sie in German)"),
-            AddressForm.INFORMAL => TB("Informal address (du in German)"),
+            AddressForm.FORMAL => TB("Formal address"),
+            AddressForm.INFORMAL => TB("Informal address"),
 
-            _ => TB("Formal address (Sie in German)"),
+            _ => TB("Formal address"),
         };
     }
 }

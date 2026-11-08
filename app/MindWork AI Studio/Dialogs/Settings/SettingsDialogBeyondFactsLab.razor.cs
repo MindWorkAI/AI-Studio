@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Dialogs.Settings;
 
@@ -7,6 +8,19 @@ namespace AIStudio.Dialogs.Settings;
 /// </summary>
 public partial class SettingsDialogBeyondFactsLab : SettingsDialogBase
 {
+    /// <summary>
+    /// Whether the language of the app tells a formal address from an informal one, so that the form of address
+    /// is a choice at all.
+    /// </summary>
+    private bool offersFormOfAddress;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        this.offersFormOfAddress = (await this.SettingsManager.GetActiveLanguagePlugin()).HasInformalAddress();
+    }
+
     /// <summary>
     /// Shows the minimum confidence which applies, never one below the floor of the lab.
     /// </summary>

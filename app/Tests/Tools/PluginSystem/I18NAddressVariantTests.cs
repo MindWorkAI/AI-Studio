@@ -91,6 +91,38 @@ public sealed class I18NAddressVariantTests
     }
 
     [Test]
+    public void ALanguageWithAnInformalVariantOfItsOwnOffersTheChoice()
+    {
+        var german = new FakeLanguagePlugin(new Dictionary<string, string> { ["root::A::T1"] = "Speichern", [KEY] = FORMAL, [INFORMAL_KEY] = INFORMAL });
+
+        Assert.That(german.HasInformalAddress(), Is.True);
+    }
+
+    [Test]
+    public void ALanguageWithOneFormOfAddressOffersNoChoice()
+    {
+        // The localization assistant writes the informal variants of English in the same words:
+        var english = new FakeLanguagePlugin(new Dictionary<string, string> { [KEY] = TEXT, [INFORMAL_KEY] = TEXT });
+
+        Assert.That(english.HasInformalAddress(), Is.False);
+    }
+
+    [Test]
+    public void ALanguageWithoutInformalVariantsOffersNoChoice()
+    {
+        // The informal variant of the base language does not count for the language in use:
+        var german = new FakeLanguagePlugin(
+            new Dictionary<string, string> { [KEY] = FORMAL },
+            new Dictionary<string, string> { [KEY] = TEXT, [INFORMAL_KEY] = "Enter your name, please." });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(german.HasInformalAddress(), Is.False);
+            Assert.That(NoPluginLanguage.INSTANCE.HasInformalAddress(), Is.False);
+        }
+    }
+
+    [Test]
     public void TheTextsAddressThePersonFormallyUntilTheAppSaysOtherwise()
     {
         Assert.That(I18N.I.AddressForm, Is.EqualTo(AddressForm.FORMAL), "Nothing in the tests sets where the form of address comes from.");

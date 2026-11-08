@@ -998,6 +998,8 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.MinimumProviderConfidence"] = "MEDIUM"
 --
 -- Configure how the lab addresses users in languages with a formal and an informal address, such as German.
+-- In a language with one form of address only, such as English, the setting has no effect, and the options
+-- of the lab do not show it.
 -- Allowed values are: FORMAL, INFORMAL
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.AddressForm"] = "FORMAL"
 
