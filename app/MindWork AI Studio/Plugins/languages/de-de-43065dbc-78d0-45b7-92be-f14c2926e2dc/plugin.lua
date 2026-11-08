@@ -735,6 +735,333 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOU
 -- Use a document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T3309547196"] = "Regelwerk für die Dokumentenanalyse verwenden"
 
+-- Prepare a challenging appearance as a researcher step by step, e.g., a panel discussion, an interview, or a hearing. Each preparation belongs to one event and has its own steps, chats, and work states.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1218290190"] = "Bereite dich Schritt für Schritt auf einen anspruchsvollen Auftritt als Wissenschaftler:in vor – etwa bei einer Podiumsdiskussion, einem Interview oder einer Anhörung. Jede Vorbereitung ist einer Veranstaltung zugeordnet und hat eigene Schritte, Chats und Arbeitsstände."
+
+-- Changed on {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1279137966"] = "Geändert am {0}"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1469573738"] = "Löschen"
+
+-- AI Studio cannot read this preparation. Its files may be damaged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1496519091"] = "AI Studio kann diese Vorbereitung nicht lesen. Die Dateien dieser Vorbereitung sind möglicherweise beschädigt."
+
+-- AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1564342983"] = "AI Studio kann Ihre Angaben zu diesem Schritt nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. AI Studio lässt die Datei unverändert."
+
+-- You have no preparations yet. Create one for the event you want to prepare for.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1599306665"] = "Du hast noch keine Vorbereitung erstellt. Erstelle eine für den Anlass, auf den du dich vorbereiten möchtest."
+
+-- Enter a new name for this preparation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T193031277"] = "Geben Sie einen neuen Namen für diese Vorbereitung ein."
+
+-- Cannot be opened
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1981873292"] = "Kann nicht geöffnet werden"
+
+-- Copy preparation ID
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2344012850"] = "Vorbereitungs-ID kopieren"
+
+-- Your details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T25208484"] = "Deine Angaben"
+
+-- Create
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2567824509"] = "Erstellen"
+
+-- Preparation ID
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2671360307"] = "Vorbereitungs-ID"
+
+-- Create a preparation to begin.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2751865753"] = "Erstelle eine Vorbereitung, um loszulegen."
+
+-- AI Studio has left the files of this preparation unchanged. A future update may make it accessible again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2824385338"] = "AI Studio hat die Dateien dieser Vorbereitung unverändert gelassen. Ein zukünftiges Update könnte sie wieder zugänglich machen."
+
+-- The event has taken place
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2842348392"] = "Das Ereignis hat stattgefunden."
+
+-- Marked on {0}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3254361846"] = "Markiert am {0}."
+
+-- Rename preparation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3342203974"] = "Vorbereitung umbenennen"
+
+-- Rename
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3355849203"] = "Umbenennen"
+
+-- Delete preparation permanently
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T354252674"] = "Vorbereitung endgültig löschen"
+
+-- Unavailable preparation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3646236084"] = "Vorbereitung nicht verfügbar"
+
+-- This preparation cannot be opened. Permanently delete it with all of its files?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3647862078"] = "Diese Vorbereitung kann nicht geöffnet werden. Möchtest du sie zusammen mit all ihren Dateien endgültig löschen?"
+
+-- Name the event you want to prepare for, e.g., the title of a panel discussion.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3679923414"] = "Gib den Namen der Veranstaltung an, auf die du dich vorbereiten möchtest, z. B. den Titel einer Podiumsdiskussion."
+
+-- Name of the preparation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3746973353"] = "Name der Vorbereitung"
+
+-- Please enter a name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3818326829"] = "Bitte geben Sie einen Namen ein."
+
+-- AI Studio could not save your details. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3921500806"] = "AI Studio konnte deine Angaben nicht speichern. Bitte versuche es erneut."
+
+-- BeyondFacts Lab
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3956097526"] = "BeyondFacts Lab"
+
+-- A newer version of AI Studio stored this preparation. This version cannot open it. Please update AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T395932079"] = "Eine neuere Version von AI Studio hat diese Vorbereitung gespeichert. Diese Version kann sie nicht öffnen. Bitte aktualisiere AI Studio."
+
+-- AI Studio could not save the change of your preparations. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T4073131406"] = "AI Studio konnte die Änderung deiner Vorbereitungen nicht speichern. Bitte versuche es erneut."
+
+-- Requires a newer AI Studio version
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T4087140083"] = "Erfordert eine neuere Version von AI Studio"
+
+-- Details missing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T506453229"] = "Details fehlen"
+
+-- Permanently delete the preparation '{0}' with all of its steps, chats, and work states?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T772787118"] = "Die Vorbereitung „{0}“ mit all ihren Schritten, Chats und Arbeitsständen endgültig löschen?"
+
+-- New preparation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T851005164"] = "Neue Vorbereitung"
+
+-- Your preparations
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272"] = "Deine Vorbereitungen"
+
+-- Informal address (du in German)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLADDRESSFORMEXTENSIONS::T554958468"] = "Verstanden – ich verwende die informelle Anrede (du)."
+
+-- Formal address (Sie in German)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLADDRESSFORMEXTENSIONS::T859201973"] = "Understood. I’ll use the formal form of address (Sie)."
+
+-- E.g., take up a confirmed conflict of values or a perspective from the step about values and perspectives
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1134014442"] = "Greife z. B. einen bestätigten Wertekonflikt oder eine Perspektive aus dem Schritt zu Werten und Perspektiven auf."
+
+-- What have you changed, kept, or left open compared to your initial position, and why?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1455147822"] = "Was hast du im Vergleich zu deiner ursprünglichen Position geändert, beibehalten oder offengelassen – und warum?"
+
+-- Show options for action
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1601690165"] = "Optionen für die Aktion anzeigen"
+
+-- Manipulative questions and straw men
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1656068515"] = "Manipulative Fragen und Strohmann-Argumente"
+
+-- Topic of the event
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1766174370"] = "Thema der Veranstaltung"
+
+-- Moderate
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T177463328"] = "Moderat"
+
+-- Other perspectives: Whose point of view would you like to understand better, or have you hardly considered so far?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1885081930"] = "Andere Perspektiven: Wessen Sichtweise möchtest du besser verstehen oder hast du bisher kaum berücksichtigt?"
+
+-- Stays in your preparation and never goes into the research on the web
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1949096445"] = "Bleibt bei deiner Vorbereitung und recherchiert niemals im Web."
+
+-- Very demanding
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1967151608"] = "Sehr anspruchsvoll"
+
+-- Date and time
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2054731205"] = "Datum und Uhrzeit"
+
+-- Notes on how to use your materials
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2123646094"] = "Hinweise zur Verwendung Ihrer Materialien"
+
+-- Duration of your contribution
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T223853289"] = "Dauer deines Beitrags"
+
+-- Special notes for the test
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2242825987"] = "Besondere Hinweise zum Test"
+
+-- Uncertainties and worries about communicating
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2428368968"] = "Unsicherheiten und Sorgen beim Kommunizieren"
+
+-- Difficulty at the start
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T243923502"] = "Schwierigkeiten am Anfang"
+
+-- E.g., 90 minutes
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2537467295"] = "z. B. 90 Minuten"
+
+-- Place
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2597472412"] = "Ort"
+
+-- E.g., 8 minutes
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2697611204"] = "z. B. 8 Minuten"
+
+-- A few sentences are enough
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2765665158"] = "Ein paar Sätze reichen aus."
+
+-- Other participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T277557865"] = "Weitere Teilnehmende"
+
+-- What do you want to achieve with your contribution?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2818219287"] = "Was möchtest du mit deinem Beitrag erreichen?"
+
+-- Scientific criticism
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2865565843"] = "Wissenschaftliche Kritik"
+
+-- The address of the event page, beginning with https://
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2900883219"] = "Die Adresse der Veranstaltungsseite, beginnend mit https://"
+
+-- Names and roles, as far as you know them
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3020176946"] = "Namen und Rollen, soweit bekannt"
+
+-- Personal detail: it goes into exports and shared sessions only when you explicitly choose so.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3063635296"] = "Persönliche Angabe: Sie wird nur dann in Exporte und geteilte Sitzungen übernommen, wenn du das ausdrücklich auswählst."
+
+-- Political instrumentalization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3078371152"] = "Politische Instrumentalisierung"
+
+-- Mixed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3114856344"] = "Gemischt"
+
+-- Personal involvement: Where does the topic touch you personally? Which question or criticism could trigger a strong reaction?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3199962614"] = "Persönliche Betroffenheit: Wo berührt dich das Thema persönlich? Welche Frage oder Kritik könnte bei dir eine starke Reaktion auslösen?"
+
+-- Format of the event
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3217479436"] = "Format der Veranstaltung"
+
+-- E.g., panel, keynote, or interview; online, on site, or hybrid
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3297023821"] = "Z. B. Podiumsdiskussion, Keynote oder Interview; online, vor Ort oder hybrid"
+
+-- Values and concerns: What matters most to you about this topic?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3444467007"] = "Werte und Bedenken: Was ist dir bei diesem Thema am wichtigsten?"
+
+-- Audience
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3506118019"] = "Zielgruppe"
+
+-- Suggestions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3534677498"] = "Vorschläge"
+
+-- Emotionally charged criticism
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3552262211"] = "Emotional aufgeladene Kritik"
+
+-- Link to the event
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3658981841"] = "Link zur Veranstaltung"
+
+-- Raise awareness
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3790372874"] = "Bewusstsein schaffen"
+
+-- E.g., use only paper X as the basis for the content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3804983466"] = "Verwende z. B. nur Paper X als Grundlage für den Inhalt."
+
+-- Core theses and arguments (if any)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T39824489"] = "Kernthesen und Argumente (falls vorhanden)"
+
+-- Total duration of the event
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T4051894943"] = "Gesamtdauer des Ereignisses"
+
+-- Influence policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T4052553234"] = "Richtlinie zur Einflussnahme"
+
+-- You can raise the difficulty after each question.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T519332031"] = "Nach jeder Frage kannst du den Schwierigkeitsgrad erhöhen."
+
+-- E.g., students, experts, or the general public
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T533097975"] = "z. B. Studierende, Fachleute oder die breite Öffentlichkeit"
+
+-- Short description of your contribution
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T667686615"] = "Kurzbeschreibung deines Beitrags"
+
+-- Type of questions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T805059831"] = "Art der Fragen"
+
+-- The central question or the title
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T828389221"] = "Die zentrale Frage oder der Titel"
+
+-- Uncertainties and controversies in content and science (if known)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T82922542"] = "Unsicherheiten und Kontroversen bei Inhalten und in der Wissenschaft (sofern bekannt)"
+
+-- Inform
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T85613896"] = "Informieren"
+
+-- E.g., December 10, 2 pm
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T881586300"] = "Z. B. 10. Dezember, 14 Uhr"
+
+-- E.g., the venue and the city, or online
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T916990010"] = "Z. B. der Veranstaltungsort und die Stadt oder online"
+
+-- In your own words, with the suggestions below, or still open: the chat sharpens your goal and role with you.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T917276711"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder zunächst ganz offen: Im Chat präzisierst du gemeinsam mit der KI dein Ziel und deine Rolle."
+
+-- Topic of your contribution or your specific assignment
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T932670647"] = "Thema Ihres Beitrags oder Ihrer konkreten Aufgabe"
+
+-- E.g., aggressive moderation, time pressure, or a particular counterpart
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T965551209"] = "Z. B. aggressive Moderation, Zeitdruck oder ein bestimmtes Gegenüber"
+
+-- Take a position in the debate
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T974131333"] = "Nimm in der Debatte Stellung."
+
+-- Demanding
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T985014450"] = "Anspruchsvoll"
+
+-- ## Welcome!  The BeyondFacts Lab guides you through an AI-supported process of reflection, which helps you take a position in challenging communication situations and stay able to communicate.  Data protection depends on the AI provider you choose, its rules for processing and storing data, and your configuration. Enter only data that are suitable and approved for this.  Please check all results critically. Depending on the AI model, the answers may differ. Hallucinations cannot be ruled out.  This is a prototype, so we look forward to your feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLNOTICE::T940905480"] = "## Willkommen!\n\nDas BeyondFacts Lab begleitet dich durch einen KI-gestützten Reflexionsprozess. Er hilft dir, in schwierigen Kommunikationssituationen Position zu beziehen und im Gespräch handlungsfähig zu bleiben.\n\nDer Datenschutz hängt vom gewählten KI-Anbieter, dessen Regeln zur Verarbeitung und Speicherung von Daten sowie deiner Konfiguration ab. Gib nur Daten ein, die dafür geeignet und freigegeben sind.\n\nBitte prüfe alle Ergebnisse kritisch. Je nach KI-Modell können die Antworten unterschiedlich ausfallen. Halluzinationen lassen sich nicht ausschließen.\n\nDies ist ein Prototyp – wir freuen uns auf dein Feedback."
+
+-- I have read the notes
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLNOTICEDIALOG::T4071737336"] = "Ich habe die Hinweise gelesen."
+
+-- Test situation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Testsituation"
+
+-- Knowledge and uncertainty
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1147870258"] = "Wissen und Unsicherheit"
+
+-- How you convey evidence, trade-offs between values, and open questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890"] = "Wie du Belege, Abwägungen zwischen Werten und offene Fragen vermittelst."
+
+-- Event details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T135387869"] = "Details zum Ereignis"
+
+-- What the event is about, for whom, and what you were asked to contribute.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T158292580"] = "Worum es bei der Veranstaltung geht, für wen sie gedacht ist und was du dazu beitragen sollst."
+
+-- You can fill in single fields or start right away in the chat.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2524378548"] = "Du kannst einzelne Felder ausfüllen oder direkt im Chat loslegen."
+
+-- Goals and role
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2988481290"] = "Ziele und Rolle"
+
+-- What matters to you, what touches you, and what moves others.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3022557767"] = "Was dir wichtig ist, was dich berührt und was andere bewegt."
+
+-- What you want to achieve, and in which role you speak.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3052319680"] = "Was du erreichen möchtest und in welcher Rolle du sprichst."
+
+-- Strategy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3205650756"] = "Strategie"
+
+-- Results and materials
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3602322182"] = "Ergebnisse und Materialien"
+
+-- Values and perspectives
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T494574525"] = "Werte und Perspektiven"
+
+-- What you take away from your preparation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T517692701"] = "Was du aus deiner Vorbereitung mitnimmst."
+
+-- Play through critical questions and opposing positions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T573043138"] = "Gehe kritische Fragen und Gegenpositionen durch."
+
+-- What you know for sure, what is uncertain, and where your expertise ends.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T762525208"] = "Was du sicher weißt, was ungewiss ist und wo deine Fachkenntnisse enden."
+
+-- Some details are still missing. The chat will ask for them, and you can continue anyway.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1474406854"] = "Einige Angaben fehlen noch. Der Chat fragt dich danach, aber du kannst trotzdem fortfahren."
+
+-- Please enter an address that begins with https:// or http://.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T2837809367"] = "Bitte geben Sie eine Adresse ein, die mit https:// oder http:// beginnt."
+
+-- * The chat works best when you fill in these details.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288"] = "* Der Chat funktioniert am besten, wenn du diese Angaben ausfüllst."
+
 -- Extended bias poster
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1241605514"] = "Erweitertes Poster der Verzerrungen"
 
@@ -4415,6 +4742,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1259707710"] = "Ihre Projek
 
 -- Your temporary chats, along with their transcripts.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1293614512"] = "Ihre temporären Chats mit ihren Transkripten."
+
+-- Your preparations in the BeyondFacts Lab.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1415474409"] = "Deine Vorbereitungen im BeyondFacts Lab."
 
 -- What belongs into a backup
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1682175486"] = "Was in eine Sicherung gehört"
@@ -9591,6 +9921,24 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T82
 -- Restore default
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T913168756"] = "Standard wiederherstellen"
 
+-- How the lab addresses you in languages with a formal and an informal address, such as German.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T1832497993"] = "Wie das Lab dich in Sprachen anspricht, in denen es eine formelle und eine informelle Anrede gibt, z. B. Deutsch."
+
+-- Assistant: BeyondFacts Lab Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T19824556"] = "Assistent: Optionen für BeyondFacts Lab"
+
+-- Form of address
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2183481736"] = "Anrede"
+
+-- Select a minimum confidence level
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2579793544"] = "Mindest-Konfidenzniveau auswählen"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3448155331"] = "Schließen"
+
+-- Your preparations usually contain unpublished research. Therefore, the lab accepts only providers with at least medium confidence. You can raise this minimum, e.g., to use only self-hosted models.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T4002746484"] = "Ihre Vorbereitungen enthalten in der Regel unveröffentlichte Forschungsergebnisse. Daher akzeptiert das Labor nur Anbieter mit mindestens mittlerem Vertrauensniveau. Sie können diese Mindestanforderung erhöhen, zum Beispiel indem Sie ausschließlich selbst gehostete Modelle verwenden."
+
 -- Files are sent as they were first read
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1320692831"] = "Dateien werden so gesendet, wie sie zuerst eingelesen wurden"
 
@@ -11199,11 +11547,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3733831260"] = "Erstellen Sie Ihr
 -- Generate an ERI server to integrate business systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3756213118"] = "Erstellen Sie einen ERI-Server zur Integration von Geschäftssystemen."
 
+-- Prepare step by step for a challenging appearance as a researcher, e.g., a panel discussion or an interview.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T386812830"] = "Bereite dich Schritt für Schritt auf einen anspruchsvollen Auftritt als Forscher oder Forscherin vor, zum Beispiel bei einer Podiumsdiskussion oder einem Interview."
+
 -- Use an LLM to find an icon for a given context.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3881504200"] = "Verwenden Sie ein LLM, um ein Icon für einen bestimmten Kontext zu finden."
 
 -- Job Posting
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3930052338"] = "Stellenanzeige"
+
+-- BeyondFacts Lab
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3956097526"] = "BeyondFacts Lab"
 
 -- Ask a question about a legal document.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537"] = "Stellen Sie Fragen zu einem juristischen Dokument."
@@ -12921,6 +13275,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSION
 -- Only services configured in AI Studio
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T750634166"] = "Nur in AI Studio konfigurierte Dienste"
 
+-- BeyondFacts Lab: Prepare for challenging conversations about your research, step by step
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1110065980"] = "BeyondFacts Lab: Bereite dich Schritt für Schritt auf herausfordernde Gespräche über deine Forschung vor"
+
 -- Visual Briefing Assistant: Turn source material into an interactive briefing
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1217946647"] = "Assistent für visuelle Briefings: Quellmaterial in ein interaktives Briefing verwandeln"
 
@@ -13169,6 +13526,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T348883878"] = "Assisten
 
 -- Translation Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T3887962308"] = "Übersetzungs-Assistent"
+
+-- BeyondFacts Lab
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T3956097526"] = "BeyondFacts Lab"
 
 -- Agenda Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T4034795997"] = "Agenda-Assistent"
