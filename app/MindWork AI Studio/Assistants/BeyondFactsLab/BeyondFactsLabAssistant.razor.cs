@@ -80,11 +80,17 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     /// <inheritdoc />
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        // An organization may hide the lab, or the person may switch its preview feature off, while the page is open:
-        if (triggeredEvent is Event.CONFIGURATION_CHANGED && !BflAccess.CanOpen(this.SettingsManager))
+        if (triggeredEvent is Event.CONFIGURATION_CHANGED)
         {
-            this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
-            return;
+            // An organization may hide the lab, or the person may switch its preview feature off, while the page is open:
+            if (!BflAccess.CanOpen(this.SettingsManager))
+            {
+                this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
+                return;
+            }
+
+            // A changed option, such as the form of address in the options of the lab, shows right away:
+            this.StateHasChanged();
         }
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
