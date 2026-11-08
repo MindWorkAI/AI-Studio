@@ -838,6 +838,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLADDRESSFORMEXTENSIONS:
 -- Formal address (Sie in German)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLADDRESSFORMEXTENSIONS::T859201973"] = "Formal address (Sie in German)"
 
+-- Moderate the discussion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1131866893"] = "Moderate the discussion"
+
 -- E.g., take up a confirmed conflict of values or a perspective from the step about values and perspectives
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1134014442"] = "E.g., take up a confirmed conflict of values or a perspective from the step about values and perspectives"
 
