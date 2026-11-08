@@ -7,11 +7,11 @@ using SourceCodeRules.UsageAnalyzers;
 namespace AIStudio.Tests.Analyzers;
 
 /// <summary>
-/// Checks that the texts of the app are looked up only through a T or TB wrapper, whose fallback text the I18N
+/// Checks that the texts of the app are looked up only through a T, TB, or TA wrapper, whose fallback text the I18N
 /// collector finds.
 /// </summary>
 /// <remarks>
-/// The collector reads the texts from calls of T and TB. A text handed to GetText anywhere else never reaches
+/// The collector reads the texts from calls of T, TB, and TA. A text handed to GetText anywhere else never reaches
 /// the language plugins, so it is never translated, and nothing at runtime shows it. MWAIS0012 refuses such a
 /// call while compiling. GetText is an extension method, so these tests ask in both of the forms C# knows for
 /// one: the classic method with a this parameter and the member of an extension block.
@@ -42,6 +42,7 @@ public sealed class DirectI18NGetTextAnalyzerTests
     [TestCase(CLASSIC_FORM, "TB", TestName = "A TB wrapper around a classic extension method")]
     [TestCase(EXTENSION_BLOCK_FORM, "T", TestName = "A T wrapper around the member of an extension block")]
     [TestCase(EXTENSION_BLOCK_FORM, "TB", TestName = "A TB wrapper around the member of an extension block")]
+    [TestCase(EXTENSION_BLOCK_FORM, "TA", TestName = "A TA wrapper around the member of an extension block")]
     public async Task AWrapperWhichForwardsItsTextIsAllowed(string form, string wrapper)
     {
         var reported = await AnalyzeAsync(form, $"public string {wrapper}(string fallbackEN) => this.GetText(fallbackEN);");
@@ -54,6 +55,7 @@ public sealed class DirectI18NGetTextAnalyzerTests
     [TestCase(CLASSIC_FORM, """public string Describe() => ILangExtensions.GetText(this, "Hello");""", TestName = "A classic extension method called as a static method")]
     [TestCase(EXTENSION_BLOCK_FORM, """public string Describe() => this.GetText("Hello");""", TestName = "The member of an extension block called from another method")]
     [TestCase(EXTENSION_BLOCK_FORM, """public string T(string fallbackEN) => this.GetText("Hello");""", TestName = "The member of an extension block called by a wrapper with a text of its own")]
+    [TestCase(EXTENSION_BLOCK_FORM, """public string TA(string fallbackEN) => this.GetText("Hello");""", TestName = "The member of an extension block called by a TA wrapper with a text of its own")]
     [TestCase(EXTENSION_BLOCK_FORM, """public string Describe() => ILangExtensions.GetText(this, "Hello");""", TestName = "The member of an extension block called as a static method")]
     public async Task ADirectLookupIsRefused(string form, string member)
     {

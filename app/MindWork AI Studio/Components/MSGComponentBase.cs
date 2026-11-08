@@ -45,6 +45,13 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
 
     #endregion
 
+    /// <summary>
+    /// Gets a text which addresses the reader, in the form of address the person chose; see I18N.AddressForm.
+    /// </summary>
+    /// <param name="fallbackEN">The text in English (US).</param>
+    /// <returns>The text from the language plugin or the English text.</returns>
+    public string TA(string fallbackEN) => this.GetText(this.Lang, fallbackEN, addressForm: I18N.I.AddressForm);
+
     #region Implementation of IMessageBusReceiver
 
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
