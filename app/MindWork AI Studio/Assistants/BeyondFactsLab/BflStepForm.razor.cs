@@ -70,6 +70,6 @@ public partial class BflStepForm : MSGComponentBase
 
         return Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
             ? null
-            : T("Please enter an address that begins with https:// or http://.");
+            : TA("Please enter an address that begins with https:// or http://.");
     }
 }

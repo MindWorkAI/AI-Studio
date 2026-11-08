@@ -28,6 +28,8 @@ public sealed class ThisUsageAnalyzerTests
     [TestCase("CITY", TestName = "A static field")]
     [TestCase("ROOM", TestName = "A constant")]
     [TestCase("Shorten(this.location)", TestName = "A static method")]
+    [TestCase("""T("Kickoff")""", TestName = "A text of T")]
+    [TestCase("""TA("Your meeting")""", TestName = "A text of TA")]
     public async Task AMemberWhichNeedsNoThisIsLeftAlone(string expression)
     {
         var reported = await AnalyzeClassAsync(expression);
@@ -160,6 +162,10 @@ public sealed class ThisUsageAnalyzerTests
                   private string Describe() => this.Name;
 
                   private static string Shorten(string text) => text[..1];
+
+                  private string T(string fallbackEN) => fallbackEN;
+
+                  private string TA(string fallbackEN) => fallbackEN;
               }
               """;
 

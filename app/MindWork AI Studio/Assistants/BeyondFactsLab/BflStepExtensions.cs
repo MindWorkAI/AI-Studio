@@ -4,6 +4,8 @@ public static class BflStepExtensions
 {
     private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(BflStepExtensions).Namespace, nameof(BflStepExtensions));
 
+    private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(BflStepExtensions).Namespace, nameof(BflStepExtensions));
+
     /// <param name="step">The step.</param>
     extension(BflStep step)
     {
@@ -28,13 +30,13 @@ public static class BflStepExtensions
         /// </summary>
         public string Description => step switch
         {
-            BflStep.FRAMEWORK => TB("What the event is about, for whom, and what you were asked to contribute."),
-            BflStep.KNOWLEDGE => TB("What you know for sure, what is uncertain, and where your expertise ends."),
-            BflStep.GOALS_AND_ROLE => TB("What you want to achieve, and in which role you speak."),
-            BflStep.VALUES_AND_PERSPECTIVES => TB("What matters to you, what touches you, and what moves others."),
-            BflStep.STRATEGY => TB("How you convey evidence, trade-offs between values, and open questions."),
-            BflStep.TEST_SITUATION => TB("Play through critical questions and opposing positions."),
-            BflStep.RESULTS => TB("What you take away from your preparation."),
+            BflStep.FRAMEWORK => TA("What the event is about, for whom, and what you were asked to contribute."),
+            BflStep.KNOWLEDGE => TA("What you know for sure, what is uncertain, and where your expertise ends."),
+            BflStep.GOALS_AND_ROLE => TA("What you want to achieve, and in which role you speak."),
+            BflStep.VALUES_AND_PERSPECTIVES => TA("What matters to you, what touches you, and what moves others."),
+            BflStep.STRATEGY => TA("How you convey evidence, trade-offs between values, and open questions."),
+            BflStep.TEST_SITUATION => TA("Play through critical questions and opposing positions."),
+            BflStep.RESULTS => TA("What you take away from your preparation."),
 
             _ => string.Empty,
         };
@@ -44,7 +46,7 @@ public static class BflStepExtensions
         /// </summary>
         public string FormHint => step switch
         {
-            BflStep.VALUES_AND_PERSPECTIVES => TB("You can fill in single fields or start right away in the chat."),
+            BflStep.VALUES_AND_PERSPECTIVES => TA("You can fill in single fields or start right away in the chat."),
 
             _ => string.Empty,
         };

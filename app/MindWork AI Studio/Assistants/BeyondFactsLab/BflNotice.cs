@@ -9,16 +9,17 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// <remarks>
 /// The notes are a text of the localization, so they come in every language of the app. The settings keep a hash of
 /// the notes as the app showed them when the person confirmed them. A new wording, in English or in a translation,
-/// therefore shows them again, and so does a switch to another language, whose notes the person has not read yet.
+/// therefore shows them again, and so does a switch to another language or to another form of address, whose notes
+/// the person has not read yet.
 /// </remarks>
 public static class BflNotice
 {
-    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(BflNotice).Namespace, nameof(BflNotice));
+    private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(BflNotice).Namespace, nameof(BflNotice));
 
     /// <summary>
-    /// Gets the notes in the language of the app, as Markdown.
+    /// Gets the notes in the language of the app and in the form of address the person chose, as Markdown.
     /// </summary>
-    public static string Text => TB("""
+    public static string Text => TA("""
         ## Welcome!
 
         The BeyondFacts Lab guides you through an AI-supported process of reflection, which helps you take a position in challenging communication situations and stay able to communicate.

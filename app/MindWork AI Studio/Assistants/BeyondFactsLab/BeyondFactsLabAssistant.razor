@@ -14,13 +14,13 @@
 
         <InnerScrolling>
             <MudText Typo="Typo.body1" Class="mb-3 mr-3">
-                @T("Prepare a challenging appearance as a researcher step by step, e.g., a panel discussion, an interview, or a hearing. Each preparation belongs to one event and has its own steps, chats, and work states.")
+                @TA("Prepare a challenging appearance as a researcher step by step, e.g., a panel discussion, an interview, or a hearing. Each preparation belongs to one event and has its own steps, chats, and work states.")
             </MudText>
 
-            <MudText Typo="Typo.h5" Class="mb-1">@T("Your preparations")</MudText>
+            <MudText Typo="Typo.h5" Class="mb-1">@TA("Your preparations")</MudText>
             @if (this.projects.Count == 0)
             {
-                <MudText Typo="Typo.body2" Class="mb-3">@T("You have no preparations yet. Create one for the event you want to prepare for.")</MudText>
+                <MudText Typo="Typo.body2" Class="mb-3">@TA("You have no preparations yet. Create one for the event you want to prepare for.")</MudText>
             }
             else
             {
@@ -100,7 +100,7 @@
                                 <MudText Typo="Typo.h5" Class="mt-2">@step.Title</MudText>
                                 <MudText Typo="Typo.body2" Class="mb-4">@step.Description</MudText>
 
-                                <MudText Typo="Typo.h6" Class="mb-2">@T("Your details")</MudText>
+                                <MudText Typo="Typo.h6" Class="mb-2">@TA("Your details")</MudText>
                                 @if (this.forms.TryGetValue(step, out var form))
                                 {
                                     <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
@@ -108,7 +108,7 @@
                                 else
                                 {
                                     <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
-                                        @T("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
+                                        @TA("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
                                     </MudAlert>
                                 }
                             </MudStep>
@@ -119,7 +119,7 @@
             else
             {
                 <MudPaper Outlined="true" Class="pa-6 mr-3">
-                    <MudText Typo="Typo.h5">@T("Create a preparation to begin.")</MudText>
+                    <MudText Typo="Typo.h5">@TA("Create a preparation to begin.")</MudText>
                 </MudPaper>
             }
         </InnerScrolling>
