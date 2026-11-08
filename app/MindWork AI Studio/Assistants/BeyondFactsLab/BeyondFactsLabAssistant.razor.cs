@@ -62,17 +62,10 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     /// </summary>
     private async Task ShowNoticeIfNeededAsync()
     {
-        var currentHash = await BflNotice.ComputeHashAsync();
+        var notice = BflNotice.Text;
+        var currentHash = BflNotice.ComputeHash(notice);
         if (BflNotice.IsAccepted(this.SettingsManager.ConfigurationData.BeyondFactsLab.AcceptedNoticeHash, currentHash))
             return;
-
-        var languagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
-        var notice = await BflNotice.ReadAsync(languagePlugin.IETFTag);
-        if (string.IsNullOrWhiteSpace(notice))
-        {
-            this.Logger.LogError("The notes of the BeyondFacts Lab are missing.");
-            return;
-        }
 
         var parameters = new DialogParameters<BflNoticeDialog> { { dialog => dialog.Notice, notice } };
         var reference = await this.DialogService.ShowAsync<BflNoticeDialog>(T("BeyondFacts Lab"), parameters, DialogOptions.BLOCKING_FULLSCREEN);

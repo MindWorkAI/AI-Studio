@@ -1,4 +1,8 @@
+using System.Runtime.CompilerServices;
+
 using AIStudio.Assistants.BeyondFactsLab;
+
+using SharedTools;
 
 namespace AIStudio.Tests.BeyondFactsLab;
 
@@ -9,49 +13,58 @@ namespace AIStudio.Tests.BeyondFactsLab;
 public sealed class BflNoticeTests
 {
     [Test]
-    public async Task TheNotesComeInBothLanguages()
+    public void TheNotesAreMarkdownWithAHeadingAndParagraphs()
     {
+        var paragraphs = BflNotice.Text.ReplaceLineEndings("\n").Split("\n\n");
+
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(await BflNotice.ReadAsync("de-DE"), Does.Contain("Prototyp"));
-            Assert.That(await BflNotice.ReadAsync("en-US"), Does.Contain("prototype"));
+            Assert.That(paragraphs[0], Is.EqualTo("## Welcome!"));
+            Assert.That(paragraphs, Has.Length.EqualTo(5));
+            Assert.That(paragraphs[^1], Does.Contain("prototype"));
+            Assert.That(paragraphs, Has.None.StartsWith(" "), "The indentation of the source must not reach the notes.");
         }
     }
 
-    [TestCase("de-DE", BflNotice.GERMAN_PATH)]
-    [TestCase("de-AT", BflNotice.GERMAN_PATH)]
-    [TestCase("en-US", BflNotice.ENGLISH_PATH)]
-    [TestCase("fr-FR", BflNotice.ENGLISH_PATH)]
-    public void EveryLanguageButGermanGetsTheEnglishNotes(string ietfTag, string expectedPath)
-    {
-        Assert.That(BflNotice.PathFor(ietfTag), Is.EqualTo(expectedPath));
-    }
-
     [Test]
-    public void AChangeOfEitherLanguageChangesTheHash()
+    public void TheCollectorFindsTheNotesAsTheAppShowsThem()
     {
-        var hash = BflNotice.ComputeHash("Hinweis", "Note");
+        var source = File.ReadAllText(NoticeSourceFile());
+        var warnings = new List<string>();
+
+        var texts = I18NSourceScanner.FindTexts(source, NoticeSourceFile(), warnings).Select(text => I18NKeyHash.NormalizeLineEndings(text.Text));
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(BflNotice.ComputeHash("Hinweis, geändert", "Note"), Is.Not.EqualTo(hash));
-            Assert.That(BflNotice.ComputeHash("Hinweis", "Note, changed"), Is.Not.EqualTo(hash));
-            Assert.That(BflNotice.ComputeHash("Note", "Hinweis"), Is.Not.EqualTo(hash));
+            Assert.That(texts, Does.Contain(I18NKeyHash.NormalizeLineEndings(BflNotice.Text)));
+            Assert.That(warnings, Is.Empty);
+        }
+    }
+
+    [Test]
+    public void AChangeOfTheNotesChangesTheHash()
+    {
+        var hash = BflNotice.ComputeHash("## Welcome!\n\nThe notes.");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflNotice.ComputeHash("## Welcome!\n\nThe changed notes."), Is.Not.EqualTo(hash));
+            Assert.That(BflNotice.ComputeHash("## Herzlich willkommen!\n\nDie Hinweise."), Is.Not.EqualTo(hash), "Notes in another language were not read yet.");
         }
     }
 
     [Test]
     public void LineEndingsAndOuterSpaceDoNotChangeTheHash()
     {
-        var hash = BflNotice.ComputeHash("Erste Zeile\nZweite Zeile", "First line\nSecond line");
+        var hash = BflNotice.ComputeHash("First line\n\nSecond line");
 
-        Assert.That(BflNotice.ComputeHash("Erste Zeile\r\nZweite Zeile\r\n", "  First line\r\nSecond line"), Is.EqualTo(hash));
+        Assert.That(BflNotice.ComputeHash("  First line\r\n\r\nSecond line\r\n"), Is.EqualTo(hash));
     }
 
     [Test]
-    public async Task OnlyTheHashOfTheNotesAsTheyAreNowCountsAsConfirmed()
+    public void OnlyTheHashOfTheNotesAsTheyAreNowCountsAsConfirmed()
     {
-        var currentHash = await BflNotice.ComputeHashAsync();
+        var currentHash = BflNotice.ComputeHash(BflNotice.Text);
 
         using (Assert.EnterMultipleScope())
         {
@@ -59,7 +72,10 @@ public sealed class BflNoticeTests
             Assert.That(BflNotice.IsAccepted(currentHash, currentHash), Is.True);
             Assert.That(BflNotice.IsAccepted(currentHash.ToUpperInvariant(), currentHash), Is.True);
             Assert.That(BflNotice.IsAccepted(string.Empty, currentHash), Is.False, "Nobody confirmed anything yet.");
-            Assert.That(BflNotice.IsAccepted(BflNotice.ComputeHash("old", "old"), currentHash), Is.False, "The notes changed since.");
+            Assert.That(BflNotice.IsAccepted(BflNotice.ComputeHash("old"), currentHash), Is.False, "The notes changed since.");
         }
     }
+
+    private static string NoticeSourceFile([CallerFilePath] string sourceFilePath = "") =>
+        Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFilePath)!, "..", "..", "MindWork AI Studio", "Assistants", "BeyondFactsLab", "BflNotice.cs"));
 }
