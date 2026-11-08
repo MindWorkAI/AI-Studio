@@ -2219,8 +2219,8 @@ public partial class ChatComponent : MSGComponentBase
     /// chats are stored by hand: the conversation would be gone once the new chat opens otherwise.
     /// The dialog says so beforehand, and when storing fails, nothing is compressed.<br/><br/>
     ///
-    /// The new chat is a copy of this one whose messages give way to the summary and the last answer
-    /// of the AI, see ChatCompression.TurnIntoContinuation. It thus keeps the workspace, the profile,
+    /// The new chat is a copy of this one whose messages give way to the summary and the last exchange,
+    /// see ChatCompression.TurnIntoContinuation. It thus keeps the workspace, the profile,
     /// the chat template, the tools, the data sources, and the restrictions of this chat, and it
     /// continues with the provider which wrote the summary. The summary passes the prompt injection
     /// filter before it becomes a message of the new chat, since a model reads it there again.<br/><br/>
@@ -2245,7 +2245,7 @@ public partial class ChatComponent : MSGComponentBase
         var plan = ChatCompressionPlan.Of(sourceChat, exampleConversationLength, sourceChat.Draft.IsEmpty);
         if (plan is null)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Compress, T("There is nothing before the last answer of the AI to summarize yet.")));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Compress, T("There is nothing to summarize yet before your last message and the last answer of the AI.")));
             return;
         }
 

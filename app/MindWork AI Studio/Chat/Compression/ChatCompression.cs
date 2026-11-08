@@ -22,14 +22,19 @@ public static class ChatCompression
     private static readonly TimeSpan REGEX_TIMEOUT = TimeSpan.FromSeconds(1);
 
     /// <summary>
-    /// Replaces the messages of a copy of the compressed chat with the summary and the last answer of the AI.
+    /// Replaces the messages of a copy of the compressed chat with the summary and the last exchange.
     /// </summary>
     /// <remarks>
     /// The plan is made anew on the copy, which is the compressed chat as it was serialized, so the
     /// copy keeps blocks and attachments of its own and shares none with the original. The new chat
-    /// then holds the example conversation of its chat template, the summary as a message of the
-    /// user, and the last answer of the AI. The summary goes right before that answer, which keeps
-    /// its time, so the order of the time stamps is the order of the conversation.<br/><br/>
+    /// then holds the example conversation of its chat template, the last message of the user with
+    /// the summary ahead of its text, and the last answer of the AI. The last message keeps its time
+    /// and its files, which the AI thus receives in full again, and the roles keep alternating, see
+    /// ChatCompressionPlan. Answering that message anew in the new chat answers it with the summary
+    /// at hand.<br/><br/>
+    ///
+    /// When the last message of the user was hidden and therefore summarized, the summary becomes a
+    /// message of its own, right before the last answer.<br/><br/>
     ///
     /// A message of the user which had no answer becomes the draft of the new chat, so the user finds
     /// it in the field for the next message, see ChatCompressionPlan.<br/><br/>
@@ -49,16 +54,25 @@ public static class ChatCompression
         var plan = ChatCompressionPlan.Of(continuation, exampleConversationLength, continuation.Draft.IsEmpty)
                    ?? throw new InvalidOperationException("The chat holds nothing to compress.");
 
-        var summary = new ContentBlock
+        ContentBlock summary;
+        if (plan.LastQuestion is { Content: ContentText lastQuestion } lastQuestionBlock)
         {
-            Time = plan.LastAnswer.Time.AddTicks(-1),
-            ContentType = ContentType.TEXT,
-            Role = ChatRole.USER,
-            Content = new ContentText
+            lastQuestion.Text = WithLastMessage(summaryMessage, lastQuestion.Text);
+            summary = lastQuestionBlock;
+        }
+        else
+        {
+            summary = new ContentBlock
             {
-                Text = summaryMessage,
-            },
-        };
+                Time = plan.LastAnswer.Time.AddTicks(-1),
+                ContentType = ContentType.TEXT,
+                Role = ChatRole.USER,
+                Content = new ContentText
+                {
+                    Text = summaryMessage,
+                },
+            };
+        }
 
         //
         // What the provider reported about the last answer was for the request of the compressed
@@ -84,8 +98,9 @@ public static class ChatCompression
     /// The text of the message which holds the summary in the new chat.
     /// </summary>
     /// <remarks>
-    /// The user reads it, so it says where the conversation comes from and that its files did not
-    /// come along. The AI reads it as well, which does no harm: it learns the same.
+    /// The user reads it, so it says where the conversation comes from and that the summary only
+    /// describes the files attached there. The AI reads it as well, which does no harm: it learns
+    /// the same.
     /// </remarks>
     /// <param name="sourceName">The name of the compressed chat.</param>
     /// <param name="summary">The summary, filtered for prompt injections.</param>
@@ -93,9 +108,17 @@ public static class ChatCompression
     public static string SummaryMessage(string sourceName, string summary)
     {
         var heading = string.Format(TB("Summary of the chat '{0}'"), sourceName);
-        var note = TB("This chat continues the conversation of that chat, which stays as it was. Files attached there are not part of this chat: attach them again when the AI needs their full content.");
+        var note = TB("This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.");
         return $"**{heading}**\n\n{note}\n\n---\n\n{summary.Trim()}";
     }
+
+    /// <summary>
+    /// The text of the last message of the user in the new chat: the summary, followed by the message as it was.
+    /// </summary>
+    /// <param name="summaryMessage">The text of the message which holds the summary, see SummaryMessage.</param>
+    /// <param name="lastMessage">The text of the last message of the user.</param>
+    /// <returns>The text of the message.</returns>
+    internal static string WithLastMessage(string summaryMessage, string lastMessage) => $"{summaryMessage}\n\n---\n\n**{TB("Your last message in that chat")}**\n\n{lastMessage}";
 
     /// <summary>
     /// The name of a chat as the summary and the suggested name of its continuation call it.

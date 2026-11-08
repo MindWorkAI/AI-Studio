@@ -76,15 +76,21 @@ public partial class ChatCompressionDialog : MSGComponentBase
 
     #endregion
 
-    private bool HasAttachments => this.Plan.Preamble.Concat(this.Plan.ToSummarize).Any(block => block.Content?.FileAttachments.Count > 0);
+    private bool HasDocumentsToSummarize => this.Plan.ToSummarize.Any(block => block.Content?.FileAttachments.MayContainDocuments() is true);
+
+    private bool HasImagesToSummarize => this.Plan.ToSummarize.Any(block => block.Content?.FileAttachments.ContainsImages() is true);
 
     private string SummaryScope => this.Plan.ToSummarize.Count is 1
         ? string.Format(T("'{0}' summarizes 1 message."), this.ProviderSettings.InstanceName)
         : string.Format(T("'{0}' summarizes {1} messages."), this.ProviderSettings.InstanceName, this.Plan.ToSummarize.Count);
 
-    private string ProgressMessage => this.progress.Parts > 1
-        ? string.Format(T("The AI is summarizing part {0} of {1}..."), this.progress.Part, this.progress.Parts)
-        : T("The AI is summarizing the chat...");
+    private string ProgressMessage => this.progress.Step switch
+    {
+        ChatCompressionStep.SUMMARIZING when this.progress.Total > 1 => string.Format(T("The AI is summarizing part {0} of {1}..."), this.progress.Current, this.progress.Total),
+        ChatCompressionStep.SUMMARIZING => T("The AI is summarizing the chat..."),
+
+        _ => T("AI Studio is reading the messages and their files..."),
+    };
 
     private string? ValidateChatName(string? value) => string.IsNullOrWhiteSpace(value) ? T("Please enter a chat name.") : null;
 

@@ -1,6 +1,7 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Chat.Compression;
@@ -17,8 +18,9 @@ namespace AIStudio.Chat.Compression;
 /// chat, it has to pass the prompt injection filter, see AssistantLaunchService.CreateTextPayloadAsync.
 /// </remarks>
 /// <param name="tokenCounter">Counts the tokens of the messages, with the tokenizer of the provider.</param>
+/// <param name="promptInjectionGuard">Reports what the filter took out of the attached documents, once for the whole compression.</param>
 /// <param name="logger">The logger.</param>
-public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter, ILogger<ChatCompressionService> logger)
+public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter, PromptInjectionGuardService promptInjectionGuard, ILogger<ChatCompressionService> logger)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatCompressionService).Namespace, nameof(ChatCompressionService));
 
@@ -52,6 +54,17 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     /// Asks the AI for a summary of the messages the plan names.
     /// </summary>
     /// <remarks>
+    /// The summary takes in the summarized messages as the AI received them in the chat, with the
+    /// text of their documents and transcripts, see ContentText.PrepareTextContentForAI. A document
+    /// stored at its first send comes from the provenance store, so the summary reads what the AI
+    /// read, even when its file changed or is gone by now. The last exchange goes along as well,
+    /// marked, so that the summary leads up to it, see ChatCompressionInput.Render.<br/><br/>
+    ///
+    /// Images do not go along. What matters of an image for the conversation shows in what the
+    /// conversation said about it, the answers of the AI above all, and the summary keeps that.
+    /// Describing every image anew would cost a request of its own per image, which adds up to
+    /// hundreds in a chat full of screenshots.<br/><br/>
+    ///
     /// A conversation which does not fit into one request is summarized in parts, one after the
     /// other, see ChatCompressionInput.TakePart. Each part gets what the context window of the model
     /// leaves after the summary so far, which is counted anew after every answer: a model may write
@@ -76,15 +89,26 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
 
         try
         {
+            progress?.Report(new(ChatCompressionStep.READING_FILES, 0, 0));
+            var texts = await this.ReadMessagesAsync(plan.ToSummarize, token);
+
             //
-            // The last answer goes along at its place in the conversation, marked, so that the summary
-            // knows what follows it. Messages after it, such as an unanswered question, keep coming
-            // after it, so the AI does not take the answer for a reply to them:
+            // The last exchange goes along at its place in the conversation, marked, so that the
+            // summary knows what follows it. Messages after it, such as an unanswered question, keep
+            // coming after it, so the AI does not take the answer for a reply to them:
             //
-            var messages = new List<CountedMessage>(plan.ToSummarize.Count + 1);
+            var kept = new Dictionary<ContentBlock, KeptMessage>(ReferenceEqualityComparer.Instance) { [plan.LastAnswer] = KeptMessage.LAST_ANSWER };
+            if (plan.LastQuestion is not null)
+                kept[plan.LastQuestion] = KeptMessage.LAST_QUESTION;
+
+            var messages = new List<CountedMessage>(plan.ToSummarize.Count + kept.Count);
             var number = 0;
-            foreach (var block in plan.ToSummarize.Append(plan.LastAnswer).OrderBy(block => block.Time))
-                messages.Add(await this.CountAsync(provider, ChatCompressionInput.Render(block, ++number, isLastAnswer: ReferenceEquals(block, plan.LastAnswer)), token));
+            foreach (var block in plan.ToSummarize.Concat(kept.Keys).OrderBy(block => block.Time))
+            {
+                var keptMessage = kept.GetValueOrDefault(block, KeptMessage.NONE);
+                var text = keptMessage is KeptMessage.NONE ? texts[block] : (block.Content as ContentText)?.Text ?? string.Empty;
+                messages.Add(await this.CountAsync(provider, ChatCompressionInput.Render(block, ++number, text, keptMessage), token));
+            }
 
             var window = provider.GetModelProfile().Context;
             var tokensForTheSummary = window.IsKnown ? Math.Clamp(window.DefaultTokens / 4, MIN_TOKENS_FOR_THE_SUMMARY, MAX_TOKENS_FOR_THE_SUMMARY) : 0;
@@ -102,9 +126,9 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
 
             var summary = string.Empty;
             var summaryTokens = 0;
-            var start = 0;
+            var (startMessage, startOffset) = (0, 0);
             var part = 0;
-            while (start < messages.Count)
+            while (startMessage < messages.Count)
             {
                 token.ThrowIfCancellationRequested();
 
@@ -112,10 +136,10 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
                 if (tokensPerPart < MIN_TOKENS_PER_PART)
                     return ChatCompressionResult.Failed(TB("The summary grew too long for the context window of the selected model. Please select a model which takes longer texts."));
 
-                var (conversation, next) = ChatCompressionInput.TakePart(messages, start, tokensPerPart);
-                var isLastPart = next >= messages.Count;
+                var (conversation, nextMessage, nextOffset) = ChatCompressionInput.TakePart(messages, startMessage, startOffset, tokensPerPart);
+                var isLastPart = nextMessage >= messages.Count;
                 part++;
-                progress?.Report(new(part, isLastPart ? part : Math.Max(part + 1, expectedParts)));
+                progress?.Report(new(ChatCompressionStep.SUMMARIZING, part, isLastPart ? part : Math.Max(part + 1, expectedParts)));
 
                 var request = ChatCompressionPrompts.BuildRequest(conversation, part, isLastPart, summary, focus, maxWords);
                 summary = await RequestSummaryAsync(sourceChat, provider, request, token);
@@ -127,7 +151,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
                 if (!isLastPart && window.IsKnown)
                     summaryTokens = (await this.CountAsync(provider, summary, token)).Tokens;
 
-                start = next;
+                (startMessage, startOffset) = (nextMessage, nextOffset);
             }
 
             return ChatCompressionResult.Succeeded(summary);
@@ -189,6 +213,46 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     }
 
     internal static int EstimateTokens(string text) => (text.Length + 2) / 3;
+
+    /// <summary>
+    /// Reads the messages to summarize as the AI received them in the chat, with the text of their documents and transcripts.
+    /// </summary>
+    /// <remarks>
+    /// The images stay out, see SummarizeAsync; the rendered message names them. Reading works on a
+    /// copy of each message, so the chat stays untouched. What the filter takes out of the
+    /// documents is reported once for all of them, as for a request of the chat, see
+    /// ListContentBlockExtensions.BuildMessagesAsync.
+    /// </remarks>
+    /// <param name="blocks">The messages to summarize.</param>
+    /// <param name="token">Ends the reading between two messages.</param>
+    /// <returns>The texts by their blocks.</returns>
+    private async Task<IReadOnlyDictionary<ContentBlock, string>> ReadMessagesAsync(IReadOnlyList<ContentBlock> blocks, CancellationToken token)
+    {
+        var texts = new Dictionary<ContentBlock, string>(ReferenceEqualityComparer.Instance);
+        await using var reportingScope = blocks.Any(block => block.Content is ContentText text && text.FileAttachments.MayContainDocuments())
+            ? promptInjectionGuard.BeginAction()
+            : null;
+
+        foreach (var block in blocks)
+        {
+            token.ThrowIfCancellationRequested();
+            if (block.Content is not ContentText text)
+            {
+                texts[block] = string.Empty;
+                continue;
+            }
+
+            var withoutImages = new ContentText
+            {
+                Text = text.Text,
+                FileAttachments = [..text.FileAttachments.Where(attachment => !attachment.IsImage)],
+            };
+
+            texts[block] = await withoutImages.PrepareTextContentForAI(reportingScope);
+        }
+
+        return texts;
+    }
 
     /// <summary>
     /// Sends one request for a summary.

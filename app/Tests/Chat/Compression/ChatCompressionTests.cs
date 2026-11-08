@@ -11,7 +11,7 @@ namespace AIStudio.Tests.Chat.Compression;
 /// <remarks>
 /// The new chat starts as a copy of the compressed one, so it keeps everything which is not a
 /// message, the restrictions above all: they say what the conversation has seen, and the summary
-/// carries that content along. Only the messages give way to the summary and the last answer.
+/// carries that content along. Only the messages give way to the summary and the last exchange.
 /// </remarks>
 [TestFixture]
 public sealed class ChatCompressionTests
@@ -19,7 +19,7 @@ public sealed class ChatCompressionTests
     private static readonly DateTimeOffset START = new(2026, 11, 7, 10, 0, 0, TimeSpan.Zero);
 
     [Test]
-    public void TheSummaryAndTheLastAnswerReplaceTheMessages()
+    public void TheSummaryGoesAheadOfTheLastMessageOfTheUser()
     {
         var chat = Chat(
             Block(ChatRole.USER, "Example question", 1, hidden: true),
@@ -34,12 +34,55 @@ public sealed class ChatCompressionTests
         var ordered = chat.Blocks.OrderBy(block => block.Time).ToList();
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(Texts(chat), Is.EqualTo(new[] { "Example question", "Example answer", "The summary", "Second answer" }), "The order of the time stamps is the order of the conversation.");
-            Assert.That(ordered[2].Role, Is.EqualTo(ChatRole.USER), "The summary stands as a message of the user between two answers, so the roles keep alternating.");
+            Assert.That(Texts(chat), Is.EqualTo(new[] { "Example question", "Example answer", ChatCompression.WithLastMessage("The summary", "Second question"), "Second answer" }), "The order of the time stamps is the order of the conversation.");
+            Assert.That(ordered.Select(block => block.Role), Is.EqualTo(new[] { ChatRole.USER, ChatRole.AI, ChatRole.USER, ChatRole.AI }), "The summary shares the message of the user, so the roles keep alternating.");
             Assert.That(ordered[2].HideFromUser, Is.False, "The user sees what the new chat continues from.");
-            Assert.That(ordered[2].ContentType, Is.EqualTo(ContentType.TEXT));
+            Assert.That(ordered[2].Time, Is.EqualTo(START.AddMinutes(5)), "The last message of the user keeps its time.");
             Assert.That(ordered[3].Time, Is.EqualTo(START.AddMinutes(6)), "The last answer keeps its time.");
             Assert.That(chat.Blocks, Is.EqualTo(ordered), "The list is in the order of the conversation as well.");
+        }
+    }
+
+    [Test]
+    public void TheFilesOfTheLastMessageStayAttached()
+    {
+        var lastQuestion = Block(ChatRole.USER, "Please compare both.", 3);
+        ((ContentText)lastQuestion.Content!).FileAttachments =
+        [
+            new FileAttachment(FileAttachmentType.DOCUMENT, "report.pdf", "C:/files/report.pdf", 1_000),
+            new FileAttachmentImage("chart.png", "C:/files/chart.png", 1_000),
+        ];
+
+        var chat = Chat(
+            Block(ChatRole.USER, "First question", 1),
+            Block(ChatRole.AI, "First answer", 2),
+            lastQuestion,
+            Block(ChatRole.AI, "The comparison", 4));
+
+        ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE, "provider-1");
+
+        var message = (ContentText)chat.Blocks.OrderBy(block => block.Time).First().Content!;
+        Assert.That(message.FileAttachments.Select(attachment => attachment.FileName), Is.EqualTo(new[] { "report.pdf", "chart.png" }), "The AI receives the files of the last message in full again.");
+    }
+
+    [Test]
+    public void TheSummaryStandsAloneWhenTheLastMessageWasHidden()
+    {
+        var chat = Chat(
+            Block(ChatRole.USER, "First question", 1),
+            Block(ChatRole.AI, "First answer", 2),
+            Block(ChatRole.USER, "Prompt of an assistant", 3, hidden: true),
+            Block(ChatRole.AI, "Result of the assistant", 4));
+
+        ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE, "provider-1");
+
+        var ordered = chat.Blocks.OrderBy(block => block.Time).ToList();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Texts(chat), Is.EqualTo(new[] { "The summary", "Result of the assistant" }), "The hidden message was summarized, so the summary stands as a message of its own.");
+            Assert.That(ordered[0].Role, Is.EqualTo(ChatRole.USER));
+            Assert.That(ordered[0].HideFromUser, Is.False);
+            Assert.That(ordered[0].Time, Is.LessThan(ordered[1].Time), "The summary goes right before the last answer.");
         }
     }
 
@@ -72,7 +115,9 @@ public sealed class ChatCompressionTests
     {
         var chat = Chat(
             Block(ChatRole.USER, "Question about the confidential handbook", 1),
-            Block(ChatRole.AI, "Answer from the confidential handbook", 2));
+            Block(ChatRole.AI, "Answer from the confidential handbook", 2),
+            Block(ChatRole.USER, "Follow-up question", 3),
+            Block(ChatRole.AI, "Follow-up answer", 4));
 
         chat.DataSecurity = DataSourceSecurity.SELF_HOSTED;
         chat.RequireProviderConfidence(ConfidenceLevel.MEDIUM);
@@ -89,12 +134,14 @@ public sealed class ChatCompressionTests
     [Test]
     public void AnUnansweredQuestionBecomesTheDraft()
     {
-        var pending = Block(ChatRole.USER, "Question which was too long for the model", 3);
+        var pending = Block(ChatRole.USER, "Question which was too long for the model", 5);
         var report = new FileAttachment(FileAttachmentType.DOCUMENT, "report.pdf", "C:/files/report.pdf", 1_000);
         ((ContentText)pending.Content!).FileAttachments = [report];
         var chat = Chat(
             Block(ChatRole.USER, "First question", 1),
             Block(ChatRole.AI, "First answer", 2),
+            Block(ChatRole.USER, "Second question", 3),
+            Block(ChatRole.AI, "Second answer", 4),
             pending);
 
         ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE, "provider-1");
@@ -103,7 +150,7 @@ public sealed class ChatCompressionTests
         {
             Assert.That(chat.Draft.Text, Is.EqualTo("Question which was too long for the model"), "The user finds the question in the field for the next message and can send it again.");
             Assert.That(chat.Draft.FileAttachments.Select(attachment => attachment.FileName), Is.EqualTo(new[] { "report.pdf" }));
-            Assert.That(Texts(chat), Is.EqualTo(new[] { "The summary", "First answer" }), "The question is in the draft, so it is not a message of the new chat as well.");
+            Assert.That(Texts(chat), Is.EqualTo(new[] { ChatCompression.WithLastMessage("The summary", "Second question"), "Second answer" }), "The question is in the draft, so it is not a message of the new chat as well.");
         }
     }
 
@@ -134,12 +181,24 @@ public sealed class ChatCompressionTests
     [Test]
     public void TheSummaryMessageNamesTheChatItContinues()
     {
-        var message = ChatCompression.SummaryMessage("Budget 2027", "  1. Intent: ...  ");
+        var message = ChatCompression.SummaryMessage("Budget 2027", "  1. Primary request and intent: ...  ");
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(message, Does.StartWith("**Summary of the chat 'Budget 2027'**"));
-            Assert.That(message, Does.EndWith("\n\n1. Intent: ..."));
+            Assert.That(message, Does.EndWith("\n\n1. Primary request and intent: ..."));
+        }
+    }
+
+    [Test]
+    public void TheLastMessageFollowsTheSummaryUnchanged()
+    {
+        var message = ChatCompression.WithLastMessage("**Summary of the chat 'Budget 2027'**", "What about  the travel costs?\n");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(message, Does.StartWith("**Summary of the chat 'Budget 2027'**\n\n---\n\n"));
+            Assert.That(message, Does.EndWith("**\n\nWhat about  the travel costs?\n"), "The message of the user stays word for word.");
         }
     }
 

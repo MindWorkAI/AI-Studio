@@ -6,9 +6,15 @@ namespace AIStudio.Chat.Compression;
 /// <remarks>
 /// Compressing never changes the chat itself. The conversation continues in a new chat, which gets
 /// the example conversation of the chat template, a summary of everything in between, and the last
-/// answer of the AI word for word. The last answer stays because the next message of the user
-/// mostly refers to it, and because the summary then stands as a message of the user between two
-/// answers: the roles keep alternating, which the chat templates of some local models insist on.<br/><br/>
+/// exchange word for word: the last message of the user, with its files, and the last answer of the
+/// AI. The last exchange stays because the next message of the user mostly refers to it. The summary
+/// goes into the last message of the user, ahead of its text, see ChatCompression.TurnIntoContinuation:
+/// as a message of its own, it would follow the example conversation and precede the last message,
+/// so two messages of the user would meet, which the chat templates of some local models refuse.<br/><br/>
+///
+/// A last message of the user which is hidden, such as the prompt an assistant sent into the chat,
+/// is summarized instead: the new chat could show it only together with the summary, which the user
+/// has to see. The summary then stands as a message of its own, right before the last answer.<br/><br/>
 ///
 /// A message of the user which never got an answer, e.g., because the chat had grown too long for
 /// the model, is not summarized as if it had been answered. It goes into the field for the next
@@ -17,9 +23,10 @@ namespace AIStudio.Chat.Compression;
 /// </remarks>
 /// <param name="Preamble">The example conversation of the chat template, which the new chat starts with unchanged.</param>
 /// <param name="ToSummarize">The messages the summary replaces, in the order of the conversation.</param>
+/// <param name="LastQuestion">The last message of the user before the last answer, which the new chat keeps word for word with its files, or null when it is hidden and therefore summarized.</param>
 /// <param name="LastAnswer">The last answer of the AI, which the new chat keeps word for word.</param>
 /// <param name="PendingQuestion">The last message of the user when it has no answer and goes into the field for the next message of the new chat, otherwise null.</param>
-public sealed record ChatCompressionPlan(IReadOnlyList<ContentBlock> Preamble, IReadOnlyList<ContentBlock> ToSummarize, ContentBlock LastAnswer, ContentText? PendingQuestion)
+public sealed record ChatCompressionPlan(IReadOnlyList<ContentBlock> Preamble, IReadOnlyList<ContentBlock> ToSummarize, ContentBlock? LastQuestion, ContentBlock LastAnswer, ContentText? PendingQuestion)
 {
     /// <summary>
     /// Plans how to compress the given chat.
@@ -37,7 +44,7 @@ public sealed record ChatCompressionPlan(IReadOnlyList<ContentBlock> Preamble, I
     /// <param name="chat">The chat to compress. It stays unchanged.</param>
     /// <param name="exampleConversationLength">How many blocks the example conversation of the chat template holds, 0 without a template.</param>
     /// <param name="draftIsEmpty">Whether the user has not started a message of their own in the chat.</param>
-    /// <returns>The plan, or null when the chat holds no finished answer of the AI with something before it to summarize.</returns>
+    /// <returns>The plan, or null when the chat holds no finished answer of the AI, or nothing to summarize besides the last exchange.</returns>
     public static ChatCompressionPlan? Of(ChatThread chat, int exampleConversationLength, bool draftIsEmpty)
     {
         var blocks = chat.Blocks.OrderBy(block => block.Time).ToList();
@@ -50,12 +57,18 @@ public sealed record ChatCompressionPlan(IReadOnlyList<ContentBlock> Preamble, I
         if (lastAnswerIndex < preambleLength)
             return null;
 
+        var beforeTheAnswer = blocks[preambleLength..lastAnswerIndex];
+        var lastQuestion = beforeTheAnswer.LastOrDefault(block => block.Role is ChatRole.USER && IsSentText(block));
+        if (lastQuestion is { HideFromUser: true })
+            lastQuestion = null;
+
         var afterTheAnswer = blocks[(lastAnswerIndex + 1)..];
         var pendingBlock = draftIsEmpty
             ? afterTheAnswer.LastOrDefault(block => block is { Role: ChatRole.USER, HideFromUser: false } && IsSentText(block))
             : null;
 
-        var toSummarize = blocks[preambleLength..lastAnswerIndex]
+        var toSummarize = beforeTheAnswer
+            .Where(block => !ReferenceEquals(block, lastQuestion))
             .Concat(afterTheAnswer.Where(block => !ReferenceEquals(block, pendingBlock)))
             .Where(IsSentText)
             .ToList();
@@ -63,7 +76,7 @@ public sealed record ChatCompressionPlan(IReadOnlyList<ContentBlock> Preamble, I
         if (toSummarize.Count is 0)
             return null;
 
-        return new(blocks[..preambleLength], toSummarize, blocks[lastAnswerIndex], pendingBlock?.Content as ContentText);
+        return new(blocks[..preambleLength], toSummarize, lastQuestion, blocks[lastAnswerIndex], pendingBlock?.Content as ContentText);
     }
 
     /// <summary>

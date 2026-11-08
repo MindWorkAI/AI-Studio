@@ -7,26 +7,35 @@ namespace AIStudio.Chat.Compression;
 /// Turns the messages to summarize into the text the AI reads, and splits that text into parts which fit the model.
 /// </summary>
 /// <remarks>
-/// The summary is asked for when a chat has grown large, often because it no longer fits the model.
-/// A request which handed the AI the whole conversation as the chat sends it would then fail just
-/// the same. So the AI gets the texts of the messages only: attached documents and images stand in
-/// by their names, since what the conversation learned from them is in the answers anyway. Whatever
-/// is still too long for one request is split into parts, and the AI summarizes them one after the
-/// other, each time on top of its summary so far.
+/// Each message reads as the AI received it in the chat, with the content of its documents and
+/// transcripts. Attached images are only named: the summary knows of them what the conversation
+/// said about them. Only the last exchange reads as its bare text, since it follows the summary
+/// word for word, its files included.<br/><br/>
+///
+/// A chat is compressed when it has grown large, often because it no longer fits the model, so a
+/// single request with all of it would fail just the same. The text is therefore split into parts,
+/// and the AI summarizes them one after the other, each time on top of its summary so far. A
+/// message larger than a whole part, e.g., one with a long document, is split across several
+/// parts, so that nothing of it gets lost.
 /// </remarks>
 public static class ChatCompressionInput
 {
     /// <summary>
-    /// Stands for the middle of a message which is too long for a part of its own.
+    /// Begins a part which carries on with a message the part before ended with.
     /// </summary>
-    private const string LEFT_OUT_MARKER = "[... {0} characters left out ...]";
+    internal const string CONTINUATION_MARKER = "[... continuation of the message the previous part ended with ...]\n";
 
     /// <summary>
-    /// How much of a message cut in the middle stays, measured against what would fit exactly.
+    /// Ends a part whose last message continues in the next part.
+    /// </summary>
+    internal const string TO_BE_CONTINUED_MARKER = "\n[... the message continues in the next part ...]";
+
+    /// <summary>
+    /// How much of a text fits, measured against what the estimate says would fit exactly.
     /// </summary>
     /// <remarks>
-    /// The tokens of the cut message are only estimated from its characters, and a few tokens go to
-    /// the marker, so the cut leaves some room.
+    /// The tokens of a piece of a text are only estimated from its characters, and a few tokens go to
+    /// the markers, so splitting leaves some room.
     /// </remarks>
     private const double CUT_MARGIN = 0.9;
 
@@ -37,31 +46,37 @@ public static class ChatCompressionInput
     /// A heading names the number, the author, and the time, so that the summary can keep the order
     /// and tell who said what. Messages hidden from the user, such as the prompts an assistant sent
     /// into the chat, are marked: the user never saw them, which matters for how the summary words
-    /// them. The time is the stored one, in invariant notation, so that a summary does not depend on
-    /// the language of the app.
+    /// them. So are the messages of the last exchange, which the summary must neither summarize nor
+    /// repeat. The time is the stored one, in invariant notation, so that a summary does not depend
+    /// on the language of the app.
     /// </remarks>
     /// <param name="block">The block of the message. It must be one which the message builder sends, see ChatCompressionPlan.</param>
     /// <param name="number">The number of the message in the conversation, counted from 1.</param>
-    /// <param name="isLastAnswer">Whether this is the last answer of the AI, which the new chat keeps word for word.</param>
+    /// <param name="text">The text of the message: the one the AI received in the chat, with the content of its documents, or the bare text of a message of the last exchange.</param>
+    /// <param name="kept">Whether the message follows the summary word for word.</param>
     /// <returns>The message as the AI reads it.</returns>
-    public static string Render(ContentBlock block, int number, bool isLastAnswer = false)
+    public static string Render(ContentBlock block, int number, string text, KeptMessage kept)
     {
-        var text = block.Content as ContentText;
         var sb = new StringBuilder();
         sb.Append(CultureInfo.InvariantCulture, $"[Message {number}, {RoleName(block.Role)}, {block.Time.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}");
         if (block.HideFromUser)
             sb.Append(", not shown to the user");
 
-        if (isLastAnswer)
-            sb.Append(", the last answer, which follows your summary word for word");
+        sb.Append(kept switch
+        {
+            KeptMessage.LAST_QUESTION => ", the last message of the user, which follows your summary word for word together with its files",
+            KeptMessage.LAST_ANSWER => ", the last answer, which follows your summary word for word",
+
+            _ => string.Empty,
+        });
 
         sb.Append("]\n");
-        sb.Append((text?.Text ?? string.Empty).Trim());
+        sb.Append(text.Trim());
         sb.Append('\n');
 
-        var attachments = (text?.FileAttachments ?? []).Select(Describe).ToList();
+        var attachments = (block.Content as ContentText)?.FileAttachments ?? [];
         if (attachments.Count > 0)
-            sb.Append("Attached files: ").Append(string.Join(", ", attachments)).Append('\n');
+            sb.Append("Attached files: ").Append(string.Join(", ", attachments.Select(Describe))).Append('\n');
 
         return sb.ToString();
     }
@@ -70,9 +85,7 @@ public static class ChatCompressionInput
     /// Splits the messages into parts of at most the given number of tokens each.
     /// </summary>
     /// <remarks>
-    /// Messages stay whole and in their order, so that a part never ends in the middle of one. A
-    /// message which alone is larger than a part is cut in the middle and gets a part of its own:
-    /// its beginning and its end are what a conversation refers to most.
+    /// The rules are those of TakePart, with the same room for every part.
     /// </remarks>
     /// <param name="messages">The rendered messages with their tokens, in the order of the conversation.</param>
     /// <param name="tokensPerPart">How many tokens of messages one part may hold.</param>
@@ -80,12 +93,12 @@ public static class ChatCompressionInput
     public static IReadOnlyList<string> SplitIntoParts(IReadOnlyList<CountedMessage> messages, int tokensPerPart)
     {
         var parts = new List<string>();
-        var start = 0;
-        while (start < messages.Count)
+        var (message, offset) = (0, 0);
+        while (message < messages.Count)
         {
-            var (part, next) = TakePart(messages, start, tokensPerPart);
+            var (part, nextMessage, nextOffset) = TakePart(messages, message, offset, tokensPerPart);
             parts.Add(part);
-            start = next;
+            (message, offset) = (nextMessage, nextOffset);
         }
 
         return parts;
@@ -96,76 +109,87 @@ public static class ChatCompressionInput
     /// </summary>
     /// <remarks>
     /// The summary asks for one part at a time, because the room for a part shrinks as the summary
-    /// so far grows, which only shows after each answer. The rules are those of SplitIntoParts.
+    /// so far grows, which only shows after each answer.<br/><br/>
+    ///
+    /// Messages stay whole and in their order where they can. A message which does not fit into
+    /// what is left of the part starts the next one. A message larger than a whole part is split:
+    /// the part takes as much of it as fits, preferably up to the end of a line, and the next part
+    /// carries on where it ended. Markers tell the AI where a message breaks off and goes on. A split
+    /// never falls between the two halves of a surrogate pair.
     /// </remarks>
     /// <param name="messages">The rendered messages with their tokens, in the order of the conversation.</param>
-    /// <param name="start">The index of the first message of the part.</param>
+    /// <param name="startMessage">The index of the first message of the part.</param>
+    /// <param name="startOffset">Where in the text of that message the part begins: 0, unless the part before split it.</param>
     /// <param name="tokensPerPart">How many tokens of messages the part may hold.</param>
-    /// <returns>The text of the part, and the index of the first message after it.</returns>
-    internal static (string Text, int Next) TakePart(IReadOnlyList<CountedMessage> messages, int start, int tokensPerPart)
+    /// <returns>The text of the part, and where the next part begins: the index of its first message, and the offset in the text of that message.</returns>
+    internal static (string Text, int NextMessage, int NextOffset) TakePart(IReadOnlyList<CountedMessage> messages, int startMessage, int startOffset, int tokensPerPart)
     {
         var part = new StringBuilder();
         var partTokens = 0;
-        var index = start;
+        var index = startMessage;
+        var offset = startOffset;
         while (index < messages.Count)
         {
-            var text = messages[index].Text;
-            var tokens = messages[index].Tokens;
-            if (tokens > tokensPerPart)
+            var message = messages[index];
+            if (offset >= message.Text.Length)
             {
-                // A message too large for any part gets a part of its own:
-                if (part.Length > 0)
-                    break;
-
-                text = CutMiddle(text, tokens, tokensPerPart);
-                tokens = tokensPerPart;
+                (index, offset) = (index + 1, 0);
+                continue;
             }
 
-            if (part.Length > 0 && partTokens + tokens > tokensPerPart)
+            var rest = message.Text.Length - offset;
+            var tokens = offset is 0 ? message.Tokens : TokensOfPiece(message, rest);
+            var marker = offset is 0 ? string.Empty : CONTINUATION_MARKER;
+            if (tokens <= tokensPerPart - partTokens)
+            {
+                if (part.Length > 0)
+                    part.Append('\n');
+
+                part.Append(marker).Append(message.Text, offset, rest);
+                partTokens += tokens;
+                (index, offset) = (index + 1, 0);
+                continue;
+            }
+
+            // A message which does not fit into what is left starts the next part:
+            if (part.Length > 0)
                 break;
 
-            if (part.Length > 0)
-                part.Append('\n');
-
-            part.Append(text);
-            partTokens += tokens;
-            index++;
+            // A message larger than a whole part is split, and the next part carries on with it:
+            var length = PieceLength(message.Text, offset, rest, tokens, tokensPerPart);
+            part.Append(marker).Append(message.Text, offset, length).Append(TO_BE_CONTINUED_MARKER);
+            return (part.ToString(), index, offset + length);
         }
 
-        return (part.ToString(), index);
+        return (part.ToString(), index, offset);
     }
 
     /// <summary>
-    /// Cuts the middle out of a text, so that it takes about the given number of tokens.
+    /// Estimates the tokens of the end of a message, from the characters per token of the whole message.
+    /// </summary>
+    private static int TokensOfPiece(CountedMessage message, int length) => (int)Math.Ceiling(message.Tokens * (double)length / message.Text.Length);
+
+    /// <summary>
+    /// How many characters of a message, from the given offset on, fit into a part.
     /// </summary>
     /// <remarks>
-    /// The characters per token are those of the very text, which the counted tokens tell. Two thirds
-    /// of what stays come from the beginning, one third from the end. Never cuts between the two
-    /// halves of a surrogate pair.
+    /// At least one character, so that every part moves on, and less than the rest, which does not
+    /// fit. A line break in the last tenth of the piece ends it, so that lines stay whole.
     /// </remarks>
-    /// <param name="text">The text.</param>
-    /// <param name="tokens">How many tokens the whole text takes.</param>
-    /// <param name="maxTokens">How many tokens the text may take.</param>
-    /// <returns>The text when it fits, otherwise its beginning and its end with a marker in between.</returns>
-    internal static string CutMiddle(string text, int tokens, int maxTokens)
+    private static int PieceLength(string text, int offset, int rest, int restTokens, int tokensPerPart)
     {
-        if (tokens <= maxTokens || text.Length is 0)
-            return text;
+        var length = (int)(rest * (Math.Max(0, tokensPerPart) / (double)restTokens) * CUT_MARGIN);
+        length = Math.Clamp(length, 1, Math.Max(1, rest - 1));
 
-        var keep = Math.Max(0, (int)(text.Length * (Math.Max(0, maxTokens) / (double)tokens) * CUT_MARGIN));
-        if (keep >= text.Length)
-            return text;
+        var searchLength = Math.Max(1, length / 10);
+        var lineBreak = text.LastIndexOf('\n', offset + length - 1, searchLength);
+        if (lineBreak >= offset)
+            length = lineBreak - offset + 1;
 
-        var headLength = keep * 2 / 3;
-        if (headLength > 0 && char.IsHighSurrogate(text[headLength - 1]))
-            headLength--;
+        if (char.IsHighSurrogate(text[offset + length - 1]))
+            length = length > 1 ? length - 1 : Math.Min(rest, length + 1);
 
-        var tailStart = text.Length - (keep - headLength);
-        if (tailStart < text.Length && char.IsLowSurrogate(text[tailStart]))
-            tailStart++;
-
-        var marker = string.Format(CultureInfo.InvariantCulture, LEFT_OUT_MARKER, tailStart - headLength);
-        return string.Concat(text.AsSpan(0, headLength), $"\n{marker}\n", text.AsSpan(tailStart));
+        return length;
     }
 
     private static string RoleName(ChatRole role) => role switch

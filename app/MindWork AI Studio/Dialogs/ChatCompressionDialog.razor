@@ -4,7 +4,7 @@
     <DialogContent>
         <MudStack Spacing="3">
             <MudText Typo="Typo.body1">
-                @T("The AI summarizes this chat, and the conversation continues in a new chat which holds the summary and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.")
+                @T("The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.")
             </MudText>
 
             <MudText Typo="Typo.body2">
@@ -25,10 +25,17 @@
                 </MudAlert>
             }
 
-            @if (this.HasAttachments)
+            @if (this.HasDocumentsToSummarize)
             {
                 <MudAlert Severity="Severity.Info" Dense="true">
-                    @T("Files attached in this chat do not go into the new chat. The summary keeps what the conversation said about them.")
+                    @T("The summary takes in the content of the documents attached in this chat. This takes longer than summarizing the messages alone.")
+                </MudAlert>
+            }
+
+            @if (this.HasImagesToSummarize)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    @T("The AI does not look at the images in this chat again. The summary keeps what the conversation said about them.")
                 </MudAlert>
             }
 
