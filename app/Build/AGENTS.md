@@ -43,13 +43,13 @@ order of the list is chronological only. Bug reports
 alone and commissioned work outside this repository get no entry on the supporters page; the changelog may
 still thank them.
 
-**Concepts and ideas.** A person whose concept, content, or idea shapes a part of AI Studio, such as the
-researcher who designed an assistant, gets an entry in the list "Concepts and Ideas" on the supporters page,
-also without any contribution to this repository. The maintainer decides who counts, and the person agrees
+**Ideas, expertise, and concepts.** A person whose idea, expertise, or concept shapes a part of AI Studio,
+such as the researcher who designed an assistant and wrote its content, gets an entry in the list "Ideas,
+Expertise, and Concepts" on the supporters page, also without any contribution to this repository. The maintainer decides who counts, and the person agrees
 to be named. Their entry gives their full name, since they may have no GitHub account, and links to a page
 of their own if they have one:
 `<Supporter Name="<first name> <last name>" Type="SupporterType.INDIVIDUAL" URL="<their page>" Acknowledgment="@T("…")"/>`,
-or without `URL`. The list is sorted by when the concept or idea came to AI Studio.
+or without `URL`. The list is sorted by when the idea, expertise, or concept came to AI Studio.
 
 The credit choice in the pull request template is binding:
 
