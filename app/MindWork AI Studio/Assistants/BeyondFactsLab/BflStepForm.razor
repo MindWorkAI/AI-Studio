@@ -1,0 +1,97 @@
+@inherits MSGComponentBase
+
+@if (this.MissingFields.Count > 0)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+        @T("Some details are still missing. The chat will ask for them, and you can continue anyway.")
+        <br/>
+        @string.Join(", ", this.MissingFields.Select(field => field.Label))
+    </MudAlert>
+}
+
+@if (!string.IsNullOrWhiteSpace(this.Step.FormHint))
+{
+    <MudText Typo="Typo.body2" Class="mb-3">@this.Step.FormHint</MudText>
+}
+
+<MudStack Spacing="3">
+    @foreach (var field in this.Fields)
+    {
+        switch (field.Kind)
+        {
+            case BflFieldKind.SINGLE_LINE:
+            case BflFieldKind.LINK:
+                <MudTextField @key="field.Id"
+                              T="string"
+                              Value="@this.Form.Get(field.Id)"
+                              ValueChanged="@(value => this.SetValueAsync(field, value))"
+                              Label="@LabelOf(field)"
+                              HelperText="@field.Hint"
+                              MaxLength="@field.Kind.MaxLength"
+                              Validation="@this.ValidationOf(field)"
+                              Disabled="@this.Disabled"
+                              Variant="Variant.Outlined"/>
+                break;
+
+            case BflFieldKind.MULTI_LINE:
+                <MudTextField @key="field.Id"
+                              T="string"
+                              Value="@this.Form.Get(field.Id)"
+                              ValueChanged="@(value => this.SetValueAsync(field, value))"
+                              Label="@LabelOf(field)"
+                              HelperText="@field.Hint"
+                              MaxLength="@field.Kind.MaxLength"
+                              Disabled="@this.Disabled"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Sizing="InputSizing.Auto"
+                              MaxLines="12"/>
+                break;
+
+            case BflFieldKind.CHOICE:
+                <MudSelect @key="field.Id"
+                           T="string"
+                           Value="@this.Form.Get(field.Id)"
+                           ValueChanged="@(value => this.SetValueAsync(field, value))"
+                           Label="@LabelOf(field)"
+                           HelperText="@field.Hint"
+                           Clearable="true"
+                           Disabled="@this.Disabled"
+                           Variant="Variant.Outlined">
+                    @foreach (var option in field.Options)
+                    {
+                        <MudSelectItem T="string" Value="@option.Id">@option.Label</MudSelectItem>
+                    }
+                </MudSelect>
+                break;
+
+            case BflFieldKind.MULTI_CHOICE:
+                <div @key="field.Id">
+                    <MudText Typo="Typo.body2">@LabelOf(field)</MudText>
+                    <MudChipSet T="string"
+                                SelectionMode="SelectionMode.MultiSelection"
+                                SelectedValues="@this.Form.GetChoices(field.Id)"
+                                SelectedValuesChanged="@(values => this.SetChoicesAsync(field, values))"
+                                CheckMark="true"
+                                Color="Color.Primary"
+                                Variant="Variant.Outlined"
+                                Disabled="@this.Disabled">
+                        @foreach (var option in field.Options)
+                        {
+                            <MudChip T="string" Value="@option.Id" Text="@option.Label"/>
+                        }
+                    </MudChipSet>
+                    @if (!string.IsNullOrWhiteSpace(field.Hint))
+                    {
+                        <MudText Typo="Typo.caption">@field.Hint</MudText>
+                    }
+                </div>
+                break;
+        }
+    }
+</MudStack>
+
+@if (this.HasKeyDetails)
+{
+    <MudText Typo="Typo.caption" Class="mt-2">@T("* The chat works best when you fill in these details.")</MudText>
+}

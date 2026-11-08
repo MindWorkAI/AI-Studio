@@ -6,39 +6,6 @@ namespace Build.Commands;
 
 public sealed partial class CollectI18NKeysCommand
 {
-    private const string START_TAG1 = """
-                                      T("
-                                      """;
-        
-    private const string START_TAG2 = """
-                                      TB("
-                                      """;
-        
-    private const string START_TAG3 = """
-                                      T(@"
-                                      """;
-        
-    private const string END_TAG1 = """
-                            ")
-                            """;
-
-    private const string END_TAG2 = """
-                            ",
-                            """;
-        
-    private static readonly (string Tag, int Length)[] START_TAGS =
-    [
-        (START_TAG1, START_TAG1.Length),
-        (START_TAG2, START_TAG2.Length),
-        (START_TAG3, START_TAG3.Length)
-    ];
-
-    private static readonly string[] END_TAGS =
-    [
-        END_TAG1,
-        END_TAG2
-    ];
-    
     /// <summary>
     /// Defines the command "collect-i18n".
     /// </summary>
@@ -82,7 +49,7 @@ public sealed partial class CollectI18NKeysCommand
                 continue;
             
             var content = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
-            var matches = this.FindAllTextTags(content, filePath, warnings);
+            var matches = I18NSourceScanner.FindTexts(content, filePath, warnings);
             if (matches.Count == 0)
                 continue;
             
@@ -98,9 +65,9 @@ public sealed partial class CollectI18NKeysCommand
             var langNamespace = $"{ns}.{name}".ToUpperInvariant();
             foreach (var match in matches)
             {
-                // The key in the format A.B.C.D.T{hash}:
-                var key = $"UI_TEXT_CONTENT.{langNamespace}.T{match.ToFNV32()}";
-                allI18NContent.TryAdd(key, match);
+                // The key in the format A.B.C.D.T{hash}, with the hash the app computes at runtime:
+                var key = $"UI_TEXT_CONTENT.{langNamespace}.T{I18NKeyHash.Of(match.Text)}";
+                allI18NContent.TryAdd(key, I18NKeyHash.NormalizeLineEndings(match.Text));
             }
         }
         
@@ -179,78 +146,6 @@ public sealed partial class CollectI18NKeysCommand
         // Add the UI_TEXT_CONTENT table:
         LuaTable.Create(ref sb, "UI_TEXT_CONTENT", keyValuePairs);
         return sb.ToString();
-    }
-
-    private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent, string filePath, List<string> warnings)
-    {
-        (int Index, int Len) FindNextStart(ReadOnlySpan<char> content)
-        {
-            var bestIndex = -1;
-            var bestLength = 0;
-
-            foreach (var (tag, length) in START_TAGS)
-            {
-                var index = content.IndexOf(tag);
-                if (index != -1 && (bestIndex == -1 || index < bestIndex))
-                {
-                    bestIndex = index;
-                    bestLength = length;
-                }
-            }
-
-            return (bestIndex, bestLength);
-        }
-
-        int FindNextEnd(ReadOnlySpan<char> content)
-        {
-            var bestIndex = -1;
-            foreach (var tag in END_TAGS)
-            {
-                var index = content.IndexOf(tag);
-                if (index != -1 && (bestIndex == -1 || index < bestIndex))
-                    bestIndex = index;
-            }
-
-            return bestIndex;
-        }
-        
-        var matches = new List<string>();
-        var startIdx = FindNextStart(fileContent);
-        var content = fileContent;
-        while (startIdx.Index > -1)
-        {
-            //
-            // In some cases, after the initial " there follow more " characters.
-            // We need to skip them:
-            //
-            content = content[(startIdx.Index + startIdx.Len)..];
-            while(content[0] == '"')
-                content = content[1..];
-            
-            var endIdx = FindNextEnd(content);
-            if (endIdx == -1)
-                break;
-            
-            var match = content[..endIdx];
-            while (match[^1] == '"')
-                match = match[..^1];
-
-            var text = match.ToString();
-
-            //
-            // We read the raw source text, whereas the app hashes the unescaped string at
-            // runtime. Thus, any escape sequence makes both hashes differ, so that the text
-            // never finds its translation. Since we cannot detect this at runtime, we warn
-            // about it here:
-            //
-            if(text.Contains('\\'))
-                warnings.Add($"- Warning: The text '{text}' in the file '{filePath}' contains an escape sequence. Its key does not match the key the app looks up at runtime, so this text stays untranslated. Please use a raw string literal instead.");
-
-            matches.Add(text);
-            startIdx = FindNextStart(content);
-        }
-        
-        return matches;
     }
 
     private bool IsSupportedSourceFile(string filePath) =>

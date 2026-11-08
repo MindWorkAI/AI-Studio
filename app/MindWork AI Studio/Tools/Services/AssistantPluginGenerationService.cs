@@ -1,7 +1,3 @@
-// ReSharper disable RedundantUsingDirective
-using System.Reflection;
-using Microsoft.Extensions.FileProviders;
-// ReSharper restore RedundantUsingDirective
 using System.Text;
 using System.Text.Json;
 using AIStudio.Assistants.Builder;
@@ -255,7 +251,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         foreach (var contextFile in ASSISTANT_CONTEXT_FILES)
         {
-            var content = await ReadAppResourceTextAsync(contextFile.RelativePath);
+            var content = await AppResources.ReadTextAsync(contextFile.RelativePath);
             if (string.IsNullOrWhiteSpace(content))
             {
                 logger.LogError($"The context for \"{contextFile.Title}\" could not be read from the assembly. Path: {contextFile.RelativePath}");
@@ -713,7 +709,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
     private async Task<string> LoadLuaResponseSchemaAsync()
     {
-        var responseSchema = await ReadAppResourceTextAsync(LUA_RESPONSE_SCHEMA_PATH);
+        var responseSchema = await AppResources.ReadTextAsync(LUA_RESPONSE_SCHEMA_PATH);
         if (!string.IsNullOrWhiteSpace(responseSchema))
             return responseSchema.Trim();
 
@@ -741,26 +737,6 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         }
 
         return builder.ToString().Trim();
-    }
-
-    private static async Task<string> ReadAppResourceTextAsync(string relativePath)
-    {
-        relativePath = relativePath.Replace('\\', '/');
-#if DEBUG
-        var filePath = Path.Join(Environment.CurrentDirectory, relativePath);
-        return File.Exists(filePath)
-            ? await File.ReadAllTextAsync(filePath)
-            : string.Empty;
-#else
-        var provider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!);
-        var file = provider.GetFileInfo(relativePath);
-        if (!file.Exists)
-            return string.Empty;
-
-        await using var stream = file.CreateReadStream();
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        return await reader.ReadToEndAsync();
-#endif
     }
 
     private static bool ProviderIsUsable(ProviderSettings provider) => provider != ProviderSettings.NONE && provider.UsedLLMProvider is not LLMProviders.NONE;

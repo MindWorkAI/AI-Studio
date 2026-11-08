@@ -22,6 +22,7 @@ public static class ComponentsExtensions
         public PreviewFeatures RequiredPreviewFeature => component switch
         {
             Components.VISUAL_BRIEFING_ASSISTANT => PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026,
+            Components.BEYOND_FACTS_LAB_ASSISTANT => PreviewFeatures.PRE_BEYOND_FACTS_LAB_2026,
 
             _ => PreviewFeatures.NONE,
         };
@@ -33,15 +34,16 @@ public static class ComponentsExtensions
         /// <remarks>
         /// Components return <c>false</c> for three different reasons. The chat has no assistant sessions
         /// at all. Dynamic assistants key their sessions per plugin. The visual briefing assistant keys
-        /// its sessions per briefing, so it owns one slot per stored briefing rather than one per
-        /// component. All must be excluded from the single-slot checks, which is why this is a
-        /// capability and not a component comparison.
+        /// its sessions per briefing, and the BeyondFacts Lab per step of a preparation, so they own one
+        /// slot per stored item rather than one per component. All must be excluded from the single-slot
+        /// checks, which is why this is a capability and not a component comparison.
         /// </remarks>
         /// <value><c>true</c> when the component owns exactly one session slot.</value>
         public bool HasSingleSessionSlot => component switch
         {
             Components.CHAT or Components.DYNAMIC_ASSISTANT => false,
             Components.VISUAL_BRIEFING_ASSISTANT => false,
+            Components.BEYOND_FACTS_LAB_ASSISTANT => false,
 
             _ => true,
         };
@@ -68,7 +70,10 @@ public static class ComponentsExtensions
             Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
             Components.BATCH_PROCESSING_ASSISTANT => false,
             Components.LOG_VIEWER_ASSISTANT => false,
-        
+
+            // The lab takes in nothing from other places, and its answers stay in its own steps:
+            Components.BEYOND_FACTS_LAB_ASSISTANT => false,
+
             Components.APP_SETTINGS => false,
             Components.WRITER => false,
         
@@ -105,7 +110,8 @@ public static class ComponentsExtensions
             Components.VISUAL_BRIEFING_ASSISTANT => TB("Visual Briefing Assistant"),
             Components.META_ASSISTANT => TB("Assistant Builder"),
             Components.LOG_VIEWER_ASSISTANT => TB("Log Viewer Assistant"),
-        
+            Components.BEYOND_FACTS_LAB_ASSISTANT => TB("BeyondFacts Lab"),
+
             Components.CHAT => TB("New Chat"),
         
             _ => Enum.GetName(component)!,
@@ -157,7 +163,10 @@ public static class ComponentsExtensions
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence : default,
             Components.META_ASSISTANT => settingsManager.ConfigurationData.AssistantBuilder.PreselectOptions ? settingsManager.ConfigurationData.AssistantBuilder.MinimumProviderConfidence : default,
             Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.MinimumProviderConfidence,
-        
+
+            // Unpublished research is the usual material of the lab, so its minimum never drops below the floor:
+            Components.BEYOND_FACTS_LAB_ASSISTANT => settingsManager.ConfigurationData.BeyondFactsLab.MinimumProviderConfidence > DataBeyondFactsLab.MINIMUM_CONFIDENCE_FLOOR ? settingsManager.ConfigurationData.BeyondFactsLab.MinimumProviderConfidence : DataBeyondFactsLab.MINIMUM_CONFIDENCE_FLOOR,
+
             // The minimum confidence for the Document Analysis Assistant is set per policy.
             // We do this inside the Document Analysis Assistant component:
             Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfidenceLevel.NONE,
@@ -191,6 +200,7 @@ public static class ComponentsExtensions
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : Settings.Provider.NONE,
             Components.META_ASSISTANT => settingsManager.ConfigurationData.AssistantBuilder.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AssistantBuilder.PreselectedProvider) : Settings.Provider.NONE,
             Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.GetProviderById(settingsManager.ConfigurationData.VisualBriefing.PreselectedProvider),
+            Components.BEYOND_FACTS_LAB_ASSISTANT => settingsManager.GetProviderById(settingsManager.ConfigurationData.BeyondFactsLab.PreselectedProvider),
 
             // The Document Analysis Assistant does not have a preselected provider at the component level.
             // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
@@ -228,6 +238,9 @@ public static class ComponentsExtensions
                 // The Document Analysis Assistant does not have a preselected profile at the component level.
                 // The profile is selected per policy instead. We do this inside the Document Analysis Assistant component:
                 Components.DOCUMENT_ANALYSIS_ASSISTANT => Profile.NO_PROFILE.Id,
+
+                // The lab works with what the person enters in each preparation and never with a profile:
+                Components.BEYOND_FACTS_LAB_ASSISTANT => Profile.NO_PROFILE.Id,
 
                 _ => string.Empty,
             };

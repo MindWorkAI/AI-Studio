@@ -72,6 +72,12 @@ The app's texts are localized in two steps, and the developer always does the fi
 **Moving a `TB()` text into another class gives it a new I18N key**, so its translation is made anew during
 the next localization run.
 
+**A text with several lines**, such as a notice in Markdown, is one raw string literal right after the
+parenthesis: `TB("""`, the indented lines of the text, and `""")` on a line of its own. The collector reads
+every literal as the compiler does, with its escape sequences and without the indentation of a raw literal,
+and the translations keep the line breaks. A text which is not one literal, such as an interpolated string
+or a concatenation, gets no translation; the collector warns about it.
+
 ## Plugin System
 
 **Location:** `app/MindWork AI Studio/Plugins/`

@@ -5,13 +5,7 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 
-using Microsoft.Extensions.FileProviders;
-
 using SharedTools;
-
-#if RELEASE
-using System.Reflection;
-#endif
 
 namespace AIStudio.Assistants.I18N;
 
@@ -42,7 +36,10 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         daily lives with it. The app offers the regular chat mode for which LLMs have become
         known. However, AI Studio also offers so-called assistants, where users no longer
         have to prompt.
-        
+
+        Some texts are longer notes in Markdown, with headings, paragraphs, or lists. Keep their
+        Markdown and their line breaks exactly as they are, and translate only the words.
+
         # Target Audience
         The app is intended for everyone, not just IT specialists or scientists. When translating,
         make sure the texts are easy for everyone to understand.
@@ -250,17 +247,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         //
         // Read the file `Assistants\I18N\allTexts.lua`:
         //
-        #if DEBUG
-        var filePath = Path.Join(Environment.CurrentDirectory, "Assistants", "I18N");
-        var resourceFileProvider = new PhysicalFileProvider(filePath);
-        #else
-        var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Assistants/I18N");
-        #endif
-
-        var file = resourceFileProvider.GetFileInfo("allTexts.lua");
-        await using var fileStream = file.CreateReadStream();
-        using var reader = new StreamReader(fileStream);
-        var newI18NDataLuaCode = await reader.ReadToEndAsync();
+        var newI18NDataLuaCode = await AppResources.ReadTextAsync("Assistants/I18N/allTexts.lua");
         
         //
         // Next, we try to load the text as a language plugin -- without

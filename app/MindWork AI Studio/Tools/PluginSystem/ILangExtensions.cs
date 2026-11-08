@@ -19,7 +19,7 @@ public static class ILangExtensions
                 typeName = typeName[..typeName.IndexOf('`')];
         
             var ns = $"{typeNamespace}::{typeName}".ToUpperInvariant().Replace(".", "::");
-            var key = $"root::{ns}::T{fallbackEN.ToFNV32()}";
+            var key = $"root::{ns}::T{I18NKeyHash.Of(fallbackEN)}";
         
             if(plugin is NoPluginLanguage)
                 return fallbackEN;
