@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 
-using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
@@ -44,7 +43,7 @@ public sealed class DataBeyondFactsLab(Expression<Func<Data, DataBeyondFactsLab>
     /// <summary>
     /// Gets or sets how the lab addresses the person in languages with a formal and an informal address.
     /// </summary>
-    public BflAddressForm AddressForm { get; set; } = ManagedConfiguration.Register(configSelection, value => value.AddressForm, BflAddressForm.FORMAL);
+    public AddressForm AddressForm { get; set; } = ManagedConfiguration.Register(configSelection, value => value.AddressForm, AddressForm.FORMAL);
 
     /// <summary>
     /// Gets or sets the hash of the notes the person confirmed, see BflNotice; empty while they confirmed none.

@@ -3,7 +3,7 @@
 @if (this.MissingFields.Count > 0)
 {
     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
-        @T("Some details are still missing. The chat will ask for them, and you can continue anyway.")
+        @TA("Some details are still missing. The chat will ask for them, and you can continue anyway.")
         <br/>
         @string.Join(", ", this.MissingFields.Select(field => field.Label))
     </MudAlert>
@@ -93,5 +93,5 @@
 
 @if (this.HasKeyDetails)
 {
-    <MudText Typo="Typo.caption" Class="mt-2">@T("* The chat works best when you fill in these details.")</MudText>
+    <MudText Typo="Typo.caption" Class="mt-2">@TA("* The chat works best when you fill in these details.")</MudText>
 }

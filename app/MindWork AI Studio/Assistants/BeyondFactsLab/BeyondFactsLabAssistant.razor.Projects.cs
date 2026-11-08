@@ -77,7 +77,7 @@ public partial class BeyondFactsLabAssistant
     /// </summary>
     private async Task CreateProjectAsync()
     {
-        var name = await this.AskForNameAsync(T("New preparation"), T("Name the event you want to prepare for, e.g., the title of a panel discussion."), string.Empty, T("Create"));
+        var name = await this.AskForNameAsync(T("New preparation"), TA("Name the event you want to prepare for, e.g., the title of a panel discussion."), string.Empty, T("Create"));
         if (name is null)
             return;
 
@@ -97,7 +97,7 @@ public partial class BeyondFactsLabAssistant
         if (this.selectedProject?.Project is not { } project)
             return;
 
-        var name = await this.AskForNameAsync(T("Rename preparation"), T("Enter a new name for this preparation."), project.Name, T("Rename"));
+        var name = await this.AskForNameAsync(T("Rename preparation"), TA("Enter a new name for this preparation."), project.Name, T("Rename"));
         if (name is null)
             return;
 
@@ -121,8 +121,8 @@ public partial class BeyondFactsLabAssistant
             {
                 dialog => dialog.Message,
                 project.IsAvailable
-                    ? string.Format(T("Permanently delete the preparation '{0}' with all of its steps, chats, and work states?"), project.Name)
-                    : T("This preparation cannot be opened. Permanently delete it with all of its files?")
+                    ? string.Format(TA("Permanently delete the preparation '{0}' with all of its steps, chats, and work states?"), project.Name)
+                    : TA("This preparation cannot be opened. Permanently delete it with all of its files?")
             },
         };
 
@@ -173,7 +173,7 @@ public partial class BeyondFactsLabAssistant
             { dialog => dialog.ConfirmText, confirmText },
             { dialog => dialog.ConfirmColor, Color.Primary },
             { dialog => dialog.AllowEmptyInput, false },
-            { dialog => dialog.EmptyInputErrorMessage, T("Please enter a name.") },
+            { dialog => dialog.EmptyInputErrorMessage, TA("Please enter a name.") },
         };
 
         var reference = await this.DialogService.ShowAsync<SingleInputDialog>(title, parameters, DialogOptions.FULLSCREEN);
@@ -198,7 +198,7 @@ public partial class BeyondFactsLabAssistant
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException)
         {
             this.Logger.LogError(exception, "A change of the preparations of the BeyondFacts Lab failed.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.RecordVoiceOver, T("AI Studio could not save the change of your preparations. Please try again.")));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.RecordVoiceOver, TA("AI Studio could not save the change of your preparations. Please try again.")));
             await this.ReloadAfterFailureAsync();
         }
         finally
@@ -265,7 +265,7 @@ public partial class BeyondFactsLabAssistant
     /// <param name="status">The status of the preparation.</param>
     private string ProjectRecoveryMessage(BflProjectLoadStatus status) => status switch
     {
-        BflProjectLoadStatus.NEWER_VERSION => T("A newer version of AI Studio stored this preparation. This version cannot open it. Please update AI Studio."),
+        BflProjectLoadStatus.NEWER_VERSION => TA("A newer version of AI Studio stored this preparation. This version cannot open it. Please update AI Studio."),
         _ => T("AI Studio cannot read this preparation. Its files may be damaged."),
     };
 }

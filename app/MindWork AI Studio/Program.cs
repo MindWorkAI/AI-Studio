@@ -350,7 +350,12 @@ internal sealed class Program
         // Store the service provider (DI). We need it later for some classes,
         // which are not part of the request pipeline:
         SERVICE_PROVIDER = app.Services;
-        
+
+        // The texts of TA() address the person as the BeyondFacts Lab is set to, since only the lab has such texts
+        // so far. Once the app gets a setting of its own for the form of address, that setting takes over here:
+        var settingsForTexts = app.Services.GetRequiredService<SettingsManager>();
+        I18N.UseAddressFormOf(() => settingsForTexts.ConfigurationData.BeyondFactsLab.AddressForm);
+
         // Initialize the encryption service:
         programLogger.LogInformation("Initializing the encryption service.");
         var encryptionLogger = app.Services.GetRequiredService<ILogger<Encryption>>();

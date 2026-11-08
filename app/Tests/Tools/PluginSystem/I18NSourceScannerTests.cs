@@ -8,7 +8,7 @@ using SharedTools;
 namespace AIStudio.Tests.Tools.PluginSystem;
 
 /// <summary>
-/// Checks how the I18N collector finds the texts of T() and TB(), and which key it files them under.
+/// Checks how the I18N collector finds the texts of T(), TB(), and TA(), and which key it files them under.
 /// </summary>
 /// <remarks>
 /// The app looks up a translation by the hash of the string the compiler made of a text. The collector has to file
@@ -58,7 +58,7 @@ public sealed class I18NSourceScannerTests
             var root = CSharpSyntaxTree.ParseText(content).GetRoot();
             foreach (var invocation in root.DescendantNodes().OfType<InvocationExpressionSyntax>())
             {
-                if (CalledName(invocation) is not ("T" or "TB") || invocation.ArgumentList.Arguments.FirstOrDefault()?.Expression is not LiteralExpressionSyntax literal)
+                if (CalledName(invocation) is not ("T" or "TB" or "TA") ||invocation.ArgumentList.Arguments.FirstOrDefault()?.Expression is not LiteralExpressionSyntax literal)
                     continue;
 
                 // The collector takes only a text which follows the parenthesis right away:
@@ -108,18 +108,28 @@ public sealed class I18NSourceScannerTests
     public void AllKindsOfCallsAreFound()
     {
         const string SOURCE = """
-                              T("First"); TB("Second"); this.T("Third", typeof(X).Namespace, nameof(X)); @T(@"Fourth"); T( "Not found");
+                              T("First"); TB("Second"); this.T("Third", typeof(X).Namespace, nameof(X)); @T(@"Fourth"); TA("Fifth"); @TA("Sixth"); T( "Not found");
                               """;
 
         var texts = I18NSourceScanner.FindTexts(SOURCE, "Calls.cs", []);
 
-        Assert.That(texts.Select(text => text.Text), Is.EqualTo(new[] { "First", "Second", "Third", "Fourth" }));
+        Assert.That(texts.Select(text => text.Text), Is.EqualTo(new[] { "First", "Second", "Third", "Fourth", "Fifth", "Sixth" }));
+    }
+
+    [Test]
+    public void OnlyATextOfTAGetsAVariantWithTheInformalAddress()
+    {
+        const string SOURCE = """T("Save"); TB("Your details"); TA("Enter your name."); TA(@"Please check ""this"".");""";
+
+        var texts = I18NSourceScanner.FindTexts(SOURCE, "Address.cs", []);
+
+        Assert.That(texts.Where(text => text.HasAddressVariants).Select(text => text.Text), Is.EqualTo(new[] { "Enter your name.", "Please check \"this\"." }));
     }
 
     [Test]
     public void ACallOfAnotherMethodIsIgnored()
     {
-        const string SOURCE = """GetT("No text"); MyTB("No text either"); T("Text");""";
+        const string SOURCE = """GetT("No text"); MyTB("No text either"); DATA("No text at all"); T("Text");""";
 
         var texts = I18NSourceScanner.FindTexts(SOURCE, "Other.cs", []);
 

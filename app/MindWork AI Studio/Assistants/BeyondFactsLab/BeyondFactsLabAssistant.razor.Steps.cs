@@ -85,7 +85,7 @@ public partial class BeyondFactsLabAssistant
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             this.Logger.LogError(exception, "Could not save the details of a step in the BeyondFacts Lab.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.RecordVoiceOver, T("AI Studio could not save your details. Please try again.")));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.RecordVoiceOver, TA("AI Studio could not save your details. Please try again.")));
         }
     }
 

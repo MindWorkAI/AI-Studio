@@ -67,7 +67,12 @@ public sealed partial class CollectI18NKeysCommand
             {
                 // The key in the format A.B.C.D.T{hash}, with the hash the app computes at runtime:
                 var key = $"UI_TEXT_CONTENT.{langNamespace}.T{I18NKeyHash.Of(match.Text)}";
-                allI18NContent.TryAdd(key, I18NKeyHash.NormalizeLineEndings(match.Text));
+                var text = I18NKeyHash.NormalizeLineEndings(match.Text);
+                allI18NContent.TryAdd(key, text);
+
+                // A text of TA() addresses the reader, so it gets a second key for the informal address:
+                if (match.HasAddressVariants)
+                    allI18NContent.TryAdd(I18NAddressVariant.InformalKeyOf(key), text);
             }
         }
         

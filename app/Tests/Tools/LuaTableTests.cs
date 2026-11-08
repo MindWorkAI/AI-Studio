@@ -51,6 +51,18 @@ public sealed class LuaTableTests
     }
 
     [Test]
+    public async Task TheKeyOfAnInformalVariantKeepsItsEnding()
+    {
+        var code = Create(new Dictionary<string, string>
+        {
+            [KEY] = "Enter your name.",
+            [SharedTools.I18NAddressVariant.InformalKeyOf(KEY)] = "Enter your name.",
+        });
+
+        Assert.That(await ReadAsync(code, $"{LUA_KEY}::INFORMAL"), Is.EqualTo("Enter your name."), code);
+    }
+
+    [Test]
     public void TextsOnOneLineAreWrittenAsBefore()
     {
         var code = Create(new Dictionary<string, string>

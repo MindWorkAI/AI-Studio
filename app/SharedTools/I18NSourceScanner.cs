@@ -1,15 +1,18 @@
 namespace SharedTools;
 
 /// <summary>
-/// Finds the texts of T() and TB() in a C# or Razor source file.
+/// Finds the texts of T(), TB(), and TA() in a C# or Razor source file.
 /// </summary>
 /// <remarks>
 /// A text counts when its literal follows the opening parenthesis right away and is the whole first argument.
-/// Every kind of literal works, also a raw literal over several lines; see CSharpStringLiteral.
+/// Every kind of literal works, also a raw literal over several lines; see CSharpStringLiteral. A text of TA()
+/// addresses the reader, so it gets a variant with the informal address; see I18NAddressVariant.
 /// </remarks>
 public static class I18NSourceScanner
 {
-    private static readonly string[] START_TAGS = ["TB(", "T("];
+    private const string ADDRESSED_TEXT_TAG = "TA(";
+
+    private static readonly string[] START_TAGS = ["TB(", ADDRESSED_TEXT_TAG, "T("];
 
     /// <summary>
     /// Finds the texts in the content of a source file.
@@ -22,7 +25,7 @@ public static class I18NSourceScanner
     {
         var texts = new List<I18NSourceText>();
         var position = 0;
-        while (TryFindNextCall(content, position, out var literalStart))
+        while (TryFindNextCall(content, position, out var literalStart, out var tag))
         {
             position = literalStart;
             var rest = content.AsSpan(literalStart);
@@ -49,29 +52,30 @@ public static class I18NSourceScanner
                 continue;
             }
 
-            texts.Add(new I18NSourceText(literalStart, length, text));
+            texts.Add(new I18NSourceText(literalStart, length, text, tag == ADDRESSED_TEXT_TAG));
         }
 
         return texts;
     }
 
     /// <summary>
-    /// Finds the next call of T() or TB() at or after the position, i.e., a start tag which no identifier precedes.
+    /// Finds the next call of T(), TB(), or TA() at or after the position, i.e., a start tag which no identifier precedes.
     /// </summary>
-    private static bool TryFindNextCall(string content, int position, out int argumentStart)
+    private static bool TryFindNextCall(string content, int position, out int argumentStart, out string foundTag)
     {
         argumentStart = -1;
+        foundTag = string.Empty;
         while (position < content.Length)
         {
             var bestIndex = -1;
-            var bestLength = 0;
+            var bestTag = string.Empty;
             foreach (var tag in START_TAGS)
             {
                 var index = content.IndexOf(tag, position, StringComparison.Ordinal);
                 if (index >= 0 && (bestIndex < 0 || index < bestIndex))
                 {
                     bestIndex = index;
-                    bestLength = tag.Length;
+                    bestTag = tag;
                 }
             }
 
@@ -84,7 +88,8 @@ public static class I18NSourceScanner
                 continue;
             }
 
-            argumentStart = bestIndex + bestLength;
+            argumentStart = bestIndex + bestTag.Length;
+            foundTag = bestTag;
             return true;
         }
 
