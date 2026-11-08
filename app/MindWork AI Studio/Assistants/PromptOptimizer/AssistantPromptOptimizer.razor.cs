@@ -10,11 +10,6 @@ using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
-#if !DEBUG
-using System.Reflection;
-using Microsoft.Extensions.FileProviders;
-#endif
-
 namespace AIStudio.Assistants.PromptOptimizer;
 
 public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialogPromptOptimizer>
@@ -578,24 +573,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         });
     }
 
-    private static async Task<string> ReadPromptingGuidelineAsync()
-    {
-#if DEBUG
-        var guidelinePath = Path.Join(Environment.CurrentDirectory, "Assistants", "PromptOptimizer", "prompting_guideline.md");
-        return File.Exists(guidelinePath)
-            ? await File.ReadAllTextAsync(guidelinePath)
-            : string.Empty;
-#else
-        var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Assistants/PromptOptimizer");
-        var file = resourceFileProvider.GetFileInfo("prompting_guideline.md");
-        if (!file.Exists)
-            return string.Empty;
-
-        await using var fileStream = file.CreateReadStream();
-        using var reader = new StreamReader(fileStream);
-        return await reader.ReadToEndAsync();
-#endif
-    }
+    private static async Task<string> ReadPromptingGuidelineAsync() => await AppResources.ReadTextAsync("Assistants/PromptOptimizer/prompting_guideline.md");
 
     private async Task<string> GetPromptingGuidelineForOptimizationAsync()
     {
