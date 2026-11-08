@@ -27,6 +27,9 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     private BeyondFactsLabStore Store { get; init; } = null!;
 
     [Inject]
+    private BflConversationService ConversationService { get; init; } = null!;
+
+    [Inject]
     private ILogger<BeyondFactsLabAssistant> Logger { get; init; } = null!;
 
     /// <summary>

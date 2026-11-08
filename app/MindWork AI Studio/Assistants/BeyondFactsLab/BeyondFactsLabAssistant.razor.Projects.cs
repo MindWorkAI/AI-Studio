@@ -133,6 +133,8 @@ public partial class BeyondFactsLabAssistant
 
         await this.RunStoreActionAsync(async () =>
         {
+            // An answer which still runs would otherwise end after the preparation is gone:
+            await this.ConversationService.ForgetProjectAsync(project.ProjectId);
             await this.Store.DeleteAsync(project.ProjectId);
             this.selectedProject = null;
             await this.ReloadProjectsAsync(null);
