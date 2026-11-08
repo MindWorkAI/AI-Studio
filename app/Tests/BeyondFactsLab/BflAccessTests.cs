@@ -66,7 +66,7 @@ public sealed class BflAccessTests
     {
         var forms = ConfigurationSelectDataFactory.GetBeyondFactsLabAddressFormData().Select(data => data.Value);
 
-        Assert.That(forms, Is.EquivalentTo(Enum.GetValues<BflAddressForm>()));
+        Assert.That(forms, Is.EquivalentTo(Enum.GetValues<AddressForm>()));
     }
 
     private static SettingsManager CreateSettingsManager() => new(NullLogger<SettingsManager>.Instance, null!);

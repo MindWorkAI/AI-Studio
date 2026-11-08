@@ -1,4 +1,3 @@
-using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
@@ -142,7 +141,7 @@ public sealed class BflComponentTests
     [Test]
     public void NewSettingsAddressFormally()
     {
-        Assert.That(new DataBeyondFactsLab().AddressForm, Is.EqualTo(BflAddressForm.FORMAL), "The texts of AI Studio address the person formally as well.");
+        Assert.That(new DataBeyondFactsLab().AddressForm, Is.EqualTo(AddressForm.FORMAL), "The texts of AI Studio address the person formally as well.");
     }
 
     private static SettingsManager CreateSettingsManager() => new(NullLogger<SettingsManager>.Instance, null!);
