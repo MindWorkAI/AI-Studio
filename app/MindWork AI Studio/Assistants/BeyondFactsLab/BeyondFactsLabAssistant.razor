@@ -92,6 +92,10 @@
                     <MudText Typo="Typo.caption" Class="mx-1">@string.Format(Culture, T("Marked on {0}."), happenedAtUtc.ToLocalTime().ToString("d", Culture))</MudText>
                 }
 
+                <div class="mt-4 mr-3">
+                    <ProviderSelection ProviderSettings="@this.providerSettings" ProviderSettingsChanged="@this.SelectProviderAsync" ValidateProvider="@this.ValidateProvider" Disabled="@this.isBusy"/>
+                </div>
+
                 <MudStepperWithoutActions NonLinear="@true" ActiveIndex="@this.ActiveStepIndex" ActiveIndexChanged="@this.SelectStepAsync" Class="mt-4 mr-3">
                     <ChildContent>
                         @foreach (var step in BflStep.All)

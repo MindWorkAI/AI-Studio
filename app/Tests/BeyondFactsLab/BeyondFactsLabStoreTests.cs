@@ -437,6 +437,34 @@ public sealed class BeyondFactsLabStoreTests
     }
 
     [Test]
+    public async Task TheProviderIsRememberedWithoutCountingAsAChange()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+
+        await store.SetProviderAsync(created.ProjectId, "provider-1");
+        var loaded = await this.CreateStore().LoadAsync(created.ProjectId);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(created.ProviderId, Is.Empty, "A new preparation starts with the preselected provider.");
+            Assert.That(loaded!.ProviderId, Is.EqualTo("provider-1"));
+            Assert.That(loaded.ModifiedAtUtc, Is.EqualTo(created.ModifiedAtUtc));
+        }
+    }
+
+    [Test]
+    public async Task APreparationWithoutAProviderIdIsNotOpened()
+    {
+        var projectId = Guid.NewGuid();
+        await this.WriteProjectFileAsync(projectId, $$"""{ "schemaVersion": 1, "projectId": "{{projectId:D}}", "name": "Panel", "providerId": null }""");
+
+        var loaded = await this.CreateStore().LoadAsync(projectId);
+
+        Assert.That(loaded, Is.Null);
+    }
+
+    [Test]
     public async Task APreparationWithAnUnknownStepIsNotOpened()
     {
         var projectId = Guid.NewGuid();

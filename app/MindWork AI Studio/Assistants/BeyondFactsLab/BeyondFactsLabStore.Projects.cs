@@ -310,6 +310,19 @@ public sealed partial class BeyondFactsLabStore
     }
 
     /// <summary>
+    /// Remembers the provider the person chose for the chats of a preparation, without counting it as a change of
+    /// the preparation.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="providerId">The ID of the provider.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The preparation.</returns>
+    public async Task<BflProject> SetProviderAsync(Guid projectId, string providerId, CancellationToken token = default)
+    {
+        return await this.MutateProjectAsync(projectId, project => project.ProviderId = providerId, token, isChange: false);
+    }
+
+    /// <summary>
     /// Changes a preparation under its lock and stores it.
     /// </summary>
     /// <param name="projectId">The ID of the preparation.</param>
@@ -406,7 +419,8 @@ public sealed partial class BeyondFactsLabStore
         project.ProjectId != Guid.Empty &&
         project.ProjectId == expectedProjectId &&
         !string.IsNullOrWhiteSpace(project.Name) &&
-        Enum.IsDefined(project.CurrentStep);
+        Enum.IsDefined(project.CurrentStep) &&
+        !IsNull(project.ProviderId);
 
     /// <summary>
     /// Cleans a name and refuses one which is empty afterward.

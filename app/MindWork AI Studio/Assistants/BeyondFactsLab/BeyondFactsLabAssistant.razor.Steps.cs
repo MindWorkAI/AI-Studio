@@ -24,6 +24,7 @@ public partial class BeyondFactsLabAssistant
     private async Task ShowProjectAsync(BflProjectEntry? project)
     {
         this.selectedProject = project;
+        this.ResolveProvider(project?.Project);
         if (project?.Project is { } openedProject)
         {
             this.forms = new(await this.Store.LoadFormsAsync(openedProject.ProjectId));
