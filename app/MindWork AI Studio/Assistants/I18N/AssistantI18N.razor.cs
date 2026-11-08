@@ -36,7 +36,10 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         daily lives with it. The app offers the regular chat mode for which LLMs have become
         known. However, AI Studio also offers so-called assistants, where users no longer
         have to prompt.
-        
+
+        Some texts are longer notes in Markdown, with headings, paragraphs, or lists. Keep their
+        Markdown and their line breaks exactly as they are, and translate only the words.
+
         # Target Audience
         The app is intended for everyone, not just IT specialists or scientists. When translating,
         make sure the texts are easy for everyone to understand.
