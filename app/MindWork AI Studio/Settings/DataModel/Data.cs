@@ -217,6 +217,11 @@ public sealed class Data
     /// Gets the managed Visual Briefing Assistant defaults.
     /// </summary>
     public DataVisualBriefing VisualBriefing { get; set; } = new(x => x.VisualBriefing);
+
+    /// <summary>
+    /// Gets the managed settings of the BeyondFacts Lab.
+    /// </summary>
+    public DataBeyondFactsLab BeyondFactsLab { get; set; } = new(x => x.BeyondFactsLab);
     
     public DataLegalCheck LegalCheck { get; set; } = new();
     
