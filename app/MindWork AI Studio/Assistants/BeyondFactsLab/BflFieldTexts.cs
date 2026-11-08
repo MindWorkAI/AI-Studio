@@ -90,7 +90,7 @@ public static class BflFieldTexts
         public string Label => option.Id switch
         {
             BflFieldCatalog.GOAL_INFORM => TB("Inform"),
-            BflFieldCatalog.GOAL_MODERATE => TB("Moderate"),
+            BflFieldCatalog.GOAL_MODERATE => TB("Moderate the discussion"),
             BflFieldCatalog.GOAL_TAKE_POSITION => TB("Take a position in the debate"),
             BflFieldCatalog.GOAL_RAISE_AWARENESS => TB("Raise awareness"),
             BflFieldCatalog.GOAL_SHOW_OPTIONS => TB("Show options for action"),

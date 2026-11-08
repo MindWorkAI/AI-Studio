@@ -122,6 +122,15 @@ public sealed class BflFieldCatalogTests
     }
 
     [Test]
+    public void EveryFieldAndOptionHasALabelOfItsOwn()
+    {
+        // Equal English texts share one key of the localization, so another language could not tell them apart:
+        var labels = BflFieldCatalog.FIELDS.SelectMany(field => field.Options.Select(option => option.Label).Prepend(field.Label));
+
+        Assert.That(labels, Is.Unique);
+    }
+
+    [Test]
     public void OnlyPublicDetailsAboutTheEventReachTheResearch()
     {
         var shared = BflFieldCatalog.FIELDS.Where(field => field.IsSharedWithResearch).Select(field => field.Id);
