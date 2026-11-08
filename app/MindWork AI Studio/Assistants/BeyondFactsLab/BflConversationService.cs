@@ -239,6 +239,9 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
 
         await store.DeleteThreadAsync(location);
         conversation.Thread = BflThreadFactory.Create(location);
+
+        // The new conversation keeps the ID of the chat, so what the old one received would otherwise wait for the next start:
+        await ChatProvenance.ForgetChatsAsync([location.ChatId]);
         await this.NotifyAsync(location);
         return true;
     }
