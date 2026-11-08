@@ -38,12 +38,11 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     /// The most room kept free for the summary the AI writes.
     /// </summary>
     /// <remarks>
-    /// Some providers stop an answer after a few thousand tokens unless told otherwise; Anthropic
-    /// does so after 4,096. A summary which asked for more would end in the middle without anybody
-    /// noticing, and the new chat would lack its last sections. A summary meant to save tokens has
-    /// no business being longer anyway.
+    /// Context windows of 250,000 tokens and more are common by now. A summary of 8,192 tokens takes
+    /// a small share of them, yet keeps room for the details of a long conversation. A summary meant
+    /// to save tokens has no business being longer anyway.
     /// </remarks>
-    private const int MAX_TOKENS_FOR_THE_SUMMARY = 4_096;
+    private const int MAX_TOKENS_FOR_THE_SUMMARY = 8_192;
 
     /// <summary>
     /// The room kept free for the words of a request around the messages, and for the rounding of estimates.
