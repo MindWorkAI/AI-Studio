@@ -317,7 +317,145 @@ public sealed class BeyondFactsLabStoreTests
         Assert.That(json, Does.Contain("Podiumsdiskussion über Gewässerschutz"));
     }
 
+    [Test]
+    public async Task AFormIsStoredInTheFolderOfItsStepAndCountsAsAChange()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var form = new BflStepFormData();
+        form.Set(BflFieldCatalog.FORMAT, "Panel discussion");
+
+        var changed = await store.SaveFormAsync(created.ProjectId, BflStep.FRAMEWORK, form);
+        var loaded = await this.CreateStore().LoadFormAsync(created.ProjectId, BflStep.FRAMEWORK);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(File.Exists(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "01-framework", "form.json")), Is.True);
+            Assert.That(loaded.Get(BflFieldCatalog.FORMAT), Is.EqualTo("Panel discussion"));
+            Assert.That(changed.ModifiedAtUtc, Is.GreaterThan(created.ModifiedAtUtc));
+            Assert.That((await store.LoadAsync(created.ProjectId))!.ModifiedAtUtc, Is.EqualTo(changed.ModifiedAtUtc));
+        }
+    }
+
+    [Test]
+    public async Task AStepWithoutAFormGetsAnEmptyOne()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+
+        var form = await store.LoadFormAsync(created.ProjectId, BflStep.STRATEGY);
+        var forms = await store.LoadFormsAsync(created.ProjectId);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(form.Values, Is.Empty);
+            Assert.That(forms.Keys, Is.EquivalentTo(BflStep.All));
+        }
+    }
+
+    [Test]
+    public async Task AValueOfAFieldThisVersionDoesNotKnowIsKept()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "02-knowledge", """{ "schemaVersion": 1, "values": { "field_of_a_newer_version": "kept" } }""");
+
+        var form = await store.LoadFormAsync(created.ProjectId, BflStep.KNOWLEDGE);
+        form.Set(BflFieldCatalog.CORE_THESES, "Thesis");
+        await store.SaveFormAsync(created.ProjectId, BflStep.KNOWLEDGE, form);
+
+        var json = await File.ReadAllTextAsync(formPath);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(json, Does.Contain("field_of_a_newer_version"));
+            Assert.That(json, Does.Contain("Thesis"));
+        }
+    }
+
+    [Test]
+    public async Task ADamagedFormIsNeitherOpenedNorOverwritten()
+    {
+        const string DAMAGED = "{ \"values\": ";
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "01-framework", DAMAGED);
+
+        var forms = await store.LoadFormsAsync(created.ProjectId);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(forms.ContainsKey(BflStep.FRAMEWORK), Is.False);
+            Assert.That(forms.ContainsKey(BflStep.KNOWLEDGE), Is.True);
+            await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadFormAsync(created.ProjectId, BflStep.FRAMEWORK));
+            await Assert.ThrowsAsync<InvalidDataException>(async () => await store.SaveFormAsync(created.ProjectId, BflStep.FRAMEWORK, new BflStepFormData()));
+            Assert.That(await File.ReadAllTextAsync(formPath), Is.EqualTo(DAMAGED));
+        }
+    }
+
+    [Test]
+    public async Task AFormOfANewerVersionIsNotOverwritten()
+    {
+        const string NEWER = """{ "schemaVersion": 2, "values": {} }""";
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "05-strategy", NEWER);
+
+        using (Assert.EnterMultipleScope())
+        {
+            await Assert.ThrowsAsync<InvalidDataException>(async () => await store.SaveFormAsync(created.ProjectId, BflStep.STRATEGY, new BflStepFormData()));
+            Assert.That(await File.ReadAllTextAsync(formPath), Is.EqualTo(NEWER));
+        }
+    }
+
+    [Test]
+    public async Task AFormOfAPreparationWhichCannotBeOpenedIsNotWritten()
+    {
+        var projectId = Guid.NewGuid();
+        await this.WriteProjectFileAsync(projectId, "not JSON at all");
+        var store = this.CreateStore();
+
+        await Assert.ThrowsAsync<InvalidDataException>(async () => await store.SaveFormAsync(projectId, BflStep.FRAMEWORK, new BflStepFormData()));
+
+        Assert.That(Directory.Exists(Path.Combine(this.RootDirectory, projectId.ToString("D"), "steps")), Is.False);
+    }
+
+    [Test]
+    public async Task TheStepShownLastIsRememberedWithoutCountingAsAChange()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+
+        await store.SetCurrentStepAsync(created.ProjectId, BflStep.STRATEGY);
+        var loaded = await this.CreateStore().LoadAsync(created.ProjectId);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(created.CurrentStep, Is.EqualTo(BflStep.FRAMEWORK));
+            Assert.That(loaded!.CurrentStep, Is.EqualTo(BflStep.STRATEGY));
+            Assert.That(loaded.ModifiedAtUtc, Is.EqualTo(created.ModifiedAtUtc));
+        }
+    }
+
+    [Test]
+    public async Task APreparationWithAnUnknownStepIsNotOpened()
+    {
+        var projectId = Guid.NewGuid();
+        await this.WriteProjectFileAsync(projectId, $$"""{ "schemaVersion": 1, "projectId": "{{projectId:D}}", "name": "Panel", "currentStep": 42 }""");
+
+        var loaded = await this.CreateStore().LoadAsync(projectId);
+
+        Assert.That(loaded, Is.Null);
+    }
+
     private BeyondFactsLabStore CreateStore() => new(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.dataDirectory });
+
+    private async Task<string> WriteFormFileAsync(Guid projectId, string stepFolder, string content)
+    {
+        var path = Path.Combine(this.RootDirectory, projectId.ToString("D"), "steps", stepFolder, "form.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await File.WriteAllTextAsync(path, content);
+        return path;
+    }
 
     private string ProjectPath(Guid projectId) => Path.Combine(this.RootDirectory, projectId.ToString("D"), "project.json");
 

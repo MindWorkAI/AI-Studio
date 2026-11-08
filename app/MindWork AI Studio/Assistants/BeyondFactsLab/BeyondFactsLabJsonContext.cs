@@ -7,6 +7,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// </summary>
 [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(BflProject))]
+[JsonSerializable(typeof(BflStepFormData))]
 
 // The preparation selected last:
 [JsonSerializable(typeof(Guid?))]

@@ -61,8 +61,9 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(IReadOnlyList<string>), SqliteProvenanceStoreClientImplementation.JSON_OPTIONS));
         yield return Case(new(typeof(List<string>), SqliteProvenanceStoreClientImplementation.JSON_OPTIONS));
 
-        // The preparations of the BeyondFacts Lab, and the one selected last:
+        // The preparations of the BeyondFacts Lab, their forms, and the preparation selected last:
         yield return Case(new(typeof(BflProject), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflStepFormData), BeyondFactsLabJson.PERSISTENCE));
         yield return Case(new(typeof(Guid?), BeyondFactsLabJson.PERSISTENCE), "selected preparation");
     }
 

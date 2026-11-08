@@ -24,6 +24,11 @@ public partial class BeyondFactsLabAssistant
     private bool isBusy;
 
     /// <summary>
+    /// The IDs of the preparations which lack key details.
+    /// </summary>
+    private HashSet<Guid> projectsWithMissingDetails = [];
+
+    /// <summary>
     /// Gets the culture of the active language plugin, for dates.
     /// </summary>
     private static CultureInfo Culture => Tools.PluginSystem.I18N.I.Culture;
@@ -35,7 +40,16 @@ public partial class BeyondFactsLabAssistant
     private async Task ReloadProjectsAsync(Guid? preferredId)
     {
         this.projects = await this.Store.ListProjectsAsync();
-        this.selectedProject = BflProjectSelection.Choose(this.projects, preferredId ?? this.selectedProject?.ProjectId, this.Store.LastSelectedProjectId);
+
+        var withMissingDetails = new HashSet<Guid>();
+        foreach (var project in this.projects.Where(project => project.IsAvailable))
+        {
+            if (BflMissingDetails.StepsOf(await this.Store.LoadFormsAsync(project.ProjectId)).Count > 0)
+                withMissingDetails.Add(project.ProjectId);
+        }
+
+        this.projectsWithMissingDetails = withMissingDetails;
+        await this.ShowProjectAsync(BflProjectSelection.Choose(this.projects, preferredId ?? this.selectedProject?.ProjectId, this.Store.LastSelectedProjectId));
     }
 
     /// <summary>
@@ -51,8 +65,11 @@ public partial class BeyondFactsLabAssistant
         if (project is null)
             return;
 
-        this.selectedProject = project;
-        await this.RunStoreActionAsync(() => this.Store.RememberSelectionAsync(projectId));
+        await this.RunStoreActionAsync(async () =>
+        {
+            await this.ShowProjectAsync(project);
+            await this.Store.RememberSelectionAsync(projectId);
+        });
     }
 
     /// <summary>

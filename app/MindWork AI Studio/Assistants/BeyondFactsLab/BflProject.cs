@@ -49,4 +49,9 @@ public sealed class BflProject
     /// Gets or sets when the person marked the event as having taken place, or null while it has not.
     /// </summary>
     public DateTimeOffset? HappenedAtUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets the step the person looked at last, where the lab opens the preparation again.
+    /// </summary>
+    public BflStep CurrentStep { get; set; } = BflStep.FRAMEWORK;
 }

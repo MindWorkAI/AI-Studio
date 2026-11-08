@@ -298,40 +298,39 @@ public sealed partial class BeyondFactsLabStore
     }
 
     /// <summary>
+    /// Remembers the step the person looked at last, without counting it as a change of the preparation.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="step">The step.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The preparation.</returns>
+    public async Task<BflProject> SetCurrentStepAsync(Guid projectId, BflStep step, CancellationToken token = default)
+    {
+        return await this.MutateProjectAsync(projectId, project => project.CurrentStep = step, token, isChange: false);
+    }
+
+    /// <summary>
     /// Changes a preparation under its lock and stores it.
     /// </summary>
     /// <param name="projectId">The ID of the preparation.</param>
     /// <param name="mutation">The change.</param>
     /// <param name="token">The cancellation token.</param>
+    /// <param name="isChange">Whether the list shows the preparation as changed now.</param>
     /// <returns>The changed preparation.</returns>
     /// <exception cref="FileNotFoundException">The preparation does not exist.</exception>
     /// <exception cref="InvalidDataException">This version cannot open the preparation, so it does not write it either.</exception>
-    private async Task<BflProject> MutateProjectAsync(Guid projectId, Action<BflProject> mutation, CancellationToken token)
+    private async Task<BflProject> MutateProjectAsync(Guid projectId, Action<BflProject> mutation, CancellationToken token, bool isChange = true)
     {
         await this.InitializeAsync(token);
         var gate = this.GetLock(projectId);
         await gate.WaitAsync(token);
         try
         {
-            var path = this.ProjectPath(projectId);
-            if (!File.Exists(path))
-                throw new FileNotFoundException("The preparation does not exist.", path);
-
-            BflProject? project;
-            try
-            {
-                project = await this.LoadWithoutInitializeAsync(projectId, token);
-            }
-            catch (JsonException exception)
-            {
-                throw new InvalidDataException("This version of AI Studio cannot open the preparation.", exception);
-            }
-
-            if (project is null)
-                throw new InvalidDataException("This version of AI Studio cannot open the preparation.");
-
+            var project = await this.LoadRequiredWithoutInitializeAsync(projectId, token);
             mutation(project);
-            project.ModifiedAtUtc = DateTimeOffset.UtcNow;
+            if (isChange)
+                project.ModifiedAtUtc = DateTimeOffset.UtcNow;
+
             await this.StoreProjectAsync(project, token);
             return project;
         }
@@ -339,6 +338,33 @@ public sealed partial class BeyondFactsLabStore
         {
             gate.Release();
         }
+    }
+
+    /// <summary>
+    /// Reads a preparation which has to exist and has to be one this version can open, without the first start of the store.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The preparation.</returns>
+    /// <exception cref="FileNotFoundException">The preparation does not exist.</exception>
+    /// <exception cref="InvalidDataException">This version cannot open the preparation.</exception>
+    private async Task<BflProject> LoadRequiredWithoutInitializeAsync(Guid projectId, CancellationToken token)
+    {
+        var path = this.ProjectPath(projectId);
+        if (!File.Exists(path))
+            throw new FileNotFoundException("The preparation does not exist.", path);
+
+        BflProject? project;
+        try
+        {
+            project = await this.LoadWithoutInitializeAsync(projectId, token);
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidDataException("This version of AI Studio cannot open the preparation.", exception);
+        }
+
+        return project ?? throw new InvalidDataException("This version of AI Studio cannot open the preparation.");
     }
 
     /// <summary>
@@ -379,7 +405,8 @@ public sealed partial class BeyondFactsLabStore
         project.SchemaVersion is >= 1 and <= BflProject.CURRENT_SCHEMA_VERSION &&
         project.ProjectId != Guid.Empty &&
         project.ProjectId == expectedProjectId &&
-        !string.IsNullOrWhiteSpace(project.Name);
+        !string.IsNullOrWhiteSpace(project.Name) &&
+        Enum.IsDefined(project.CurrentStep);
 
     /// <summary>
     /// Cleans a name and refuses one which is empty afterward.

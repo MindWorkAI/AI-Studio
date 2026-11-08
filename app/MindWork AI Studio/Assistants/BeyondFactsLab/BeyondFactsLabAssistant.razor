@@ -35,6 +35,10 @@
                             <MudStack Spacing="0">
                                 <MudText Typo="Typo.body1">@this.ProjectDisplayName(project)</MudText>
                                 <MudText Typo="Typo.caption">@this.ProjectCaption(project)</MudText>
+                                @if (this.projectsWithMissingDetails.Contains(project.ProjectId))
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Warning">@T("Details missing")</MudText>
+                                }
                                 @if (!project.IsAvailable)
                                 {
                                     <MudText Typo="Typo.caption" Color="Color.Error">@this.ProjectStatusName(project.Status)</MudText>
@@ -87,6 +91,30 @@
                 {
                     <MudText Typo="Typo.caption" Class="mx-1">@string.Format(Culture, T("Marked on {0}."), happenedAtUtc.ToLocalTime().ToString("d", Culture))</MudText>
                 }
+
+                <MudStepperWithoutActions NonLinear="@true" ActiveIndex="@this.ActiveStepIndex" ActiveIndexChanged="@this.SelectStepAsync" Class="mt-4 mr-3">
+                    <ChildContent>
+                        @foreach (var step in BflStep.All)
+                        {
+                            <MudStep @key="step" Title="@step.Title" SecondaryText="@this.StepSecondaryText(step)">
+                                <MudText Typo="Typo.h5" Class="mt-2">@step.Title</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-4">@step.Description</MudText>
+
+                                <MudText Typo="Typo.h6" Class="mb-2">@T("Your details")</MudText>
+                                @if (this.forms.TryGetValue(step, out var form))
+                                {
+                                    <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                                        @T("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
+                                    </MudAlert>
+                                }
+                            </MudStep>
+                        }
+                    </ChildContent>
+                </MudStepperWithoutActions>
             }
             else
             {
