@@ -115,6 +115,20 @@
                             </MudList>
                         </MudPaper>
                     </MudItem>
+
+                    <MudItem Class="pa-0 pr-2 mt-4" xs="6">
+                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                            <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Size="Size.Large" class="mr-2"/>
+                                @T("Concepts and Ideas")
+                            </MudText>
+
+                            <MudList T="string">
+                                <Supporter Name="Drew Nelson" Type="SupporterType.INDIVIDUAL" Acknowledgment="@T("Thank you, Drew, for the idea of learning about one cognitive bias every day, so that we become more aware of our own biases step by step. The Bias of the Day assistant is built on it.")"/>
+                                <Supporter Name="Lara Wüster" Type="SupporterType.INDIVIDUAL" URL="https://www.pm.mh.tum.de/ethics/institut/team/lara-wuester/" Acknowledgment="@T("Thank you, Lara, for the concept and the content of the BeyondFacts Lab, which helps researchers prepare for challenging appearances.")"/>
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
                 </MudGrid>
             </ExpansionPanel>
 
