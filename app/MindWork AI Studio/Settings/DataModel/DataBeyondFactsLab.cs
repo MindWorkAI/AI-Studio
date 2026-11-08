@@ -45,4 +45,12 @@ public sealed class DataBeyondFactsLab(Expression<Func<Data, DataBeyondFactsLab>
     /// Gets or sets how the lab addresses the person in languages with a formal and an informal address.
     /// </summary>
     public BflAddressForm AddressForm { get; set; } = ManagedConfiguration.Register(configSelection, value => value.AddressForm, BflAddressForm.FORMAL);
+
+    /// <summary>
+    /// Gets or sets the hash of the notes the person confirmed, see BflNotice; empty while they confirmed none.
+    /// </summary>
+    /// <remarks>
+    /// Only the person can confirm the notes, so an organization cannot manage this setting.
+    /// </remarks>
+    public string AcceptedNoticeHash { get; set; } = string.Empty;
 }

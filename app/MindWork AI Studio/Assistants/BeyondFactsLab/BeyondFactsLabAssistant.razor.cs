@@ -29,6 +29,11 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     [Inject]
     private ILogger<BeyondFactsLabAssistant> Logger { get; init; } = null!;
 
+    /// <summary>
+    /// Whether the person may open the lab, so that the page did not send them away.
+    /// </summary>
+    private bool mayOpen;
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
@@ -40,7 +45,43 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
         }
 
         this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
+        this.mayOpen = true;
         await this.RunStoreActionAsync(() => this.ReloadProjectsAsync(null));
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender && this.mayOpen)
+            await this.ShowNoticeIfNeededAsync();
+    }
+
+    /// <summary>
+    /// Shows the notes of the lab, unless the person confirmed them as they are now.
+    /// </summary>
+    private async Task ShowNoticeIfNeededAsync()
+    {
+        var currentHash = await BflNotice.ComputeHashAsync();
+        if (BflNotice.IsAccepted(this.SettingsManager.ConfigurationData.BeyondFactsLab.AcceptedNoticeHash, currentHash))
+            return;
+
+        var languagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
+        var notice = await BflNotice.ReadAsync(languagePlugin.IETFTag);
+        if (string.IsNullOrWhiteSpace(notice))
+        {
+            this.Logger.LogError("The notes of the BeyondFacts Lab are missing.");
+            return;
+        }
+
+        var parameters = new DialogParameters<BflNoticeDialog> { { dialog => dialog.Notice, notice } };
+        var reference = await this.DialogService.ShowAsync<BflNoticeDialog>(T("BeyondFacts Lab"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var result = await reference.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        this.SettingsManager.ConfigurationData.BeyondFactsLab.AcceptedNoticeHash = currentHash;
+        await this.SettingsManager.StoreSettings();
     }
 
     /// <inheritdoc />
