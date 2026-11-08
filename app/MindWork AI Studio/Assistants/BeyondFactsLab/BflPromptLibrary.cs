@@ -60,6 +60,20 @@ public static class BflPromptLibrary
     ];
 
     /// <summary>
+    /// Reads the texts of the system prompt of a step.
+    /// </summary>
+    /// <param name="step">The step.</param>
+    /// <param name="addressForm">How the model addresses the person.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The texts, which BflPromptComposer puts together.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without one of the files.</exception>
+    public static async Task<BflPromptParts> LoadPartsAsync(BflStep step, AddressForm addressForm, CancellationToken token = default) => new(
+        await ReadAsync(CORE_PATH, token),
+        await ReadAsync(KNOWLEDGE_PATH, token),
+        await ReadAsync(StepPath(step), token),
+        await ReadAsync(AddressPath(addressForm), token));
+
+    /// <summary>
     /// Reads a file of the lab's prompts.
     /// </summary>
     /// <param name="path">The file, one of the paths of this class.</param>
