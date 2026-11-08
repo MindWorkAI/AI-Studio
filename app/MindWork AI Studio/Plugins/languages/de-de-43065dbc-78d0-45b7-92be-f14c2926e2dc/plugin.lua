@@ -10054,10 +10054,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T257
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3448155331"] = "Schließen"
 
 -- Whether the lab addresses you formally or informally.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3883838251"] = "Ob das Labor Sie mit „Sie“ oder „du“ anspricht."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3883838251"] = "Ob das Lab Sie siezt oder duzt."
 
 -- Whether the lab addresses you formally or informally.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3883838251::INFORMAL"] = "Ob das Labor dich mit „Sie“ oder „du“ anspricht."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3883838251::INFORMAL"] = "Ob das Lab dich siezt oder duzt."
 
 -- Your preparations usually contain unpublished research. Therefore, the lab accepts only providers with at least medium confidence. You can raise this minimum, e.g., to use only self-hosted models.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T4002746484"] = "Ihre Vorbereitungen enthalten meist unveröffentlichte Forschung. Daher akzeptiert das Lab nur Anbieter mit mindestens dem Vertrauensniveau „Mittel“. Sie können diese Untergrenze anheben, etwa um nur selbst gehostete Modelle zu verwenden."
@@ -12832,7 +12832,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3608282312"] = "Danke, Simon, fü
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3660718138"] = "Vielen Dank, Richard, dass du der Erste warst."
 
 -- Thank you, Drew, for the idea of learning about one cognitive bias every day, so that we become more aware of our own biases step by step. The Bias of the Day assistant is built on it.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T378717265"] = "Vielen Dank, Drew, für die Idee, jeden Tag etwas über eine kognitive Verzerrung zu lernen, damit wir uns Schritt für Schritt unserer eigenen kognitiven Verzerrungen bewusster werden. Der Assistent „Bias des Tages“ basiert darauf."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T378717265"] = "Vielen Dank, Drew, für die Idee, jeden Tag eine kognitive Verzerrung kennenzulernen, damit wir uns Schritt für Schritt unserer eigenen Verzerrungen bewusster werden. Darauf baut der Assistent „Vorurteil des Tages“ auf."
 
 -- Our Titans
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3805270964"] = "Unsere Titanen"
@@ -12844,7 +12844,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3821668394"] = "Moderation, Desig
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3856759487"] = "Danke, Thibault, dass du Requesty als neuen Anbieter in AI Studio integriert hast."
 
 -- Thank you, Lara, for the concept and the content of the BeyondFacts Lab and for the expertise you put into it, so that researchers can prepare for challenging appearances.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3992506100"] = "Vielen Dank, Lara, für das Konzept und die Inhalte des BeyondFacts Lab sowie für das Fachwissen, das Sie eingebracht haben, damit Forschende sich auf herausfordernde Auftritte vorbereiten können."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3992506100"] = "Vielen Dank, Lara, für das Konzept und die Inhalte des BeyondFacts Lab und für das Fachwissen, das du eingebracht hast, damit sich Forschende auf herausfordernde Auftritte vorbereiten können."
 
 -- Thanks, Nils, for taking the time to learn Rust, for building the foundation for local retrieval, and for assistant plugins and the Assistant Builder.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T4042792376"] = "Danke, Nils, dass du dir die Zeit genommen hast, Rust zu lernen, die Grundlage für die lokale Suche zu schaffen und Assistenten-Plugins sowie den Assistenten-Builder zu entwickeln."
@@ -13300,10 +13300,10 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T870850829"
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T937754037"] = "Selbstlöschende Chats: Chats löschen, die älter als 30 Tage sind"
 
 -- Informal address
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T2888141085"] = "Informelle Anrede"
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T2888141085"] = "Informelle Anrede (du)"
 
 -- Formal address
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T3439873254"] = "Formelle Anrede"
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T3439873254"] = "Formelle Anrede (Sie)"
 
 -- This data source can be used with any LLM provider. Your data may be sent to a cloud-based provider.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T1531417967"] = "Diese Datenquelle kann mit jedem LLM-Anbieter verwendet werden. Ihre Daten können an einen cloudbasierten Anbieter gesendet werden."
