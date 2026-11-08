@@ -1,0 +1,59 @@
+@using AIStudio.Chat
+@inherits MSGComponentBase
+
+<MudText Typo="Typo.h6" Class="mt-6 mb-2">@T("Conversation")</MudText>
+@if (this.conversation is null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
+}
+else if (this.conversation.Thread is not { } thread)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
+        @TA("AI Studio cannot open the conversation of this step. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.")
+    </MudAlert>
+    <MudButton StartIcon="@Icons.Material.Filled.RestartAlt" Color="Color.Error" OnClick="@this.ResetAsync">@T("Start over")</MudButton>
+}
+else
+{
+    @if (!this.conversation.HasVisibleMessages && !this.IsRunning)
+    {
+        <MudText Typo="Typo.body2" Class="mb-3">
+            @TA("The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.")
+        </MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum" OnClick="@this.StartAsync" Disabled="@(!this.CanSend)" Class="mb-3">
+            @T("Start the conversation")
+        </MudButton>
+    }
+    else
+    {
+        @foreach (var block in thread.Blocks)
+        {
+            @if (block is { HideFromUser: false, Content: not null })
+            {
+                <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportTitle="@T("Export message")" ExportFileName="@this.Location.Step.Title"/>
+            }
+        }
+    }
+
+    @if (this.ProviderIssue is { } issue)
+    {
+        <MudText Typo="Typo.body2" Color="Color.Warning" Class="mb-2">@issue</MudText>
+    }
+
+    <MudStack Row="true" AlignItems="AlignItems.End" Class="mt-2" StretchItems="StretchItems.Start">
+        <MudTextField T="string" @bind-Value="@this.userInput" Immediate="true" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Variant="Variant.Outlined" Label="@TA("Your message")" Disabled="@(!this.conversation.IsAvailable || this.IsRunning)"/>
+        @if (this.IsRunning)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Stop" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" OnClick="@this.SendAsync" Disabled="@(!this.CanSendMessage)">@T("Send")</MudButton>
+        }
+    </MudStack>
+
+    @if (this.conversation.HasVisibleMessages)
+    {
+        <MudButton StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="@this.ResetAsync" Disabled="@this.IsRunning" Class="mt-2">@T("Start over")</MudButton>
+    }
+}

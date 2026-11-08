@@ -115,6 +115,8 @@
                                         @TA("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
                                     </MudAlert>
                                 }
+
+                                <BflStepChat @key="@step" Location="@(new BflThreadLocation(project.ProjectId, step))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
                             </MudStep>
                         }
                     </ChildContent>
