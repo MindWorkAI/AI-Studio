@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 
+using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Media;
@@ -10,15 +11,16 @@ using AIStudio.Tools.Services;
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// Adds documents and recordings to the material of a preparation of the BeyondFacts Lab, and removes them.
+/// Adds documents, recordings, and images to the material of a preparation of the BeyondFacts Lab, and removes them.
 /// </summary>
 /// <remarks>
 /// A singleton, so that reading a long document or transcribing a recording goes on while the person looks at another
 /// page: the lab shows the material again when it comes back and listens to MaterialsChanged. The lab reads each file
-/// once, through the prompt injection filter of the runtime, and keeps only the filtered text; see BflMaterial.
+/// once. Of a document or a recording, it keeps only the text which passed the prompt injection filter of the runtime;
+/// of an image, a copy prepared for models; see BflMaterial.
 /// </remarks>
 /// <param name="store">The store of the lab.</param>
-/// <param name="rustService">The runtime, which reads the documents and transcripts.</param>
+/// <param name="rustService">The runtime, which reads the documents and transcripts and prepares the images.</param>
 /// <param name="guardService">The prompt injection filter, which tells the person what it removed.</param>
 /// <param name="messageBus">The message bus, for what the person needs to know.</param>
 /// <param name="settingsManager">The settings, which name the transcription provider and the confidence the lab demands.</param>
@@ -88,7 +90,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
     }
 
     /// <summary>
-    /// Reads documents and recordings and adds them to the material of a preparation.
+    /// Reads documents, recordings, and images and adds them to the material of a preparation.
     /// </summary>
     /// <remarks>
     /// One action for the prompt injection filter, so that the person hears once about what it removed from all of
@@ -96,7 +98,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
     /// of a long text, the lab keeps the beginning, see MAX_TEXT_CHARACTERS. The method itself does not fail.
     /// </remarks>
     /// <param name="projectId">The ID of the preparation.</param>
-    /// <param name="paths">The documents and recordings.</param>
+    /// <param name="paths">The documents, recordings, and images.</param>
     /// <param name="pandocAvailability">Makes sure Pandoc is there for the formats which need it; it belongs to the window of the person.</param>
     public async Task ImportAsync(Guid projectId, IReadOnlyList<string> paths, PandocAvailabilityService pandocAvailability)
     {
@@ -125,10 +127,10 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
             await using var promptInjectionScope = guardService.BeginAction();
             foreach (var path in paths)
             {
-                // The page lets the person choose documents and recordings only, see AttachDocuments; this keeps out whatever else arrives:
+                // The page lets the person choose documents, recordings, and images only, see AttachDocuments; this keeps out whatever else arrives:
                 if (KindOf(path) is not { } kind)
                 {
-                    logger.LogWarning("The BeyondFacts Lab does not read the file '{Path}', since it is neither a document nor a recording.", path);
+                    logger.LogWarning("The BeyondFacts Lab does not read the file '{Path}', since it is no document, recording, or image for models.", path);
                     continue;
                 }
 
@@ -185,11 +187,15 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         if (PersistentMediaTranscript.IsMediaPath(path))
             return BflMaterialKind.RECORDING;
 
+        // Only the formats the runtime prepares for models, not HEIC, AVIF, or SVG:
+        if (FileTypes.IsAllowedPath(path, FileTypes.MODEL_IMAGE))
+            return BflMaterialKind.IMAGE;
+
         return null;
     }
 
     /// <summary>
-    /// Reads one document or recording and adds it to the material of a preparation.
+    /// Reads one document, recording, or image and adds it to the material of a preparation.
     /// </summary>
     /// <param name="projectId">The ID of the preparation.</param>
     /// <param name="path">The file.</param>
@@ -219,6 +225,14 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         if (!knownHashes.Add(hash))
         {
             await messageBus.SendInfo(new(Icons.Material.Filled.Description, string.Format(TB("The material of this preparation contains '{0}' already."), name)));
+            return;
+        }
+
+        if (kind is BflMaterialKind.IMAGE)
+        {
+            if (!await this.AddImageAsync(projectId, path, name, size, hash))
+                knownHashes.Remove(hash);
+
             return;
         }
 
@@ -263,6 +277,66 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
             knownHashes.Remove(hash);
             logger.LogError(exception, "The BeyondFacts Lab could not store the material '{Name}' of the preparation '{ProjectId}'.", name, projectId);
             await messageBus.SendError(new(Icons.Material.Filled.SaveAs, string.Format(TA("AI Studio could not save the material '{0}'. Please try again."), name)));
+        }
+    }
+
+    /// <summary>
+    /// Prepares an image for models and adds the copy to the material of a preparation.
+    /// </summary>
+    /// <remarks>
+    /// The runtime turns the image upright, scales it down to the edge models take, and encodes it anew as JPEG or PNG,
+    /// which leaves out its metadata, such as the place where a photo was taken. The copy is as large as any provider
+    /// takes; a provider which takes less gets a smaller one when the lab sends it, see ModelImageService. Like an image
+    /// in a chat, it does not pass the prompt injection filter, which reads text only; see BflConversationService.WithImages.
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="path">The image.</param>
+    /// <param name="name">The name of the image as the person knows it.</param>
+    /// <param name="size">The size of the image in bytes.</param>
+    /// <param name="hash">The hash of the image.</param>
+    /// <returns>True when the preparation has the image now, also as a material it had already.</returns>
+    private async Task<bool> AddImageAsync(Guid projectId, string path, string name, long size, string hash)
+    {
+        var prepared = await rustService.PrepareImageForModelAsync(path, IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES);
+        if (!prepared.IsPrepared)
+        {
+            logger.LogWarning("The BeyondFacts Lab could not prepare the image '{Path}': {ErrorCode}.", path, prepared.ErrorCode);
+            await messageBus.SendError(new(Icons.Material.Filled.Image, prepared.ErrorCode.ToUserMessage(name)));
+            return false;
+        }
+
+        var material = new BflMaterial
+        {
+            Name = name,
+            Kind = BflMaterialKind.IMAGE,
+            Image = new()
+            {
+                Extension = prepared.MimeType is "image/png" ? "png" : "jpg",
+                Width = (int)prepared.Width,
+                Height = (int)prepared.Height,
+            },
+            SourceBytes = size,
+            SourceHash = hash,
+        };
+
+        try
+        {
+            var addition = await store.AddImageMaterialAsync(projectId, material, Convert.FromBase64String(prepared.Base64));
+            if (addition.IsDuplicate)
+                await messageBus.SendInfo(new(Icons.Material.Filled.Image, string.Format(TB("The material of this preparation contains '{0}' already."), addition.Material.Name)));
+
+            return true;
+        }
+        catch (FileNotFoundException)
+        {
+            // The person deleted the preparation while the lab prepared the image; nothing is left to add it to.
+            return false;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or FormatException or ArgumentException)
+        {
+            logger.LogError(exception, "The BeyondFacts Lab could not store the image '{Name}' of the preparation '{ProjectId}'.", name, projectId);
+            await messageBus.SendError(new(Icons.Material.Filled.SaveAs, string.Format(TA("AI Studio could not save the material '{0}'. Please try again."), name)));
+            return false;
         }
     }
 

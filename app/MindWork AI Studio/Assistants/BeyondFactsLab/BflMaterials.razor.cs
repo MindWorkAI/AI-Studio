@@ -13,7 +13,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// The area "Material" beside the steps of a preparation, where the person adds documents and recordings which the
+/// The area "Material" beside the steps of a preparation, where the person adds documents, recordings, and images which the
 /// chats of every step read, and removes them again.
 /// </summary>
 /// <remarks>
@@ -23,9 +23,10 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 public partial class BflMaterials : MSGComponentBase
 {
     /// <summary>
-    /// The kinds of files the lab reads: documents, and audio or video recordings for their transcript.
+    /// The kinds of files the lab reads: documents, audio or video recordings for their transcript, and the images
+    /// the runtime prepares for models.
     /// </summary>
-    private static readonly FileTypeFilter[] ALLOWED_FILE_TYPES = [FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO];
+    private static readonly FileTypeFilter[] ALLOWED_FILE_TYPES = [FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO, FileTypes.MODEL_IMAGE];
 
     /// <summary>
     /// Gets or sets the ID of the preparation whose material to show.
@@ -201,7 +202,22 @@ public partial class BflMaterials : MSGComponentBase
     /// <param name="material">The material.</param>
     private string? ShareNotice(BflMaterial material)
     {
-        if (!this.shares.TryGetValue(material.MaterialId, out var share) || share.IsComplete)
+        if (!this.shares.TryGetValue(material.MaterialId, out var share))
+            return null;
+
+        switch (share.Image)
+        {
+            case BflImageDelivery.MODEL_SEES_NO_IMAGES:
+                return T("The selected model cannot see images; it learns only the name of this one.");
+
+            case BflImageDelivery.OVER_THE_LIMIT:
+                return T("The selected model takes no more images at once; it learns only the name of this one.");
+
+            case BflImageDelivery.SENT:
+                return null;
+        }
+
+        if (share.IsComplete)
             return null;
 
         return share.Characters > 0
@@ -210,12 +226,12 @@ public partial class BflMaterials : MSGComponentBase
     }
 
     /// <summary>
-    /// Lets the lab read the documents the person just dropped or chose.
+    /// Lets the lab read the documents and images the person just dropped or chose.
     /// </summary>
-    /// <param name="attached">The documents, as the attachment control collected them.</param>
+    /// <param name="attached">The files, as the attachment control collected them.</param>
     private Task AttachedAsync(HashSet<FileAttachment> attached)
     {
-        var paths = attached.Where(attachment => attachment is { IsForbidden: false, IsImage: false }).Select(attachment => attachment.FilePath).ToList();
+        var paths = attached.Where(attachment => attachment is { IsForbidden: false }).Select(attachment => attachment.FilePath).ToList();
         attached.Clear();
         if (paths.Count is 0)
             return Task.CompletedTask;
@@ -272,6 +288,7 @@ public partial class BflMaterials : MSGComponentBase
     {
         null => Icons.Material.Filled.ErrorOutline,
         BflMaterialKind.RECORDING => Icons.Material.Filled.Mic,
+        BflMaterialKind.IMAGE => Icons.Material.Filled.Image,
         _ => Icons.Material.Filled.Description,
     };
 
@@ -300,8 +317,15 @@ public partial class BflMaterials : MSGComponentBase
     }
 
     /// <summary>
-    /// Gets the line below the name of a material: its size and when the person added it.
+    /// Gets the line below the name of a material: its size, or the size of the copy of an image in pixels, and when
+    /// the person added it.
     /// </summary>
     /// <param name="material">The material.</param>
-    private string Caption(BflMaterial material) => string.Format(Culture, T("{0}, added on {1}"), material.SourceBytes.FileSize(), material.AddedAtUtc.ToLocalTime().ToString("d", Culture));
+    private string Caption(BflMaterial material)
+    {
+        var addedOn = material.AddedAtUtc.ToLocalTime().ToString("d", Culture);
+        return material.Image is { } image
+            ? string.Format(Culture, T("Image of {0} × {1} pixels, added on {2}"), image.Width.ToString("N0", Culture), image.Height.ToString("N0", Culture), addedOn)
+            : string.Format(Culture, T("{0}, added on {1}"), material.SourceBytes.FileSize(), addedOn);
+    }
 }
