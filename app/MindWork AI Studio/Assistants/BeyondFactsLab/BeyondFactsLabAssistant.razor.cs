@@ -50,6 +50,11 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     /// </summary>
     private bool scrollToActiveStep;
 
+    /// <summary>
+    /// Whether the area which tells how to work with the lab is open.
+    /// </summary>
+    private bool introductionExpanded;
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
@@ -63,6 +68,9 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
         this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
         this.mayOpen = true;
         await this.RunStoreActionAsync(() => this.ReloadProjectsAsync(null));
+
+        // Whoever has no preparation yet needs to know how the lab works first:
+        this.introductionExpanded = this.projects.Count is 0;
     }
 
     /// <inheritdoc />
@@ -117,6 +125,16 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
         }
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+    }
+
+    /// <summary>
+    /// Remembers whether the person opened or closed the area which tells how to work with the lab.
+    /// </summary>
+    /// <param name="isExpanded">Whether the area is open now.</param>
+    private Task IntroductionExpandedChanged(bool isExpanded)
+    {
+        this.introductionExpanded = isExpanded;
+        return Task.CompletedTask;
     }
 
     private async Task OpenSettingsDialogAsync() => await this.DialogService.ShowAsync<SettingsDialogBeyondFactsLab>(null, new DialogParameters(), DialogOptions.FULLSCREEN);

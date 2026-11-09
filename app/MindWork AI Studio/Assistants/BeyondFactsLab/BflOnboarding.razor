@@ -1,0 +1,4 @@
+@inherits MSGComponentBase
+
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidateProvider"/>
+<BflChat Location="@BflOnboardingThreadLocation.INSTANCE" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)" ShowHeading="@false"/>
