@@ -84,12 +84,12 @@ public static class GlossaryPrompt
         if (glossary.TargetLanguage is CommonLanguages.OTHER || targetLanguage is CommonLanguages.OTHER)
             return glossary.TargetLanguage == targetLanguage && string.Equals(glossary.CustomTargetLanguage.Trim(), customTargetLanguage.Trim(), StringComparison.OrdinalIgnoreCase);
 
-        var glossaryTag = glossary.TargetLanguage.ToIETFTag();
-        var targetTag = targetLanguage.ToIETFTag();
+        var glossaryTag = glossary.TargetLanguage.IETFTag;
+        var targetTag = targetLanguage.IETFTag;
         return glossaryTag.Length > 0 && targetTag.Length > 0 && string.Equals(glossaryTag.Split('-')[0], targetTag.Split('-')[0], StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string LanguageTag(CommonLanguages language, string customLanguage) => language is CommonLanguages.OTHER ? EscapeLine(customLanguage) : language.ToIETFTag();
+    private static string LanguageTag(CommonLanguages language, string customLanguage) => language is CommonLanguages.OTHER ? EscapeLine(customLanguage) : language.IETFTag;
 
     private static string EscapeLine(string text) => text
         .Replace("\r\n", " ")

@@ -63,7 +63,7 @@
     @foreach (var source in Enum.GetValues<BatchProcessingPromptSource>())
     {
         <MudSelectItem Value="@source">
-            @source.Name()
+            @source.Name
         </MudSelectItem>
     }
 </MudSelect>
@@ -149,7 +149,7 @@ else
     @foreach (var mode in Enum.GetValues<BatchProcessingOutputMode>())
     {
         <MudSelectItem Value="@mode">
-            @mode.Name()
+            @mode.Name
         </MudSelectItem>
     }
 </MudSelect>
@@ -157,16 +157,16 @@ else
 @if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
 {
     <MudSelect T="FileExportFormat" @bind-Value="@this.resultFileFormat" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Label="@T("File format")" HelperText="@T("Choose the format of the result files. Everything except Markdown is converted by Pandoc, which AI Studio offers to install when it is missing.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
-        @foreach (var format in FileExportFormatExtensions.ANSWER_FORMATS)
+        @foreach (var format in FileExportFormat.AnswerFormats)
         {
             <MudSelectItem Value="@format">
-                @format.ToName()
+                @format.Name
             </MudSelectItem>
         }
     </MudSelect>
 
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-        @(string.Format(T("Each answer is stored as its own file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result{0}."), this.resultFileFormat.ToFileExtension()))
+        @(string.Format(T("Each answer is stored as its own file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result{0}."), this.resultFileFormat.FileExtension))
     </MudJustifiedText>
 }
 else
@@ -179,7 +179,7 @@ else
         @foreach (var separator in Enum.GetValues<BatchProcessingCsvSeparator>())
         {
             <MudSelectItem Value="@separator">
-                @separator.Name()
+                @separator.Name
             </MudSelectItem>
         }
     </MudSelect>

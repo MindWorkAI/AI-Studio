@@ -180,7 +180,7 @@ public sealed class GlossaryLookupTool(SettingsManager settingsManager, Glossary
 
     private static bool IsLanguage(CommonLanguages language, string customLanguage, string wantedLanguage) => language is CommonLanguages.OTHER
         ? string.Equals(SingleLine(customLanguage), wantedLanguage, StringComparison.OrdinalIgnoreCase)
-        : language.ToIETFTag() is { Length: > 0 } tag && string.Equals(tag.Split('-')[0], wantedLanguage.Split('-')[0], StringComparison.OrdinalIgnoreCase);
+        : language.IETFTag is { Length: > 0 } tag && string.Equals(tag.Split('-')[0], wantedLanguage.Split('-')[0], StringComparison.OrdinalIgnoreCase);
 
     private static string? ShortDescription(Glossary glossary)
     {
@@ -362,7 +362,7 @@ public sealed class GlossaryLookupTool(SettingsManager settingsManager, Glossary
         ? $"translation, {LanguageName(glossary.SourceLanguage, glossary.CustomSourceLanguage)} -> {LanguageName(glossary.TargetLanguage, glossary.CustomTargetLanguage)}"
         : "reference";
 
-    private static string LanguageName(CommonLanguages language, string customLanguage) => language is CommonLanguages.OTHER ? SingleLine(customLanguage) : language.ToIETFTag();
+    private static string LanguageName(CommonLanguages language, string customLanguage) => language is CommonLanguages.OTHER ? SingleLine(customLanguage) : language.IETFTag;
 
     private static string SingleLine(string text) => string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 }

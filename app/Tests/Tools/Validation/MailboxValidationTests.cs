@@ -37,7 +37,7 @@ public sealed class MailboxValidationTests
     [TestCase(MailboxTransportSecurity.SSL_ON_CONNECT, ExpectedResult = 993)]
     [TestCase(MailboxTransportSecurity.STARTTLS, ExpectedResult = 143)]
     [TestCase(MailboxTransportSecurity.UNKNOWN, ExpectedResult = null)]
-    public int? EachEncryptionComesWithItsUsualPort(MailboxTransportSecurity transportSecurity) => transportSecurity.GetUsualPort();
+    public int? EachEncryptionComesWithItsUsualPort(MailboxTransportSecurity transportSecurity) => transportSecurity.UsualPort;
 
     [TestCase(0, ExpectedResult = false)]
     [TestCase(DataSourceValidation.MIN_ATTACHMENT_SIZE_MEGABYTES, ExpectedResult = true)]

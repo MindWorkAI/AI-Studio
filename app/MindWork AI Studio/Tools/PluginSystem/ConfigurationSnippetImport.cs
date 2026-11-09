@@ -328,6 +328,6 @@ public static class ConfigurationSnippetImport
                 return TB("The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.");
         }
 
-        return string.Format(TB("The pasted configuration is not a valid configuration of the type '{0}'."), type.GetName());
+        return string.Format(TB("The pasted configuration is not a valid configuration of the type '{0}'."), type.Name);
     }
 }

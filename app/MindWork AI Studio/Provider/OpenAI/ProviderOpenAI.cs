@@ -25,7 +25,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.OPEN_AI.ToSecretId();
+    public override string Id => LLMProviders.OPEN_AI.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "OpenAI";
@@ -71,7 +71,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         // OpenAI changed the role of the system prompt from one generation to the next, and the
         // early reasoning models take no system prompt at all. Which role a model takes is stated
         // by the OpenAI families in Models/OpenAI:
-        var systemPromptRole = modelProfile.SystemPromptRole.ToOpenAIRole();
+        var systemPromptRole = modelProfile.SystemPromptRole.OpenAIRole;
 
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelProfile.Has(Capability.RESPONSES_API);

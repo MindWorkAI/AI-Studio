@@ -133,7 +133,7 @@ public sealed partial class PluginInstallService
             return false;
         }
 
-        pluginRoot = Path.Join(dataDirectory, "plugins", pluginType.GetDirectory());
+        pluginRoot = Path.Join(dataDirectory, "plugins", pluginType.Directory);
         return true;
     }
 

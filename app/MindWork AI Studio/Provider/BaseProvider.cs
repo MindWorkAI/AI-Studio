@@ -693,11 +693,14 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <remarks>
     /// Two answers mean this: one provider says so in the body of a bad request, another turns the
     /// request down with 413 instead. For the user they are the same thing, and saying it in one
-    /// place is also what keeps both on one I18N key.
+    /// place is also what keeps both on one I18N key.<br/><br/>
+    /// The message names the passages of the data sources along with the attachments: the classic
+    /// RAG process sends them with every message, and while their budget leaves the rest of the
+    /// window to everything else, a long chat may still fill it, see PassageBudget.
     /// </remarks>
     /// <param name="providerMessage">What the provider itself said about the failure.</param>
     /// <returns>The message to show.</returns>
-    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
+    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
 
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
@@ -1377,7 +1380,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (runnableTools.Count > 0)
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
-                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
+                    runnableTools.Select(x => (object)ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
                     (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
@@ -1445,7 +1448,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// With the ID, the settings also know what the provider's own model list reported, e.g., the
     /// context window of a self-hosted model, see ProviderExtensions.GetAutomaticModelProfile. So
     /// the tools of a request and the way images are passed on see the model as the configured
-    /// provider does.
+    /// provider does.<br/><br/>
+    /// The tokenizer comes along as well, so that the classic RAG process counts its passages for
+    /// the model as the chat counts the conversation, see PassageBudget.
     /// </remarks>
     public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
@@ -1455,6 +1460,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         Model = chatModel,
         InstanceName = this.InstanceName,
         CapabilityOverrides = this.CapabilityOverrides,
+        TokenizerPath = this.TokenizerPath,
     };
 
     /// <summary>
@@ -1573,7 +1579,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             form.Add(new StringContent("json"), "response_format");
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL);
             request.Content = form;
 
             // Handle the authorization header based on the provider:
@@ -1662,15 +1668,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                 modelName = "placeholder";
             
             // Prepare the HTTP embedding request:
-            var payload = new
-            {
-                model = modelName,
-                input = texts,
-                encoding_format = "float"
-            };
-            
+            var payload = new EmbeddingRequest(modelName, texts);
             var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
-            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL());
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL);
 
             // Handle the authorization header based on the provider:
             switch (this.Provider)

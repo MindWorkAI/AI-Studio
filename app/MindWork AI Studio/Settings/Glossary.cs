@@ -45,6 +45,19 @@ public sealed record Glossary(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default) : ConfigurationBaseObject
 {
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public override string Name { get; set; } = Name;
+    public GlossaryType Type { get; set; } = Type;
+    public string Description { get; set; } = Description;
+    public CommonLanguages SourceLanguage { get; set; } = SourceLanguage;
+    public string CustomSourceLanguage { get; set; } = CustomSourceLanguage;
+    public CommonLanguages TargetLanguage { get; set; } = TargetLanguage;
+    public string CustomTargetLanguage { get; set; } = CustomTargetLanguage;
+    public bool PreselectInTranslation { get; set; } = PreselectInTranslation;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+
     //
     // A new glossary is meant to be used: whoever adds a glossary into English expects the next
     // translation into English to follow it.

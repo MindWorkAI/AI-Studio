@@ -1,8 +1,5 @@
 using System.Text.RegularExpressions;
 
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
 namespace Build.Commands;
 
 /// <summary>
@@ -41,9 +38,18 @@ public sealed partial class VerifyModelsCommand
     /// </remarks>
     private const string DAY_MARKER = "new DateOnly(";
 
-    [Command("verify-models", Description = "Report how long ago the pages behind the model rules were read")]
-    public int VerifyModels(
-        [Option("months", Description = "How long a page may go unread before it is reported")] int months = DEFAULT_MONTHS)
+    /// <summary>
+    /// Defines the command "verify-models".
+    /// </summary>
+    public static Command CreateCommand()
+    {
+        var months = new Option<int>("--months") { Description = "How long a page may go unread before it is reported", DefaultValueFactory = _ => DEFAULT_MONTHS };
+        var command = new Command("verify-models", "Report how long ago the pages behind the model rules were read") { months };
+        command.SetAction(parseResult => new VerifyModelsCommand().VerifyModels(parseResult.GetValue(months)));
+        return command;
+    }
+
+    public int VerifyModels(int months = DEFAULT_MONTHS)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return 1;

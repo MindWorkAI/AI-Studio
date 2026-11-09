@@ -17,7 +17,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.ANTHROPIC.ToSecretId();
+    public override string Id => LLMProviders.ANTHROPIC.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Anthropic";
@@ -218,7 +218,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             // has not always been only something to talk to. The six above skip that question
             // because they are not a catalog: every one of them was picked by hand.
             //
-            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider)).Concat(additionalModels).DistinctBy(x => x.Id).OrderBy(x => x.Id)]
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider)).Concat(additionalModels).DistinctBy(x => x.Id).OrderBy(x => x.Id, Model.ID_ORDER)]
         };
     }
 

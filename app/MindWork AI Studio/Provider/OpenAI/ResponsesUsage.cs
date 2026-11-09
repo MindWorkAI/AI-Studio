@@ -17,7 +17,7 @@ public sealed record ResponsesUsage
     /// <summary>
     /// What everything sent to the model cost, the cached part included.
     /// </summary>
-    public int? InputTokens { get; init; }
+    public int? InputTokens { get; set; }
 
     /// <summary>
     /// States what this block reports, as far as it can be believed.

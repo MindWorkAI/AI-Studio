@@ -12,6 +12,9 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     
     protected override string Description => T("Find synonyms for words or phrases.");
     
+    // The prompt of this assistant asks for a list of synonyms only, so the chat gets a prompt of its own, which keeps the language:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
+
     protected override string SystemPrompt => 
         $"""
         You have a PhD in linguistics. Therefore, you are an expert in the {this.SystemPromptLanguage()} language.
@@ -44,6 +47,21 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
         You do not ask follow-up questions and never repeat the task instructions. When you do not know
         any synonyms for the given word or phrase, you state this. Your output is always in
         the {this.SystemPromptLanguage()} language.
+        """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues a search for synonyms, for follow-up questions about them.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You have a PhD in linguistics. Therefore, you are an expert in the {this.SystemPromptLanguage()} language.
+        The user looked for synonyms of a word or phrase: the conversation so far holds the word or phrase, its context
+        when the user gave one, and your synonyms for each of its meanings. Now you answer the user's follow-up
+        questions, e.g., how two synonyms differ, which one suits a certain sentence, or which register a word belongs
+        to, and you find further synonyms when the user asks for them. Synonyms are always in the
+        {this.SystemPromptLanguage()} language.
+
+        Answer questions in the language the user writes in.
         """;
     
     protected override bool AllowProfiles => false;
@@ -157,7 +175,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
             CommonLanguages.AS_IS => "source",
             CommonLanguages.OTHER => this.customTargetLanguage,
             
-            _ => $"{this.selectedLanguage.Name()}",
+            _ => $"{this.selectedLanguage.Name}",
         };
 
         if (string.IsNullOrWhiteSpace(lang))

@@ -3,24 +3,22 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Settings;
 using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
-
-#if !DEBUG
-using System.Reflection;
-using Microsoft.Extensions.FileProviders;
-#endif
 
 namespace AIStudio.Assistants.PromptOptimizer;
 
 public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialogPromptOptimizer>
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true,
-    };
+        TypeInfoResolver = PromptOptimizationJsonContext.Default,
+    }.AsReadOnly();
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -33,6 +31,9 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     protected override string Title => T("Prompt Optimizer");
 
     protected override string Description => T("Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.");
+
+    // Sending to a new chat puts the optimized prompt into its input field, so no chat continues this conversation:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
 
     protected override string SystemPrompt =>
         $"""
@@ -123,18 +124,10 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override bool SubmitDisabled => this.useCustomPromptGuide && this.customPromptGuideFiles.Count == 0;
 
-    protected override ChatThread ConvertToChatThread => (this.ChatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
-
     protected override void ResetForm()
     {
         this.inputPrompt = string.Empty;
-        this.useCustomPromptGuide = false;
-        this.customPromptGuideFiles.Clear();
-        this.currentCustomPromptGuidePath = string.Empty;
-        this.customPromptingGuidelineContent = string.Empty;
+        this.ClearCustomPromptGuide();
         this.hasUpdatedDefaultRecommendations = false;
         this.ResetGuidelineSummaryToDefault();
         this.ResetOutput();
@@ -155,7 +148,63 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedTargetLanguage;
         this.customTargetLanguage = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedOtherLanguage;
         this.importantAspects = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedImportantAspects;
+        this.PreselectCustomPromptGuide();
         return true;
+    }
+
+    /// <summary>
+    /// Reads the preselected prompt guide, now that the preselections are in place.
+    /// </summary>
+    /// <remarks>
+    /// The guide is read anew whenever the preselections are applied, i.e., when the assistant opens
+    /// and when the form is reset. That way, a change to the file reaches the next optimization
+    /// without anybody having to choose the file again.
+    /// </remarks>
+    protected override async Task OnDefaultsAppliedAsync()
+    {
+        if (!this.useCustomPromptGuide || this.customPromptGuideFiles.Count == 0)
+            return;
+
+        await this.LoadCustomPromptGuidelineContentAsync(this.customPromptGuideFiles.First());
+    }
+
+    /// <summary>
+    /// Takes the prompt guide of the settings as the custom prompt guide, if the settings name one.
+    /// </summary>
+    /// <remarks>
+    /// Only the file is taken here. Its content follows in OnDefaultsAppliedAsync, because reading it
+    /// is asynchronous, while the preselections are not. Content read before stays as long as the file
+    /// is the same.
+    /// </remarks>
+    private void PreselectCustomPromptGuide()
+    {
+        var guidePath = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedCustomPromptGuidePath;
+        if (string.IsNullOrWhiteSpace(guidePath))
+        {
+            // An empty guide which the organization locked means the default guide for everybody:
+            if (this.IsCustomPromptGuideLocked)
+                this.ClearCustomPromptGuide();
+
+            return;
+        }
+
+        if (!string.Equals(this.currentCustomPromptGuidePath, guidePath, StringComparison.OrdinalIgnoreCase))
+            this.customPromptingGuidelineContent = string.Empty;
+
+        this.useCustomPromptGuide = true;
+        this.customPromptGuideFiles = [ FileAttachment.FromPath(guidePath) ];
+        this.currentCustomPromptGuidePath = guidePath;
+    }
+
+    /// <summary>
+    /// Goes back to the default prompt guide.
+    /// </summary>
+    private void ClearCustomPromptGuide()
+    {
+        this.useCustomPromptGuide = false;
+        this.customPromptGuideFiles.Clear();
+        this.currentCustomPromptGuidePath = string.Empty;
+        this.customPromptingGuidelineContent = string.Empty;
     }
 
     protected override async Task OnInitializedAsync()
@@ -186,6 +235,16 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private string recStructureMarkers = string.Empty;
     private string recRoleDefinition = string.Empty;
     private string recLanguageChoice = string.Empty;
+
+    /// <summary>
+    /// The files a custom prompt guide can come from, in the assistant and in its settings.
+    /// </summary>
+    /// <remarks>
+    /// Documents only: an audio or a video file would be transcribed, and a transcript reports
+    /// the name of its file rather than the path, which the preview of the guide needs.
+    /// </remarks>
+    internal static readonly FileTypeFilter[] CUSTOM_PROMPT_GUIDE_FILE_TYPES = [ FileTypes.DOCUMENT ];
+
     private static readonly AssistantSessionStateKey<string> INPUT_PROMPT_STATE_KEY = new(nameof(inputPrompt));
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
@@ -246,7 +305,20 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         state.Restore(REC_STRUCTURE_MARKERS_STATE_KEY, value => this.recStructureMarkers = value);
         state.Restore(REC_ROLE_DEFINITION_STATE_KEY, value => this.recRoleDefinition = value);
         state.Restore(REC_LANGUAGE_CHOICE_STATE_KEY, value => this.recLanguageChoice = value);
+
+        // A session from before the organization locked its prompt guide must not bring back another one:
+        if (this.IsCustomPromptGuideLocked)
+            this.PreselectCustomPromptGuide();
     }
+
+    /// <summary>
+    /// Whether the organization decides which prompt guide this assistant uses.
+    /// </summary>
+    /// <remarks>
+    /// The guide is a preselection, so a lock binds only while preselection is enabled, as for the
+    /// template of the Slide Assistant. Without preselection, the user may choose any guide.
+    /// </remarks>
+    private bool IsCustomPromptGuideLocked => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions && ManagedConfiguration.TryGet(x => x.PromptOptimizer, x => x.PreselectedCustomPromptGuidePath, out var meta) && meta.IsLocked;
 
     private bool ShowUpdatedPromptGuidelinesIndicator => !this.useCustomPromptGuide && this.hasUpdatedDefaultRecommendations;
     private bool CanPreviewCustomPromptGuide => this.useCustomPromptGuide && this.customPromptGuideFiles.Count > 0;
@@ -279,7 +351,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         {
             CommonLanguages.AS_IS => "the source language of the input prompt",
             CommonLanguages.OTHER => this.customTargetLanguage,
-            _ => this.selectedTargetLanguage.Name(),
+            _ => this.selectedTargetLanguage.Name,
         };
 
         if (string.IsNullOrWhiteSpace(language))
@@ -301,7 +373,9 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         var promptingGuideline = await this.GetPromptingGuidelineForOptimizationAsync();
         if (string.IsNullOrWhiteSpace(promptingGuideline))
         {
-            if (this.useCustomPromptGuide)
+            if (this.useCustomPromptGuide && this.IsCustomPromptGuideLocked)
+                this.AddInputIssue(T("The prompt guide of your organization could not be loaded."));
+            else if (this.useCustomPromptGuide)
                 this.AddInputIssue(T("Please attach and load a valid custom prompt guide file."));
             else
                 this.AddInputIssue(T("The prompting guideline file could not be loaded. Please verify 'prompting_guideline.md' in Assistants/PromptOptimizer."));
@@ -499,24 +573,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         });
     }
 
-    private static async Task<string> ReadPromptingGuidelineAsync()
-    {
-#if DEBUG
-        var guidelinePath = Path.Join(Environment.CurrentDirectory, "Assistants", "PromptOptimizer", "prompting_guideline.md");
-        return File.Exists(guidelinePath)
-            ? await File.ReadAllTextAsync(guidelinePath)
-            : string.Empty;
-#else
-        var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Assistants/PromptOptimizer");
-        var file = resourceFileProvider.GetFileInfo("prompting_guideline.md");
-        if (!file.Exists)
-            return string.Empty;
-
-        await using var fileStream = file.CreateReadStream();
-        using var reader = new StreamReader(fileStream);
-        return await reader.ReadToEndAsync();
-#endif
-    }
+    private static async Task<string> ReadPromptingGuidelineAsync() => await AppResources.ReadTextAsync("Assistants/PromptOptimizer/prompting_guideline.md");
 
     private async Task<string> GetPromptingGuidelineForOptimizationAsync()
     {
@@ -536,6 +593,10 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private async Task SetUseCustomPromptGuide(bool useCustom)
     {
+        // The switch is disabled then; this keeps it so should anything else call here:
+        if (this.IsCustomPromptGuideLocked)
+            return;
+
         this.useCustomPromptGuide = useCustom;
         if (!useCustom)
             return;
@@ -548,29 +609,24 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             await this.LoadCustomPromptGuidelineContentAsync(fileAttachment);
     }
 
-    private async Task OnCustomPromptGuideFilesChanged(HashSet<FileAttachment> files)
+    /// <summary>
+    /// Takes the file whose content was just loaded as the custom prompt guide.
+    /// </summary>
+    /// <remarks>
+    /// The content has arrived already, through the binding of ReadFileContent, which reports it
+    /// before the path. A file without readable content never gets here.
+    /// </remarks>
+    /// <param name="filePath">The path of the file which was loaded.</param>
+    private async Task SetCustomPromptGuideFile(string filePath)
     {
-        if (files.Count == 0)
-        {
-            this.customPromptGuideFiles.Clear();
-            this.currentCustomPromptGuidePath = string.Empty;
-            this.customPromptingGuidelineContent = string.Empty;
-            return;
-        }
-
-        var selected = files.FirstOrDefault(file => !string.Equals(file.FilePath, this.currentCustomPromptGuidePath, StringComparison.OrdinalIgnoreCase))
-                       ?? files.First();
-
         var replacedPrevious = !string.IsNullOrWhiteSpace(this.currentCustomPromptGuidePath) &&
-                               !string.Equals(this.currentCustomPromptGuidePath, selected.FilePath, StringComparison.OrdinalIgnoreCase);
+                               !string.Equals(this.currentCustomPromptGuidePath, filePath, StringComparison.OrdinalIgnoreCase);
 
-        this.customPromptGuideFiles = [ selected ];
-        this.currentCustomPromptGuidePath = selected.FilePath;
+        this.customPromptGuideFiles = [ FileAttachment.FromPath(filePath) ];
+        this.currentCustomPromptGuidePath = filePath;
 
-        if (files.Count > 1 || replacedPrevious)
+        if (replacedPrevious)
             await this.MessageBus.SendInfo(new(Icons.Material.Filled.SwapHoriz, T("Replaced the previously selected custom prompt guide file.")));
-
-        await this.LoadCustomPromptGuidelineContentAsync(selected);
     }
 
     private async Task LoadCustomPromptGuidelineContentAsync(FileAttachment fileAttachment)

@@ -16,6 +16,7 @@ use docx_to_md::{DocumentContainer, Error as DocumentError, ImageHandlingMode as
 use encoding_rs::Encoding;
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
+use onenote_parser::Parser as OneNoteParser;
 use pdfium_render::prelude::{Pdfium, PdfiumError, PdfiumInternalError};
 use pptx_to_md::{DiagnosticSeverity, Error as PresentationError, ImageHandlingMode, MarkdownOptions, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata, ReadingOrder};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -28,6 +29,8 @@ use tokio::io::AsyncReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tokenizers::tokenizer::Tokenizer;
+use typed_path::{PathType, TypedPath};
+use crate::onenote_markdown;
 
 #[derive(Debug, Serialize)]
 pub struct Chunk {
@@ -126,6 +129,12 @@ pub enum Metadata {
     
     Document {
         page_number: Option<usize>,
+
+        /// Whether the page is one the file itself knows, such as a page of a OneNote section. The
+        /// pages of a Word or OpenDocument file are only estimated from its page breaks, since such
+        /// a file carries no fixed layout. The app tells the AI which of the two it reads.
+        page_is_exact: bool,
+
         image: Option<Base64Image>,
     },
 
@@ -310,6 +319,10 @@ const DOCX: &str = "docx";
 const ODT: &str = "odt";
 const HTML: &str = "html";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
+
+/// How many bytes of an image fill one segment. Base64 turns three bytes into four characters, so
+/// a segment of this many bytes fills `IMAGE_SEGMENT_SIZE_IN_CHARS` exactly and needs no padding.
+const IMAGE_SEGMENT_SIZE_IN_BYTES: usize = IMAGE_SEGMENT_SIZE_IN_CHARS / 4 * 3;
 const MAX_TEXT_SEGMENT_LENGTH_IN_CHARS: usize = 100_000;
 
 /// The signature which identifies a PDF file.
@@ -755,6 +768,11 @@ enum ExtractionRoute {
     PandocHtml,
     PresentationPptx,
     PresentationOdp,
+
+    /// A section of a OneNote notebook. Its content is never identified, since `file-format` does not
+    /// know OneNote, so only the extension leads here.
+    OneNote,
+
     Spreadsheet,
     Csv,
     Text,
@@ -777,6 +795,7 @@ fn route_from_extension(ext: &str) -> Option<ExtractionRoute> {
         "csv" | "tsv" => Some(ExtractionRoute::Csv),
         "pptx" => Some(ExtractionRoute::PresentationPptx),
         "odp" => Some(ExtractionRoute::PresentationOdp),
+        "one" => Some(ExtractionRoute::OneNote),
         "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => Some(ExtractionRoute::Spreadsheet),
         "jpg" | "jpeg" | "png" | "gif" | "bmp" | "tiff" | "svg" | "webp" | "heic" => Some(ExtractionRoute::Image),
 
@@ -924,6 +943,7 @@ async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> 
         ExtractionRoute::PandocHtml => convert_with_pandoc(file_path, HTML, TO_MARKDOWN).await?,
         ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx, stream_id).await?,
         ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp, stream_id).await?,
+        ExtractionRoute::OneNote => stream_onenote_section(file_path, extract_images, stream_id).await?,
         ExtractionRoute::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
         ExtractionRoute::Csv => stream_text_file(file_path, true, Some("csv".to_string())).await?,
         ExtractionRoute::Text => stream_text_file(file_path, false, None).await?,
@@ -1471,6 +1491,7 @@ async fn convert_with_pandoc(
             content,
             Metadata::Document {
                 page_number: None,
+                page_is_exact: false,
                 image: None,
             }
         ));
@@ -1625,6 +1646,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             }
             if tx.blocking_send(Ok(Chunk::new(content, Metadata::Document {
                 page_number: Some(page.page_number),
+                page_is_exact: false,
                 image: None,
             }))).is_err() {
                 return;
@@ -1640,6 +1662,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
                     let base64_image = Base64Image::new(image_id.clone(), base64_data[offset..end].to_string(), segment_index, end == base64_data.len(), Some(image.media_type.clone()));
                     if tx.blocking_send(Ok(Chunk::new(String::new(), Metadata::Document {
                         page_number: Some(page.page_number),
+                        page_is_exact: false,
                         image: Some(base64_image),
                     }))).is_err() {
                         return;
@@ -1854,6 +1877,187 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
     Ok(Box::pin(ReceiverStream::new(rx)))
 }
 
+/// Reads a section of a OneNote notebook, one chunk per page, followed by the images of the page.
+///
+/// A page is numbered by its place in the page list of the section, subpages included, which is
+/// where the user finds it in OneNote. The parser reads the file on demand rather than as a whole,
+/// and the images are read the same way, one segment at a time.
+async fn stream_onenote_section(file_path: &str, extract_images: bool, stream_id: &str) -> Result<ChunkStream> {
+    let path = file_path.to_owned();
+    let stream_id = stream_id.to_owned();
+    let (tx, rx) = mpsc::channel(32);
+    let worker_error_tx = tx.clone();
+
+    // Parsing reads the file and resolves its objects synchronously, so the complete producer must
+    // stay outside Tokio's asynchronous workers.
+    let worker = tokio::task::spawn_blocking(move || {
+        //
+        // The parser keeps the cause of a failure to itself: its error tells only what went wrong as
+        // text. Opening the file first is what still tells a file out of reach, e.g., one another
+        // program holds open, apart from a broken section, which fails the same way on every run.
+        //
+        if let Err(e) = std::fs::File::open(&path) {
+            let _ = tx.blocking_send(Err(ExtractionError::new(
+                classify_io_error(&e),
+                format!("The file could not be read: {e}"),
+            ).into()));
+            return;
+        }
+
+        //
+        // The path comes from this system, so it follows its rules. Letting the parser guess them
+        // would read a Windows path such as C:\Notes\Work.one as a Unix path.
+        //
+        let path_type = if cfg!(windows) { PathType::Windows } else { PathType::Unix };
+        let section = match OneNoteParser::new().parse_section(TypedPath::new(path.as_str(), path_type)) {
+            Ok(section) => section,
+
+            //
+            // A section protected with a password fails here as well: the parser cannot decrypt
+            // it, and reports it like a damaged file.
+            //
+            Err(e) => {
+                let _ = tx.blocking_send(Err(ExtractionError::new(
+                    ExtractionErrorCode::NotAValidDocument,
+                    format!("The OneNote section could not be read. It may be damaged or protected with a password: {e}"),
+                ).into()));
+                return;
+            },
+        };
+
+        for warning in section.report().warnings() {
+            match warning.page() {
+                Some((_, page_title)) => warn!("OneNote section '{path}', page '{page_title}': {message}", message = warning.message()),
+                None => warn!("OneNote section '{path}': {message}", message = warning.message()),
+            }
+        }
+
+        let mut metadata_md = onenote_markdown::section_metadata_to_markdown(&section);
+        let mut number_of_pages = 0;
+        let mut number_of_characters = 0;
+
+        for page in section.page_series().iter().flat_map(|series| series.pages()) {
+            let mut content = onenote_markdown::page_to_markdown(page);
+
+            //
+            // Counted without the comments: the metadata of a page, which every page carries, would
+            // make a page of nothing but drawings or pictures look readable.
+            //
+            number_of_pages += 1;
+            number_of_characters += readable_character_count_outside_comments(&content);
+
+            if let Some(metadata) = metadata_md.take() {
+                content = format!("{metadata}\n\n{content}");
+            }
+
+            if tx.blocking_send(Ok(Chunk::new(content, Metadata::Document {
+                page_number: Some(number_of_pages),
+                page_is_exact: true,
+                image: None,
+            }))).is_err() {
+                return;
+            }
+
+            if !extract_images {
+                continue;
+            }
+
+            for (index, image) in onenote_markdown::page_images(page).into_iter().enumerate() {
+                let Some((reader, media_type)) = onenote_markdown::image_data_for_models(image) else {
+                    continue;
+                };
+
+                //
+                // The image ID carries the stream it belongs to, like the other readers do it. The app
+                // removes the segments of a finished extraction by that prefix:
+                //
+                let image_id = format!("{stream_id}-{number_of_pages}-{index}");
+                let mut receiver_is_gone = false;
+                let reading = for_each_base64_segment(reader, |content, segment, is_end| {
+                    let base64_image = Base64Image::new(image_id.clone(), content, segment, is_end, Some(media_type.to_string()));
+                    receiver_is_gone = tx.blocking_send(Ok(Chunk::new(String::new(), Metadata::Document {
+                        page_number: Some(number_of_pages),
+                        page_is_exact: true,
+                        image: Some(base64_image),
+                    }))).is_err();
+
+                    !receiver_is_gone
+                });
+
+                if receiver_is_gone {
+                    return;
+                }
+
+                //
+                // A missing image costs the page a picture, not its text. The segments sent so far
+                // never complete, and the app drops them with the stream.
+                //
+                if let Err(e) = reading {
+                    warn!("Image {index} on page {number_of_pages} of '{path}' could not be read: {e}");
+                }
+            }
+        }
+
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_pages} page(s) of '{path}'.");
+
+        //
+        // Without this marker, a section without any text and a broken extraction both arrive as an
+        // empty document, and the AI would answer as if the file had no content at all.
+        //
+        if number_of_characters == 0 {
+            warn!("No text could be extracted from '{path}': {number_of_pages} page(s).");
+
+            let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                ExtractionErrorCode::NoTextExtracted,
+                format!("No text could be extracted from {number_of_pages} page(s) of the OneNote section."),
+            ))));
+        }
+    });
+
+    tokio::spawn(async move {
+        if let Err(e) = worker.await {
+            let _ = worker_error_tx.send(Err(ExtractionError::new(
+                ExtractionErrorCode::Internal,
+                format!("The OneNote parser task failed: {e}"),
+            ).into())).await;
+        }
+    });
+
+    Ok(Box::pin(ReceiverStream::new(rx)))
+}
+
+/// Encodes what a reader yields as base64 segments of `IMAGE_SEGMENT_SIZE_IN_CHARS`, reading only as
+/// much as one segment needs, and hands each to `send` together with its index and whether it is the
+/// last one. Stops as soon as `send` returns `false`.
+///
+/// The segments add up to the encoding of the whole data: every segment but the last encodes a
+/// multiple of three bytes and therefore carries no padding.
+fn for_each_base64_segment(mut reader: impl std::io::Read, mut send: impl FnMut(String, usize, bool) -> bool) -> std::io::Result<()> {
+    let mut current = read_image_segment(&mut reader)?;
+    let mut index = 0;
+    while !current.is_empty() {
+        // Reading one segment ahead is what tells the last segment as such:
+        let next = read_image_segment(&mut reader)?;
+        if !send(general_purpose::STANDARD.encode(&current), index, next.is_empty()) {
+            return Ok(());
+        }
+
+        current = next;
+        index += 1;
+    }
+
+    Ok(())
+}
+
+/// Reads the bytes of the next image segment, fewer only at the end of the data.
+fn read_image_segment(reader: &mut impl std::io::Read) -> std::io::Result<Vec<u8>> {
+    use std::io::Read;
+
+    let mut segment = Vec::with_capacity(IMAGE_SEGMENT_SIZE_IN_BYTES);
+    reader.take(IMAGE_SEGMENT_SIZE_IN_BYTES as u64).read_to_end(&mut segment)?;
+    Ok(segment)
+}
+
 fn presentation_metadata_to_markdown(metadata: &PresentationMetadata) -> Option<String> {
     let mut fields = Vec::new();
     push_presentation_metadata_field(&mut fields, "Title", metadata.title.as_deref());
@@ -1903,7 +2107,7 @@ fn document_metadata_to_markdown(metadata: &DocumentMetadata) -> Option<String> 
     if fields.is_empty() { None } else { Some(format!("<!-- Document Metadata\n{}\n-->", fields.join("\n"))) }
 }
 
-fn push_presentation_metadata_field(fields: &mut Vec<String>, label: &str, value: Option<&str>) {
+pub(crate) fn push_presentation_metadata_field(fields: &mut Vec<String>, label: &str, value: Option<&str>) {
     if let Some(value) = value {
         fields.push(format!(
             "{label}: {}",
@@ -2097,17 +2301,12 @@ mod tests {
         }
     }
 
-    /// Reads a text file through `extract_data`, the route the app calls, and collects the events
-    /// it sends.
-    async fn extract_text_file(content: &str) -> ExtractedTextFile {
-        let directory = tempfile::tempdir().expect("a temporary directory must be available");
-        let path = directory.path().join("notes.txt");
-        std::fs::write(&path, content).expect("the text file must be writable");
-
+    /// Reads a file through `extract_data`, the route the app calls, and returns the events it sends.
+    async fn extracted_events(path: &Path, extract_images: bool) -> Vec<serde_json::Value> {
         let query = ExtractDataQuery {
             path: path.to_string_lossy().to_string(),
             stream_id: "test".to_string(),
-            extract_images: false,
+            extract_images,
             include_token_count: false,
             tokenizer_path: String::new(),
         };
@@ -2116,9 +2315,21 @@ mod tests {
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("the response must be readable");
         let body = String::from_utf8(body.to_vec()).expect("the response must be UTF-8");
 
+        body.lines()
+            .filter_map(|line| line.strip_prefix("data:"))
+            .map(|data| serde_json::from_str(data.trim_start()).expect("every event must be JSON"))
+            .collect()
+    }
+
+    /// Reads a text file through `extract_data`, the route the app calls, and collects the events
+    /// it sends.
+    async fn extract_text_file(content: &str) -> ExtractedTextFile {
+        let directory = tempfile::tempdir().expect("a temporary directory must be available");
+        let path = directory.path().join("notes.txt");
+        std::fs::write(&path, content).expect("the text file must be writable");
+
         let mut extracted = ExtractedTextFile { lines: Vec::new(), redacted_count: 0, rule_ids: Vec::new() };
-        for data in body.lines().filter_map(|line| line.strip_prefix("data:")) {
-            let event: serde_json::Value = serde_json::from_str(data.trim_start()).expect("every event must be JSON");
+        for event in extracted_events(&path, false).await {
             let metadata = &event["metadata"];
             if metadata.get("Text").is_some() {
                 extracted.lines.push(event["content"].as_str().expect("a line must carry text").to_string());
@@ -2206,5 +2417,152 @@ mod tests {
         let comment = document_metadata_to_markdown(&metadata).expect("the title makes a comment");
         assert!(comment.contains("Title: REST API"), "got: {comment}");
         assert!(!comment.contains("Custom") && !comment.contains("48800"), "got: {comment}");
+    }
+
+    /// A section from Microsoft's test suites for the Office protocols, which are licensed under the
+    /// MIT license, cf. the LICENSE next to them.
+    fn onenote_fixture(name: &str) -> std::path::PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/onenote").join(name)
+    }
+
+    /// Reads a OneNote section through `extract_data` and splits what arrives into its pages, each
+    /// with its number, and the codes of the notices and errors.
+    async fn extract_onenote_section(path: &Path) -> (Vec<(usize, String)>, Vec<String>) {
+        let mut pages = Vec::new();
+        let mut codes = Vec::new();
+        for event in extracted_events(path, false).await {
+            let metadata = &event["metadata"];
+            if let Some(document) = metadata.get("Document") {
+                let page_number = document["page_number"].as_u64().expect("a page must carry its number") as usize;
+                pages.push((page_number, event["content"].as_str().expect("a page must carry text").to_string()));
+            } else if let Some(error) = metadata.get("Error") {
+                codes.push(error["code"].as_str().expect("an error must carry its code").to_string());
+            } else {
+                panic!("unexpected event for a OneNote section: {event}");
+            }
+        }
+
+        (pages, codes)
+    }
+
+    /// Reads data through `for_each_base64_segment` and returns every segment with its index and
+    /// whether it was marked as the last one.
+    fn base64_segments_of(data: &[u8]) -> Vec<(String, usize, bool)> {
+        let mut segments = Vec::new();
+        for_each_base64_segment(std::io::Cursor::new(data), |content, index, is_end| {
+            segments.push((content, index, is_end));
+            true
+        }).expect("reading from memory cannot fail");
+
+        segments
+    }
+
+    /// An image is read one segment at a time, and the segments add up to the encoding of the whole
+    /// image, with only the last one marked as such.
+    #[test]
+    fn the_segments_of_an_image_add_up_to_its_whole_encoding() {
+        let data: Vec<u8> = (0..IMAGE_SEGMENT_SIZE_IN_BYTES * 2 + 5).map(|index| (index % 251) as u8).collect();
+        let segments = base64_segments_of(&data);
+
+        assert_eq!(segments.iter().map(|(content, _, _)| content.len()).collect::<Vec<_>>(), vec![IMAGE_SEGMENT_SIZE_IN_CHARS, IMAGE_SEGMENT_SIZE_IN_CHARS, 8]);
+        assert_eq!(segments.iter().map(|&(_, index, is_end)| (index, is_end)).collect::<Vec<_>>(), vec![(0, false), (1, false), (2, true)]);
+        assert_eq!(segments.into_iter().map(|(content, _, _)| content).collect::<String>(), general_purpose::STANDARD.encode(&data));
+    }
+
+    /// An image which fills exactly one segment is its own last segment, and an empty one sends
+    /// nothing at all.
+    #[test]
+    fn an_image_of_one_segment_ends_there_and_an_empty_one_sends_nothing() {
+        let segments = base64_segments_of(&[7; IMAGE_SEGMENT_SIZE_IN_BYTES]);
+        assert_eq!(segments.len(), 1);
+        assert_eq!((segments[0].0.len(), segments[0].2), (IMAGE_SEGMENT_SIZE_IN_CHARS, true));
+
+        assert!(base64_segments_of(&[]).is_empty());
+    }
+
+    /// Once the app stopped listening, the rest of the image is not read anymore.
+    #[test]
+    fn the_segments_of_an_image_stop_once_nobody_listens() {
+        let mut calls = 0;
+        for_each_base64_segment(std::io::Cursor::new(vec![0; IMAGE_SEGMENT_SIZE_IN_BYTES * 3]), |_, _, _| {
+            calls += 1;
+            false
+        }).expect("reading from memory cannot fail");
+
+        assert_eq!(calls, 1);
+    }
+
+    #[test]
+    fn a_onenote_section_is_read_by_its_extension() {
+        assert_eq!(route_from_extension("one"), Some(ExtractionRoute::OneNote));
+    }
+
+    /// The section is named in front of the first page, and each page starts with its title, then
+    /// its metadata, then its text.
+    #[tokio::test]
+    async fn a_page_of_a_onenote_section_arrives_with_its_title_metadata_and_text() {
+        let (pages, codes) = extract_onenote_section(&onenote_fixture("OneWithoutFileData.one")).await;
+        assert!(codes.is_empty(), "got: {codes:?}");
+        assert_eq!(pages.len(), 1, "got: {pages:?}");
+
+        let (page_number, content) = &pages[0];
+        assert_eq!(*page_number, 1);
+        assert!(content.starts_with("<!-- Section Metadata\nTitle: OneWithoutFileData\n-->\n\n# The OneNote file without file data\n\n<!-- Page Metadata\n"), "got: {content}");
+        assert!(content.contains("\nCreated: 2019-01-14T06:59:10Z\nModified: 2019-01-14T06:59:44Z\n-->"), "got: {content}");
+        assert!(content.ends_with("-->\n\nThis is a test file which does not contain the file data."), "got: {content}");
+    }
+
+    /// A page of a OneNote section is a page the file knows, not one estimated from page breaks.
+    #[tokio::test]
+    async fn the_pages_of_a_onenote_section_are_exact() {
+        let events = extracted_events(&onenote_fixture("OneWithoutFileData.one"), false).await;
+        let flags: Vec<_> = events.iter()
+            .filter_map(|event| event["metadata"].get("Document"))
+            .map(|document| document["page_is_exact"].clone())
+            .collect();
+
+        assert_eq!(flags, vec![serde_json::Value::Bool(true)]);
+    }
+
+    /// OneDrive hands out a section in a packaging of its own, cf. MS-ONESTORE 2.8.
+    #[tokio::test]
+    async fn a_onenote_section_downloaded_from_onedrive_is_read_as_well() {
+        let (pages, codes) = extract_onenote_section(&onenote_fixture("AlternativePackaging.one")).await;
+        assert!(codes.is_empty(), "got: {codes:?}");
+        assert_eq!(pages.len(), 1, "got: {pages:?}");
+        assert!(pages[0].1.contains("# Test Suite Sample\n"), "got: {}", pages[0].1);
+        assert!(pages[0].1.ends_with("-->\n\nTest Suite Sample"), "got: {}", pages[0].1);
+    }
+
+    /// An attached file is named, but its name is no text of the page: a page with nothing else on
+    /// it has no text the AI could work with.
+    #[tokio::test]
+    async fn a_file_attached_to_a_onenote_page_is_named_without_counting_as_text() {
+        let (pages, codes) = extract_onenote_section(&onenote_fixture("OneWithFileData.one")).await;
+        assert_eq!(pages.len(), 1, "got: {pages:?}");
+        assert!(pages[0].1.ends_with("<!-- Attached file: testing.docx -->"), "got: {}", pages[0].1);
+        assert_eq!(codes, vec!["NO_TEXT_EXTRACTED"]);
+    }
+
+    /// The parser cannot decrypt a section protected with a password. Such a section must be
+    /// refused rather than arrive as a section without pages.
+    #[tokio::test]
+    async fn a_onenote_section_protected_with_a_password_is_refused() {
+        let (pages, codes) = extract_onenote_section(&onenote_fixture("Encryption.one")).await;
+        assert!(pages.is_empty(), "got: {pages:?}");
+        assert_eq!(codes, vec!["NOT_A_VALID_DOCUMENT"]);
+    }
+
+    /// The parser does not say why a section fails, cf. `stream_onenote_section`. A file which is
+    /// readable but no section is a property of that file, though.
+    #[tokio::test]
+    async fn a_file_which_is_no_onenote_section_is_reported_as_an_invalid_document() {
+        let directory = tempfile::tempdir().expect("a temporary directory must be available");
+        let path = directory.path().join("notes.one");
+        std::fs::write(&path, "This is no OneNote section.").expect("the file must be writable");
+
+        let (pages, codes) = extract_onenote_section(&path).await;
+        assert!(pages.is_empty(), "got: {pages:?}");
+        assert_eq!(codes, vec!["NOT_A_VALID_DOCUMENT"]);
     }
 }

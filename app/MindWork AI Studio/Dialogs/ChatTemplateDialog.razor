@@ -253,7 +253,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>
-                        @context.Role.ToChatTemplateName()
+                        @context.Role.ChatTemplateName
                     </MudTd>
                     <MudTd>
                         @switch(context.Content)
@@ -287,7 +287,7 @@
                     <MudTd>
                         @if (this.IsReadOnly)
                         {
-                            @context.Role.ToChatTemplateName()
+                            @context.Role.ChatTemplateName
                         }
                         else
                         {
@@ -295,7 +295,7 @@
                                 @foreach (var role in ChatRoles.ChatTemplateRoles())
                                 {
                                     <MudSelectItem Value="@role">
-                                        @role.ToChatTemplateName()
+                                        @role.ChatTemplateName
                                     </MudSelectItem>
                                 }
                             </MudSelect>

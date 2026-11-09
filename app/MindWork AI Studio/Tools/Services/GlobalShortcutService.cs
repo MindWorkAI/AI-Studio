@@ -20,7 +20,7 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
     }
 
     private readonly SemaphoreSlim registrationSemaphore = new(1, 1);
-    private readonly object runtimeStateLock = new();
+    private readonly Lock runtimeStateLock = new();
     private readonly Dictionary<Shortcut, ShortcutState> lastSentStates = [];
     private readonly Dictionary<Shortcut, string> lastNonEmptyShortcuts = [];
     private readonly Dictionary<Shortcut, ShortcutRuntimeBinding> runtimeBindings = [];

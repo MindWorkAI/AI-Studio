@@ -10,5 +10,5 @@
     <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://betterhumans.pub/cognitive-bias-cheat-sheet-55a472476b18">@T("Blog post of Buster Benson:") "Cognitive bias cheat sheet"</MudListItem>
 </MudList>
 
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidateTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting)" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidateTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

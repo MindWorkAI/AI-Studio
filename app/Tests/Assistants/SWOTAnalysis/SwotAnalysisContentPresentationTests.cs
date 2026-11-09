@@ -54,7 +54,7 @@ public sealed class SwotAnalysisContentPresentationTests
         var content = new ContentText
         {
             Text = "Fallback Markdown",
-            Presentation = ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, "not a SWOT result"),
+            Presentation = ContentPresentation.Create(ContentPresentationKind.SWOT_ANALYSIS, "not a SWOT result", JsonSerializerOptions.Default),
         };
 
         var presentationWasRead = SwotAnalysisContentPresentation.TryRead(content.Presentation, out _);

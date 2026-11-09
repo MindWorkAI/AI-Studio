@@ -149,7 +149,7 @@ public static class GlossaryImport
             if (language is CommonLanguages.AS_IS or CommonLanguages.OTHER)
                 continue;
 
-            if (name == language.ToIETFTag().ToLowerInvariant() || name == language.ToString().ToLowerInvariant())
+            if (name == language.IETFTag.ToLowerInvariant() || name == language.ToString().ToLowerInvariant())
                 return language;
         }
 

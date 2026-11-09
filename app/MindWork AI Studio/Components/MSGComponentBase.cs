@@ -23,19 +23,6 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
 
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
-    /// <summary>
-    /// How Markdown rendered by this component looks: its code blocks follow the color theme of the app.
-    /// </summary>
-    /// <remarks>
-    /// Every component which renders Markdown wants the same, so it is written down once here instead
-    /// of in each of them. Read on every render: a change of the color theme renders every component
-    /// again, cf. ProcessMessage, and the code blocks change along with it.
-    /// </remarks>
-    protected MudMarkdownStyling MarkdownStyling => new()
-    {
-        CodeBlock = { Theme = this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default },
-    };
-
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -57,6 +44,13 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
     public string T(string fallbackEN, string? typeNamespace, string? typeName) => this.GetText(this.Lang, fallbackEN, typeNamespace, typeName);
 
     #endregion
+
+    /// <summary>
+    /// Gets a text which addresses the reader, in the form of address the person chose; see I18N.AddressForm.
+    /// </summary>
+    /// <param name="fallbackEN">The text in English (US).</param>
+    /// <returns>The text from the language plugin or the English text.</returns>
+    public string TA(string fallbackEN) => this.GetText(this.Lang, fallbackEN, addressForm: I18N.I.AddressForm);
 
     #region Implementation of IMessageBusReceiver
 

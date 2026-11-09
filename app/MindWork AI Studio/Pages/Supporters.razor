@@ -30,8 +30,9 @@
                     </MudButton>
                 </div>
 
+                @* Two columns from the breakpoint md on; in a narrower window, the boxes follow each other. *@
                 <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
-                    <MudItem Class="pa-0 pr-2" xs="6">
+                    <MudItem Class="pa-0 pr-md-2" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" class="mr-2"/>
@@ -60,7 +61,7 @@
                         </MudPaper>
                     </MudItem>
 
-                    <MudItem xs="6" Class="pa-0 pl-2">
+                    <MudItem Class="pa-0 pl-md-2 mt-4 mt-md-0" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" class="mr-2"/>
@@ -77,8 +78,9 @@
 
             <ExpansionPanel HeaderText="@T("Content Contributors")" HeaderIcon="@Icons.Material.Filled.Code">
 
+                @* Two columns from the breakpoint md on; in a narrower window, the boxes follow each other. *@
                 <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
-                    <MudItem Class="pa-0 pr-2" xs="6">
+                    <MudItem Class="pa-0 pr-md-2" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" class="mr-2"/>
@@ -103,7 +105,7 @@
                         </MudPaper>
                     </MudItem>
 
-                    <MudItem Class="pa-0 pr-2" xs="6">
+                    <MudItem Class="pa-0 pl-md-2 mt-4 mt-md-0" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
                                 <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" class="mr-2"/>
@@ -112,6 +114,18 @@
 
                             <MudList T="string">
                                 <Supporter Name="KeSah001" Type="SupporterType.INDIVIDUAL" URL="https://github.com/KeSah001" Acknowledgment="@T("Thank you very much, Kerstin, for creating the Wiki, for advising us on ERI with real use cases, and for your work on version 2 of the ERI protocol.")"/>
+                            </MudList>
+                        </MudPaper>
+
+                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3 mt-4">
+                            <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
+                                <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Size="Size.Large" class="mr-2"/>
+                                @T("Ideas, Expertise, and Concepts")
+                            </MudText>
+
+                            <MudList T="string">
+                                <Supporter Name="Drew Nelson" Type="SupporterType.INDIVIDUAL" Acknowledgment="@T("Thank you, Drew, for the idea of learning about one cognitive bias every day, so that we become more aware of our own biases step by step. The Bias of the Day assistant is built on it.")"/>
+                                <Supporter Name="Lara Wüster" Type="SupporterType.INDIVIDUAL" URL="https://www.pm.mh.tum.de/ethics/institut/team/lara-wuester/" Acknowledgment="@T("Thank you, Lara, for the concept and the content of the BeyondFacts Lab and for the expertise you put into it, so that researchers can prepare for challenging appearances.")"/>
                             </MudList>
                         </MudPaper>
                     </MudItem>

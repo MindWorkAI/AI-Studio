@@ -53,7 +53,7 @@ public partial class GlossaryManagement : MSGComponentBase
         return $"{LanguageName(glossary.SourceLanguage, glossary.CustomSourceLanguage)} → {LanguageName(glossary.TargetLanguage, glossary.CustomTargetLanguage)}";
     }
 
-    private static string LanguageName(CommonLanguages language, string customLanguage) => language is CommonLanguages.OTHER ? customLanguage : language.Name();
+    private static string LanguageName(CommonLanguages language, string customLanguage) => language is CommonLanguages.OTHER ? customLanguage : language.Name;
 
     private Task AddGlossary() => this.AddGlossary(new DialogParameters<GlossaryDialog>
     {

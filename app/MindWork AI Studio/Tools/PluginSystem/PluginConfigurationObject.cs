@@ -59,13 +59,13 @@ public sealed record PluginConfigurationObject
     private static string DescribeEndpoint(IConfigurationObject configObject) => configObject switch
     {
         Settings.Provider { IsSelfHosted: true } provider => provider.Hostname,
-        Settings.Provider provider => Provider.LLMProvidersExtensions.ToName(provider.UsedLLMProvider),
+        Settings.Provider provider => Provider.LLMProvidersExtensions.ToName(provider.UsedLLMProvider, translate: true),
 
         EmbeddingProvider { IsSelfHosted: true } embeddingProvider => embeddingProvider.Hostname,
-        EmbeddingProvider embeddingProvider => Provider.LLMProvidersExtensions.ToName(embeddingProvider.UsedLLMProvider),
+        EmbeddingProvider embeddingProvider => Provider.LLMProvidersExtensions.ToName(embeddingProvider.UsedLLMProvider, translate: true),
 
         TranscriptionProvider { IsSelfHosted: true } transcriptionProvider => transcriptionProvider.Hostname,
-        TranscriptionProvider transcriptionProvider => Provider.LLMProvidersExtensions.ToName(transcriptionProvider.UsedLLMProvider),
+        TranscriptionProvider transcriptionProvider => Provider.LLMProvidersExtensions.ToName(transcriptionProvider.UsedLLMProvider, translate: true),
 
         DataSourceERI_V1 dataSource => dataSource.Hostname,
 

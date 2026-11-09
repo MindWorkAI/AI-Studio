@@ -27,7 +27,7 @@ public sealed record VectorSearchResult(
     /// <remarks>
     /// The vector store keeps only the pages of a chunk, cf. LocalIndexSearchService.SearchVectorsAsync.
     /// </remarks>
-    public ChunkLocation? StoredLocation { get; init; }
+    public ChunkLocation? StoredLocation { get; set; }
 
     /// <summary>
     /// Where the chunk is: what the index store keeps, or the pages alone when it could not say.

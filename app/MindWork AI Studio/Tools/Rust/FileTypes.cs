@@ -84,7 +84,11 @@ public static class FileTypes
     // The legacy binary ".ppt" is missing on purpose: AI Studio has no reader for it, so offering
     // it would only let users attach a file which cannot be read.
     public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "pptx", "odp");
-    public static readonly FileTypeFilter MAIL        = FileTypeFilter.Leaf(TB("Mail"), "eml", "msg", "mbox");
+
+    // Only the sections of a notebook carry its pages. The table of contents (".onetoc2") holds none,
+    // and a package (".onepkg") would have to be unpacked into memory as a whole.
+    public static readonly FileTypeFilter ONENOTE     = FileTypeFilter.Leaf("OneNote", "one");
+    public static readonly FileTypeFilter MAIL       = FileTypeFilter.Leaf(TB("Mail"), "eml", "msg", "mbox");
     public static readonly FileTypeFilter LATEX       = FileTypeFilter.Leaf("LaTeX", "tex", "bib", "sty", "cls", "log");
 
     // Only the LaTeX document itself, without the auxiliary files of the LaTeX family: this is
@@ -96,7 +100,7 @@ public static class FileTypes
     public static readonly FileTypeFilter POWER_POINT_PRESENTATION = FileTypeFilter.Leaf("PowerPoint", "pptx");
 
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
-        WORD, SPREADSHEET, POWER_POINT, PDF);
+        WORD, SPREADSHEET, POWER_POINT, ONENOTE, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),
         TEXT, TABULAR, OFFICE_FILES, SOURCE_CODE, LATEX);
 

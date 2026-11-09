@@ -72,11 +72,11 @@
             
             @if(this.availableAuthMethods.Count > 0 || this.dataAuthMethod != default)
             {
-                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName()" Label="Authentication Method" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
+                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName" Label="Authentication Method" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
                     @foreach (var authMethod in this.availableAuthMethods)
                     {
                         <MudSelectItem Value="@authMethod">
-                            @authMethod.DisplayName()
+                            @authMethod.DisplayName
                         </MudSelectItem>
                     }
                 </MudSelect>
@@ -116,11 +116,11 @@
                 </MudSelect>
             }
 
-            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
+            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.SelectionText" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
                 @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
                 {
                     <MudSelectItem Value="@policy">
-                        @policy.ToSelectionText()
+                        @policy.SelectionText
                     </MudSelectItem>
                 }
             </MudSelect>

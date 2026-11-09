@@ -4,8 +4,21 @@ namespace AIStudio.Tools;
 
 public static class ElementReferenceExtensions
 {
-    public static async ValueTask ScrollIntoViewAsync(this ElementReference elementReference, IJSRuntime jsRuntime)
+    extension(ElementReference elementReference)
     {
-        await jsRuntime.InvokeVoidAsync("scrollToBottom", elementReference);
+        public async ValueTask ScrollIntoViewAsync(IJSRuntime jsRuntime)
+        {
+            await jsRuntime.InvokeVoidAsync("scrollToBottom", elementReference);
+        }
+
+        /// <summary>
+        /// Scrolls back to the sticky header right after this empty anchor, so that the content below the header
+        /// starts at the top again. Nothing moves while the header sits in its place anyway.
+        /// </summary>
+        /// <param name="jsRuntime">The JavaScript runtime of the page.</param>
+        public async ValueTask ScrollToStickyHeaderAsync(IJSRuntime jsRuntime)
+        {
+            await jsRuntime.InvokeVoidAsync("scrollToStickyHeader", elementReference);
+        }
     }
 }

@@ -34,6 +34,6 @@
 <AttachDocuments Name="SWOT Analysis Context Material" @bind-DocumentPaths="@this.contextMaterials" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 
 <div style="margin-top: 20px;">
-    <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
+    <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name)" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
     <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
 </div>

@@ -32,7 +32,7 @@ public sealed class RetrievalImageContext : IRetrievalContext, IImageSource
     /// <remarks>
     /// Is the image source a URL, a local file path, a base64 string, etc.?
     /// </remarks>
-    public required ContentImageSource SourceType { get; init; }
+    public required ContentImageSource SourceType { get; set; }
 
     /// <summary>
     /// The image source.

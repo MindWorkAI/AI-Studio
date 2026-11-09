@@ -1,6 +1,6 @@
 [package]
 name = "mindwork-ai-studio"
-version = "26.10.1"
+version = "26.11.1"
 edition = "2024"
 description = "MindWork AI Studio"
 authors = ["Thorsten Sommer"]
@@ -65,6 +65,15 @@ whoami = "2.1.2"
 cfg-if = "1.0.4"
 pptx-to-md = "2.0.0"
 docx-to-md = "0.2.0"
+
+# Reads the sections of OneNote notebooks (.one) page by page. It reads the file on demand instead of
+# loading it into memory, and so does every image it hands out. It is licensed under the MPL-2.0, which
+# is why its notices ship with the app, cf. resources/notices/THIRD_PARTY_DOCUMENT_NOTICES.md. Packages
+# (.onepkg) stay unsupported: the `onepkg` feature unpacks the whole archive into memory.
+onenote_parser = "2.1.0"
+
+# The OneNote parser takes the path of a section as a `TypedPath` of this version without re-exporting it.
+typed-path = "0.12.4"
 tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.39.6"

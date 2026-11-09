@@ -65,7 +65,7 @@ public sealed class MailPassageTests
             Assert.That(new[] { passage }.GetPassagesOf(MAIL_SOURCE), Is.EqualTo(new[] { passage }), "Only a passage under its source gets the eye next to it.");
             Assert.That(passage.Path, Is.Empty, "The address of a mail names it for AI Studio only, so there is nothing to copy or open.");
             Assert.That(passage.DataSourceName, Is.EqualTo(MAIL_SOURCE.Title));
-            Assert.That(passage.GetProvenanceKind(), Is.EqualTo(ProvenanceKind.MAIL));
+            Assert.That(passage.ProvenanceKind, Is.EqualTo(ProvenanceKind.MAIL));
         }
     }
 }

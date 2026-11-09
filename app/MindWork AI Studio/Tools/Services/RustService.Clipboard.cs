@@ -28,7 +28,7 @@ public sealed partial class RustService
                 return;
             }
 
-            var state = await response.Content.ReadFromJsonAsync<SetClipboardResponse>(this.jsonRustSerializerOptions);
+            var state = await response.Content.ReadFromJsonAsync<SetClipboardResponse>(JSON_OPTIONS);
             if (!state.Success)
             {
                 this.logger!.LogError("Failed to copy the text to the clipboard.");

@@ -24,7 +24,7 @@ public sealed class WebRootFilesTests
 {
     private static IEnumerable<string> ChangelogFiles() => Changelog.LOGS.Select(log => log.Filename);
 
-    private static IEnumerable<ERIVersion> SpecificationVersions() => Enum.GetValues<ERIVersion>().Where(version => version.WasSpecificationSelected());
+    private static IEnumerable<ERIVersion> SpecificationVersions() => Enum.GetValues<ERIVersion>().Where(version => version.WasSpecificationSelected);
 
     private static string ReadAppPageSource([CallerFilePath] string sourceFilePath = "") => File.ReadAllText(Path.Combine(Path.GetDirectoryName(sourceFilePath)!, "..", "..", "..", "MindWork AI Studio", "App.razor"));
 
@@ -78,7 +78,7 @@ public sealed class WebRootFilesTests
         var destinationPath = Path.Combine(Path.GetTempPath(), $"eri-specification-{Guid.NewGuid():N}.json");
         try
         {
-            Assert.That(await webRootFiles.CopyToAsync(version.SpecificationURL(), destinationPath), Is.True);
+            Assert.That(await webRootFiles.CopyToAsync(version.SpecificationURL, destinationPath), Is.True);
             Assert.That(await File.ReadAllTextAsync(destinationPath), Is.EqualTo(await version.ReadSpecification(webRootFiles)));
         }
         finally

@@ -15,10 +15,12 @@ namespace AIStudio.Assistants.SWOTAnalysis;
 /// </remarks>
 internal static class SwotAnalysisModeration
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    // Internal rather than private, so that a test can check the JSON the moderator gets:
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
-    };
+        TypeInfoResolver = SwotModerationJsonContext.Default,
+    }.AsReadOnly();
 
     public static string BuildSystemPrompt(string outputLanguageInstruction) =>
         $"""
@@ -76,8 +78,8 @@ internal static class SwotAnalysisModeration
         string sharedResearch = "")
     {
         var payload = Enum.GetValues<SwotAnalysisCategory>().ToDictionary(
-            category => category.JsonName(),
-            category => CreateCategoryPayload(categories[category], category.FactorIdPrefix()));
+            category => category.JsonName,
+            category => CreateCategoryPayload(categories[category], category.FactorIdPrefix));
 
         return $"""
                 Reconcile these preliminary results of the four SWOT categories. Then write the overall assessment
@@ -138,16 +140,9 @@ internal static class SwotAnalysisModeration
         };
     }
 
-    private static object CreateCategoryPayload(SwotCategoryAnalysisResult analysis, string factorIdPrefix) => new
-    {
-        empty_message = analysis.EmptyMessage,
-        findings = analysis.Findings.Select((finding, index) => new
-        {
-            factor_id = $"{factorIdPrefix}{index + 1}",
-            summary = finding.Summary,
-            explanation = finding.Explanation,
-        }),
-    };
+    private static SwotModerationCategoryInput CreateCategoryPayload(SwotCategoryAnalysisResult analysis, string factorIdPrefix) => new(
+        analysis.EmptyMessage,
+        [.. analysis.Findings.Select((finding, index) => new SwotModerationFindingInput($"{factorIdPrefix}{index + 1}", finding.Summary, finding.Explanation))]);
 
     private static SwotCategory CreateCategory(SwotModeratedCategory category) => new()
     {

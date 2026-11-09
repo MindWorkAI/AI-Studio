@@ -10,5 +10,5 @@ public interface IMessageBase
     /// This property typically identifies whether the entity is acting
     /// as a user, assistant, or system in the context of the interaction.
     /// </summary>
-    public string Role { get; init; }
+    public string Role { get; set; }
 }

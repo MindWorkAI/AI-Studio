@@ -279,8 +279,8 @@ public sealed class SourcePassageTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That((Passage(HANDBOOK_URL, "Welcome.") with { Type = RetrievalContentType.TEXT_TRANSCRIPT }).IsTranscript(), Is.True);
-            Assert.That(Passage(HANDBOOK_URL, "Welcome.").IsTranscript(), Is.False);
+            Assert.That((Passage(HANDBOOK_URL, "Welcome.") with { Type = RetrievalContentType.TEXT_TRANSCRIPT }).IsTranscript, Is.True);
+            Assert.That(Passage(HANDBOOK_URL, "Welcome.").IsTranscript, Is.False);
         }
     }
 

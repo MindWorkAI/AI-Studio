@@ -21,8 +21,6 @@ public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome
     private static readonly int[] NO_FAILED_PAGES = [];
     private static readonly PromptInjectionFinding[] NO_FINDINGS = [];
 
-    private readonly IReadOnlyList<PromptInjectionFinding>? promptInjectionFindings;
-
     /// <summary>
     /// The prompt-injection attempts the runtime filtered out of the content, if any.
     /// </summary>
@@ -33,8 +31,8 @@ public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome
     /// </remarks>
     public IReadOnlyList<PromptInjectionFinding> PromptInjectionFindings
     {
-        get => this.promptInjectionFindings ?? NO_FINDINGS;
-        init => this.promptInjectionFindings = value;
+        get => field ?? NO_FINDINGS;
+        init;
     }
 
     /// <summary>

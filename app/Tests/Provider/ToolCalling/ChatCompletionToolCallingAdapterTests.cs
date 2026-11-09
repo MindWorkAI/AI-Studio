@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using AIStudio.Provider;
 using AIStudio.Provider.OpenAI;
@@ -198,10 +199,27 @@ public sealed class ChatCompletionToolCallingAdapterTests
     /// <returns>The call as the loop sees it, and the request of the next round as it goes over the wire.</returns>
     private static async Task<(ToolCallingRequestedCall Call, string NextRequest)> AnswerOneCall(string functionName, string arguments, string result)
     {
-        var toolCallLine = JsonSerializer.Serialize(new
+        //
+        // Built as nodes, since the options of the providers know no anonymous types. The nodes escape the name and the
+        // arguments the way a provider would:
+        //
+        var toolCallLine = new JsonObject
         {
-            Choices = new[] { new { Index = 0, Delta = new { ToolCalls = new[] { new { Index = 0, Id = "call_1", Type = "function", Function = new { Name = functionName, Arguments = arguments } } } } } },
-        }, ProviderJsonOptions.OPTIONS);
+            ["choices"] = new JsonArray(new JsonObject
+            {
+                ["index"] = 0,
+                ["delta"] = new JsonObject
+                {
+                    ["tool_calls"] = new JsonArray(new JsonObject
+                    {
+                        ["index"] = 0,
+                        ["id"] = "call_1",
+                        ["type"] = "function",
+                        ["function"] = new JsonObject { ["name"] = functionName, ["arguments"] = arguments },
+                    }),
+                },
+            }),
+        }.ToJsonString();
 
         var sent = new List<ChatCompletionAPIRequest>();
         var adapter = Adapter(true, sent.Add,

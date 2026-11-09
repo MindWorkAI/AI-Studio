@@ -19,7 +19,7 @@ public sealed class ImageSizeLimitTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(LLMProviders.ANTHROPIC.GetMaxImageSizeBytes(), Is.EqualTo(3_932_160));
+            Assert.That(LLMProviders.ANTHROPIC.MaxImageSizeBytes, Is.EqualTo(3_932_160));
             Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.ANTHROPIC)), Is.EqualTo(3_932_160));
         }
     }
@@ -29,7 +29,7 @@ public sealed class ImageSizeLimitTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(LLMProviders.OPEN_AI.GetMaxImageSizeBytes(), Is.Null, "Nobody stated a limit, and no number stands in for that.");
+            Assert.That(LLMProviders.OPEN_AI.MaxImageSizeBytes, Is.Null, "Nobody stated a limit, and no number stands in for that.");
             Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.OPEN_AI)), Is.EqualTo(IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES));
         }
     }
@@ -39,7 +39,7 @@ public sealed class ImageSizeLimitTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(Host.LLMMAN.GetMaxImageSizeBytes(), Is.EqualTo(1_048_576));
+            Assert.That(Host.LLMMAN.MaxImageSizeBytes, Is.EqualTo(1_048_576));
             Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.SELF_HOSTED, Host.LLMMAN)), Is.EqualTo(1_048_576));
             Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.SELF_HOSTED, Host.OLLAMA)), Is.EqualTo(IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES), "Ollama states no limit we know of.");
         }

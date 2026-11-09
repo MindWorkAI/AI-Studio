@@ -9,7 +9,7 @@ namespace AIStudio.Dialogs;
 public partial class PandocDialog : MSGComponentBase
 {
     // Use runtime detection instead of metadata to ensure correct RID on dev machines:
-    private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
+    private static readonly RID CPU_ARCHITECTURE = RID.Current;
     
     [Parameter]
     public bool ShowInstallationPage { get; set; }

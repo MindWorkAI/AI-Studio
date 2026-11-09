@@ -29,10 +29,11 @@ public sealed class GlossaryStore(ILogger<GlossaryStore> logger, string? dataDir
 
     private const int CURRENT_FILE_VERSION = 1;
 
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
-    };
+        TypeInfoResolver = GlossaryJsonContext.Default,
+    }.AsReadOnly();
 
     private readonly ConcurrentDictionary<Guid, IReadOnlyList<GlossaryEntry>> cache = [];
 
@@ -228,5 +229,5 @@ public sealed class GlossaryStore(ILogger<GlossaryStore> logger, string? dataDir
     /// </summary>
     /// <param name="Version">The version of the file format.</param>
     /// <param name="Entries">The entries of the glossary.</param>
-    private sealed record GlossaryFile(int Version, List<GlossaryEntry> Entries);
+    internal sealed record GlossaryFile(int Version, List<GlossaryEntry> Entries);
 }

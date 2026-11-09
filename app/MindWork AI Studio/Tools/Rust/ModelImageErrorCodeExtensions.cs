@@ -13,13 +13,16 @@ public static class ModelImageErrorCodeExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ModelImageErrorCodeExtensions).Namespace, nameof(ModelImageErrorCodeExtensions));
 
-    /// <summary>
-    /// Gets the localized message which explains why an image was not sent to the AI.
-    /// </summary>
     /// <param name="code">Why the image could not be prepared.</param>
-    /// <param name="fileName">The name of the image file, as shown to the user.</param>
-    /// <returns>The localized message.</returns>
-    public static string ToUserMessage(this ModelImageErrorCode code, string fileName) => string.Format(ToUserMessageFormat(code), fileName);
+    extension(ModelImageErrorCode code)
+    {
+        /// <summary>
+        /// Gets the localized message which explains why an image was not sent to the AI.
+        /// </summary>
+        /// <param name="fileName">The name of the image file, as shown to the user.</param>
+        /// <returns>The localized message.</returns>
+        public string ToUserMessage(string fileName) => string.Format(ToUserMessageFormat(code), fileName);
+    }
 
     private static string ToUserMessageFormat(ModelImageErrorCode code) => code switch
     {

@@ -5,5 +5,5 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.
 /// </summary>
 internal sealed record StaanWebSection
 {
-    public IReadOnlyList<StaanSearchResult> Results { get; init; } = [];
+    public IReadOnlyList<StaanSearchResult> Results { get; set; } = [];
 }

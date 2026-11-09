@@ -52,7 +52,7 @@ const SETTINGS_FILE_NAME: &str = "settings.json";
 /// (`DataBackupContents`) includes. The runtime refuses a plan which names anything else, so that
 /// whatever goes wrong in the app, a restore never replaces the logs, the downloaded tools, or the
 /// data folder as a whole.
-const REPLACEABLE_ELEMENTS: [(Location, &str); 11] = [
+const REPLACEABLE_ELEMENTS: [(Location, &str); 12] = [
     (Location::ConfigDirectory, SETTINGS_FILE_NAME),
     (Location::DataDirectory, "workspaces/"),
     (Location::DataDirectory, "tempChats/"),
@@ -60,6 +60,7 @@ const REPLACEABLE_ELEMENTS: [(Location, &str); 11] = [
     (Location::DataDirectory, "plugins/"),
     (Location::DataDirectory, "tokenizers/"),
     (Location::DataDirectory, "visualBriefings/"),
+    (Location::DataDirectory, "beyondFactsLab/"),
     (Location::DataDirectory, "databases/sqlite/"),
     (Location::DataDirectory, "databases/vector_database/stores/"),
     (Location::DataDirectory, "mediaTranscripts/"),
@@ -810,6 +811,21 @@ mod tests {
         assert_eq!(outcome, Some(RestoreOutcome::Applied));
         assert_eq!(test.read(Location::DataDirectory, "mediaTranscripts/restored/transcript.md").as_deref(), Some("restored transcript"));
         assert!(!test.exists(Location::DataDirectory, "mediaTranscripts/current"));
+    }
+
+    #[test]
+    fn a_restore_replaces_the_preparations_of_the_beyondfacts_lab() {
+        let test = TestFolders::new();
+        test.write_current_data();
+        test.write(Location::DataDirectory, "beyondFactsLab/current/project.json", "current preparation");
+        test.prepare_restore(r#"{ "location": "DATA_DIRECTORY", "relative_path": "beyondFactsLab/", "keep": [] }"#);
+        test.write(Location::DataDirectory, ".restore-pending/beyondFactsLab/restored/project.json", "restored preparation");
+
+        let outcome = apply_pending_restore_in(&test.folders(), &[]);
+
+        assert_eq!(outcome, Some(RestoreOutcome::Applied));
+        assert_eq!(test.read(Location::DataDirectory, "beyondFactsLab/restored/project.json").as_deref(), Some("restored preparation"));
+        assert!(!test.exists(Location::DataDirectory, "beyondFactsLab/current"));
     }
 
     #[test]

@@ -1,6 +1,9 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 
 namespace AIStudio.Tests.Models.Generation;
 
@@ -68,6 +71,53 @@ public static class CompilationHarness
 
         var reported = await compilation.WithAnalyzers([analyzer]).GetAnalyzerDiagnosticsAsync();
         return reported;
+    }
+
+    /// <summary>
+    /// Runs one analyzer over a snippet and applies its code fix to the first diagnostic it reports.
+    /// </summary>
+    /// <remarks>
+    /// The code fix runs in a workspace of its own, as it does in the IDE. The fixed source still has to
+    /// compile, since a code fix which breaks the code is worse than none.
+    /// </remarks>
+    /// <param name="source">The C# source to fix.</param>
+    /// <param name="analyzer">The analyzer which reports what to fix.</param>
+    /// <param name="codeFix">The code fix to apply.</param>
+    /// <returns>The fixed source.</returns>
+    public static async Task<string> FixAsync(string source, DiagnosticAnalyzer analyzer, CodeFixProvider codeFix)
+    {
+        using var workspace = new AdhocWorkspace();
+        var projectInfo = ProjectInfo.Create(
+            ProjectId.CreateNewId(),
+            VersionStamp.Default,
+            "SnippetUnderTest",
+            "SnippetUnderTest",
+            LanguageNames.CSharp,
+            compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable),
+            parseOptions: new CSharpParseOptions(LanguageVersion.Latest),
+            metadataReferences: REFERENCES.Value);
+
+        var project = workspace.AddProject(projectInfo);
+        var document = workspace.AddDocument(project.Id, "Snippet.cs", SourceText.From(source));
+
+        var compilation = await document.Project.GetCompilationAsync();
+        Assert.That(ErrorsOf(compilation!), Is.Empty, "The snippet has to compile, or the code fix is being asked about code which does not exist.");
+
+        var reported = await compilation!.WithAnalyzers([analyzer]).GetAnalyzerDiagnosticsAsync();
+        Assert.That(reported, Is.Not.Empty, "The analyzer has to report something, or there is nothing for the code fix to do.");
+
+        var actions = new List<CodeAction>();
+        var context = new CodeFixContext(document, reported[0], (action, _) => actions.Add(action), CancellationToken.None);
+        await codeFix.RegisterCodeFixesAsync(context);
+        Assert.That(actions, Has.Count.EqualTo(1), "The code fix has to offer exactly one action.");
+
+        var operations = await actions[0].GetOperationsAsync(CancellationToken.None);
+        var changedSolution = operations.OfType<ApplyChangesOperation>().Single().ChangedSolution;
+        var fixedText = await changedSolution.GetDocument(document.Id)!.GetTextAsync();
+        var fixedSource = fixedText.ToString();
+
+        Assert.That(ErrorsOf(Compile(fixedSource)), Is.Empty, "The fixed source has to compile.");
+        return fixedSource;
     }
 
     private static MetadataReference[] GatherReferences()

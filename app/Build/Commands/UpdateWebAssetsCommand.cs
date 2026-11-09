@@ -1,7 +1,3 @@
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
-
 using SharedTools;
 
 namespace Build.Commands;
@@ -14,7 +10,16 @@ public sealed class UpdateWebAssetsCommand
     /// </summary>
     private static readonly HashSet<string> SKIPPED_EXTENSIONS = new(StringComparer.OrdinalIgnoreCase) { ".br", ".gz", ".map" };
 
-    [Command("update-web", Description = "Update web assets")]
+    /// <summary>
+    /// Defines the command "update-web".
+    /// </summary>
+    public static Command CreateCommand()
+    {
+        var command = new Command("update-web", "Update web assets");
+        command.SetAction(_ => new UpdateWebAssetsCommand().UpdateWebAssets());
+        return command;
+    }
+
     public void UpdateWebAssets()
     {
         if(!Environment.IsWorkingDirectoryValid())
@@ -25,7 +30,7 @@ public sealed class UpdateWebAssetsCommand
         
         var rid = Environment.GetCurrentRid();
         var cwd = Environment.GetAIStudioDirectory();
-        var contentPath = Path.Join(cwd, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", "wwwroot", "_content");
+        var contentPath = Path.Join(cwd, "bin", "release", Environment.DOTNET_VERSION, rid.MicrosoftRid, "publish", "wwwroot", "_content");
         
         var isMudBlazorDirectoryPresent = Directory.Exists(Path.Join(contentPath, "MudBlazor"));
         if (!isMudBlazorDirectoryPresent)

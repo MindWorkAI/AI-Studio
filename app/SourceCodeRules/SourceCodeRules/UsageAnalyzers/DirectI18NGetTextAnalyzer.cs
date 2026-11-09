@@ -18,9 +18,9 @@ public sealed class DirectI18NGetTextAnalyzer : DiagnosticAnalyzer
 
     private const string TITLE = "Direct translation lookup is not allowed";
 
-    private const string MESSAGE_FORMAT = "Call GetText only from a T or TB wrapper whose first string parameter is forwarded as the fallback text";
+    private const string MESSAGE_FORMAT = "Call GetText only from a T, TB, or TA wrapper whose first string parameter is forwarded as the fallback text";
 
-    private const string DESCRIPTION = "Translation calls must use collector-compatible T or TB wrappers so that every fallback text is included in the generated I18N resources.";
+    private const string DESCRIPTION = "Translation calls must use collector-compatible T, TB, or TA wrappers so that every fallback text is included in the generated I18N resources.";
 
     private const string CATEGORY = "Usage";
 
@@ -42,7 +42,7 @@ public sealed class DirectI18NGetTextAnalyzer : DiagnosticAnalyzer
             return;
 
         var targetMethod = method.ReducedFrom ?? method;
-        if (targetMethod.Name != "GetText" || targetMethod.ContainingType.Name != "ILangExtensions" || targetMethod.ContainingNamespace.ToDisplayString() != "AIStudio.Tools.PluginSystem")
+        if (targetMethod.Name != "GetText" || !IsLangExtensions(targetMethod.ContainingType))
             return;
 
         if (context.SemanticModel.GetOperation(invocation) is IInvocationOperation operation
@@ -52,9 +52,22 @@ public sealed class DirectI18NGetTextAnalyzer : DiagnosticAnalyzer
         context.ReportDiagnostic(Diagnostic.Create(RULE, invocation.GetLocation()));
     }
 
+    /// <summary>
+    /// Whether a method of this type is the GetText of the language plugins.
+    /// </summary>
+    /// <remarks>
+    /// A classic extension method belongs to its static class directly. A member of an extension block
+    /// belongs to the block, and only the block belongs to the static class.
+    /// </remarks>
+    private static bool IsLangExtensions(INamedTypeSymbol? type)
+    {
+        var staticClass = type is { IsExtension: true } ? type.ContainingType : type;
+        return staticClass?.Name == "ILangExtensions" && staticClass.ContainingNamespace.ToDisplayString() == "AIStudio.Tools.PluginSystem";
+    }
+
     private static bool IsCollectorCompatibleWrapper(IMethodSymbol? containingMethod, IInvocationOperation invocation)
     {
-        if (containingMethod?.Name is not ("T" or "TB")
+        if (containingMethod?.Name is not ("T" or "TB" or "TA")
             || containingMethod.ReturnType.SpecialType != SpecialType.System_String
             || containingMethod.Parameters.Length == 0
             || containingMethod.Parameters[0].Type.SpecialType != SpecialType.System_String)

@@ -27,7 +27,7 @@
             {
                 <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
                     <MudJustifiedText Typo="Typo.body1">
-                        @MailboxConnectionFailure.SERVER_NOT_ALLOWED.GetDescription()
+                        @MailboxConnectionFailure.SERVER_NOT_ALLOWED.Description
                     </MudJustifiedText>
                 </MudAlert>
             }
@@ -164,7 +164,7 @@
                         </MudJustifiedText>
                     }
                     <MudJustifiedText Typo="Typo.body2" Class="mb-1">
-                        @string.Format(T("Username: {0}"), this.selectedTemplate.UsernameFormat.GetDescription())
+                        @string.Format(T("Username: {0}"), this.selectedTemplate.UsernameFormat.Description)
                     </MudJustifiedText>
                     <MudLink Href="@this.selectedTemplate.HelpUrl" Target="_blank" Typo="Typo.body2">
                         @string.Format(T("Instructions of {0}"), this.selectedTemplate.Name)
@@ -214,7 +214,7 @@
                             Variant="Variant.Outlined"/>
                     </MudStack>
 
-                    <MudSelect T="MailboxTransportSecurity" Value="@this.dataTransportSecurity" ValueChanged="@this.SelectTransportSecurity" Text="@this.dataTransportSecurity.GetName()" Label="@T("Encryption")" Class="mt-3" ReadOnly="@this.AllowsOnlyOrganizationMailServers" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Validation="@DataSourceValidation.ValidateMailboxTransportSecurity">
+                    <MudSelect T="MailboxTransportSecurity" Value="@this.dataTransportSecurity" ValueChanged="@this.SelectTransportSecurity" Text="@this.dataTransportSecurity.Name" Label="@T("Encryption")" Class="mt-3" ReadOnly="@this.AllowsOnlyOrganizationMailServers" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Validation="@DataSourceValidation.ValidateMailboxTransportSecurity">
                         @foreach (var transportSecurity in ConfigurationSelectDataFactory.GetMailboxTransportSecurityData())
                         {
                             <MudSelectItem T="MailboxTransportSecurity" Value="@transportSecurity.Value">
@@ -301,7 +301,7 @@
                 <MudTextSwitch @bind-Value="@this.dataIncludeSentAndDrafts" Color="Color.Primary" Label="@T("Include sent mails and drafts?")" LabelOn="@T("Yes, also index the sent mails and the drafts")" LabelOff="@T("No, only index the selected folder and its subfolders")"/>
             }
 
-            <MudSelect T="MailboxMaxAge" @bind-Value="@this.dataMaxAge" Text="@this.dataMaxAge.GetName()" Label="@T("Period")" Class="mb-1 mt-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DateRange">
+            <MudSelect T="MailboxMaxAge" @bind-Value="@this.dataMaxAge" Text="@this.dataMaxAge.Name" Label="@T("Period")" Class="mb-1 mt-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DateRange">
                 @foreach (var maxAge in ConfigurationSelectDataFactory.GetMailboxMaxAgeData())
                 {
                     <MudSelectItem T="MailboxMaxAge" Value="@maxAge.Value">

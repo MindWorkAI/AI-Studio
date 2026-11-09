@@ -20,7 +20,7 @@ internal static partial class VisualBriefingStructuredResponseProcessor
         .DisableHtml()
         .Build();
     private static readonly NullabilityInfoContext NULLABILITY = new();
-    private static readonly object CONTRACT_LOCK = new();
+    private static readonly Lock CONTRACT_LOCK = new();
     private static readonly Dictionary<Type, ContractShape> CONTRACTS = [];
 
     /// <summary>
@@ -158,6 +158,18 @@ internal static partial class VisualBriefingStructuredResponseProcessor
                     VisualBriefingValidationRule.JSON_INVALID,
                     "The structured response root must be a JSON object.",
                     expected: "JSON object");
+
+            var duplicateIssue = FindDuplicateField(document.RootElement, "$");
+            if (duplicateIssue is not null)
+                return Rejected<T>(
+                    candidate,
+                    duplicateIssue.Kind,
+                    VisualBriefingFailureCode.RESPONSE_JSON_INVALID,
+                    VisualBriefingValidationRule.JSON_INVALID,
+                    ContractIssueMessage(duplicateIssue),
+                    duplicateIssue.Path,
+                    fieldName: duplicateIssue.FieldName,
+                    expected: duplicateIssue.Expected);
 
             var contractIssue = Inspect(
                 document.RootElement,
@@ -377,6 +389,58 @@ internal static partial class VisualBriefingStructuredResponseProcessor
     private static long? ToResponseLine(ResponseCandidate candidate, long? candidateLine) =>
         candidateLine is null ? null : candidate.StartLine + candidateLine;
 
+    /// <summary>
+    /// Finds the first field which an object of the response names a second time.
+    /// </summary>
+    /// <remarks>
+    /// JSON allows a name twice, and readers disagree on which of the values counts: the checks below
+    /// see one of them, while the browser which runs the finished briefing may see the other. The
+    /// response is refused instead, and the repair names the field. This looks into every value, also
+    /// into those the contract leaves open, such as the data of a chart.
+    /// </remarks>
+    private static ContractInspectionIssue? FindDuplicateField(JsonElement element, string path)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+            {
+                var names = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var property in element.EnumerateObject())
+                {
+                    var safeField = SafeIdentifier(property.Name);
+                    var fieldPath = string.IsNullOrEmpty(safeField) ? path : $"{path}.{safeField}";
+                    if (!names.Add(property.Name))
+                        return new(
+                            VisualBriefingStructuredResponseIssueKind.DUPLICATE_FIELD,
+                            fieldPath,
+                            safeField,
+                            "every field name only once per object");
+
+                    var issue = FindDuplicateField(property.Value, fieldPath);
+                    if (issue is not null)
+                        return issue;
+                }
+
+                return null;
+            }
+            case JsonValueKind.Array:
+            {
+                var index = 0;
+                foreach (var item in element.EnumerateArray())
+                {
+                    var issue = FindDuplicateField(item, $"{path}[{index}]");
+                    if (issue is not null)
+                        return issue;
+                    index++;
+                }
+
+                return null;
+            }
+            default:
+                return null;
+        }
+    }
+
     private static ContractInspectionIssue? Inspect(
         JsonElement element,
         ContractShape shape,
@@ -496,6 +560,10 @@ internal static partial class VisualBriefingStructuredResponseProcessor
             $"The model response contains the unknown field '{issue.FieldName}' at {issue.Path}.",
         VisualBriefingStructuredResponseIssueKind.UNKNOWN_FIELD =>
             $"The model response contains an unknown field at {issue.Path}.",
+        VisualBriefingStructuredResponseIssueKind.DUPLICATE_FIELD when !string.IsNullOrEmpty(issue.FieldName) =>
+            $"The model response contains the field '{issue.FieldName}' more than once at {issue.Path}.",
+        VisualBriefingStructuredResponseIssueKind.DUPLICATE_FIELD =>
+            $"The model response contains a field more than once at {issue.Path}.",
         VisualBriefingStructuredResponseIssueKind.REQUIRED_FIELD_MISSING =>
             $"The required field '{issue.FieldName}' is missing at {issue.Path}.",
         VisualBriefingStructuredResponseIssueKind.ENUM_VALUE_INVALID =>

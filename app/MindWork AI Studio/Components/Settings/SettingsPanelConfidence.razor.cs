@@ -8,7 +8,7 @@ public partial class SettingsPanelConfidence : SettingsPanelBase
     private string GetCurrentConfidenceLevelName(LLMProviders llmProvider)
     {
         if (this.TryGetShownConfidenceLevel(llmProvider, out var level))
-            return level.GetName();
+            return level.Name;
 
         return T("Not yet configured");
     }

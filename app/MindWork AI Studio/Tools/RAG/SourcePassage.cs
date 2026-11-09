@@ -25,27 +25,27 @@ public sealed record SourcePassage
     /// the passage. The list of sources tells sources apart by their address without the fragment,
     /// and so does the search for the passages of a source, see GetPassagesOf.
     /// </remarks>
-    public string SourceUrl { get; init; } = string.Empty;
+    public string SourceUrl { get; set; } = string.Empty;
 
     /// <summary>
     /// The name of where the passage was found, e.g., a document or a database.
     /// </summary>
-    public string DataSourceName { get; init; } = string.Empty;
+    public string DataSourceName { get; set; } = string.Empty;
 
     /// <summary>
     /// The path to the content, e.g., a file path or a URL.
     /// </summary>
-    public string Path { get; init; } = string.Empty;
+    public string Path { get; set; } = string.Empty;
 
     /// <summary>
     /// The category of the content, like text or image.
     /// </summary>
-    public RetrievalContentCategory Category { get; init; }
+    public RetrievalContentCategory Category { get; set; }
 
     /// <summary>
     /// What type of content the passage is, like a document or a transcript.
     /// </summary>
-    public RetrievalContentType Type { get; init; }
+    public RetrievalContentType Type { get; set; }
 
     /// <summary>
     /// The entry of the provenance store which holds the matched text and the content around it,
@@ -57,7 +57,7 @@ public sealed record SourcePassage
     /// stored, Text and SurroundingContent are empty. Left out of the chat file while null.
     /// </remarks>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Guid? ProvenanceId { get; init; }
+    public Guid? ProvenanceId { get; set; }
 
     /// <summary>
     /// The matched text, filtered for prompt injections, as long as it is not stored, see ProvenanceId.
@@ -65,22 +65,22 @@ public sealed record SourcePassage
     /// <remarks>
     /// Empty for an image which matched: the AI is only told that it did, never shown the image.
     /// </remarks>
-    public string Text { get; init; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
 
     /// <summary>
     /// The content around the matched text, filtered for prompt injections, as long as it is not stored, see ProvenanceId.
     /// </summary>
-    public IReadOnlyList<string> SurroundingContent { get; init; } = [];
+    public IReadOnlyList<string> SurroundingContent { get; set; } = [];
 
     /// <summary>
     /// The page the passage starts on, or null when it has none.
     /// </summary>
-    public int? PageNumber { get; init; }
+    public int? PageNumber { get; set; }
 
     /// <summary>
     /// The page the passage ends on, or null when it is not known.
     /// </summary>
-    public int? EndPageNumber { get; init; }
+    public int? EndPageNumber { get; set; }
 
     //
     // Where a passage without pages is. Left out of the chat file while unknown, which they are for
@@ -91,31 +91,31 @@ public sealed record SourcePassage
     /// The sheet of a spreadsheet the passage is from, or null.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? SheetName { get; init; }
+    public string? SheetName { get; set; }
 
     /// <summary>
     /// The row the passage starts at, counted from one: a row of its sheet, or of a table such as a CSV file.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? StartRow { get; init; }
+    public int? StartRow { get; set; }
 
     /// <summary>
     /// The row the passage ends at, or null when it is not known.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? EndRow { get; init; }
+    public int? EndRow { get; set; }
 
     /// <summary>
     /// The line the passage starts at, counted from one, for text and source code, or null.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? StartLine { get; init; }
+    public int? StartLine { get; set; }
 
     /// <summary>
     /// The line the passage ends at, or null when it is not known.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? EndLine { get; init; }
+    public int? EndLine { get; set; }
 
     /// <summary>
     /// Which part of its document the passage is, counted from one, or null when the data source
@@ -126,5 +126,5 @@ public sealed record SourcePassage
     /// indexed before these were kept. Wherever they are known, they say it better, see
     /// SourcePassageExtensions.GetLocation.
     /// </remarks>
-    public int? ChunkNumber { get; init; }
+    public int? ChunkNumber { get; set; }
 }

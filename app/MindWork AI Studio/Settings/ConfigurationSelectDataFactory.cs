@@ -25,7 +25,7 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<LangBehavior>> GetLangBehaviorData()
     {
         foreach (var behavior in Enum.GetValues<LangBehavior>())
-            yield return new(behavior.Name(), behavior);
+            yield return new(behavior.Name, behavior);
     }
     
     public static IEnumerable<ConfigurationSelectData<Guid>> GetLanguagesData()
@@ -117,14 +117,14 @@ public static class ConfigurationSelectDataFactory
     
     public static IEnumerable<ConfigurationSelectData<PreviewFeatures>> GetPreviewFeaturesData(SettingsManager settingsManager)
     {
-        foreach (var source in settingsManager.ConfigurationData.App.PreviewVisibility.GetPreviewFeatures().Where(x => !x.IsReleased()))
-            yield return new(source.GetPreviewDescription(), source);
+        foreach (var source in settingsManager.ConfigurationData.App.PreviewVisibility.GetPreviewFeatures().Where(x => !x.IsReleased))
+            yield return new(source.PreviewDescription, source);
     }
     
     public static IEnumerable<ConfigurationSelectData<SendToChatDataSourceBehavior>> GetSendToChatDataSourceBehaviorData()
     {
         foreach (var behavior in Enum.GetValues<SendToChatDataSourceBehavior>())
-            yield return new(behavior.Description(), behavior);
+            yield return new(behavior.Description, behavior);
     }
     
     public static IEnumerable<ConfigurationSelectData<NavBehavior>> GetNavBehaviorData()
@@ -162,13 +162,13 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
     {
         foreach (var source in Enum.GetValues<IconSources>())
-            yield return new(source.Name(), source);
+            yield return new(source.Name, source);
     }
     
     public static IEnumerable<ConfigurationSelectData<CommonLanguages>> GetCommonLanguagesData()
     {
         foreach (var language in Enum.GetValues<CommonLanguages>())
-            yield return new(language.Name(), language);
+            yield return new(language.Name, language);
     }
     
     public static IEnumerable<ConfigurationSelectData<CommonLanguages>> GetCommonLanguagesTranslationData()
@@ -177,7 +177,7 @@ public static class ConfigurationSelectDataFactory
             if(language is CommonLanguages.AS_IS)
                 yield return new(TB("Not yet specified"), language);
             else
-                yield return new(language.Name(), language);
+                yield return new(language.Name, language);
     }
     
     public static IEnumerable<ConfigurationSelectData<CommonLanguages>> GetCommonLanguagesOptionalData()
@@ -186,73 +186,73 @@ public static class ConfigurationSelectDataFactory
             if(language is CommonLanguages.AS_IS)
                 yield return new(TB("Do not specify the language"), language);
             else
-                yield return new(language.Name(), language);
+                yield return new(language.Name, language);
     }
     
     public static IEnumerable<ConfigurationSelectData<CommonCodingLanguages>> GetCommonCodingLanguagesData()
     {
         foreach (var language in Enum.GetValues<CommonCodingLanguages>())
-            yield return new(language.Name(), language);
+            yield return new(language.Name, language);
     }
     
     public static IEnumerable<ConfigurationSelectData<Complexity>> GetComplexityData()
     {
         foreach (var complexity in Enum.GetValues<Complexity>())
-            yield return new(complexity.Name(), complexity);
+            yield return new(complexity.Name, complexity);
     }
     
     public static IEnumerable<ConfigurationSelectData<NumberParticipants>> GetNumberParticipantsData()
     {
         foreach (var number in Enum.GetValues<NumberParticipants>())
-            yield return new(number.Name(), number);
+            yield return new(number.Name, number);
     }
     
     public static IEnumerable<ConfigurationSelectData<WritingStylesRewrite>> GetWritingStyles4RewriteData()
     {
         foreach (var style in Enum.GetValues<WritingStylesRewrite>())
-            yield return new(style.Name(), style);
+            yield return new(style.Name, style);
     }
     
     public static IEnumerable<ConfigurationSelectData<WritingStylesEMail>> GetWritingStyles4EMailData()
     {
         foreach (var style in Enum.GetValues<WritingStylesEMail>())
-            yield return new(style.Name(), style);
+            yield return new(style.Name, style);
     }
     
     public static IEnumerable<ConfigurationSelectData<SentenceStructure>> GetSentenceStructureData()
     {
         foreach (var voice in Enum.GetValues<SentenceStructure>())
-            yield return new(voice.Name(), voice);
+            yield return new(voice.Name, voice);
     }
 
     public static IEnumerable<ConfigurationSelectData<AudienceProfile>> GetSlideBuilderAudienceProfileData()
     {
         foreach (var profile in Enum.GetValues<AudienceProfile>())
-            yield return new(profile.Name(), profile);
+            yield return new(profile.Name, profile);
     }
 
     public static IEnumerable<ConfigurationSelectData<AudienceAgeGroup>> GetSlideBuilderAudienceAgeGroupData()
     {
         foreach (var ageGroup in Enum.GetValues<AudienceAgeGroup>())
-            yield return new(ageGroup.Name(), ageGroup);
+            yield return new(ageGroup.Name, ageGroup);
     }
 
     public static IEnumerable<ConfigurationSelectData<AudienceOrganizationalLevel>> GetSlideBuilderAudienceOrganizationalLevelData()
     {
         foreach (var level in Enum.GetValues<AudienceOrganizationalLevel>())
-            yield return new(level.Name(), level);
+            yield return new(level.Name, level);
     }
 
     public static IEnumerable<ConfigurationSelectData<AudienceExpertise>> GetSlideBuilderAudienceExpertiseData()
     {
         foreach (var expertise in Enum.GetValues<AudienceExpertise>())
-            yield return new(expertise.Name(), expertise);
+            yield return new(expertise.Name, expertise);
     }
 
     public static IEnumerable<ConfigurationSelectData<PresentationOccasion>> GetSlideBuilderOccasionData()
     {
         foreach (var occasion in Enum.GetValues<PresentationOccasion>())
-            yield return new(occasion.Name(), occasion);
+            yield return new(occasion.Name, occasion);
     }
 
     public static IEnumerable<ConfigurationSelectData<string>> GetProfilesData(IEnumerable<Profile> profiles)
@@ -285,7 +285,7 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<ConfidenceSchemes>> GetConfidenceSchemesData()
     {
         foreach (var scheme in Enum.GetValues<ConfidenceSchemes>())
-            yield return new(scheme.GetListDescription(), scheme);
+            yield return new(scheme.ListDescription, scheme);
     }
     
     public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetConfidenceLevelsData(SettingsManager settingsManager, bool restrictToGlobalMinimum = false)
@@ -309,10 +309,31 @@ public static class ConfigurationSelectDataFactory
                     continue;
                 
                 default:
-                    yield return new(level.GetName(), level);
+                    yield return new(level.Name, level);
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Gets the minimum confidence levels the BeyondFacts Lab offers: none below its floor.
+    /// </summary>
+    /// <param name="settingsManager">The settings, whose enforced global minimum may lift the floor.</param>
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetBeyondFactsLabConfidenceLevelsData(SettingsManager settingsManager)
+    {
+        var minimumLevel = DataBeyondFactsLab.MINIMUM_CONFIDENCE_FLOOR;
+        if (settingsManager.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true } && settingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence > minimumLevel)
+            minimumLevel = settingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence;
+
+        foreach (var level in Enum.GetValues<ConfidenceLevel>())
+            if (level >= minimumLevel)
+                yield return new(level.Name, level);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<AddressForm>> GetBeyondFactsLabAddressFormData()
+    {
+        foreach (var addressForm in Enum.GetValues<AddressForm>())
+            yield return new(addressForm.Name, addressForm);
     }
 
     public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetDataSourceConfidenceLevelsData()
@@ -322,7 +343,7 @@ public static class ConfigurationSelectDataFactory
             if (level is ConfidenceLevel.NONE)
                 continue;
 
-            yield return new(level.GetName(), level);
+            yield return new(level.Name, level);
         }
     }
 
@@ -330,10 +351,10 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var level in Enum.GetValues<ConfidenceLevel>())
         {
-            if (!level.IsAllowedMailboxConfidence())
+            if (!level.IsAllowedMailboxConfidence)
                 continue;
 
-            yield return new(level.GetName(), level);
+            yield return new(level.Name, level);
         }
     }
 
@@ -344,14 +365,14 @@ public static class ConfigurationSelectDataFactory
             if (transportSecurity is MailboxTransportSecurity.UNKNOWN)
                 continue;
 
-            yield return new(transportSecurity.GetName(), transportSecurity);
+            yield return new(transportSecurity.Name, transportSecurity);
         }
     }
 
     public static IEnumerable<ConfigurationSelectData<MailboxMaxAge>> GetMailboxMaxAgeData()
     {
         foreach (var maxAge in Enum.GetValues<MailboxMaxAge>())
-            yield return new(maxAge.GetName(), maxAge);
+            yield return new(maxAge.Name, maxAge);
     }
 
     /// <summary>
@@ -362,13 +383,13 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var restriction in Enum.GetValues<OutboundDataRestriction>())
             if (restriction.StricterOf(minimumRestriction) == restriction)
-                yield return new(restriction.GetName(), restriction);
+                yield return new(restriction.Name, restriction);
     }
 
     public static IEnumerable<ConfigurationSelectData<Themes>> GetThemesData()
     {
         foreach (var theme in Enum.GetValues<Themes>())
-            yield return new(theme.GetName(), theme);
+            yield return new(theme.Name, theme);
     }
 
     public static IEnumerable<ConfigurationSelectData<AssistantAuditLevel>> GetAssistantAuditLevelsData()
@@ -378,7 +399,7 @@ public static class ConfigurationSelectDataFactory
             if (level == AssistantAuditLevel.UNKNOWN)
                 continue;
 
-            yield return new(level.GetName(), level);
+            yield return new(level.Name, level);
         }
     }
 
@@ -386,7 +407,7 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var bitrate in Enum.GetValues<TranscriptionOpusBitrate>())
         {
-            yield return new(bitrate.GetName(), bitrate);
+            yield return new(bitrate.Name, bitrate);
         }
     }
 

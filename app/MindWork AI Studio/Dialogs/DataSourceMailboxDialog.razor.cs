@@ -339,7 +339,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     // Without a root folder, the sent mails and the drafts belong to the whole mailbox anyway:
     private bool HasRootFolder => !string.IsNullOrEmpty(this.dataRootFolder);
 
-    private string ConfidenceLevelText => this.dataConfidenceLevel is ConfidenceLevel.NONE ? string.Empty : this.dataConfidenceLevel.GetName();
+    private string ConfidenceLevelText => this.dataConfidenceLevel is ConfidenceLevel.NONE ? string.Empty : this.dataConfidenceLevel.Name;
 
     private OutboundDataRestriction MinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction;
 
@@ -353,7 +353,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             if (this.testedSettings != this.CurrentSettings)
                 return this.RequiresConnectionTest ? T("Not tested yet.") : string.Empty;
 
-            return this.testFailure is { } failure ? failure.GetDescription() : T("Connection successful.");
+            return this.testFailure is { } failure ? failure.Description : T("Connection successful.");
         }
     }
 
@@ -493,7 +493,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         // Who switches the encryption usually means the port that comes with it, unless they
         // entered a port of their own:
         //
-        if (this.dataPort == this.dataTransportSecurity.GetUsualPort() && transportSecurity.GetUsualPort() is { } usualPort)
+        if (this.dataPort == this.dataTransportSecurity.UsualPort && transportSecurity.UsualPort is { } usualPort)
             this.dataPort = usualPort;
 
         this.dataTransportSecurity = transportSecurity;
@@ -565,7 +565,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             serverAnswer = e.InnerException?.Message ?? string.Empty;
             this.folderIssue = e.Failure is MailboxConnectionFailure.SERVER_ERROR
                 ? T("The server did not create the folder. Perhaps a folder of this name exists already.")
-                : e.Failure.GetDescription();
+                : e.Failure.Description;
 
             this.Logger.LogWarning($"Creating a folder in the mailbox '{this.dataId}' failed: {e.Failure} ({e.InnerException?.GetType().Name ?? "no inner exception"}).");
             return null;
@@ -577,7 +577,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         }
         catch (OperationCanceledException)
         {
-            this.folderIssue = MailboxConnectionFailure.NETWORK_UNAVAILABLE.GetDescription();
+            this.folderIssue = MailboxConnectionFailure.NETWORK_UNAVAILABLE.Description;
             return null;
         }
         finally

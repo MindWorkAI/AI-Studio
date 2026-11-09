@@ -26,13 +26,13 @@ public partial class PluginInfoDialog : MSGComponentBase
     [Parameter]
     public IAvailablePlugin Plugin { get; set; } = null!;
 
-    private string TypeText => this.Plugin.Type.GetName();
+    private string TypeText => this.Plugin.Type.Name;
 
     private string AuthorsText => this.Plugin.Authors.Length > 0 ? string.Join(", ", this.Plugin.Authors) : this.T("No authors specified");
 
-    private string CategoriesText => this.Plugin.Categories.Length > 0 ? string.Join(", ", this.Plugin.Categories.Select(category => category.GetName())) : this.T("No categories specified");
+    private string CategoriesText => this.Plugin.Categories.Length > 0 ? string.Join(", ", this.Plugin.Categories.Select(category => category.Name)) : this.T("No categories specified");
 
-    private string TargetGroupsText => this.Plugin.TargetGroups.Length > 0 ? string.Join(", ", this.Plugin.TargetGroups.Select(targetGroup => targetGroup.Name())) : this.T("No target groups specified");
+    private string TargetGroupsText => this.Plugin.TargetGroups.Length > 0 ? string.Join(", ", this.Plugin.TargetGroups.Select(targetGroup => targetGroup.Name)) : this.T("No target groups specified");
 
     /// <summary>
     /// The plugin states the time in UTC; the user reads it in their own time zone.

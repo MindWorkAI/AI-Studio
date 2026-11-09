@@ -162,10 +162,10 @@ public sealed class PassageProvenanceTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(Passage(HANDBOOK_URL, "text").GetProvenanceKind(), Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
-            Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_TRANSCRIPT }).GetProvenanceKind(), Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
-            Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_EMAIL }).GetProvenanceKind(), Is.EqualTo(ProvenanceKind.MAIL), "A mail is a mail, whether a mailbox data source or a tool handed it over.");
-            Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_WEBSITE }).GetProvenanceKind(), Is.EqualTo(ProvenanceKind.WEB_PAGE));
+            Assert.That(Passage(HANDBOOK_URL, "text").ProvenanceKind, Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
+            Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_TRANSCRIPT }).ProvenanceKind, Is.EqualTo(ProvenanceKind.DATA_SOURCE_PASSAGE));
+            Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_EMAIL }).ProvenanceKind, Is.EqualTo(ProvenanceKind.MAIL), "A mail is a mail, whether a mailbox data source or a tool handed it over.");
+            Assert.That((Passage(HANDBOOK_URL, "text") with { Type = RetrievalContentType.TEXT_WEBSITE }).ProvenanceKind, Is.EqualTo(ProvenanceKind.WEB_PAGE));
         }
     }
 

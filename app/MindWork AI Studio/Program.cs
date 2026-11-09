@@ -1,9 +1,11 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
+using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
+using AIStudio.Tools.Mathematics;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
@@ -18,6 +20,7 @@ using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Glossaries;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mathematics;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
@@ -175,9 +178,18 @@ internal sealed class Program
             config.PopoverOptions.ModalOverlay = true;
         });
 
-        builder.Services.AddMemoryCache(); // Needed for the Markdown library
         builder.Services.AddMudMarkdownServices();
-        builder.Services.AddSingleton(new MudTheme());
+
+        //
+        // Code blocks in Markdown take their colors from the palettes, see MudMarkdownThemeProvider in the
+        // main layout. Their backgrounds stay those of the code blocks before, so that a code block still
+        // stands out against a white card:
+        //
+        builder.Services.AddSingleton(new MudTheme
+        {
+            PaletteLight = new MudMarkdownPaletteLight { CodeHighlight = MudCodeHighlightThemes.Light.LightPlus with { Background = "#F0F0F0" } },
+            PaletteDark = new MudMarkdownPaletteDark { CodeHighlight = MudCodeHighlightThemes.Dark.DarkPlus with { Background = "#444444" } },
+        });
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
@@ -200,6 +212,10 @@ internal sealed class Program
         builder.Services.AddSingleton<IToolImplementation, ReadMailTool>();
         builder.Services.AddSingleton<IToolImplementation, CountMailsTool>();
         builder.Services.AddSingleton<IToolCollection, MailboxToolCollection>();
+        builder.Services.AddSingleton<MathComputationService>();
+        builder.Services.AddSingleton<IToolImplementation, CalculateTool>();
+        builder.Services.AddSingleton<IToolImplementation, ComputeSymbolicallyTool>();
+        builder.Services.AddSingleton<IToolCollection, MathematicsToolCollection>();
         builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();
@@ -219,6 +235,8 @@ internal sealed class Program
         builder.Services.AddSingleton<VisualBriefingBuildOrchestrator>();
         builder.Services.AddSingleton<VisualBriefingPreviewTokenService>();
         builder.Services.AddSingleton<IMediaTranscriptStorage, VisualBriefingTranscriptStorage>();
+        builder.Services.AddSingleton<BeyondFactsLabStore>();
+        builder.Services.AddSingleton<BflConversationService>();
         builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
@@ -338,7 +356,12 @@ internal sealed class Program
         // Store the service provider (DI). We need it later for some classes,
         // which are not part of the request pipeline:
         SERVICE_PROVIDER = app.Services;
-        
+
+        // The texts of TA() address the person as the BeyondFacts Lab is set to, since only the lab has such texts
+        // so far. Once the app gets a setting of its own for the form of address, that setting takes over here:
+        var settingsForTexts = app.Services.GetRequiredService<SettingsManager>();
+        I18N.UseAddressFormOf(() => settingsForTexts.ConfigurationData.BeyondFactsLab.AddressForm);
+
         // Initialize the encryption service:
         programLogger.LogInformation("Initializing the encryption service.");
         var encryptionLogger = app.Services.GetRequiredService<ILogger<Encryption>>();

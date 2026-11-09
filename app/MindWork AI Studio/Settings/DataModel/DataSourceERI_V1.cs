@@ -20,7 +20,7 @@ namespace AIStudio.Settings.DataModel;
 /// <summary>
 /// An external data source, accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.
 /// </summary>
-public readonly record struct DataSourceERI_V1 : IERIDataSource
+public record struct DataSourceERI_V1: IERIDataSource
 {
     private static readonly ILogger<DataSourceERI_V1> LOGGER = Program.LOGGER_FACTORY.CreateLogger<DataSourceERI_V1>();
 
@@ -34,52 +34,52 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     }
     
     /// <inheritdoc />
-    public uint Num { get; init; }
+    public uint Num { get; set; }
 
     /// <inheritdoc />
-    public string Id { get; init; } = Guid.Empty.ToString();
+    public string Id { get; set; } = Guid.Empty.ToString();
     
     /// <inheritdoc />
-    public string Name { get; init; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public DataSourceType Type { get; init; } = DataSourceType.NONE;
+    public DataSourceType Type { get; set; } = DataSourceType.NONE;
     
     /// <inheritdoc />
-    public string Hostname { get; init; } = string.Empty;
+    public string Hostname { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public int Port { get; init; }
+    public int Port { get; set; }
 
     /// <inheritdoc />
-    public AuthMethod AuthMethod { get; init; } = AuthMethod.NONE;
+    public AuthMethod AuthMethod { get; set; } = AuthMethod.NONE;
 
     /// <inheritdoc />
-    public string Username { get; init; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public DataSourceERIUsernamePasswordMode UsernamePasswordMode { get; init; } = DataSourceERIUsernamePasswordMode.USER_MANAGED;
+    public DataSourceERIUsernamePasswordMode UsernamePasswordMode { get; set; } = DataSourceERIUsernamePasswordMode.USER_MANAGED;
 
     /// <inheritdoc />
-    public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+    public DataSourceSecurity SecurityPolicy { get; set; } = DataSourceSecurity.NOT_SPECIFIED;
 
     /// <inheritdoc />
-    public OutboundDataRestriction OutboundDataRestriction { get; init; } = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
+    public OutboundDataRestriction OutboundDataRestriction { get; set; } = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
 
     /// <inheritdoc />
-    public bool IsEnterpriseConfiguration { get; init; }
+    public bool IsEnterpriseConfiguration { get; set; }
 
     /// <inheritdoc />
-    public Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+    public Guid EnterpriseConfigurationPluginId { get; set; } = Guid.Empty;
     
     /// <inheritdoc />
-    public ERIVersion Version { get; init; } = ERIVersion.V1;
+    public ERIVersion Version { get; set; } = ERIVersion.V1;
     
     /// <inheritdoc />
-    public string SelectedRetrievalId { get; init; } = string.Empty;
+    public string SelectedRetrievalId { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public ushort MaxMatches { get; init; } = 10;
+    public ushort MaxMatches { get; set; } = 10;
     
     /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
@@ -98,11 +98,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
     /// <inheritdoc />
     /// <remarks>
-    /// An ERI data source has a single page. ERI v1 knows no offset, so a further page would have
-    /// to ask the server for all pages before it as well. A server may refuse more matches than its
-    /// retrieval process allows, which often is the very number configured here: it would refuse
-    /// every further page, and the model would hear that the data source could not be searched
-    /// rather than that there is nothing more.
+    /// An ERI data source has a single page of matches. ERI v1 knows no offset, so a further page
+    /// would have to ask the server for all pages before it as well. A server may refuse more
+    /// matches than its retrieval process allows, which often is the very number configured here:
+    /// it would refuse every further page, and the model would hear that the data source could not
+    /// be searched rather than that there is nothing more.<br/><br/>
+    /// Semantic Search still turns pages within these matches, when they are too long for a single
+    /// search: it cuts them into pages by their length, and asks the server again for each of them.
     /// </remarks>
     public int GetLastPage() => 1;
 
@@ -170,7 +172,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Path = eriContext.Path ?? string.Empty,
                                 Type = eriContext.ToRetrievalContentType(),
                                 Links = eriContext.Links ?? [],
-                                Category = eriContext.Type.ToRetrievalContentCategory(),
+                                Category = eriContext.Type.RetrievalContentCategory,
                                 SourceCategory = eriContext.Category ?? string.Empty,
                                 MatchedText = eriContext.MatchedContent ?? string.Empty,
                                 DataSourceName = eriContext.Name ?? string.Empty,
@@ -185,7 +187,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Type = eriContext.ToRetrievalContentType(),
                                 Links = eriContext.Links ?? [],
                                 Source = eriContext.MatchedContent ?? string.Empty,
-                                Category = eriContext.Type.ToRetrievalContentCategory(),
+                                Category = eriContext.Type.RetrievalContentCategory,
                                 SourceCategory = eriContext.Category ?? string.Empty,
                                 SourceType = ContentImageSource.BASE64,
                                 DataSourceName = eriContext.Name ?? string.Empty,
@@ -275,7 +277,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         // its passages reach a chat, see DataSourceOutboundDataExtensions.GetEffectiveOutboundDataRestriction.
         //
         var outboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
-        if (table.TryGetValue("OutboundDataRestriction", out var outboundDataRestrictionValue) && !(outboundDataRestrictionValue.TryRead<string>(out var outboundDataRestrictionText) && EnumNames.TryParse(outboundDataRestrictionText, out outboundDataRestriction)))
+        if (table.TryGetValue("OutboundDataRestriction", out var outboundDataRestrictionValue) && !(outboundDataRestrictionValue.TryRead<string>(out var outboundDataRestrictionText) && OutboundDataRestriction.TryParseName(outboundDataRestrictionText, out outboundDataRestriction)))
         {
             LOGGER.LogWarning($"The configured data source {idx} does not contain a valid outbound data restriction, so the strictest one applies. (Plugin ID: {configPluginId})");
             outboundDataRestriction = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;

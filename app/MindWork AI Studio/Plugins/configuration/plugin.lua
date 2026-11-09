@@ -915,7 +915,7 @@ CONFIG["SETTINGS"] = {}
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
 --   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
---   VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
+--   VISUAL_BRIEFING_ASSISTANT, BEYOND_FACTS_LAB_ASSISTANT, I18N_ASSISTANT,
 --   LOG_VIEWER_ASSISTANT
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
@@ -983,6 +983,27 @@ CONFIG["SETTINGS"] = {}
 -- documents. Providers below this level cannot be selected in the assistant.
 -- CONFIG["SETTINGS"]["DataVisualBriefing.MinimumProviderConfidence"] = "NONE"
 
+-- Configure organization defaults for the BeyondFacts Lab.
+-- The lab guides researchers step by step through the preparation of a challenging appearance,
+-- such as a panel discussion or an interview. It is a prototype: users see it only when they allow
+-- prototypes and enable the preview feature PRE_BEYOND_FACTS_LAB_2026.
+--
+-- Configure the provider which new preparations start with.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum provider confidence required by the lab.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Unpublished research is the usual material of the lab, so the lab never accepts less than MEDIUM.
+-- A lower value has no effect; HIGH allows only self-hosted models in the built-in confidence schemes.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.MinimumProviderConfidence"] = "MEDIUM"
+--
+-- Configure how the lab addresses users in languages with a formal and an informal address, such as German.
+-- In a language with one form of address only, such as English, the setting has no effect, and the options
+-- of the lab do not show it.
+-- Allowed values are: FORMAL, INFORMAL
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.AddressForm"] = "FORMAL"
+
 -- Configure defaults for the Assistant Builder.
 -- Preselection must be enabled for the remaining Assistant Builder settings to take effect.
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectOptions"] = true
@@ -1013,6 +1034,62 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOutputLanguage.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.MinimumProviderConfidence.AllowUserOverride"] = true
+
+-- Configure defaults for the Prompt Optimizer.
+-- These settings need AI Studio v26.11.1 or newer; older versions ignore them.
+-- Preselection must be enabled for the remaining Prompt Optimizer settings to take effect.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectOptions"] = true
+--
+-- Configure the language of the optimized prompt.
+-- Allowed values are: AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT,
+--   JA_JP, RU_RU, OTHER
+-- AS_IS keeps the language of the prompt the user enters.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedTargetLanguage"] = "AS_IS"
+--
+-- Configure a free-form language, used only when PreselectedTargetLanguage is "OTHER".
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedOtherLanguage"] = ""
+--
+-- Configure the aspects the optimized prompt should emphasize, such as the structure of the
+-- answer or constraints.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedImportantAspects"] = ""
+--
+-- Configure the prompt guide of your organization. The Prompt Optimizer then optimizes prompts
+-- along this guide instead of its default one, and it reads the current content of the file
+-- whenever it opens. Lock it so that users cannot choose another guide in the assistant; lock
+-- PreselectOptions as well, because the guide applies only while preselection is enabled.
+-- An empty path stands for the default guide: locked, it makes everybody use the default guide.
+--
+-- The simplest way is to ship the guide with this plugin: put the file, e.g., a Markdown, PDF,
+-- or Word document, next to this plugin.lua, or into a folder below it, and give its path
+-- relative to this plugin.lua. The path must stay inside the plugin directory, i.e., no '..'
+-- segments and no links pointing out of it. When the file is missing or the path is rejected,
+-- AI Studio logs a warning, and this plugin does not manage the guide: users keep the one they
+-- chose, or the default guide.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath"] = "Prompting-Guide.md"
+--
+-- An absolute path works as well. It must be readable on every machine, e.g., on a network
+-- share or in a folder your software distribution fills; for Flatpak installations, it must
+-- be readable inside the sandbox.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath"] = "C:\\Guides\\Prompting-Guide.md"
+--
+-- Configure the minimum provider confidence required to optimize prompts.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Providers below this level cannot be selected in the Prompt Optimizer. This minimum applies
+-- only while preselection is enabled; the app-wide minimum confidence applies in any case.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.MinimumProviderConfidence"] = "NONE"
+--
+-- Configure the preselected provider for optimizing prompts.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Allow users to change individual managed Prompt Optimizer defaults locally.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedTargetLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedOtherLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedImportantAspects.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.MinimumProviderConfidence.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedProvider.AllowUserOverride"] = true
 
 -- Configure enterprise approvals for assistant plugins.
 -- Each approval is matched only by the current SHA-256 hash over all Lua files
@@ -1092,6 +1169,7 @@ CONFIG["SETTINGS"] = {}
 -- whole collection or sets its confidence, and of several levels set for a collection and its
 -- tools, the highest applies.
 -- Collection IDs include: mailboxes (search_mails, read_mail, and count_mails; while the mailbox
+-- preview is enabled), mathematics (calculate and compute_symbolically; while the mathematics
 -- preview is enabled)
 
 -- Disable individual tools or tool collections by their stable ID. The default is an empty set.
@@ -1107,12 +1185,14 @@ CONFIG["SETTINGS"] = {}
 -- Configure the minimum provider confidence level required for individual tools or tool
 -- collections.
 -- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search, glossary_lookup
--- Collection IDs include: mailboxes
+-- Collection IDs include: mailboxes, mathematics
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
--- semantic_search = NONE, glossary_lookup = NONE, mailboxes = VERY_LOW
+-- semantic_search = NONE, glossary_lookup = NONE, mailboxes = VERY_LOW, mathematics = NONE
 -- glossary_lookup returns entries of the user's glossaries. Raise its minimum when your
 -- glossaries hold terms which only trusted providers may see.
+-- mathematics computes locally and sees nothing but what the model writes into its arguments,
+-- so it needs no minimum of its own.
 -- search_confluence always searches with a HIGH-confidence provider only, whatever value is
 -- set here.
 -- semantic_search offers a provider only the data sources whose own confidence level it meets,
@@ -1123,7 +1203,8 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page"] = "VERY_LOW",
 --     ["search_confluence"] = "HIGH",
 --     ["semantic_search"] = "NONE",
---     ["mailboxes"] = "VERY_LOW"
+--     ["mailboxes"] = "VERY_LOW",
+--     ["mathematics"] = "NONE"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -1567,7 +1648,7 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Collection IDs include: mailboxes
+--     -- Collection IDs include: mailboxes, mathematics
 --     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
 --     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
@@ -1737,7 +1818,7 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Collection IDs include: mailboxes
+--     -- Collection IDs include: mailboxes, mathematics
 --     -- Allowing search_confluence also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --
@@ -1749,7 +1830,9 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Optional: hide the policy definition section in the UI.
 --     -- When set to true, users will only see the document selection interface
 --     -- and cannot view or modify the policy settings.
---     -- This is useful for enterprise configurations where policy details should remain hidden.
+--     -- This is useful for enterprise configurations where users would find the policy details overwhelming.
+--     -- It keeps the assistant simple, but it does not keep the policy a secret: a chat which continues
+--     -- an analysis gets the whole policy as its system prompt, and users can read it there.
 --     -- Allowed values are: true, false (default: false)
 --     ["HidePolicyDefinition"] = false
 -- }

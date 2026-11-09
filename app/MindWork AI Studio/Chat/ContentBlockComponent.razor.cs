@@ -13,32 +13,11 @@ public partial class ContentBlockComponent : MSGComponentBase
 {
     private const string CHAT_MATH_SYNC_FUNCTION = "chatMath.syncContainer";
     private const string CHAT_MATH_DISPOSE_FUNCTION = "chatMath.disposeContainer";
-    private const string HTML_START_TAG = "<";
-    private const string HTML_END_TAG = "</";
-    private const string HTML_SELF_CLOSING_TAG = "/>";
-    private const string CODE_FENCE_MARKER_BACKTICK = "```";
-    private const string CODE_FENCE_MARKER_TILDE = "~~~";
-    private const string MATH_BLOCK_MARKER_DOLLAR = "$$";
-    private const string MATH_BLOCK_MARKER_BRACKET_OPEN = """\[""";
-    private const string MATH_BLOCK_MARKER_BRACKET_CLOSE = """\]""";
-    private const string HTML_CODE_FENCE_PREFIX = "```html";
 
     /// <summary>
     /// How many files of an answer the export menu lists one by one; beyond that, it groups them by kind.
     /// </summary>
     private const int MAX_FILES_WITHOUT_SUBMENUS = 5;
-
-    private static readonly string[] HTML_TAG_MARKERS =
-    [
-        "<!doctype",
-        "<html",
-        "<head",
-        "<body",
-        "<style",
-        "<script",
-        "<iframe",
-        "<svg",
-    ];
 
     /// <summary>
     /// The role of the chat content block.
@@ -239,7 +218,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
 
     /// <summary>
-    /// The files this block holds, tables and code blocks, so that the export menu can offer each of them.
+    /// The files this block holds, tables, code blocks, and formulas, so that the export menu can offer each of them.
     /// </summary>
     /// <remarks>
     /// Cached the same way the Markdown render plan is: reading the files means parsing the whole
@@ -261,7 +240,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 return this.cachedMessageFiles;
 
             this.cachedMessageFilesInput = markdown;
-            this.cachedMessageFiles = PlainFileExport.ExtractFiles(this.GetMarkdownRenderPlan(markdown).Source, this.csvSeparator);
+            this.cachedMessageFiles = PlainFileExport.ExtractFiles(this.GetMarkdownRenderPlan(markdown), this.csvSeparator);
             return this.cachedMessageFiles;
         }
     }
@@ -295,8 +274,8 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </remarks>
     private string ExportLabel(MessageFile file)
     {
-        var isTable = file.Format.IsTabular();
-        var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular() == isTable).ToList();
+        var isTable = file.Format.IsTabular;
+        var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular == isTable).ToList();
         var extensionOrName = file.ToFileExtensionOrName();
         var typeName = file.ToName();
 
@@ -329,7 +308,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// for the entire answer out of sight. Each submenu keeps the order of the answer, so "Code
     /// block 3" is the third entry of its submenu as well.
     /// </remarks>
-    private IEnumerable<IGrouping<bool, MessageFile>> MessageFilesByKind => this.MessageFiles.GroupBy(file => file.Format.IsTabular()).OrderByDescending(isTable => isTable.Key);
+    private IEnumerable<IGrouping<bool, MessageFile>> MessageFilesByKind => this.MessageFiles.GroupBy(file => file.Format.IsTabular).OrderByDescending(isTable => isTable.Key);
 
     /// <summary>
     /// Names the submenu of one kind of files in the export menu, with the number of its files.
@@ -343,7 +322,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// <summary>
     /// Returns the icon of the submenu of one kind of files in the export menu.
     /// </summary>
-    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.ToIcon() : FileExportFormat.SOURCE_CODE.ToIcon();
+    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.Icon : FileExportFormat.SOURCE_CODE.Icon;
 
     /// <summary>
     /// What the export offers, falling back to the chat wording when nobody named it.
@@ -559,7 +538,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             return this.cachedMarkdownRenderPlan;
 
         this.cachedMarkdownRenderPlanInput = text;
-        this.cachedMarkdownRenderPlan = BuildMarkdownRenderPlan(text);
+        this.cachedMarkdownRenderPlan = MarkdownRenderPlanner.Build(text);
         return this.cachedMarkdownRenderPlan;
     }
 
@@ -635,231 +614,6 @@ public partial class ContentBlockComponent : MSGComponentBase
             : $"{mathSegmentCount}:{hash.ToHashCode()}";
     }
 
-    private static MarkdownRenderPlan BuildMarkdownRenderPlan(string text)
-    {
-        var normalized = NormalizeMarkdownForRendering(text);
-        if (string.IsNullOrWhiteSpace(normalized))
-            return MarkdownRenderPlan.EMPTY;
-
-        var normalizedSpan = normalized.AsSpan();
-        var segments = new List<MarkdownRenderSegment>();
-        var activeCodeFenceMarker = '\0';
-        var activeMathBlockFenceType = MathBlockFenceType.NONE;
-        var markdownSegmentStart = 0;
-        var mathContentStart = 0;
-
-        for (var lineStart = 0; lineStart < normalizedSpan.Length;)
-        {
-            var lineEnd = lineStart;
-            while (lineEnd < normalizedSpan.Length && normalizedSpan[lineEnd] is not '\r' and not '\n')
-                lineEnd++;
-
-            var nextLineStart = lineEnd;
-            if (nextLineStart < normalizedSpan.Length)
-            {
-                if (normalizedSpan[nextLineStart] == '\r')
-                    nextLineStart++;
-
-                if (nextLineStart < normalizedSpan.Length && normalizedSpan[nextLineStart] == '\n')
-                    nextLineStart++;
-            }
-
-            var trimmedLine = TrimWhitespace(normalizedSpan[lineStart..lineEnd]);
-            if (activeMathBlockFenceType is MathBlockFenceType.NONE && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
-            {
-                lineStart = nextLineStart;
-                continue;
-            }
-
-            if (activeCodeFenceMarker != '\0')
-            {
-                lineStart = nextLineStart;
-                continue;
-            }
-
-            if (activeMathBlockFenceType is MathBlockFenceType.NONE)
-            {
-                if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
-                {
-                    AddMarkdownSegment(markdownSegmentStart, lineStart);
-                    mathContentStart = nextLineStart;
-                    activeMathBlockFenceType = MathBlockFenceType.DOLLAR;
-                    lineStart = nextLineStart;
-                    continue;
-                }
-
-                if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_OPEN.AsSpan()))
-                {
-                    AddMarkdownSegment(markdownSegmentStart, lineStart);
-                    mathContentStart = nextLineStart;
-                    activeMathBlockFenceType = MathBlockFenceType.BRACKET;
-                }
-            }
-            else if (activeMathBlockFenceType is MathBlockFenceType.DOLLAR && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
-            {
-                var (start, end) = TrimLineBreaks(normalizedSpan, mathContentStart, lineStart);
-                segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start));
-
-                markdownSegmentStart = nextLineStart;
-                activeMathBlockFenceType = MathBlockFenceType.NONE;
-            }
-            else if (activeMathBlockFenceType is MathBlockFenceType.BRACKET && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_CLOSE.AsSpan()))
-            {
-                var (start, end) = TrimLineBreaks(normalizedSpan, mathContentStart, lineStart);
-                segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start));
-
-                markdownSegmentStart = nextLineStart;
-                activeMathBlockFenceType = MathBlockFenceType.NONE;
-            }
-
-            lineStart = nextLineStart;
-        }
-
-        if (activeMathBlockFenceType is not MathBlockFenceType.NONE)
-            return new(normalized, [new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length)]);
-
-        AddMarkdownSegment(markdownSegmentStart, normalized.Length);
-        if (segments.Count == 0)
-            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length));
-
-        return new(normalized, segments);
-
-        void AddMarkdownSegment(int start, int end)
-        {
-            if (end <= start)
-                return;
-
-            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, start, end - start));
-        }
-    }
-
-    private static string NormalizeMarkdownForRendering(string text)
-    {
-        var textWithoutThinkTags = text.RemoveThinkTags();
-        var trimmed = TrimWhitespace(textWithoutThinkTags.AsSpan());
-        if (trimmed.IsEmpty)
-            return string.Empty;
-
-        var cleaned = trimmed.Length == textWithoutThinkTags.Length
-            ? textWithoutThinkTags
-            : trimmed.ToString();
-
-        if (cleaned.Contains(CODE_FENCE_MARKER_BACKTICK, StringComparison.Ordinal))
-            return cleaned;
-
-        if (LooksLikeRawHtml(cleaned))
-            return $"{HTML_CODE_FENCE_PREFIX}{Environment.NewLine}{cleaned}{Environment.NewLine}{CODE_FENCE_MARKER_BACKTICK}";
-
-        return cleaned;
-    }
-
-    private static bool LooksLikeRawHtml(string text)
-    {
-        var content = text.AsSpan();
-        var start = 0;
-        while (start < content.Length && char.IsWhiteSpace(content[start]))
-            start++;
-
-        content = content[start..];
-        if (!content.StartsWith(HTML_START_TAG.AsSpan(), StringComparison.Ordinal))
-            return false;
-
-        foreach (var marker in HTML_TAG_MARKERS)
-            if (content.IndexOf(marker.AsSpan(), StringComparison.OrdinalIgnoreCase) >= 0)
-                return true;
-
-        return content.IndexOf(HTML_END_TAG.AsSpan(), StringComparison.Ordinal) >= 0
-               || content.IndexOf(HTML_SELF_CLOSING_TAG.AsSpan(), StringComparison.Ordinal) >= 0;
-    }
-
-    private static bool TryUpdateCodeFenceState(ReadOnlySpan<char> trimmedLine, ref char activeCodeFenceMarker)
-    {
-        var fenceMarker = '\0';
-        if (trimmedLine.StartsWith(CODE_FENCE_MARKER_BACKTICK.AsSpan(), StringComparison.Ordinal))
-            fenceMarker = '`';
-        else if (trimmedLine.StartsWith(CODE_FENCE_MARKER_TILDE.AsSpan(), StringComparison.Ordinal))
-            fenceMarker = '~';
-
-        if (fenceMarker == '\0')
-            return false;
-
-        activeCodeFenceMarker = activeCodeFenceMarker == '\0'
-            ? fenceMarker
-            : activeCodeFenceMarker == fenceMarker
-                ? '\0'
-                : activeCodeFenceMarker;
-
-        return true;
-    }
-
-    private static ReadOnlySpan<char> TrimWhitespace(ReadOnlySpan<char> text)
-    {
-        var start = 0;
-        var end = text.Length - 1;
-
-        while (start < text.Length && char.IsWhiteSpace(text[start]))
-            start++;
-
-        while (end >= start && char.IsWhiteSpace(text[end]))
-            end--;
-
-        return start > end ? ReadOnlySpan<char>.Empty : text[start..(end + 1)];
-    }
-
-    private static (int Start, int End) TrimLineBreaks(ReadOnlySpan<char> text, int start, int end)
-    {
-        while (start < end && text[start] is '\r' or '\n')
-            start++;
-
-        while (end > start && text[end - 1] is '\r' or '\n')
-            end--;
-
-        return (start, end);
-    }
-
-    private enum MarkdownRenderSegmentType
-    {
-        MARKDOWN,
-        MATH_BLOCK,
-    }
-
-    private enum MathBlockFenceType
-    {
-        NONE,
-        DOLLAR,
-        BRACKET,
-    }
-
-    private sealed record MarkdownRenderPlan(string Source, IReadOnlyList<MarkdownRenderSegment> Segments)
-    {
-        public static readonly MarkdownRenderPlan EMPTY = new(string.Empty, []);
-    }
-
-    private sealed class MarkdownRenderSegment(MarkdownRenderSegmentType type, int start, int length)
-    {
-        private string? cachedContent;
-
-        public MarkdownRenderSegmentType Type { get; } = type;
-
-        public int Start { get; } = start;
-
-        public int Length { get; } = length;
-
-        public int RenderKey { get; } = HashCode.Combine(type, start, length);
-
-        public string GetContent(string source)
-        {
-            if (this.cachedContent is not null)
-                return this.cachedContent;
-
-            this.cachedContent = this.Start == 0 && this.Length == source.Length
-                ? source
-                : source.Substring(this.Start, this.Length);
-
-            return this.cachedContent;
-        }
-    }
-    
     private async Task RemoveBlock()
     {
         if (this.RemoveBlockFunc is null || !this.BlockActionsEnabled())
@@ -895,7 +649,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
             var disclosureService = this.GetsAIGeneratedContentDisclosure ? this.DisclosureService : null;
-            if (format.UsesPandoc())
+            if (format.UsesPandoc)
                 await PandocExport.ToDocument(this.RustService, this.PandocAvailability, disclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
             else if (this.Content.TryGetExportMarkdown(out var markdown))
                 await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, disclosureService?.AddDisclosureToMarkdown(markdown) ?? markdown, this.ExportFileName);

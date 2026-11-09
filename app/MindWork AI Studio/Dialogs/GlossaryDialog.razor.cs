@@ -118,7 +118,7 @@ public partial class GlossaryDialog : MSGComponentBase
         ? T("Preselect in the translation assistant when you translate into its target language")
         : T("Preselect in the translation assistant");
 
-    private string LanguageName(CommonLanguages language) => language is CommonLanguages.AS_IS ? T("Please select a language") : language.Name();
+    private string LanguageName(CommonLanguages language) => language is CommonLanguages.AS_IS ? T("Please select a language") : language.Name;
 
     /// <summary>
     /// Fills the table, and shows the columns of other forms and notes when any entry uses them.

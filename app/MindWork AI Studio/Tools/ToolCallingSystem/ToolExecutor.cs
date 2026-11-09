@@ -14,6 +14,22 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
 {
     private const string INVALID_TOOL_CALL_ERROR = "The tool call was invalid.";
 
+    /// <summary>
+    /// How the arguments are read for running a tool: every name only once per object.
+    /// </summary>
+    /// <remarks>
+    /// JSON allows a name twice, and readers disagree on which of the values counts. A tool reads one
+    /// of them, while the check for addresses the model wrote into its call reads both, and a provider
+    /// which receives the call back may read the other. A call which names an argument twice therefore
+    /// does not run, and the message of the parser, which names the argument but quotes none of the
+    /// values, goes back to the model. The trace reads the arguments without this rule, so that the
+    /// user still sees what the model sent.
+    /// </remarks>
+    private static readonly JsonDocumentOptions EXECUTION_ARGUMENT_OPTIONS = new()
+    {
+        AllowDuplicateProperties = false,
+    };
+
     public ToolCallOutcome CreateInvalidToolCallResult(string toolCallId, int order)
     {
         logger.LogWarning(
@@ -116,7 +132,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         var implementation = runnableTool.Implementation;
         try
         {
-            using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
+            using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson, EXECUTION_ARGUMENT_OPTIONS);
             var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
 
             //
