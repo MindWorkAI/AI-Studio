@@ -883,10 +883,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272::INFORMAL"] = "Deine Vorbereitungen"
 
 -- Permanently delete the preparation '{0}' with all of its steps, chats, material, and work states?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T98434423"] = "Die Vorbereitung „{0}“ mit all ihren Schritten, Chats, Materialien und Arbeitsständen dauerhaft löschen?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T98434423"] = "Die Vorbereitung „{0}“ mit allen Schritten, Chats, Arbeitsständen und ihrem Material endgültig löschen?"
 
 -- Permanently delete the preparation '{0}' with all of its steps, chats, material, and work states?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T98434423::INFORMAL"] = "Die Vorbereitung „{0}“ mit all ihren Schritten, Chats, Materialien und Arbeitsständen dauerhaft löschen?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T98434423::INFORMAL"] = "Die Vorbereitung „{0}“ mit allen Schritten, Chats, Arbeitsständen und ihrem Material endgültig löschen?"
 
 -- Stop
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T1266644741"] = "Stoppen"
@@ -1072,10 +1072,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T253746729
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2597472412"] = "Ort"
 
 -- E.g., use only paper X as the basis for the content. Add the material itself in the area 'Material'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2640948568"] = "Verwenden Sie beispielsweise ausschließlich Paper X als Grundlage für den Inhalt. Fügen Sie das Material selbst im Bereich „Material“ hinzu."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2640948568"] = "Z. B. nur Paper X als inhaltliche Grundlage verwenden. Das Material selbst fügen Sie im Bereich „Material“ hinzu."
 
 -- E.g., use only paper X as the basis for the content. Add the material itself in the area 'Material'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2640948568::INFORMAL"] = "Verwende beispielsweise ausschließlich Paper X als Grundlage für den Inhalt. Füge das Material selbst im Bereich „Material“ hinzu."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2640948568::INFORMAL"] = "Z. B. nur Paper X als inhaltliche Grundlage verwenden. Das Material selbst fügst du im Bereich „Material“ hinzu."
 
 -- E.g., 8 minutes
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T2697611204"] = "Z. B. 8 Minuten"
@@ -1285,10 +1285,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4050768
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4050768390::INFORMAL"] = "Erstelle mit „Neue Vorbereitung“ eine Vorbereitung für deine Veranstaltung."
 
 -- Add material beside the steps, e.g., notes, a talk draft, a paper, or the invitation. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4078402565"] = "Fügen Sie zusätzlich zu den Schritten Material hinzu, z. B. Notizen, einen Vortragsentwurf, eine wissenschaftliche Arbeit oder die Einladung. Es gilt für alle Schritte, und das Labor fragt Sie danach. Fügen Sie nur Material hinzu, das Sie mit dem ausgewählten Anbieter verarbeiten lassen dürfen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4078402565"] = "Fügen Sie neben den Schritten Material hinzu, z. B. Notizen, einen Vortragstext, ein Paper oder die Einladung. Es gilt für alle Schritte, und das Lab stellt Ihnen Fragen dazu. Fügen Sie nur hinzu, was Sie mit dem ausgewählten Anbieter verarbeiten dürfen."
 
 -- Add material beside the steps, e.g., notes, a talk draft, a paper, or the invitation. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4078402565::INFORMAL"] = "Füge zusätzlich zu den Schritten Material hinzu, z. B. Notizen, einen Vortragsentwurf, eine wissenschaftliche Arbeit oder die Einladung. Es gilt für alle Schritte, und das Labor fragt dich danach. Füge nur Material hinzu, das du mit dem ausgewählten Anbieter verarbeiten lassen darfst."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4078402565::INFORMAL"] = "Füge neben den Schritten Material hinzu, z. B. Notizen, einen Vortragstext, ein Paper oder die Einladung. Es gilt für alle Schritte, und das Lab stellt dir Fragen dazu. Füge nur hinzu, was du mit dem ausgewählten Anbieter verarbeiten darfst."
 
 -- Counterarguments are presented fairly.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4133199796"] = "Gegenargumente werden fair dargestellt."
@@ -1318,10 +1318,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T7994775
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1101494102"] = "Material, das nicht geöffnet werden kann"
 
 -- Remove '{0}' from the material of this preparation? The document on your computer stays as it is.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1178043046"] = "Soll „{0}“ aus dem Material dieser Vorbereitung entfernt werden? Das Dokument auf Ihrem Computer bleibt unverändert."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1178043046"] = "„{0}“ aus dem Material dieser Vorbereitung entfernen? Das Dokument auf Ihrem Rechner bleibt unverändert."
 
 -- Remove '{0}' from the material of this preparation? The document on your computer stays as it is.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1178043046::INFORMAL"] = "Soll „{0}“ aus dem Material dieser Vorbereitung entfernt werden? Das Dokument auf deinem Computer bleibt unverändert."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1178043046::INFORMAL"] = "„{0}“ aus dem Material dieser Vorbereitung entfernen? Das Dokument auf deinem Rechner bleibt unverändert."
 
 -- Suspicious passages removed: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1396926557"] = "Verdächtige Passagen entfernt: {0}"
@@ -1330,7 +1330,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1396926557
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1881436937"] = "Die Dateien sind möglicherweise beschädigt oder wurden mit einer neueren Version von AI Studio gespeichert."
 
 -- Only its first {0} % fits into the context window of the selected model.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1972084"] = "Nur die ersten {0} % passen in das Kontextfenster des ausgewählten Modells."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1972084"] = "Nur die ersten {0} % davon passen in das Kontextfenster des ausgewählten Modells."
 
 -- {0}, added on {1}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1991791069"] = "{0}, hinzugefügt am {1}"
@@ -1339,61 +1339,61 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1991791069
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2290020830"] = "Material entfernen"
 
 -- You have not added any material yet.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2411834584"] = "Sie haben noch keine Materialien hinzugefügt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2411834584"] = "Sie haben noch kein Material hinzugefügt."
 
 -- You have not added any material yet.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2411834584::INFORMAL"] = "Du hast noch keine Materialien hinzugefügt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2411834584::INFORMAL"] = "Du hast noch kein Material hinzugefügt."
 
 -- Reading '{0}'
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2512325161"] = "„{0}“ wird gelesen"
 
 -- Add only material which you may process with the selected provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2732993552"] = "Fügen Sie nur Inhalte hinzu, die Sie mit dem ausgewählten Anbieter verarbeiten dürfen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2732993552"] = "Fügen Sie nur Material hinzu, das Sie mit dem ausgewählten Anbieter verarbeiten dürfen."
 
 -- Add only material which you may process with the selected provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2732993552::INFORMAL"] = "Füge nur Inhalte hinzu, die du mit dem ausgewählten Anbieter verarbeiten darfst."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2732993552::INFORMAL"] = "Füge nur Material hinzu, das du mit dem ausgewählten Anbieter verarbeiten darfst."
 
 -- Nothing of it fits into the context window of the selected model; the model learns only its name.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2961384605"] = "Davon passt nichts in das Kontextfenster des ausgewählten Modells; das Modell lernt nur seinen Namen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2961384605"] = "Nichts davon passt in das Kontextfenster des ausgewählten Modells; das Modell erfährt nur seinen Namen."
 
 -- Material
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3419754368"] = "Material"
 
 -- Drag notes, talk drafts, papers, or invitations here, or click the paperclip.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3875535716"] = "Ziehen Sie Notizen, Vortragsentwürfe, Dokumente oder Einladungen hierher oder klicken Sie auf die Büroklammer."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3875535716"] = "Ziehen Sie Notizen, Vortragstexte, Paper oder Einladungen hierher, oder klicken Sie auf die Büroklammer."
 
 -- Drag notes, talk drafts, papers, or invitations here, or click the paperclip.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3875535716::INFORMAL"] = "Ziehe Notizen, Vortragsentwürfe, Dokumente oder Einladungen hierher oder klicke auf die Büroklammer."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3875535716::INFORMAL"] = "Ziehe Notizen, Vortragstexte, Paper oder Einladungen hierher, oder klicke auf die Büroklammer."
 
 -- Applies to all steps: the lab reads it in every conversation and asks you about it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4120311495"] = "Gilt für alle Schritte: Das Labor liest es in jeder Unterhaltung und fragt Sie danach."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4120311495"] = "Gilt für alle Schritte: Das Lab liest es in jedem Gespräch mit und stellt Ihnen Fragen dazu."
 
 -- Applies to all steps: the lab reads it in every conversation and asks you about it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4120311495::INFORMAL"] = "Gilt für alle Schritte: Das Labor liest es in jeder Unterhaltung und fragt dich danach."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4120311495::INFORMAL"] = "Gilt für alle Schritte: Das Lab liest es in jedem Gespräch mit und stellt dir Fragen dazu."
 
 -- Some parts of it could not be read.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T479190972"] = "Einige Teile davon konnten nicht gelesen werden."
 
 -- AI Studio cannot open this material. Remove it with its files?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T921014732"] = "AI Studio kann dieses Material nicht öffnen. Möchten Sie es zusammen mit den zugehörigen Dateien entfernen?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T921014732"] = "AI Studio kann dieses Material nicht öffnen. Möchten Sie es mit seinen Dateien entfernen?"
 
 -- AI Studio cannot open this material. Remove it with its files?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T921014732::INFORMAL"] = "AI Studio kann dieses Material nicht öffnen. Möchtest du es zusammen mit den zugehörigen Dateien entfernen?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T921014732::INFORMAL"] = "AI Studio kann dieses Material nicht öffnen. Möchtest du es mit seinen Dateien entfernen?"
 
 -- AI Studio could not save the material '{0}'. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T1103897715"] = "AI Studio konnte das Material „{0}“ nicht speichern. Bitte versuchen Sie es erneut."
 
 -- AI Studio could not save the material '{0}'. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T1103897715::INFORMAL"] = "AI Studio konnte das Material „{0}“ nicht speichern. Bitte versuch es erneut."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T1103897715::INFORMAL"] = "AI Studio konnte das Material „{0}“ nicht speichern. Bitte versuche es erneut."
 
 -- The material of this preparation contains '{0}' already.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3278714500"] = "Das Material dieser Vorbereitung enthält '{0}' bereits."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3278714500"] = "Das Material dieser Vorbereitung enthält „{0}“ bereits."
 
 -- AI Studio could not read the material of this preparation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3436313422"] = "AI Studio konnte den Inhalt dieser Vorbereitung nicht lesen. Bitte versuchen Sie es erneut."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3436313422"] = "AI Studio konnte das Material dieser Vorbereitung nicht lesen. Bitte versuchen Sie es erneut."
 
 -- AI Studio could not read the material of this preparation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3436313422::INFORMAL"] = "AI Studio konnte den Inhalt dieser Vorbereitung nicht lesen. Bitte versuche es erneut."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3436313422::INFORMAL"] = "AI Studio konnte das Material dieser Vorbereitung nicht lesen. Bitte versuche es erneut."
 
 -- AI Studio could not delete the material. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3527509691"] = "AI Studio konnte das Material nicht löschen. Bitte versuchen Sie es erneut."
@@ -1405,10 +1405,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3527
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3883112013"] = "AI Studio konnte das Dokument „{0}“ nicht öffnen."
 
 -- The document '{0}' is larger than {1} MB, so the lab does not read it. Please add a shorter part of it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T799379568"] = "Das Dokument '{0}' ist größer als {1} MB und kann daher vom Lab nicht eingelesen werden. Bitte fügen Sie einen kürzeren Ausschnitt daraus hinzu."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T799379568"] = "Das Dokument „{0}“ ist größer als {1} MB, darum liest das Lab es nicht. Bitte fügen Sie einen kürzeren Teil davon hinzu."
 
 -- The document '{0}' is larger than {1} MB, so the lab does not read it. Please add a shorter part of it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T799379568::INFORMAL"] = "Das Dokument '{0}' ist größer als {1} MB und kann daher vom Lab nicht eingelesen werden. Bitte füge einen kürzeren Ausschnitt daraus hinzu."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T799379568::INFORMAL"] = "Das Dokument „{0}“ ist größer als {1} MB, darum liest das Lab es nicht. Bitte füge einen kürzeren Teil davon hinzu."
 
 -- ## Welcome!  The BeyondFacts Lab guides you through an AI-supported process of reflection, which helps you take a position in challenging communication situations and stay able to communicate.  Data protection depends on the AI provider you choose, its rules for processing and storing data, and your configuration. Enter only data that are suitable and approved for this.  Please check all results critically. Depending on the AI model, the answers may differ. Hallucinations cannot be ruled out.  This is a prototype, so we look forward to your feedback.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLNOTICE::T940905480"] = "## Herzlich willkommen!\n\nIm BeyondFacts Lab werden Sie durch einen geführten, KI-unterstützten Reflexionsprozess geleitet, der Ihnen dabei hilft, sich in herausfordernden Kommunikationssituationen zu positionieren und kommunikationsfähig zu bleiben.\n\nDer Datenschutz hängt vom gewählten KI-Anbieter, dessen Verarbeitungs- und Speicherregeln sowie Ihrer Konfiguration ab. Geben Sie nur Daten ein, die dafür geeignet und freigegeben sind.\n\nBitte prüfen Sie alle Ergebnisse kritisch. Die Antworten können, je nach KI-Modell, unterschiedlich ausfallen. Halluzinationen sind nicht ausgeschlossen.\n\nEs handelt sich um einen Prototyp, daher freuen wir uns über Ihr Feedback."
@@ -5215,7 +5215,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2373663376"] = "Gut zu wiss
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2422278827"] = "Datenordner"
 
 -- Your preparations in the BeyondFacts Lab, with their material and conversations.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2591783227"] = "Ihre Vorbereitungen im BeyondFacts Lab mit den dazugehörigen Materialien und Gesprächen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2591783227"] = "Ihre Vorbereitungen im BeyondFacts Lab mit ihrem Material und ihren Gesprächen."
 
 -- The transcripts of the audio and video files in your local data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T260303721"] = "Die Transkripte der Audio- und Videodateien in Ihren lokalen Datenquellen."
