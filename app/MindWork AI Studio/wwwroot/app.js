@@ -91,8 +91,11 @@ function updateStickyHeaderVariables(header) {
     if (!header.isConnected || !container)
         return false;
 
-    container.style.setProperty('--sticky-header-height', `${header.offsetHeight}px`);
-    container.style.setProperty('--sticky-space-below-header', `${container.clientHeight - header.offsetHeight}px`);
+    // The exact height, since offsetHeight rounds to whole pixels: a header rounded down covers the topmost line of
+    // the content sticking below it, such as the border of a box.
+    const headerHeight = header.getBoundingClientRect().height;
+    container.style.setProperty('--sticky-header-height', `${headerHeight}px`);
+    container.style.setProperty('--sticky-space-below-header', `${container.clientHeight - headerHeight}px`);
     return true;
 }
 
