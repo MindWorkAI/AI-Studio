@@ -22,9 +22,10 @@ public static class UserFile
     /// <param name="rustService">Rust service used to read file content.</param>
     /// <param name="pandocAvailability">Makes sure Pandoc is there and offers its installation.</param>
     /// <param name="reportingScope">The action the file is read for, or null when it is read for none.</param>
+    /// <param name="maxCharacters">How many characters of the content to keep at most; the result says whether it left out any.</param>
     /// <param name="token">Cancels the extraction when the caller no longer needs the content.</param>
     /// <returns>The result of reading the file.</returns>
-    public static async Task<FileExtractionResult> LoadFileData(string filePath, RustService rustService, PandocAvailabilityService pandocAvailability, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    public static async Task<FileExtractionResult> LoadFileData(string filePath, RustService rustService, PandocAvailabilityService pandocAvailability, PromptInjectionReportingScope? reportingScope = null, int maxCharacters = int.MaxValue, CancellationToken token = default)
     {
         if (string.IsNullOrEmpty(filePath))
         {
@@ -51,7 +52,7 @@ public static class UserFile
             }
         }
 
-        var result = await rustService.ReadArbitraryFileData(filePath, int.MaxValue, reportingScope: reportingScope, token: token);
+        var result = await rustService.ReadArbitraryFileData(filePath, int.MaxValue, reportingScope: reportingScope, maxCharacters: maxCharacters, token: token);
 
         //
         // Nobody wants to read that their own cancellation failed. We hand the result back so the
