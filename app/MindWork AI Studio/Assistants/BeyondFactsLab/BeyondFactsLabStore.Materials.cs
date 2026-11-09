@@ -84,6 +84,7 @@ public sealed partial class BeyondFactsLabStore
                 SourceHash = material.SourceHash.ToLowerInvariant(),
                 TextLength = text.Length,
                 IsIncomplete = material.IsIncomplete,
+                IsShortened = material.IsShortened,
                 FailedPages = [.. material.FailedPages],
                 FilteredPassages = Math.Max(0, material.FilteredPassages),
             };

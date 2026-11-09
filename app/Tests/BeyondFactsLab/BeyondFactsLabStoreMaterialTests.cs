@@ -57,6 +57,21 @@ public sealed class BeyondFactsLabStoreMaterialTests
         }
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task AMaterialKeepsWhetherItsTextIsOnlyTheBeginning(bool isShortened)
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var material = Material("Buch.pdf", HASH);
+        material.IsShortened = isShortened;
+
+        await store.AddMaterialAsync(created.ProjectId, material, "Kapitel 1");
+        var materials = await this.CreateStore().ListMaterialsAsync(created.ProjectId);
+
+        Assert.That(materials[0].Material!.IsShortened, Is.EqualTo(isShortened));
+    }
+
     [TestCase("/Users/person/Documents/Talk.pdf")]
     [TestCase(@"C:\Users\person\Documents\Talk.pdf")]
     [TestCase("Talk.pdf")]

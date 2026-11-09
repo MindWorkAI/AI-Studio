@@ -60,6 +60,12 @@ public sealed class BflMaterial
     public bool IsIncomplete { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the lab kept only the beginning of the text, because the document holds more than a
+    /// conversation can ever take of one material.
+    /// </summary>
+    public bool IsShortened { get; set; }
+
+    /// <summary>
     /// Gets or sets the pages which could not be read, when they are known.
     /// </summary>
     public List<int> FailedPages { get; set; } = [];

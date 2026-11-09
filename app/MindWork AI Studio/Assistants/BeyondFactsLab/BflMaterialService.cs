@@ -22,18 +22,14 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 public sealed class BflMaterialService(BeyondFactsLabStore store, RustService rustService, PromptInjectionGuardService guardService, MessageBus messageBus, ILogger<BflMaterialService> logger)
 {
     /// <summary>
-    /// The largest document the lab reads, in megabytes.
+    /// How many characters of the text of a document the lab keeps at most.
     /// </summary>
     /// <remarks>
-    /// Its text reaches a prompt only in part anyway, see BflMaterialBudget, while reading a huge document takes
-    /// long and holds its whole text in memory. Slides with many pictures stay well below this size.
+    /// The size of a file says little about its text: slides with many pictures take hundreds of megabytes for a few
+    /// pages of text. So the lab limits the text instead, to what a conversation can ever take of one material, see
+    /// BflMaterialBudget. It keeps the beginning and leaves out the rest, which never reaches memory either.
     /// </remarks>
-    public const int MAX_FILE_MEGABYTES = 100;
-
-    /// <summary>
-    /// The largest document the lab reads, in bytes.
-    /// </summary>
-    private const long MAX_FILE_BYTES = MAX_FILE_MEGABYTES * 1024L * 1024L;
+    public const int MAX_TEXT_CHARACTERS = BflMaterialBudget.MAX_CHARACTERS;
 
     private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(BflMaterialService).Namespace, nameof(BflMaterialService));
 
@@ -69,8 +65,8 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
     /// </summary>
     /// <remarks>
     /// One action for the prompt injection filter, so that the person hears once about what it removed from all of
-    /// them. A document larger than MAX_FILE_MEGABYTES, one the preparation has already, and one which cannot be
-    /// read are left out, and the person learns why. The method itself does not fail.
+    /// them. A document the preparation has already and one which cannot be read are left out, and the person learns
+    /// why; of a long document, the lab keeps the beginning, see MAX_TEXT_CHARACTERS. The method itself does not fail.
     /// </remarks>
     /// <param name="projectId">The ID of the preparation.</param>
     /// <param name="paths">The documents.</param>
@@ -166,13 +162,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         try
         {
             size = new FileInfo(path).Length;
-            if (size > MAX_FILE_BYTES)
-            {
-                await messageBus.SendWarning(new(Icons.Material.Filled.Description, string.Format(TA("The document '{0}' is larger than {1} MB, so the lab does not read it. Please add a shorter part of it."), name, MAX_FILE_MEGABYTES)));
-                return;
-            }
-
-            hash = await FileContentHash.ComputeAsync(path, CancellationToken.None);
+            hash =await FileContentHash.ComputeAsync(path, CancellationToken.None);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -188,7 +178,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         }
 
         // Failures, missing pages, and a misleading file extension are reported there:
-        var extraction = await UserFile.LoadFileData(path, rustService, pandocAvailability, promptInjectionScope);
+        var extraction = await UserFile.LoadFileData(path, rustService, pandocAvailability, promptInjectionScope, MAX_TEXT_CHARACTERS);
         if (!extraction.HasUsableContent)
         {
             knownHashes.Remove(hash);
@@ -201,6 +191,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
             SourceBytes = size,
             SourceHash = hash,
             IsIncomplete = extraction.Outcome is FileExtractionOutcome.PARTIAL,
+            IsShortened = extraction.IsShortened,
             FailedPages = [.. extraction.FailedPages],
             FilteredPassages = extraction.PromptInjectionRedactedCount,
         };
@@ -210,6 +201,8 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
             var addition = await store.AddMaterialAsync(projectId, material, extraction.Content);
             if (addition.IsDuplicate)
                 await messageBus.SendInfo(new(Icons.Material.Filled.Description, string.Format(TB("The material of this preparation contains '{0}' already."), addition.Material.Name)));
+            else if (addition.Material.IsShortened)
+                await messageBus.SendInfo(new(Icons.Material.Filled.ContentCut, string.Format(TB("The lab keeps only the beginning of '{0}': a conversation never takes more of one material."), addition.Material.Name)));
         }
         catch (FileNotFoundException)
         {

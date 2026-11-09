@@ -46,6 +46,10 @@
                             {
                                 <MudText Typo="Typo.caption" Color="Color.Warning">@T("Some parts of it could not be read.")</MudText>
                             }
+                            @if (material.IsShortened)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Info">@T("Only its beginning was kept.")</MudText>
+                            }
                             @if (material.FilteredPassages > 0)
                             {
                                 <MudText Typo="Typo.caption" Color="Color.Warning">@string.Format(T("Suspicious passages removed: {0}"), material.FilteredPassages)</MudText>
