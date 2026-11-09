@@ -1212,6 +1212,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T974131333
 -- Demanding
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T985014450"] = "Demanding"
 
+-- Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1198247392"] = "Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio."
+
+-- Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1198247392::INFORMAL"] = "Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio."
+
 -- The lab writes no press releases or other PR texts, and it checks no facts. It replaces neither your own expert review nor the legal and data protection advice of your institution, and it makes no political or normative decision for you. For a quick text, use the chat or another assistant of AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1231621082"] = "The lab writes no press releases or other PR texts, and it checks no facts. It replaces neither your own expert review nor the legal and data protection advice of your institution, and it makes no political or normative decision for you. For a quick text, use the chat or another assistant of AI Studio."
 
@@ -1284,12 +1290,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4050768
 -- Create a preparation for your event with 'New preparation'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4050768390::INFORMAL"] = "Create a preparation for your event with 'New preparation'."
 
--- Add material beside the steps, e.g., notes, a talk draft, a paper, or the invitation. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4078402565"] = "Add material beside the steps, e.g., notes, a talk draft, a paper, or the invitation. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider."
-
--- Add material beside the steps, e.g., notes, a talk draft, a paper, or the invitation. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4078402565::INFORMAL"] = "Add material beside the steps, e.g., notes, a talk draft, a paper, or the invitation. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider."
-
 -- Counterarguments are presented fairly.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4133199796"] = "Counterarguments are presented fairly."
 
@@ -1314,17 +1314,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T7801220
 -- The knowledge base of the lab is a guide on science in public debates by Lara Wüster from the Technical University of Munich (TUM).
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T799477590"] = "The knowledge base of the lab is a guide on science in public debates by Lara Wüster from the Technical University of Munich (TUM)."
 
+-- Image of {0} × {1} pixels, added on {2}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1012777859"] = "Image of {0} × {1} pixels, added on {2}"
+
 -- Material which cannot be opened
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1101494102"] = "Material which cannot be opened"
 
--- Remove '{0}' from the material of this preparation? The document on your computer stays as it is.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1178043046"] = "Remove '{0}' from the material of this preparation? The document on your computer stays as it is."
+-- Drag documents such as notes or papers, recordings of interviews, or images such as posters here, or click the paperclip.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1158895346"] = "Drag documents such as notes or papers, recordings of interviews, or images such as posters here, or click the paperclip."
 
--- Remove '{0}' from the material of this preparation? The document on your computer stays as it is.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1178043046::INFORMAL"] = "Remove '{0}' from the material of this preparation? The document on your computer stays as it is."
+-- Drag documents such as notes or papers, recordings of interviews, or images such as posters here, or click the paperclip.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1158895346::INFORMAL"] = "Drag documents such as notes or papers, recordings of interviews, or images such as posters here, or click the paperclip."
+
+-- The lab prepares these recordings on your computer and then uploads their audio to the transcription provider '{0}'. It keeps only their transcript.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1212930509"] = "The lab prepares these recordings on your computer and then uploads their audio to the transcription provider '{0}'. It keeps only their transcript."
+
+-- The lab prepares these recordings on your computer and then uploads their audio to the transcription provider '{0}'. It keeps only their transcript.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1212930509::INFORMAL"] = "The lab prepares these recordings on your computer and then uploads their audio to the transcription provider '{0}'. It keeps only their transcript."
 
 -- Suspicious passages removed: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1396926557"] = "Suspicious passages removed: {0}"
+
+-- Transcribing '{0}'; a long recording takes a while
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1623145262"] = "Transcribing '{0}'; a long recording takes a while"
 
 -- Its files may be damaged, or a newer version of AI Studio stored it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1881436937"] = "Its files may be damaged, or a newer version of AI Studio stored it."
@@ -1347,11 +1359,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2411834584
 -- Reading '{0}'
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2512325161"] = "Reading '{0}'"
 
--- Add only material which you may process with the selected provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2732993552"] = "Add only material which you may process with the selected provider."
-
--- Add only material which you may process with the selected provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2732993552::INFORMAL"] = "Add only material which you may process with the selected provider."
+-- Transcribe recordings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2580687702"] = "Transcribe recordings"
 
 -- Nothing of it fits into the context window of the selected model; the model learns only its name.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2961384605"] = "Nothing of it fits into the context window of the selected model; the model learns only its name."
@@ -1359,11 +1368,26 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2961384605
 -- Material
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3419754368"] = "Material"
 
--- Drag notes, talk drafts, papers, or invitations here, or click the paperclip.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3875535716"] = "Drag notes, talk drafts, papers, or invitations here, or click the paperclip."
+-- Add only material which you may process with the selected provider. Recordings also go to the transcription provider of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3626936561"] = "Add only material which you may process with the selected provider. Recordings also go to the transcription provider of AI Studio."
 
--- Drag notes, talk drafts, papers, or invitations here, or click the paperclip.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3875535716::INFORMAL"] = "Drag notes, talk drafts, papers, or invitations here, or click the paperclip."
+-- Add only material which you may process with the selected provider. Recordings also go to the transcription provider of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3626936561::INFORMAL"] = "Add only material which you may process with the selected provider. Recordings also go to the transcription provider of AI Studio."
+
+-- The selected model takes no more images at once; it learns only the name of this one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3737706996"] = "The selected model takes no more images at once; it learns only the name of this one."
+
+-- Remove '{0}' from the material of this preparation? The file on your computer stays as it is.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3928054987"] = "Remove '{0}' from the material of this preparation? The file on your computer stays as it is."
+
+-- Remove '{0}' from the material of this preparation? The file on your computer stays as it is.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3928054987::INFORMAL"] = "Remove '{0}' from the material of this preparation? The file on your computer stays as it is."
+
+-- Only its beginning was kept.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4052039157"] = "Only its beginning was kept."
+
+-- The selected model cannot see images; it learns only the name of this one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T408521866"] = "The selected model cannot see images; it learns only the name of this one."
 
 -- Applies to all steps: the lab reads it in every conversation and asks you about it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4120311495"] = "Applies to all steps: the lab reads it in every conversation and asks you about it."
@@ -1386,6 +1410,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T1103
 -- AI Studio could not save the material '{0}'. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T1103897715::INFORMAL"] = "AI Studio could not save the material '{0}'. Please try again."
 
+-- AI Studio could not transcribe the recording '{0}': {1}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T1905306777"] = "AI Studio could not transcribe the recording '{0}': {1}"
+
 -- The material of this preparation contains '{0}' already.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3278714500"] = "The material of this preparation contains '{0}' already."
 
@@ -1401,14 +1428,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3527
 -- AI Studio could not delete the material. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3527509691::INFORMAL"] = "AI Studio could not delete the material. Please try again."
 
--- AI Studio could not open the document '{0}'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3883112013"] = "AI Studio could not open the document '{0}'."
+-- The lab keeps only the beginning of '{0}': a conversation never takes more of one material.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T442496893"] = "The lab keeps only the beginning of '{0}': a conversation never takes more of one material."
 
--- The document '{0}' is larger than {1} MB, so the lab does not read it. Please add a shorter part of it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T799379568"] = "The document '{0}' is larger than {1} MB, so the lab does not read it. Please add a shorter part of it."
+-- Recordings need a transcription provider with at least the confidence '{0}'. Please select one in the transcription settings of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T683045092"] = "Recordings need a transcription provider with at least the confidence '{0}'. Please select one in the transcription settings of AI Studio."
 
--- The document '{0}' is larger than {1} MB, so the lab does not read it. Please add a shorter part of it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T799379568::INFORMAL"] = "The document '{0}' is larger than {1} MB, so the lab does not read it. Please add a shorter part of it."
+-- Recordings need a transcription provider with at least the confidence '{0}'. Please select one in the transcription settings of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T683045092::INFORMAL"] = "Recordings need a transcription provider with at least the confidence '{0}'. Please select one in the transcription settings of AI Studio."
+
+-- AI Studio could not open the file '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T994524596"] = "AI Studio could not open the file '{0}'."
 
 -- ## Welcome!  The BeyondFacts Lab guides you through an AI-supported process of reflection, which helps you take a position in challenging communication situations and stay able to communicate.  Data protection depends on the AI provider you choose, its rules for processing and storing data, and your configuration. Enter only data that are suitable and approved for this.  Please check all results critically. Depending on the AI model, the answers may differ. Hallucinations cannot be ruled out.  This is a prototype, so we look forward to your feedback.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLNOTICE::T940905480"] = "## Welcome!\n\nThe BeyondFacts Lab guides you through an AI-supported process of reflection, which helps you take a position in challenging communication situations and stay able to communicate.\n\nData protection depends on the AI provider you choose, its rules for processing and storing data, and your configuration. Enter only data that are suitable and approved for this.\n\nPlease check all results critically. Depending on the AI model, the answers may differ. Hallucinations cannot be ruled out.\n\nThis is a prototype, so we look forward to your feedback."
