@@ -1213,10 +1213,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T974131333
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T985014450"] = "Anspruchsvoll"
 
 -- Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1198247392"] = "Fügen Sie neben den Schritten Materialien hinzu, z. B. Notizen, einen Vortragsentwurf, eine wissenschaftliche Arbeit, die Einladung, eine Interviewaufzeichnung oder ein Poster. Diese Materialien gelten für alle Schritte, und das Labor fragt Sie dazu. Fügen Sie nur Materialien hinzu, die Sie mit dem ausgewählten Anbieter verarbeiten lassen dürfen; Aufzeichnungen werden außerdem an den Transkriptionsanbieter von AI Studio übermittelt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1198247392"] = "Fügen Sie neben den Schritten Material hinzu, z. B. Notizen, einen Vortragstext, ein Paper, die Einladung, die Aufnahme eines Interviews oder ein Poster. Es gilt für alle Schritte, und das Lab stellt Ihnen Fragen dazu. Fügen Sie nur hinzu, was Sie mit dem ausgewählten Anbieter verarbeiten dürfen; Aufnahmen gehen außerdem an den Transkriptionsanbieter von AI Studio."
 
 -- Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1198247392::INFORMAL"] = "Füge neben den Schritten Materialien hinzu, z. B. Notizen, einen Vortragsentwurf, eine wissenschaftliche Arbeit, die Einladung, eine Interviewaufzeichnung oder ein Poster. Diese Materialien gelten für alle Schritte, und das Labor fragt dich dazu. Füge nur Materialien hinzu, die du mit dem ausgewählten Anbieter verarbeiten lassen darfst; Aufzeichnungen werden außerdem an den Transkriptionsanbieter von AI Studio übermittelt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1198247392::INFORMAL"] = "Füge neben den Schritten Material hinzu, z. B. Notizen, einen Vortragstext, ein Paper, die Einladung, die Aufnahme eines Interviews oder ein Poster. Es gilt für alle Schritte, und das Lab stellt dir Fragen dazu. Füge nur hinzu, was du mit dem ausgewählten Anbieter verarbeiten darfst; Aufnahmen gehen außerdem an den Transkriptionsanbieter von AI Studio."
 
 -- The lab writes no press releases or other PR texts, and it checks no facts. It replaces neither your own expert review nor the legal and data protection advice of your institution, and it makes no political or normative decision for you. For a quick text, use the chat or another assistant of AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1231621082"] = "Das Lab schreibt keine Pressemitteilungen oder anderen PR-Texte und prüft keine Fakten. Es ersetzt weder Ihre eigene fachliche Prüfung noch die Rechts- und Datenschutzberatung Ihrer Institution, und es nimmt Ihnen keine politische oder normative Entscheidung ab. Für einen schnellen Text nutzen Sie den Chat oder einen anderen Assistenten von AI Studio."
@@ -1321,22 +1321,22 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1012777859
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1101494102"] = "Material, das nicht geöffnet werden kann"
 
 -- Drag documents such as notes or papers, recordings of interviews, or images such as posters here, or click the paperclip.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1158895346"] = "Ziehen Sie Dokumente wie Notizen oder Unterlagen, Interviewaufnahmen oder Bilder wie Plakate hierher oder klicken Sie auf die Büroklammer."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1158895346"] = "Ziehen Sie Dokumente wie Notizen oder Paper, Aufnahmen von Interviews oder Bilder wie Poster hierher, oder klicken Sie auf die Büroklammer."
 
 -- Drag documents such as notes or papers, recordings of interviews, or images such as posters here, or click the paperclip.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1158895346::INFORMAL"] = "Zieh Dokumente wie Notizen oder Unterlagen, Interviewaufnahmen oder Bilder wie Plakate hierher oder klick auf die Büroklammer."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1158895346::INFORMAL"] = "Ziehe Dokumente wie Notizen oder Paper, Aufnahmen von Interviews oder Bilder wie Poster hierher, oder klicke auf die Büroklammer."
 
 -- The lab prepares these recordings on your computer and then uploads their audio to the transcription provider '{0}'. It keeps only their transcript.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1212930509"] = "Das Labor bereitet diese Aufnahmen auf Ihrem Computer vor und lädt anschließend die Audiodateien beim Transkriptionsanbieter „{0}“ hoch. Es speichert nur die Transkripte."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1212930509"] = "Das Lab bereitet diese Aufnahmen auf Ihrem Rechner vor und lädt dann ihre Tonspur zum Transkriptionsanbieter „{0}“ hoch. Es behält nur ihre Transkripte."
 
 -- The lab prepares these recordings on your computer and then uploads their audio to the transcription provider '{0}'. It keeps only their transcript.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1212930509::INFORMAL"] = "Das Labor bereitet diese Aufnahmen auf deinem Computer vor und lädt anschließend die Audiodateien beim Transkriptionsanbieter „{0}“ hoch. Es speichert nur die Transkripte."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1212930509::INFORMAL"] = "Das Lab bereitet diese Aufnahmen auf deinem Rechner vor und lädt dann ihre Tonspur zum Transkriptionsanbieter „{0}“ hoch. Es behält nur ihre Transkripte."
 
 -- Suspicious passages removed: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1396926557"] = "Verdächtige Passagen entfernt: {0}"
 
 -- Transcribing '{0}'; a long recording takes a while
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1623145262"] = "„{0}“ wird transkribiert; bei einer langen Aufnahme dauert es eine Weile."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1623145262"] = "„{0}“ wird transkribiert; bei einer langen Aufnahme dauert das eine Weile"
 
 -- Its files may be damaged, or a newer version of AI Studio stored it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1881436937"] = "Die Dateien sind möglicherweise beschädigt oder wurden mit einer neueren Version von AI Studio gespeichert."
@@ -1369,25 +1369,25 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T2961384605
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3419754368"] = "Material"
 
 -- Add only material which you may process with the selected provider. Recordings also go to the transcription provider of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3626936561"] = "Fügen Sie nur Material hinzu, das vom ausgewählten Anbieter verarbeitet werden darf. Aufnahmen werden außerdem an den Transkriptionsanbieter von AI Studio übermittelt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3626936561"] = "Fügen Sie nur Material hinzu, das Sie mit dem ausgewählten Anbieter verarbeiten dürfen. Aufnahmen gehen außerdem an den Transkriptionsanbieter von AI Studio."
 
 -- Add only material which you may process with the selected provider. Recordings also go to the transcription provider of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3626936561::INFORMAL"] = "Füge nur Material hinzu, das vom ausgewählten Anbieter verarbeitet werden darf. Aufnahmen werden außerdem an den Transkriptionsanbieter von AI Studio übermittelt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3626936561::INFORMAL"] = "Füge nur Material hinzu, das du mit dem ausgewählten Anbieter verarbeiten darfst. Aufnahmen gehen außerdem an den Transkriptionsanbieter von AI Studio."
 
 -- The selected model takes no more images at once; it learns only the name of this one.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3737706996"] = "Das ausgewählte Modell kann nicht mehrere Bilder gleichzeitig verarbeiten; es erhält nur den Namen dieses Bildes."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3737706996"] = "Das ausgewählte Modell nimmt nicht so viele Bilder auf einmal an; es erfährt nur den Namen dieses Bildes."
 
 -- Remove '{0}' from the material of this preparation? The file on your computer stays as it is.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3928054987"] = "Möchten Sie „{0}“ aus dem Material dieser Vorbereitung entfernen? Die Datei auf Ihrem Computer bleibt unverändert."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3928054987"] = "„{0}“ aus dem Material dieser Vorbereitung entfernen? Die Datei auf Ihrem Rechner bleibt unverändert."
 
 -- Remove '{0}' from the material of this preparation? The file on your computer stays as it is.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3928054987::INFORMAL"] = "Möchtest du „{0}“ aus dem Material dieser Vorbereitung entfernen? Die Datei auf deinem Computer bleibt unverändert."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T3928054987::INFORMAL"] = "„{0}“ aus dem Material dieser Vorbereitung entfernen? Die Datei auf deinem Rechner bleibt unverändert."
 
 -- Only its beginning was kept.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4052039157"] = "Nur der Anfang wurde beibehalten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4052039157"] = "Nur sein Anfang wurde übernommen."
 
 -- The selected model cannot see images; it learns only the name of this one.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T408521866"] = "Das ausgewählte Modell kann keine Bilder sehen; es erfährt lediglich den Namen dieses Bildes."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T408521866"] = "Das ausgewählte Modell kann keine Bilder sehen; es erfährt nur den Namen dieses Bildes."
 
 -- Applies to all steps: the lab reads it in every conversation and asks you about it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T4120311495"] = "Gilt für alle Schritte: Das Lab liest es in jedem Gespräch mit und stellt Ihnen Fragen dazu."
@@ -1429,13 +1429,13 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3527
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T3527509691::INFORMAL"] = "AI Studio konnte das Material nicht löschen. Bitte versuche es erneut."
 
 -- The lab keeps only the beginning of '{0}': a conversation never takes more of one material.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T442496893"] = "Das Labor behält nur den Anfang von „{0}“ bei: Eine Unterhaltung verwendet nie mehr als ein Material."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T442496893"] = "Das Lab behält nur den Anfang von „{0}“: Mehr von einem Material nimmt ein Gespräch nie auf."
 
 -- Recordings need a transcription provider with at least the confidence '{0}'. Please select one in the transcription settings of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T683045092"] = "Für Aufnahmen ist ein Transkriptionsanbieter mit mindestens der Konfidenzstufe „{0}“ erforderlich. Bitte wählen Sie in den Transkriptionseinstellungen von AI Studio einen Anbieter aus."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T683045092"] = "Aufnahmen brauchen einen Transkriptionsanbieter mit mindestens dem Vertrauensniveau „{0}“. Bitte wählen Sie einen in den Transkriptionseinstellungen von AI Studio aus."
 
 -- Recordings need a transcription provider with at least the confidence '{0}'. Please select one in the transcription settings of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T683045092::INFORMAL"] = "Für Aufnahmen ist ein Transkriptionsanbieter mit mindestens der Konfidenzstufe „{0}“ erforderlich. Bitte wähle in den Transkriptionseinstellungen von AI Studio einen Anbieter aus."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T683045092::INFORMAL"] = "Aufnahmen brauchen einen Transkriptionsanbieter mit mindestens dem Vertrauensniveau „{0}“. Bitte wähle einen in den Transkriptionseinstellungen von AI Studio aus."
 
 -- AI Studio could not open the file '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALSERVICE::T994524596"] = "AI Studio konnte die Datei „{0}“ nicht öffnen."
