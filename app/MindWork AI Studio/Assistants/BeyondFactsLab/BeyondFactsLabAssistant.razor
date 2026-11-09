@@ -85,9 +85,11 @@
             {
                 @* Stays at the top while the person scrolls, like the header of the workspaces: the preparation, its
                    provider, and the steps remain in view, and only the list of preparations scrolls away. The empty
-                   anchor before it marks where the header sits in the flow, to scroll back there for another step. *@
+                   anchor before it marks where the header sits in the flow, to scroll back there for another step.
+                   Its background is that of the page, which lies on the paper of MainLayout: the background of the
+                   palette is darker in the dark mode. *@
                 <div @ref="@this.stickyHeaderAnchor"></div>
-                <div @ref="@this.stickyHeader" class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
+                <div @ref="@this.stickyHeader" class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-surface);">
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.h4">@project.Name</MudText>
