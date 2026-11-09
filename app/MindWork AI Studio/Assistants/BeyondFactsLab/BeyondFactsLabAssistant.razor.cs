@@ -49,6 +49,16 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     private ElementReference stickyHeaderAnchor;
 
     /// <summary>
+    /// The header of the preparation, which stays at the top while the person scrolls.
+    /// </summary>
+    private ElementReference stickyHeader;
+
+    /// <summary>
+    /// The ID of the header element whose height the page follows, so that only a new header element needs following.
+    /// </summary>
+    private string? followedStickyHeaderId;
+
+    /// <summary>
     /// Whether the next render shows another step, which then starts at the top.
     /// </summary>
     private bool scrollToActiveStep;
@@ -86,6 +96,16 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
             // The person scrolled down in one step and chose another one; it starts right under the header:
             this.scrollToActiveStep = false;
             await this.stickyHeaderAnchor.ScrollToStickyHeaderAsync(this.JsRuntime);
+        }
+
+        //
+        // The material sticks right below the header, so the page has to know how tall the header is. Opening a
+        // preparation after none, or after one which is unavailable, renders a new header element:
+        //
+        if (this.stickyHeader.Id is { } headerId && headerId != this.followedStickyHeaderId)
+        {
+            this.followedStickyHeaderId = headerId;
+            await this.stickyHeader.FollowStickyHeaderAsync(this.JsRuntime);
         }
 
         if (firstRender && this.mayOpen)

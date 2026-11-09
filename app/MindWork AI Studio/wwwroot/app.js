@@ -80,6 +80,41 @@ window.scrollToStickyHeader = function(anchor) {
         container.scrollTop += distance;
 }
 
+// Lets content further down stick right below a sticky header, e.g., a column beside the content. The scrolling
+// container of the header gets two CSS variables: --sticky-header-height, the height of the header, and
+// --sticky-space-below-header, the height of the container which the header leaves free. Both follow every change
+// of size, e.g., when a narrower window wraps the header into more lines.
+//
+// A header which left the page stops being observed with the next change of size, so nothing needs to stop it.
+function updateStickyHeaderVariables(header) {
+    const container = header.parentElement;
+    if (!header.isConnected || !container)
+        return false;
+
+    container.style.setProperty('--sticky-header-height', `${header.offsetHeight}px`);
+    container.style.setProperty('--sticky-space-below-header', `${container.clientHeight - header.offsetHeight}px`);
+    return true;
+}
+
+const stickyHeaderObserver = new ResizeObserver(entries => {
+    for (const entry of entries) {
+        // The container carries its header along, since it changes size without the header:
+        const header = entry.target.stickyHeader ?? entry.target;
+        if (!updateStickyHeaderVariables(header))
+            stickyHeaderObserver.unobserve(entry.target);
+    }
+});
+
+window.followStickyHeader = function(header) {
+    const container = header?.parentElement;
+    if (!container)
+        return;
+
+    container.stickyHeader = header;
+    stickyHeaderObserver.observe(header);
+    stickyHeaderObserver.observe(container);
+}
+
 window.setDocumentLanguage = function (ietfTag) {
     document.documentElement.lang = ietfTag
 }

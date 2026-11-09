@@ -87,7 +87,7 @@
                    provider, and the steps remain in view, and only the list of preparations scrolls away. The empty
                    anchor before it marks where the header sits in the flow, to scroll back there for another step. *@
                 <div @ref="@this.stickyHeaderAnchor"></div>
-                <div class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
+                <div @ref="@this.stickyHeader" class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.h4">@project.Name</MudText>
@@ -120,7 +120,8 @@
                 </div>
 
                 @* The material stands beside the step, as it applies to all steps, and below it on a narrow window. It
-                   stays out of the key of the step, so that reading a document goes on when the person picks another step. *@
+                   stays out of the key of the step, so that reading a document goes on when the person picks another step.
+                   Beside the step, it stays in view below the header, see the scoped CSS of this page. *@
                 <div class="mr-3">
                     <MudGrid Spacing="3">
                         <MudItem xs="12" lg="8">
@@ -145,7 +146,9 @@
                             </div>
                         </MudItem>
                         <MudItem xs="12" lg="4">
-                            <BflMaterials ProjectId="@project.ProjectId" Step="@this.activeStep" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                            <div class="bfl-material-column">
+                                <BflMaterials ProjectId="@project.ProjectId" Step="@this.activeStep" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                            </div>
                         </MudItem>
                     </MudGrid>
                 </div>

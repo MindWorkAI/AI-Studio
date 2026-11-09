@@ -1,0 +1,14 @@
+/*
+ * Beside the step, which the grid allows from the breakpoint lg of MudBlazor on, the material stays in view right
+ * below the sticky header while the person scrolls through the conversation of the step. A long list of material
+ * scrolls on its own, so that its end stays reachable. The variables come from followStickyHeader in app.js. On a
+ * narrower window, the material stands below the step and scrolls with the page.
+ */
+@media (min-width: 1280px) {
+    .bfl-material-column {
+        position: sticky;
+        top: var(--sticky-header-height, 0px);
+        max-height: var(--sticky-space-below-header, none);
+        overflow-y: auto;
+    }
+}
