@@ -107,5 +107,5 @@ public sealed class BflRecordingTests
         }
     }
 
-    private BflMaterialService CreateService() => new(new BeyondFactsLabStore(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.dataDirectory }), null!, null!, null!, this.settingsManager, this.transcriptionService, NullLogger<BflMaterialService>.Instance);
+    private BflMaterialService CreateService() => new(new BeyondFactsLabStore(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.dataDirectory }), null!, null!, null!, this.settingsManager, this.transcriptionService, null!, NullLogger<BflMaterialService>.Instance);
 }

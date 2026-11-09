@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
@@ -25,8 +26,9 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// <param name="messageBus">The message bus, for what the person needs to know.</param>
 /// <param name="settingsManager">The settings, which name the transcription provider and the confidence the lab demands.</param>
 /// <param name="mediaTranscriptionService">The transcription of recordings.</param>
+/// <param name="sessionService">The registry of running assistant sessions, which shows that the lab is at work.</param>
 /// <param name="logger">The logger.</param>
-public sealed class BflMaterialService(BeyondFactsLabStore store, RustService rustService, PromptInjectionGuardService guardService, MessageBus messageBus, SettingsManager settingsManager, MediaTranscriptionService mediaTranscriptionService, ILogger<BflMaterialService> logger)
+public sealed class BflMaterialService(BeyondFactsLabStore store, RustService rustService, PromptInjectionGuardService guardService, MessageBus messageBus, SettingsManager settingsManager, MediaTranscriptionService mediaTranscriptionService, AssistantSessionService sessionService, ILogger<BflMaterialService> logger)
 {
     /// <summary>
     /// How many characters of the text of a document or a transcript the lab keeps at most.
@@ -107,8 +109,14 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
 
         var gate = this.importLocks.GetOrAdd(projectId, _ => new(1, 1));
         await gate.WaitAsync();
+        var sessionKey = ImportSessionKey(projectId);
+        var sessionId = Guid.Empty;
         try
         {
+            // The navigation and the tile of the lab show that the lab is at work, as while it answers in a conversation.
+            // Nothing cancels an import, so the source stays unused; the registry disposes of it when the import ends:
+            sessionId = (await sessionService.TryBeginAsync(sessionKey, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT.Name, new CancellationTokenSource(), null, new(StringComparer.Ordinal))).SessionId;
+
             HashSet<string> knownHashes;
             try
             {
@@ -142,6 +150,14 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         finally
         {
             this.materialsInProgress.TryRemove(projectId, out _);
+            if (sessionId != Guid.Empty)
+            {
+                await sessionService.CompleteAsync(sessionKey, sessionId, AssistantSessionStatus.COMPLETED, string.Empty, null, new(StringComparer.Ordinal));
+
+                // The material shows what came of the import; the registry only showed that the lab was at work:
+                await sessionService.ClearAsync(sessionKey);
+            }
+
             gate.Release();
             await this.NotifyAsync(projectId);
         }
@@ -389,6 +405,17 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
                 logger.LogWarning("Could not delete the transcript in '{Folder}'; the next start of AI Studio removes it.", location.FolderPath);
         }
     }
+
+    /// <summary>
+    /// Gets the slot in the registry of assistant sessions which shows that the lab reads material for a preparation.
+    /// </summary>
+    /// <remarks>
+    /// The conversations of the steps have slots of their own, keyed by the folders of their steps, see
+    /// BflStepThreadLocation.Key; no step folder is called "materials".
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <returns>The key of the slot.</returns>
+    internal static AssistantSessionKey ImportSessionKey(Guid projectId) => new(Tools.Components.BEYOND_FACTS_LAB_ASSISTANT, $"{projectId:D}/materials");
 
     /// <summary>
     /// Tells every page which listens that the material of a preparation changed.
