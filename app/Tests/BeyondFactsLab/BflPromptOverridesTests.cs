@@ -1,5 +1,8 @@
 using AIStudio.Assistants.BeyondFactsLab;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.BeyondFactsLab;
 
@@ -187,6 +190,32 @@ public sealed class BflPromptOverridesTests
             Assert.That(copiedAgain, Is.Zero);
             Assert.That(await File.ReadAllTextAsync(BflPromptOverrides.FilePath(this.directory, BflPromptLibrary.CORE_PATH)), Is.EqualTo("Ein neuer Kern."));
             Assert.That(await File.ReadAllTextAsync(BflPromptOverrides.FilePath(this.directory, BflPromptLibrary.StepPath(BflStep.RESULTS))), Is.Empty, "Even an empty file is the person's own.");
+        }
+    }
+
+    [Test]
+    public async Task TheLabTellsAboutReplacedPromptsOnlyWhileTheSettingAllowsThem()
+    {
+        var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
+        var store = new BeyondFactsLabStore(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.directory });
+        var service = new BflConversationService(store, settingsManager, null!, null!, NullLogger<BflConversationService>.Instance);
+        await BflPromptOverrides.CopyBuiltInAsync(store.PromptOverridesDirectory);
+
+        settingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides = true;
+        var withCopies = await service.UsesPromptOverridesAsync();
+
+        await File.WriteAllTextAsync(BflPromptOverrides.FilePath(store.PromptOverridesDirectory, BflPromptLibrary.CORE_PATH), "Ein neuer Kern.");
+        var withChange = await service.UsesPromptOverridesAsync();
+
+        settingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides = false;
+        var switchedOff = await service.UsesPromptOverridesAsync();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(store.PromptOverridesDirectory, Is.EqualTo(Path.Combine(this.directory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, BflPromptOverrides.DIRECTORY_NAME)));
+            Assert.That(withCopies, Is.False, "Copies which nobody changed replace nothing.");
+            Assert.That(withChange, Is.True);
+            Assert.That(switchedOff, Is.False);
         }
     }
 

@@ -298,6 +298,14 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => (await this.ComposeRequestAsync(location, provider)).SystemPrompt;
 
     /// <summary>
+    /// Checks whether files in the test folder replace prompts of the lab right now, so that the lab can tell the
+    /// person.
+    /// </summary>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>True while the setting allows prompt overrides and a file replaces a prompt with another text.</returns>
+    public async Task<bool> UsesPromptOverridesAsync(CancellationToken token = default) => this.PromptOverridesDirectory is { } directory && (await BflPromptOverrides.FindAsync(directory, token)).Count > 0;
+
+    /// <summary>
     /// Puts together what a request of a chat carries beside the conversation: the system prompt, and the images of
     /// the material the model may see.
     /// </summary>
