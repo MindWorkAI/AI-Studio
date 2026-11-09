@@ -4,6 +4,7 @@ using AIStudio.Assistants.Builder;
 using AIStudio.Assistants.ERI;
 using AIStudio.Assistants.PromptOptimizer;
 using AIStudio.Assistants.SWOTAnalysis;
+using AIStudio.Tools.DocumentSegments;
 using AIStudio.Tools.PowerPoint;
 using AIStudio.Tools.Services;
 
@@ -33,10 +34,14 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(SwotModerationResult), SwotModelAnswer.JSON_OPTIONS));
         yield return Case(new(typeof(ERIServerFileList), ERIServerFileList.JSON_OPTIONS));
         yield return Case(new(typeof(SlideDeckSpec.DeckDto), SlideDeckSpec.JSON_OPTIONS));
+
+        // The segments of a document, e.g., translated by the Translation assistant:
+        yield return Case(new(typeof(SegmentBatch), SegmentJson.ANSWER_OPTIONS));
     }
 
     /// <summary>
-    /// The JSON which the Assistant Builder and the moderation of a SWOT analysis put into their prompts.
+    /// The JSON which the Assistant Builder, the moderation of a SWOT analysis, and the work on the segments of a
+    /// document put into their prompts.
     /// </summary>
     public static IEnumerable<TestCaseData> ModelPrompts()
     {
@@ -49,5 +54,8 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(AssistantBuilderRevisionPromptData), untrusted));
 
         yield return Case(new(typeof(Dictionary<string, SwotModerationCategoryInput>), SwotAnalysisModeration.JSON_OPTIONS));
+
+        // The segments of a document, which a model works on:
+        yield return Case(new(typeof(SegmentBatch), SegmentJson.PROMPT_OPTIONS));
     }
 }
