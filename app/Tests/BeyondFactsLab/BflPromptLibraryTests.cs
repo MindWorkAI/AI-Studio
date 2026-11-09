@@ -24,6 +24,16 @@ public sealed class BflPromptLibraryTests
     /// </remarks>
     private const int MAX_FIXED_PROMPT_CHARACTERS = 90_000;
 
+    /// <summary>
+    /// How many characters the fixed part of the prompt of the onboarding may have: the prompt and the longest form of
+    /// address.
+    /// </summary>
+    /// <remarks>
+    /// About 4,000 tokens. The onboarding asks for no minimum context window, unlike the steps, so it has to leave room
+    /// for a conversation in small models as well.
+    /// </remarks>
+    private const int MAX_ONBOARDING_PROMPT_CHARACTERS = 16_000;
+
     [Test]
     public async Task EveryPromptComesWithTheApp()
     {
@@ -65,5 +75,16 @@ public sealed class BflPromptLibraryTests
             longestAddress = Math.Max(longestAddress, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.AddressPath(addressForm))).Length);
 
         Assert.That(core.Length + knowledge.Length + longestStep + longestAddress, Is.LessThanOrEqualTo(MAX_FIXED_PROMPT_CHARACTERS));
+    }
+
+    [Test]
+    public async Task ThePromptOfTheOnboardingStaysShort()
+    {
+        var onboarding = await BflPromptLibrary.ReadAsync(BflPromptLibrary.ONBOARDING_PATH);
+        var longestAddress = 0;
+        foreach (var addressForm in Enum.GetValues<AddressForm>())
+            longestAddress = Math.Max(longestAddress, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.AddressPath(addressForm))).Length);
+
+        Assert.That(onboarding.Length + longestAddress, Is.LessThanOrEqualTo(MAX_ONBOARDING_PROMPT_CHARACTERS));
     }
 }

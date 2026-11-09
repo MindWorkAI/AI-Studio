@@ -27,6 +27,12 @@ public static class BflPromptLibrary
     public const string KNOWLEDGE_PATH = FOLDER + "/Knowledge/beyondfacts-paper.md";
 
     /// <summary>
+    /// The prompt of the conversation in which the lab tells whether it fits a task. It stands on its own, without
+    /// the core and the guide.
+    /// </summary>
+    public const string ONBOARDING_PATH = FOLDER + "/Prompts/onboarding.md";
+
+    /// <summary>
     /// The instruction to address the person formally.
     /// </summary>
     private const string ADDRESS_FORMAL_PATH = FOLDER + "/Prompts/snippets/address-formal.md";
@@ -55,6 +61,7 @@ public static class BflPromptLibrary
     [
         CORE_PATH,
         KNOWLEDGE_PATH,
+        ONBOARDING_PATH,
         ..Enum.GetValues<AddressForm>().Select(AddressPath).Distinct(),
         ..BflStep.All.Select(StepPath)
     ];
@@ -71,6 +78,17 @@ public static class BflPromptLibrary
         await ReadAsync(CORE_PATH, token),
         await ReadAsync(KNOWLEDGE_PATH, token),
         await ReadAsync(StepPath(step), token),
+        await ReadAsync(AddressPath(addressForm), token));
+
+    /// <summary>
+    /// Reads the texts of the system prompt of the conversation about whether the lab fits a task.
+    /// </summary>
+    /// <param name="addressForm">How the model addresses the person.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The texts, which BflPromptComposer puts together.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without one of the files.</exception>
+    public static async Task<BflOnboardingPromptParts> LoadOnboardingPartsAsync(AddressForm addressForm, CancellationToken token = default) => new(
+        await ReadAsync(ONBOARDING_PATH, token),
         await ReadAsync(AddressPath(addressForm), token));
 
     /// <summary>
