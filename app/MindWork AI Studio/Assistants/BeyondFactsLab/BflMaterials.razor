@@ -4,26 +4,32 @@
     <MudText Typo="Typo.h6">@T("Material")</MudText>
     <MudText Typo="Typo.body2" Class="mb-3">@TA("Applies to all steps: the lab reads it in every conversation and asks you about it.")</MudText>
 
-    @* The whole page takes dropped documents; the paperclip opens the file chooser. *@
+    @* The whole page takes dropped files; the paperclip opens the file chooser. Recordings come to this component,
+       which transcribes them through the material service instead of the attachment control. *@
     <div class="border-dashed border rounded-lg pa-2 mb-3">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <AttachDocuments Name="BeyondFacts Lab material"
                              DocumentPaths="@this.attachments"
                              OnChange="@this.AttachedAsync"
+                             OnMediaFiles="@this.RecordingsAttachedAsync"
                              UseSmallForm="@true"
                              CatchAllDocuments="@true"
                              ShowMediaStatus="@false"
                              ValidateMediaFileTypes="@false"
                              AllowedFileTypes="@ALLOWED_FILE_TYPES"
-                             Disabled="@(this.DocumentInProgress is not null)"/>
-            <MudText Typo="Typo.body2">@TA("Drag notes, talk drafts, papers, or invitations here, or click the paperclip.")</MudText>
+                             Disabled="@(this.MaterialInProgress is not null)"/>
+            <MudText Typo="Typo.body2">@TA("Drag documents, such as notes, papers, or invitations, or recordings of interviews here, or click the paperclip.")</MudText>
         </MudStack>
     </div>
 
-    @if (this.DocumentInProgress is { } documentInProgress)
+    @if (this.MaterialInProgress is { } materialInProgress)
     {
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1"/>
-        <MudText Typo="Typo.caption" Class="mb-3">@string.Format(T("Reading '{0}'"), documentInProgress)</MudText>
+        <MudText Typo="Typo.caption" Class="mb-3">
+            @(materialInProgress.Kind is BflMaterialKind.RECORDING
+                ? string.Format(T("Transcribing '{0}'; a long recording takes a while"), materialInProgress.Name)
+                : string.Format(T("Reading '{0}'"), materialInProgress.Name))
+        </MudText>
     }
 
     @if (this.materials.Count > 0)
@@ -32,7 +38,7 @@
             @foreach (var entry in this.materials)
             {
                 <MudStack @key="entry.MaterialId" Row="true" AlignItems="AlignItems.Start" Spacing="1">
-                    <MudIcon Icon="@(entry.IsAvailable ? Icons.Material.Filled.Description : Icons.Material.Filled.ErrorOutline)" Color="@(entry.IsAvailable ? Color.Default : Color.Error)" Size="Size.Small" Class="mt-1"/>
+                    <MudIcon Icon="@Icon(entry)" Color="@(entry.IsAvailable ? Color.Default : Color.Error)" Size="Size.Small" Class="mt-1"/>
                     <MudStack Spacing="0" Style="min-width: 0; flex: 1 1 auto;">
                         @if (entry.Material is { } material)
                         {
@@ -68,10 +74,10 @@
             }
         </MudStack>
     }
-    else if (this.DocumentInProgress is null)
+    else if (this.MaterialInProgress is null)
     {
         <MudText Typo="Typo.body2" Class="mb-3">@TA("You have not added any material yet.")</MudText>
     }
 
-    <MudText Typo="Typo.caption">@TA("Add only material which you may process with the selected provider.")</MudText>
+    <MudText Typo="Typo.caption">@TA("Add only material which you may process with the selected provider. Recordings also go to the transcription provider of AI Studio.")</MudText>
 </MudPaper>

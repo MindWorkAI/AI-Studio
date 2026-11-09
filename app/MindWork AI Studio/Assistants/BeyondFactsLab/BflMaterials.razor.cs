@@ -13,19 +13,19 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// The area "Material" beside the steps of a preparation, where the person adds documents which the chats of every
-/// step read, and removes them again.
+/// The area "Material" beside the steps of a preparation, where the person adds documents and recordings which the
+/// chats of every step read, and removes them again.
 /// </summary>
 /// <remarks>
-/// Reading a document runs in BflMaterialService, so it goes on while the person looks at another step or page; this
-/// component shows the material and renders whenever the service says it changed.
+/// Reading a document or transcribing a recording runs in BflMaterialService, so it goes on while the person looks at
+/// another step or page; this component shows the material and renders whenever the service says it changed.
 /// </remarks>
 public partial class BflMaterials : MSGComponentBase
 {
     /// <summary>
-    /// The kinds of files the lab reads: documents, not pictures, audio, or video.
+    /// The kinds of files the lab reads: documents, and audio or video recordings for their transcript.
     /// </summary>
-    private static readonly FileTypeFilter[] ALLOWED_FILE_TYPES = [FileTypes.DOCUMENT];
+    private static readonly FileTypeFilter[] ALLOWED_FILE_TYPES = [FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO];
 
     /// <summary>
     /// Gets or sets the ID of the preparation whose material to show.
@@ -103,9 +103,9 @@ public partial class BflMaterials : MSGComponentBase
     private static CultureInfo Culture => Tools.PluginSystem.I18N.I.Culture;
 
     /// <summary>
-    /// Gets the name of the document the lab reads for the preparation right now, or null while it reads none.
+    /// Gets the file the lab reads for the preparation right now, or null while it reads none.
     /// </summary>
-    private string? DocumentInProgress => this.MaterialService.DocumentInProgress(this.ProjectId);
+    private BflMaterialInProgress? MaterialInProgress => this.MaterialService.MaterialInProgress(this.ProjectId);
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -226,6 +226,56 @@ public partial class BflMaterials : MSGComponentBase
     }
 
     /// <summary>
+    /// Lets the lab transcribe the recordings the person just dropped or chose, after asking.
+    /// </summary>
+    /// <remarks>
+    /// The lab asks for itself instead of the attachment control: only a transcription provider with the confidence of
+    /// the lab may hear the recordings, and the person learns which one that is before anything leaves the computer.
+    /// </remarks>
+    /// <param name="paths">The recordings.</param>
+    private async Task RecordingsAttachedAsync(IReadOnlyList<string> paths)
+    {
+        if (this.MaterialService.UsableTranscriptionProvider() is not { } provider)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.MaterialService.NoTranscriptionProviderMessage));
+            return;
+        }
+
+        var message = string.Format(TA("The lab prepares these recordings on your computer and then uploads their audio to the transcription provider '{0}'. It keeps only their transcript."), Markdown.EscapeInlineText(provider.Name));
+        var names = string.Join('\n', paths.Select(path => $"- {Markdown.EscapeInlineText(BeyondFactsLabStore.MaterialName(path))}"));
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            {
+                dialog => dialog.MarkdownBody,
+                $"""
+                 {message}
+
+                 {names}
+                 """
+            },
+        };
+
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Transcribe recordings"), parameters, DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        // The service goes on transcribing when the person leaves the page, so nothing here waits for it:
+        this.MaterialService.ImportAsync(this.ProjectId, paths, this.PandocAvailability).Observe("BeyondFacts Lab: transcribing material");
+    }
+
+    /// <summary>
+    /// Gets the icon of a material, which tells its kind.
+    /// </summary>
+    /// <param name="entry">The material.</param>
+    private static string Icon(BflMaterialEntry entry) => entry.Material?.Kind switch
+    {
+        null => Icons.Material.Filled.ErrorOutline,
+        BflMaterialKind.RECORDING => Icons.Material.Filled.Mic,
+        _ => Icons.Material.Filled.Description,
+    };
+
+    /// <summary>
     /// Removes a material after asking.
     /// </summary>
     /// <param name="entry">The material.</param>
@@ -236,7 +286,7 @@ public partial class BflMaterials : MSGComponentBase
             {
                 dialog => dialog.Message,
                 entry.Material is { } material
-                    ? string.Format(TA("Remove '{0}' from the material of this preparation? The document on your computer stays as it is."), material.Name)
+                    ? string.Format(TA("Remove '{0}' from the material of this preparation? The file on your computer stays as it is."), material.Name)
                     : TA("AI Studio cannot open this material. Remove it with its files?")
             },
         };
