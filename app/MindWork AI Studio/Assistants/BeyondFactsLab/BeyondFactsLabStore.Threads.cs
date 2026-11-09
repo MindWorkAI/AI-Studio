@@ -12,6 +12,16 @@ public sealed partial class BeyondFactsLabStore
     private const string THREAD_FILE_NAME = "thread.json";
 
     /// <summary>
+    /// The folder of the conversation about whether the lab fits a task. It is no ID, so no preparation can have it.
+    /// </summary>
+    private const string ONBOARDING_DIRECTORY_NAME = "onboarding";
+
+    /// <summary>
+    /// Guards the conversation about whether the lab fits a task, which belongs to no preparation.
+    /// </summary>
+    private readonly SemaphoreSlim onboardingLock = new(1, 1);
+
+    /// <summary>
     /// Loads a chat of the lab.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
@@ -100,6 +110,7 @@ public sealed partial class BeyondFactsLabStore
         if (!Directory.Exists(this.RootDirectory))
             return locations;
 
+        AddWhenStored(BflOnboardingThreadLocation.INSTANCE);
         foreach (var directory in Directory.EnumerateDirectories(this.RootDirectory))
         {
             if (!Guid.TryParse(Path.GetFileName(directory), out var projectId))
@@ -167,6 +178,7 @@ public sealed partial class BeyondFactsLabStore
     private string ThreadPath(BflThreadLocation location) => location switch
     {
         BflStepThreadLocation stepLocation => Path.Combine(this.ProjectDirectory(stepLocation.ProjectId), STEPS_DIRECTORY_NAME, stepLocation.Step.FolderName, THREAD_FILE_NAME),
+        BflOnboardingThreadLocation => Path.Combine(this.RootDirectory, ONBOARDING_DIRECTORY_NAME, THREAD_FILE_NAME),
 
         _ => throw new ArgumentOutOfRangeException(nameof(location), location, "The lab keeps no chat there.")
     };
@@ -178,6 +190,7 @@ public sealed partial class BeyondFactsLabStore
     private SemaphoreSlim ThreadLock(BflThreadLocation location) => location switch
     {
         BflStepThreadLocation stepLocation => this.GetLock(stepLocation.ProjectId),
+        BflOnboardingThreadLocation => this.onboardingLock,
 
         _ => throw new ArgumentOutOfRangeException(nameof(location), location, "The lab keeps no chat there.")
     };

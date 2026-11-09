@@ -143,6 +143,27 @@ public sealed class ProvenanceCleanupServiceTests
     }
 
     [Test]
+    public async Task WhatTheOnboardingOfTheLabReceivedSurvivesTheCleanup()
+    {
+        var labStore = this.CreateLabStore();
+        var location = BflOnboardingThreadLocation.INSTANCE;
+        var referenced = await this.store.Client.StoreAsync(location.ChatId, ProvenanceKind.WEB_PAGE, "of a page the onboarding read", null, TOKEN);
+        var thread = BflThreadFactory.Create(location);
+        thread.Blocks.Add(new ContentBlock
+        {
+            ContentType = ContentType.TEXT,
+            Role = ChatRole.AI,
+            Content = new ContentText { Text = "Laut der Seite …", SourcePassages = [new SourcePassage { SourceUrl = "https://example.org/", ProvenanceId = referenced }] }
+        });
+        await labStore.SaveThreadAsync(location, thread);
+
+        await this.RunAsync(RestoreStateWith(report: null));
+
+        var entries = await this.store.Client.GetEntriesAsync([referenced!.Value], TOKEN);
+        Assert.That(entries.Keys, Is.EquivalentTo(new[] { referenced.Value }), "The onboarding belongs to no preparation, but it is a chat of the lab all the same.");
+    }
+
+    [Test]
     public async Task WhatAChatOfADeletedPreparationReceivedIsRemoved()
     {
         var labStore = this.CreateLabStore();

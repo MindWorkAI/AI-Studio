@@ -41,6 +41,30 @@ public sealed class BflThreadTests
     }
 
     [Test]
+    public void TheIdOfTheOnboardingFollowsFromItsName()
+    {
+        // Computed independently, from SHA-256 over "beyondfacts-lab/thread/onboarding". A stored chat keeps its ID, so
+        // this value never changes:
+        var expected = Guid.Parse("b98423a4-8502-8ddd-8e56-df78ccd610ba");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflThreadId.ONBOARDING, Is.EqualTo(expected));
+            Assert.That(BflOnboardingThreadLocation.INSTANCE.ChatId, Is.EqualTo(expected));
+            Assert.That(BflOnboardingThreadLocation.INSTANCE.Key, Is.EqualTo("onboarding"));
+            Assert.That(BflOnboardingThreadLocation.INSTANCE.ChatName, Is.EqualTo("onboarding"));
+        }
+    }
+
+    [Test]
+    public void TheOnboardingSharesItsIdWithNoStep()
+    {
+        var stepIds = BflStep.All.Select(step => BflThreadId.Of(PROJECT_ID, step));
+
+        Assert.That(stepIds, Has.None.EqualTo(BflThreadId.ONBOARDING));
+    }
+
+    [Test]
     public void ThePlaceOfAStepServesAsAKey()
     {
         BflThreadLocation first = new BflStepThreadLocation(PROJECT_ID, BflStep.STRATEGY);
