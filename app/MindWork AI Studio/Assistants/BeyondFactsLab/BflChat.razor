@@ -1,7 +1,10 @@
 @using AIStudio.Chat
 @inherits MSGComponentBase
 
-<MudText Typo="Typo.h6" Class="mt-6 mb-2">@T("Conversation")</MudText>
+@if (this.ShowHeading)
+{
+    <MudText Typo="Typo.h6" Class="mt-6 mb-2">@T("Conversation")</MudText>
+}
 @if (this.conversation is null)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
@@ -9,7 +12,7 @@
 else if (this.conversation.Thread is not { } thread)
 {
     <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
-        @TA("AI Studio cannot open the conversation of this step. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.")
+        @TA("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.")
     </MudAlert>
     <MudButton StartIcon="@Icons.Material.Filled.RestartAlt" Color="Color.Error" OnClick="@this.ResetAsync">@T("Start over")</MudButton>
 }
@@ -17,9 +20,7 @@ else
 {
     @if (!this.conversation.HasVisibleMessages && !this.IsRunning)
     {
-        <MudText Typo="Typo.body2" Class="mb-3">
-            @TA("The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.")
-        </MudText>
+        <MudText Typo="Typo.body2" Class="mb-3">@this.Introduction</MudText>
         <div class="mb-4">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum" OnClick="@this.StartAsync" Disabled="@(!this.CanSend)">
                 @T("Start the conversation")
@@ -32,7 +33,7 @@ else
         {
             @if (block is { HideFromUser: false, Content: not null })
             {
-                <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportTitle="@T("Export message")" ExportFileName="@this.Location.Step.Title"/>
+                <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportTitle="@T("Export message")" ExportFileName="@this.ExportFileName"/>
             }
         }
     }
