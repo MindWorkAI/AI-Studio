@@ -129,7 +129,7 @@
                         </MudAlert>
                     }
 
-                    <BflStepChat Location="@(new BflThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                    <BflStepChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
                 </div>
             }
             else

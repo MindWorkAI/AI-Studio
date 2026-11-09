@@ -8,7 +8,7 @@ using AIStudio.Tools.AssistantSessions;
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// Runs the chats of the steps of the BeyondFacts Lab.
+/// Runs the chats of the BeyondFacts Lab, such as those of the steps of a preparation.
 /// </summary>
 /// <remarks>
 /// A singleton, so that an answer goes on while the person looks at another page: the page asks for the chat again
@@ -40,7 +40,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(BflConversationService).Namespace, nameof(BflConversationService));
 
     /// <summary>
-    /// The chats loaded so far, by their steps.
+    /// The chats loaded so far, by their places.
     /// </summary>
     private readonly ConcurrentDictionary<BflThreadLocation, BflConversation> conversations = new();
 
@@ -63,9 +63,9 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     public event Func<BflThreadLocation, Task>? ConversationChanged;
 
     /// <summary>
-    /// Gets the chat of a step, loading it on the first call.
+    /// Gets a chat, loading it on the first call.
     /// </summary>
-    /// <param name="location">The step of the preparation.</param>
+    /// <param name="location">Where the chat belongs.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The chat; it is not available when this version cannot open the stored one.</returns>
     public async Task<BflConversation> GetAsync(BflThreadLocation location, CancellationToken token = default)
@@ -87,7 +87,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
             catch (InvalidDataException exception)
             {
                 // The file stays as it is, see BeyondFactsLabStore.SaveThreadAsync:
-                logger.LogWarning(exception, "Could not open the chat of the step '{Step}' of the preparation '{ProjectId}' of the BeyondFacts Lab.", location.Step, location.ProjectId);
+                logger.LogWarning(exception, "Could not open the chat '{Location}' of the BeyondFacts Lab.", location.Key);
                 thread = null;
             }
 
@@ -102,9 +102,9 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     }
 
     /// <summary>
-    /// Lets the model open the conversation of a step, as the prompt of the step describes.
+    /// Lets the model open a conversation, as its prompt describes.
     /// </summary>
-    /// <param name="location">The step of the preparation.</param>
+    /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers.</param>
     public Task StartAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => this.SendAsync(location, provider, OPENING_REQUEST, isHidden: true);
 
@@ -115,7 +115,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// The message is stored before the model answers, so that a crash loses at most the answer. What goes wrong is
     /// reported through the message bus; the method itself does not fail.
     /// </remarks>
-    /// <param name="location">The step of the preparation.</param>
+    /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers.</param>
     /// <param name="text">The message.</param>
     /// <param name="isHidden">Whether the person does not see the message, e.g., the request which opens a conversation.</param>
@@ -135,7 +135,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
-            logger.LogError(exception, "The BeyondFacts Lab could not put together the system prompt of the step '{Step}'.", location.Step);
+            logger.LogError(exception, "The BeyondFacts Lab could not put together the system prompt of the chat '{Location}'.", location.Key);
             await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, TB("The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.")));
             return;
         }
@@ -208,7 +208,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
-            logger.LogError(exception, "The BeyondFacts Lab could not store the chat of the step '{Step}'.", location.Step);
+            logger.LogError(exception, "The BeyondFacts Lab could not store the chat '{Location}'.", location.Key);
             await messageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not save this conversation. Please try again.")));
         }
         finally
@@ -218,16 +218,16 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     }
 
     /// <summary>
-    /// Stops the answer the model writes in a step.
+    /// Stops the answer the model writes in a chat.
     /// </summary>
-    /// <param name="location">The step of the preparation.</param>
+    /// <param name="location">Where the chat belongs.</param>
     public Task CancelAsync(BflThreadLocation location) => sessionService.CancelAsync(SessionKey(location));
 
     /// <summary>
-    /// Deletes the conversation of a step, so that it starts over.
+    /// Deletes a conversation, so that it starts over.
     /// </summary>
-    /// <param name="location">The step of the preparation.</param>
-    /// <returns>False while the model answers in the step.</returns>
+    /// <param name="location">Where the chat belongs.</param>
+    /// <returns>False while the model answers in the chat.</returns>
     public async Task<bool> ResetAsync(BflThreadLocation location)
     {
         var conversation = await this.GetAsync(location);
@@ -253,7 +253,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <returns>The IDs of the chats the preparation could have had.</returns>
     public async Task<IReadOnlyList<Guid>> ForgetProjectAsync(Guid projectId)
     {
-        var locations = BflStep.All.Select(step => new BflThreadLocation(projectId, step)).ToList();
+        var locations = BflStep.All.Select(step => new BflStepThreadLocation(projectId, step)).ToList();
         foreach (var location in locations)
         {
             await sessionService.CancelAsync(SessionKey(location));
@@ -264,19 +264,27 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     }
 
     /// <summary>
-    /// Puts together the system prompt of a step, anew for every request, so that changed details and a changed form
+    /// Puts together the system prompt of a chat, anew for every request, so that changed details and a changed form
     /// of address count right away. The chat also uses it to count what the next request carries.
     /// </summary>
-    /// <param name="location">The step of the preparation.</param>
+    /// <param name="location">Where the chat belongs.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
     /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
     public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location)
     {
-        var forms = await store.LoadFormsAsync(location.ProjectId);
-        var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm);
+        var addressForm = Tools.PluginSystem.I18N.I.AddressForm;
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
-        return BflPromptComposer.Compose(parts, location.Step, forms, language);
+        switch (location)
+        {
+            case BflStepThreadLocation stepLocation:
+                var forms = await store.LoadFormsAsync(stepLocation.ProjectId);
+                var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm);
+                return BflPromptComposer.Compose(parts, stepLocation.Step, forms, language);
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(location), location, "The lab has no prompt for this chat.");
+        }
     }
 
     /// <summary>
@@ -328,7 +336,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
             {
-                logger.LogError(exception, "The BeyondFacts Lab could not store the chat of the step '{Step}'.", conversation.Location.Step);
+                logger.LogError(exception, "The BeyondFacts Lab could not store the chat '{Location}'.", conversation.Location.Key);
                 await messageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not save this conversation. Please try again.")));
             }
         }
@@ -350,7 +358,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <summary>
     /// Tells every page which listens that a chat changed.
     /// </summary>
-    /// <param name="location">The step of the chat.</param>
+    /// <param name="location">Where the chat belongs.</param>
     private async Task NotifyAsync(BflThreadLocation location)
     {
         if (this.ConversationChanged is not { } handlers)
@@ -371,8 +379,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     }
 
     /// <summary>
-    /// Gets the key under which a request of a step registers in AssistantSessionService.
+    /// Gets the key under which a request of a chat registers in AssistantSessionService.
     /// </summary>
-    /// <param name="location">The step of the preparation.</param>
-    private static AssistantSessionKey SessionKey(BflThreadLocation location) => new(Tools.Components.BEYOND_FACTS_LAB_ASSISTANT, $"{location.ProjectId:D}/{location.Step.FolderName}");
+    /// <param name="location">Where the chat belongs.</param>
+    private static AssistantSessionKey SessionKey(BflThreadLocation location) => new(Tools.Components.BEYOND_FACTS_LAB_ASSISTANT, location.Key);
 }

@@ -124,7 +124,7 @@ public sealed class ProvenanceCleanupServiceTests
         // switches it on:
         var labStore = this.CreateLabStore();
         var project = await labStore.CreateAsync("Panel");
-        var location = new BflThreadLocation(project.ProjectId, BflStep.KNOWLEDGE);
+        var location = new BflStepThreadLocation(project.ProjectId, BflStep.KNOWLEDGE);
         var referenced = await this.store.Client.StoreAsync(location.ChatId, ProvenanceKind.WEB_PAGE, "of a page the chat of the lab read", null, TOKEN);
         var unreferenced = await this.store.Client.StoreAsync(location.ChatId, ProvenanceKind.WEB_PAGE, "of an answer the person removed", null, TOKEN);
         var thread = BflThreadFactory.Create(location);
@@ -147,7 +147,7 @@ public sealed class ProvenanceCleanupServiceTests
     {
         var labStore = this.CreateLabStore();
         var project = await labStore.CreateAsync("Panel");
-        var location = new BflThreadLocation(project.ProjectId, BflStep.KNOWLEDGE);
+        var location = new BflStepThreadLocation(project.ProjectId, BflStep.KNOWLEDGE);
         await labStore.SaveThreadAsync(location, BflThreadFactory.Create(location));
         var entry = await this.store.Client.StoreAsync(location.ChatId, ProvenanceKind.WEB_PAGE, "of a page the chat of the lab read", null, TOKEN);
         await labStore.DeleteAsync(project.ProjectId);

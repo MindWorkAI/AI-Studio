@@ -25,7 +25,7 @@ public partial class BflStepChat : MSGComponentBase
     /// Gets or sets the step of the preparation whose chat to show.
     /// </summary>
     [Parameter, EditorRequired]
-    public BflThreadLocation Location { get; set; }
+    public BflStepThreadLocation Location { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the provider which answers.
@@ -74,7 +74,7 @@ public partial class BflStepChat : MSGComponentBase
     /// <summary>
     /// The step whose chat is shown, to notice when the parent shows another one.
     /// </summary>
-    private BflThreadLocation? shownLocation;
+    private BflStepThreadLocation? shownLocation;
 
     /// <summary>
     /// The message the person writes.
@@ -130,7 +130,7 @@ public partial class BflStepChat : MSGComponentBase
     /// <summary>
     /// Renders the chat again when the service changed it, and counts again once an answer is complete.
     /// </summary>
-    /// <param name="location">The step whose chat changed.</param>
+    /// <param name="location">Where the chat which changed belongs.</param>
     private Task OnConversationChangedAsync(BflThreadLocation location)
     {
         if (location != this.Location)
