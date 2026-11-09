@@ -142,7 +142,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         string systemPrompt;
         try
         {
-            systemPrompt = await this.ComposeSystemPromptAsync(location);
+            systemPrompt = await this.ComposeSystemPromptAsync(location, provider);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
@@ -275,14 +275,15 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     }
 
     /// <summary>
-    /// Puts together the system prompt of a chat, anew for every request, so that changed details and a changed form
-    /// of address count right away. The chat also uses it to count what the next request carries.
+    /// Puts together the system prompt of a chat, anew for every request, so that changed details, material, and a
+    /// changed form of address count right away. The chat also uses it to count what the next request carries.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
+    /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
     /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
-    public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location)
+    public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var addressForm = Tools.PluginSystem.I18N.I.AddressForm;
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
@@ -291,7 +292,9 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
             case BflStepThreadLocation stepLocation:
                 var forms = await store.LoadFormsAsync(stepLocation.ProjectId);
                 var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm);
-                return BflPromptComposer.Compose(parts, stepLocation.Step, forms, language);
+                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, language, provider);
+                var materials = await this.ReadMaterialsAsync(stepLocation.ProjectId, shares);
+                return BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language);
 
             case BflOnboardingThreadLocation:
                 return BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm), language);
@@ -299,6 +302,68 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
             default:
                 throw new ArgumentOutOfRangeException(nameof(location), location, "The lab has no prompt for this chat.");
         }
+    }
+
+    /// <summary>
+    /// Decides how much of the material of a preparation the prompt of a step carries, e.g., to show the person what
+    /// the model does not read.
+    /// </summary>
+    /// <param name="location">The step.</param>
+    /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
+    /// <returns>The share of each material this version can open, in the order the person added them.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
+    /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
+    public async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, AIStudio.Settings.Provider provider)
+    {
+        var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
+        var forms = await store.LoadFormsAsync(location.ProjectId);
+        var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm);
+        return await this.ShareMaterialsAsync(location, parts, forms, language, provider);
+    }
+
+    /// <summary>
+    /// Decides how much of the material of a preparation the prompt of a step carries.
+    /// </summary>
+    /// <param name="location">The step.</param>
+    /// <param name="parts">The texts of the prompt of the step.</param>
+    /// <param name="forms">The forms of the preparation.</param>
+    /// <param name="language">The name of the language the model answers in.</param>
+    /// <param name="provider">The provider which answers.</param>
+    /// <returns>The share of each material this version can open, in the order the person added them.</returns>
+    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, string language, AIStudio.Settings.Provider provider)
+    {
+        var materials = (await store.ListMaterialsAsync(location.ProjectId)).Select(entry => entry.Material).OfType<BflMaterial>().ToList();
+        if (materials.Count is 0)
+            return [];
+
+        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language);
+        return BflMaterialBudget.Share(materials, BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length));
+    }
+
+    /// <summary>
+    /// Reads as much of each material as its share allows, and no more.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="shares">The share of each material.</param>
+    /// <returns>What the prompt carries of each material which could be read.</returns>
+    private async Task<IReadOnlyList<BflMaterialExcerpt>> ReadMaterialsAsync(Guid projectId, IReadOnlyList<BflMaterialShare> shares)
+    {
+        List<BflMaterialExcerpt> excerpts = [];
+        foreach (var share in shares)
+        {
+            try
+            {
+                var text = await store.ReadMaterialTextAsync(projectId, share.Material.MaterialId, share.Characters);
+                excerpts.Add(new(share, share.IsComplete ? text : BflMaterialBudget.EndAtLineEnd(text)));
+            }
+            catch (InvalidDataException exception)
+            {
+                // The person removed the material meanwhile, or its file went missing; the list shows that:
+                logger.LogWarning(exception, "Could not read the material '{MaterialId}' of the BeyondFacts Lab.", share.Material.MaterialId);
+            }
+        }
+
+        return excerpts;
     }
 
     /// <summary>

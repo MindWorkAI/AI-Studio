@@ -6,9 +6,10 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// Puts together the system prompts of the BeyondFacts Lab.
 /// </summary>
 /// <remarks>
-/// The same parts and forms always give the same prompt, byte by byte, on every system. The parts which stay the
-/// same during a conversation come first, the core and the guide, and the details last, so that providers which
-/// cache the beginning of a prompt can do so. The texts this class adds itself are German, like the prompts.
+/// The same parts, forms, and materials always give the same prompt, byte by byte, on every system. The parts which
+/// stay the same during a conversation come first, the core and the guide, then the material, which changes seldom,
+/// and the details last, so that providers which cache the beginning of a prompt can do so. The texts this class adds
+/// itself are German, like the prompts.
 /// </remarks>
 public static class BflPromptComposer
 {
@@ -23,15 +24,17 @@ public static class BflPromptComposer
     /// <param name="parts">The texts of the prompt.</param>
     /// <param name="step">The step the chat belongs to.</param>
     /// <param name="forms">The forms of the preparation, by their steps; a step this version cannot open is missing.</param>
+    /// <param name="materials">What the prompt carries of the material of the preparation, see BflMaterialBudget.</param>
     /// <param name="responseLanguage">The name of the language the model answers in, e.g., the language of the app.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The core prompt has a placeholder without a value.</exception>
-    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, string responseLanguage) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
         [BflPromptTemplate.KNOWLEDGE] = parts.Knowledge.Trim(),
         [BflPromptTemplate.STEP] = parts.Step.Trim(),
+        [BflPromptTemplate.MATERIALS] = Materials(materials),
         [BflPromptTemplate.DETAILS] = Details(step, forms),
         [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms)
     }).ReplaceLineEndings(LINE_BREAK.ToString());
@@ -51,6 +54,42 @@ public static class BflPromptComposer
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim()
     }).ReplaceLineEndings(LINE_BREAK.ToString());
+
+    /// <summary>
+    /// Lists the material of the preparation, each with its name and as much of its text as fits.
+    /// </summary>
+    /// <remarks>
+    /// The model learns which material is shortened, so that it neither takes the beginning for the whole nor
+    /// guesses what follows.
+    /// </remarks>
+    /// <param name="materials">What the prompt carries of each material, in the order the person added them.</param>
+    private static string Materials(IReadOnlyList<BflMaterialExcerpt> materials)
+    {
+        if (materials.Count is 0)
+            return "Die Person hat kein Material hinzugefügt.";
+
+        var text = new StringBuilder();
+        for (var index = 0; index < materials.Count; index++)
+        {
+            var excerpt = materials[index];
+            if (index > 0)
+                text.Append(LINE_BREAK);
+
+            text.Append($"## Material {index + 1}: „{excerpt.Share.Material.Name}“").Append(LINE_BREAK);
+            if (excerpt.Text.Length is 0)
+            {
+                text.Append("(Für dieses Material reicht der Platz im Kontext des Modells nicht. Du kennst nur seinen Namen.)").Append(LINE_BREAK);
+                continue;
+            }
+
+            if (!excerpt.Share.IsComplete)
+                text.Append($"(Gekürzt: Hier steht nur der Anfang, etwa {excerpt.Share.Percent} % des Materials. Für mehr reicht der Platz im Kontext des Modells nicht.)").Append(LINE_BREAK);
+
+            text.Append(LINE_BREAK).Append(excerpt.Text.Trim()).Append(LINE_BREAK);
+        }
+
+        return text.ToString().TrimEnd();
+    }
 
     /// <summary>
     /// Lists what the person entered into the forms, step by step.

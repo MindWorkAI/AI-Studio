@@ -38,6 +38,10 @@
                         {
                             <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@material.Name</MudText>
                             <MudText Typo="Typo.caption">@this.Caption(material)</MudText>
+                            @if (this.ShareNotice(material) is { } shareNotice)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Info">@shareNotice</MudText>
+                            }
                             @if (material.IsIncomplete)
                             {
                                 <MudText Typo="Typo.caption" Color="Color.Warning">@T("Some parts of it could not be read.")</MudText>

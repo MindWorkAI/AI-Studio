@@ -144,7 +144,7 @@
                             </div>
                         </MudItem>
                         <MudItem xs="12" lg="4">
-                            <BflMaterials ProjectId="@project.ProjectId"/>
+                            <BflMaterials ProjectId="@project.ProjectId" Step="@this.activeStep" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
                         </MudItem>
                     </MudGrid>
                 </div>

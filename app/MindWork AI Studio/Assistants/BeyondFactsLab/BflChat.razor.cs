@@ -49,6 +49,9 @@ public partial class BflChat : MSGComponentBase
     private BflConversationService ConversationService { get; init; } = null!;
 
     [Inject]
+    private BflMaterialService MaterialService { get; init; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
@@ -131,6 +134,7 @@ public partial class BflChat : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.ConversationService.ConversationChanged += this.OnConversationChangedAsync;
+        this.MaterialService.MaterialsChanged += this.OnMaterialsChangedAsync;
         this.SettingsManager.InjectSpellchecking(this.inputAttributes);
         await base.OnInitializedAsync();
     }
@@ -155,6 +159,7 @@ public partial class BflChat : MSGComponentBase
     protected override void DisposeResources()
     {
         this.ConversationService.ConversationChanged -= this.OnConversationChangedAsync;
+        this.MaterialService.MaterialsChanged -= this.OnMaterialsChangedAsync;
         this.countCancellation.Cancel();
         this.countCancellation.Dispose();
         base.DisposeResources();
@@ -167,6 +172,24 @@ public partial class BflChat : MSGComponentBase
     private Task OnConversationChangedAsync(BflThreadLocation location)
     {
         if (location != this.Location)
+            return Task.CompletedTask;
+
+        return this.InvokeAsync(async () =>
+        {
+            if (!this.IsRunning)
+                await this.RecountAsync();
+
+            this.StateHasChanged();
+        });
+    }
+
+    /// <summary>
+    /// Counts again when the material of the preparation changed, since every request of a step carries it.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation whose material changed.</param>
+    private Task OnMaterialsChangedAsync(Guid projectId)
+    {
+        if (this.Location is not BflStepThreadLocation stepLocation || stepLocation.ProjectId != projectId)
             return Task.CompletedTask;
 
         return this.InvokeAsync(async () =>
@@ -196,7 +219,7 @@ public partial class BflChat : MSGComponentBase
 
         try
         {
-            var systemPrompt = await this.ConversationService.ComposeSystemPromptAsync(this.Location);
+            var systemPrompt = await this.ConversationService.ComposeSystemPromptAsync(this.Location, this.Provider);
             var parts = ConversationParts.Of(thread, systemPrompt, string.Empty, null, false, null);
             this.tokens = await this.TokenCounter.CountAsync(this.Provider, parts, thread.ReportedHistoryFor(this.Provider.Model), this.countCancellation.Token);
         }

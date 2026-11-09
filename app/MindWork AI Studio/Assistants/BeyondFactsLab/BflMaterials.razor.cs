@@ -33,8 +33,29 @@ public partial class BflMaterials : MSGComponentBase
     [Parameter, EditorRequired]
     public Guid ProjectId { get; set; }
 
+    /// <summary>
+    /// Gets or sets the step shown, whose prompt decides how much of the material fits.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public BflStep Step { get; set; }
+
+    /// <summary>
+    /// Gets or sets the provider which answers in the chats of the preparation.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public AIStudio.Settings.Provider Provider { get; set; } = Settings.Provider.NONE;
+
+    /// <summary>
+    /// Gets or sets why the provider cannot answer, or null when it can.
+    /// </summary>
+    [Parameter]
+    public string? ProviderIssue { get; set; }
+
     [Inject]
     private BflMaterialService MaterialService { get; init; } = null!;
+
+    [Inject]
+    private BflConversationService ConversationService { get; init; } = null!;
 
     [Inject]
     private BeyondFactsLabStore Store { get; init; } = null!;
@@ -59,9 +80,25 @@ public partial class BflMaterials : MSGComponentBase
     private IReadOnlyList<BflMaterialEntry> materials = [];
 
     /// <summary>
+    /// How much of each material the prompt of the step shown carries, by the IDs of the materials; empty while no
+    /// provider can answer.
+    /// </summary>
+    private IReadOnlyDictionary<Guid, BflMaterialShare> shares = new Dictionary<Guid, BflMaterialShare>();
+
+    /// <summary>
     /// The preparation whose material is shown, to notice when the parent shows another one.
     /// </summary>
     private Guid shownProjectId = Guid.Empty;
+
+    /// <summary>
+    /// The step the shares were decided for, to decide them again for another step.
+    /// </summary>
+    private BflStep? sharedStep;
+
+    /// <summary>
+    /// The provider the shares were decided for, to decide them again for another provider.
+    /// </summary>
+    private string sharedProviderId = string.Empty;
 
     private static CultureInfo Culture => Tools.PluginSystem.I18N.I.Culture;
 
@@ -81,12 +118,14 @@ public partial class BflMaterials : MSGComponentBase
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        if (this.shownProjectId == this.ProjectId)
-            return;
-
-        this.shownProjectId = this.ProjectId;
-        this.materials = [];
-        await this.ReloadAsync();
+        if (this.shownProjectId != this.ProjectId)
+        {
+            this.shownProjectId = this.ProjectId;
+            this.materials = [];
+            await this.ReloadAsync();
+        }
+        else if (this.sharedStep != this.Step || this.sharedProviderId != this.Provider.Id)
+            await this.ShareAsync();
     }
 
     /// <inheritdoc />
@@ -126,6 +165,48 @@ public partial class BflMaterials : MSGComponentBase
             this.Logger.LogError(exception, "Could not list the material of a preparation of the BeyondFacts Lab.");
             this.materials = [];
         }
+
+        await this.ShareAsync();
+    }
+
+    /// <summary>
+    /// Decides how much of each material the prompt of the step shown carries, for the provider chosen.
+    /// </summary>
+    private async Task ShareAsync()
+    {
+        this.sharedStep = this.Step;
+        this.sharedProviderId = this.Provider.Id;
+        if (this.ProviderIssue is not null || !this.materials.Any(entry => entry.IsAvailable))
+        {
+            this.shares = new Dictionary<Guid, BflMaterialShare>();
+            return;
+        }
+
+        try
+        {
+            var decided = await this.ConversationService.ShareMaterialsAsync(new BflStepThreadLocation(this.ProjectId, this.Step), this.Provider);
+            this.shares = decided.ToDictionary(share => share.Material.MaterialId);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
+        {
+            // Sending reports the same problem; the area only leaves out how much fits:
+            this.Logger.LogDebug(exception, "Could not decide how much of the material of the BeyondFacts Lab fits.");
+            this.shares = new Dictionary<Guid, BflMaterialShare>();
+        }
+    }
+
+    /// <summary>
+    /// Gets what the person needs to know about how much of a material the model reads, or null when it reads all.
+    /// </summary>
+    /// <param name="material">The material.</param>
+    private string? ShareNotice(BflMaterial material)
+    {
+        if (!this.shares.TryGetValue(material.MaterialId, out var share) || share.IsComplete)
+            return null;
+
+        return share.Characters > 0
+            ? string.Format(T("Only its first {0} % fits into the context window of the selected model."), share.Percent)
+            : T("Nothing of it fits into the context window of the selected model; the model learns only its name.");
     }
 
     /// <summary>
