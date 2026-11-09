@@ -87,6 +87,9 @@ public partial class BeyondFactsLabAssistant
             var project = await this.Store.CreateAsync(name);
             await this.Store.RememberSelectionAsync(project.ProjectId);
             await this.ReloadProjectsAsync(project.ProjectId);
+
+            // The new preparation comes into view:
+            this.introductionExpanded = false;
         });
     }
 

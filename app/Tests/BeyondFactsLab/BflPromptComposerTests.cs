@@ -68,6 +68,55 @@ public sealed class BflPromptComposerTests
     }
 
     [Test]
+    public async Task TheOnboardingFillsEveryPlaceholderWithoutTheGuide()
+    {
+        var parts = await BflPromptLibrary.LoadOnboardingPartsAsync(AddressForm.FORMAL);
+        var knowledge = await BflPromptLibrary.ReadAsync(BflPromptLibrary.KNOWLEDGE_PATH);
+
+        var prompt = BflPromptComposer.ComposeOnboarding(parts, "Deutsch");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Not.Contain("{{"));
+            Assert.That(prompt, Does.Contain("Antworte auf Deutsch."));
+            Assert.That(prompt, Does.Not.Contain(knowledge.Trim()[..200]), "The onboarding stays short, so it leaves out the guide.");
+        }
+    }
+
+    [Test]
+    public async Task TheFormOfAddressDecidesTheInstructionOfTheOnboarding()
+    {
+        var formal = BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(AddressForm.FORMAL), "Deutsch");
+        var informal = BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(AddressForm.INFORMAL), "Deutsch");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(formal, Does.Contain("mit „Sie“"));
+            Assert.That(formal, Does.Not.Contain("mit „du“"));
+            Assert.That(informal, Does.Contain("mit „du“"));
+            Assert.That(informal, Does.Not.Contain("mit „Sie“"));
+        }
+    }
+
+    [Test]
+    public void TheOnboardingIsTheSameOnEverySystem()
+    {
+        var parts = new BflOnboardingPromptParts("Sprache: {{RESPONSE_LANGUAGE}}\r\n{{ADDRESS_FORM}}\r\nEnde", " Anrede\r\n");
+
+        var prompt = BflPromptComposer.ComposeOnboarding(parts, "Deutsch");
+
+        Assert.That(prompt, Is.EqualTo("Sprache: Deutsch\nAnrede\nEnde"));
+    }
+
+    [Test]
+    public void TheOnboardingKnowsNoDetailsOfAPreparation()
+    {
+        var parts = new BflOnboardingPromptParts("{{DETAILS}}", "Anrede");
+
+        Assert.Throws<FormatException>(() => BflPromptComposer.ComposeOnboarding(parts, "Deutsch"));
+    }
+
+    [Test]
     public void TheLanguageOfTheAnswersIsNamed()
     {
         var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), "English (United States)");

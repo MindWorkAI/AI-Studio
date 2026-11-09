@@ -3,7 +3,7 @@ using System.Text;
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// Puts together the system prompt of a step of the BeyondFacts Lab.
+/// Puts together the system prompts of the BeyondFacts Lab.
 /// </summary>
 /// <remarks>
 /// The same parts and forms always give the same prompt, byte by byte, on every system. The parts which stay the
@@ -34,6 +34,22 @@ public static class BflPromptComposer
         [BflPromptTemplate.STEP] = parts.Step.Trim(),
         [BflPromptTemplate.DETAILS] = Details(step, forms),
         [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms)
+    }).ReplaceLineEndings(LINE_BREAK.ToString());
+
+    /// <summary>
+    /// Puts together the system prompt of the conversation about whether the lab fits a task.
+    /// </summary>
+    /// <remarks>
+    /// It knows no preparation and leaves out the guide, so that it stays short.
+    /// </remarks>
+    /// <param name="parts">The texts of the prompt.</param>
+    /// <param name="responseLanguage">The name of the language the model answers in, e.g., the language of the app.</param>
+    /// <returns>The system prompt.</returns>
+    /// <exception cref="FormatException">The prompt has a placeholder without a value.</exception>
+    public static string ComposeOnboarding(BflOnboardingPromptParts parts, string responseLanguage) => BflPromptTemplate.Fill(parts.Onboarding, new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
+        [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim()
     }).ReplaceLineEndings(LINE_BREAK.ToString());
 
     /// <summary>

@@ -12,20 +12,26 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// The chat of one step of the BeyondFacts Lab, below its form "Your details".
+/// A chat of the BeyondFacts Lab, such as the one of a step below its form "Your details".
 /// </summary>
 /// <remarks>
 /// The chat itself lives in BflConversationService, so an answer goes on while the person looks elsewhere; this
 /// component shows it and renders whenever the service says it changed. It offers no "send to": the lab neither
 /// receives content from other assistants nor hands its answers on.
 /// </remarks>
-public partial class BflStepChat : MSGComponentBase
+public partial class BflChat : MSGComponentBase
 {
     /// <summary>
-    /// Gets or sets the step of the preparation whose chat to show.
+    /// Gets or sets where the chat to show belongs, e.g., to a step of a preparation.
     /// </summary>
     [Parameter, EditorRequired]
-    public BflThreadLocation Location { get; set; }
+    public BflThreadLocation Location { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets whether the chat shows a heading of its own; it needs none where its place already names it.
+    /// </summary>
+    [Parameter]
+    public bool ShowHeading { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the provider which answers.
@@ -46,7 +52,7 @@ public partial class BflStepChat : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
-    private ILogger<BflStepChat> Logger { get; init; } = null!;
+    private ILogger<BflChat> Logger { get; init; } = null!;
 
     [Inject]
     private ConversationTokenCounter TokenCounter { get; init; } = null!;
@@ -72,7 +78,7 @@ public partial class BflStepChat : MSGComponentBase
     private BflConversation? conversation;
 
     /// <summary>
-    /// The step whose chat is shown, to notice when the parent shows another one.
+    /// Where the chat shown belongs, to notice when the parent shows another one.
     /// </summary>
     private BflThreadLocation? shownLocation;
 
@@ -93,6 +99,33 @@ public partial class BflStepChat : MSGComponentBase
     private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null && this.Budget is not BflTokenBudgetState.FULL;
 
     private bool CanSendMessage => this.CanSend && !string.IsNullOrWhiteSpace(this.userInput);
+
+    /// <summary>
+    /// Gets what the chat says before its conversation begins.
+    /// </summary>
+    private string Introduction => this.Location switch
+    {
+        BflOnboardingThreadLocation => TA("Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin."),
+        _ => TA("The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.")
+    };
+
+    /// <summary>
+    /// Gets the name a message gets when the person exports it.
+    /// </summary>
+    private string ExportFileName => this.Location switch
+    {
+        BflStepThreadLocation stepLocation => stepLocation.Step.Title,
+        _ => T("Is the lab right for my task?")
+    };
+
+    /// <summary>
+    /// Gets the question before the conversation starts over.
+    /// </summary>
+    private string ResetQuestion => this.Location switch
+    {
+        BflStepThreadLocation => TA("Delete the conversation of this step and start it over? Your details stay as they are."),
+        _ => TA("Delete this conversation and start it over?")
+    };
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -130,7 +163,7 @@ public partial class BflStepChat : MSGComponentBase
     /// <summary>
     /// Renders the chat again when the service changed it, and counts again once an answer is complete.
     /// </summary>
-    /// <param name="location">The step whose chat changed.</param>
+    /// <param name="location">Where the chat which changed belongs.</param>
     private Task OnConversationChangedAsync(BflThreadLocation location)
     {
         if (location != this.Location)
@@ -146,7 +179,7 @@ public partial class BflStepChat : MSGComponentBase
     }
 
     /// <summary>
-    /// Counts what the next request of the chat carries: the system prompt with the guide, and the conversation.
+    /// Counts what the next request of the chat carries: the system prompt, e.g., with the guide, and the conversation.
     /// </summary>
     /// <remarks>
     /// Only while no answer runs: the request appends to the conversation which the count reads. The message being
@@ -216,7 +249,7 @@ public partial class BflStepChat : MSGComponentBase
     };
 
     /// <summary>
-    /// Lets the model open the conversation of the step.
+    /// Lets the model open the conversation.
     /// </summary>
     private async Task StartAsync()
     {
@@ -259,7 +292,7 @@ public partial class BflStepChat : MSGComponentBase
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { dialog => dialog.Message, TA("Delete the conversation of this step and start it over? Your details stay as they are.") }
+            { dialog => dialog.Message, this.ResetQuestion }
         };
 
         var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start over"), parameters, DialogOptions.FULLSCREEN);
@@ -273,7 +306,7 @@ public partial class BflStepChat : MSGComponentBase
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            this.Logger.LogError(exception, "Could not delete the chat of a step in the BeyondFacts Lab.");
+            this.Logger.LogError(exception, "Could not delete the chat '{Location}' of the BeyondFacts Lab.", this.Location.Key);
             await this.MessageBus.SendError(new(Icons.Material.Filled.DeleteForever, TA("AI Studio could not delete this conversation. Please try again.")));
         }
     }

@@ -13,9 +13,15 @@
         </MudStack>
 
         <InnerScrolling>
-            <MudText Typo="Typo.body1" Class="mb-3 mr-3">
-                @TA("Prepare a challenging appearance as a researcher step by step, e.g., a panel discussion, an interview, or a hearing. Each preparation belongs to one event and has its own steps, chats, and work states.")
-            </MudText>
+            @* How to work with the lab opens by itself while there is no preparation yet. *@
+            <MudExpansionPanels MultiExpansion="@true" Class="mb-6 mr-3">
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.School" HeaderText="@T("Working with the lab")" IsExpanded="@this.introductionExpanded" ExpandedChanged="@this.IntroductionExpandedChanged">
+                    <BflIntroduction/>
+                </ExpansionPanel>
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.HelpOutline" HeaderText="@T("Is the lab right for my task?")">
+                    <BflOnboarding/>
+                </ExpansionPanel>
+            </MudExpansionPanels>
 
             <MudText Typo="Typo.h5" Class="mb-1">@TA("Your preparations")</MudText>
             @if (this.projects.Count == 0)
@@ -129,7 +135,7 @@
                         </MudAlert>
                     }
 
-                    <BflStepChat Location="@(new BflThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                    <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
                 </div>
             }
             else

@@ -10,7 +10,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// Stores the preparations of the BeyondFacts Lab as files below the data directory.
 /// </summary>
 /// <remarks>
-/// Each preparation lives in a folder named by its ID. The store keeps no paths: it derives every path from
+/// Each preparation lives in a folder named by its ID; the conversation about whether the lab fits a task, which
+/// belongs to no preparation, lives in a folder of its own. The store keeps no paths: it derives every path from
 /// IDs, so a backup works on another computer as well. It writes each file atomically, guards each preparation
 /// with a lock of its own, and never deletes anything on its own; only the person deletes a preparation.
 /// </remarks>

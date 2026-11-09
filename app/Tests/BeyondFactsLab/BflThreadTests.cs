@@ -22,7 +22,7 @@ public sealed class BflThreadTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(BflThreadId.Of(PROJECT_ID, BflStep.STRATEGY), Is.EqualTo(expected));
-            Assert.That(new BflThreadLocation(PROJECT_ID, BflStep.STRATEGY).ChatId, Is.EqualTo(expected));
+            Assert.That(new BflStepThreadLocation(PROJECT_ID, BflStep.STRATEGY).ChatId, Is.EqualTo(expected));
         }
     }
 
@@ -41,6 +41,46 @@ public sealed class BflThreadTests
     }
 
     [Test]
+    public void TheIdOfTheOnboardingFollowsFromItsName()
+    {
+        // Computed independently, from SHA-256 over "beyondfacts-lab/thread/onboarding". A stored chat keeps its ID, so
+        // this value never changes:
+        var expected = Guid.Parse("b98423a4-8502-8ddd-8e56-df78ccd610ba");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflThreadId.ONBOARDING, Is.EqualTo(expected));
+            Assert.That(BflOnboardingThreadLocation.INSTANCE.ChatId, Is.EqualTo(expected));
+            Assert.That(BflOnboardingThreadLocation.INSTANCE.Key, Is.EqualTo("onboarding"));
+            Assert.That(BflOnboardingThreadLocation.INSTANCE.ChatName, Is.EqualTo("onboarding"));
+        }
+    }
+
+    [Test]
+    public void TheOnboardingSharesItsIdWithNoStep()
+    {
+        var stepIds = BflStep.All.Select(step => BflThreadId.Of(PROJECT_ID, step));
+
+        Assert.That(stepIds, Has.None.EqualTo(BflThreadId.ONBOARDING));
+    }
+
+    [Test]
+    public void ThePlaceOfAStepServesAsAKey()
+    {
+        BflThreadLocation first = new BflStepThreadLocation(PROJECT_ID, BflStep.STRATEGY);
+        BflThreadLocation second = new BflStepThreadLocation(PROJECT_ID, BflStep.STRATEGY);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(first, Is.EqualTo(second));
+            Assert.That(first.GetHashCode(), Is.EqualTo(second.GetHashCode()));
+            Assert.That(first, Is.Not.EqualTo(new BflStepThreadLocation(PROJECT_ID, BflStep.FRAMEWORK)));
+            Assert.That(first.Key, Is.EqualTo($"{PROJECT_ID:D}/05-strategy"));
+            Assert.That(first.ChatName, Is.EqualTo("05-strategy"));
+        }
+    }
+
+    [Test]
     public void TheIdIsAVersion8Uuid()
     {
         var id = BflThreadId.Of(PROJECT_ID, BflStep.FRAMEWORK);
@@ -55,7 +95,7 @@ public sealed class BflThreadTests
     [Test]
     public void ANewChatHasNothingButItsPlace()
     {
-        var location = new BflThreadLocation(PROJECT_ID, BflStep.KNOWLEDGE);
+        var location = new BflStepThreadLocation(PROJECT_ID, BflStep.KNOWLEDGE);
 
         var thread = BflThreadFactory.Create(location);
 
@@ -73,7 +113,7 @@ public sealed class BflThreadTests
     [Test]
     public void AChatIsReadiedAsAChatOfTheLabWithoutToolsOrDataSources()
     {
-        var thread = BflThreadFactory.Create(new BflThreadLocation(PROJECT_ID, BflStep.KNOWLEDGE));
+        var thread = BflThreadFactory.Create(new BflStepThreadLocation(PROJECT_ID, BflStep.KNOWLEDGE));
         thread.DataSourceOptions.DisableDataSources = false;
         thread.RuntimeSelectedToolIds = ["web_search"];
         var provider = new AIStudio.Settings.Provider(1, "provider-1", "Test", LLMProviders.SELF_HOSTED, new Model("model", null));

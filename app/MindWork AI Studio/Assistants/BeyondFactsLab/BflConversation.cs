@@ -3,7 +3,7 @@ using AIStudio.Chat;
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// The chat of a step of the BeyondFacts Lab, as BflConversationService keeps it while the app runs.
+/// A chat of the BeyondFacts Lab, as BflConversationService keeps it while the app runs.
 /// </summary>
 /// <remarks>
 /// The service keeps it beyond the page, so that an answer goes on while the person looks at another page, and the
@@ -12,7 +12,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 public sealed class BflConversation
 {
     /// <summary>
-    /// Gets the step of the preparation the chat belongs to.
+    /// Gets where the chat belongs, e.g., to a step of a preparation.
     /// </summary>
     public required BflThreadLocation Location { get; init; }
 

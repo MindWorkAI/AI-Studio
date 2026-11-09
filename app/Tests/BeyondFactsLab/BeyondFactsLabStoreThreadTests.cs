@@ -35,7 +35,7 @@ public sealed class BeyondFactsLabStoreThreadTests
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
 
-        var thread = await store.LoadThreadAsync(new BflThreadLocation(created.ProjectId, BflStep.FRAMEWORK));
+        var thread = await store.LoadThreadAsync(new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK));
 
         Assert.That(thread, Is.Null);
     }
@@ -45,10 +45,11 @@ public sealed class BeyondFactsLabStoreThreadTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var location = new BflThreadLocation(created.ProjectId, BflStep.KNOWLEDGE);
+        var location = new BflStepThreadLocation(created.ProjectId, BflStep.KNOWLEDGE);
         var thread = WithMessage(BflThreadFactory.Create(location), "Worauf beruht meine Expertise?");
 
-        var changed = await store.SaveThreadAsync(location, thread);
+        await store.SaveThreadAsync(location, thread);
+        var changed = await store.LoadAsync(created.ProjectId);
         var loaded = await this.CreateStore().LoadThreadAsync(location);
 
         using (Assert.EnterMultipleScope())
@@ -57,7 +58,7 @@ public sealed class BeyondFactsLabStoreThreadTests
             Assert.That(loaded!.ChatId, Is.EqualTo(location.ChatId));
             Assert.That(loaded.Blocks, Has.Count.EqualTo(1));
             Assert.That(((ContentText)loaded.Blocks[0].Content!).Text, Is.EqualTo("Worauf beruht meine Expertise?"));
-            Assert.That(changed.ModifiedAtUtc, Is.GreaterThan(created.ModifiedAtUtc), "A conversation is work on the preparation.");
+            Assert.That(changed!.ModifiedAtUtc, Is.GreaterThan(created.ModifiedAtUtc), "A conversation is work on the preparation.");
             Assert.That(File.Exists(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "02-knowledge", "thread.json")), Is.True);
         }
     }
@@ -67,9 +68,9 @@ public sealed class BeyondFactsLabStoreThreadTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var thread = BflThreadFactory.Create(new BflThreadLocation(created.ProjectId, BflStep.STRATEGY));
+        var thread = BflThreadFactory.Create(new BflStepThreadLocation(created.ProjectId, BflStep.STRATEGY));
 
-        await Assert.ThrowsAsync<ArgumentException>(async () => await store.SaveThreadAsync(new BflThreadLocation(created.ProjectId, BflStep.FRAMEWORK), thread));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await store.SaveThreadAsync(new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK), thread));
     }
 
     [Test]
@@ -77,7 +78,7 @@ public sealed class BeyondFactsLabStoreThreadTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var location = new BflThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
+        var location = new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
         await store.DeleteAsync(created.ProjectId);
 
         await Assert.ThrowsAsync<FileNotFoundException>(async () => await store.SaveThreadAsync(location, BflThreadFactory.Create(location)));
@@ -90,8 +91,8 @@ public sealed class BeyondFactsLabStoreThreadTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var strategy = new BflThreadLocation(created.ProjectId, BflStep.STRATEGY);
-        var framework = new BflThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
+        var strategy = new BflStepThreadLocation(created.ProjectId, BflStep.STRATEGY);
+        var framework = new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
         await store.SaveThreadAsync(strategy, BflThreadFactory.Create(strategy));
         var stepsDirectory = Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps");
         Directory.CreateDirectory(Path.Combine(stepsDirectory, "01-framework"));
@@ -109,7 +110,7 @@ public sealed class BeyondFactsLabStoreThreadTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var location = new BflThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
+        var location = new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
         var path = Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "01-framework", "thread.json");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         await File.WriteAllTextAsync(path, "{ damaged");
@@ -127,7 +128,7 @@ public sealed class BeyondFactsLabStoreThreadTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var location = new BflThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
+        var location = new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
         await store.SaveThreadAsync(location, WithMessage(BflThreadFactory.Create(location), "Hallo"));
 
         await store.DeleteThreadAsync(location);
@@ -141,8 +142,8 @@ public sealed class BeyondFactsLabStoreThreadTests
         var store = this.CreateStore();
         var first = await store.CreateAsync("Panel");
         var second = await store.CreateAsync("Interview");
-        var firstStrategy = new BflThreadLocation(first.ProjectId, BflStep.STRATEGY);
-        var secondFramework = new BflThreadLocation(second.ProjectId, BflStep.FRAMEWORK);
+        var firstStrategy = new BflStepThreadLocation(first.ProjectId, BflStep.STRATEGY);
+        var secondFramework = new BflStepThreadLocation(second.ProjectId, BflStep.FRAMEWORK);
         await store.SaveThreadAsync(firstStrategy, BflThreadFactory.Create(firstStrategy));
         await store.SaveThreadAsync(secondFramework, BflThreadFactory.Create(secondFramework));
 
@@ -157,8 +158,56 @@ public sealed class BeyondFactsLabStoreThreadTests
             Assert.That(locations[firstStrategy.ChatId], Is.EqualTo(firstStrategy));
             Assert.That(locations[secondFramework.ChatId], Is.EqualTo(secondFramework));
             Assert.That(store.GetThreadWrittenAt(firstStrategy), Is.Not.Null);
-            Assert.That(store.GetThreadWrittenAt(new BflThreadLocation(first.ProjectId, BflStep.FRAMEWORK)), Is.Null);
+            Assert.That(store.GetThreadWrittenAt(new BflStepThreadLocation(first.ProjectId, BflStep.FRAMEWORK)), Is.Null);
         }
+    }
+
+    [Test]
+    public async Task TheOnboardingIsStoredApartFromThePreparations()
+    {
+        var store = this.CreateStore();
+        var location = BflOnboardingThreadLocation.INSTANCE;
+
+        await store.SaveThreadAsync(location, WithMessage(BflThreadFactory.Create(location), "Passt das Lab zu meinem Interview?"));
+        var otherStore = this.CreateStore();
+        var loaded = await otherStore.LoadThreadAsync(location);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded, Is.Not.Null);
+            Assert.That(loaded!.ChatId, Is.EqualTo(BflThreadId.ONBOARDING));
+            Assert.That(((ContentText)loaded.Blocks[0].Content!).Text, Is.EqualTo("Passt das Lab zu meinem Interview?"));
+            Assert.That(File.Exists(Path.Combine(this.RootDirectory, "onboarding", "thread.json")), Is.True);
+            Assert.That(await otherStore.ListProjectsAsync(), Is.Empty, "The folder of the onboarding is no preparation.");
+            Assert.That(otherStore.ReadAllThreadLocations()[BflThreadId.ONBOARDING], Is.EqualTo(location));
+            Assert.That(otherStore.GetThreadWrittenAt(location), Is.Not.Null);
+        }
+    }
+
+    [Test]
+    public async Task StartingTheOnboardingOverDeletesIt()
+    {
+        var store = this.CreateStore();
+        var location = BflOnboardingThreadLocation.INSTANCE;
+        await store.SaveThreadAsync(location, WithMessage(BflThreadFactory.Create(location), "Hallo"));
+
+        await store.DeleteThreadAsync(location);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(await store.LoadThreadAsync(location), Is.Null);
+            Assert.That(store.ReadAllThreadLocations(), Does.Not.ContainKey(BflThreadId.ONBOARDING));
+        }
+    }
+
+    [Test]
+    public async Task AChatOfAStepIsNotStoredAsTheOnboarding()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var thread = BflThreadFactory.Create(new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK));
+
+        await Assert.ThrowsAsync<ArgumentException>(async () => await store.SaveThreadAsync(BflOnboardingThreadLocation.INSTANCE, thread));
     }
 
     private static ChatThread WithMessage(ChatThread thread, string text)

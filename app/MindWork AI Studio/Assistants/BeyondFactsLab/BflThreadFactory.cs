@@ -13,15 +13,15 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 public static class BflThreadFactory
 {
     /// <summary>
-    /// Creates the chat of a step, without any messages.
+    /// Creates a chat of the lab, without any messages.
     /// </summary>
-    /// <param name="location">The step of the preparation the chat belongs to.</param>
+    /// <param name="location">Where the chat belongs, e.g., to a step of a preparation.</param>
     /// <returns>The chat.</returns>
     public static ChatThread Create(BflThreadLocation location) => new()
     {
         ChatId = location.ChatId,
         WorkspaceId = Guid.Empty,
-        Name = location.Step.FolderName,
+        Name = location.ChatName,
         IncludeDateTime = true,
         SelectedProfile = Profile.NO_PROFILE.Id,
         SelectedChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE.Id,
@@ -38,7 +38,7 @@ public static class BflThreadFactory
     /// </remarks>
     /// <param name="thread">The chat.</param>
     /// <param name="provider">The provider which answers.</param>
-    /// <param name="systemPrompt">The system prompt of the step, see BflPromptComposer.</param>
+    /// <param name="systemPrompt">The system prompt of the chat, see BflPromptComposer.</param>
     public static void PrepareForRequest(ChatThread thread, AIStudio.Settings.Provider provider, string systemPrompt)
     {
         thread.SystemPrompt = systemPrompt;
