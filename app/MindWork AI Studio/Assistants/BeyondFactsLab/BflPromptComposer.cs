@@ -56,11 +56,12 @@ public static class BflPromptComposer
     }).ReplaceLineEndings(LINE_BREAK.ToString());
 
     /// <summary>
-    /// Lists the material of the preparation, each with its name and as much of its text as fits.
+    /// Lists the material of the preparation, each with its name and as much of its text as fits, or for an image,
+    /// whether it goes along.
     /// </summary>
     /// <remarks>
     /// The model learns which material is shortened, so that it neither takes the beginning for the whole nor
-    /// guesses what follows.
+    /// guesses what follows, and which text is the transcript of a recording, whose spelling may be off.
     /// </remarks>
     /// <param name="materials">What the prompt carries of each material, in the order the person added them.</param>
     private static string Materials(IReadOnlyList<BflMaterialExcerpt> materials)
@@ -72,15 +73,33 @@ public static class BflPromptComposer
         for (var index = 0; index < materials.Count; index++)
         {
             var excerpt = materials[index];
+            var material = excerpt.Share.Material;
             if (index > 0)
                 text.Append(LINE_BREAK);
 
-            text.Append($"## Material {index + 1}: „{excerpt.Share.Material.Name}“").Append(LINE_BREAK);
+            text.Append($"## Material {index + 1}: „{material.Name}“").Append(LINE_BREAK);
+            if (material.Kind is BflMaterialKind.IMAGE)
+            {
+                text.Append(excerpt.Share.Image switch
+                {
+                    BflImageDelivery.SENT => "(Ein Bild. Es liegt der ersten Nachricht dieses Gesprächs bei.)",
+                    BflImageDelivery.OVER_THE_LIMIT => "(Ein Bild. Das Modell nimmt nicht so viele Bilder auf einmal an. Du kennst nur seinen Namen.)",
+                    _ => "(Ein Bild. Das Modell kann keine Bilder sehen. Du kennst nur seinen Namen.)",
+                }).Append(LINE_BREAK);
+                continue;
+            }
+
+            if (material.Kind is BflMaterialKind.RECORDING)
+                text.Append("(Das Transkript einer Aufnahme. Namen und Fachbegriffe können falsch geschrieben sein.)").Append(LINE_BREAK);
+
             if (excerpt.Text.Length is 0)
             {
                 text.Append("(Für dieses Material reicht der Platz im Kontext des Modells nicht. Du kennst nur seinen Namen.)").Append(LINE_BREAK);
                 continue;
             }
+
+            if (material.IsShortened)
+                text.Append("(Das Lab hat nur den Anfang dieses Materials übernommen. Den Rest kennst du nicht.)").Append(LINE_BREAK);
 
             if (!excerpt.Share.IsComplete)
                 text.Append($"(Gekürzt: Hier steht nur der Anfang, etwa {excerpt.Share.Percent} % des Materials. Für mehr reicht der Platz im Kontext des Modells nicht.)").Append(LINE_BREAK);

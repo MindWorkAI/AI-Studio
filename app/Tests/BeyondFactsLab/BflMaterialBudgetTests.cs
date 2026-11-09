@@ -18,6 +18,37 @@ public sealed class BflMaterialBudgetTests
     }
 
     [Test]
+    public void EachImageTakesItsRoomBeforeTheText()
+    {
+        var characters = BflMaterialBudget.CharactersFor(ContextWindow.Of(128_000), 90_000, sentImages: 2);
+
+        Assert.That(characters, Is.EqualTo(((128_000 - BflTokenBudget.RESERVE_TOKENS - 2 * BflMaterialBudget.TOKENS_PER_IMAGE) * 4 - 90_000) / 2));
+    }
+
+    [Test]
+    public void ImagesBeyondWhatTheModelTakesStayBehind()
+    {
+        List<BflMaterial> images = [Image("A.png"), Image("B.png"), Image("C.png")];
+
+        var shares = BflMaterialBudget.ShareImages(images, 2);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(shares.Select(share => share.Image), Is.EqualTo(new[] { BflImageDelivery.SENT, BflImageDelivery.SENT, BflImageDelivery.OVER_THE_LIMIT }), "The images the person added first go along.");
+            Assert.That(shares.Select(share => share.Material.Name), Is.EqualTo(new[] { "A.png", "B.png", "C.png" }));
+            Assert.That(shares.All(share => share.Characters is 0), Is.True, "An image takes no characters.");
+        }
+    }
+
+    [Test]
+    public void AModelWhichSeesNoImagesGetsNone()
+    {
+        var shares = BflMaterialBudget.ShareImages([Image("A.png"), Image("B.png")], 0);
+
+        Assert.That(shares.Select(share => share.Image), Is.All.EqualTo(BflImageDelivery.MODEL_SEES_NO_IMAGES));
+    }
+
+    [Test]
     public void AHugeWindowStillCarriesNoBook()
     {
         Assert.That(BflMaterialBudget.CharactersFor(ContextWindow.Of(1_000_000), 90_000), Is.EqualTo(BflMaterialBudget.MAX_CHARACTERS));
@@ -115,5 +146,13 @@ public sealed class BflMaterialBudgetTests
         MaterialId = Guid.NewGuid(),
         Name = $"{textLength}.pdf",
         TextLength = textLength,
+    };
+
+    private static BflMaterial Image(string name) => new()
+    {
+        MaterialId = Guid.NewGuid(),
+        Name = name,
+        Kind = BflMaterialKind.IMAGE,
+        Image = new() { Extension = "png", Width = 100, Height = 100 },
     };
 }

@@ -284,6 +284,43 @@ public sealed class BflPromptComposerTests
         }
     }
 
+    [TestCase(BflImageDelivery.SENT, "(Ein Bild. Es liegt der ersten Nachricht dieses Gesprächs bei.)")]
+    [TestCase(BflImageDelivery.MODEL_SEES_NO_IMAGES, "(Ein Bild. Das Modell kann keine Bilder sehen. Du kennst nur seinen Namen.)")]
+    [TestCase(BflImageDelivery.OVER_THE_LIMIT, "(Ein Bild. Das Modell nimmt nicht so viele Bilder auf einmal an. Du kennst nur seinen Namen.)")]
+    public void AnImageSaysWhetherItGoesAlong(BflImageDelivery delivery, string expected)
+    {
+        var image = new BflMaterial { MaterialId = Guid.NewGuid(), Name = "Poster.png", Kind = BflMaterialKind.IMAGE };
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [new(new(image, 0, delivery), string.Empty)], "Deutsch");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain($"## Material 1: „Poster.png“\n{expected}"));
+            Assert.That(prompt, Does.Not.Contain("reicht der Platz"), "An image takes no room in the prompt.");
+        }
+    }
+
+    [Test]
+    public void ARecordingIsMarkedAsATranscript()
+    {
+        var recording = new BflMaterial { MaterialId = Guid.NewGuid(), Name = "Interview.mp3", Kind = BflMaterialKind.RECORDING, TextLength = 10 };
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [new(new(recording, 10), "Guten Tag.")], "Deutsch");
+
+        Assert.That(prompt, Does.Contain("## Material 1: „Interview.mp3“\n(Das Transkript einer Aufnahme."));
+    }
+
+    [Test]
+    public void AMaterialWhoseEndTheLabLeftOutSaysSo()
+    {
+        var book = new BflMaterial { MaterialId = Guid.NewGuid(), Name = "Buch.pdf", TextLength = 10, IsShortened = true };
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [new(new(book, 10), "Kapitel 1.")], "Deutsch");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain("(Das Lab hat nur den Anfang dieses Materials übernommen. Den Rest kennst du nicht.)"));
+            Assert.That(prompt, Does.Not.Contain("Gekürzt:"), "The whole stored text fits.");
+        }
+    }
+
     [Test]
     public void TheOnboardingKnowsNoMaterial()
     {

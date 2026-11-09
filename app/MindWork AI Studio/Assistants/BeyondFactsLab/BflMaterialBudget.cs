@@ -18,6 +18,10 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// it. It does not pass the filter again: cutting off the end of a text adds nothing which the filter did not see,
 /// unlike IRetrievalContextExtensions.ShortenToFitAsync, which cuts the unfiltered text of a data source.
 /// </para>
+/// <para>
+/// An image takes no characters: as many images as the model takes at once go along with the first message of the
+/// conversation, and each takes TOKENS_PER_IMAGE from the free room before the text gets its half.
+/// </para>
 /// </remarks>
 public static class BflMaterialBudget
 {
@@ -58,19 +62,45 @@ public static class BflMaterialBudget
     private const double MAX_SHARE_GIVEN_UP_FOR_A_LINE_END = 0.1;
 
     /// <summary>
-    /// Gets how many characters the material of a preparation may take in the prompt of a step.
+    /// How many tokens the lab expects one image to take.
+    /// </summary>
+    /// <remarks>
+    /// No provider tells beforehand. Anthropic counts about width × height / 750 tokens and first scales an image down
+    /// to about 1.15 megapixels, which gives about 1,600 tokens at most; OpenAI counts at most about 1,100 for one image
+    /// in high detail. The lab reserves the larger one for every image it sends.
+    /// </remarks>
+    public const int TOKENS_PER_IMAGE = 1_600;
+
+    /// <summary>
+    /// Gets how many characters the text of the material of a preparation may take in the prompt of a step.
     /// </summary>
     /// <param name="contextWindow">The context window of the model which answers.</param>
     /// <param name="promptCharacters">How many characters the system prompt has without the material.</param>
+    /// <param name="sentImages">How many images of the material go along with the request; each takes room first.</param>
     /// <returns>The characters, between 0 and MAX_CHARACTERS.</returns>
-    public static int CharactersFor(ContextWindow contextWindow, int promptCharacters)
+    public static int CharactersFor(ContextWindow contextWindow, int promptCharacters, int sentImages = 0)
     {
         if (!contextWindow.IsKnown)
             return CHARACTERS_WITHOUT_A_KNOWN_CONTEXT_WINDOW;
 
-        var freeCharacters = ((long)contextWindow.DefaultTokens - BflTokenBudget.RESERVE_TOKENS) * CHARACTERS_PER_TOKEN - promptCharacters;
+        var freeTokens = (long)contextWindow.DefaultTokens - BflTokenBudget.RESERVE_TOKENS - (long)Math.Max(0, sentImages) * TOKENS_PER_IMAGE;
+        var freeCharacters = freeTokens * CHARACTERS_PER_TOKEN - promptCharacters;
         return (int)Math.Clamp((long)(freeCharacters * SHARE_OF_THE_FREE_CONTEXT), 0, MAX_CHARACTERS);
     }
+
+    /// <summary>
+    /// Decides which images of the material go along with a request: as many as the model takes at once, in the order
+    /// the person added them.
+    /// </summary>
+    /// <param name="images">The images of the material, in the order the person added them.</param>
+    /// <param name="imagesTheModelTakes">How many images the model takes in one message; 0 when it sees none.</param>
+    /// <returns>The share of each image, in the same order.</returns>
+    public static IReadOnlyList<BflMaterialShare> ShareImages(IReadOnlyList<BflMaterial> images, int imagesTheModelTakes) =>
+    [
+        .. images.Select((image, index) => new BflMaterialShare(image, 0, imagesTheModelTakes <= 0
+            ? BflImageDelivery.MODEL_SEES_NO_IMAGES
+            : index < imagesTheModelTakes ? BflImageDelivery.SENT : BflImageDelivery.OVER_THE_LIMIT))
+    ];
 
     /// <summary>
     /// Shares out the characters among the materials evenly: what a short material does not need goes to the others.

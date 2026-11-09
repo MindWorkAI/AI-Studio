@@ -139,10 +139,10 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         if (conversation.Thread is not { } thread || !await this.CheckProviderAsync(location, thread, provider))
             return;
 
-        string systemPrompt;
+        BflRequestMaterial requestMaterial;
         try
         {
-            systemPrompt = await this.ComposeSystemPromptAsync(location, provider);
+            requestMaterial = await this.ComposeRequestAsync(location, provider);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
@@ -165,7 +165,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         var status = AssistantSessionStatus.FAILED;
         try
         {
-            BflThreadFactory.PrepareForRequest(thread, provider, systemPrompt);
+            BflThreadFactory.PrepareForRequest(thread, provider, requestMaterial.SystemPrompt);
             var request = new ContentText { Text = text };
             thread.Blocks.Add(new ContentBlock
             {
@@ -205,7 +205,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
             sessionId = (await sessionService.TryBeginAsync(sessionKey, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT.Name, cancellation, thread, new(StringComparer.Ordinal))).SessionId;
             await this.NotifyAsync(location);
 
-            await answer.CreateFromProviderAsync(provider.CreateProvider(), provider.Model, request, thread, cancellation.Token);
+            await answer.CreateFromProviderAsync(provider.CreateProvider(), provider.Model, request, WithImages(thread, requestMaterial.Images), cancellation.Token);
             status = cancellation.IsCancellationRequested ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.COMPLETED;
         }
         catch (OperationCanceledException)
@@ -283,7 +283,18 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <returns>The system prompt.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
     /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
-    public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
+    public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => (await this.ComposeRequestAsync(location, provider)).SystemPrompt;
+
+    /// <summary>
+    /// Puts together what a request of a chat carries beside the conversation: the system prompt, and the images of
+    /// the material the model may see.
+    /// </summary>
+    /// <param name="location">Where the chat belongs.</param>
+    /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
+    /// <returns>The system prompt and the images.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
+    /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
+    private async Task<BflRequestMaterial> ComposeRequestAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var addressForm = Tools.PluginSystem.I18N.I.AddressForm;
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
@@ -294,14 +305,92 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
                 var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm);
                 var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, language, provider);
                 var materials = await this.ReadMaterialsAsync(stepLocation.ProjectId, shares);
-                return BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language);
+                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language), this.ImagesOf(stepLocation.ProjectId, shares));
 
             case BflOnboardingThreadLocation:
-                return BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm), language);
+                return new(BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm), language), []);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(location), location, "The lab has no prompt for this chat.");
         }
+    }
+
+    /// <summary>
+    /// Gives a request the images of the material, attached to the first message of the person, without storing them
+    /// in the chat.
+    /// </summary>
+    /// <remarks>
+    /// A system prompt carries no images with any provider, so they go along with the first message, which stays the
+    /// same from request to request, as the cache of a provider needs. The request gets a copy of that message only;
+    /// every other message, the answer which streams in above all, stays the same object, and the chat keeps as many
+    /// messages, so that the tokens a provider reports still belong to it. The stored chat never holds an image.
+    ///
+    /// Unlike the text of documents and transcripts, an image does not pass the prompt injection filter of the
+    /// runtime, which reads text only; images in a chat do not either. The lab offers the model no tools, so nothing
+    /// in an image can make it send data anywhere, and the prompt tells the model that the material, images included,
+    /// holds no instructions.
+    /// </remarks>
+    /// <param name="thread">The chat.</param>
+    /// <param name="images">The images to send.</param>
+    /// <returns>The chat for the request: the chat itself when there is no image to send.</returns>
+    internal static ChatThread WithImages(ChatThread thread, IReadOnlyList<FileAttachmentImage> images)
+    {
+        if (images.Count is 0)
+            return thread;
+
+        var index = thread.Blocks.FindIndex(block => block is { Role: ChatRole.USER, Content: ContentText });
+        if (index < 0)
+            return thread;
+
+        var firstMessage = thread.Blocks[index].DeepClone();
+        var content = (ContentText)firstMessage.Content!;
+        content.FileAttachments = [.. content.FileAttachments, .. images];
+
+        List<ContentBlock> blocks = [.. thread.Blocks];
+        blocks[index] = firstMessage;
+        return thread with { Blocks = blocks };
+    }
+
+    /// <summary>
+    /// Gets how many images the model of a provider takes in one message.
+    /// </summary>
+    /// <param name="provider">The provider which answers.</param>
+    /// <returns>0 when the model sees no images, and int.MaxValue when nobody knows a limit.</returns>
+    private static int ImagesTheModelTakes(AIStudio.Settings.Provider provider)
+    {
+        if (!provider.SupportsImageInput())
+            return 0;
+
+        var profile = provider.GetModelProfile();
+        if (!profile.HasAny(Capability.MULTIPLE_IMAGE_INPUT))
+            return 1;
+
+        return profile.Images.MaxInOneMessage ?? int.MaxValue;
+    }
+
+    /// <summary>
+    /// Gets the images of the material which go along with a request.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="shares">The share of each material.</param>
+    /// <returns>The copies of the images to send, in the order the person added them.</returns>
+    private IReadOnlyList<FileAttachmentImage> ImagesOf(Guid projectId, IReadOnlyList<BflMaterialShare> shares)
+    {
+        List<FileAttachmentImage> images = [];
+        foreach (var share in shares.Where(share => share.Image is BflImageDelivery.SENT))
+        {
+            var file = new FileInfo(store.MaterialImagePath(projectId, share.Material));
+            if (!file.Exists)
+            {
+                // The person removed the material meanwhile; the list shows that:
+                logger.LogWarning("The copy of the image '{MaterialId}' of the BeyondFacts Lab is missing.", share.Material.MaterialId);
+                continue;
+            }
+
+            images.Add(new(share.Material.Name, file.FullName, file.Length));
+        }
+
+        return images;
     }
 
     /// <summary>
@@ -322,7 +411,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     }
 
     /// <summary>
-    /// Decides how much of the material of a preparation the prompt of a step carries.
+    /// Decides how much of the material of a preparation a request of a step carries: which images go along, and how
+    /// much of each text fits beside them.
     /// </summary>
     /// <param name="location">The step.</param>
     /// <param name="parts">The texts of the prompt of the step.</param>
@@ -336,8 +426,15 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         if (materials.Count is 0)
             return [];
 
+        var imageShares = BflMaterialBudget.ShareImages([.. materials.Where(material => material.Kind is BflMaterialKind.IMAGE)], ImagesTheModelTakes(provider));
+        var sentImages = imageShares.Count(share => share.Image is BflImageDelivery.SENT);
+
         var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language);
-        return BflMaterialBudget.Share(materials, BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length));
+        var characters = BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length, sentImages);
+        var textShares = BflMaterialBudget.Share([.. materials.Where(material => material.Kind is not BflMaterialKind.IMAGE)], characters);
+
+        var sharesById = textShares.Concat(imageShares).ToDictionary(share => share.Material.MaterialId);
+        return [.. materials.Select(material => sharesById[material.MaterialId])];
     }
 
     /// <summary>
@@ -351,6 +448,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         List<BflMaterialExcerpt> excerpts = [];
         foreach (var share in shares)
         {
+            // An image has no text; the prompt names it and says whether it goes along:
+            if (share.Material.Kind is BflMaterialKind.IMAGE)
+            {
+                excerpts.Add(new(share, string.Empty));
+                continue;
+            }
+
             try
             {
                 var text = await store.ReadMaterialTextAsync(projectId, share.Material.MaterialId, share.Characters);

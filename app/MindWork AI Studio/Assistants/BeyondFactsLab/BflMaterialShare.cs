@@ -1,11 +1,12 @@
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// How much of a material the prompt of a step carries.
+/// How much of a material a request of a step carries.
 /// </summary>
 /// <param name="Material">The material.</param>
-/// <param name="Characters">How many characters of its text, from the beginning, the prompt carries at most.</param>
-public sealed record BflMaterialShare(BflMaterial Material, int Characters)
+/// <param name="Characters">How many characters of its text, from the beginning, the prompt carries at most; 0 for an image.</param>
+/// <param name="Image">Whether an image reaches the model; NONE for any other kind of material.</param>
+public sealed record BflMaterialShare(BflMaterial Material, int Characters, BflImageDelivery Image = BflImageDelivery.NONE)
 {
     /// <summary>
     /// Gets whether the prompt carries the whole text.
