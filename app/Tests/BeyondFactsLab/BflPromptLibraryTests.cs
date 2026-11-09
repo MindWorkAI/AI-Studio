@@ -78,6 +78,21 @@ public sealed class BflPromptLibraryTests
     }
 
     [Test]
+    public async Task EveryOpeningRequestNamesASectionOfItsPrompt()
+    {
+        var core = (await BflPromptLibrary.ReadAsync(BflPromptLibrary.CORE_PATH)).ReplaceLineEndings("\n");
+        var onboarding = (await BflPromptLibrary.ReadAsync(BflPromptLibrary.ONBOARDING_PATH)).ReplaceLineEndings("\n");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflConversationService.OpeningRequestFor(new BflStepThreadLocation(Guid.NewGuid(), BflStep.FRAMEWORK)), Does.Contain("„Dieser Schritt“"));
+            Assert.That(core, Does.Contain("\n# Dieser Schritt\n"));
+            Assert.That(BflConversationService.OpeningRequestFor(BflOnboardingThreadLocation.INSTANCE), Does.Contain("„Gesprächsführung“"));
+            Assert.That(onboarding, Does.Contain("\n# Gesprächsführung\n"));
+        }
+    }
+
+    [Test]
     public async Task ThePromptOfTheOnboardingStaysShort()
     {
         var onboarding = await BflPromptLibrary.ReadAsync(BflPromptLibrary.ONBOARDING_PATH);

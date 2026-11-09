@@ -31,6 +31,12 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     public const string OPENING_REQUEST = "Beginne das Gespräch dieses Schritts mit deiner ersten Nachricht, wie es der Abschnitt „Dieser Schritt“ beschreibt.";
 
     /// <summary>
+    /// The request which lets the model open the conversation about whether the lab fits a task. The person does not
+    /// see it.
+    /// </summary>
+    public const string ONBOARDING_OPENING_REQUEST = "Beginne das Gespräch mit deiner ersten Nachricht, wie es der Abschnitt „Gesprächsführung“ beschreibt.";
+
+    /// <summary>
     /// How often a streamed answer renders at most.
     /// </summary>
     private static readonly TimeSpan STREAMING_RENDER_MIN_TIME = TimeSpan.FromMilliseconds(100);
@@ -106,7 +112,14 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers.</param>
-    public Task StartAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => this.SendAsync(location, provider, OPENING_REQUEST, isHidden: true);
+    public Task StartAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => this.SendAsync(location, provider, OpeningRequestFor(location), isHidden: true);
+
+    /// <summary>
+    /// Gets the request which lets the model open a conversation.
+    /// </summary>
+    /// <param name="location">Where the chat belongs.</param>
+    /// <returns>The request, which names the section of the prompt that describes the first message.</returns>
+    public static string OpeningRequestFor(BflThreadLocation location) => location is BflOnboardingThreadLocation ? ONBOARDING_OPENING_REQUEST : OPENING_REQUEST;
 
     /// <summary>
     /// Sends a message of the person and lets the model answer it.
@@ -125,7 +138,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
             return;
 
         var conversation = await this.GetAsync(location);
-        if (conversation.Thread is not { } thread || !await this.CheckProviderAsync(thread, provider))
+        if (conversation.Thread is not { } thread || !await this.CheckProviderAsync(location, thread, provider))
             return;
 
         string systemPrompt;
@@ -282,6 +295,9 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
                 var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm);
                 return BflPromptComposer.Compose(parts, stepLocation.Step, forms, language);
 
+            case BflOnboardingThreadLocation:
+                return BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm), language);
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(location), location, "The lab has no prompt for this chat.");
         }
@@ -290,17 +306,18 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <summary>
     /// Checks whether a provider may answer in a chat, and tells the person why not.
     /// </summary>
+    /// <param name="location">Where the chat belongs.</param>
     /// <param name="thread">The chat.</param>
     /// <param name="provider">The provider.</param>
     /// <returns>True when the provider may answer.</returns>
-    private async Task<bool> CheckProviderAsync(ChatThread thread, AIStudio.Settings.Provider provider)
+    private async Task<bool> CheckProviderAsync(BflThreadLocation location, ChatThread thread, AIStudio.Settings.Provider provider)
     {
         string? reason = null;
         if (provider.UsedLLMProvider is LLMProviders.NONE)
             reason = TA("Please select a provider.");
         else if (!settingsManager.IsProviderConfident(provider, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT) || !thread.IsLLMProviderAllowed(provider))
             reason = TA("The selected provider may not see your preparation. Please select another provider.");
-        else if (!BflModelRequirements.HasEnoughContext(provider.GetModelProfile().Context))
+        else if (!BflModelRequirements.HasEnoughContext(location, provider.GetModelProfile().Context))
             reason = TA("The model of the selected provider reads too little at once for the lab. Please select another provider.");
 
         if (reason is null)
