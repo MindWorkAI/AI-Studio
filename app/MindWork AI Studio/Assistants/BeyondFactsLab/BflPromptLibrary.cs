@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Assistants.BeyondFactsLab;
@@ -8,6 +10,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// <remarks>
 /// The files are German Markdown below Assistants/BeyondFactsLab, embedded into the app. A development build reads
 /// them from the disk, so that a changed prompt shows in the next request without building again; see AppResources.
+/// While the person allows it, files in the folder for prompt overrides replace them, see BflPromptOverrides.
 /// </remarks>
 public static class BflPromptLibrary
 {
@@ -43,6 +46,30 @@ public static class BflPromptLibrary
     private const string ADDRESS_INFORMAL_PATH = FOLDER + "/Prompts/snippets/address-informal.md";
 
     /// <summary>
+    /// The placeholders BflPromptComposer fills in the core.
+    /// </summary>
+    private static readonly FrozenSet<string> CORE_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
+        BflPromptTemplate.RESPONSE_LANGUAGE,
+        BflPromptTemplate.ADDRESS_FORM,
+        BflPromptTemplate.KNOWLEDGE,
+        BflPromptTemplate.STEP,
+        BflPromptTemplate.MATERIALS,
+        BflPromptTemplate.DETAILS,
+        BflPromptTemplate.MISSING_DETAILS);
+
+    /// <summary>
+    /// The placeholders BflPromptComposer fills in the prompt of the onboarding.
+    /// </summary>
+    private static readonly FrozenSet<string> ONBOARDING_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
+        BflPromptTemplate.RESPONSE_LANGUAGE,
+        BflPromptTemplate.ADDRESS_FORM);
+
+    /// <summary>
+    /// The placeholders of every other file: none, because BflPromptComposer inserts these files as values.
+    /// </summary>
+    private static readonly FrozenSet<string> NO_PLACEHOLDERS = FrozenSet<string>.Empty;
+
+    /// <summary>
     /// Gets the prompt of a step, named like the folder of the step.
     /// </summary>
     /// <param name="step">The step.</param>
@@ -67,38 +94,82 @@ public static class BflPromptLibrary
     ];
 
     /// <summary>
+    /// Gets a file of the lab's prompts relative to the folder of the lab, e.g., "Prompts/core.md".
+    /// </summary>
+    /// <param name="path">The file, one of the paths of this class.</param>
+    /// <exception cref="ArgumentException">The file lies outside the folder of the lab.</exception>
+    public static string RelativePath(string path) => path.StartsWith(FOLDER + "/", StringComparison.Ordinal) ? path[(FOLDER.Length + 1)..] : throw new ArgumentException("The file lies outside the folder of the BeyondFacts Lab.", nameof(path));
+
+    /// <summary>
+    /// Gets the placeholders a file of the lab's prompts may contain.
+    /// </summary>
+    /// <remarks>
+    /// BflPromptComposer fills placeholders in the core and in the prompt of the onboarding only. It inserts every
+    /// other file as a value, whose placeholders it leaves as they are, so that they would reach the model as text.
+    /// </remarks>
+    /// <param name="path">The file, one of the paths of this class.</param>
+    public static IReadOnlySet<string> PlaceholdersOf(string path) => path switch
+    {
+        CORE_PATH => CORE_PLACEHOLDERS,
+        ONBOARDING_PATH => ONBOARDING_PLACEHOLDERS,
+        _ => NO_PLACEHOLDERS
+    };
+
+    /// <summary>
     /// Reads the texts of the system prompt of a step.
     /// </summary>
     /// <param name="step">The step.</param>
     /// <param name="addressForm">How the model addresses the person.</param>
+    /// <param name="overrideDirectory">The folder whose files replace the prompts, or null while the person does not allow it.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The texts, which BflPromptComposer puts together.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the files.</exception>
-    public static async Task<BflPromptParts> LoadPartsAsync(BflStep step, AddressForm addressForm, CancellationToken token = default) => new(
-        await ReadAsync(CORE_PATH, token),
-        await ReadAsync(KNOWLEDGE_PATH, token),
-        await ReadAsync(StepPath(step), token),
-        await ReadAsync(AddressPath(addressForm), token));
+    /// <exception cref="BflPromptOverrideException">A file which replaces a prompt contains a placeholder which the lab does not fill in it.</exception>
+    public static async Task<BflPromptParts> LoadPartsAsync(BflStep step, AddressForm addressForm, string? overrideDirectory = null, CancellationToken token = default) => new(
+        await ReadAsync(CORE_PATH, overrideDirectory, token),
+        await ReadAsync(KNOWLEDGE_PATH, overrideDirectory, token),
+        await ReadAsync(StepPath(step), overrideDirectory, token),
+        await ReadAsync(AddressPath(addressForm), overrideDirectory, token));
 
     /// <summary>
     /// Reads the texts of the system prompt of the conversation about whether the lab fits a task.
     /// </summary>
     /// <param name="addressForm">How the model addresses the person.</param>
+    /// <param name="overrideDirectory">The folder whose files replace the prompts, or null while the person does not allow it.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The texts, which BflPromptComposer puts together.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the files.</exception>
-    public static async Task<BflOnboardingPromptParts> LoadOnboardingPartsAsync(AddressForm addressForm, CancellationToken token = default) => new(
-        await ReadAsync(ONBOARDING_PATH, token),
-        await ReadAsync(AddressPath(addressForm), token));
+    /// <exception cref="BflPromptOverrideException">A file which replaces a prompt contains a placeholder which the lab does not fill in it.</exception>
+    public static async Task<BflOnboardingPromptParts> LoadOnboardingPartsAsync(AddressForm addressForm, string? overrideDirectory = null, CancellationToken token = default) => new(
+        await ReadAsync(ONBOARDING_PATH, overrideDirectory, token),
+        await ReadAsync(AddressPath(addressForm), overrideDirectory, token));
 
     /// <summary>
-    /// Reads a file of the lab's prompts.
+    /// Reads a file of the lab's prompts: the file which replaces it, if there is one, or else the file which comes
+    /// with the app.
+    /// </summary>
+    /// <param name="path">The file, one of the paths of this class.</param>
+    /// <param name="overrideDirectory">The folder whose files replace the prompts, or null while the person does not allow it.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The text of the file.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without the file, or the file is empty.</exception>
+    /// <exception cref="BflPromptOverrideException">The file which replaces the prompt contains a placeholder which the lab does not fill in it.</exception>
+    public static async Task<string> ReadAsync(string path, string? overrideDirectory = null, CancellationToken token = default)
+    {
+        if (overrideDirectory is not null && await BflPromptOverrides.TryReadAsync(overrideDirectory, path, token) is { } replacement)
+            return replacement;
+
+        return await ReadBuiltInAsync(path, token);
+    }
+
+    /// <summary>
+    /// Reads a file of the lab's prompts as it comes with the app.
     /// </summary>
     /// <param name="path">The file, one of the paths of this class.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The text of the file.</returns>
     /// <exception cref="FileNotFoundException">The app comes without the file, or the file is empty.</exception>
-    public static async Task<string> ReadAsync(string path, CancellationToken token = default)
+    public static async Task<string> ReadBuiltInAsync(string path, CancellationToken token = default)
     {
         var text = await AppResources.ReadTextAsync(path, token);
         if (string.IsNullOrWhiteSpace(text))

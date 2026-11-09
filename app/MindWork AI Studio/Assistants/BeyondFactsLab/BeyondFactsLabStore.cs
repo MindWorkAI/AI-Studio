@@ -74,6 +74,11 @@ public sealed partial class BeyondFactsLabStore(ILogger<BeyondFactsLabStore> log
         ROOT_DIRECTORY_NAME);
 
     /// <summary>
+    /// Gets the folder whose files replace the prompts of the lab while the person allows it, see BflPromptOverrides.
+    /// </summary>
+    public string PromptOverridesDirectory => Path.Combine(this.RootDirectory, BflPromptOverrides.DIRECTORY_NAME);
+
+    /// <summary>
     /// Writes a text file so that readers see either the old or the new content, never a part of it.
     /// </summary>
     /// <param name="targetPath">The file to write.</param>
