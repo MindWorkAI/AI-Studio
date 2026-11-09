@@ -165,6 +165,9 @@ public partial class GlossaryDialog : MSGComponentBase
 
     private async Task ImportEntries()
     {
+        if (!this.ValidateCompleteEntries())
+            return;
+
         var dialogParameters = new DialogParameters<GlossaryImportDialog>
         {
             { x => x.ExistingEntries, this.CreateEntries() },
@@ -198,14 +201,8 @@ public partial class GlossaryDialog : MSGComponentBase
         if (!this.dataIsValid)
             return;
         
-        // A row with only a term or only a value is unfinished. Storing would drop it, so the user
-        // decides first. Completely empty rows are dropped silently, e.g. one added by mistake:
-        var unfinishedRows = this.rows.Count(row => string.IsNullOrWhiteSpace(row.Term) != string.IsNullOrWhiteSpace(row.Value));
-        if (unfinishedRows > 0)
-        {
-            this.dataIssues = [string.Format(T("{0} entries lack a term or a value. Please complete or delete them."), unfinishedRows)];
+        if (!this.ValidateCompleteEntries())
             return;
-        }
 
         var isTranslation = this.dataType is GlossaryType.TRANSLATION;
         var glossary = this.Glossary with
@@ -228,6 +225,20 @@ public partial class GlossaryDialog : MSGComponentBase
             this.Logger.LogInformation("Created glossary '{GlossaryName}'.", glossary.Name);
 
         this.MudDialog.Close(DialogResult.Ok(new GlossaryDialogResult(glossary, this.CreateEntries())));
+    }
+
+    private bool ValidateCompleteEntries()
+    {
+        // Saving or importing would drop unfinished rows. Completely empty rows may be left out:
+        var unfinishedRows = this.rows.Count(row => string.IsNullOrWhiteSpace(row.Term) != string.IsNullOrWhiteSpace(row.Value));
+        if (unfinishedRows > 0)
+        {
+            this.dataIssues = [string.Format(T("{0} entries lack a term or a value. Please complete or delete them."), unfinishedRows)];
+            return false;
+        }
+
+        this.dataIssues = [];
+        return true;
     }
 
     private string? ValidateName(string name)
