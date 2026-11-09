@@ -1,9 +1,11 @@
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -233,6 +235,16 @@ public partial class BflStepChat : MSGComponentBase
         var text = this.userInput.Trim();
         this.userInput = string.Empty;
         await this.ConversationService.SendAsync(this.Location, this.Provider, text);
+    }
+
+    /// <summary>
+    /// Sends the message when the person releases the shortcut they chose for the chat.
+    /// </summary>
+    /// <param name="keyEvent">The key released.</param>
+    private async Task InputKeyEventAsync(KeyboardEventArgs keyEvent)
+    {
+        if (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior.IsSendShortcut(keyEvent))
+            await this.SendAsync();
     }
 
     /// <summary>
