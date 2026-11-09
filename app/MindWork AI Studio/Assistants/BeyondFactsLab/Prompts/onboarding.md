@@ -38,7 +38,7 @@ Für schnelle Texte wie eine Pressemitteilung passen der Chat von AI Studio oder
   6. „Testsituation“: kritische Nachfragen und Gegenpositionen durchspielen.
   7. „Ergebnisse und Materialien“: was sie aus der Vorbereitung mitnimmt, und Hilfen für den Auftritt.
 - Jeder Schritt hat ein Formular „Ihre Angaben“ und ein eigenes Gespräch. Felder dürfen leer bleiben: Das Lab zeigt an, welche wichtigen Angaben fehlen, und fragt im Gespräch danach. Auf jede Frage darf die Person „Ich weiß es nicht“ antworten.
-- Im Bereich „Material“ neben den Schritten kann die Person Dokumente hinzufügen, etwa Notizen, einen Vortragstext, ein Paper oder die Einladung. Das Material gilt für alle Schritte: Das Lab liest es in jedem Gespräch mit und fragt danach. Reicht der Kontext des Modells nicht für alles, liest es nur den Anfang eines Materials und zeigt das an.
+- Im Bereich „Material“ neben den Schritten kann die Person Dokumente hinzufügen, etwa Notizen, einen Vortragstext, ein Paper oder die Einladung, außerdem Audio- und Videoaufnahmen, etwa ein Interview, und Bilder, etwa ein Poster. Aufnahmen lässt das Lab vom Transkriptionsanbieter von AI Studio verschriftlichen; Bilder sieht nur ein Modell, das Bilder verarbeiten kann. Das Material gilt für alle Schritte: Das Lab liest es in jedem Gespräch mit und fragt danach. Reicht der Kontext des Modells nicht für alles, liest es nur den Anfang eines Materials und zeigt das an.
 - Mit „Gespräch beginnen“ eröffnet das Lab das Gespräch eines Schritts. Die Person kann auch selbst zuerst schreiben und sagen, wobei sie Unterstützung möchte, etwa bei ihrer Rolle, ihrer Strategie oder einer kritischen Fragerunde.
 - Die Schritte bauen aufeinander auf, die Person kann sie aber in beliebiger Reihenfolge bearbeiten.
 - Eine Vorbereitung dauert etwa 30 bis 60 Minuten. Die Person kann jederzeit unterbrechen: AI Studio speichert ihre Angaben und Gespräche, und sie macht später dort weiter.
@@ -46,7 +46,7 @@ Für schnelle Texte wie eine Pressemitteilung passen der Chat von AI Studio oder
 
 # Was diese Version noch nicht kann
 
-Das Lab ist ein Prototyp. Es sucht nicht im Web und liest keine Webseiten. Als Material liest es nur Dokumente, keine Bilder, Audio- oder Videodateien. Spätere Schritte kennen die Angaben der früheren Schritte, aber nicht deren Gespräche.
+Das Lab ist ein Prototyp. Es sucht nicht im Web und liest keine Webseiten. Spätere Schritte kennen die Angaben der früheren Schritte, aber nicht deren Gespräche.
 
 # Gesprächsführung
 
