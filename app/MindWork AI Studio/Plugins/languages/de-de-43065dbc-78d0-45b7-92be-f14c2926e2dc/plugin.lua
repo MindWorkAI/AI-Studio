@@ -1332,6 +1332,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1212930509
 -- The lab prepares these recordings on your computer and then uploads their audio to the transcription provider '{0}'. It keeps only their transcript.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1212930509::INFORMAL"] = "Das Lab bereitet diese Aufnahmen auf deinem Rechner vor und lädt dann ihre Tonspur zum Transkriptionsanbieter „{0}“ hoch. Es behält nur ihre Transkripte."
 
+-- AI Studio does not know the context window of the selected model, so the lab sends only its first {0} %. You can enter the window under 'Override Model Limits' in the settings of the provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1271077201"] = "AI Studio kennt das Kontextfenster des ausgewählten Modells nicht. Daher sendet AI Studio nur die ersten {0} % des Chats. Sie können das Kontextfenster unter „Modelllimits überschreiben“ in den Einstellungen des Anbieters eingeben."
+
+-- AI Studio does not know the context window of the selected model, so the lab sends only its first {0} %. You can enter the window under 'Override Model Limits' in the settings of the provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1271077201::INFORMAL"] = "AI Studio kennt das Kontextfenster des ausgewählten Modells nicht. Daher sendet AI Studio nur die ersten {0} % des Chats. Du kannst das Kontextfenster unter „Modelllimits überschreiben“ in den Einstellungen des Anbieters eingeben."
+
 -- Suspicious passages removed: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1396926557"] = "Verdächtige Passagen entfernt: {0}"
 
