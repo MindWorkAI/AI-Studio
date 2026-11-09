@@ -3,8 +3,9 @@
 
 <CascadingValue Value="Components.BEYOND_FACTS_LAB_ASSISTANT">
     @* The lab does not inherit AssistantBase, so it sets up the inner scrolling itself, the way the
-       Visual Briefing assistant does. *@
-    <div class="inner-scrolling-context">
+       Visual Briefing assistant does, and is a drop area of its own: a document dropped anywhere on
+       the page lands in the material of the open preparation. *@
+    <PathDropZone IsArea="@true" Class="inner-scrolling-context">
         <PreviewPrototype ApplyInnerScrollingFix="true"/>
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3 mr-3" StretchItems="StretchItems.Start">
             <MudText Typo="Typo.h3">@T("BeyondFacts Lab")</MudText>
@@ -156,5 +157,5 @@
                 </MudPaper>
             }
         </InnerScrolling>
-    </div>
+    </PathDropZone>
 </CascadingValue>
