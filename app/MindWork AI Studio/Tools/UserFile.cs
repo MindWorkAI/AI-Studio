@@ -1,5 +1,6 @@
 ﻿using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools;
@@ -20,9 +21,10 @@ public static class UserFile
     /// <param name="filePath">The full path to the file to be read. Must not be null or empty.</param>
     /// <param name="rustService">Rust service used to read file content.</param>
     /// <param name="pandocAvailability">Makes sure Pandoc is there and offers its installation.</param>
+    /// <param name="reportingScope">The action the file is read for, or null when it is read for none.</param>
     /// <param name="token">Cancels the extraction when the caller no longer needs the content.</param>
     /// <returns>The result of reading the file.</returns>
-    public static async Task<FileExtractionResult> LoadFileData(string filePath, RustService rustService, PandocAvailabilityService pandocAvailability, CancellationToken token = default)
+    public static async Task<FileExtractionResult> LoadFileData(string filePath, RustService rustService, PandocAvailabilityService pandocAvailability, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         if (string.IsNullOrEmpty(filePath))
         {
@@ -49,7 +51,7 @@ public static class UserFile
             }
         }
 
-        var result = await rustService.ReadArbitraryFileData(filePath, int.MaxValue, token: token);
+        var result = await rustService.ReadArbitraryFileData(filePath, int.MaxValue, reportingScope: reportingScope, token: token);
 
         //
         // Nobody wants to read that their own cancellation failed. We hand the result back so the
