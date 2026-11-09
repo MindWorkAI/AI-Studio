@@ -48,6 +48,7 @@ public partial class BeyondFactsLabAssistant
             return;
 
         this.activeStep = steps[index];
+        this.scrollToActiveStep = true;
         if (this.selectedProject?.Project is not { } project)
             return;
 

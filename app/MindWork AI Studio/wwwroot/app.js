@@ -56,6 +56,17 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
+// Scrolls back to where a sticky header sits in the flow, so that the content below it starts right under the
+// header. The anchor is an empty element right before the header: while the header sticks to the top, the anchor
+// lies above it; otherwise, the content below already starts right under the header, and nothing moves.
+window.scrollToStickyHeader = function(anchor) {
+    const header = anchor?.nextElementSibling;
+    if (!header || anchor.getBoundingClientRect().top >= header.getBoundingClientRect().top)
+        return;
+
+    anchor.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+}
+
 window.setDocumentLanguage = function (ietfTag) {
     document.documentElement.lang = ietfTag
 }

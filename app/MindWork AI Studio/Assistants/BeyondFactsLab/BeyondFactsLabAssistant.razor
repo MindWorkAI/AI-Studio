@@ -77,7 +77,9 @@
             else if (this.selectedProject?.Project is { } project)
             {
                 @* Stays at the top while the person scrolls, like the header of the workspaces: the preparation, its
-                   provider, and the steps remain in view, and only the list of preparations scrolls away. *@
+                   provider, and the steps remain in view, and only the list of preparations scrolls away. The empty
+                   anchor before it marks where the header sits in the flow, to scroll back there for another step. *@
+                <div @ref="@this.stickyHeaderAnchor"></div>
                 <div class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
                         <MudStack Spacing="0">

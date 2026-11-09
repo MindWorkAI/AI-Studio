@@ -32,10 +32,23 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     [Inject]
     private ILogger<BeyondFactsLabAssistant> Logger { get; init; } = null!;
 
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+
     /// <summary>
     /// Whether the person may open the lab, so that the page did not send them away.
     /// </summary>
     private bool mayOpen;
+
+    /// <summary>
+    /// The empty element right before the header of the preparation, which marks where the header sits in the flow.
+    /// </summary>
+    private ElementReference stickyHeaderAnchor;
+
+    /// <summary>
+    /// Whether the next render shows another step, which then starts at the top.
+    /// </summary>
+    private bool scrollToActiveStep;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -56,6 +69,13 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
+        if (this.scrollToActiveStep)
+        {
+            // The person scrolled down in one step and chose another one; it starts right under the header:
+            this.scrollToActiveStep = false;
+            await this.stickyHeaderAnchor.ScrollToStickyHeaderAsync(this.JsRuntime);
+        }
+
         if (firstRender && this.mayOpen)
             await this.ShowNoticeIfNeededAsync();
     }
