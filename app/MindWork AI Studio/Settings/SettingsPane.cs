@@ -6,7 +6,7 @@ namespace AIStudio.Settings;
 /// <remarks>
 /// A pane of the first level appears in the list on the left of the window; a deeper pane opens in
 /// place of its parent, and a back button left of its title leads there again. The window gives every pane what a panel of the
-/// settings page gets as well, so <see cref="Component"/> derives from
+/// settings page gets as well, so <see cref="this.Component"/> derives from
 /// <see cref="AIStudio.Components.Settings.SettingsPanelBase"/>.
 /// </remarks>
 /// <param name="Path">Where the pane lives in the window.</param>

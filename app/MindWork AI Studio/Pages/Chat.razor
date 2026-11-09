@@ -45,7 +45,7 @@
                         @this.RenderWorkspaceSidebarHeader(canHide: this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR, canClose: false)
                     </HeaderContent>
                     <ChildContent>
-                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
+                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInWorkspace" SaveState="@this.chatSaveState" SaveChatRequested="@this.SaveCurrentChat"/>
                     </ChildContent>
                 </InnerScrolling>
                 <div class="chat-sidebar-handle" role="separator" aria-orientation="vertical" @ref="this.sidebarHandle"></div>
@@ -58,7 +58,8 @@
                 ComposerState="@this.composerState"
                 Workspaces="@this.workspaces"
                 WorkspaceName="name => this.UpdateWorkspaceName(name)"
-                Search="@this.workspaceSearch"/>
+                Search="@this.workspaceSearch"
+                SaveState="@this.chatSaveState"/>
         </div>
     }
     else if (this.SettingsManager.ConfigurationData.Workspace.IsChatListShown && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR)
@@ -87,7 +88,8 @@
                 ComposerState="@this.composerState"
                 Workspaces="@this.workspaces"
                 WorkspaceName="name => this.UpdateWorkspaceName(name)"
-                Search="@this.workspaceSearch"/>
+                Search="@this.workspaceSearch"
+                SaveState="@this.chatSaveState"/>
         </MudStack>
     }
     else
@@ -101,7 +103,8 @@
             ComposerState="@this.composerState"
             Workspaces="@this.workspaces"
             WorkspaceName="name => this.UpdateWorkspaceName(name)"
-            Search="@this.workspaceSearch"/>
+            Search="@this.workspaceSearch"
+            SaveState="@this.chatSaveState"/>
     }
 
     @if (
@@ -113,7 +116,7 @@
                 @this.RenderWorkspaceSidebarHeader(canHide: false, canClose: true)
             </MudDrawerHeader>
             <MudDrawerContainer>
-                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
+                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInWorkspace" SaveState="@this.chatSaveState" SaveChatRequested="@this.SaveCurrentChat"/>
             </MudDrawerContainer>
         </MudDrawer>
     }

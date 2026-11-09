@@ -55,6 +55,23 @@ public partial class Workspaces : MSGComponentBase
     [Parameter]
     public WorkspaceSearch? Search { get; set; }
 
+    /// <summary>
+    /// Whether the open chat holds changes the user did not save yet. While chats are saved by hand,
+    /// the list shows that on the open chat, together with a button to save it.
+    /// </summary>
+    [Parameter]
+    public ChatSaveState? SaveState { get; set; }
+
+    /// <summary>
+    /// Asks the page to save the open chat.
+    /// </summary>
+    /// <remarks>
+    /// The page hands the request to its chat component, which saves the chat just like the save
+    /// button of its toolbar does.
+    /// </remarks>
+    [Parameter]
+    public EventCallback SaveChatRequested { get; set; }
+
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
 
     /// <summary>
@@ -209,6 +226,9 @@ public partial class Workspaces : MSGComponentBase
             this.Search.TextChanged += this.OnSearchTextChanged;
             this.Search.StepRequested += this.OnSearchStepRequested;
         }
+
+        if (this.SaveState is not null)
+            this.SaveState.Changed += this.OnSaveStateChanged;
 
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED, Event.CONFIGURATION_CHANGED ]);
@@ -725,7 +745,7 @@ public partial class Workspaces : MSGComponentBase
 
     private bool IsWorkspaceOfCurrentChatListed => this.workspaces.Any(workspace => this.IsWorkspaceOfCurrentChat(workspace.WorkspaceId));
 
-    private bool IsCurrentChatAmongTemporaryChats => this.temporaryChats.Any(this.IsCurrentChat);
+    private bool IsCurrentChatAmongTemporaryChats => this.temporaryChats.Any(this.IsCurrentChat) || this.GetNeverSavedChat() is { IsTemporary: true };
 
     /// <summary>
     /// Whether some row of the list carries the mark of the open chat.
@@ -746,7 +766,7 @@ public partial class Workspaces : MSGComponentBase
             if (this.IsWorkspacesSectionCollapsed || !this.IsWorkspaceExpanded(workspace.WorkspaceId))
                 return true;
 
-            return workspace.ChatsLoaded && workspace.Chats.Any(this.IsCurrentChat);
+            return workspace.ChatsLoaded && (workspace.Chats.Any(this.IsCurrentChat) || this.GetNeverSavedChat() is not null);
         }
 
         return false;
@@ -804,6 +824,81 @@ public partial class Workspaces : MSGComponentBase
     /// words of the search.
     /// </summary>
     private ChatIndicator GetChatIcon(WorkspaceTreeChat chat, ChatIndicator state) => this.chatPassages.ContainsKey(chat.ChatId) ? ChatIndicator.FoundInChat(state) : state;
+
+    #endregion
+
+    #region Saving the open chat by hand
+
+    //
+    // While chats are saved by hand, the open chat shows whether it holds changes the user did not
+    // save yet, with a dot after its name and a button to save it. A new chat which was never saved
+    // shows up as well, from its first message on, in the place it will be saved to: first among the
+    // chats of its workspace, or first among the other chats. Saving it puts it there for real, so
+    // nothing moves. The chat which holds the changes is always the open one:
+    // leaving a chat asks the user to save it or to give up the changes.
+    //
+
+    /// <summary>
+    /// Whether the user saves the chats of the given place by hand.
+    /// </summary>
+    /// <param name="workspaceId">The workspace of the chats, or <see cref="Guid.Empty"/> for the chats outside of workspaces.</param>
+    private bool IsSavedByHand(Guid workspaceId) => this.SettingsManager.ConfigurationData.Workspace.GetStorageBehavior(workspaceId) is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY;
+
+    /// <summary>
+    /// Whether the given chat shows that it holds changes the user did not save yet.
+    /// </summary>
+    /// <param name="chat">The chat.</param>
+    private bool HasUnsavedChanges(WorkspaceTreeChat chat) => this.IsCurrentChat(chat)
+                                                              && this.SaveState?.IsUnsaved(chat.ChatId) is true
+                                                              && this.IsSavedByHand(chat.WorkspaceId);
+
+    /// <summary>
+    /// The open chat, while it holds messages but was never saved, as the row which stands in for it
+    /// until it is saved. Null otherwise, and while the list does not know yet what is saved.
+    /// </summary>
+    private WorkspaceTreeChat? GetNeverSavedChat()
+    {
+        if (this.CurrentChatThread is not { } openChat || !openChat.Blocks.Any(block => !block.HideFromUser))
+            return null;
+
+        var chat = new WorkspaceTreeChat(openChat.WorkspaceId, openChat.ChatId, ChatPath: string.Empty, openChat.Name, DateTimeOffset.Now, IsTemporary: openChat.WorkspaceId == Guid.Empty);
+        if (!this.HasUnsavedChanges(chat))
+            return null;
+
+        if (chat.IsTemporary)
+            return this.temporaryChats.Any(this.IsCurrentChat) ? null : chat;
+
+        foreach (var workspace in this.workspaces)
+        {
+            if (workspace.WorkspaceId != openChat.WorkspaceId)
+                continue;
+
+            return workspace.ChatsLoaded && !workspace.Chats.Any(this.IsCurrentChat) ? chat : null;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The chats of a place as the list shows them: the open chat which was never saved first, when it
+    /// belongs there.
+    /// </summary>
+    /// <param name="chats">The saved chats of the place.</param>
+    /// <param name="workspaceId">The workspace of the chats, or <see cref="Guid.Empty"/> for the chats outside of workspaces.</param>
+    /// <param name="neverSavedChat">The open chat which was never saved, see <see cref="GetNeverSavedChat"/>.</param>
+    private static IReadOnlyList<WorkspaceTreeChat> WithNeverSavedChat(IReadOnlyList<WorkspaceTreeChat> chats, Guid workspaceId, WorkspaceTreeChat? neverSavedChat) => neverSavedChat is { } chat && chat.WorkspaceId == workspaceId
+        ? [chat, ..chats]
+        : chats;
+
+    /// <summary>
+    /// What the dot after the name of the open chat tells, while it holds unsaved changes.
+    /// </summary>
+    /// <param name="isNeverSaved">Whether the chat was never saved.</param>
+    private string GetUnsavedChangesText(bool isNeverSaved) => isNeverSaved ? T("This chat is not saved yet") : T("This chat has unsaved changes");
+
+    private Task SaveChatAsync() => this.SaveChatRequested.InvokeAsync();
+
+    private void OnSaveStateChanged() => this.SafeStateHasChanged().Observe($"{nameof(Workspaces)}: showing whether the open chat is saved");
 
     #endregion
 
@@ -1529,6 +1624,9 @@ public partial class Workspaces : MSGComponentBase
             this.Search.TextChanged -= this.OnSearchTextChanged;
             this.Search.StepRequested -= this.OnSearchStepRequested;
         }
+
+        if (this.SaveState is not null)
+            this.SaveState.Changed -= this.OnSaveStateChanged;
 
         this.isDisposed = true;
         this.prefetchCancellationTokenSource?.Cancel();

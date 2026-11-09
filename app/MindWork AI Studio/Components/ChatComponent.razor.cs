@@ -71,6 +71,13 @@ public partial class ChatComponent : MSGComponentBase
     public WorkspaceSearch? Search { get; set; }
 
     /// <summary>
+    /// Whether the open chat holds unsaved changes, which the workspace sidebar shows while chats are
+    /// saved by hand.
+    /// </summary>
+    [Parameter]
+    public ChatSaveState? SaveState { get; set; }
+
+    /// <summary>
     /// The element around the messages, in which the search finds its words.
     /// </summary>
     private ElementReference messagesElement;
@@ -118,7 +125,25 @@ public partial class ChatComponent : MSGComponentBase
     private DataSourceOptions lastAppliedAutomaticDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
     private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
-    private bool hasUnsavedChanges;
+
+    /// <summary>
+    /// Whether the open chat holds changes which are not stored yet.
+    /// </summary>
+    /// <remarks>
+    /// While the user saves chats by hand, the workspace sidebar shows it, see <see cref="this.SaveState"/>.
+    /// While chats are stored automatically, the flag is set only for the moment until a change is
+    /// stored, which the sidebar has no reason to show.
+    /// </remarks>
+    private bool HasUnsavedChanges
+    {
+        get;
+        set
+        {
+            field = value;
+            this.SaveState?.SetUnsavedChanges(this.ChatThread?.ChatId ?? Guid.Empty, value && this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY);
+        }
+    }
+
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
     private byte scrollRenderCountdown;
@@ -346,7 +371,7 @@ public partial class ChatComponent : MSGComponentBase
             this.KeepComposerInDraft();
 
             // Also for text which arrives without a key, e.g., pasted with the mouse:
-            this.hasUnsavedChanges = true;
+            this.HasUnsavedChanges = true;
         }
     }
 
@@ -710,13 +735,19 @@ public partial class ChatComponent : MSGComponentBase
         if (!isFirstChat)
             await this.StopAnswerOfLeftChatAsync(this.loadedParameterChatId, this.loadedParameterWorkspaceId);
 
+        //
+        // A component which appears anew goes on with the open chat of the page. What the previous
+        // component did not save yet, the page still knows:
+        //
+        var keepsUnsavedChanges = isFirstChat && this.SaveState?.IsUnsaved(chatId) is true;
+
         this.loadedParameterChatId = chatId;
         this.loadedParameterWorkspaceId = workspaceId;
 
         // The chat being left keeps the message the user started in it:
         await this.FlushDraftAsync();
         await this.PreserveNewChatDraftAsync(leftChatHadNoThread);
-        await this.LoadedChatChanged(notifyParent: false);
+        await this.LoadedChatChanged(notifyParent: false, hasUnsavedChanges: keepsUnsavedChanges);
     }
 
     private void MarkCurrentChatAsLoadedParameter()
@@ -1285,12 +1316,12 @@ public partial class ChatComponent : MSGComponentBase
     {
         if (this.ChatThread is not null)
         {
-            this.hasUnsavedChanges = true;
+            this.HasUnsavedChanges = true;
             this.ChatThread.DataSourceOptions = updatedOptions;
             if(this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 await this.SaveThread();
-                this.hasUnsavedChanges = false;
+                this.HasUnsavedChanges = false;
             }
         }
         else
@@ -1316,7 +1347,7 @@ public partial class ChatComponent : MSGComponentBase
         if(this.dataSourceSelectionComponent?.IsVisible ?? false)
             this.dataSourceSelectionComponent.Hide();
         
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
         this.ComposerState.MarkUserDraft();
         var key = keyEvent.Code.ToLowerInvariant();
         
@@ -1351,7 +1382,7 @@ public partial class ChatComponent : MSGComponentBase
 
         this.ComposerState.SetUserInput(await this.JsRuntime.InvokeAsync<string>("formatChatInputMarkdown", CHAT_INPUT_ID, formatType));
         this.KeepComposerInDraft();
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
     }
 
     private async Task ComposerAttachmentsChanged(HashSet<FileAttachment> attachments)
@@ -1361,7 +1392,7 @@ public partial class ChatComponent : MSGComponentBase
 
         this.ComposerState.MarkUserDraft();
         this.KeepComposerInDraft();
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
 
         // A file the user took out goes without the text its preview read:
         if (this.ChatThread is { } chat)
@@ -1416,7 +1447,7 @@ public partial class ChatComponent : MSGComponentBase
         chat.RequireRestrictions(payload.Restrictions);
         this.ComposerState.SetUserInput(payload.Text);
         this.KeepComposerInDraft();
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
     }
 
     /// <summary>
@@ -1695,7 +1726,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(chat.WorkspaceId))
             await this.StoreAndListChatAsync(chat);
         else
-            this.hasUnsavedChanges = true;
+            this.HasUnsavedChanges = true;
 
         await this.SyncForegroundChatAsync();
         return chat;
@@ -1786,8 +1817,16 @@ public partial class ChatComponent : MSGComponentBase
             if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 await this.SaveThread();
-                this.hasUnsavedChanges = false;
+                this.HasUnsavedChanges = false;
                 this.StateHasChanged();
+            }
+            else
+            {
+                //
+                // Typing the message marked the chat as changed already. A new chat got its thread
+                // only now, though, and the workspace sidebar shows it from its first message on:
+                //
+                this.HasUnsavedChanges = true;
             }
         }
         else
@@ -1832,7 +1871,7 @@ public partial class ChatComponent : MSGComponentBase
         }
 
         // Enable the stream state for the chat component:
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
         
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
@@ -1917,7 +1956,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.ChatThread is not null)
         {
             this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
-            this.hasUnsavedChanges = true;
+            this.HasUnsavedChanges = true;
         }
     }
     
@@ -1944,12 +1983,24 @@ public partial class ChatComponent : MSGComponentBase
                 this.ComposerState.FileAttachments.Add(transcript);
         }
 
-        this.hasUnsavedChanges = false;
+        this.HasUnsavedChanges = false;
 
         // A new chat is on the disk now, like any other:
         this.unstoredChat = null;
     }
-    
+
+    /// <summary>
+    /// Saves the open chat on behalf of the workspace sidebar, just like the save button of the toolbar.
+    /// </summary>
+    public async Task SaveCurrentChatAsync()
+    {
+        if (!this.CanThreadBeSaved || this.IsCurrentChatStreaming)
+            return;
+
+        await this.SaveThread();
+        this.StateHasChanged();
+    }
+
     /// <summary>
     /// Starts a new chat in the given workspace, on behalf of the workspace tree.
     /// </summary>
@@ -1998,7 +2049,7 @@ public partial class ChatComponent : MSGComponentBase
         // not stored automatically, since leaving stops it, see StopAnswerOfLeftChatAsync:
         //
         var storageBehavior = this.ChatStorage;
-        if ((storageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges) || (storageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY && this.IsCurrentChatStreaming))
+        if ((storageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.HasUnsavedChanges) || (storageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY && this.IsCurrentChatStreaming))
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
@@ -2056,7 +2107,7 @@ public partial class ChatComponent : MSGComponentBase
         //
         // Reset our state:
         //
-        this.hasUnsavedChanges = false;
+        this.HasUnsavedChanges = false;
         this.ComposerState.Clear();
 
         // The open chat is left now, so the new template takes over:
@@ -2248,7 +2299,7 @@ public partial class ChatComponent : MSGComponentBase
             this.ComposerState.FileAttachments.Add(transcript);
 
         this.ChatThread = copy;
-        this.hasUnsavedChanges = false;
+        this.HasUnsavedChanges = false;
 
         // The copy carries the message along, so a new chat which never reached the disk stays that way:
         this.unstoredChat = null;
@@ -2259,9 +2310,14 @@ public partial class ChatComponent : MSGComponentBase
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
 
-    private async Task LoadedChatChanged(bool notifyParent = true)
+    /// <summary>
+    /// Shows the chat which <see cref="this.ChatThread"/> holds now.
+    /// </summary>
+    /// <param name="notifyParent">Whether the page hears about the chat.</param>
+    /// <param name="hasUnsavedChanges">Whether the chat holds changes the user did not save yet. True only for the open chat of the page, when this component appears anew.</param>
+    private async Task LoadedChatChanged(bool notifyParent = true, bool hasUnsavedChanges = false)
     {
-        this.hasUnsavedChanges = false;
+        this.HasUnsavedChanges = hasUnsavedChanges;
         this.ComposerState.Clear();
 
         if (this.ChatThread is not null)
@@ -2314,7 +2370,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.ChatThread is not null)
             await this.StopAnswerOfLeftChatAsync(this.ChatThread.ChatId, this.ChatThread.WorkspaceId);
 
-        this.hasUnsavedChanges = false;
+        this.HasUnsavedChanges = false;
         this.ComposerState.Clear();
         this.ClearWorkspaceHeaderState();
         
@@ -2394,7 +2450,7 @@ public partial class ChatComponent : MSGComponentBase
             return;
 
         // Like every other change, stored right away only while chats are stored automatically:
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
         if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             await this.SaveThread();
 
@@ -2409,7 +2465,7 @@ public partial class ChatComponent : MSGComponentBase
         if (!this.blockActions.TryRemoveForRegenerate(this.ChatThread, aiBlock))
             return;
 
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
         this.StateHasChanged();
         
         await this.SendMessage(reuseLastUserPrompt: true);
@@ -2425,7 +2481,7 @@ public partial class ChatComponent : MSGComponentBase
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
 
         // Like every other change, stored right away only while chats are stored automatically:
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
         if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             await this.SaveThread();
 
@@ -2440,7 +2496,7 @@ public partial class ChatComponent : MSGComponentBase
             return Task.CompletedTask;
 
         this.RestoreComposerForEditing();
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
         this.StateHasChanged();
         return Task.CompletedTask;
     }
@@ -2451,7 +2507,7 @@ public partial class ChatComponent : MSGComponentBase
             return Task.CompletedTask;
 
         this.RestoreComposerForEditing();
-        this.hasUnsavedChanges = true;
+        this.HasUnsavedChanges = true;
         this.StateHasChanged();
         return Task.CompletedTask;
     }
@@ -2659,7 +2715,7 @@ public partial class ChatComponent : MSGComponentBase
                 // Streaming mutates the last AI block over time.
                 // In manual storage mode, a save during streaming must not
                 // mark the final streamed state as already persisted.
-                this.hasUnsavedChanges = true;
+                this.HasUnsavedChanges = true;
                 if(this.autoSaveEnabled)
                     await this.SaveThread();
                 break;
@@ -2686,7 +2742,7 @@ public partial class ChatComponent : MSGComponentBase
                     if (!snapshot.IsActive)
                     {
                         // The job stored the answer only while chats are stored automatically, see AIJobService.CheckpointChatAsync:
-                        this.hasUnsavedChanges = this.ChatStorage is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
+                        this.HasUnsavedChanges = this.ChatStorage is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
                         this.previousInputForbidden = true;
                     }
 
@@ -2714,7 +2770,7 @@ public partial class ChatComponent : MSGComponentBase
                 // to keep it. Otherwise, it is part of the chat: changing it counts as a change of the
                 // chat, and a message which came back from the disk with the chat is saved already.
                 //
-                return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult)(object)(this.hasUnsavedChanges || (this.ChatThread is null && this.ComposerState.HasVisibleUserDraft))));
+                return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult)(object)(this.HasUnsavedChanges || (this.ChatThread is null && this.ComposerState.HasVisibleUserDraft))));
         }
 
         return Task.FromResult(MessageBusAnswer<TResult>.NONE);
@@ -2747,7 +2803,7 @@ public partial class ChatComponent : MSGComponentBase
         if(this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();
-            this.hasUnsavedChanges = false;
+            this.HasUnsavedChanges = false;
         }
 
         await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);

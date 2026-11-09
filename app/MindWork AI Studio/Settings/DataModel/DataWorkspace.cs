@@ -14,8 +14,8 @@ public sealed class DataWorkspace
     /// not at all.
     /// </summary>
     /// <remarks>
-    /// The chat settings offer it, together with <see cref="StorageTemporaryMaintenancePolicy"/>, as one
-    /// choice, see <see cref="GetChoice"/>. It lives here and keeps the names of its values, so that
+    /// The chat settings offer it, together with <see cref="this.StorageTemporaryMaintenancePolicy"/>, as one
+    /// choice, see <see cref="this.GetChoice"/>. It lives here and keeps the names of its values, so that
     /// older versions of AI Studio still read the settings file.
     /// </remarks>
     public WorkspaceStorageBehavior StorageBehavior { get; set; } = WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
@@ -26,7 +26,7 @@ public sealed class DataWorkspace
     /// </summary>
     /// <remarks>
     /// While chats are stored only when the user saves them, no chat is deleted, whatever this says, see
-    /// <see cref="GetDeletionPolicy"/>.
+    /// <see cref="this.GetDeletionPolicy"/>.
     /// </remarks>
     public WorkspaceStorageTemporaryMaintenancePolicy StorageTemporaryMaintenancePolicy { get; set; } = DEFAULT_TEMPORARY_POLICY;
 
@@ -36,7 +36,7 @@ public sealed class DataWorkspace
     /// <remarks>
     /// Null in every settings file written before chats in workspaces had a choice of their own. They
     /// are then stored as all other chats are, but never deleted, as before. Changing the choice for all
-    /// other chats does not change the one for chats in workspaces, see <see cref="SetChoice"/>.
+    /// other chats does not change the one for chats in workspaces, see <see cref="this.SetChoice"/>.
     /// </remarks>
     public WorkspaceStorageBehavior? WorkspaceChatsStorageBehavior { get; set; }
 
@@ -55,7 +55,7 @@ public sealed class DataWorkspace
         ? this.WorkspaceChatsStorageBehavior ?? this.StorageBehavior
         : this.StorageBehavior;
 
-    /// <inheritdoc cref="GetStorageBehavior(bool)"/>
+    /// <inheritdoc cref="this.GetStorageBehavior(bool)"/>
     /// <param name="workspaceId">The workspace the chat lies in, or <see cref="Guid.Empty"/> for a chat outside of a workspace.</param>
     public WorkspaceStorageBehavior GetStorageBehavior(Guid workspaceId) => this.GetStorageBehavior(isInWorkspace: workspaceId != Guid.Empty);
 
@@ -174,7 +174,7 @@ public sealed class DataWorkspace
     /// <remarks>
     /// Null in every settings file written before workspaces had a switch of their own. Workspaces then
     /// follow the storing of chats, as they did before: whoever chose to store no chat had switched
-    /// workspaces off with it, and must not find them back. Ask <see cref="UsesWorkspaces"/>.
+    /// workspaces off with it, and must not find them back. Ask <see cref="this.UsesWorkspaces"/>.
     /// </remarks>
     public bool? AreWorkspacesEnabled { get; set; }
 
@@ -185,7 +185,7 @@ public sealed class DataWorkspace
     /// Switched off, the sidebar lists the disappearing chats only, while the chats in workspaces stay
     /// where they are and come back once the user switches workspaces on again. Switched on while chats in
     /// workspaces are not stored, the workspaces keep what they hold, but no new chat goes into one, see
-    /// <see cref="CanChatsGoIntoWorkspaces"/>.
+    /// <see cref="this.CanChatsGoIntoWorkspaces"/>.
     /// </remarks>
     [JsonIgnore]
     public bool UsesWorkspaces => this.AreWorkspacesEnabled ?? this.AreChatsStored;

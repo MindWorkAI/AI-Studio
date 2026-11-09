@@ -179,6 +179,17 @@
 }
 
 /*
+ * While chats are saved by hand, the open chat shows unsaved changes with a dot, as an editor marks a
+ * file with unsaved changes. The dot takes the color of the name.
+ */
+.workspace-list ::deep .workspace-unsaved-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+/*
  * A clicked list item keeps the focus, and MudBlazor gives a focused item the background of a hovered
  * one until the user clicks elsewhere. That background is meant for the keyboard. A click on a
  * workspace would otherwise leave its row looking hovered, so only focus from the keyboard keeps it.

@@ -45,6 +45,12 @@ public partial class Chat : MSGComponentBase
     private ChatComponent? chatComponent;
     private readonly ChatComposerState composerState = new();
 
+    /// <summary>
+    /// Whether the open chat holds changes the user did not save yet, which the chat component tells the
+    /// workspace sidebar. The page keeps it, since both are created anew whenever the sidebar shows up again.
+    /// </summary>
+    private readonly ChatSaveState chatSaveState = new();
+
     private ElementReference sidebarElement;
     private ElementReference sidebarHandle;
 
@@ -197,6 +203,21 @@ public partial class Chat : MSGComponentBase
             return;
 
         await this.chatComponent.StartNewChatInWorkspaceAsync(workspaceId);
+    }
+
+    /// <summary>
+    /// Saves the open chat, when the workspace sidebar asks for it.
+    /// </summary>
+    /// <remarks>
+    /// Like <see cref="this.StartNewChatInWorkspace"/>, this reads the reference to the chat component only
+    /// when the user clicked.
+    /// </remarks>
+    private async Task SaveCurrentChat()
+    {
+        if (this.chatComponent is null)
+            return;
+
+        await this.chatComponent.SaveCurrentChatAsync();
     }
 
     #region Overrides of MSGComponentBase

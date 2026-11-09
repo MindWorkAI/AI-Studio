@@ -6562,6 +6562,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1469573738"] = "Delete"
 -- Rename Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1474303418"] = "Rename Workspace"
 
+-- Save chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1516264254"] = "Save chat"
+
 -- Rename Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T156144855"] = "Rename Chat"
 
@@ -6646,8 +6649,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4048389951"] = "Workspaces"
 -- Chats
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4258277800"] = "Chats"
 
+-- This chat is not saved yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T434968703"] = "This chat is not saved yet"
+
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T474393241"] = "Please select the workspace where you want to move the chat to."
+
+-- This chat has unsaved changes
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T485456566"] = "This chat has unsaved changes"
 
 -- Delete Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T701874671"] = "Delete Workspace"
