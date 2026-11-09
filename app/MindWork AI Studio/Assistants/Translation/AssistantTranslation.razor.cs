@@ -3,7 +3,6 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
-using AIStudio.Tools.Rust;
 
 namespace AIStudio.Assistants.Translation;
 
@@ -57,10 +56,16 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     
     protected override string SubmitText => this.mode is AssistantContentMode.DOCUMENT ? T("Translate document") : T("Translate");
 
-    protected override Func<Task> SubmitAction => () => this.TranslateText(true);
+    protected override Func<Task> SubmitAction => () => this.mode is AssistantContentMode.DOCUMENT ? this.TranslateDocumentAsync() : this.TranslateText(true);
 
-    // Documents cannot be translated yet, so only a text can be submitted:
-    protected override bool SubmitDisabled => this.isAgentRunning || this.mode is not AssistantContentMode.TEXT;
+    protected override bool SubmitDisabled => this.isAgentRunning || this.isSavingDocument;
+
+    protected override bool ShowDedicatedProgress => this.mode is AssistantContentMode.DOCUMENT;
+
+    protected override string ProgressText => this.mode is AssistantContentMode.DOCUMENT ? this.DocumentProgressText : string.Empty;
+
+    // A document goes to the model in many small requests, which need no tools:
+    protected override IReadOnlySet<string>? AssistantManagedToolIds => this.mode is AssistantContentMode.DOCUMENT ? NO_TOOLS : null;
 
     protected override bool ShowSubmit => this.mode is not AssistantContentMode.UNDECIDED;
 
@@ -83,6 +88,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     {
         // The mode stays as it is: the button next to the settings switches it.
         this.documentPath = string.Empty;
+        this.translatedDocument = null;
+        this.documentProgress = null;
         this.inputText = string.Empty;
         this.inputTextLastTranslation = string.Empty;
         this.webContentURL = string.Empty;
@@ -149,6 +156,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     {
         state.Set(MODE_STATE_KEY, this.mode);
         state.Set(DOCUMENT_PATH_STATE_KEY, this.documentPath);
+        state.Set(TRANSLATED_DOCUMENT_STATE_KEY, this.translatedDocument);
+        state.Set(DOCUMENT_PROGRESS_STATE_KEY, this.documentProgress);
         state.Set(SHOW_WEB_CONTENT_READER_STATE_KEY, this.showWebContentReader);
         state.Set(USE_CONTENT_CLEANER_AGENT_STATE_KEY, this.useContentCleanerAgent);
         state.Set(LIVE_TRANSLATION_STATE_KEY, this.liveTranslation);
@@ -165,6 +174,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     {
         state.Restore(MODE_STATE_KEY, value => this.mode = value);
         state.Restore(DOCUMENT_PATH_STATE_KEY, value => this.documentPath = value);
+        state.Restore(TRANSLATED_DOCUMENT_STATE_KEY, value => this.translatedDocument = value);
+        state.Restore(DOCUMENT_PROGRESS_STATE_KEY, value => this.documentProgress = value);
         state.Restore(SHOW_WEB_CONTENT_READER_STATE_KEY, value => this.showWebContentReader = value);
         state.Restore(USE_CONTENT_CLEANER_AGENT_STATE_KEY, value => this.useContentCleanerAgent = value);
         state.Restore(LIVE_TRANSLATION_STATE_KEY, value => this.liveTranslation = value);
@@ -206,17 +217,6 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     }
 
     private Task SwitchMode() => this.ChooseMode(this.mode is AssistantContentMode.DOCUMENT ? AssistantContentMode.TEXT : AssistantContentMode.DOCUMENT);
-
-    private string? ValidateDocument(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-            return T("Please choose a document to translate.");
-
-        if (!FileTypes.IsAllowedPath(path, FileTypes.EDITABLE_DOCUMENT))
-            return T("This kind of file cannot be translated. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.");
-
-        return null;
-    }
 
     private string? ValidatingText(string text)
     {

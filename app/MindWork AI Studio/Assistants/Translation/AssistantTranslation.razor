@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_TRANSLATION)]
+@using AIStudio.Tools.DocumentSegments
 @using AIStudio.Tools.Rust
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogTranslation>
 
@@ -42,4 +43,39 @@ else
         : @<MudTooltip Text="@this.SwitchModeTooltip">
               <MudIconButton Variant="Variant.Text" Icon="@this.SwitchModeIcon" Disabled="@(this.IsProcessing || this.isAgentRunning)" OnClick="@this.SwitchMode"/>
           </MudTooltip>;
+
+    private protected override RenderFragment? BelowSubmitContent => this.mode is AssistantContentMode.DOCUMENT && !this.IsProcessing && this.translatedDocument is { } document
+        ? @<MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+              <MudText Typo="Typo.h6" Class="mb-2">
+                  @T("Translated document")
+              </MudText>
+              <MudText Typo="Typo.body1">
+                  @string.Format(T("'{0}' is translated into {1}."), Path.GetFileName(document.SourcePath), document.LanguageName)
+              </MudText>
+              <MudText Typo="Typo.body2">
+                  @string.Format(T("Translated sections: {0}"), document.Results.CountOf(SegmentStatus.TRANSFORMED))
+              </MudText>
+              @if (document.Results.CountOf(SegmentStatus.FILTERED) is > 0 and var filteredCount)
+              {
+                  <MudText Typo="Typo.body2">
+                      @string.Format(T("Sections left as they are, because the security check found suspicious content in them: {0}"), filteredCount)
+                  </MudText>
+              }
+              @if (document.Results.CountOf(SegmentStatus.FAILED) is > 0 and var failedCount)
+              {
+                  <MudText Typo="Typo.body2">
+                      @string.Format(T("Sections left as they are, because the AI model delivered no usable translation for them: {0}"), failedCount)
+                  </MudText>
+              }
+              @if (DocumentSegmentFormats.For(document.SourcePath) is { } format)
+              {
+                  <MudText Typo="Typo.body2" Class="mt-2">
+                      @format.LimitsNotice
+                  </MudText>
+              }
+              <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@this.isSavingDocument" OnClick="@this.SaveTranslatedDocumentAsync" Class="mt-3">
+                  @T("Save translated document")
+              </MudButton>
+          </MudPaper>
+        : null;
 }

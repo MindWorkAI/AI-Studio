@@ -458,7 +458,21 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             sessionCancellationTokenSource?.Dispose();
             await this.RefreshAssistantUIAsync();
         }
+
+        // Once the run is over, so that what the assistant does next, e.g., asking where to save, is not part of it:
+        if (!this.isDisposed)
+            await this.OnRunFinishedAsync(sessionStatus);
     }
+
+    /// <summary>
+    /// Called after a run of this assistant ended, while the user still looks at the assistant.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose result is a file offers to save it here. Nothing calls this when the user left the
+    /// assistant during the run: a dialog would open over whatever they look at now.
+    /// </remarks>
+    /// <param name="status">How the run ended.</param>
+    protected virtual Task OnRunFinishedAsync(AssistantSessionStatus status) => Task.CompletedTask;
 
     /// <summary>
     /// Tells the user that the assistant cannot start with the selected provider, together with whatever else is missing.

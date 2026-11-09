@@ -14,6 +14,11 @@ public interface IDocumentSegmentFormat
     public FileTypeFilter FileType { get; }
 
     /// <summary>
+    /// What of a document of this kind stays as it is, for the user, e.g., "Code and formulas stay as they are."
+    /// </summary>
+    public string LimitsNotice { get; }
+
+    /// <summary>
     /// Reads the segments of a document, in the order of the document.
     /// </summary>
     /// <param name="path">The document.</param>

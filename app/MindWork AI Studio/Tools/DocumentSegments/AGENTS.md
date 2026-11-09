@@ -30,7 +30,7 @@ the repository root and to `app/AGENTS.md`, which apply here as well.
 - **Tags are the only structure a model sees.** Never put markup of a format, such as XML or Markdown
   syntax which the format must keep, into a segment as words: make it a tag of its own. Words of a
   document which read as a tag (`TaggedText.ContainsTagLikeText`) would be taken for one, so a format
-  sends such a segment without its tags.
+  leaves such a segment as it is, or sends it without tags when it has no markup to guard.
 - **A pair stays within its pair, a tag of its own may move.** `TaggedText.HasSameTagsAs` checks exactly
   this, so a format can nest its parts again as before. Whatever must keep its order, such as the start
   and the end of a field, belongs into one pair.
