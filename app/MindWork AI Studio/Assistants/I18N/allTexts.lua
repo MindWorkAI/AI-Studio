@@ -3655,6 +3655,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T33
 -- Simple language, e.g., for children
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T530584375"] = "Simple language, e.g., for children"
 
+-- Translate a document or a text from one language to another.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T109146452"] = "Translate a document or a text from one language to another."
+
 -- Please select a target language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1173859091"] = "Please select a target language."
 
@@ -3663,6 +3666,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T12497
 
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T137304886"] = "Please provide a text as input. You might copy the desired text from a document or a website."
+
+-- Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1928036000"] = "Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here."
 
 -- Translate
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2028202101"] = "Translate"
@@ -3673,8 +3679,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T23782
 -- Translate the following text to {0}:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2578812023"] = "Translate the following text to {0}:"
 
--- Translate text from one language to another.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3230457846"] = "Translate text from one language to another."
+-- Switch to document translation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2998957500"] = "Switch to document translation"
+
+-- Please choose a document to translate.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3177554507"] = "Please choose a document to translate."
 
 -- No live translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3556243327"] = "No live translation"
@@ -3682,14 +3691,35 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T35562
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3848935911"] = "Custom target language"
 
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4165204724"] = "Document"
+
+-- Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4264268496"] = "Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible."
+
 -- Live translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4279308324"] = "Live translation"
+
+-- Select a document to translate
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T551715734"] = "Select a document to translate"
+
+-- Switch to text translation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T589253298"] = "Switch to text translation"
 
 -- Translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T613888204"] = "Translation"
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T656744944"] = "Please provide a custom language."
+
+-- Translate document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T673837466"] = "Translate document"
+
+-- This kind of file cannot be translated. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T693130064"] = "This kind of file cannot be translated. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file."
+
+-- Translate text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T922529912"] = "Translate text"
 
 -- confidential
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1052709079"] = "confidential"
@@ -11083,6 +11113,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T170112
 -- Live translation is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1825690873"] = "Live translation is not preselected"
 
+-- How should the translator start?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1945562480"] = "How should the translator start?"
+
 -- Content cleaner agent is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1969816694"] = "Content cleaner agent is not preselected"
 
@@ -11118,6 +11151,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T364177
 
 -- Preselect the content cleaner agent?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3649428096"] = "Preselect the content cleaner agent?"
+
+-- Choose whether the translator asks you every time whether to translate a document or a text, or whether it always starts with one of them. You can switch between both at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T4241081248"] = "Choose whether the translator asks you every time whether to translate a document or a text, or whether it always starts with one of them. You can switch between both at any time with the button next to the gear icon."
 
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T629158142"] = "Preselect the web content reader?"
@@ -13410,6 +13446,15 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T28881410
 
 -- Formal address
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T3439873254"] = "Formal address"
+
+-- Always start with a document
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T204202312"] = "Always start with a document"
+
+-- Ask every time
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T648770414"] = "Ask every time"
+
+-- Always start with a text
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T97323650"] = "Always start with a text"
 
 -- This data source can be used with any LLM provider. Your data may be sent to a cloud-based provider.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T1531417967"] = "This data source can be used with any LLM provider. Your data may be sent to a cloud-based provider."

@@ -95,7 +95,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected abstract Func<Task> SubmitAction { get; }
     
     protected virtual bool SubmitDisabled => false;
-    
+
+    /// <summary>
+    /// Whether the assistant shows its submit button at all.
+    /// </summary>
+    /// <remarks>
+    /// An assistant which first asks what to work on, e.g., a document or a text, hides the button
+    /// until the user chose, since there is nothing to submit before.
+    /// </remarks>
+    protected virtual bool ShowSubmit => true;
+
     private protected virtual RenderFragment? Body => null;
 
     private protected virtual RenderFragment? AfterSubmitContent => null;
