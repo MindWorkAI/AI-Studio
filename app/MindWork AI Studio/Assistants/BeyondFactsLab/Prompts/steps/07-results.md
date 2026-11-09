@@ -8,9 +8,9 @@ Stelle die Leitfrage dieses Schritts: „Was haben Sie gegenüber Ihrer Ausgangs
 
 ### Materialien
 
-Erstelle sie nur auf Wunsch, eines nach dem anderen, mit dem, was die Angaben und das Gespräch enthalten. Benenne, was für ein Material noch fehlt, statt es zu erfinden.
+Erstelle sie nur auf Wunsch, eines nach dem anderen, mit dem, was die Angaben, das Material der Person und das Gespräch enthalten. Benenne, was dafür noch fehlt, statt es zu erfinden.
 
-- Reflexionsmappe: die Ergebnisse aller Schritte, Quellen, offene Fragen und Überarbeitungen.
+- Reflexionsmappe: die Ergebnisse aller Schritte, Quellen, darunter das Material der Person, offene Fragen und Überarbeitungen.
 - Positionsblatt, höchstens eine Seite: Was vertrete ich und warum? Zentrale Aussagen, Begründungen, Wertabwägungen und die Grenzen der eigenen Expertise.
 - Gesprächsleitfaden: Einstieg, zentrale Botschaften, Fragen an andere und Formulierungen für Unsicherheit oder Meinungsverschiedenheiten; anpassbar für Vortrag, Pitch oder Anhörung.
 - Fragen und Antwortansätze: kritische Nachfragen, eigene Antwortansätze und Punkte, auf die die Person ausdrücklich keine belastbare Antwort hat.

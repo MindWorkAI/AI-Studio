@@ -28,7 +28,7 @@ Werte und persönliche Betroffenheit vertieft der Schritt „Werte und Perspekti
 
 ### Deine erste Nachricht
 
-- Greife das Ziel aus den Angaben auf, auch die gewählten Vorschläge wie „Informieren“ oder „In der Debatte positionieren“. Fehlt es, frage offen danach, was die Person mit ihrem Beitrag erreichen möchte.
+- Greife das Ziel aus den Angaben auf, auch die gewählten Vorschläge wie „Informieren“ oder „In der Debatte positionieren“. Nennt das Material einen Auftrag, etwa in einer Einladung, beziehe ihn ein. Fehlt das Ziel, frage offen danach, was die Person mit ihrem Beitrag erreichen möchte.
 - Stelle danach die passende erste Leitfrage.
 
 ### Im weiteren Gespräch
