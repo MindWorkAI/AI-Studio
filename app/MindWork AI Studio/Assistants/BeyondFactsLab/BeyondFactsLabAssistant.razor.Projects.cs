@@ -125,7 +125,7 @@ public partial class BeyondFactsLabAssistant
             {
                 dialog => dialog.Message,
                 project.IsAvailable
-                    ? string.Format(TA("Permanently delete the preparation '{0}' with all of its steps, chats, and work states?"), project.Name)
+                    ? string.Format(TA("Permanently delete the preparation '{0}' with all of its steps, chats, material, and work states?"), project.Name)
                     : TA("This preparation cannot be opened. Permanently delete it with all of its files?")
             },
         };
