@@ -30,6 +30,9 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     private BflConversationService ConversationService { get; init; } = null!;
 
     [Inject]
+    private BflMaterialService MaterialService { get; init; } = null!;
+
+    [Inject]
     private ILogger<BeyondFactsLabAssistant> Logger { get; init; } = null!;
 
     [Inject]
@@ -44,6 +47,16 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     /// The empty element right before the header of the preparation, which marks where the header sits in the flow.
     /// </summary>
     private ElementReference stickyHeaderAnchor;
+
+    /// <summary>
+    /// The header of the preparation, which stays at the top while the person scrolls.
+    /// </summary>
+    private ElementReference stickyHeader;
+
+    /// <summary>
+    /// The ID of the header element whose height the page follows, so that only a new header element needs following.
+    /// </summary>
+    private string? followedStickyHeaderId;
 
     /// <summary>
     /// Whether the next render shows another step, which then starts at the top.
@@ -66,6 +79,7 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
         }
 
         this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
+        this.MaterialService.MaterialsChanged += this.OnMaterialsChangedAsync;
         this.mayOpen = true;
         await this.RunStoreActionAsync(() => this.ReloadProjectsAsync(null));
 
@@ -82,6 +96,16 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
             // The person scrolled down in one step and chose another one; it starts right under the header:
             this.scrollToActiveStep = false;
             await this.stickyHeaderAnchor.ScrollToStickyHeaderAsync(this.JsRuntime);
+        }
+
+        //
+        // The material sticks right below the header, so the page has to know how tall the header is. Opening a
+        // preparation after none, or after one which is unavailable, renders a new header element:
+        //
+        if (this.stickyHeader.Id is { } headerId && headerId != this.followedStickyHeaderId)
+        {
+            this.followedStickyHeaderId = headerId;
+            await this.stickyHeader.FollowStickyHeaderAsync(this.JsRuntime);
         }
 
         if (firstRender && this.mayOpen)
@@ -125,6 +149,32 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
         }
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+    }
+
+    /// <inheritdoc />
+    protected override void DisposeResources()
+    {
+        this.MaterialService.MaterialsChanged -= this.OnMaterialsChangedAsync;
+        base.DisposeResources();
+    }
+
+    /// <summary>
+    /// Shows a preparation as changed once its material changed: material is work on the preparation.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation whose material changed.</param>
+    private Task OnMaterialsChangedAsync(Guid projectId)
+    {
+        if (this.projects.All(project => project.ProjectId != projectId))
+            return Task.CompletedTask;
+
+        return this.InvokeAsync(async () =>
+        {
+            if (await this.Store.LoadAsync(projectId) is not { } project)
+                return;
+
+            this.ReplaceProject(project);
+            this.StateHasChanged();
+        });
     }
 
     /// <summary>

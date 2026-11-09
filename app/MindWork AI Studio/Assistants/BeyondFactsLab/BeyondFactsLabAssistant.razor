@@ -3,8 +3,9 @@
 
 <CascadingValue Value="Components.BEYOND_FACTS_LAB_ASSISTANT">
     @* The lab does not inherit AssistantBase, so it sets up the inner scrolling itself, the way the
-       Visual Briefing assistant does. *@
-    <div class="inner-scrolling-context">
+       Visual Briefing assistant does, and is a drop area of its own: a document dropped anywhere on
+       the page lands in the material of the open preparation. *@
+    <PathDropZone IsArea="@true" Class="inner-scrolling-context">
         <PreviewPrototype ApplyInnerScrollingFix="true"/>
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3 mr-3" StretchItems="StretchItems.Start">
             <MudText Typo="Typo.h3">@T("BeyondFacts Lab")</MudText>
@@ -84,9 +85,11 @@
             {
                 @* Stays at the top while the person scrolls, like the header of the workspaces: the preparation, its
                    provider, and the steps remain in view, and only the list of preparations scrolls away. The empty
-                   anchor before it marks where the header sits in the flow, to scroll back there for another step. *@
+                   anchor before it marks where the header sits in the flow, to scroll back there for another step.
+                   Its background is that of the page, which lies on the paper of MainLayout: the background of the
+                   palette is darker in the dark mode. *@
                 <div @ref="@this.stickyHeaderAnchor"></div>
-                <div class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
+                <div @ref="@this.stickyHeader" class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-surface);">
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.h4">@project.Name</MudText>
@@ -118,24 +121,38 @@
                     </MudStepperWithoutActions>
                 </div>
 
-                <div @key="@this.activeStep" class="mr-3 px-6">
-                    <MudText Typo="Typo.h5" Class="mt-2">@this.activeStep.Title</MudText>
-                    <MudText Typo="Typo.body2" Class="mb-4">@this.activeStep.Description</MudText>
+                @* The material stands beside the step, as it applies to all steps, and below it on a narrow window. It
+                   stays out of the key of the step, so that reading a document goes on when the person picks another step.
+                   Beside the step, it stays in view below the header, see the scoped CSS of this page. *@
+                <div class="mr-3">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" lg="8">
+                            <div @key="@this.activeStep" class="px-6">
+                                <MudText Typo="Typo.h5" Class="mt-2">@this.activeStep.Title</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-4">@this.activeStep.Description</MudText>
 
-                    <MudText Typo="Typo.h6" Class="mb-2">@TA("Your details")</MudText>
-                    @if (this.forms.TryGetValue(this.activeStep, out var form))
-                    {
-                        var step = this.activeStep;
-                        <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
-                    }
-                    else
-                    {
-                        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
-                            @TA("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
-                        </MudAlert>
-                    }
+                                <MudText Typo="Typo.h6" Class="mb-2">@TA("Your details")</MudText>
+                                @if (this.forms.TryGetValue(this.activeStep, out var form))
+                                {
+                                    var step = this.activeStep;
+                                    <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                                        @TA("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
+                                    </MudAlert>
+                                }
 
-                    <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                                <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                            </div>
+                        </MudItem>
+                        <MudItem xs="12" lg="4">
+                            <div class="bfl-material-column">
+                                <BflMaterials ProjectId="@project.ProjectId" Step="@this.activeStep" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
                 </div>
             }
             else
@@ -145,5 +162,5 @@
                 </MudPaper>
             }
         </InnerScrolling>
-    </div>
+    </PathDropZone>
 </CascadingValue>

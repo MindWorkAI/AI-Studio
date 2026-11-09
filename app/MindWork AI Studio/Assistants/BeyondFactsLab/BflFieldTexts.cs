@@ -68,7 +68,7 @@ public static class BflFieldTexts
             BflFieldCatalog.EVENT_LINK => TB("The address of the event page, beginning with https://"),
 
             BflFieldCatalog.CONTRIBUTION_SUMMARY => TB("A few sentences are enough"),
-            BflFieldCatalog.MATERIAL_NOTES => TB("E.g., use only paper X as the basis for the content"),
+            BflFieldCatalog.MATERIAL_NOTES => TA("E.g., use only paper X as the basis for the content. Add the material itself in the area 'Material'."),
 
             BflFieldCatalog.GOALS => TA("In your own words, with the suggestions below, or still open: the chat sharpens your goal and role with you."),
 

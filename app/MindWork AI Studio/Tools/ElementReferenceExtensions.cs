@@ -20,5 +20,20 @@ public static class ElementReferenceExtensions
         {
             await jsRuntime.InvokeVoidAsync("scrollToStickyHeader", elementReference);
         }
+
+        /// <summary>
+        /// Keeps the height of this sticky header, and the space it leaves free below, in the CSS variables
+        /// <c>--sticky-header-height</c> and <c>--sticky-space-below-header</c> of its scrolling container, so that
+        /// content further down can stick right below it.
+        /// </summary>
+        /// <remarks>
+        /// The variables follow every change of size, e.g., when a narrower window wraps the header into more lines.
+        /// Call it again for a new element only: a header which left the page stops being followed by itself.
+        /// </remarks>
+        /// <param name="jsRuntime">The JavaScript runtime of the page.</param>
+        public async ValueTask FollowStickyHeaderAsync(IJSRuntime jsRuntime)
+        {
+            await jsRuntime.InvokeVoidAsync("followStickyHeader", elementReference);
+        }
     }
 }

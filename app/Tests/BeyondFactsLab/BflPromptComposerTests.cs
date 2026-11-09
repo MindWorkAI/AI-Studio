@@ -9,7 +9,7 @@ namespace AIStudio.Tests.BeyondFactsLab;
 [TestFixture]
 public sealed class BflPromptComposerTests
 {
-    private const string CORE = "Sprache: {{RESPONSE_LANGUAGE}}\n{{ADDRESS_FORM}}\n{{KNOWLEDGE}}\n{{STEP}}\n{{DETAILS}}\n{{MISSING_DETAILS}}";
+    private const string CORE = "Sprache: {{RESPONSE_LANGUAGE}}\n{{ADDRESS_FORM}}\n{{KNOWLEDGE}}\n{{STEP}}\n{{MATERIALS}}\n{{DETAILS}}\n{{MISSING_DETAILS}}";
 
     private static readonly BflPromptParts PARTS = new(CORE, "Leitfaden", "Schritt", "Anrede");
 
@@ -41,7 +41,7 @@ public sealed class BflPromptComposerTests
         foreach (var step in BflStep.All)
         {
             var parts = await BflPromptLibrary.LoadPartsAsync(step, AddressForm.FORMAL);
-            var prompt = BflPromptComposer.Compose(parts, step, new Dictionary<BflStep, BflStepFormData>(), "Deutsch");
+            var prompt = BflPromptComposer.Compose(parts, step, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch");
 
             using (Assert.EnterMultipleScope())
             {
@@ -55,8 +55,8 @@ public sealed class BflPromptComposerTests
     [Test]
     public async Task TheFormOfAddressDecidesTheInstruction()
     {
-        var formal = BflPromptComposer.Compose(await BflPromptLibrary.LoadPartsAsync(BflStep.FRAMEWORK, AddressForm.FORMAL), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), "Deutsch");
-        var informal = BflPromptComposer.Compose(await BflPromptLibrary.LoadPartsAsync(BflStep.FRAMEWORK, AddressForm.INFORMAL), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), "Deutsch");
+        var formal = BflPromptComposer.Compose(await BflPromptLibrary.LoadPartsAsync(BflStep.FRAMEWORK, AddressForm.FORMAL), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch");
+        var informal = BflPromptComposer.Compose(await BflPromptLibrary.LoadPartsAsync(BflStep.FRAMEWORK, AddressForm.INFORMAL), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch");
 
         using (Assert.EnterMultipleScope())
         {
@@ -119,7 +119,7 @@ public sealed class BflPromptComposerTests
     [Test]
     public void TheLanguageOfTheAnswersIsNamed()
     {
-        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), "English (United States)");
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "English (United States)");
 
         Assert.That(prompt, Does.StartWith("Sprache: English (United States)\n"));
     }
@@ -127,7 +127,7 @@ public sealed class BflPromptComposerTests
     [Test]
     public void TheMissingKeyDetailsAreListed()
     {
-        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), "Deutsch");
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch");
 
         foreach (var field in BflFieldCatalog.FIELDS.Where(field => field.IsKeyDetail))
             Assert.That(prompt, Does.Contain(field.Label), field.Id);
@@ -140,7 +140,7 @@ public sealed class BflPromptComposerTests
         foreach (var field in BflFieldCatalog.FIELDS.Where(field => field.IsKeyDetail))
             forms[field.Step].Set(field.Id, "vorhanden");
 
-        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, forms, "Deutsch");
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, forms, [], "Deutsch");
 
         Assert.That(prompt, Does.EndWith("Es fehlen keine wichtigen Angaben."));
     }
@@ -155,7 +155,7 @@ public sealed class BflPromptComposerTests
         goals.SetChoices(directions, [BflFieldCatalog.GOAL_INFORM, BflFieldCatalog.GOAL_SHOW_OPTIONS]);
         var forms = new Dictionary<BflStep, BflStepFormData> { [BflStep.FRAMEWORK] = framework, [BflStep.GOALS_AND_ROLE] = goals };
 
-        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, forms, "Deutsch");
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, forms, [], "Deutsch");
         var inform = directions.Options.Single(option => option.Id == BflFieldCatalog.GOAL_INFORM).Label;
         var showOptions = directions.Options.Single(option => option.Id == BflFieldCatalog.GOAL_SHOW_OPTIONS).Label;
         var format = BflFieldCatalog.FIELDS.Single(field => field.Id == BflFieldCatalog.FORMAT).Label;
@@ -175,7 +175,7 @@ public sealed class BflPromptComposerTests
         var knowledge = new BflStepFormData();
         knowledge.Set(BflFieldCatalog.CORE_THESES, "Erste These\r\nZweite These");
 
-        var prompt = BflPromptComposer.Compose(PARTS, BflStep.KNOWLEDGE, new Dictionary<BflStep, BflStepFormData> { [BflStep.KNOWLEDGE] = knowledge }, "Deutsch");
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.KNOWLEDGE, new Dictionary<BflStep, BflStepFormData> { [BflStep.KNOWLEDGE] = knowledge }, [], "Deutsch");
 
         Assert.That(prompt, Does.Contain(": Erste These\n  Zweite These"));
     }
@@ -190,7 +190,7 @@ public sealed class BflPromptComposerTests
 
         foreach (var step in BflStep.All)
         {
-            var prompt = BflPromptComposer.Compose(PARTS, step, forms, "Deutsch");
+            var prompt = BflPromptComposer.Compose(PARTS, step, forms, [], "Deutsch");
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(prompt.Contains("VERTRAULICH-4711", StringComparison.Ordinal), Is.EqualTo(step is BflStep.VALUES_AND_PERSPECTIVES), step.ToString());
@@ -208,8 +208,8 @@ public sealed class BflPromptComposerTests
         var strategy = new BflStepFormData();
         strategy.Set(BflFieldCatalog.COMMUNICATION_WORRIES, "Zeitdruck");
 
-        var first = BflPromptComposer.Compose(PARTS, BflStep.STRATEGY, new Dictionary<BflStep, BflStepFormData> { [BflStep.FRAMEWORK] = framework, [BflStep.STRATEGY] = strategy }, "Deutsch");
-        var second = BflPromptComposer.Compose(PARTS, BflStep.STRATEGY, new Dictionary<BflStep, BflStepFormData> { [BflStep.STRATEGY] = strategy, [BflStep.FRAMEWORK] = framework }, "Deutsch");
+        var first = BflPromptComposer.Compose(PARTS, BflStep.STRATEGY, new Dictionary<BflStep, BflStepFormData> { [BflStep.FRAMEWORK] = framework, [BflStep.STRATEGY] = strategy }, [], "Deutsch");
+        var second = BflPromptComposer.Compose(PARTS, BflStep.STRATEGY, new Dictionary<BflStep, BflStepFormData> { [BflStep.STRATEGY] = strategy, [BflStep.FRAMEWORK] = framework }, [], "Deutsch");
 
         using (Assert.EnterMultipleScope())
         {
@@ -218,4 +218,116 @@ public sealed class BflPromptComposerTests
             Assert.That(first.IndexOf("Interview", StringComparison.Ordinal), Is.LessThan(first.IndexOf("Öffentlichkeit", StringComparison.Ordinal)), "The details follow the order of the forms.");
         }
     }
+
+    [Test]
+    public void APreparationWithoutMaterialSaysSo()
+    {
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch");
+
+        Assert.That(prompt, Does.Contain("Die Person hat kein Material hinzugefügt."));
+    }
+
+    [Test]
+    public void TheMaterialComesWithItsNameAndText()
+    {
+        var invitation = Excerpt("Einladung.docx", "Podium am 10. Dezember\r\nim Audimax", 10_000);
+        var paper = Excerpt("Paper.pdf", "Abstract", 10_000);
+
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [invitation, paper], "Deutsch");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain("## Material 1: „Einladung.docx“\n\nPodium am 10. Dezember\nim Audimax"));
+            Assert.That(prompt, Does.Contain("## Material 2: „Paper.pdf“\n\nAbstract"));
+            Assert.That(prompt, Does.Not.Contain("Gekürzt"));
+        }
+    }
+
+    [Test]
+    public void AShortenedMaterialSaysHowMuchOfItIsThere()
+    {
+        var material = new BflMaterial { MaterialId = Guid.NewGuid(), Name = "Paper.pdf", TextLength = 1_000 };
+        var shortened = new BflMaterialExcerpt(new(material, 400), "Der Anfang");
+        var missing = new BflMaterialExcerpt(new(new BflMaterial { MaterialId = Guid.NewGuid(), Name = "Buch.pdf", TextLength = 1_000 }, 0), string.Empty);
+
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [shortened, missing], "Deutsch");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain("(Gekürzt: Hier steht nur der Anfang, etwa 40 % des Materials."));
+            Assert.That(prompt, Does.Contain("## Material 2: „Buch.pdf“\n(Für dieses Material reicht der Platz im Kontext des Modells nicht. Du kennst nur seinen Namen.)"));
+        }
+    }
+
+    [Test]
+    public void APlaceholderInTheMaterialStaysText()
+    {
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [Excerpt("Notizen.md", "Siehe {{KNOWLEDGE}}", 100)], "Deutsch");
+
+        Assert.That(prompt, Does.Contain("Siehe {{KNOWLEDGE}}"));
+    }
+
+    [Test]
+    public async Task TheMaterialStandsBetweenTheStepAndTheDetails()
+    {
+        var parts = await BflPromptLibrary.LoadPartsAsync(BflStep.KNOWLEDGE, AddressForm.FORMAL);
+        var knowledge = new BflStepFormData();
+        knowledge.Set(BflFieldCatalog.CORE_THESES, "THESE-4711");
+
+        var prompt = BflPromptComposer.Compose(parts, BflStep.KNOWLEDGE, new Dictionary<BflStep, BflStepFormData> { [BflStep.KNOWLEDGE] = knowledge }, [Excerpt("Paper.pdf", "MATERIAL-4711", 100)], "Deutsch");
+        var material = prompt.IndexOf("MATERIAL-4711", StringComparison.Ordinal);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt.IndexOf(parts.Step.Trim(), StringComparison.Ordinal), Is.LessThan(material), "The material changes less often than the details, so it comes first for the prompt caching.");
+            Assert.That(material, Is.LessThan(prompt.IndexOf("THESE-4711", StringComparison.Ordinal)));
+        }
+    }
+
+    [TestCase(BflImageDelivery.SENT, "(Ein Bild. Es liegt der ersten Nachricht dieses Gesprächs bei.)")]
+    [TestCase(BflImageDelivery.MODEL_SEES_NO_IMAGES, "(Ein Bild. Das Modell kann keine Bilder sehen. Du kennst nur seinen Namen.)")]
+    [TestCase(BflImageDelivery.OVER_THE_LIMIT, "(Ein Bild. Das Modell nimmt nicht so viele Bilder auf einmal an. Du kennst nur seinen Namen.)")]
+    public void AnImageSaysWhetherItGoesAlong(BflImageDelivery delivery, string expected)
+    {
+        var image = new BflMaterial { MaterialId = Guid.NewGuid(), Name = "Poster.png", Kind = BflMaterialKind.IMAGE };
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [new(new(image, 0, delivery), string.Empty)], "Deutsch");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain($"## Material 1: „Poster.png“\n{expected}"));
+            Assert.That(prompt, Does.Not.Contain("reicht der Platz"), "An image takes no room in the prompt.");
+        }
+    }
+
+    [Test]
+    public void ARecordingIsMarkedAsATranscript()
+    {
+        var recording = new BflMaterial { MaterialId = Guid.NewGuid(), Name = "Interview.mp3", Kind = BflMaterialKind.RECORDING, TextLength = 10 };
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [new(new(recording, 10), "Guten Tag.")], "Deutsch");
+
+        Assert.That(prompt, Does.Contain("## Material 1: „Interview.mp3“\n(Das Transkript einer Aufnahme."));
+    }
+
+    [Test]
+    public void AMaterialWhoseEndTheLabLeftOutSaysSo()
+    {
+        var book = new BflMaterial { MaterialId = Guid.NewGuid(), Name = "Buch.pdf", TextLength = 10, IsShortened = true };
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [new(new(book, 10), "Kapitel 1.")], "Deutsch");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain("(Das Lab hat nur den Anfang dieses Materials übernommen. Den Rest kennst du nicht.)"));
+            Assert.That(prompt, Does.Not.Contain("Gekürzt:"), "The whole stored text fits.");
+        }
+    }
+
+    [Test]
+    public void TheOnboardingKnowsNoMaterial()
+    {
+        var parts = new BflOnboardingPromptParts("{{MATERIALS}}", "Anrede");
+
+        Assert.Throws<FormatException>(() => BflPromptComposer.ComposeOnboarding(parts, "Deutsch"));
+    }
+
+    private static BflMaterialExcerpt Excerpt(string name, string text, int textLength) => new(new(new BflMaterial { MaterialId = Guid.NewGuid(), Name = name, TextLength = textLength }, textLength), text);
 }

@@ -33,6 +33,11 @@ public static partial class BflPromptTemplate
     public const string STEP = "STEP";
 
     /// <summary>
+    /// The material the person added to the preparation.
+    /// </summary>
+    public const string MATERIALS = "MATERIALS";
+
+    /// <summary>
     /// What the person entered into the forms.
     /// </summary>
     public const string DETAILS = "DETAILS";
