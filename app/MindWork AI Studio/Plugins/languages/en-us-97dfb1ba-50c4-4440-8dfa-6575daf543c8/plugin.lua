@@ -762,6 +762,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- You have no preparations yet. Create one for the event you want to prepare for.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1599306665::INFORMAL"] = "You have no preparations yet. Create one for the event you want to prepare for."
 
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1809312323"] = "Please select a provider."
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1809312323::INFORMAL"] = "Please select a provider."
+
 -- Enter a new name for this preparation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T193031277"] = "Enter a new name for this preparation."
 
@@ -773,6 +779,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- Copy preparation ID
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2344012850"] = "Copy preparation ID"
+
+-- The model of this provider reads at most {0} tokens at once. The lab needs at least {1}, because its guide alone takes about 20,000. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2481344122"] = "The model of this provider reads at most {0} tokens at once. The lab needs at least {1}, because its guide alone takes about 20,000. Please select another provider."
+
+-- The model of this provider reads at most {0} tokens at once. The lab needs at least {1}, because its guide alone takes about 20,000. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2481344122::INFORMAL"] = "The model of this provider reads at most {0} tokens at once. The lab needs at least {1}, because its guide alone takes about 20,000. Please select another provider."
 
 -- Your details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T25208484"] = "Your details"
@@ -875,6 +887,33 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- Your preparations
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272::INFORMAL"] = "Your preparations"
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T1809312323"] = "Please select a provider."
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T1809312323::INFORMAL"] = "Please select a provider."
+
+-- The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2261674511"] = "The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug."
+
+-- The model of the selected provider reads too little at once for the lab. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3132723417"] = "The model of the selected provider reads too little at once for the lab. Please select another provider."
+
+-- The model of the selected provider reads too little at once for the lab. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3132723417::INFORMAL"] = "The model of the selected provider reads too little at once for the lab. Please select another provider."
+
+-- The selected provider may not see your preparation. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3133264313"] = "The selected provider may not see your preparation. Please select another provider."
+
+-- The selected provider may not see your preparation. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3133264313::INFORMAL"] = "The selected provider may not see your preparation. Please select another provider."
+
+-- AI Studio could not save this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884"] = "AI Studio could not save this conversation. Please try again."
+
+-- AI Studio could not save this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884::INFORMAL"] = "AI Studio could not save this conversation. Please try again."
 
 -- Moderate the discussion
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1131866893"] = "Moderate the discussion"
@@ -1091,6 +1130,75 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLNOTICE::T940905480::IN
 
 -- I have read the notes
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLNOTICEDIALOG::T4071737336"] = "I have read the notes"
+
+-- Stop
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T1266644741"] = "Stop"
+
+-- approx. {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T1992478915"] = "approx. {0} of {1} tokens"
+
+-- Start the conversation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T2172806379"] = "Start the conversation"
+
+-- The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T2610371636"] = "The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first."
+
+-- The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T2610371636::INFORMAL"] = "The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first."
+
+-- Conversation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T2640583206"] = "Conversation"
+
+-- Export message
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T274919936"] = "Export message"
+
+-- approx. {0} tokens; the context window of this model is unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T357466604"] = "approx. {0} tokens; the context window of this model is unknown"
+
+-- Your message
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3642105949"] = "Your message"
+
+-- Your message
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3642105949::INFORMAL"] = "Your message"
+
+-- Delete the conversation of this step and start it over? Your details stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3734341112"] = "Delete the conversation of this step and start it over? Your details stay as they are."
+
+-- Delete the conversation of this step and start it over? Your details stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3734341112::INFORMAL"] = "Delete the conversation of this step and start it over? Your details stay as they are."
+
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3757008686"] = "AI Studio could not delete this conversation. Please try again."
+
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3757008686::INFORMAL"] = "AI Studio could not delete this conversation. Please try again."
+
+-- AI Studio cannot open the conversation of this step. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T397620511"] = "AI Studio cannot open the conversation of this step. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it."
+
+-- AI Studio cannot open the conversation of this step. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T397620511::INFORMAL"] = "AI Studio cannot open the conversation of this step. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it."
+
+-- {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3996190985"] = "{0} of {1} tokens"
+
+-- Send
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T4069397711"] = "Send"
+
+-- Start over
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T606705767"] = "Start over"
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T962106497"] = "This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once."
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T962106497::INFORMAL"] = "This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T991103295"] = "This conversation fills most of the context window of the model. Soon, you will have to start it over."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T991103295::INFORMAL"] = "This conversation fills most of the context window of the model. Soon, you will have to start it over."
 
 -- Test situation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Test situation"

@@ -1,0 +1,1 @@
+Sprich die Person formell an: auf Deutsch mit „Sie“, in anderen Sprachen mit der entsprechenden höflichen Form, etwa „vous“ im Französischen oder „usted“ im Spanischen. Die Beispielfragen in diesen Anweisungen stehen bereits in der Sie-Form.

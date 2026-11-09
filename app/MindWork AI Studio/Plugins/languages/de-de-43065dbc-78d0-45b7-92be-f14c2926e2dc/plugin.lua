@@ -762,6 +762,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- You have no preparations yet. Create one for the event you want to prepare for.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1599306665::INFORMAL"] = "Du hast noch keine Vorbereitung. Erstelle eine für die Veranstaltung, auf die du dich vorbereiten möchtest."
 
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1809312323::INFORMAL"] = "Bitte wähle einen Anbieter aus."
+
 -- Enter a new name for this preparation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T193031277"] = "Geben Sie einen neuen Namen für diese Vorbereitung ein."
 
@@ -773,6 +779,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- Copy preparation ID
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2344012850"] = "Vorbereitungs-ID kopieren"
+
+-- The model of this provider reads at most {0} tokens at once. The lab needs at least {1}, because its guide alone takes about 20,000. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2481344122"] = "Das Modell dieses Anbieters verarbeitet höchstens {0} Token auf einmal. Das Lab braucht mindestens {1}, weil allein sein Leitfaden etwa 20.000 Token umfasst. Bitte wählen Sie einen anderen Anbieter aus."
+
+-- The model of this provider reads at most {0} tokens at once. The lab needs at least {1}, because its guide alone takes about 20,000. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2481344122::INFORMAL"] = "Das Modell dieses Anbieters verarbeitet höchstens {0} Token auf einmal. Das Lab braucht mindestens {1}, weil allein sein Leitfaden etwa 20.000 Token umfasst. Bitte wähle einen anderen Anbieter aus."
 
 -- Your details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T25208484"] = "Ihre Angaben"
@@ -875,6 +887,33 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- Your preparations
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272::INFORMAL"] = "Deine Vorbereitungen"
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T1809312323::INFORMAL"] = "Bitte wähle einen Anbieter aus."
+
+-- The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2261674511"] = "Das BeyondFacts Lab konnte die Anweisungen für das Modell nicht zusammenstellen. Bitte melden Sie dies als Fehler."
+
+-- The model of the selected provider reads too little at once for the lab. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3132723417"] = "Das Modell des ausgewählten Anbieters verarbeitet zu wenig auf einmal für das Lab. Bitte wählen Sie einen anderen Anbieter aus."
+
+-- The model of the selected provider reads too little at once for the lab. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3132723417::INFORMAL"] = "Das Modell des ausgewählten Anbieters verarbeitet zu wenig auf einmal für das Lab. Bitte wähle einen anderen Anbieter aus."
+
+-- The selected provider may not see your preparation. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3133264313"] = "Der ausgewählte Anbieter darf Ihre Vorbereitung nicht sehen. Bitte wählen Sie einen anderen Anbieter aus."
+
+-- The selected provider may not see your preparation. Please select another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3133264313::INFORMAL"] = "Der ausgewählte Anbieter darf deine Vorbereitung nicht sehen. Bitte wähle einen anderen Anbieter aus."
+
+-- AI Studio could not save this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuchen Sie es erneut."
+
+-- AI Studio could not save this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuche es erneut."
 
 -- Moderate the discussion
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1131866893"] = "Diskussion moderieren"
@@ -1091,6 +1130,75 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLNOTICE::T940905480::IN
 
 -- I have read the notes
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLNOTICEDIALOG::T4071737336"] = "Ich habe die Hinweise gelesen"
+
+-- Stop
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T1266644741"] = "Stoppen"
+
+-- approx. {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T1992478915"] = "ca. {0} von {1} Token"
+
+-- Start the conversation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T2172806379"] = "Gespräch beginnen"
+
+-- The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T2610371636"] = "Das Lab eröffnet das Gespräch dieses Schritts mit dem, was Ihre Angaben schon sagen, und fragt nach dem, was fehlt. Sie können auch zuerst schreiben."
+
+-- The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T2610371636::INFORMAL"] = "Das Lab eröffnet das Gespräch dieses Schritts mit dem, was deine Angaben schon sagen, und fragt nach dem, was fehlt. Du kannst auch zuerst schreiben."
+
+-- Conversation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T2640583206"] = "Gespräch"
+
+-- Export message
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T274919936"] = "Nachricht exportieren"
+
+-- approx. {0} tokens; the context window of this model is unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T357466604"] = "ca. {0} Token; das Kontextfenster dieses Modells ist unbekannt"
+
+-- Your message
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3642105949"] = "Ihre Nachricht"
+
+-- Your message
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3642105949::INFORMAL"] = "Deine Nachricht"
+
+-- Delete the conversation of this step and start it over? Your details stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3734341112"] = "Das Gespräch dieses Schritts löschen und neu beginnen? Ihre Angaben bleiben unverändert."
+
+-- Delete the conversation of this step and start it over? Your details stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3734341112::INFORMAL"] = "Das Gespräch dieses Schritts löschen und neu beginnen? Deine Angaben bleiben unverändert."
+
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3757008686"] = "AI Studio konnte dieses Gespräch nicht löschen. Bitte versuchen Sie es erneut."
+
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3757008686::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht löschen. Bitte versuche es erneut."
+
+-- AI Studio cannot open the conversation of this step. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T397620511"] = "AI Studio kann das Gespräch dieses Schritts nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Sie können das Gespräch neu beginnen; dabei wird es gelöscht."
+
+-- AI Studio cannot open the conversation of this step. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T397620511::INFORMAL"] = "AI Studio kann das Gespräch dieses Schritts nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Du kannst das Gespräch neu beginnen; dabei wird es gelöscht."
+
+-- {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T3996190985"] = "{0} von {1} Token"
+
+-- Send
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T4069397711"] = "Senden"
+
+-- Start over
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T606705767"] = "Neu beginnen"
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T962106497"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beginnen Sie es neu, oder wählen Sie einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T962106497::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beginne es neu, oder wähle einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T991103295"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Bald müssen Sie es neu beginnen."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPCHAT::T991103295::INFORMAL"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Bald musst du es neu beginnen."
 
 -- Test situation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Testsituation"

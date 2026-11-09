@@ -1,5 +1,6 @@
 using System.Globalization;
 
+using AIStudio.Chat;
 using AIStudio.Dialogs;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -133,7 +134,12 @@ public partial class BeyondFactsLabAssistant
 
         await this.RunStoreActionAsync(async () =>
         {
+            // An answer which still runs would otherwise end after the preparation is gone:
+            var chatIds = await this.ConversationService.ForgetProjectAsync(project.ProjectId);
             await this.Store.DeleteAsync(project.ProjectId);
+
+            // What the chats received goes along with them; whatever this misses, the cleanup at the next start removes:
+            await ChatProvenance.ForgetChatsAsync(chatIds);
             this.selectedProject = null;
             await this.ReloadProjectsAsync(null);
         });

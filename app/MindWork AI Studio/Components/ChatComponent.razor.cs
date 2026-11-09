@@ -1264,27 +1264,10 @@ public partial class ChatComponent : MSGComponentBase
         
         this.hasUnsavedChanges = true;
         this.ComposerState.MarkUserDraft();
-        var key = keyEvent.Code.ToLowerInvariant();
-        
-        // Was the enter key (either enter or numpad enter) pressed?
-        var isEnter = key is "enter" or "numpadenter";
-        
-        // Was a modifier key pressed as well?
-        var isModifier = keyEvent.AltKey || keyEvent.CtrlKey || keyEvent.MetaKey || keyEvent.ShiftKey;
 
         // Depending on the user's settings, might react to shortcuts:
-        switch (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)
-        {
-            case SendBehavior.ENTER_IS_SENDING:
-                if (!isModifier && isEnter)
-                    await this.SendMessage();
-                break;
-            
-            case SendBehavior.MODIFER_ENTER_IS_SENDING:
-                if (isEnter && isModifier)
-                    await this.SendMessage();
-                break;
-        }
+        if (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior.IsSendShortcut(keyEvent))
+            await this.SendMessage();
     }
 
     private async Task ApplyMarkdownFormat(string formatType)

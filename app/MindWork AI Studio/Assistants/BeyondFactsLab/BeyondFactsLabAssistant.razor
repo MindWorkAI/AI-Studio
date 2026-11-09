@@ -76,45 +76,61 @@
             }
             else if (this.selectedProject?.Project is { } project)
             {
-                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3 mr-3">
-                    <MudText Typo="Typo.h4">@project.Name</MudText>
-                    <MudStack Row="true" Spacing="1">
-                        <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameProjectAsync" Disabled="@this.isBusy">@T("Rename")</MudButton>
-                        <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
+                @* Stays at the top while the person scrolls, like the header of the workspaces: the preparation, its
+                   provider, and the steps remain in view, and only the list of preparations scrolls away. The empty
+                   anchor before it marks where the header sits in the flow, to scroll back there for another step. *@
+                <div @ref="@this.stickyHeaderAnchor"></div>
+                <div class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.h4">@project.Name</MudText>
+                            @if (project.HappenedAtUtc is { } happenedAtUtc)
+                            {
+                                <MudText Typo="Typo.caption">@string.Format(Culture, T("Marked on {0}."), happenedAtUtc.ToLocalTime().ToString("d", Culture))</MudText>
+                            }
+                        </MudStack>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudSwitch T="bool" Value="@(project.HappenedAtUtc is not null)" ValueChanged="@this.SetHappenedAsync" Disabled="@this.isBusy" Color="Color.Primary" Class="mr-2">
+                                @T("The event has taken place")
+                            </MudSwitch>
+                            <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameProjectAsync" Disabled="@this.isBusy">@T("Rename")</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
+                        </MudStack>
                     </MudStack>
-                </MudStack>
 
-                <MudSwitch T="bool" Value="@(project.HappenedAtUtc is not null)" ValueChanged="@this.SetHappenedAsync" Disabled="@this.isBusy" Color="Color.Primary" Class="mx-1">
-                    @T("The event has taken place")
-                </MudSwitch>
-                @if (project.HappenedAtUtc is { } happenedAtUtc)
-                {
-                    <MudText Typo="Typo.caption" Class="mx-1">@string.Format(Culture, T("Marked on {0}."), happenedAtUtc.ToLocalTime().ToString("d", Culture))</MudText>
-                }
+                    <ProviderSelection ProviderSettings="@this.providerSettings" ProviderSettingsChanged="@this.SelectProviderAsync" ValidateProvider="@this.ValidateProvider" Disabled="@this.isBusy"/>
 
-                <MudStepperWithoutActions NonLinear="@true" ActiveIndex="@this.ActiveStepIndex" ActiveIndexChanged="@this.SelectStepAsync" Class="mt-4 mr-3">
-                    <ChildContent>
-                        @foreach (var step in BflStep.All)
-                        {
-                            <MudStep @key="step" Title="@step.Title" SecondaryText="@this.StepSecondaryText(step)">
-                                <MudText Typo="Typo.h5" Class="mt-2">@step.Title</MudText>
-                                <MudText Typo="Typo.body2" Class="mb-4">@step.Description</MudText>
+                    @* The steps have no content of their own: only the navigation of the stepper stays in view, and the
+                       step shown follows below. *@
+                    <MudStepperWithoutActions NonLinear="@true" ActiveIndex="@this.ActiveStepIndex" ActiveIndexChanged="@this.SelectStepAsync">
+                        <ChildContent>
+                            @foreach (var step in BflStep.All)
+                            {
+                                <MudStep @key="step" Title="@step.Title" SecondaryText="@this.StepSecondaryText(step)"/>
+                            }
+                        </ChildContent>
+                    </MudStepperWithoutActions>
+                </div>
 
-                                <MudText Typo="Typo.h6" Class="mb-2">@TA("Your details")</MudText>
-                                @if (this.forms.TryGetValue(step, out var form))
-                                {
-                                    <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
-                                }
-                                else
-                                {
-                                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
-                                        @TA("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
-                                    </MudAlert>
-                                }
-                            </MudStep>
-                        }
-                    </ChildContent>
-                </MudStepperWithoutActions>
+                <div @key="@this.activeStep" class="mr-3 px-6">
+                    <MudText Typo="Typo.h5" Class="mt-2">@this.activeStep.Title</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-4">@this.activeStep.Description</MudText>
+
+                    <MudText Typo="Typo.h6" Class="mb-2">@TA("Your details")</MudText>
+                    @if (this.forms.TryGetValue(this.activeStep, out var form))
+                    {
+                        var step = this.activeStep;
+                        <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                            @TA("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
+                        </MudAlert>
+                    }
+
+                    <BflStepChat Location="@(new BflThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                </div>
             }
             else
             {

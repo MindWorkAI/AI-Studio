@@ -56,6 +56,30 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
+// Scrolls back to where a sticky header sits in the flow, so that the content below it starts right under the
+// header. The anchor is an empty element right before the header: once the page is scrolled past it, the anchor
+// lies above the top of its scrolling container, which then moves back by that distance. Otherwise, the content
+// below already starts right under the header, and nothing moves.
+//
+// It sets scrollTop itself: scrollIntoView did not move the page for this anchor without height, and the content
+// which renders right after a switch may stop a smooth scroll.
+window.scrollToStickyHeader = function(anchor) {
+    if (!anchor)
+        return;
+
+    // The nearest ancestor which scrolls its content, or else the document:
+    let container = anchor.parentElement;
+    while (container && !['auto', 'scroll'].includes(getComputedStyle(container).overflowY))
+        container = container.parentElement;
+
+    const containerTop = container ? container.getBoundingClientRect().top + container.clientTop : 0;
+    container ??= document.scrollingElement;
+
+    const distance = anchor.getBoundingClientRect().top - containerTop;
+    if (distance < 0)
+        container.scrollTop += distance;
+}
+
 window.setDocumentLanguage = function (ietfTag) {
     document.documentElement.lang = ietfTag
 }

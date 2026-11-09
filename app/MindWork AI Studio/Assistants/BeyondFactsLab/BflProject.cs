@@ -54,4 +54,14 @@ public sealed class BflProject
     /// Gets or sets the step the person looked at last, where the lab opens the preparation again.
     /// </summary>
     public BflStep CurrentStep { get; set; } = BflStep.FRAMEWORK;
+
+    /// <summary>
+    /// Gets or sets the ID of the provider the person chose for the chats of the preparation, or an empty string while
+    /// they chose none.
+    /// </summary>
+    /// <remarks>
+    /// The lab checks the provider again whenever it opens the preparation: an organization may have prohibited it
+    /// meanwhile, or the person may have lowered its confidence.
+    /// </remarks>
+    public string ProviderId { get; set; } = string.Empty;
 }
