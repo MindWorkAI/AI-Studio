@@ -79,13 +79,29 @@ public sealed partial class BeyondFactsLabStore(ILogger<BeyondFactsLabStore> log
     /// <param name="targetPath">The file to write.</param>
     /// <param name="content">The new content.</param>
     /// <param name="token">The cancellation token.</param>
-    private static async Task WriteTextAtomicAsync(string targetPath, string content, CancellationToken token)
+    private static Task WriteTextAtomicAsync(string targetPath, string content, CancellationToken token) => WriteAtomicAsync(targetPath, temporaryPath => File.WriteAllTextAsync(temporaryPath, content, new UTF8Encoding(false), token), token);
+
+    /// <summary>
+    /// Writes a binary file so that readers see either the old or the new content, never a part of it.
+    /// </summary>
+    /// <param name="targetPath">The file to write.</param>
+    /// <param name="content">The new content.</param>
+    /// <param name="token">The cancellation token.</param>
+    private static Task WriteBytesAtomicAsync(string targetPath, ReadOnlyMemory<byte> content, CancellationToken token) => WriteAtomicAsync(targetPath, temporaryPath => File.WriteAllBytesAsync(temporaryPath, content, token), token);
+
+    /// <summary>
+    /// Writes a file beside its target first and moves it there once it is complete.
+    /// </summary>
+    /// <param name="targetPath">The file to write.</param>
+    /// <param name="writeTemporaryFile">Writes the new content into the file of the path given.</param>
+    /// <param name="token">The cancellation token.</param>
+    private static async Task WriteAtomicAsync(string targetPath, Func<string, Task> writeTemporaryFile, CancellationToken token)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
         var temporaryPath = $"{targetPath}.tmp-{Guid.NewGuid():N}";
         try
         {
-            await File.WriteAllTextAsync(temporaryPath, content, new UTF8Encoding(false), token);
+            await writeTemporaryFile(temporaryPath);
             await using (var stream = new FileStream(temporaryPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 4_096, true))
                 await stream.FlushAsync(token);
 

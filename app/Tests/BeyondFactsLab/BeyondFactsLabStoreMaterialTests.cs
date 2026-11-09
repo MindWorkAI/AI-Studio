@@ -57,6 +57,121 @@ public sealed class BeyondFactsLabStoreMaterialTests
         }
     }
 
+    [Test]
+    public async Task AnImageIsStoredWithItsCopy()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        byte[] copy = [0x89, 0x50, 0x4E, 0x47];
+
+        var addition = await store.AddImageMaterialAsync(created.ProjectId, ImageMaterial("Poster.tiff", HASH), copy);
+        var materials = await this.CreateStore().ListMaterialsAsync(created.ProjectId);
+        var path = store.MaterialImagePath(created.ProjectId, materials[0].Material!);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(addition.IsDuplicate, Is.False);
+            Assert.That(materials[0].Material!.Kind, Is.EqualTo(BflMaterialKind.IMAGE));
+            Assert.That(materials[0].Material!.Image!.Width, Is.EqualTo(2_560));
+            Assert.That(materials[0].Material!.TextLength, Is.Zero);
+            Assert.That(path, Is.EqualTo(this.MaterialFile(created.ProjectId, addition.Material.MaterialId, ".png")));
+            Assert.That(await File.ReadAllBytesAsync(path), Is.EqualTo(copy));
+            Assert.That(File.Exists(this.MaterialFile(created.ProjectId, addition.Material.MaterialId, ".md")), Is.False, "An image has no text.");
+        }
+    }
+
+    [Test]
+    public async Task AnImageWithoutItsCopyCannotBeOpened()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var addition = await store.AddImageMaterialAsync(created.ProjectId, ImageMaterial("Poster.png", HASH), new byte[] { 1 });
+
+        File.Delete(this.MaterialFile(created.ProjectId, addition.Material.MaterialId, ".png"));
+        var materials = await store.ListMaterialsAsync(created.ProjectId);
+
+        Assert.That(materials.Single().IsAvailable, Is.False);
+    }
+
+    [Test]
+    public async Task DeletingAnImageDeletesItsCopy()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var addition = await store.AddImageMaterialAsync(created.ProjectId, ImageMaterial("Poster.png", HASH), new byte[] { 1 });
+
+        await store.DeleteMaterialAsync(created.ProjectId, addition.Material.MaterialId);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(await store.ListMaterialsAsync(created.ProjectId), Is.Empty);
+            Assert.That(File.Exists(this.MaterialFile(created.ProjectId, addition.Material.MaterialId, ".png")), Is.False);
+        }
+    }
+
+    [Test]
+    public async Task ARecordingIsStoredWithItsTranscript()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var material = Material("Interview.mp3", HASH);
+        material.Kind = BflMaterialKind.RECORDING;
+
+        var addition = await store.AddMaterialAsync(created.ProjectId, material, "Guten Tag.");
+        var materials = await this.CreateStore().ListMaterialsAsync(created.ProjectId);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(materials[0].Material!.Kind, Is.EqualTo(BflMaterialKind.RECORDING));
+            Assert.That(await store.ReadMaterialTextAsync(created.ProjectId, addition.Material.MaterialId, 100), Is.EqualTo("Guten Tag."));
+        }
+    }
+
+    [Test]
+    public async Task AMaterialStoredBeforeTheKindsIsADocument()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var addition = await store.AddMaterialAsync(created.ProjectId, Material("Paper.pdf", HASH), "Text");
+        var json = this.MaterialFile(created.ProjectId, addition.Material.MaterialId, ".json");
+
+        var lines = (await File.ReadAllLinesAsync(json)).Where(line => !line.Contains("\"kind\"", StringComparison.Ordinal) && !line.Contains("\"image\"", StringComparison.Ordinal));
+        await File.WriteAllLinesAsync(json, lines);
+        var materials = await this.CreateStore().ListMaterialsAsync(created.ProjectId);
+
+        Assert.That(materials.Single().Material!.Kind, Is.EqualTo(BflMaterialKind.DOCUMENT));
+    }
+
+    [Test]
+    public async Task AnImageWithoutTheDescriptionOfItsCopyIsDamaged()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var addition = await store.AddImageMaterialAsync(created.ProjectId, ImageMaterial("Poster.png", HASH), new byte[] { 1 });
+        var json = this.MaterialFile(created.ProjectId, addition.Material.MaterialId, ".json");
+
+        await File.WriteAllTextAsync(json, (await File.ReadAllTextAsync(json)).Replace("\"png\"", "\"../../x\"", StringComparison.Ordinal));
+        var materials = await this.CreateStore().ListMaterialsAsync(created.ProjectId);
+
+        Assert.That(materials.Single().IsAvailable, Is.False, "An unknown extension could point anywhere.");
+    }
+
+    [Test]
+    public async Task AnImageCannotBeAddedAsText()
+    {
+        var store = this.CreateStore();
+
+        await Assert.ThrowsAsync<ArgumentException>(async () => await store.AddMaterialAsync(Guid.NewGuid(), ImageMaterial("Poster.png", HASH), "Text"));
+    }
+
+    [Test]
+    public async Task ADocumentCannotBeAddedAsAnImage()
+    {
+        var store = this.CreateStore();
+
+        await Assert.ThrowsAsync<ArgumentException>(async () => await store.AddImageMaterialAsync(Guid.NewGuid(), Material("Paper.pdf", HASH), new byte[] { 1 }));
+    }
+
     [TestCase(true)]
     [TestCase(false)]
     public async Task AMaterialKeepsWhetherItsTextIsOnlyTheBeginning(bool isShortened)
@@ -274,6 +389,15 @@ public sealed class BeyondFactsLabStoreMaterialTests
         Name = name,
         SourceHash = hash,
         SourceBytes = 2_048,
+    };
+
+    private static BflMaterial ImageMaterial(string name, string hash) => new()
+    {
+        Name = name,
+        Kind = BflMaterialKind.IMAGE,
+        Image = new() { Extension = "png", Width = 2_560, Height = 1_440 },
+        SourceHash = hash,
+        SourceBytes = 4_096,
     };
 
     private string MaterialFile(Guid projectId, Guid materialId, string extension) => Path.Combine(this.RootDirectory, projectId.ToString("D"), "materials", $"{materialId:D}{extension}");

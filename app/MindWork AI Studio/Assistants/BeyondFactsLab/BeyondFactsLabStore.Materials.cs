@@ -38,32 +38,91 @@ public sealed partial class BeyondFactsLabStore
     }
 
     /// <summary>
-    /// Adds a material to a preparation, unless it has one with the same content already, and counts that as a
-    /// change of the preparation.
+    /// Adds a document or a recording to a preparation, unless it has a material with the same content already, and
+    /// counts that as a change of the preparation.
     /// </summary>
     /// <remarks>
     /// The store gives the material its ID, the time it was added, and the length of its text. It keeps only the
-    /// name of the document, never a path, even when the name passed contains one.
+    /// name of the file, never a path, even when the name passed contains one.
     /// </remarks>
     /// <param name="projectId">The ID of the preparation.</param>
-    /// <param name="material">What the lab knows about the document: its name, size, hash, and how it was read.</param>
-    /// <param name="text">The text of the document, after the prompt injection filter.</param>
+    /// <param name="material">What the lab knows about the file: its kind, name, size, hash, and how it was read.</param>
+    /// <param name="text">The text of the document or the transcript of the recording, after the prompt injection filter.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The new material, or the one with the same content which the preparation had already.</returns>
-    /// <exception cref="ArgumentException">The name, the hash, or the text is empty.</exception>
+    /// <exception cref="ArgumentException">The name, the hash, or the text is empty, or the material is an image.</exception>
     /// <exception cref="FileNotFoundException">The preparation does not exist.</exception>
     /// <exception cref="InvalidDataException">This version cannot open the preparation, so it does not write it either.</exception>
-    public async Task<BflMaterialAddition> AddMaterialAsync(Guid projectId, BflMaterial material, string text, CancellationToken token = default)
+    public Task<BflMaterialAddition> AddMaterialAsync(Guid projectId, BflMaterial material, string text, CancellationToken token = default)
+    {
+        if (material.Kind is not (BflMaterialKind.DOCUMENT or BflMaterialKind.RECORDING) || material.Image is not null)
+            throw new ArgumentException("Only a document or a recording has a text; an image needs AddImageMaterialAsync.", nameof(material));
+
+        if (string.IsNullOrWhiteSpace(text))
+            throw new ArgumentException("A material needs a text.", nameof(text));
+
+        return this.AddAsync(projectId, material, text.Length, (stored, writeToken) => WriteTextAtomicAsync(this.MaterialTextPath(projectId, stored.MaterialId), text, writeToken), token);
+    }
+
+    /// <summary>
+    /// Adds an image to a preparation, unless it has a material with the same content already, and counts that as a
+    /// change of the preparation.
+    /// </summary>
+    /// <remarks>
+    /// The store gives the material its ID and the time it was added. It keeps only the name of the file, never a
+    /// path, even when the name passed contains one.
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="material">What the lab knows about the file: its name, size, hash, and the description of the copy.</param>
+    /// <param name="image">The copy of the image, prepared for models.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The new material, or the one with the same content which the preparation had already.</returns>
+    /// <exception cref="ArgumentException">The name, the hash, or the copy is empty, or the material is no image.</exception>
+    /// <exception cref="FileNotFoundException">The preparation does not exist.</exception>
+    /// <exception cref="InvalidDataException">This version cannot open the preparation, so it does not write it either.</exception>
+    public Task<BflMaterialAddition> AddImageMaterialAsync(Guid projectId, BflMaterial material, ReadOnlyMemory<byte> image, CancellationToken token = default)
+    {
+        if (material.Kind is not BflMaterialKind.IMAGE || !BflMaterialImage.IsValid(material.Image))
+            throw new ArgumentException("An image material needs the description of its copy.", nameof(material));
+
+        if (image.IsEmpty)
+            throw new ArgumentException("An image material needs its copy.", nameof(image));
+
+        return this.AddAsync(projectId, material, 0, (stored, writeToken) => WriteBytesAtomicAsync(this.MaterialImagePath(projectId, stored.MaterialId, stored.Image!.Extension), image, writeToken), token);
+    }
+
+    /// <summary>
+    /// Gets the copy of an image which the lab keeps as material.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="material">The material, an image.</param>
+    /// <returns>The path of the copy.</returns>
+    /// <exception cref="ArgumentException">The material is no image.</exception>
+    public string MaterialImagePath(Guid projectId, BflMaterial material)
+    {
+        if (material.Kind is not BflMaterialKind.IMAGE || !BflMaterialImage.IsValid(material.Image))
+            throw new ArgumentException("Only an image material has a copy of an image.", nameof(material));
+
+        return this.MaterialImagePath(projectId, material.MaterialId, material.Image!.Extension);
+    }
+
+    /// <summary>
+    /// Adds a material to a preparation, unless it has one with the same content already.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="material">What the lab knows about the file.</param>
+    /// <param name="textLength">How many characters the text of the material has; 0 for an image.</param>
+    /// <param name="writeContent">Writes the text or the copy of the image for the stored material.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The new material, or the one with the same content which the preparation had already.</returns>
+    private async Task<BflMaterialAddition> AddAsync(Guid projectId, BflMaterial material, int textLength, Func<BflMaterial, CancellationToken, Task> writeContent, CancellationToken token)
     {
         var name = MaterialName(material.Name);
         if (name.Length is 0)
             throw new ArgumentException("A material needs a name.", nameof(material));
 
         if (string.IsNullOrWhiteSpace(material.SourceHash))
-            throw new ArgumentException("A material needs the hash of its document.", nameof(material));
-
-        if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException("A material needs a text.", nameof(text));
+            throw new ArgumentException("A material needs the hash of its file.", nameof(material));
 
         await this.InitializeAsync(token);
         var gate = this.GetLock(projectId);
@@ -79,18 +138,20 @@ public sealed partial class BeyondFactsLabStore
             {
                 MaterialId = Guid.NewGuid(),
                 Name = name,
+                Kind = material.Kind,
+                Image = material.Image is { } image ? new() { Extension = image.Extension, Width = image.Width, Height = image.Height } : null,
                 AddedAtUtc = DateTimeOffset.UtcNow,
                 SourceBytes = Math.Max(0, material.SourceBytes),
                 SourceHash = material.SourceHash.ToLowerInvariant(),
-                TextLength = text.Length,
+                TextLength = textLength,
                 IsIncomplete = material.IsIncomplete,
                 IsShortened = material.IsShortened,
                 FailedPages = [.. material.FailedPages],
                 FilteredPassages = Math.Max(0, material.FilteredPassages),
             };
 
-            // The text comes first: a material whose description exists always has its text, even after a crash in between.
-            await WriteTextAtomicAsync(this.MaterialTextPath(projectId, stored.MaterialId), text, token);
+            // The content comes first: a material whose description exists always has its content, even after a crash in between.
+            await writeContent(stored, token);
             await WriteTextAtomicAsync(this.MaterialPath(projectId, stored.MaterialId), JsonSerializer.Serialize(stored, JSON_OPTIONS), token);
 
             project.ModifiedAtUtc = DateTimeOffset.UtcNow;
@@ -122,9 +183,13 @@ public sealed partial class BeyondFactsLabStore
         {
             var project = await this.LoadRequiredWithoutInitializeAsync(projectId, token);
 
-            // The description goes first: a text left behind by a crash in between belongs to no material and is never read.
+            // The description goes first: content left behind by a crash in between belongs to no material and is never read.
             DeleteIfExists(this.MaterialPath(projectId, materialId));
             DeleteIfExists(this.MaterialTextPath(projectId, materialId));
+
+            // Also when the description is damaged, every copy of an image goes with it:
+            foreach (var extension in BflMaterialImage.EXTENSIONS)
+                DeleteIfExists(this.MaterialImagePath(projectId, materialId, extension));
 
             project.ModifiedAtUtc = DateTimeOffset.UtcNow;
             await this.StoreProjectAsync(project, token);
@@ -221,14 +286,14 @@ public sealed partial class BeyondFactsLabStore
     /// <param name="materialId">The ID the file names.</param>
     /// <param name="path">The file of the description.</param>
     /// <param name="token">The cancellation token.</param>
-    /// <returns>The material, or null when it is damaged, has no text, or a newer version stored it.</returns>
+    /// <returns>The material, or null when it is damaged, has no content, or a newer version stored it.</returns>
     private async Task<BflMaterial?> LoadMaterialAsync(Guid projectId, Guid materialId, string path, CancellationToken token)
     {
         try
         {
             await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 65_536, true);
             var material = await JsonSerializer.DeserializeAsync<BflMaterial>(stream, JSON_OPTIONS, token);
-            if (material is not null && IsValidMaterial(material, materialId) && File.Exists(this.MaterialTextPath(projectId, materialId)))
+            if (material is not null && IsValidMaterial(material, materialId) && File.Exists(this.MaterialContentPath(projectId, material)))
                 return material;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
@@ -237,7 +302,7 @@ public sealed partial class BeyondFactsLabStore
             return null;
         }
 
-        logger.LogWarning("The material '{MaterialId}' of the preparation '{ProjectId}' of the BeyondFacts Lab is not valid, or its text is missing.", materialId, projectId);
+        logger.LogWarning("The material '{MaterialId}' of the preparation '{ProjectId}' of the BeyondFacts Lab is not valid, or its content is missing.", materialId, projectId);
         return null;
     }
 
@@ -252,7 +317,13 @@ public sealed partial class BeyondFactsLabStore
         !string.IsNullOrWhiteSpace(material.Name) &&
         !string.IsNullOrWhiteSpace(material.SourceHash) &&
         material is { SourceBytes: >= 0, TextLength: >= 0, FilteredPassages: >= 0 } &&
-        !IsNull(material.FailedPages);
+        !IsNull(material.FailedPages) &&
+        material.Kind switch
+        {
+            BflMaterialKind.DOCUMENT or BflMaterialKind.RECORDING => material.Image is null,
+            BflMaterialKind.IMAGE => BflMaterialImage.IsValid(material.Image),
+            _ => false,
+        };
 
     /// <summary>
     /// Gets the name under which the lab keeps a document: its file name without any folder, cleaned like the name of
@@ -290,4 +361,21 @@ public sealed partial class BeyondFactsLabStore
     /// <param name="projectId">The ID of the preparation.</param>
     /// <param name="materialId">The ID of the material.</param>
     private string MaterialTextPath(Guid projectId, Guid materialId) => Path.Combine(this.MaterialsDirectory(projectId), $"{materialId:D}{MATERIAL_TEXT_FILE_EXTENSION}");
+
+    /// <summary>
+    /// Gets the file which holds the copy of an image.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="materialId">The ID of the material.</param>
+    /// <param name="extension">The file extension of the copy, without the dot.</param>
+    private string MaterialImagePath(Guid projectId, Guid materialId, string extension) => Path.Combine(this.MaterialsDirectory(projectId), $"{materialId:D}.{extension}");
+
+    /// <summary>
+    /// Gets the file which holds the content of a material: its text, or the copy of an image.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="material">A valid material.</param>
+    private string MaterialContentPath(Guid projectId, BflMaterial material) => material.Kind is BflMaterialKind.IMAGE
+        ? this.MaterialImagePath(projectId, material)
+        : this.MaterialTextPath(projectId, material.MaterialId);
 }
