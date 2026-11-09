@@ -37,6 +37,7 @@ public interface IDocumentSegmentFormat
     /// <param name="targetPath">The new document, which the user chose.</param>
     /// <param name="results">What became of the segments.</param>
     /// <param name="languageTag">The IETF tag of the language of the new texts, e.g., "de-DE", which the format notes where the document records languages; empty when the language is unknown or unchanged.</param>
+    /// <param name="logger">Where the format reports what goes wrong on the way, e.g., a temporary file which cannot be removed.</param>
     /// <param name="token">Cancels the writing.</param>
-    public Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, CancellationToken token);
+    public Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token);
 }

@@ -43,7 +43,27 @@ the repository root and to `app/AGENTS.md`, which apply here as well.
   hold for every format of Office documents: no copy of the whole file in memory, and `TemplateCopy` from
   `app/MindWork AI Studio/Tools/OpenXml/` for the copy in the temporary folder.
 
+## Word documents
+
+`Word/WordSegmentFormat` translates the paragraphs of the body, the tables, the text boxes, the headers and
+footers, and the notes, and leaves everything else of the document alone.
+
+- **Move, never copy.** The writer moves the elements a tag stands for into the new paragraph. A text box
+  holds paragraphs of its own, which are segments as well; only moving keeps their new words, whichever
+  paragraph is written first.
+- **Containers are pairs, fields are pairs, the rest is a tag of its own.** Links, content controls, and the
+  insertions of the change tracking enclose runs, so the writer creates them anew around the new words. A field
+  whose result lies in the same paragraph is a pair around its result, which keeps its start, instruction,
+  and end in their order. Content controls bound to data, or offering a choice, a date, or a check box, stay
+  as they are.
+- **Bookmarks and comment ranges are no tags.** Their starts go before the new words, their ends after them,
+  so a range only widens to its paragraph.
+- **New words take the properties of the first words of their pair.** A paragraph whose words differ in
+  their formatting within a pair counts as simplified.
+
 ## Tests
 
 The tests in `app/Tests/Tools/DocumentSegments/` play the model with a delegate, so they run without a
 provider. Each format gets a test which writes every segment back unchanged and expects the same document.
+Office documents are built in code, e.g., by `TestWordDocument`, so no binary document is checked in, and a
+test which writes one compares what the `OpenXmlValidator` finds with what it finds in the source.

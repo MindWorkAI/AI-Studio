@@ -2,6 +2,8 @@ using System.Text;
 
 using AIStudio.Tools.DocumentSegments;
 
+using Microsoft.Extensions.Logging.Abstractions;
+
 namespace AIStudio.Tests.Tools.DocumentSegments;
 
 /// <summary>
@@ -78,7 +80,7 @@ public sealed class MarkdownSegmentFormatTests
         var source = await this.WriteSourceAsync(DOCUMENT);
         var target = Path.Join(this.testFolder, "target.md");
 
-        var result = await this.format.WriteAsync(source, target, await this.ResultsAsync(source, text => text), string.Empty, CancellationToken.None);
+        var result = await this.format.WriteAsync(source, target, await this.ResultsAsync(source, text => text), string.Empty, NullLogger.Instance, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -93,7 +95,7 @@ public sealed class MarkdownSegmentFormatTests
         var source = await this.WriteSourceAsync(DOCUMENT);
         var target = Path.Join(this.testFolder, "target.md");
 
-        var result = await this.format.WriteAsync(source, target, await this.ResultsAsync(source, text => text.ToUpperInvariant()), "de-DE", CancellationToken.None);
+        var result = await this.format.WriteAsync(source, target, await this.ResultsAsync(source, text => text.ToUpperInvariant()), "de-DE", NullLogger.Instance, CancellationToken.None);
         var written = File.ReadAllText(target);
 
         Assert.Multiple(() =>
@@ -124,7 +126,7 @@ public sealed class MarkdownSegmentFormatTests
             ["Run <1/> and <2>check</2> the output."] = SegmentOutcome.Transformed("Führe es aus und prüfe die Ausgabe."),
         });
 
-        var result = await this.format.WriteAsync(source, target, results, "de-DE", CancellationToken.None);
+        var result = await this.format.WriteAsync(source, target, results, "de-DE", NullLogger.Instance, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -139,7 +141,7 @@ public sealed class MarkdownSegmentFormatTests
         var source = await this.WriteSourceAsync(DOCUMENT);
         var target = Path.Join(this.testFolder, "target.md");
 
-        var result = await this.format.WriteAsync(source, target, new SegmentResults(new Dictionary<string, SegmentOutcome>()), "de-DE", CancellationToken.None);
+        var result = await this.format.WriteAsync(source, target, new SegmentResults(new Dictionary<string, SegmentOutcome>()), "de-DE", NullLogger.Instance, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -156,7 +158,7 @@ public sealed class MarkdownSegmentFormatTests
         await File.WriteAllTextAsync(source, WINDOWS_DOCUMENT, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
         var target = Path.Join(this.testFolder, "target.md");
 
-        await this.format.WriteAsync(source, target, await this.ResultsAsync(source, text => text.ToUpperInvariant()), "de-DE", CancellationToken.None);
+        await this.format.WriteAsync(source, target, await this.ResultsAsync(source, text => text.ToUpperInvariant()), "de-DE", NullLogger.Instance, CancellationToken.None);
         var bytes = await File.ReadAllBytesAsync(target);
 
         Assert.Multiple(() =>

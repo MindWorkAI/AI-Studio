@@ -178,7 +178,7 @@ public partial class AssistantTranslation
         feedback.ShowRunning(targetPath);
         try
         {
-            var result = await format.WriteAsync(document.SourcePath, targetPath, document.Results, document.LanguageTag, CancellationToken.None);
+            var result = await format.WriteAsync(document.SourcePath, targetPath, document.Results, document.LanguageTag, this.Logger, CancellationToken.None);
             if (result.Outcome is SegmentWriteOutcome.SOURCE_CHANGED)
             {
                 this.Logger.LogWarning("The document '{DocumentPath}' changed since it was translated, so the translation was not saved.", document.SourcePath);

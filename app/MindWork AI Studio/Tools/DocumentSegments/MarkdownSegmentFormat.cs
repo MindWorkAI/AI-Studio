@@ -51,7 +51,7 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
     }
 
     /// <inheritdoc />
-    public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, CancellationToken token)
+    public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
     {
         var file = await TextDocumentFile.ReadAsync(sourcePath, token);
         var result = TextSegmentWriter.Apply(file.Text, SegmentsOf(file.Text), results, WithoutLineBreaks, out var text);

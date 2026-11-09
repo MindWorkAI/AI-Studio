@@ -1,3 +1,4 @@
+using AIStudio.Tools.DocumentSegments.Word;
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.DocumentSegments;
@@ -9,6 +10,7 @@ public static class DocumentSegmentFormats
 {
     private static readonly IReadOnlyList<IDocumentSegmentFormat> FORMATS =
     [
+        new WordSegmentFormat(),
         new MarkdownSegmentFormat(),
     ];
 
