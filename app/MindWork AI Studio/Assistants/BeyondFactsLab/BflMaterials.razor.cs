@@ -3,6 +3,7 @@ using System.Globalization;
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Settings;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -219,6 +220,10 @@ public partial class BflMaterials : MSGComponentBase
 
         if (share.IsComplete)
             return null;
+
+        // Without a known context window, the lab sends a fixed share, see BflMaterialBudget; the model may read far more:
+        if (share.Characters > 0 && !this.Provider.GetModelProfile().Context.IsKnown)
+            return string.Format(TA("AI Studio does not know the context window of the selected model, so the lab sends only its first {0} %. You can enter the window under 'Override Model Limits' in the settings of the provider."), share.Percent);
 
         return share.Characters > 0
             ? string.Format(T("Only its first {0} % fits into the context window of the selected model."), share.Percent)
