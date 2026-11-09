@@ -46,6 +46,15 @@ public sealed class DataBeyondFactsLab(Expression<Func<Data, DataBeyondFactsLab>
     public AddressForm AddressForm { get; set; } = ManagedConfiguration.Register(configSelection, value => value.AddressForm, AddressForm.FORMAL);
 
     /// <summary>
+    /// Gets or sets whether files in the folder for prompt overrides replace the prompts which come with the lab.
+    /// </summary>
+    /// <remarks>
+    /// The option serves the further development of the prompts, e.g., by the research team behind the lab, not the
+    /// preparation of an appearance. An organization may switch it off and lock it.
+    /// </remarks>
+    public bool AllowPromptOverrides { get; set; } = ManagedConfiguration.Register(configSelection, value => value.AllowPromptOverrides, false);
+
+    /// <summary>
     /// Gets or sets the hash of the notes the person confirmed, see BflNotice; empty while they confirmed none.
     /// </summary>
     /// <remarks>
