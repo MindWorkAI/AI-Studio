@@ -41,8 +41,6 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// </summary>
     private static readonly TimeSpan STREAMING_RENDER_MIN_TIME = TimeSpan.FromMilliseconds(100);
 
-    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(BflConversationService).Namespace, nameof(BflConversationService));
-
     private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(BflConversationService).Namespace, nameof(BflConversationService));
 
     /// <summary>
@@ -149,7 +147,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not put together the system prompt of the chat '{Location}'.", location.Key);
-            await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, TB("The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.")));
+            await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, TA("The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.")));
             return;
         }
 
