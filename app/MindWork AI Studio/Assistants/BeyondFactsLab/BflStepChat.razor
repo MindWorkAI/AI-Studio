@@ -20,9 +20,11 @@ else
         <MudText Typo="Typo.body2" Class="mb-3">
             @TA("The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.")
         </MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum" OnClick="@this.StartAsync" Disabled="@(!this.CanSend)" Class="mb-3">
-            @T("Start the conversation")
-        </MudButton>
+        <div class="mb-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum" OnClick="@this.StartAsync" Disabled="@(!this.CanSend)">
+                @T("Start the conversation")
+            </MudButton>
+        </div>
     }
     else
     {
@@ -40,25 +42,36 @@ else
         <MudText Typo="Typo.body2" Color="Color.Warning" Class="mb-2">@issue</MudText>
     }
 
-    @if (this.TokenBudgetText is { } budgetText)
-    {
-        <MudText Typo="Typo.caption" Color="@this.TokenBudgetColor" Class="mt-2">@budgetText</MudText>
-    }
+    @* Laid out like the input of the chat page: sending through the icon in the field, and the tokens as its helper text. *@
+    <MudTextField T="string"
+                  @bind-Value="@this.userInput"
+                  Immediate="true"
+                  Lines="3"
+                  Sizing="InputSizing.Auto"
+                  MaxLines="12"
+                  Variant="Variant.Outlined"
+                  Label="@TA("Your message")"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.Send"
+                  AdornmentColor="@(this.CanSendMessage ? Color.Primary : Color.Default)"
+                  AdornmentAriaLabel="@T("Send")"
+                  OnAdornmentClick="@this.SendAsync"
+                  UserAttributes="@this.inputAttributes"
+                  HelperText="@this.TokenBudgetText"
+                  Class="@this.InputClass"
+                  Disabled="@(!this.conversation.IsAvailable || this.IsRunning)"/>
 
-    <MudStack Row="true" AlignItems="AlignItems.End" Class="mt-2" StretchItems="StretchItems.Start">
-        <MudTextField T="string" @bind-Value="@this.userInput" Immediate="true" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Variant="Variant.Outlined" Label="@TA("Your message")" Disabled="@(!this.conversation.IsAvailable || this.IsRunning)"/>
-        @if (this.IsRunning)
-        {
-            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Stop" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
-        }
-        else
-        {
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" OnClick="@this.SendAsync" Disabled="@(!this.CanSendMessage)">@T("Send")</MudButton>
-        }
-    </MudStack>
-
-    @if (this.conversation.HasVisibleMessages)
+    @if (this.IsRunning || this.conversation.HasVisibleMessages)
     {
-        <MudButton StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="@this.ResetAsync" Disabled="@this.IsRunning" Class="mt-2">@T("Start over")</MudButton>
+        <MudStack Row="true" Spacing="1" Class="mt-2">
+            @if (this.IsRunning)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Stop" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
+            }
+            @if (this.conversation.HasVisibleMessages)
+            {
+                <MudButton StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="@this.ResetAsync" Disabled="@this.IsRunning">@T("Start over")</MudButton>
+            }
+        </MudStack>
     }
 }

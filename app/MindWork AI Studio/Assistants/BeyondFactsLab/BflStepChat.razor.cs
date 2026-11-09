@@ -79,6 +79,11 @@ public partial class BflStepChat : MSGComponentBase
     /// </summary>
     private string userInput = string.Empty;
 
+    /// <summary>
+    /// The attributes of the message field, such as the spell checking the person chose.
+    /// </summary>
+    private readonly Dictionary<string, object?> inputAttributes = new();
+
     private bool IsRunning => this.conversation?.IsRunning ?? false;
 
     private BflTokenBudgetState Budget => BflTokenBudget.Of(this.tokens);
@@ -91,6 +96,7 @@ public partial class BflStepChat : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.ConversationService.ConversationChanged += this.OnConversationChangedAsync;
+        this.SettingsManager.InjectSpellchecking(this.inputAttributes);
         await base.OnInitializedAsync();
     }
 
@@ -192,16 +198,19 @@ public partial class BflStepChat : MSGComponentBase
             {
                 BflTokenBudgetState.FULL => $"{budget}. {TA("This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.")}",
                 BflTokenBudgetState.WARNING => $"{budget}. {TA("This conversation fills most of the context window of the model. Soon, you will have to start it over.")}",
-                _ => budget,
+                _ => budget
             };
         }
     }
 
-    private Color TokenBudgetColor => this.Budget switch
+    /// <summary>
+    /// Gets the classes of the message field; like on the chat page, they colour its helper text with the tokens.
+    /// </summary>
+    private string InputClass => this.Budget switch
     {
-        BflTokenBudgetState.FULL => Color.Error,
-        BflTokenBudgetState.WARNING => Color.Warning,
-        _ => Color.Default,
+        BflTokenBudgetState.FULL => "mt-2 token-budget-exceeded",
+        BflTokenBudgetState.WARNING => "mt-2 token-budget-nearly-full",
+        _ => "mt-2"
     };
 
     /// <summary>
@@ -221,7 +230,7 @@ public partial class BflStepChat : MSGComponentBase
         if (!this.CanSendMessage)
             return;
 
-        var text = this.userInput;
+        var text = this.userInput.Trim();
         this.userInput = string.Empty;
         await this.ConversationService.SendAsync(this.Location, this.Provider, text);
     }
