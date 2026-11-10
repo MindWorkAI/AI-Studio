@@ -155,13 +155,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         catch (BflPromptOverrideException exception)
         {
             logger.LogWarning(exception, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
-            await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."),exception.FileName, exception.Placeholder)));
+            await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."),exception.FileName, exception.Placeholder)));
             return;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not put together the system prompt of the chat '{Location}'.", location.Key);
-            await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, TA("The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.")));
+            await messageBus.SendError(new(AppIcons.ERROR, TA("The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.")));
             return;
         }
 
@@ -231,12 +231,12 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         catch (ProviderRequestException exception)
         {
             logger.LogError(exception, "The provider request of the BeyondFacts Lab failed. Status={StatusCode}, Reason='{ReasonPhrase}'.", exception.StatusCode, exception.ReasonPhrase);
-            await messageBus.SendError(new(Icons.Material.Filled.CloudOff, exception.UserMessage));
+            await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, exception.UserMessage));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not store the chat '{Location}'.", location.Key);
-            await messageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not save this conversation. Please try again.")));
+            await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not save this conversation. Please try again.")));
         }
         finally
         {
@@ -532,7 +532,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         if (reason is null)
             return true;
 
-        await messageBus.SendError(new(Icons.Material.Filled.CloudOff, reason));
+        await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, reason));
         return false;
     }
 
@@ -563,7 +563,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
             {
                 logger.LogError(exception, "The BeyondFacts Lab could not store the chat '{Location}'.", conversation.Location.Key);
-                await messageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not save this conversation. Please try again.")));
+                await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not save this conversation. Please try again.")));
             }
         }
 

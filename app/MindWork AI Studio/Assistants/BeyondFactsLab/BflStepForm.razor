@@ -16,7 +16,7 @@
 
 @if (this.HasPublicDetails && this.IsEventNotPublic)
 {
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.PublicOff" Class="mb-3">
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@AppIcons.NOT_PUBLIC" Class="mb-3">
         @TA("The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol.")
     </MudAlert>
 }

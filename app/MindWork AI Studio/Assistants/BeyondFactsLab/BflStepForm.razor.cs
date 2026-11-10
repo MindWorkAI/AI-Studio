@@ -46,7 +46,7 @@ public partial class BflStepForm : MSGComponentBase
     /// <summary>
     /// The symbol which marks a field whose value the research of the lab receives.
     /// </summary>
-    private const string PUBLIC_DETAIL_ICON = Icons.Material.Filled.TravelExplore;
+    private const string PUBLIC_DETAIL_ICON = AppIcons.WEB_RESEARCH;
 
     /// <summary>
     /// Gets whether the step has fields whose values the research receives, so that the form explains their symbol.

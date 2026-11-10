@@ -188,12 +188,12 @@ public partial class BflResults : MSGComponentBase
 
     private static string StatusIcon(BflResultStatus status) => status switch
     {
-        BflResultStatus.UNREADABLE => Icons.Material.Filled.Error,
-        BflResultStatus.WRITING => Icons.Material.Filled.HourglassTop,
-        BflResultStatus.DRAFT => Icons.Material.Filled.EditNote,
-        BflResultStatus.CONFIRMED => Icons.Material.Filled.CheckCircle,
-        BflResultStatus.OUTDATED => Icons.Material.Filled.Update,
-        _ => Icons.Material.Filled.RadioButtonUnchecked
+        BflResultStatus.UNREADABLE => AppIcons.ERROR,
+        BflResultStatus.WRITING => AppIcons.PENDING,
+        BflResultStatus.DRAFT => AppIcons.DRAFT,
+        BflResultStatus.CONFIRMED => AppIcons.SUCCESS,
+        BflResultStatus.OUTDATED => AppIcons.OUTDATED,
+        _ => AppIcons.NOT_CREATED
     };
 
     private static Color StatusColor(BflResultStatus status) => status switch
@@ -384,7 +384,7 @@ public partial class BflResults : MSGComponentBase
         catch (ArgumentOutOfRangeException exception)
         {
             this.Logger.LogError(exception, "Could not export a result of the BeyondFacts Lab, because no exporter writes the format {ExportFormat}.", format);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Error, TA("AI Studio could not export this material. Please try another format.")));
+            await this.MessageBus.SendError(new(AppIcons.ERROR, TA("AI Studio could not export this material. Please try another format.")));
         }
         finally
         {
@@ -403,7 +403,7 @@ public partial class BflResults : MSGComponentBase
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             this.Logger.LogError(exception, "Could not save the result '{Kind}' of a preparation in the BeyondFacts Lab.", kind);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not save this material. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not save this material. Please try again.")));
         }
         finally
         {

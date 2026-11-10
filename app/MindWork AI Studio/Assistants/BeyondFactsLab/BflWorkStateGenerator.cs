@@ -109,7 +109,7 @@ public sealed class BflWorkStateGenerator(BeyondFactsLabStore store, BflConversa
             if (answer.Sections.Count is 0)
             {
                 logger.LogWarning("The model wrote no readable work state of the BeyondFacts Lab: {Problems}", string.Join(" ", answer.Problems));
-                await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, TA("The model did not write a work state the lab can read. Please try again, or try another provider.")));
+                await messageBus.SendError(new(AppIcons.ERROR, TA("The model did not write a work state the lab can read. Please try again, or try another provider.")));
                 return;
             }
 
@@ -126,12 +126,12 @@ public sealed class BflWorkStateGenerator(BeyondFactsLabStore store, BflConversa
         catch (BflPromptOverrideException exception)
         {
             logger.LogWarning(exception, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
-            await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), exception.FileName, exception.Placeholder)));
+            await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), exception.FileName, exception.Placeholder)));
         }
         catch (ProviderRequestException exception)
         {
             logger.LogError(exception, "The provider request for a work state of the BeyondFacts Lab failed. Status={StatusCode}, Reason='{ReasonPhrase}'.", exception.StatusCode, exception.ReasonPhrase);
-            await messageBus.SendError(new(Icons.Material.Filled.CloudOff, exception.UserMessage));
+            await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, exception.UserMessage));
         }
         catch (FileNotFoundException)
         {
@@ -140,7 +140,7 @@ public sealed class BflWorkStateGenerator(BeyondFactsLabStore store, BflConversa
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or FormatException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not write the work state of '{Location}'.", location.Key);
-            await messageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not create the work state. Please try again.")));
+            await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not create the work state. Please try again.")));
         }
         finally
         {

@@ -166,7 +166,7 @@ public partial class VisualBriefingAssistant
         var path = await this.Store.GetProjectDirectoryPathAsync(this.selectedProject.BriefingId);
         if (string.IsNullOrWhiteSpace(path))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The visual briefing project folder is not available.")));
+            await this.MessageBus.SendWarning(new(AppIcons.FOLDER_OPEN, T("The visual briefing project folder is not available.")));
             return;
         }
 
@@ -178,18 +178,18 @@ public partial class VisualBriefingAssistant
         catch (Exception exception)
         {
             this.Logger.LogWarning(exception, "Could not open the visual briefing project folder. BriefingId={BriefingId}", this.selectedProject.BriefingId);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the visual briefing project folder.")));
+            await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, T("Could not open the visual briefing project folder.")));
             return;
         }
 
         if (response.Success)
         {
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Folder, T("Opened the visual briefing project folder.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.FOLDER_OPEN, T("Opened the visual briefing project folder.")));
             return;
         }
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the visual briefing project folder: {0}"), issue)));
+        await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, string.Format(T("Could not open the visual briefing project folder: {0}"), issue)));
     }
 
     /// <summary>

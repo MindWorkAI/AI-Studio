@@ -151,9 +151,9 @@ public partial class BflResearchPanel : MSGComponentBase
 
     private string StatusIcon(BflResearch? found) => found switch
     {
-        null => Icons.Material.Outlined.Circle,
-        _ when found.IsOutdated(this.PublicDetails) => Icons.Material.Filled.Update,
-        _ => Icons.Material.Filled.CheckCircle,
+        null => AppIcons.NOT_STARTED,
+        _ when found.IsOutdated(this.PublicDetails) => AppIcons.OUTDATED,
+        _ => AppIcons.SUCCESS,
     };
 
     private Color StatusColor(BflResearch? found) => found switch

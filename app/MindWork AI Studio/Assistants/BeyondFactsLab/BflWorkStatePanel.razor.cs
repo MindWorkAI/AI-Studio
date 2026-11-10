@@ -241,7 +241,7 @@ public partial class BflWorkStatePanel : MSGComponentBase
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             this.Logger.LogError(exception, "Could not save the work state of a step in the BeyondFacts Lab.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not save the work state. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not save the work state. Please try again.")));
             return false;
         }
         finally

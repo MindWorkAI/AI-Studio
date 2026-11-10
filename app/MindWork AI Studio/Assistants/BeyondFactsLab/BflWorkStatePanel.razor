@@ -37,7 +37,7 @@ else
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1"/>
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
             <MudText Typo="Typo.caption">@T("The lab writes the work state from the conversation")</MudText>
-            <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Stop" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
+            <MudButton Size="Size.Small" StartIcon="@AppIcons.STOP" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
         </MudStack>
     }
 
@@ -61,8 +61,8 @@ else
                 }
             </MudStack>
             <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="@this.ConfirmDraftAsync" Disabled="@this.IsBusy">@T("Confirm")</MudButton>
-                <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@this.DiscardDraftAsync" Disabled="@this.IsBusy">@T("Discard draft")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CONFIRM" OnClick="@this.ConfirmDraftAsync" Disabled="@this.IsBusy">@T("Confirm")</MudButton>
+                <MudButton StartIcon="@AppIcons.DELETE" OnClick="@this.DiscardDraftAsync" Disabled="@this.IsBusy">@T("Discard draft")</MudButton>
             </MudStack>
         </div>
     }
@@ -78,17 +78,17 @@ else
             <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-3">
                 @if (this.Status is BflWorkStateStatus.OUTDATED or BflWorkStateStatus.DETAILS_CHANGED)
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="@this.ConfirmAgainAsync" Disabled="@this.IsBusy">@T("Confirm again")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CONFIRM" OnClick="@this.ConfirmAgainAsync" Disabled="@this.IsBusy">@T("Confirm again")</MudButton>
                 }
-                <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="@this.EditAsync" Disabled="@this.IsBusy">@T("Edit")</MudButton>
-                <MudButton StartIcon="@Icons.Material.Filled.Undo" OnClick="@this.WithdrawAsync" Disabled="@this.IsBusy">@T("Withdraw")</MudButton>
+                <MudButton StartIcon="@AppIcons.EDIT" OnClick="@this.EditAsync" Disabled="@this.IsBusy">@T("Edit")</MudButton>
+                <MudButton StartIcon="@AppIcons.WITHDRAW" OnClick="@this.WithdrawAsync" Disabled="@this.IsBusy">@T("Withdraw")</MudButton>
             </MudStack>
         </MudPaper>
     }
 
     <MudButton Variant="@(workState.Draft is null && workState.Confirmed is null ? Variant.Filled : Variant.Outlined)"
                Color="Color.Primary"
-               StartIcon="@Icons.Material.Filled.AutoAwesome"
+               StartIcon="@AppIcons.GENERATE"
                OnClick="@this.GenerateAsync"
                Disabled="@(this.IsBusy || this.ProviderIssue is not null)">
         @(workState.Draft is null && workState.Confirmed is null ? T("Create work state") : T("Create anew"))
@@ -105,8 +105,8 @@ else
                     <MudText Typo="Typo.subtitle2">@field.Label</MudText>
                     <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@TextOf(field, value)</MudText>
                     <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-2">
-                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" OnClick="@(() => this.TakeOverSuggestionAsync(field, value))" Disabled="@this.IsBusy">@T("Take over")</MudButton>
-                        <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Close" OnClick="@(() => this.DismissSuggestionAsync(field))" Disabled="@this.IsBusy">@T("Dismiss")</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CONFIRM" OnClick="@(() => this.TakeOverSuggestionAsync(field, value))" Disabled="@this.IsBusy">@T("Take over")</MudButton>
+                        <MudButton Size="Size.Small" StartIcon="@AppIcons.CLOSE" OnClick="@(() => this.DismissSuggestionAsync(field))" Disabled="@this.IsBusy">@T("Dismiss")</MudButton>
                     </MudStack>
                 </MudPaper>
             }

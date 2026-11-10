@@ -138,7 +138,7 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
         var availability = await this.CheckAvailabilityAsync(provider);
         if (!availability.CanResearch)
         {
-            await messageBus.SendError(new(Icons.Material.Filled.TravelExplore, availability.Message));
+            await messageBus.SendError(new(AppIcons.WEB_RESEARCH, availability.Message));
             return;
         }
 
@@ -157,14 +157,14 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
             var forms = await store.LoadFormsAsync(location.ProjectId);
             if (BflEventVisibility.IsNotPublic(forms))
             {
-                await messageBus.SendError(new(Icons.Material.Filled.PublicOff, BflEventVisibility.NotPublicMessage));
+                await messageBus.SendError(new(AppIcons.NOT_PUBLIC, BflEventVisibility.NotPublicMessage));
                 return;
             }
 
             var details = BflPromptComposer.PublicDetailsOf(forms);
             if (details.Count is 0)
             {
-                await messageBus.SendError(new(Icons.Material.Filled.TravelExplore, string.Format(TA("Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."), BflStep.FRAMEWORK.Title)));
+                await messageBus.SendError(new(AppIcons.WEB_RESEARCH, string.Format(TA("Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."), BflStep.FRAMEWORK.Title)));
                 return;
             }
 
@@ -187,7 +187,7 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
             if (research.Text.Length is 0)
             {
                 logger.LogWarning("The agent wrote no text for the research '{Location}' of the BeyondFacts Lab.", location.Key);
-                await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, TA("The research ended without a result. Please try again, or try another provider.")));
+                await messageBus.SendError(new(AppIcons.ERROR, TA("The research ended without a result. Please try again, or try another provider.")));
                 return;
             }
 
@@ -201,12 +201,12 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
         catch (BflPromptOverrideException exception)
         {
             logger.LogWarning(exception, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
-            await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), exception.FileName, exception.Placeholder)));
+            await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), exception.FileName, exception.Placeholder)));
         }
         catch (ProviderRequestException exception)
         {
             logger.LogError(exception, "The provider request for a research of the BeyondFacts Lab failed. Status={StatusCode}, Reason='{ReasonPhrase}'.", exception.StatusCode, exception.ReasonPhrase);
-            await messageBus.SendError(new(Icons.Material.Filled.CloudOff, exception.UserMessage));
+            await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, exception.UserMessage));
         }
         catch (FileNotFoundException)
         {
@@ -215,7 +215,7 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or FormatException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not do the research '{Location}'.", location.Key);
-            await messageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not finish this research. Please try again.")));
+            await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not finish this research. Please try again.")));
         }
         finally
         {
