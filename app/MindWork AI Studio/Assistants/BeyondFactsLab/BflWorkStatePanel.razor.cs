@@ -64,7 +64,7 @@ public partial class BflWorkStatePanel : MSGComponentBase
     /// Gets or sets the provider which writes the work state.
     /// </summary>
     [Parameter, EditorRequired]
-    public AIStudio.Settings.Provider Provider { get; set; } = AIStudio.Settings.Provider.NONE;
+    public AIStudio.Settings.Provider Provider { get; set; } = Settings.Provider.NONE;
 
     /// <summary>
     /// Gets or sets why the provider cannot write, or null when it can.
