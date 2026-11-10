@@ -835,10 +835,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3647862078::INFORMAL"] = "Diese Vorbereitung kann nicht geöffnet werden. Möchtest du sie mit allen Dateien endgültig löschen?"
 
 -- The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3657264819"] = "Das Labor recherchiert jetzt im Web ausschließlich anhand der öffentlich verfügbaren Informationen zu dem Ereignis. Das Ergebnis finden Sie im Schritt „{0}“."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3657264819"] = "Das Lab recherchiert jetzt im Web zur Veranstaltung, nur mit den öffentlichen Angaben dazu. Das Ergebnis finden Sie im Schritt „{0}“."
 
 -- The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3657264819::INFORMAL"] = "Das Labor recherchiert jetzt im Web ausschließlich anhand der öffentlich verfügbaren Informationen zu dem Ereignis. Das Ergebnis findest du im Schritt „{0}“."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3657264819::INFORMAL"] = "Das Lab recherchiert jetzt im Web zur Veranstaltung, nur mit den öffentlichen Angaben dazu. Das Ergebnis findest du im Schritt „{0}“."
 
 -- Name the event you want to prepare for, e.g., the title of a panel discussion.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3679923414"] = "Geben Sie die Veranstaltung an, auf die Sie sich vorbereiten möchten, z. B. den Titel einer Podiumsdiskussion."
@@ -1270,7 +1270,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652635::INFORMAL"] = "Lass im letzten Schritt das Lab aus deinen bestätigten Arbeitsständen deine Materialien erstellen: eine Reflexionsmappe, ein Positionsblatt, einen Gesprächsleitfaden, Fragen und Antwortansätze sowie deine offenen Punkte. Du prüfst, bearbeitest und bestätigst jedes davon und exportierst es dann als Dokument."
 
 -- Research on the web
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1322369504"] = "Im Web recherchieren"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1322369504"] = "Recherche im Web"
 
 -- You keep the decision about which position you take.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1509612483"] = "Sie behalten die Entscheidung darüber, welche Position Sie vertreten."
@@ -1321,10 +1321,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3741175
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3741175627::INFORMAL"] = "Du bist nicht sicher, ob das Lab zu deiner Aufgabe passt? Frag es unter „Passt das Lab zu meiner Aufgabe?“."
 
 -- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476"] = "Im Schritt '{0}' recherchieren Agenten des Labors zum Ereignis, zu seinen Beteiligten und zur öffentlichen Debatte über das Thema – jeweils ein Agent pro Bereich. Die Agenten starten automatisch, sobald Sie die Ereignisdetails bestätigen, sofern die Websuche in AI Studio eingerichtet ist. Sie können sie jederzeit erneut starten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476"] = "Im Schritt „{0}“ recherchieren Agenten des Labs zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Sie starten von selbst, sobald Sie die Rahmendaten bestätigen, sofern die Websuche in AI Studio eingerichtet ist. Sie können sie jederzeit erneut starten."
 
 -- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476::INFORMAL"] = "Im Schritt '{0}' recherchieren Agenten des Labors zum Ereignis, zu seinen Beteiligten und zur öffentlichen Debatte über das Thema – jeweils ein Agent pro Bereich. Die Agenten starten automatisch, sobald du die Ereignisdetails bestätigst, sofern die Websuche in AI Studio eingerichtet ist. Du kannst sie jederzeit erneut starten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476::INFORMAL"] = "Im Schritt „{0}“ recherchieren Agenten des Labs zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Sie starten von selbst, sobald du die Rahmendaten bestätigst, sofern die Websuche in AI Studio eingerichtet ist. Du kannst sie jederzeit erneut starten."
 
 -- Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3813171730"] = "Ist ein Schritt weitgehend geklärt, lassen Sie das Lab unter dem Gespräch seinen Arbeitsstand erstellen. Sie prüfen und bearbeiten ihn, und sobald Sie ihn bestätigen, bauen die späteren Schritte darauf auf. Außerdem schlägt das Lab Werte für leere Felder in „Ihre Angaben“ vor, die Sie einzeln übernehmen."
@@ -1354,10 +1354,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4050768
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4133199796"] = "Gegenargumente werden fair dargestellt."
 
 -- The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036922"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung, die im Formular mit einem Symbol gekennzeichnet sind. Ihre übrigen Angaben, Ihre Materialien, Ihre Arbeitsstände und Ihre Unterhaltungen bleiben in Ihrer Vorbereitung und werden niemals an eine Suche übermittelt. Die Unterhaltungen der einzelnen Schritte durchsuchen das Web nicht selbst, sondern lesen nur Webseiten, deren Adressen darin angegeben sind, z. B. den Link zur Veranstaltung."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036922"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung, die das Formular mit einem Symbol kennzeichnet. Ihre übrigen Angaben, Ihr Material, Ihre Arbeitsstände und Ihre Gespräche bleiben in Ihrer Vorbereitung und erreichen nie eine Suche. Die Gespräche der Schritte suchen selbst nie im Web, sondern lesen nur Webseiten, deren Adressen darin stehen, z. B. den Link zur Veranstaltung."
 
 -- The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036922::INFORMAL"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung, die im Formular mit einem Symbol gekennzeichnet sind. Deine übrigen Angaben, deine Materialien, deine Arbeitsstände und deine Unterhaltungen bleiben in deiner Vorbereitung und werden niemals an eine Suche übermittelt. Die Unterhaltungen der einzelnen Schritte durchsuchen das Web nicht selbst, sondern lesen nur Webseiten, deren Adressen darin angegeben sind, z. B. den Link zur Veranstaltung."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036922::INFORMAL"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung, die das Formular mit einem Symbol kennzeichnet. Deine übrigen Angaben, dein Material, deine Arbeitsstände und deine Gespräche bleiben in deiner Vorbereitung und erreichen nie eine Suche. Die Gespräche der Schritte suchen selbst nie im Web, sondern lesen nur Webseiten, deren Adressen darin stehen, z. B. den Link zur Veranstaltung."
 
 -- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T551596393"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft Ihnen, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Sie klären Ihre Ziele und Ihre Rolle, machen wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektieren das Framing und üben den Umgang mit kritischen Fragen."
@@ -1582,46 +1582,46 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLREFLECTIONFOLDER::T416
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLREFLECTIONFOLDER::T4271561391"] = "Ein früherer Schritt hat sich nach dieser Bestätigung geändert."
 
 -- The tool 'Web Search' is not set up yet. Therefore, the lab cannot research the event on the web. To let the lab research, set the tool up in the tool settings.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1533623659"] = "Das Tool „Websuche“ ist noch nicht eingerichtet. Daher kann das Lab nicht im Web nach dem Ereignis suchen. Damit das Lab recherchieren kann, richten Sie das Tool in den Tool-Einstellungen ein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1533623659"] = "Das Werkzeug „Websuche“ ist noch nicht eingerichtet. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren. Damit das Lab recherchieren kann, richten Sie das Werkzeug in den Werkzeugeinstellungen ein."
 
 -- The tool 'Web Search' is not set up yet. Therefore, the lab cannot research the event on the web. To let the lab research, set the tool up in the tool settings.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1533623659::INFORMAL"] = "Das Tool „Websuche“ ist noch nicht eingerichtet. Daher kann das Lab nicht im Web nach dem Ereignis suchen. Damit das Lab recherchieren kann, richte das Tool in den Tool-Einstellungen ein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1533623659::INFORMAL"] = "Das Werkzeug „Websuche“ ist noch nicht eingerichtet. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren. Damit das Lab recherchieren kann, richte das Werkzeug in den Werkzeugeinstellungen ein."
 
 -- Your organization has switched tools off. Therefore, the lab cannot research the event on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1534990687"] = "Ihre Organisation hat die Tools deaktiviert. Daher kann das Labor nicht im Web nach dem Ereignis suchen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1534990687"] = "Ihre Organisation hat die Werkzeuge deaktiviert. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren."
 
 -- Your organization has switched tools off. Therefore, the lab cannot research the event on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1534990687::INFORMAL"] = "Deine Organisation hat die Tools deaktiviert. Daher kann das Labor nicht im Web nach dem Ereignis suchen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1534990687::INFORMAL"] = "Deine Organisation hat die Werkzeuge deaktiviert. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren."
 
 -- The selected model cannot use tools. Therefore, the lab cannot research the event on the web. To let the lab research, select a provider whose model can use tools.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1553118338"] = "Das ausgewählte Modell kann keine Tools verwenden. Deshalb kann das Labor nicht im Web nach dem Ereignis suchen. Damit das Labor recherchieren kann, wählen Sie einen Anbieter aus, dessen Modell Tools verwenden kann."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1553118338"] = "Das ausgewählte Modell kann keine Werkzeuge verwenden. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren. Damit das Lab recherchieren kann, wählen Sie einen Anbieter, dessen Modell Werkzeuge verwenden kann."
 
 -- The selected model cannot use tools. Therefore, the lab cannot research the event on the web. To let the lab research, select a provider whose model can use tools.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1553118338::INFORMAL"] = "Das ausgewählte Modell kann keine Tools verwenden. Deshalb kann das Labor nicht im Web nach dem Ereignis suchen. Damit das Labor recherchieren kann, wähle einen Anbieter aus, dessen Modell Tools verwenden kann."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1553118338::INFORMAL"] = "Das ausgewählte Modell kann keine Werkzeuge verwenden. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren. Damit das Lab recherchieren kann, wähle einen Anbieter, dessen Modell Werkzeuge verwenden kann."
 
 -- You switched the tool 'Web Search' off in the tool settings. Therefore, the lab cannot research the event on the web. To let the lab research, switch the tool on again there.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1738390190"] = "Sie haben das Tool „Websuche“ in den Tool-Einstellungen deaktiviert. Daher kann das Labor nicht im Web nach dem Ereignis suchen. Damit das Labor recherchieren kann, aktivieren Sie das Tool dort wieder."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1738390190"] = "Sie haben das Werkzeug „Websuche“ in den Werkzeugeinstellungen deaktiviert. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren. Damit das Lab recherchieren kann, aktivieren Sie das Werkzeug dort wieder."
 
 -- You switched the tool 'Web Search' off in the tool settings. Therefore, the lab cannot research the event on the web. To let the lab research, switch the tool on again there.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1738390190::INFORMAL"] = "Du hast das Tool „Websuche“ in den Tool-Einstellungen deaktiviert. Daher kann das Labor nicht im Web nach dem Ereignis suchen. Damit das Labor recherchieren kann, aktiviere das Tool dort wieder."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1738390190::INFORMAL"] = "Du hast das Werkzeug „Websuche“ in den Werkzeugeinstellungen deaktiviert. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren. Damit das Lab recherchieren kann, aktiviere das Werkzeug dort wieder."
 
 -- Your organization has switched the tool 'Web Search' off. Therefore, the lab cannot research the event on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1823760665"] = "Ihre Organisation hat das Tool „Websuche“ deaktiviert. Daher kann das Labor nicht im Web nach dem Ereignis recherchieren."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1823760665"] = "Ihre Organisation hat das Werkzeug „Websuche“ deaktiviert. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren."
 
 -- Your organization has switched the tool 'Web Search' off. Therefore, the lab cannot research the event on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1823760665::INFORMAL"] = "Deine Organisation hat das Tool „Websuche“ deaktiviert. Daher kann das Labor nicht im Web nach dem Ereignis recherchieren."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1823760665::INFORMAL"] = "Deine Organisation hat das Werkzeug „Websuche“ deaktiviert. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren."
 
 -- The tool 'Web Search' is not available in the BeyondFacts Lab. Therefore, the lab cannot research the event on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T4133073030"] = "Das Tool „Websuche“ ist im BeyondFacts Lab nicht verfügbar. Daher kann das Lab nicht im Web nach dem Ereignis suchen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T4133073030"] = "Das Werkzeug „Websuche“ ist im BeyondFacts Lab nicht verfügbar. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren."
 
 -- The tool 'Web Search' cannot be used here. Therefore, the lab cannot research the event on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T4233310216"] = "Das Tool „Websuche“ kann hier nicht verwendet werden. Daher kann das Labor das Ereignis nicht im Internet recherchieren."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T4233310216"] = "Das Werkzeug „Websuche“ kann hier nicht verwendet werden. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren."
 
 -- The tool 'Web Search' may not send data from here. Therefore, the lab cannot research the event on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T749654025"] = "Das Tool „Websuche“ kann möglicherweise keine Daten von hier aus senden. Daher kann das Labor nicht im Web nach dem Ereignis recherchieren."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T749654025"] = "Das Werkzeug „Websuche“ darf von hier aus keine Daten senden. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren."
 
 -- The selected provider is not trusted enough for the tool 'Web Search'. Therefore, the lab cannot research the event on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T782133941"] = "Der ausgewählte Anbieter ist für das Tool „Websuche“ nicht vertrauenswürdig genug. Daher kann das Labor nicht im Web zu dem Ereignis recherchieren."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T782133941"] = "Der ausgewählte Anbieter ist für das Werkzeug „Websuche“ nicht vertrauenswürdig genug. Daher kann das Lab nicht im Web zur Veranstaltung recherchieren."
 
 -- Not researched yet
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T1044513948"] = "Noch nicht recherchiert"
@@ -1639,7 +1639,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T155495
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2197065228"] = "Recherche läuft"
 
 -- Research this topic
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2205528655"] = "Recherchieren Sie zu diesem Thema."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2205528655"] = "Dieses Thema recherchieren"
 
 -- Web pages opened
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2410802222"] = "Geöffnete Webseiten"
@@ -1648,22 +1648,22 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T241080
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2673061400"] = "Recherchiert am {0}"
 
 -- The public details changed since this research. You can research this topic again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2733639699"] = "Die öffentlich verfügbaren Informationen haben sich seit dieser Recherche geändert. Sie können erneut zu diesem Thema recherchieren."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2733639699"] = "Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Sie können dieses Thema erneut recherchieren."
 
 -- The public details changed since this research. You can research this topic again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2733639699::INFORMAL"] = "Die öffentlich verfügbaren Informationen haben sich seit dieser Recherche geändert. Du kannst erneut zu diesem Thema recherchieren."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2733639699::INFORMAL"] = "Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Du kannst dieses Thema erneut recherchieren."
 
 -- Research this topic again
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2874128087"] = "Recherchieren Sie erneut zu diesem Thema."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2874128087"] = "Dieses Thema erneut recherchieren"
 
 -- Research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. The conversation of this step builds on what they find.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3469262706"] = "Die Recherche-Agenten des Labors untersuchen das Ereignis, die daran Beteiligten und die öffentliche Debatte zu diesem Thema – jeweils ein Agent pro Bereich. Der Dialog in diesem Schritt baut auf ihren Erkenntnissen auf."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3469262706"] = "Agenten des Labs recherchieren zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Das Gespräch dieses Schritts baut auf ihren Ergebnissen auf."
 
 -- Research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. The conversation of this step builds on what they find.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3469262706::INFORMAL"] = "Die Recherche-Agenten des Labors untersuchen das Ereignis, die daran Beteiligten und die öffentliche Debatte zu diesem Thema – jeweils ein Agent pro Bereich. Der Dialog in diesem Schritt baut auf ihren Erkenntnissen auf."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3469262706::INFORMAL"] = "Agenten des Labs recherchieren zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Das Gespräch dieses Schritts baut auf ihren Ergebnissen auf."
 
 -- The research receives these details:
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3642289030"] = "Die Recherche erhält folgende Details:"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3642289030"] = "Die Recherche erhält diese Angaben:"
 
 -- You have not entered any public details yet. Enter them in the step '{0}', such as the topic of the event or its link.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3655939277"] = "Sie haben noch keine öffentlichen Angaben eingegeben. Geben Sie diese im Schritt „{0}“ ein, zum Beispiel das Thema der Veranstaltung oder den Link dazu."
@@ -1675,10 +1675,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T365593
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3771505473"] = "Recherche starten"
 
 -- Queries sent to the web search
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3846014079"] = "An die Websuche gesendete Suchanfragen"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3846014079"] = "Suchanfragen an die Websuche"
 
 -- The agent researches this topic
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3855362913"] = "Der Agent recherchiert zu diesem Thema."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3855362913"] = "Der Agent recherchiert dieses Thema"
 
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T724820205"] = "Veraltet"
@@ -1687,16 +1687,16 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T724820
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T810547195"] = "Keine"
 
 -- The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726"] = "Die Recherche-Agenten erhalten nur die öffentlich zugänglichen Informationen zur Veranstaltung. Alle übrigen Angaben, Ihre Materialien, Arbeitsstände und Unterhaltungen bleiben in Ihrer Vorbereitung und werden niemals für eine Suche verwendet."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung. Ihre übrigen Angaben, Ihr Material, Ihre Arbeitsstände und Ihre Gespräche bleiben in Ihrer Vorbereitung und erreichen nie eine Suche."
 
 -- The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726::INFORMAL"] = "Die Recherche-Agenten erhalten nur die öffentlich zugänglichen Informationen zur Veranstaltung. Alle übrigen Angaben, deine Materialien, Arbeitsstände und Unterhaltungen bleiben in deiner Vorbereitung und werden niemals für eine Suche verwendet."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726::INFORMAL"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung. Deine übrigen Angaben, dein Material, deine Arbeitsstände und deine Gespräche bleiben in deiner Vorbereitung und erreichen nie eine Suche."
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1150375027"] = "Die Datei „{0}“ im Testordner von BeyondFacts Lab enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ersetzt. Bitte korrigieren Sie die Datei und versuchen Sie es erneut."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1150375027"] = "Die Datei „{0}“ im Testordner des BeyondFacts Labs enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ausfüllt. Bitte korrigieren Sie die Datei und versuchen Sie es erneut."
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1150375027::INFORMAL"] = "Die Datei „{0}“ im Testordner von BeyondFacts Lab enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ersetzt. Bitte korrigiere die Datei und versuche es erneut."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1150375027::INFORMAL"] = "Die Datei „{0}“ im Testordner des BeyondFacts Labs enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ausfüllt. Bitte korrigiere die Datei und versuche es erneut."
 
 -- AI Studio could not finish this research. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1909297408"] = "AI Studio konnte diese Recherche nicht abschließen. Bitte versuchen Sie es erneut."
@@ -1705,22 +1705,22 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T19092
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1909297408::INFORMAL"] = "AI Studio konnte diese Recherche nicht abschließen. Bitte versuche es erneut."
 
 -- The research ended without a result. Please try again, or try another provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564"] = "Die Recherche wurde ohne Ergebnis abgeschlossen. Bitte versuchen Sie es erneut oder wählen Sie einen anderen Anbieter."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564"] = "Die Recherche endete ohne Ergebnis. Bitte versuchen Sie es erneut oder wählen Sie einen anderen Anbieter."
 
 -- The research ended without a result. Please try again, or try another provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564::INFORMAL"] = "Die Recherche wurde ohne Ergebnis abgeschlossen. Bitte versuche es erneut oder wähle einen anderen Anbieter."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564::INFORMAL"] = "Die Recherche endete ohne Ergebnis. Bitte versuche es erneut oder wähle einen anderen Anbieter."
 
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850"] = "Bitte geben Sie zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. das Thema oder einen Link. Für die Recherche werden ausschließlich diese Angaben verwendet."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850"] = "Bitte geben Sie zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. ihr Thema oder ihren Link. Die Recherche erhält nur diese Angaben."
 
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850::INFORMAL"] = "Bitte gib zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. das Thema oder einen Link. Für die Recherche werden ausschließlich diese Angaben verwendet."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850::INFORMAL"] = "Bitte gib zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. ihr Thema oder ihren Link. Die Recherche erhält nur diese Angaben."
 
 -- Participants
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T1161681831"] = "Teilnehmende"
 
 -- How the topic is discussed in public: positions, points of dispute, and the framing of others.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T2464060444"] = "Wie das Thema in der Öffentlichkeit diskutiert wird: Positionen, Streitpunkte und die Darstellung anderer."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T2464060444"] = "Wie die Öffentlichkeit das Thema diskutiert: Positionen, Streitpunkte und das Framing anderer."
 
 -- Organizer, format and schedule, moderation, and earlier editions of the event.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3694495177"] = "Veranstalter, Format und Zeitplan, Moderation sowie frühere Ausgaben der Veranstaltung."
@@ -1729,10 +1729,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSION
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3934414907"] = "Debatte und Framing"
 
 -- The event
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T4207163500"] = "Das Ereignis"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T4207163500"] = "Die Veranstaltung"
 
 -- Who else speaks or moderates, in which role, and which public positions they have taken on the topic.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T821312467"] = "Wer sonst noch spricht oder moderiert, welche Funktion diese Personen haben und welche öffentlichen Positionen sie zum Thema vertreten haben."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T821312467"] = "Wer sonst noch spricht oder moderiert, in welcher Rolle, und welche öffentlichen Positionen diese Personen zum Thema vertreten haben."
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTGENERATOR::T1150375027"] = "Die Datei „{0}“ im Testordner des BeyondFacts Labs enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ausfüllt. Bitte korrigieren Sie die Datei und versuchen Sie es erneut."
@@ -1996,10 +1996,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1474406854"
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1474406854::INFORMAL"] = "Einige Angaben fehlen noch. Der Chat fragt danach, und du kannst trotzdem weitermachen."
 
 -- Fields marked with this symbol hold public details about the event. Only these reach the research of the lab, which searches the web. All your other details stay in your preparation.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1772905417"] = "Felder, die mit diesem Symbol gekennzeichnet sind, enthalten öffentliche Angaben zur Veranstaltung. Nur diese Informationen werden für die Webrecherche des Labs verwendet. Alle anderen Angaben bleiben in Ihrer Vorbereitung."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1772905417"] = "Felder mit diesem Symbol enthalten öffentliche Angaben zur Veranstaltung. Nur diese erreichen die Recherche des Labs, die im Web sucht. Alle Ihre übrigen Angaben bleiben in Ihrer Vorbereitung."
 
 -- Fields marked with this symbol hold public details about the event. Only these reach the research of the lab, which searches the web. All your other details stay in your preparation.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1772905417::INFORMAL"] = "Felder, die mit diesem Symbol gekennzeichnet sind, enthalten öffentliche Angaben zur Veranstaltung. Nur diese Informationen werden für die Webrecherche des Labs verwendet. Alle anderen Angaben bleiben in deiner Vorbereitung."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1772905417::INFORMAL"] = "Felder mit diesem Symbol enthalten öffentliche Angaben zur Veranstaltung. Nur diese erreichen die Recherche des Labs, die im Web sucht. Alle deine übrigen Angaben bleiben in deiner Vorbereitung."
 
 -- Please enter an address that begins with https:// or http://.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T2837809367"] = "Bitte geben Sie eine Adresse ein, die mit https:// oder http:// beginnt."
@@ -2014,7 +2014,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288"
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288::INFORMAL"] = "* Der Chat funktioniert am besten, wenn du diese Angaben ausfüllst."
 
 -- Public detail: the research of the lab receives it
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3459633363"] = "Öffentliches Detail: Die Forschung des Labors erhält es."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3459633363"] = "Öffentliche Angabe: Die Recherche des Labs erhält sie"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T1150375027"] = "Die Datei „{0}“ im Testordner des BeyondFacts Labs enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ausfüllt. Bitte korrigieren Sie die Datei und versuchen Sie es erneut."
@@ -2185,7 +2185,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2862635340"] = "Mögliche Konfliktlinien"
 
 -- Participants and counterparts
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2936747296"] = "Teilnehmende und Gesprächspartner"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2936747296"] = "Teilnehmende und Gegenüber"
 
 -- Important values
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2989269189"] = "Wichtige Werte"
@@ -14500,7 +14500,7 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSION
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3148548820"] = "Dieser Chat enthält Inhalte aus der Datenquelle „{0}“, die gefunden wurden, als deren Einstellung „Wohin ein Chat Daten senden darf, nachdem er diese Datenquelle gelesen hat“ auf „{1}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat ohne diese Inhalte lässt es sich wieder verwenden."
 
 -- This chat holds a preparation of the BeyondFacts Lab, which may be unpublished, so it reads only web pages whose addresses stand in the chat. This tool would send data beyond that, so it is not available in this chat. The lab searches the web in a research of its own, which receives only the public details about the event. A new chat without this content can use it again.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3396106925"] = "Dieser Chat enthält möglicherweise unveröffentlichte Vorbereitungsinformationen für das BeyondFacts Lab. Deshalb werden nur Webseiten gelesen, deren Adressen im Chat stehen. Dieses Tool würde darüber hinaus weitere Daten übermitteln und ist daher in diesem Chat nicht verfügbar. Das Lab recherchiert selbstständig im Web und erhält dabei nur die öffentlichen Informationen zur Veranstaltung. In einem neuen Chat ohne diese Inhalte können Sie das Tool wieder verwenden."
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3396106925"] = "Dieser Chat enthält eine Vorbereitung des BeyondFacts Labs, die womöglich unveröffentlicht ist. Daher liest er nur Webseiten, deren Adressen im Chat stehen. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. Das Lab sucht in einer eigenen Recherche im Web, die nur die öffentlichen Angaben zur Veranstaltung erhält. In einem neuen Chat ohne diese Inhalte lässt es sich wieder verwenden."
 
 -- This chat holds internal content, read while a chat was restricted to '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T348053469"] = "Dieser Chat enthält interne Inhalte, die gelesen wurden, als ein Chat auf „{0}“ beschränkt war. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat ohne diese Inhalte lässt es sich wieder verwenden."
