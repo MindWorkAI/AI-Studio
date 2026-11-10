@@ -39,3 +39,7 @@ Lucide is licensed under the [ISC License](https://github.com/lucide-icons/lucid
 2. Copy the three files from `package/` to the places in the table above.
 3. Change the version at the top of this file.
 4. Build the app and run the tests.
+5. A few places show Lucide icons as images, where no web font works, and hold copies of their SVG files from `package/icons/`. Check whether these icons changed in the new version, and take them anew if so:
+   - `cpu-ai` and `server` in `wwwroot/images/provider-icons/`, see the README there,
+   - `blocks` as the default icon of plugins, `DEFAULT_ICON_SVG` in `Tools/PluginSystem/PluginBase.Icon.cs`,
+   - `settings` in the `icon.lua` of `Plugins/assistants/` and `Plugins/configuration/`.
