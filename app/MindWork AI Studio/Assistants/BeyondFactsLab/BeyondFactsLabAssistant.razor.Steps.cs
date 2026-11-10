@@ -59,11 +59,28 @@ public partial class BeyondFactsLabAssistant
     /// Starts the research once the person confirmed the event details, on every topic without one and on every topic
     /// whose public details changed since, and tells the person.
     /// </summary>
+    /// <remarks>
+    /// Nothing starts for an event which is not public, nor while the work state suggests whether the event is public
+    /// and the person has not decided yet; the person hears why. Taking over the suggestion changes the details, so
+    /// that the person confirms the work state again, and the research starts then if the event is public.
+    /// </remarks>
     /// <param name="step">The step whose work state the person confirmed.</param>
     private async Task WorkStateConfirmedAsync(BflStep step)
     {
         if (step is not BflStep.FRAMEWORK || this.selectedProject?.Project is not { } project || this.ValidateProvider(this.providerSettings) is not null)
             return;
+
+        if (BflEventVisibility.IsNotPublic(this.forms))
+        {
+            await this.MessageBus.SendInfo(new(Icons.Material.Filled.PublicOff, BflEventVisibility.NotPublicMessage));
+            return;
+        }
+
+        if (BflEventVisibility.IsSuggestionPending(this.workStates, this.forms))
+        {
+            await this.MessageBus.SendInfo(new(Icons.Material.Filled.TravelExplore, string.Format(TA("The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'."), BflStep.STRATEGY.Title)));
+            return;
+        }
 
         var started = await this.ResearchRunner.StartWhenDueAsync(project.ProjectId, this.providerSettings, this.forms);
         if (started.Count > 0)

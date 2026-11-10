@@ -47,7 +47,7 @@ public static class BflPromptComposer
         [BflPromptTemplate.STEP] = parts.Step.Trim(),
         [BflPromptTemplate.MATERIALS] = Materials(materials),
         [BflPromptTemplate.TOOLS] = BflToolStatus.ForStep(tools ?? NO_TOOLS).Trim(),
-        [BflPromptTemplate.RESEARCH] = Research(step, research ?? new Dictionary<BflResearchTopic, BflResearch>(), PublicDetailsOf(forms)),
+        [BflPromptTemplate.RESEARCH] = Research(step, research ?? new Dictionary<BflResearchTopic, BflResearch>(), forms),
         [BflPromptTemplate.WORK_STATES] = WorkStates(step, workStates ?? new Dictionary<BflStep, BflWorkState>(), forms),
         [BflPromptTemplate.DETAILS] = Details(step, forms),
         [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms)
@@ -150,16 +150,21 @@ public static class BflPromptComposer
     /// The other steps leave the research out: what the person takes over from it, such as the participants, reaches
     /// them through the confirmed work state of the step "Strategy". A research whose public details changed since is
     /// marked, so that the model checks it with the person. The research comes in the order of its topics, each with
-    /// the day it was done.
+    /// the day it was done. For an event which is not public, an earlier research no longer counts: the person said
+    /// that its details are not public, see BflEventVisibility.
     /// </remarks>
     /// <param name="step">The step the chat belongs to.</param>
     /// <param name="research">The research of the preparation, by its topics.</param>
-    /// <param name="details">The public details about the event as they are now.</param>
-    private static string Research(BflStep step, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, IReadOnlyList<BflResearchDetail> details)
+    /// <param name="forms">The forms of the preparation, by their steps.</param>
+    private static string Research(BflStep step, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
     {
         if (step is not BflStep.STRATEGY)
             return "Die Recherche nutzt der Schritt „Strategie“. Was die Person daraus übernimmt, steht in dessen bestätigtem Arbeitsstand.";
 
+        if (BflEventVisibility.IsNotPublic(forms))
+            return "Die Veranstaltung ist nicht öffentlich. Deshalb recherchiert das Lab nicht im Web, und es gibt keine Recherche.";
+
+        var details = PublicDetailsOf(forms);
         var text = new StringBuilder();
         foreach (var topic in BflResearchTopic.All)
         {

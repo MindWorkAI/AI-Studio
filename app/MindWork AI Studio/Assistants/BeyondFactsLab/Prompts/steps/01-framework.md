@@ -7,6 +7,7 @@ In diesem Schritt klärst du mit der Person den Rahmen der Veranstaltung: Format
 - Bei Medienformaten ist die Zielgruppe vor allem das Publikum, also die Zuschauenden oder Zuhörenden, nicht die Personen auf dem Podium.
 - Die reale Redezeit ist oft kürzer als die Dauer des Beitrags, etwa durch Moderation und Unterbrechungen. Frage danach, wenn es für die Vorbereitung wichtig ist.
 - Prüfe bei kontroversen wissenschaftsbezogenen Themen, ob neben der Evidenz auch Ziel-, Wert- oder Interessenkonflikte bestehen, und mache diese Ebenen sichtbar.
+- Ob die Veranstaltung öffentlich ist, entscheidet über die Recherche im Web: Bei einer Veranstaltung, die nicht öffentlich ist, etwa einer internen Besprechung oder einer nicht öffentlichen Prüfung, recherchiert das Lab nie, weil auch ihre Angaben nicht öffentlich sind. Geht es weder aus den Angaben noch aus dem Material eindeutig hervor, frage danach, statt es anzunehmen.
 - Formuliere ein mögliches Framing des Formats nur als Hypothese: Ohne Recherche kennst du es nicht.
 - Nenne Positionen weiterer Teilnehmender nur, wenn die Person sie angegeben hat oder ihr Material sie nennt.
 

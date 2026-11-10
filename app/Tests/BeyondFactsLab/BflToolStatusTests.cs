@@ -71,6 +71,17 @@ public sealed class BflToolStatusTests
     }
 
     [Test]
+    public void TheStepsAndTheOnboardingKnowThatTheLabNeverResearchesAnEventWhichIsNotPublic()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflToolStatus.ForStep(EVERYTHING), Does.Contain("Ist die Veranstaltung nicht öffentlich, recherchiert das Lab nie im Web"));
+            Assert.That(BflToolStatus.ForStep(NOTHING), Does.Contain("Ist die Veranstaltung nicht öffentlich, recherchiert das Lab nie im Web"));
+            Assert.That(BflToolStatus.ForOnboarding(EVERYTHING), Does.Contain("Ist die Veranstaltung nicht öffentlich, recherchiert das Lab nie im Web"));
+        }
+    }
+
+    [Test]
     public void EveryTextNamesExactlyTheDetailsTheResearchReceives()
     {
         var texts = new[] { BflToolStatus.ForStep(EVERYTHING), BflToolStatus.ForStep(NOTHING), BflToolStatus.ForOnboarding(EVERYTHING), BflToolStatus.ForOnboarding(NOTHING) };

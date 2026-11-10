@@ -13,7 +13,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// <remarks>
 /// The agents work in BflResearchRunner, so that the research goes on while the person looks elsewhere; the area reads
 /// the research again whenever the runner says one changed. Above all, the area tells the person which details the
-/// research receives, and that nothing else of the preparation reaches a search.
+/// research receives, and that nothing else of the preparation reaches a search. For an event which is not public, it
+/// shows neither the research nor a way to start it, see BflEventVisibility.
 /// </remarks>
 public partial class BflResearchPanel : MSGComponentBase
 {
@@ -81,9 +82,14 @@ public partial class BflResearchPanel : MSGComponentBase
     private IReadOnlyList<BflResearchDetail> PublicDetails => BflPromptComposer.PublicDetailsOf(this.Forms);
 
     /// <summary>
+    /// Gets whether the person said that the event is not public, so that the lab never researches it.
+    /// </summary>
+    private bool IsNotPublic => BflEventVisibility.IsNotPublic(this.Forms);
+
+    /// <summary>
     /// Gets whether the person can start a research right now.
     /// </summary>
-    private bool CanStart => this.ProviderIssue is null && this.availability is { CanResearch: true } && this.PublicDetails.Count > 0;
+    private bool CanStart => !this.IsNotPublic && this.ProviderIssue is null && this.availability is { CanResearch: true } && this.PublicDetails.Count > 0;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()

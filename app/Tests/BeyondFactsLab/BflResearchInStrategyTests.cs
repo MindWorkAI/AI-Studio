@@ -68,6 +68,38 @@ public sealed class BflResearchInStrategyTests
     }
 
     [Test]
+    public void ForAnEventWhichIsNotPublicTheStepLearnsThatThereIsNoResearch()
+    {
+        var forms = Forms("Klimapolitik");
+        var research = Research(forms, BflResearchTopic.PARTICIPANTS, "## Teilnehmende\n\n### Person A");
+        forms[BflStep.FRAMEWORK].Set(BflFieldCatalog.EVENT_VISIBILITY, BflFieldCatalog.EVENT_NOT_PUBLIC);
+
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.STRATEGY, forms, [], "Deutsch", null, null, research);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain("nicht öffentlich"));
+            Assert.That(prompt, Does.Not.Contain("Person A"), "An earlier research no longer counts once the person said that the event is not public.");
+        }
+    }
+
+    [Test]
+    public void ForAPublicEventTheStepGetsTheResearch()
+    {
+        var forms = Forms("Klimapolitik");
+        var research = Research(forms, BflResearchTopic.PARTICIPANTS, "## Teilnehmende\n\n### Person A");
+        forms[BflStep.FRAMEWORK].Set(BflFieldCatalog.EVENT_VISIBILITY, BflFieldCatalog.EVENT_PUBLIC);
+
+        var prompt = BflPromptComposer.Compose(PARTS, BflStep.STRATEGY, forms, [], "Deutsch", null, null, research);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain("### Person A"));
+            Assert.That(prompt, Does.Not.Contain("haben sich seit dieser Recherche geändert"), "Whether the event is public is no detail which the research receives.");
+        }
+    }
+
+    [Test]
     public void WithoutResearchTheStepLearnsThatThereIsNone()
     {
         var prompt = BflPromptComposer.Compose(PARTS, BflStep.STRATEGY, Forms("Klimapolitik"), [], "Deutsch");

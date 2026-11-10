@@ -54,6 +54,12 @@ public partial class BflStepForm : MSGComponentBase
     private bool HasPublicDetails => this.Fields.Any(definition => definition.IsSharedWithResearch);
 
     /// <summary>
+    /// Gets whether the form holds the event details and says that the event is not public, so that no detail reaches
+    /// the research, see BflEventVisibility.
+    /// </summary>
+    private bool IsEventNotPublic => this.Step is BflStep.FRAMEWORK && BflEventVisibility.IsNotPublic(this.Form);
+
+    /// <summary>
     /// Gets what a screen reader announces for the symbol of a public detail.
     /// </summary>
     private string PublicDetailLabel => T("Public detail: the research of the lab receives it");

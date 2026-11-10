@@ -91,9 +91,9 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
     /// person confirmed the event details.
     /// </summary>
     /// <remarks>
-    /// It starts nothing and tells nothing while the research cannot search the web, or while the person entered no
-    /// public detail yet: then the area "Research" says why. It returns once the agents started, not when they are
-    /// done; what goes wrong in their work is reported through the message bus.
+    /// It starts nothing and tells nothing while the event is not public, while the research cannot search the web, or
+    /// while the person entered no public detail yet: then the area "Research" says why. It returns once the agents
+    /// started, not when they are done; what goes wrong in their work is reported through the message bus.
     /// </remarks>
     /// <param name="projectId">The ID of the preparation.</param>
     /// <param name="provider">The provider of the preparation.</param>
@@ -102,7 +102,7 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
     public async Task<IReadOnlyList<BflResearchTopic>> StartWhenDueAsync(Guid projectId, AIStudio.Settings.Provider provider, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
     {
         var details = BflPromptComposer.PublicDetailsOf(forms);
-        if (details.Count is 0 || !(await this.CheckAvailabilityAsync(provider)).CanResearch)
+        if (BflEventVisibility.IsNotPublic(forms) || details.Count is 0 || !(await this.CheckAvailabilityAsync(provider)).CanResearch)
             return [];
 
         var topics = TopicsDue(await store.LoadAllResearchAsync(projectId), details).Where(topic => !this.IsRunning(new BflResearchLocation(projectId, topic))).ToList();
@@ -153,7 +153,15 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
         var status = AssistantSessionStatus.FAILED;
         try
         {
-            var details = BflPromptComposer.PublicDetailsOf(await store.LoadFormsAsync(location.ProjectId));
+            // The forms on disk decide, since the person may have changed them since the research was asked for:
+            var forms = await store.LoadFormsAsync(location.ProjectId);
+            if (BflEventVisibility.IsNotPublic(forms))
+            {
+                await messageBus.SendError(new(Icons.Material.Filled.PublicOff, BflEventVisibility.NotPublicMessage));
+                return;
+            }
+
+            var details = BflPromptComposer.PublicDetailsOf(forms);
             if (details.Count is 0)
             {
                 await messageBus.SendError(new(Icons.Material.Filled.TravelExplore, string.Format(TA("Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."), BflStep.FRAMEWORK.Title)));

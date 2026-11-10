@@ -13,6 +13,11 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 public static class BflToolStatus
 {
     /// <summary>
+    /// Tells the model that the lab never researches an event which is not public, and where the person says so.
+    /// </summary>
+    private const string NOT_PUBLIC = "Ist die Veranstaltung nicht öffentlich, recherchiert das Lab nie im Web, weil auch ihre Angaben nicht öffentlich sind; das gibt die Person in ihren Angaben zu den Rahmendaten an.";
+
+    /// <summary>
     /// Describes what the chat of a step can do on the web.
     /// </summary>
     /// <param name="availability">What keeps the tools of the lab from being offered with the provider of the preparation.</param>
@@ -26,7 +31,7 @@ public static class BflToolStatus
         return $"""
                 {readWebPage}
 
-                Im Web suchen kannst du in diesem Gespräch nie. Es kennt die ganze Vorbereitung, auch Unveröffentlichtes. Deshalb sucht nur die Recherche des Labs im Web: eigene Recherche-Agenten, die ausschließlich die öffentlichen Angaben zur Veranstaltung erhalten ({PublicFields()}). Alle anderen Angaben, das Material, die Arbeitsstände und die Gespräche erreichen sie nie. Die Person startet die Recherche im Schritt „Strategie“. {ResearchStatus(availability)}
+                Im Web suchen kannst du in diesem Gespräch nie. Es kennt die ganze Vorbereitung, auch Unveröffentlichtes. Deshalb sucht nur die Recherche des Labs im Web: eigene Recherche-Agenten, die ausschließlich die öffentlichen Angaben zur Veranstaltung erhalten ({PublicFields()}). Alle anderen Angaben, das Material, die Arbeitsstände und die Gespräche erreichen sie nie. Die Person startet die Recherche im Schritt „Strategie“. {NOT_PUBLIC} {ResearchStatus(availability)}
 
                 Erfinde keine aktuellen Positionen, Aussagen oder Zitate von Personen und keine fehlenden Angaben zur Veranstaltung. Was weder die Angaben, das Material, die Recherche noch eine gelesene Seite belegt, halte als offenen Punkt fest, den die Person prüfen kann.
                 """;
@@ -40,7 +45,7 @@ public static class BflToolStatus
     public static string ForOnboarding(BflResearchAvailability availability)
     {
         var research = availability.CanResearch
-            ? $"Mit der aktuellen Einrichtung und dem hier gewählten Anbieter kann das Lab im Web recherchieren. Im Schritt „Strategie“ recherchieren eigene Recherche-Agenten die Veranstaltung, ihre Teilnehmenden sowie die öffentliche Debatte und das Framing zum Thema. Sie erhalten ausschließlich die öffentlichen Angaben zur Veranstaltung ({PublicFields()}). Alle anderen Angaben, das Material, die Arbeitsstände und die Gespräche bleiben in der Vorbereitung und erreichen keine Suche."
+            ? $"Mit der aktuellen Einrichtung und dem hier gewählten Anbieter kann das Lab im Web recherchieren. Im Schritt „Strategie“ recherchieren eigene Recherche-Agenten die Veranstaltung, ihre Teilnehmenden sowie die öffentliche Debatte und das Framing zum Thema. Sie erhalten ausschließlich die öffentlichen Angaben zur Veranstaltung ({PublicFields()}). Alle anderen Angaben, das Material, die Arbeitsstände und die Gespräche bleiben in der Vorbereitung und erreichen keine Suche. {NOT_PUBLIC}"
             : $"Mit der aktuellen Einrichtung und dem hier gewählten Anbieter kann das Lab nicht im Web recherchieren. {ReasonFor(availability.WebSearch)} Gibt es die Recherche, erhält sie ausschließlich die öffentlichen Angaben zur Veranstaltung ({PublicFields()}); alle anderen Angaben bleiben in der Vorbereitung.";
 
         var readWebPage = availability.ReadWebPage is ToolOfferBlockReason.NONE
