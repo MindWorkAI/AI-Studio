@@ -62,7 +62,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// Gets the folder whose files replace the prompts of the lab, or null while the person does not allow it. The
     /// setting counts anew for every request, so that switching it on or off shows in the next answer.
     /// </summary>
-    private string? PromptOverridesDirectory => BflPromptOverrides.ActiveDirectory(settingsManager.ConfigurationData.BeyondFactsLab, store.PromptOverridesDirectory);
+    internal string? PromptOverridesDirectory =>BflPromptOverrides.ActiveDirectory(settingsManager.ConfigurationData.BeyondFactsLab, store.PromptOverridesDirectory);
 
     /// <summary>
     /// Happens whenever a chat changed: a message, a chunk of an answer, or the end of a request.
@@ -314,7 +314,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <returns>The system prompt and the images.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
     /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
-    private async Task<BflRequestMaterial> ComposeRequestAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
+    internal async Task<BflRequestMaterial> ComposeRequestAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var addressForm = Tools.PluginSystem.I18N.I.AddressForm;
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
@@ -322,10 +322,11 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         {
             case BflStepThreadLocation stepLocation:
                 var forms = await store.LoadFormsAsync(stepLocation.ProjectId);
+                var workStates = await store.LoadWorkStatesAsync(stepLocation.ProjectId);
                 var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm, this.PromptOverridesDirectory);
-                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, language, provider);
+                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, language, provider);
                 var materials = await this.ReadMaterialsAsync(stepLocation.ProjectId, shares);
-                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language), this.ImagesOf(stepLocation.ProjectId, shares));
+                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates), this.ImagesOf(stepLocation.ProjectId, shares));
 
             case BflOnboardingThreadLocation:
                 return new(BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm, this.PromptOverridesDirectory), language), []);
@@ -426,8 +427,9 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     {
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
         var forms = await store.LoadFormsAsync(location.ProjectId);
+        var workStates = await store.LoadWorkStatesAsync(location.ProjectId);
         var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm, this.PromptOverridesDirectory);
-        return await this.ShareMaterialsAsync(location, parts, forms, language, provider);
+        return await this.ShareMaterialsAsync(location, parts, forms, workStates, language, provider);
     }
 
     /// <summary>
@@ -437,10 +439,11 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <param name="location">The step.</param>
     /// <param name="parts">The texts of the prompt of the step.</param>
     /// <param name="forms">The forms of the preparation.</param>
+    /// <param name="workStates">The work states of the preparation, whose confirmed ones take room in the prompt as well.</param>
     /// <param name="language">The name of the language the model answers in.</param>
     /// <param name="provider">The provider which answers.</param>
     /// <returns>The share of each material this version can open, in the order the person added them.</returns>
-    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, string language, AIStudio.Settings.Provider provider)
+    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, string language, AIStudio.Settings.Provider provider)
     {
         var materials = (await store.ListMaterialsAsync(location.ProjectId)).Select(entry => entry.Material).OfType<BflMaterial>().ToList();
         if (materials.Count is 0)
@@ -449,7 +452,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         var imageShares = BflMaterialBudget.ShareImages([.. materials.Where(material => material.Kind is BflMaterialKind.IMAGE)], ImagesTheModelTakes(provider));
         var sentImages = imageShares.Count(share => share.Image is BflImageDelivery.SENT);
 
-        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language);
+        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates);
         var characters = BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length, sentImages);
         var textShares = BflMaterialBudget.Share([.. materials.Where(material => material.Kind is not BflMaterialKind.IMAGE)], characters);
 
@@ -497,7 +500,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <param name="thread">The chat.</param>
     /// <param name="provider">The provider.</param>
     /// <returns>True when the provider may answer.</returns>
-    private async Task<bool> CheckProviderAsync(BflThreadLocation location, ChatThread thread, AIStudio.Settings.Provider provider)
+    internal async Task<bool> CheckProviderAsync(BflThreadLocation location, ChatThread thread, AIStudio.Settings.Provider provider)
     {
         string? reason = null;
         if (provider.UsedLLMProvider is LLMProviders.NONE)

@@ -48,6 +48,21 @@ public static partial class BflPromptTemplate
     public const string MISSING_DETAILS = "MISSING_DETAILS";
 
     /// <summary>
+    /// The work states the person confirmed.
+    /// </summary>
+    public const string WORK_STATES = "WORK_STATES";
+
+    /// <summary>
+    /// The sections of the work state the model writes.
+    /// </summary>
+    public const string SECTIONS = "SECTIONS";
+
+    /// <summary>
+    /// The empty fields of the form for which the model may suggest values.
+    /// </summary>
+    public const string FIELDS = "FIELDS";
+
+    /// <summary>
     /// Fills every placeholder of a template.
     /// </summary>
     /// <param name="template">The template.</param>

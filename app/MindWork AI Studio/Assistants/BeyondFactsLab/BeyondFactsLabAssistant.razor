@@ -115,7 +115,7 @@
                         <ChildContent>
                             @foreach (var step in BflStep.All)
                             {
-                                <MudStep @key="step" Title="@step.Title" SecondaryText="@this.StepSecondaryText(step)"/>
+                                <MudStep @key="step" Title="@step.Title" SecondaryText="@this.StepSecondaryText(step)" Completed="@this.IsStepCompleted(step)"/>
                             }
                         </ChildContent>
                     </MudStepperWithoutActions>
@@ -147,11 +147,20 @@
                                 }
 
                                 <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+
+                                <BflWorkStatePanel Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))"
+                                                   WorkStates="@this.workStates"
+                                                   Forms="@this.forms"
+                                                   FormChanged="@(() => this.SaveFormAsync(this.activeStep))"
+                                                   WorkStateStored="@this.WorkStateStoredAsync"
+                                                   Provider="@this.providerSettings"
+                                                   ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
                             </div>
                         </MudItem>
                         <MudItem xs="12" lg="4">
                             <div class="bfl-material-column">
                                 <BflMaterials ProjectId="@project.ProjectId" Step="@this.activeStep" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                                <BflConfirmedWorkStates WorkStates="@this.workStates" Forms="@this.forms" Class="mt-3"/>
                             </div>
                         </MudItem>
                     </MudGrid>

@@ -36,6 +36,11 @@ public static class BflPromptLibrary
     public const string ONBOARDING_PATH = FOLDER + "/Prompts/onboarding.md";
 
     /// <summary>
+    /// The request which lets the model write the work state of a step, at the end of the conversation of the step.
+    /// </summary>
+    public const string WORK_STATE_PATH = FOLDER + "/Prompts/work-state.md";
+
+    /// <summary>
     /// The instruction to address the person formally.
     /// </summary>
     private const string ADDRESS_FORMAL_PATH = FOLDER + "/Prompts/snippets/address-formal.md";
@@ -55,7 +60,8 @@ public static class BflPromptLibrary
         BflPromptTemplate.STEP,
         BflPromptTemplate.MATERIALS,
         BflPromptTemplate.DETAILS,
-        BflPromptTemplate.MISSING_DETAILS);
+        BflPromptTemplate.MISSING_DETAILS,
+        BflPromptTemplate.WORK_STATES);
 
     /// <summary>
     /// The placeholders BflPromptComposer fills in the prompt of the onboarding.
@@ -63,6 +69,13 @@ public static class BflPromptLibrary
     private static readonly FrozenSet<string> ONBOARDING_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
         BflPromptTemplate.RESPONSE_LANGUAGE,
         BflPromptTemplate.ADDRESS_FORM);
+
+    /// <summary>
+    /// The placeholders BflPromptComposer fills in the request for a work state.
+    /// </summary>
+    private static readonly FrozenSet<string> WORK_STATE_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
+        BflPromptTemplate.SECTIONS,
+        BflPromptTemplate.FIELDS);
 
     /// <summary>
     /// The placeholders of every other file: none, because BflPromptComposer inserts these files as values.
@@ -89,6 +102,7 @@ public static class BflPromptLibrary
         CORE_PATH,
         KNOWLEDGE_PATH,
         ONBOARDING_PATH,
+        WORK_STATE_PATH,
         ..Enum.GetValues<AddressForm>().Select(AddressPath).Distinct(),
         ..BflStep.All.Select(StepPath)
     ];
@@ -104,14 +118,16 @@ public static class BflPromptLibrary
     /// Gets the placeholders a file of the lab's prompts may contain.
     /// </summary>
     /// <remarks>
-    /// BflPromptComposer fills placeholders in the core and in the prompt of the onboarding only. It inserts every
-    /// other file as a value, whose placeholders it leaves as they are, so that they would reach the model as text.
+    /// BflPromptComposer fills placeholders in the core, in the prompt of the onboarding, and in the request for a work
+    /// state only. It inserts every other file as a value, whose placeholders it leaves as they are, so that they would
+    /// reach the model as text.
     /// </remarks>
     /// <param name="path">The file, one of the paths of this class.</param>
     public static IReadOnlySet<string> PlaceholdersOf(string path) => path switch
     {
         CORE_PATH => CORE_PLACEHOLDERS,
         ONBOARDING_PATH => ONBOARDING_PLACEHOLDERS,
+        WORK_STATE_PATH => WORK_STATE_PLACEHOLDERS,
         _ => NO_PLACEHOLDERS
     };
 

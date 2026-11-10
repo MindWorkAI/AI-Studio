@@ -804,6 +804,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- The event has taken place
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2842348392"] = "The event has taken place"
 
+-- Details changed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2850533805"] = "Details changed"
+
 -- Working with the lab
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3113015696"] = "Working with the lab"
 
@@ -872,6 +875,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- Details missing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T506453229"] = "Details missing"
+
+-- Outdated
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T724820205"] = "Outdated"
 
 -- New preparation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T851005164"] = "New preparation"
@@ -971,6 +977,27 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295"] = "
 
 -- This conversation fills most of the context window of the model. Soon, you will have to start it over.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295::INFORMAL"] = "This conversation fills most of the context window of the model. Soon, you will have to start it over."
+
+-- Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T281612290"] = "Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps."
+
+-- Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T281612290::INFORMAL"] = "Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps."
+
+-- {0} (outdated)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T3518457056"] = "{0} (outdated)"
+
+-- The lab builds on these in the later steps.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T4134187947"] = "The lab builds on these in the later steps."
+
+-- The lab builds on these in the later steps.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T4134187947::INFORMAL"] = "The lab builds on these in the later steps."
+
+-- Work states confirmed by you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T519160943"] = "Work states confirmed by you"
+
+-- Work states confirmed by you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T519160943::INFORMAL"] = "Work states confirmed by you"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
@@ -1278,6 +1305,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3741175
 -- Not sure whether the lab fits your task? Ask it in 'Is the lab right for my task?'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3741175627::INFORMAL"] = "Not sure whether the lab fits your task? Ask it in 'Is the lab right for my task?'."
 
+-- Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3813171730"] = "Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one."
+
+-- Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3813171730::INFORMAL"] = "Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one."
+
 -- Uncertainties and the limits of your expertise stay visible.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3849094383"] = "Uncertainties and the limits of your expertise stay visible."
 
@@ -1559,6 +1592,225 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288"
 
 -- * The chat works best when you fill in these details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288::INFORMAL"] = "* The chat works best when you fill in these details."
+
+-- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
+
+-- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T1150375027::INFORMAL"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
+
+-- AI Studio could not create the work state. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T2585039199"] = "AI Studio could not create the work state. Please try again."
+
+-- AI Studio could not create the work state. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T2585039199::INFORMAL"] = "AI Studio could not create the work state. Please try again."
+
+-- The model did not write a work state the lab can read. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T2779149404"] = "The model did not write a work state the lab can read. Please try again, or try another provider."
+
+-- The model did not write a work state the lab can read. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T2779149404::INFORMAL"] = "The model did not write a work state the lab can read. Please try again, or try another provider."
+
+-- Stop
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T1266644741"] = "Stop"
+
+-- Work state
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T1276468085"] = "Work state"
+
+-- Create work state
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T1414970155"] = "Create work state"
+
+-- Discard draft
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2273967454"] = "Discard draft"
+
+-- Confirm again
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2512319863"] = "Confirm again"
+
+-- The lab writes the work state from the conversation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2528433708"] = "The lab writes the work state from the conversation"
+
+-- Draft, not confirmed yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2553562678"] = "Draft, not confirmed yet"
+
+-- You changed your details in this step since you confirmed the work state. Please check whether it still fits, and confirm it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2584424221"] = "You changed your details in this step since you confirmed the work state. Please check whether it still fits, and confirm it again."
+
+-- You changed your details in this step since you confirmed the work state. Please check whether it still fits, and confirm it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2584424221::INFORMAL"] = "You changed your details in this step since you confirmed the work state. Please check whether it still fits, and confirm it again."
+
+-- Confirm
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2709768687"] = "Confirm"
+
+-- You confirmed this work state on {0}. The lab builds on it in the later steps.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2988765196"] = "You confirmed this work state on {0}. The lab builds on it in the later steps."
+
+-- You confirmed this work state on {0}. The lab builds on it in the later steps.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T2988765196::INFORMAL"] = "You confirmed this work state on {0}. The lab builds on it in the later steps."
+
+-- The work state of an earlier step changed since you confirmed this one. Please check whether it still fits, and confirm it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3077450290"] = "The work state of an earlier step changed since you confirmed this one. Please check whether it still fits, and confirm it again."
+
+-- The work state of an earlier step changed since you confirmed this one. Please check whether it still fits, and confirm it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3077450290::INFORMAL"] = "The work state of an earlier step changed since you confirmed this one. Please check whether it still fits, and confirm it again."
+
+-- Suggestions for your details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3210808530"] = "Suggestions for your details"
+
+-- Suggestions for your details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3210808530::INFORMAL"] = "Suggestions for your details"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3267849393"] = "Edit"
+
+-- Create anew
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3560413436"] = "Create anew"
+
+-- The lab found values for empty fields of your details. Take over what fits; your details stay as they are until then.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3706312341"] = "The lab found values for empty fields of your details. Take over what fits; your details stay as they are until then."
+
+-- The lab found values for empty fields of your details. Take over what fits; your details stay as they are until then.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3706312341::INFORMAL"] = "The lab found values for empty fields of your details. Take over what fits; your details stay as they are until then."
+
+-- Take over
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T3967633552"] = "Take over"
+
+-- AI Studio could not save the work state. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T4108327582"] = "AI Studio could not save the work state. Please try again."
+
+-- AI Studio could not save the work state. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T4108327582::INFORMAL"] = "AI Studio could not save the work state. Please try again."
+
+-- Withdraw
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T498756791"] = "Withdraw"
+
+-- AI Studio cannot open the work state of this step. Its file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T525089541"] = "AI Studio cannot open the work state of this step. Its file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged."
+
+-- AI Studio cannot open the work state of this step. Its file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T525089541::INFORMAL"] = "AI Studio cannot open the work state of this step. Its file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged."
+
+-- Dismiss
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T643372531"] = "Dismiss"
+
+-- Work state confirmed by you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T721492302"] = "Work state confirmed by you"
+
+-- Work state confirmed by you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T721492302::INFORMAL"] = "Work state confirmed by you"
+
+-- The work state records what this step yielded. The lab writes a draft from the conversation, which you check and edit. Once you confirm it, the lab builds on it in the later steps. You can change it afterward.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T779198560"] = "The work state records what this step yielded. The lab writes a draft from the conversation, which you check and edit. Once you confirm it, the lab builds on it in the later steps. You can change it afterward."
+
+-- The work state records what this step yielded. The lab writes a draft from the conversation, which you check and edit. Once you confirm it, the lab builds on it in the later steps. You can change it afterward.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T779198560::INFORMAL"] = "The work state records what this step yielded. The lab writes a draft from the conversation, which you check and edit. Once you confirm it, the lab builds on it in the later steps. You can change it afterward."
+
+-- Controversies in the field
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1036905365"] = "Controversies in the field"
+
+-- Hardest questions and approaches to answers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1149889718"] = "Hardest questions and approaches to answers"
+
+-- Changes in position
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1238570720"] = "Changes in position"
+
+-- Kept
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1329651321"] = "Kept"
+
+-- Framing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1427246449"] = "Framing"
+
+-- Personal involvement
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1599460832"] = "Personal involvement"
+
+-- Weak points and possible criticism
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T171664019"] = "Weak points and possible criticism"
+
+-- Limits of the expertise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T17784202"] = "Limits of the expertise"
+
+-- Counterarguments
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1960146633"] = "Counterarguments"
+
+-- Possible key messages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2021993591"] = "Possible key messages"
+
+-- Uncertainties and limits
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2031839434"] = "Uncertainties and limits"
+
+-- Left open
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2075304984"] = "Left open"
+
+-- Established findings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2296519357"] = "Established findings"
+
+-- Changed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2311397435"] = "Changed"
+
+-- Role
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2418769465"] = "Role"
+
+-- Value conflicts and trade-offs
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T257229999"] = "Value conflicts and trade-offs"
+
+-- Language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2591284123"] = "Language"
+
+-- Other participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T277557865"] = "Other participants"
+
+-- Possible lines of conflict
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2862635340"] = "Possible lines of conflict"
+
+-- Important values
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2989269189"] = "Important values"
+
+-- Goal of the contribution
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3269103626"] = "Goal of the contribution"
+
+-- Format and setting
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3337470659"] = "Format and setting"
+
+-- Consequences for position and communication
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3366128274"] = "Consequences for position and communication"
+
+-- Audience
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3506118019"] = "Audience"
+
+-- What already works well
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3632563563"] = "What already works well"
+
+-- Open points
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3650728928"] = "Open points"
+
+-- Dealing with worries
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3713722514"] = "Dealing with worries"
+
+-- Opening and structure
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T37339435"] = "Opening and structure"
+
+-- Key messages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3857422288"] = "Key messages"
+
+-- What to practice further
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3902621947"] = "What to practice further"
+
+-- Reasons
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T3934898046"] = "Reasons"
+
+-- Duration and speaking time
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T4159741551"] = "Duration and speaking time"
+
+-- Next steps
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T4251029163"] = "Next steps"
+
+-- Consequences for the appearance
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T483017975"] = "Consequences for the appearance"
+
+-- Making uncertainty visible
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T818217802"] = "Making uncertainty visible"
+
+-- Perspectives considered
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T83838968"] = "Perspectives considered"
 
 -- Extended bias poster
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1241605514"] = "Extended bias poster"

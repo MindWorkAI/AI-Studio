@@ -33,6 +33,9 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     private BflMaterialService MaterialService { get; init; } = null!;
 
     [Inject]
+    private BflWorkStateGenerator WorkStateGenerator { get; init; } = null!;
+
+    [Inject]
     private ILogger<BeyondFactsLabAssistant> Logger { get; init; } = null!;
 
     [Inject]
@@ -80,6 +83,7 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
 
         this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
         this.MaterialService.MaterialsChanged += this.OnMaterialsChangedAsync;
+        this.WorkStateGenerator.WorkStateChanged += this.OnWorkStateChangedAsync;
         this.mayOpen = true;
         await this.RunStoreActionAsync(() => this.ReloadProjectsAsync(null));
 
@@ -155,6 +159,7 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     protected override void DisposeResources()
     {
         this.MaterialService.MaterialsChanged -= this.OnMaterialsChangedAsync;
+        this.WorkStateGenerator.WorkStateChanged -= this.OnWorkStateChangedAsync;
         base.DisposeResources();
     }
 
