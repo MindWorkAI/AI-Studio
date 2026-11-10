@@ -152,9 +152,20 @@
                                                    WorkStates="@this.workStates"
                                                    Forms="@this.forms"
                                                    FormChanged="@(() => this.SaveFormAsync(this.activeStep))"
-                                                   WorkStateStored="@this.WorkStateStoredAsync"
+                                                   WorkStateStored="@this.ProjectStoredAsync"
                                                    Provider="@this.providerSettings"
                                                    ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+
+                                @if (this.activeStep is BflStep.RESULTS)
+                                {
+                                    <BflResults ProjectId="@project.ProjectId"
+                                                ProjectName="@project.Name"
+                                                WorkStates="@this.workStates"
+                                                Forms="@this.forms"
+                                                ResultStored="@this.ProjectStoredAsync"
+                                                Provider="@this.providerSettings"
+                                                ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                                }
                             </div>
                         </MudItem>
                         <MudItem xs="12" lg="4">
