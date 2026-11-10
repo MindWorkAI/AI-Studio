@@ -56,6 +56,84 @@ public static class BflPromptComposer
     }).ReplaceLineEndings(LINE_BREAK.ToString());
 
     /// <summary>
+    /// Puts together the request which lets the model write the work state of a step, at the end of its conversation.
+    /// </summary>
+    /// <param name="template">The request with its placeholders, see BflPromptLibrary.WORK_STATE_PATH.</param>
+    /// <param name="step">The step whose work state the model writes.</param>
+    /// <param name="form">The form of the step, whose empty fields may get suggestions.</param>
+    /// <returns>The request.</returns>
+    /// <exception cref="FormatException">The request has a placeholder without a value.</exception>
+    public static string ComposeWorkStateRequest(string template, BflStep step, BflStepFormData form) => BflPromptTemplate.Fill(template, new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [BflPromptTemplate.SECTIONS] = WorkStateSections(step),
+        [BflPromptTemplate.FIELDS] = SuggestableFields(step, form)
+    }).ReplaceLineEndings(LINE_BREAK.ToString()).Trim();
+
+    /// <summary>
+    /// Puts together the request which asks the model once to correct the sections of a work state.
+    /// </summary>
+    /// <param name="problems">What is wrong with the sections, see BflWorkStateAnswer.Problems.</param>
+    /// <returns>The request.</returns>
+    public static string ComposeWorkStateRepairRequest(IReadOnlyList<string> problems)
+    {
+        var text = new StringBuilder("Das Lab konnte deinen Arbeitsstand nicht lesen:").Append(LINE_BREAK);
+        foreach (var problem in problems)
+            text.Append("- ").Append(problem).Append(LINE_BREAK);
+
+        return text.Append(LINE_BREAK).Append("Schreibe den Arbeitsstand noch einmal vollständig, mit allen Abschnitten in der verlangten Form, und sonst nichts.").ToString();
+    }
+
+    /// <summary>
+    /// Lists the sections of the work state of a step with their headings, as the model writes them.
+    /// </summary>
+    /// <param name="step">The step.</param>
+    private static string WorkStateSections(BflStep step)
+    {
+        var text = new StringBuilder();
+        foreach (var section in BflWorkStateSections.ForStep(step))
+        {
+            if (text.Length > 0)
+                text.Append(LINE_BREAK);
+
+            text.Append($"## [{section.Key}] {section.Title}").Append(LINE_BREAK);
+            text.Append(section.Description).Append(LINE_BREAK);
+        }
+
+        return text.ToString().TrimEnd();
+    }
+
+    /// <summary>
+    /// Lists the empty fields of the form of a step for which the model may suggest values.
+    /// </summary>
+    /// <param name="step">The step.</param>
+    /// <param name="form">The form of the step.</param>
+    private static string SuggestableFields(BflStep step, BflStepFormData form)
+    {
+        var fields = BflMarkdownSections.SuggestableFields(step, form);
+        if (fields.Count is 0)
+            return "Die Person hat alle Felder dieses Schritts ausgefüllt, für die du Werte vorschlagen könntest. Schreibe deshalb keine Vorschläge.";
+
+        var text = new StringBuilder();
+        text.Append("Die folgenden Felder im Formular „Ihre Angaben“ dieses Schritts sind noch leer. Ergibt sich der Wert eines Felds eindeutig aus dem Gespräch, den Angaben oder dem Material, schreibe ihn nach den Abschnitten unter eine eigene Überschrift, etwa „## [")
+            .Append(BflMarkdownSections.FIELD_PREFIX).Append(fields[0].Id).Append("] ").Append(fields[0].Label).Append("“. Lass jedes Feld weg, für das es keinen eindeutigen Wert gibt, und rate nie. Die Person übernimmt jeden Vorschlag selbst.").Append(LINE_BREAK).Append(LINE_BREAK);
+
+        foreach (var field in fields)
+        {
+            var kind = field.Kind switch
+            {
+                BflFieldKind.SINGLE_LINE => $"eine Zeile, höchstens {field.Kind.MaxLength} Zeichen",
+                BflFieldKind.LINK => "eine vollständige Webadresse, die mit https:// oder http:// beginnt",
+
+                _ => $"Text, höchstens {field.Kind.MaxLength} Zeichen",
+            };
+
+            text.Append($"- [{BflMarkdownSections.FIELD_PREFIX}{field.Id}] {field.Label} ({kind})").Append(LINE_BREAK);
+        }
+
+        return text.ToString().TrimEnd();
+    }
+
+    /// <summary>
     /// Lists the material of the preparation, each with its name and as much of its text as fits, or for an image,
     /// whether it goes along.
     /// </summary>

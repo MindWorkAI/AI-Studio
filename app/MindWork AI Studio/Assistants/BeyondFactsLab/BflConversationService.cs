@@ -62,7 +62,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// Gets the folder whose files replace the prompts of the lab, or null while the person does not allow it. The
     /// setting counts anew for every request, so that switching it on or off shows in the next answer.
     /// </summary>
-    private string? PromptOverridesDirectory => BflPromptOverrides.ActiveDirectory(settingsManager.ConfigurationData.BeyondFactsLab, store.PromptOverridesDirectory);
+    internal string? PromptOverridesDirectory =>BflPromptOverrides.ActiveDirectory(settingsManager.ConfigurationData.BeyondFactsLab, store.PromptOverridesDirectory);
 
     /// <summary>
     /// Happens whenever a chat changed: a message, a chunk of an answer, or the end of a request.
@@ -314,7 +314,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <returns>The system prompt and the images.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
     /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
-    private async Task<BflRequestMaterial> ComposeRequestAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
+    internal async Task<BflRequestMaterial> ComposeRequestAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var addressForm = Tools.PluginSystem.I18N.I.AddressForm;
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
@@ -497,7 +497,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <param name="thread">The chat.</param>
     /// <param name="provider">The provider.</param>
     /// <returns>True when the provider may answer.</returns>
-    private async Task<bool> CheckProviderAsync(BflThreadLocation location, ChatThread thread, AIStudio.Settings.Provider provider)
+    internal async Task<bool> CheckProviderAsync(BflThreadLocation location, ChatThread thread, AIStudio.Settings.Provider provider)
     {
         string? reason = null;
         if (provider.UsedLLMProvider is LLMProviders.NONE)

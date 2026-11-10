@@ -232,6 +232,7 @@ internal sealed class Program
         builder.Services.AddSingleton<IMediaTranscriptStorage, VisualBriefingTranscriptStorage>();
         builder.Services.AddSingleton<BeyondFactsLabStore>();
         builder.Services.AddSingleton<BflConversationService>();
+        builder.Services.AddSingleton<BflWorkStateGenerator>();
         builder.Services.AddSingleton<BflMaterialService>();
         builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
