@@ -1,0 +1,8 @@
+@inherits MSGComponentBase
+
+@if (this.usesPromptOverrides)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="@this.Class">
+        @TA("The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.")
+    </MudAlert>
+}

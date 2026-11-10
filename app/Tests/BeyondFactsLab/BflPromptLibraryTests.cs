@@ -56,6 +56,32 @@ public sealed class BflPromptLibraryTests
     }
 
     [Test]
+    public async Task EveryPromptUsesOnlyThePlaceholdersTheLabFillsInIt()
+    {
+        foreach (var path in BflPromptLibrary.AllPaths)
+            Assert.That(BflPromptTemplate.NamesIn(await BflPromptLibrary.ReadBuiltInAsync(path)), Is.SubsetOf(BflPromptLibrary.PlaceholdersOf(path)), path);
+    }
+
+    [Test]
+    public void TheComposerFillsEveryPlaceholderAPromptMayContain()
+    {
+        var core = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.CORE_PATH).Select(name => $"{{{{{name}}}}}"));
+        var onboarding = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.ONBOARDING_PATH).Select(name => $"{{{{{name}}}}}"));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflPromptComposer.Compose(new(core, "Leitfaden", "Schritt", "Anrede"), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch"), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.ComposeOnboarding(new(onboarding, "Anrede"), "Deutsch"), Does.Not.Contain("{{"));
+        }
+    }
+
+    [Test]
+    public void EveryPromptLiesInTheFolderOfTheLab()
+    {
+        Assert.That(BflPromptLibrary.AllPaths.Select(BflPromptLibrary.RelativePath), Is.Unique.And.All.Not.StartWith("/"));
+    }
+
+    [Test]
     public async Task AMissingPromptIsAnError()
     {
         await Assert.ThrowsAsync<FileNotFoundException>(async () => await BflPromptLibrary.ReadAsync("Assistants/BeyondFactsLab/Prompts/does-not-exist.md"));

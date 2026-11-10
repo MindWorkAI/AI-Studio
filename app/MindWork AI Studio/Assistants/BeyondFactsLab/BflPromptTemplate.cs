@@ -60,6 +60,13 @@ public static partial class BflPromptTemplate
         return values.TryGetValue(name, out var value) ? value : throw new FormatException($"The prompt has the placeholder '{name}', which has no value.");
     });
 
+    /// <summary>
+    /// Finds the placeholders of a template, as Fill reads them.
+    /// </summary>
+    /// <param name="template">The template.</param>
+    /// <returns>The name of each placeholder, once each, in the order they first appear.</returns>
+    public static IReadOnlyList<string> NamesIn(string template) => [.. PlaceholderPattern().Matches(template).Select(match => match.Groups["name"].Value).Distinct(StringComparer.Ordinal)];
+
     [GeneratedRegex(@"\{\{\s*(?<name>[^{}]*?)\s*\}\}")]
     private static partial Regex PlaceholderPattern();
 }

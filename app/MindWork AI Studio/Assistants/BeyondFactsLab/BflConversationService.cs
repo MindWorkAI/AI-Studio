@@ -59,6 +59,12 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     private readonly Lock runningLock = new();
 
     /// <summary>
+    /// Gets the folder whose files replace the prompts of the lab, or null while the person does not allow it. The
+    /// setting counts anew for every request, so that switching it on or off shows in the next answer.
+    /// </summary>
+    private string? PromptOverridesDirectory => BflPromptOverrides.ActiveDirectory(settingsManager.ConfigurationData.BeyondFactsLab, store.PromptOverridesDirectory);
+
+    /// <summary>
     /// Happens whenever a chat changed: a message, a chunk of an answer, or the end of a request.
     /// </summary>
     /// <remarks>
@@ -143,6 +149,12 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         try
         {
             requestMaterial = await this.ComposeRequestAsync(location, provider);
+        }
+        catch (BflPromptOverrideException exception)
+        {
+            logger.LogWarning(exception, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
+            await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."),exception.FileName, exception.Placeholder)));
+            return;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
@@ -286,6 +298,14 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => (await this.ComposeRequestAsync(location, provider)).SystemPrompt;
 
     /// <summary>
+    /// Checks whether files in the test folder replace prompts of the lab right now, so that the lab can tell the
+    /// person.
+    /// </summary>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>True while the setting allows prompt overrides and a file replaces a prompt with another text.</returns>
+    public async Task<bool> UsesPromptOverridesAsync(CancellationToken token = default) => this.PromptOverridesDirectory is { } directory && (await BflPromptOverrides.FindAsync(directory, token)).Count > 0;
+
+    /// <summary>
     /// Puts together what a request of a chat carries beside the conversation: the system prompt, and the images of
     /// the material the model may see.
     /// </summary>
@@ -302,13 +322,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         {
             case BflStepThreadLocation stepLocation:
                 var forms = await store.LoadFormsAsync(stepLocation.ProjectId);
-                var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm);
+                var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm, this.PromptOverridesDirectory);
                 var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, language, provider);
                 var materials = await this.ReadMaterialsAsync(stepLocation.ProjectId, shares);
                 return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language), this.ImagesOf(stepLocation.ProjectId, shares));
 
             case BflOnboardingThreadLocation:
-                return new(BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm), language), []);
+                return new(BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm, this.PromptOverridesDirectory), language), []);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(location), location, "The lab has no prompt for this chat.");
@@ -406,7 +426,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     {
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
         var forms = await store.LoadFormsAsync(location.ProjectId);
-        var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm);
+        var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm, this.PromptOverridesDirectory);
         return await this.ShareMaterialsAsync(location, parts, forms, language, provider);
     }
 

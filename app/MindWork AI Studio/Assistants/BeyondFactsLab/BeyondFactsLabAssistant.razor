@@ -128,6 +128,8 @@
                     <MudGrid Spacing="3">
                         <MudItem xs="12" lg="8">
                             <div @key="@this.activeStep" class="px-6">
+                                @* It checks the test folder anew for every step, as the key of the step recreates it: *@
+                                <BflPromptOverrideNotice Class="mt-2 mb-2"/>
                                 <MudText Typo="Typo.h5" Class="mt-2">@this.activeStep.Title</MudText>
                                 <MudText Typo="Typo.body2" Class="mb-4">@this.activeStep.Description</MudText>
 

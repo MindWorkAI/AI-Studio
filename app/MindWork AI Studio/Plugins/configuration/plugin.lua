@@ -1002,6 +1002,13 @@ CONFIG["SETTINGS"] = {}
 -- of the lab do not show it.
 -- Allowed values are: FORMAL, INFORMAL
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.AddressForm"] = "FORMAL"
+--
+-- Configure whether files in the folder for prompt overrides replace the prompts which come with the lab.
+-- The option serves the further development of the prompts, e.g., by the research team behind the lab.
+-- Preparing an appearance does not need it. Such files count as instructions of the users themselves,
+-- and the lab shows a banner while one of them replaces a prompt. Set it to false and lock it to keep
+-- users with the prompts which come with AI Studio.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.AllowPromptOverrides"] = false
 
 -- Configure defaults for the Assistant Builder.
 -- Preselection must be enabled for the remaining Assistant Builder settings to take effect.
