@@ -57,7 +57,7 @@ else
 @code {
     private protected override RenderFragment? HeaderActions => this.CanReviseCurrentAssistant
         ? @<MudTooltip Text="@T("Revise assistant")">
-              <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.AutoMode" OnClick="@(async () => await this.OpenRevisionDialogAsync())"/>
+              <MudIconButton Variant="Variant.Text" Icon="@AppIcons.REVISE_ASSISTANT" OnClick="@(async () => await this.OpenRevisionDialogAsync())"/>
           </MudTooltip>
         : null;
 
@@ -458,7 +458,7 @@ else
                             
                             @if (item.Type == "LINK")
                             {
-                                <MudListItem T="string" Icon="@Icons.Material.Filled.Link" IconColor="@iconColor" Target="_blank" Href="@item.Href">@item.Text</MudListItem>
+                                <MudListItem T="string" Icon="@AppIcons.LINK" IconColor="@iconColor" Target="_blank" Href="@item.Href">@item.Text</MudListItem>
                             }
                             else
                             {
