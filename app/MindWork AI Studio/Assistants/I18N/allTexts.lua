@@ -14182,6 +14182,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "The index of
 -- Scripts, styles, code, preformatted text, and embedded graphics stay as they are. Pages in an older encoding than UTF-8 may show wrong characters.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::HTML::HTMLSEGMENTFORMAT::T3194149578"] = "Scripts, styles, code, preformatted text, and embedded graphics stay as they are. Pages in an older encoding than UTF-8 may show wrong characters."
 
+-- Formulas, code, drawings, comments, and the preamble apart from the title stay as they are, as does text in commands which the document defines itself. The language settings, e.g., of babel or polyglossia, stay unchanged, and a language with another script may need further packages. Documents in an older encoding than UTF-8 may show wrong characters.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::LATEX::LATEXSEGMENTFORMAT::T426201132"] = "Formulas, code, drawings, comments, and the preamble apart from the title stay as they are, as does text in commands which the document defines itself. The language settings, e.g., of babel or polyglossia, stay unchanged, and a language with another script may need further packages. Documents in an older encoding than UTF-8 may show wrong characters."
+
 -- Code, formulas, link targets, and embedded HTML stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::MARKDOWNSEGMENTFORMAT::T4053772832"] = "Code, formulas, link targets, and embedded HTML stay as they are."
 

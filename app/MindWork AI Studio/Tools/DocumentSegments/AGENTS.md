@@ -94,6 +94,28 @@ replaces the words in the source by their positions and leaves the rest byte for
 - **A run whose nodes leave markup in between stays as it is.** HtmlAgilityPack fixes broken markup in its
   tree, not in the source; what the tree does not cover would otherwise go to the model as words.
 
+## LaTeX documents
+
+`Latex/LatexSegmentFormat` reads the paragraphs of the body, the texts of headings and captions, the labels of list
+items, the cells of tables, and the title in the preamble. Like Markdown, it replaces the words in the source by
+their positions and leaves the rest byte for byte. `LatexParser` reads only as much markup as the segments need: it
+expands no macro.
+
+- **Commands which mark up words are pairs, the rest is a tag of its own.** `LatexCommands` knows which commands
+  hold words, e.g., `\textbf` or `\footnote`, which start a segment of their own, e.g., `\section`, and which are
+  layout, e.g., `\label` or `\hline`, which stays outside of a segment at its edges. An unknown command stays as it
+  is, with the arguments right after it: a macro of the document may hold anything.
+- **Words travel decoded and come back encoded.** Escaped characters, accents such as `\"a`, and quotes such as
+  `\glqq` reach the model as the characters they stand for, a tilde as a non-breaking space. `LatexWords` escapes
+  the special characters of new words; within an optional argument, it puts closing brackets into braces.
+- **Markup which ends in a command gets an empty group.** TeX takes letters right after a command for part of its
+  name and drops the space after it, so the writer protects new words after such a tag.
+- **Formulas, code, and drawings stay as they are.** A formula within a paragraph is a tag of its own. Verbatim and
+  listing environments, TikZ pictures, and bibliographies stay out entirely, as does every paragraph whose markup
+  the parser cannot follow, e.g., a closing brace without an opening one.
+- **The language settings stay.** The format leaves babel or polyglossia alone: a document may switch between
+  languages on purpose, and another script may need packages which only its author can choose.
+
 ## Tests
 
 The tests in `app/Tests/Tools/DocumentSegments/` play the model with a delegate, so they run without a

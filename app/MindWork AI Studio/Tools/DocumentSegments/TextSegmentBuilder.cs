@@ -72,5 +72,6 @@ public sealed class TextSegmentBuilder
     /// </summary>
     /// <param name="start">Where the segment starts in the source.</param>
     /// <param name="end">Where the segment ends in the source, exclusive.</param>
-    public TextSegment Build(int start, int end) => new(start, end, new DocumentSegment(this.text.Build()), this.openings, this.closings, this.placeholders);
+    /// <param name="formatWords">Makes the words of this segment fit the format in place of what the writer gets; null for the writer's.</param>
+    public TextSegment Build(int start, int end, Func<string, string>? formatWords = null) => new(start, end, new DocumentSegment(this.text.Build()), this.openings, this.closings, this.placeholders, formatWords);
 }

@@ -19,7 +19,7 @@ public static class TextSegmentWriter
     /// <param name="source">The text of the document.</param>
     /// <param name="segments">The segments of the document, as the format reads them from this source, in the order of the document.</param>
     /// <param name="results">What became of the segments.</param>
-    /// <param name="formatWords">Makes words fit the format, e.g., removes line breaks a model wrote into a Markdown paragraph.</param>
+    /// <param name="formatWords">Makes words fit the format, e.g., removes line breaks a model wrote into a Markdown paragraph; a segment may bring its own, see TextSegment.FormatWords.</param>
     /// <param name="text">The text of the new document, or the source when the results do not cover it.</param>
     /// <returns>How the segments were written, or SOURCE_CHANGED when the results miss one of them.</returns>
     public static SegmentWriteResult Apply(string source, IReadOnlyList<TextSegment> segments, SegmentResults results, Func<string, string> formatWords, out string text)
@@ -59,6 +59,7 @@ public static class TextSegmentWriter
     /// <returns>Whether the tags of the new text fit those of the segment.</returns>
     private static bool Render(TextSegment segment, string newText, Func<string, string> formatWords, StringBuilder builder)
     {
+        formatWords = segment.FormatWords ?? formatWords;
         if (!TaggedText.TryRead(newText, out var taggedText, out _))
         {
             builder.Append(formatWords(TaggedText.RemoveTags(newText)));
