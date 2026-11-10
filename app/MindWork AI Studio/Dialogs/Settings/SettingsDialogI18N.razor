@@ -4,7 +4,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+            <MudIcon Icon="@AppIcons.ASSISTANT_LOCALIZATION" Class="mr-2" />
             @T("Assistant: Localization")
         </MudText>
     </TitleContent>
@@ -14,7 +14,7 @@
             <ConfigurationSelect OptionDescription="@T("Preselect the target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedTargetLanguage = selectedValue)" OptionHelp="@T("Which target language should be preselected?")"/>
             @if (this.SettingsManager.ConfigurationData.I18N.PreselectedTargetLanguage is CommonLanguages.OTHER)
             {
-                <ConfigurationText OptionDescription="@T("Preselect another target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.I18N.PreselectOtherLanguage = updatedText)"/>
+                <ConfigurationText OptionDescription="@T("Preselect another target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" Icon="@AppIcons.LANGUAGE" Text="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.I18N.PreselectOtherLanguage = updatedText)"/>
             }
             <ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedLanguagePluginId = selectedValue)" OptionHelp="@T("Select the language plugin used for comparision.")"/>
             <ConfigurationProviderSelection Component="Components.I18N_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedProvider = selectedValue)"/>

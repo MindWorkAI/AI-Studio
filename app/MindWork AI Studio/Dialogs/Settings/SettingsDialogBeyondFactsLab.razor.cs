@@ -79,7 +79,7 @@ public partial class SettingsDialogBeyondFactsLab : SettingsDialogBase
         catch (Exception exception)
         {
             this.Logger.LogWarning(exception, "Could not open the test folder of the BeyondFacts Lab.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.FolderOpen, T("Could not open the test folder.")));
+            await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, T("Could not open the test folder.")));
             return;
         }
 
@@ -87,7 +87,7 @@ public partial class SettingsDialogBeyondFactsLab : SettingsDialogBase
             return;
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.FolderOpen, string.Format(T("Could not open the test folder: {0}"), issue)));
+        await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, string.Format(T("Could not open the test folder: {0}"), issue)));
     }
 
     /// <summary>
@@ -100,14 +100,14 @@ public partial class SettingsDialogBeyondFactsLab : SettingsDialogBase
         try
         {
             var copied = await BflPromptOverrides.CopyBuiltInAsync(this.Store.PromptOverridesDirectory);
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.ContentCopy, copied is 0
+            await this.MessageBus.SendSuccess(new(AppIcons.COPY, copied is 0
                 ? T("The test folder holds every prompt already. AI Studio changed no file.")
                 : string.Format(T("Files copied into the test folder: {0}. Files which were there already stay as they are."), copied)));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             this.Logger.LogWarning(exception, "Could not copy the prompts of the BeyondFacts Lab into the test folder.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.ContentCopy, T("Could not copy the prompts into the test folder.")));
+            await this.MessageBus.SendError(new(AppIcons.COPY, T("Could not copy the prompts into the test folder.")));
         }
         finally
         {

@@ -2,7 +2,7 @@
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.h4" Class="d-inline-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Update" Size="Size.Large" Class="mr-3"/>
+            <MudIcon Icon="@AppIcons.APP_UPDATE" Size="Size.Large" Class="mr-3"/>
             @this.HeaderText
         </MudText>
         <MudMarkdown Value="@this.UpdateResponse.Changelog" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>

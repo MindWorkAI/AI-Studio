@@ -7,24 +7,24 @@
 
         <MudSimpleTable Dense="@true" Hover="@true" Bordered="@true" Striped="@true" Style="overflow-x: auto;">
             <tbody>
-                <InfoTableRow Icon="@Icons.Material.Filled.Description" Label="@T("Description")">
+                <InfoTableRow Icon="@AppIcons.DESCRIPTION" Label="@T("Description")">
                     <MudText Typo="Typo.body2">@this.Plugin.Description</MudText>
                 </InfoTableRow>
-                <InfoTableRow Icon="@Icons.Material.Filled.Extension" Label="@T("Type")">
+                <InfoTableRow Icon="@AppIcons.TYPE" Label="@T("Type")">
                     <MudText Typo="Typo.body2">@this.TypeText</MudText>
                 </InfoTableRow>
-                <InfoTableRow Icon="@Icons.Material.Filled.Tag" Label="@T("Version")">
+                <InfoTableRow Icon="@AppIcons.VERSION" Label="@T("Version")">
                     <MudText Typo="Typo.body2">@this.Plugin.Version</MudText>
                 </InfoTableRow>
-                <InfoTableRow Icon="@Icons.Material.Filled.EditCalendar" Label="@T("Last changed")">
+                <InfoTableRow Icon="@AppIcons.LAST_CHANGED" Label="@T("Last changed")">
                     <MudText Typo="Typo.body2">@this.LastChangedText</MudText>
                 </InfoTableRow>
-                <InfoTableRow Icon="@Icons.Material.Filled.People" Label="@T("Authors")">
+                <InfoTableRow Icon="@AppIcons.PEOPLE" Label="@T("Authors")">
                     <MudText Typo="Typo.body2">@this.AuthorsText</MudText>
                 </InfoTableRow>
                 @if (!string.IsNullOrWhiteSpace(this.Plugin.SupportContact))
                 {
-                    <InfoTableRow Icon="@Icons.Material.Filled.SupportAgent" Label="@T("Support contact")">
+                    <InfoTableRow Icon="@AppIcons.SUPPORT_CONTACT" Label="@T("Support contact")">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                             <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.SupportContactText</MudText>
                             <PluginLinkButton Url="@this.Plugin.SupportContact" Size="Size.Small"/>
@@ -40,13 +40,13 @@
                         </MudStack>
                     </InfoTableRow>
                 }
-                <InfoTableRow Icon="@Icons.Material.Filled.Category" Label="@T("Categories")">
+                <InfoTableRow Icon="@AppIcons.CATEGORY" Label="@T("Categories")">
                     <MudText Typo="Typo.body2">@this.CategoriesText</MudText>
                 </InfoTableRow>
-                <InfoTableRow Icon="@Icons.Material.Filled.Groups" Label="@T("Target groups")">
+                <InfoTableRow Icon="@AppIcons.AUDIENCE" Label="@T("Target groups")">
                     <MudText Typo="Typo.body2">@this.TargetGroupsText</MudText>
                 </InfoTableRow>
-                <InfoTableRow Icon="@Icons.Material.Filled.Fingerprint" Label="@T("Plugin ID")">
+                <InfoTableRow Icon="@AppIcons.IDENTIFIER" Label="@T("Plugin ID")">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                         <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.Plugin.Id</MudText>
                         <MudCopyClipboardButton StringContent="@this.Plugin.Id.ToString()" TooltipMessage="@T("Copies the plugin ID to the clipboard")"/>
@@ -54,7 +54,7 @@
                 </InfoTableRow>
                 @if (this.Plugin.IsManagedByConfigServer)
                 {
-                    <InfoTableRow Icon="@Icons.Material.Filled.Business" Label="@T("Origin")">
+                    <InfoTableRow Icon="@AppIcons.ORGANIZATION" Label="@T("Origin")">
                         <MudText Typo="Typo.body2">@T("Managed by your organization")</MudText>
                     </InfoTableRow>
                 }

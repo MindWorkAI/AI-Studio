@@ -354,9 +354,9 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private string GetTestResultIcon()
     {
         if (!this.connectionTested)
-            return Icons.Material.Outlined.HourglassEmpty;
+            return AppIcons.PENDING;
         
-        return this.connectionSuccessfulTested ? Icons.Material.Outlined.CheckCircle : Icons.Material.Outlined.Error;
+        return this.connectionSuccessfulTested ? AppIcons.SUCCESS : AppIcons.ERROR;
     }
     
     private bool NeedsSecret() => this.dataAuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD;

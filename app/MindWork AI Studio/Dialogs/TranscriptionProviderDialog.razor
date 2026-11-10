@@ -25,7 +25,7 @@
                         }
                     }
                 </MudSelect>
-                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.CreationURL" Target="_blank">
+                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@AppIcons.OPEN_EXTERNAL" Href="@this.DataLLMProvider.CreationURL" Target="_blank">
                     @T("Create account")
                 </MudButton>
             </MudStack>
@@ -51,7 +51,7 @@
                         Label="@T("Hostname")"
                         Class="mb-3"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.Dns"
+                        AdornmentIcon="@AppIcons.SERVER"
                         AdornmentColor="Color.Info"
                         Disabled="@this.IsEnterpriseConfiguration"
                         Validation="@this.providerValidation.ValidatingHostname"
@@ -60,7 +60,7 @@
 
                 @if (this.DataLLMProvider.IsHostNeeded)
                 {
-                    <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
+                    <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
                         @foreach (Host host in Enum.GetValues(typeof(Host)))
                         {
                             if (host.IsTranscriptionSupported)
@@ -75,7 +75,7 @@
 
                 @if (this.DataLLMProvider.IsHFInstanceProviderNeeded)
                 {
-                    <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProviderForTranscription">
+                    <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@AppIcons.SERVER" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProviderForTranscription">
                         @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                         {
                             @if (inferenceProvider.SupportsTranscription)
@@ -95,7 +95,7 @@
                 {
                     <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                         <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
-                            <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
+                            <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@AppIcons.REFRESH" OnClick="@this.ReloadModels">
                                 @T("Load")
                             </MudButton>
                             @if(this.availableModels.Count is 0)
@@ -107,7 +107,7 @@
                             else
                             {
                                 <MudSelect Disabled="@(this.IsEnterpriseConfiguration || this.IsNoneProvider)" @bind-Value="@this.DataModel" Label="@T("Model")"
-                                           OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
+                                           OpenIcon="@AppIcons.MODEL"
                                            AdornmentColor="Color.Info" Adornment="Adornment.Start"
                                            Validation="@this.providerValidation.ValidatingModel">
                                     @foreach (var model in this.availableModels)
@@ -146,7 +146,7 @@
                     Counter="40"
                     Immediate="@true"
                     Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                    AdornmentIcon="@AppIcons.NAME"
                     AdornmentColor="Color.Info"
                     Disabled="@this.IsEnterpriseConfiguration"
                     Validation="@this.providerValidation.ValidatingInstanceName"

@@ -302,9 +302,6 @@ public static class AppIcons
     /// <summary>Marks an entry the user fills in by hand, such as a mail server that is not in the list.</summary>
     public const string CUSTOM_ENTRY = LucideIcons.PENCIL;
 
-    /// <summary>The former icon for data sources, until its last uses take DATA_SOURCE.</summary>
-    public const string DATABASE = LucideIcons.DATABASE;
-
     /// <summary>Marks an array, such as a JSON array.</summary>
     public const string DATA_ARRAY = LucideIcons.BRACKETS;
 
