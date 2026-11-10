@@ -12,6 +12,17 @@ AI Studio draws its icons with [Lucide](https://lucide.dev), taken from the npm 
 
 All three files are copies without any change. The code points belong to one release of the font, so always replace the three files together.
 
+## Using the icons
+
+While the app is built, `LucideIconGenerator` turns `codepoints.json` into two classes in the namespace `AIStudio.Tools`:
+
+- `LucideIcons` holds a constant for every name, such as `LucideIcons.HOUSE`. Its value is `lucide/` followed by the glyph of the icon: MudBlazor renders such a string as a span with the class `lucide` and the glyph as its text, and `wwwroot/app.css` applies the font to that class.
+- `LucideIconRegistry` finds an icon by the name lucide.dev shows for it, such as `house`. Assistant plugins name their icons this way.
+
+Besides the current names, `codepoints.json` holds aliases and names Lucide has deprecated, such as `home` for `house` or `trash-2` for `trash`, so that a plugin written with an older name keeps working. In the app itself, always pick the current name as lucide.dev shows it.
+
+The app takes its icons only from `AppIcons` in `app/MindWork AI Studio/Tools/AppIcons.cs`. It names every icon after its meaning in AI Studio, such as `AppIcons.DELETE`, and decides there which Lucide icon stands for it. To use an icon, take the constant of its meaning from `AppIcons`; when there is none yet, add one there. Never use `LucideIcons` or the icons of MudBlazor anywhere else.
+
 ## License
 
 Lucide is licensed under the [ISC License](https://github.com/lucide-icons/lucide/blob/main/LICENSE). The icons Lucide derived from [Feather](https://github.com/feathericons/feather) are licensed under the MIT License; `LICENSE-lucide.txt` lists them.
