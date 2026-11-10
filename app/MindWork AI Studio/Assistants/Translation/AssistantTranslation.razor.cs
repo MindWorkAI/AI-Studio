@@ -1,4 +1,6 @@
+using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
@@ -10,7 +12,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     
     protected override string Title => T("Translation");
     
-    protected override string Description => T("Translate text from one language to another.");
+    protected override string Description => T("Translate a document or a text from one language to another.");
     
     // The prompt of this assistant allows the translation only, so the chat gets a prompt of its own, which keeps the target language:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
@@ -52,11 +54,28 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => T("Translate");
+    protected override string SubmitText => this.mode is AssistantContentMode.DOCUMENT ? T("Translate document") : T("Translate");
 
-    protected override Func<Task> SubmitAction => () => this.TranslateText(true);
+    protected override Func<Task> SubmitAction => () => this.mode is AssistantContentMode.DOCUMENT ? this.TranslateDocumentAsync() : this.TranslateText(true);
 
-    protected override bool SubmitDisabled => this.isAgentRunning;
+    protected override bool SubmitDisabled => this.isAgentRunning || this.isSavingDocument;
+
+    protected override bool ShowDedicatedProgress => this.mode is AssistantContentMode.DOCUMENT;
+
+    protected override string ProgressText => this.mode is AssistantContentMode.DOCUMENT ? this.DocumentProgressText : string.Empty;
+
+    // A document goes to the model in many small requests, which need no tools:
+    protected override IReadOnlySet<string>? AssistantManagedToolIds => this.mode is AssistantContentMode.DOCUMENT ? NO_TOOLS : null;
+
+    protected override bool ShowSubmit => this.mode is not AssistantContentMode.UNDECIDED;
+
+    protected override bool ShowReset => this.mode is not AssistantContentMode.UNDECIDED;
+
+    protected override bool ShowResult => this.mode is AssistantContentMode.TEXT;
+
+    protected override bool ShowCopyResult => this.mode is AssistantContentMode.TEXT;
+
+    protected override bool ShowSendTo => this.mode is AssistantContentMode.TEXT;
 
     protected override string SendToChatVisibleUserPromptText =>
         $"""
@@ -67,6 +86,10 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     
     protected override void ResetForm()
     {
+        // The mode stays as it is: the button next to the settings switches it.
+        this.documentPath = string.Empty;
+        this.translatedDocument = null;
+        this.documentProgress = null;
         this.inputText = string.Empty;
         this.inputTextLastTranslation = string.Empty;
         this.webContentURL = string.Empty;
@@ -94,7 +117,19 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         
         return false;
     }
-    
+
+    protected override async Task OnDefaultsAppliedAsync()
+    {
+        // A text sent here chose the text mode already, and a reset keeps the mode the user chose.
+        // A session which is attached afterward brings its own mode:
+        if (this.mode is AssistantContentMode.UNDECIDED)
+            this.mode = this.SettingsManager.ConfigurationData.Translation.StartMode.InitialContentMode;
+
+        await base.OnDefaultsAppliedAsync();
+    }
+
+    private AssistantContentMode mode;
+    private string documentPath = string.Empty;
     private bool showWebContentReader;
     private bool useContentCleanerAgent;
     private bool liveTranslation;
@@ -104,6 +139,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private string inputTextLastTranslation = string.Empty;
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
+    private static readonly AssistantSessionStateKey<AssistantContentMode> MODE_STATE_KEY = new(nameof(mode));
+    private static readonly AssistantSessionStateKey<string> DOCUMENT_PATH_STATE_KEY = new(nameof(documentPath));
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
     private static readonly AssistantSessionStateKey<bool> LIVE_TRANSLATION_STATE_KEY = new(nameof(liveTranslation));
@@ -117,6 +154,10 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
     {
+        state.Set(MODE_STATE_KEY, this.mode);
+        state.Set(DOCUMENT_PATH_STATE_KEY, this.documentPath);
+        state.Set(TRANSLATED_DOCUMENT_STATE_KEY, this.translatedDocument);
+        state.Set(DOCUMENT_PROGRESS_STATE_KEY, this.documentProgress);
         state.Set(SHOW_WEB_CONTENT_READER_STATE_KEY, this.showWebContentReader);
         state.Set(USE_CONTENT_CLEANER_AGENT_STATE_KEY, this.useContentCleanerAgent);
         state.Set(LIVE_TRANSLATION_STATE_KEY, this.liveTranslation);
@@ -131,6 +172,10 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     /// <inheritdoc />
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
+        state.Restore(MODE_STATE_KEY, value => this.mode = value);
+        state.Restore(DOCUMENT_PATH_STATE_KEY, value => this.documentPath = value);
+        state.Restore(TRANSLATED_DOCUMENT_STATE_KEY, value => this.translatedDocument = value);
+        state.Restore(DOCUMENT_PROGRESS_STATE_KEY, value => this.documentProgress = value);
         state.Restore(SHOW_WEB_CONTENT_READER_STATE_KEY, value => this.showWebContentReader = value);
         state.Restore(USE_CONTENT_CLEANER_AGENT_STATE_KEY, value => this.useContentCleanerAgent = value);
         state.Restore(LIVE_TRANSLATION_STATE_KEY, value => this.liveTranslation = value);
@@ -144,9 +189,34 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 
     #region Overrides of AssistantBase
 
-    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputText = payload.Text;
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload)
+    {
+        this.inputText = payload.Text;
+        this.mode = AssistantContentMode.TEXT;
+    }
 
     #endregion
+
+    private IReadOnlyList<AssistantModeOption> ModeOptions =>
+    [
+        new(AssistantContentMode.DOCUMENT, Icons.Material.Filled.Description, T("Translate document"), T("Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
+        new(AssistantContentMode.TEXT, Icons.Material.Filled.TextFields, T("Translate text"), T("Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here.")),
+    ];
+
+    private string SwitchModeTooltip => this.mode is AssistantContentMode.DOCUMENT ? T("Switch to text translation") : T("Switch to document translation");
+
+    private string SwitchModeIcon => this.mode is AssistantContentMode.DOCUMENT ? Icons.Material.Filled.TextFields : Icons.Material.Filled.Description;
+
+    private async Task ChooseMode(AssistantContentMode chosenMode)
+    {
+        this.mode = chosenMode;
+
+        // The issues of the fields of the other mode would stay below the form otherwise:
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
+    }
+
+    private Task SwitchMode() => this.ChooseMode(this.mode is AssistantContentMode.DOCUMENT ? AssistantContentMode.TEXT : AssistantContentMode.DOCUMENT);
 
     private string? ValidatingText(string text)
     {

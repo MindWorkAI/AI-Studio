@@ -1,22 +1,81 @@
 @attribute [Route(Routes.ASSISTANT_TRANSLATION)]
+@using AIStudio.Tools.DocumentSegments
+@using AIStudio.Tools.Rust
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogTranslation>
 
-@if (!this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)
+@if (this.mode is AssistantContentMode.UNDECIDED)
 {
-    <ReadWebContent @bind-Content="@this.inputText" @bind-URL="@this.webContentURL" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
-}
-
-<ReadFileContent @bind-FileContent="@this.inputText" EnableDragDrop="true" CatchAllDocuments="true"/>
-
-<MudTextSwitch Label="@T("Live translation")" @bind-Value="@this.liveTranslation" LabelOn="@T("Live translation")" LabelOff="@T("No live translation")"/>
-@if (this.liveTranslation)
-{
-    <DebouncedTextField Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" ValidationFunc="@this.ValidatingText" Icon="@Icons.Material.Filled.DocumentScanner" Label="@T("Your input")" Lines="6" MaxLines="12" DebounceTime="@TimeSpan.FromMilliseconds(this.SettingsManager.ConfigurationData.Translation.DebounceIntervalMilliseconds)" WhenTextChangedAsync="async _ => await this.TranslateText(force: false)" Attributes="@USER_INPUT_ATTRIBUTES"/>
+    <AssistantModeChoice Options="@this.ModeOptions" ModeChosen="@this.ChooseMode"/>
 }
 else
 {
-    <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Your input")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    @if (this.mode is AssistantContentMode.DOCUMENT)
+    {
+        <SelectFile @bind-File="@this.documentPath" Label="@T("Document")" FileDialogTitle="@T("Select a document to translate")" Filter="@([FileTypes.EDITABLE_DOCUMENT])" Validation="@this.ValidateDocument" Disabled="@this.IsProcessing" EnableDragDrop="true" CatchAllDocuments="true"/>
+    }
+    else
+    {
+        @if (!this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)
+        {
+            <ReadWebContent @bind-Content="@this.inputText" @bind-URL="@this.webContentURL" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
+        }
+
+        <ReadFileContent @bind-FileContent="@this.inputText" EnableDragDrop="true" CatchAllDocuments="true"/>
+
+        <MudTextSwitch Label="@T("Live translation")" @bind-Value="@this.liveTranslation" LabelOn="@T("Live translation")" LabelOff="@T("No live translation")"/>
+        @if (this.liveTranslation)
+        {
+            <DebouncedTextField Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" ValidationFunc="@this.ValidatingText" Icon="@Icons.Material.Filled.DocumentScanner" Label="@T("Your input")" Lines="6" MaxLines="12" DebounceTime="@TimeSpan.FromMilliseconds(this.SettingsManager.ConfigurationData.Translation.DebounceIntervalMilliseconds)" WhenTextChangedAsync="async _ => await this.TranslateText(force: false)" Attributes="@USER_INPUT_ATTRIBUTES"/>
+        }
+        else
+        {
+            <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Your input")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        }
+    }
+
+    <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting)" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
+    <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
 }
 
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting)" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
-<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+@code {
+    private protected override RenderFragment? HeaderActions => this.mode is AssistantContentMode.UNDECIDED
+        ? null
+        : @<MudTooltip Text="@this.SwitchModeTooltip">
+              <MudIconButton Variant="Variant.Text" Icon="@this.SwitchModeIcon" Disabled="@(this.IsProcessing || this.isAgentRunning)" OnClick="@this.SwitchMode"/>
+          </MudTooltip>;
+
+    private protected override RenderFragment? BelowSubmitContent => this.mode is AssistantContentMode.DOCUMENT && !this.IsProcessing && this.translatedDocument is { } document
+        ? @<MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+              <MudText Typo="Typo.h6" Class="mb-2">
+                  @T("Translated document")
+              </MudText>
+              <MudText Typo="Typo.body1">
+                  @string.Format(T("'{0}' is translated into {1}."), Path.GetFileName(document.SourcePath), document.LanguageName)
+              </MudText>
+              <MudText Typo="Typo.body2">
+                  @string.Format(T("Translated sections: {0}"), document.Results.CountOf(SegmentStatus.TRANSFORMED))
+              </MudText>
+              @if (document.Results.CountOf(SegmentStatus.FILTERED) is > 0 and var filteredCount)
+              {
+                  <MudText Typo="Typo.body2">
+                      @string.Format(T("Sections left as they are, because the security check found suspicious content in them: {0}"), filteredCount)
+                  </MudText>
+              }
+              @if (document.Results.CountOf(SegmentStatus.FAILED) is > 0 and var failedCount)
+              {
+                  <MudText Typo="Typo.body2">
+                      @string.Format(T("Sections left as they are, because the AI model delivered no usable translation for them: {0}"), failedCount)
+                  </MudText>
+              }
+              @if (DocumentSegmentFormats.For(document.SourcePath) is { } format)
+              {
+                  <MudText Typo="Typo.body2" Class="mt-2">
+                      @format.LimitsNotice
+                  </MudText>
+              }
+              <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@this.isSavingDocument" OnClick="@this.SaveTranslatedDocumentAsync" Class="mt-3">
+                  @T("Save translated document")
+              </MudButton>
+          </MudPaper>
+        : null;
+}

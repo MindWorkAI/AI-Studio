@@ -99,6 +99,10 @@ public static class FileTypes
     public static readonly FileTypeFilter POWER_POINT_TEMPLATE     = FileTypeFilter.Leaf(TB("PowerPoint template"), "pptx", "potx");
     public static readonly FileTypeFilter POWER_POINT_PRESENTATION = FileTypeFilter.Leaf("PowerPoint", "pptx");
 
+    // What the assistants work on as a whole document, writing their result into a new file of the same type:
+    public static readonly FileTypeFilter EDITABLE_DOCUMENT = FileTypeFilter.Parent(TB("Document"),
+        MS_WORD, POWER_POINT_PRESENTATION, TEX, MARKDOWN, HTML);
+
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
         WORD, SPREADSHEET, POWER_POINT, ONENOTE, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),

@@ -28,6 +28,12 @@ public static class ConfigurationSelectDataFactory
             yield return new(behavior.Name, behavior);
     }
     
+    public static IEnumerable<ConfigurationSelectData<AssistantStartMode>> GetAssistantStartModeData()
+    {
+        foreach (var startMode in Enum.GetValues<AssistantStartMode>())
+            yield return new(startMode.Name, startMode);
+    }
+
     public static IEnumerable<ConfigurationSelectData<Guid>> GetLanguagesData()
     {
         foreach (var runningPlugin in PluginFactory.RunningPlugins)

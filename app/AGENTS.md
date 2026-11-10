@@ -174,6 +174,16 @@ presentation with the Open XML SDK (`DocumentFormat.OpenXml`), in `app/MindWork 
 **Area guide:** `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md`, with how a presentation comes about
 and the rules which are easy to break.
 
+Added document segments with which a model works on whole documents## Document Segments
+
+An assistant which works on a whole document, such as the Translation assistant with "Translate document",
+lets a model work on its text segment by segment and writes a new document of the same type, in which
+everything but the text stays as it was. The formats and the work with the model live in
+`app/MindWork AI Studio/Tools/DocumentSegments/`.
+
+**Area guide:** `app/MindWork AI Studio/Tools/DocumentSegments/AGENTS.md`, with how such a document comes
+about and the rules which are easy to break.
+
 ## Enterprise IT Support
 
 AI Studio supports centralized configuration for enterprise environments:

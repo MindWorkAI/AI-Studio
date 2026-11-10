@@ -41,17 +41,20 @@
                         </CascadingValue>
                     </CascadingValue>
                     
-                    <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@(this.SubmitDisabled || this.IsProcessing || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
-                            @this.SubmitText
-                        </MudButton>
-                        @if (this.IsProcessing)
-                        {
-                            <MudTooltip Text="@TB("Stop generation")">
-                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(async () => await this.CancelStreaming())"/>
-                            </MudTooltip>
-                        }
-                    </MudStack>
+                    @if (this.ShowSubmit)
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
+                            <MudButton Disabled="@(this.SubmitDisabled || this.IsProcessing || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
+                                @this.SubmitText
+                            </MudButton>
+                            @if (this.IsProcessing)
+                            {
+                                <MudTooltip Text="@TB("Stop generation")">
+                                    <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(async () => await this.CancelStreaming())"/>
+                                </MudTooltip>
+                            }
+                        </MudStack>
+                    }
 
                     @if (this.BelowSubmitContent is not null)
                     {
