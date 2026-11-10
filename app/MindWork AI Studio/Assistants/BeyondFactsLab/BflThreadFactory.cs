@@ -30,21 +30,27 @@ public static class BflThreadFactory
     };
 
     /// <summary>
-    /// Creates a chat of the lab, without any messages.
+    /// Creates a chat of the lab, without any messages, restricted as its place demands, see BflChatTools.
     /// </summary>
     /// <param name="location">Where the chat belongs, e.g., to a step of a preparation.</param>
     /// <returns>The chat.</returns>
-    public static ChatThread Create(BflThreadLocation location) => new()
+    public static ChatThread Create(BflThreadLocation location)
     {
-        ChatId = location.ChatId,
-        WorkspaceId = Guid.Empty,
-        Name = location.ChatName,
-        IncludeDateTime = true,
-        SelectedProfile = Profile.NO_PROFILE.Id,
-        SelectedChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE.Id,
-        SelectedToolIds = [],
-        Blocks = []
-    };
+        var thread = new ChatThread
+        {
+            ChatId = location.ChatId,
+            WorkspaceId = Guid.Empty,
+            Name = location.ChatName,
+            IncludeDateTime = true,
+            SelectedProfile = Profile.NO_PROFILE.Id,
+            SelectedChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE.Id,
+            SelectedToolIds = [],
+            Blocks = []
+        };
+
+        BflChatTools.Restrict(thread, location);
+        return thread;
+    }
 
     /// <summary>
     /// Readies a chat for the next request: its prompt and provider, and what a chat does not store.

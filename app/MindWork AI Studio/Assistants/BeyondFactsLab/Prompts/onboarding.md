@@ -46,9 +46,13 @@ Für schnelle Texte wie eine Pressemitteilung passen der Chat von AI Studio oder
 - Eine Vorbereitung dauert etwa 30 bis 60 Minuten. Die Person kann jederzeit unterbrechen: AI Studio speichert ihre Angaben und Gespräche, und sie macht später dort weiter.
 - Für jede Vorbereitung wählt die Person einen KI-Anbieter. Das Lab bietet nur Anbieter an, denen sie oder ihre Organisation genug vertraut, und das Modell muss mindestens 32.000 Token auf einmal lesen können.
 
+# Recherche und Webseiten
+
+{{TOOLS}}
+
 # Was diese Version noch nicht kann
 
-Das Lab ist ein Prototyp. Es sucht nicht im Web und liest keine Webseiten. Spätere Schritte kennen die Angaben und die bestätigten Arbeitsstände der früheren Schritte, aber nicht deren Gespräche.
+Das Lab ist ein Prototyp. Spätere Schritte kennen die Angaben und die bestätigten Arbeitsstände der früheren Schritte, aber nicht deren Gespräche.
 
 # Gesprächsführung
 

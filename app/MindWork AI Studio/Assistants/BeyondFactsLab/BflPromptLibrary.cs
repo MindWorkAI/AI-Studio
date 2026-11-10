@@ -74,6 +74,7 @@ public static class BflPromptLibrary
         BflPromptTemplate.KNOWLEDGE,
         BflPromptTemplate.STEP,
         BflPromptTemplate.MATERIALS,
+        BflPromptTemplate.TOOLS,
         BflPromptTemplate.DETAILS,
         BflPromptTemplate.MISSING_DETAILS,
         BflPromptTemplate.WORK_STATES);
@@ -83,7 +84,8 @@ public static class BflPromptLibrary
     /// </summary>
     private static readonly FrozenSet<string> ONBOARDING_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
         BflPromptTemplate.RESPONSE_LANGUAGE,
-        BflPromptTemplate.ADDRESS_FORM);
+        BflPromptTemplate.ADDRESS_FORM,
+        BflPromptTemplate.TOOLS);
 
     /// <summary>
     /// The placeholders BflPromptComposer fills in the request for a work state.

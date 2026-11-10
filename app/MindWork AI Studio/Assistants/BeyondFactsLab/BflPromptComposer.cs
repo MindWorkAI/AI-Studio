@@ -22,6 +22,11 @@ public static class BflPromptComposer
     private const char LINE_BREAK = '\n';
 
     /// <summary>
+    /// What a prompt says about the tools when nobody checked them: none of them is available.
+    /// </summary>
+    private static readonly BflResearchAvailability NO_TOOLS = new(ToolOfferBlockReason.NOT_AVAILABLE_HERE, ToolOfferBlockReason.NOT_AVAILABLE_HERE);
+
+    /// <summary>
     /// Puts together the system prompt of a step.
     /// </summary>
     /// <param name="parts">The texts of the prompt.</param>
@@ -30,15 +35,17 @@ public static class BflPromptComposer
     /// <param name="materials">What the prompt carries of the material of the preparation, see BflMaterialBudget.</param>
     /// <param name="responseLanguage">The name of the language the model answers in, e.g., the language of the app.</param>
     /// <param name="workStates">The work states of the preparation, by their steps; only the confirmed ones reach the prompt. Null when there are none.</param>
+    /// <param name="tools">What keeps the tools of the lab from being offered with the provider of the preparation; null counts as no tools at all.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The core prompt has a placeholder without a value.</exception>
-    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
         [BflPromptTemplate.KNOWLEDGE] = parts.Knowledge.Trim(),
         [BflPromptTemplate.STEP] = parts.Step.Trim(),
         [BflPromptTemplate.MATERIALS] = Materials(materials),
+        [BflPromptTemplate.TOOLS] = BflToolStatus.ForStep(tools ?? NO_TOOLS).Trim(),
         [BflPromptTemplate.WORK_STATES] = WorkStates(step, workStates ?? new Dictionary<BflStep, BflWorkState>(), forms),
         [BflPromptTemplate.DETAILS] = Details(step, forms),
         [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms)
@@ -52,12 +59,14 @@ public static class BflPromptComposer
     /// </remarks>
     /// <param name="parts">The texts of the prompt.</param>
     /// <param name="responseLanguage">The name of the language the model answers in, e.g., the language of the app.</param>
+    /// <param name="tools">What keeps the tools of the lab from being offered with the provider of the conversation; null counts as no tools at all.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The prompt has a placeholder without a value.</exception>
-    public static string ComposeOnboarding(BflOnboardingPromptParts parts, string responseLanguage) => BflPromptTemplate.Fill(parts.Onboarding, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string ComposeOnboarding(BflOnboardingPromptParts parts, string responseLanguage, BflResearchAvailability? tools = null) => BflPromptTemplate.Fill(parts.Onboarding, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
-        [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim()
+        [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
+        [BflPromptTemplate.TOOLS] = BflToolStatus.ForOnboarding(tools ?? NO_TOOLS).Trim()
     }).ReplaceLineEndings(LINE_BREAK.ToString());
 
     /// <summary>

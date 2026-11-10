@@ -198,7 +198,7 @@ public sealed class BflPromptOverridesTests
     {
         var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
         var store = new BeyondFactsLabStore(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.directory });
-        var service = new BflConversationService(store, settingsManager, null!, null!, NullLogger<BflConversationService>.Instance);
+        var service = new BflConversationService(store, settingsManager, null!, null!, null!, NullLogger<BflConversationService>.Instance);
         await BflPromptOverrides.CopyBuiltInAsync(store.PromptOverridesDirectory);
 
         settingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides = true;

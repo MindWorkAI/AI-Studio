@@ -68,6 +68,11 @@ public static partial class BflPromptTemplate
     public const string MISSING_WORK_STATES = "MISSING_WORK_STATES";
 
     /// <summary>
+    /// What a chat can do on the web with the current setup, and what keeps it from more, see BflToolStatus.
+    /// </summary>
+    public const string TOOLS = "TOOLS";
+
+    /// <summary>
     /// What a research agent looks into, see BflResearchTopic.
     /// </summary>
     public const string TOPIC = "TOPIC";

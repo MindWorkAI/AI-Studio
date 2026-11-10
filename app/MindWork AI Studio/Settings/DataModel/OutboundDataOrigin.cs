@@ -32,4 +32,11 @@ public enum OutboundDataOrigin
     /// model: found by Semantic Search or by the classic RAG process.
     /// </summary>
     DATA_SOURCE,
+
+    /// <summary>
+    /// A preparation of the BeyondFacts Lab, which the chat of every one of its steps holds from the start: details,
+    /// material, and work states which may be unpublished. The lab searches the web in agents of its own, which receive
+    /// the public details about the event only, see BflResearchRunner.
+    /// </summary>
+    BEYOND_FACTS_LAB,
 }
