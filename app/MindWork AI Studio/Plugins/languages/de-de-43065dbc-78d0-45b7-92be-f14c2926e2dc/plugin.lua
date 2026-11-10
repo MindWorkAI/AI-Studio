@@ -889,10 +889,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T851005164"] = "Neue Vorbereitung"
 
 -- The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259"] = "Das Labor hat die Webrecherche noch nicht gestartet. Entscheiden Sie zunächst anhand des Vorschlags unter dem Arbeitsstatus, ob die Veranstaltung öffentlich ist. Anschließend können Sie die Recherche im Schritt „{0}“ starten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259"] = "Das Lab hat die Recherche im Web noch nicht gestartet. Übernehmen oder verwerfen Sie zuerst den Vorschlag unter dem Arbeitsstand, ob die Veranstaltung öffentlich ist. Danach können Sie die Recherche im Schritt „{0}“ starten."
 
 -- The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259::INFORMAL"] = "Das Labor hat die Webrecherche noch nicht gestartet. Entscheide zunächst anhand des Vorschlags unter dem Arbeitsstatus, ob die Veranstaltung öffentlich ist. Anschließend kannst du die Recherche im Schritt „{0}“ starten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259::INFORMAL"] = "Das Lab hat die Recherche im Web noch nicht gestartet. Übernimm oder verwirf zuerst den Vorschlag unter dem Arbeitsstand, ob die Veranstaltung öffentlich ist. Danach kannst du die Recherche im Schritt „{0}“ starten."
 
 -- Your preparations
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272"] = "Ihre Vorbereitungen"
@@ -1048,7 +1048,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuche es erneut."
 
 -- The event is not public. Therefore, the lab does not research it on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLEVENTVISIBILITY::T2308862256"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Labor nicht im Internet dazu."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLEVENTVISIBILITY::T2308862256"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr."
 
 -- Moderate the discussion
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1131866893"] = "Diskussion moderieren"
@@ -1081,7 +1081,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T188508193
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1885081930::INFORMAL"] = "Andere Perspektiven: Wessen Sichtweise möchtest du besser verstehen oder hast du bisher wenig berücksichtigt?"
 
 -- If not, the lab does not research the event on the web, e.g., for an internal meeting or a closed examination
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1902702216"] = "Falls nicht, recherchiert das Labor nicht im Web nach der Veranstaltung, z. B. bei einer internen Besprechung oder einer nicht öffentlichen Prüfung."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1902702216"] = "Falls nicht, recherchiert das Lab nicht im Web zur Veranstaltung, z. B. bei einer internen Besprechung oder einer nicht öffentlichen Prüfung"
 
 -- Stays in your preparation and never goes into the research on the web
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1949096445"] = "Bleibt in Ihrer Vorbereitung und geht nie in die Recherche im Web ein"
@@ -1273,10 +1273,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T974131333
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T985014450"] = "Anspruchsvoll"
 
 -- If you state in the event details that the event is not public, the lab never researches it on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788"] = "Wenn Sie in den Veranstaltungsdetails angeben, dass die Veranstaltung nicht öffentlich ist, recherchiert das Labor niemals im Internet dazu."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788"] = "Wenn Sie in den Rahmendaten angeben, dass die Veranstaltung nicht öffentlich ist, recherchiert das Lab nie im Web zu ihr."
 
 -- If you state in the event details that the event is not public, the lab never researches it on the web.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788::INFORMAL"] = "Wenn du in den Veranstaltungsdetails angibst, dass die Veranstaltung nicht öffentlich ist, recherchiert das Labor niemals im Internet dazu."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788::INFORMAL"] = "Wenn du in den Rahmendaten angibst, dass die Veranstaltung nicht öffentlich ist, recherchiert das Lab nie im Web zu ihr."
 
 -- Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1198247392"] = "Fügen Sie neben den Schritten Material hinzu, z. B. Notizen, einen Vortragstext, ein Paper, die Einladung, die Aufnahme eines Interviews oder ein Poster. Es gilt für alle Schritte, und das Lab stellt Ihnen Fragen dazu. Fügen Sie nur hinzu, was Sie mit dem ausgewählten Anbieter verarbeiten dürfen; Aufnahmen gehen außerdem an den Transkriptionsanbieter von AI Studio."
@@ -1663,10 +1663,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T126664
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T1554954732"] = "Recherche"
 
 -- The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search. If the event is public after all, change this in the step '{0}'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2133645823"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Labor nicht im Web, und keine Ihrer Angaben werden für eine Suche verwendet. Falls die Veranstaltung doch öffentlich ist, ändern Sie dies im Schritt „{0}“."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2133645823"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr, und keine Ihrer Angaben erreicht eine Suche. Ist die Veranstaltung doch öffentlich, ändern Sie das im Schritt „{0}“."
 
 -- The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search. If the event is public after all, change this in the step '{0}'.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2133645823::INFORMAL"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Labor nicht im Web, und keine deiner Angaben werden für eine Suche verwendet. Falls die Veranstaltung doch öffentlich ist, ändere dies im Schritt „{0}“."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2133645823::INFORMAL"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr, und keine deiner Angaben erreicht eine Suche. Ist die Veranstaltung doch öffentlich, ändere das im Schritt „{0}“."
 
 -- Researching
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2197065228"] = "Recherche läuft"
@@ -2023,10 +2023,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T76252
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T762525208::INFORMAL"] = "Was du sicher weißt, was unsicher ist und wo deine Expertise endet."
 
 -- The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T134792596"] = "Das Ereignis ist nicht öffentlich. Daher recherchiert das Labor nicht im Internet, und keine Ihrer Angaben fließen in eine Suche ein – auch nicht die mit einem Symbol gekennzeichneten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T134792596"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr, und keine Ihrer Angaben erreicht eine Suche, auch nicht die mit einem Symbol gekennzeichneten."
 
 -- The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T134792596::INFORMAL"] = "Das Ereignis ist nicht öffentlich. Daher recherchiert das Labor nicht im Internet, und keine deiner Angaben fließen in eine Suche ein – auch nicht die mit einem Symbol gekennzeichneten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T134792596::INFORMAL"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr, und keine deiner Angaben erreicht eine Suche, auch nicht die mit einem Symbol gekennzeichneten."
 
 -- Some details are still missing. The chat will ask for them, and you can continue anyway.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1474406854"] = "Einige Angaben fehlen noch. Der Chat fragt danach, und Sie können trotzdem weitermachen."
