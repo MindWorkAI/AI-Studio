@@ -76,22 +76,28 @@ public sealed class ToolCallHistoryNoteTests
     }
 
     [Test]
-    public void ASensitiveArgumentStaysMasked()
+    public void ASensitiveArgumentStaysHiddenAndIsMarkedAsSuch()
     {
-        var note = Note(Success("confluence_search", 1, ("query", "*****")));
+        var note = Note(Success("confluence_search", 1, ("query", ToolExecutor.MASKED_ARGUMENT)));
 
-        Assert.That(note, Does.Contain("""confluence_search {"query":"*****"}"""));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(note, Does.Contain($$"""confluence_search {"query":"{{ToolCallHistoryNote.HIDDEN_VALUE}}"}"""));
+            Assert.That(note, Does.Not.Contain(ToolExecutor.MASKED_ARGUMENT), "The model would pass the mask back and search for it.");
+            Assert.That(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION, Does.Contain(ToolCallHistoryNote.HIDDEN_VALUE), "The model has to learn what the marker means.");
+        }
     }
 
     [Test]
-    public void ALongArgumentIsShortened()
+    public void ALongArgumentIsShortenedAndMarkedAsSuch()
     {
         var note = Note(Success("web_search", 1, ("query", new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS + 50))));
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(note, Does.Contain($"{new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS)}…"));
+            Assert.That(note, Does.Contain($"{new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS)}{ToolCallHistoryNote.SHORTENED_MARK}"));
             Assert.That(note, Does.Not.Contain(new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS + 1)));
+            Assert.That(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION, Does.Contain(ToolCallHistoryNote.SHORTENED_MARK.TrimStart('…', ' ')), "The model has to learn what the marker means.");
         }
     }
 
@@ -176,11 +182,14 @@ public sealed class ToolCallHistoryNoteTests
         };
 
         var systemPrompt = PrepareSystemPrompt(thread);
+        var prepared = BuildSystemPrompt(thread);
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(systemPrompt, Does.Contain(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION));
             Assert.That(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION, Does.Not.Contain("://"), "Every address of the system prompt counts as given to the model.");
+            Assert.That(prepared.Parts.Select(part => part.Kind), Is.EqualTo(new[] { SystemPromptPartKind.BASE_PROMPT, SystemPromptPartKind.HISTORY_NOTES }), "The dialog with the complete system prompt shows only what was recorded as a part.");
+            Assert.That(prepared.Parts[^1].Text, Is.EqualTo(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION));
         }
     }
 
@@ -197,13 +206,23 @@ public sealed class ToolCallHistoryNoteTests
             ],
         };
 
-        Assert.That(PrepareSystemPrompt(thread), Does.Not.Contain(ToolCallHistoryNote.START_TAG));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(PrepareSystemPrompt(thread), Does.Not.Contain(ToolCallHistoryNote.START_TAG));
+            Assert.That(BuildSystemPrompt(thread).Parts.Select(part => part.Kind), Does.Not.Contain(SystemPromptPartKind.HISTORY_NOTES));
+        }
     }
 
     private static string PrepareSystemPrompt(ChatThread thread)
     {
         using var rustService = new RustService("1", "unused");
         return thread.PrepareSystemPrompt(new SettingsManager(NullLogger<SettingsManager>.Instance, rustService));
+    }
+
+    private static PreparedSystemPrompt BuildSystemPrompt(ChatThread thread)
+    {
+        using var rustService = new RustService("1", "unused");
+        return thread.BuildSystemPrompt(new SettingsManager(NullLogger<SettingsManager>.Instance, rustService));
     }
 
     private static string Note(params ToolInvocationTrace[] traces) => ToolCallHistoryNote.Build(new ContentText { Text = "Answer.", ToolInvocations = [..traces] }, TIME)!;

@@ -507,6 +507,8 @@ public sealed record ChatThread
 
                                 {ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION}
                                 """;
+
+            parts.Add(new(SystemPromptPartKind.HISTORY_NOTES, ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION));
         }
 
         var explanation = $"{logMessage} {profileNote}";

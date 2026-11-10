@@ -38,4 +38,9 @@ public enum SystemPromptPartKind
     /// How to use the tools the request offers.
     /// </summary>
     TOOL_INSTRUCTIONS,
+
+    /// <summary>
+    /// What the notes in front of the earlier answers mean, see ToolCallHistoryNote.
+    /// </summary>
+    HISTORY_NOTES,
 }

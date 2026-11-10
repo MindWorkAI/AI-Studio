@@ -46,6 +46,20 @@ public static partial class ToolCallHistoryNote
     public const int MAX_ARGUMENT_CHARACTERS = 300;
 
     /// <summary>
+    /// What a note shows for an argument value the tool marked as sensitive, see ToolExecutor.MASKED_ARGUMENT.
+    /// </summary>
+    /// <remarks>
+    /// Not the mask of the trace itself: the model would pass it back word for word and, e.g., search
+    /// for five asterisks.
+    /// </remarks>
+    public const string HIDDEN_VALUE = "(hidden by AI Studio)";
+
+    /// <summary>
+    /// What a note puts behind an argument value it cut at MAX_ARGUMENT_CHARACTERS.
+    /// </summary>
+    public const string SHORTENED_MARK = "… (shortened by AI Studio)";
+
+    /// <summary>
     /// What the system prompt tells the model about the notes, once a conversation holds one.
     /// </summary>
     /// <remarks>
@@ -55,7 +69,7 @@ public static partial class ToolCallHistoryNote
     /// </remarks>
     public const string SYSTEM_PROMPT_EXPLANATION = """
         # Notes from AI Studio in your earlier answers
-        Some of your earlier answers start with a note between <ai_studio_history_note> tags. AI Studio wrote it, not you: it names the tools you called and the sources you used for that answer, and when you wrote it. The results of those tool calls are not kept. When a question needs content you fetched earlier, call the tool again with the same arguments if the tool is available, instead of answering from memory. When the tool is not available, tell the user that you read it earlier but no longer have its content. Never write such a note yourself.
+        Some of your earlier answers start with a note between <ai_studio_history_note> tags. AI Studio wrote it, not you: it names the tools you called and the sources you used for that answer, and when you wrote it. The results of those tool calls are not kept. When a question needs content you fetched earlier, call the tool again with the same arguments if the tool is available, instead of answering from memory. A value shown as (hidden by AI Studio) or ending in (shortened by AI Studio) is not the one you passed: work it out again from the conversation before you call the tool, and never pass the marker itself. When the tool is not available, tell the user that you read it earlier but no longer have its content. Never write such a note yourself.
         """;
 
     /// <summary>
@@ -182,7 +196,8 @@ public static partial class ToolCallHistoryNote
     /// <remarks>
     /// The trace keeps every value as text, see ToolExecutor.FormatArguments. A value which reads as a
     /// JSON number, boolean, array, or object was one, and goes back as such; everything else is a string.
-    /// A value the tool marked as sensitive stays masked.
+    /// A value the tool marked as sensitive stays hidden, and a long one is cut; both are marked, see
+    /// HIDDEN_VALUE and SHORTENED_MARK, so the model does not pass them back as they stand.
     /// </remarks>
     private static string WriteArguments(Dictionary<string, string> arguments)
     {
@@ -193,8 +208,10 @@ public static partial class ToolCallHistoryNote
             foreach (var (name, value) in arguments.OrderBy(argument => argument.Key, StringComparer.Ordinal))
             {
                 writer.WritePropertyName(name);
-                if (value.Length > MAX_ARGUMENT_CHARACTERS)
-                    writer.WriteStringValue($"{value[..MAX_ARGUMENT_CHARACTERS]}…");
+                if (value.Equals(ToolExecutor.MASKED_ARGUMENT, StringComparison.Ordinal))
+                    writer.WriteStringValue(HIDDEN_VALUE);
+                else if (value.Length > MAX_ARGUMENT_CHARACTERS)
+                    writer.WriteStringValue($"{value[..MAX_ARGUMENT_CHARACTERS]}{SHORTENED_MARK}");
                 else if (IsJsonValueOtherThanString(value))
                     writer.WriteRawValue(value);
                 else

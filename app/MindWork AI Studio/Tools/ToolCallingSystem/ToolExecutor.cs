@@ -15,6 +15,11 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
     private const string INVALID_TOOL_CALL_ERROR = "The tool call was invalid.";
 
     /// <summary>
+    /// What the trace keeps of an argument the tool marked as sensitive, see IToolImplementation.SensitiveTraceArgumentNames.
+    /// </summary>
+    public const string MASKED_ARGUMENT = "*****";
+
+    /// <summary>
     /// How the arguments are read for running a tool: every name only once per object.
     /// </summary>
     /// <remarks>
@@ -330,7 +335,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         foreach (var property in rootElement.EnumerateObject())
         {
             arguments[property.Name] = sensitiveNames.Contains(property.Name)
-                ? "*****"
+                ? MASKED_ARGUMENT
                 : property.Value.ValueKind switch
                 {
                     JsonValueKind.String => property.Value.GetString() ?? string.Empty,

@@ -120,6 +120,40 @@ public sealed class ChatThreadWebAddressTests
     }
 
     [Test]
+    public void AnAnswerGeneratedAnewForgetsTheAddressesOfItsEarlierToolRun()
+    {
+        var answer = new ContentText { Text = "The newsletter links to the program of the conference." };
+        answer.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))]);
+        var thread = Thread(
+            Block(ChatRole.USER, "What does the newsletter link to?", 1),
+            new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
+
+        answer.BeginToolRun();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(answer.WebAddressesFromTools, Is.Empty);
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/program")), Is.False, "Only the tools of the run which wrote the answer count for it.");
+        }
+    }
+
+    [Test]
+    public void ACopyOfAnAnswerKeepsItsAddressesApart()
+    {
+        var answer = new ContentText { Text = "The newsletter links to the program of the conference." };
+        answer.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))]);
+
+        var copy = (ContentText)answer.DeepClone();
+        copy.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/speakers"))]);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(copy.WebAddressesFromTools, Does.Contain(WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))), "A tool returned it in the conversation the copy continues.");
+            Assert.That(answer.WebAddressesFromTools, Has.Count.EqualTo(1), "What the copy learns must not reach the answer it was copied from.");
+        }
+    }
+
+    [Test]
     public void AnAddressAToolReturnedForAMessageOfTheUserIsNotGiven()
     {
         // Only answers of the model are filled by the tool calling loop. A message of the user holding the set came from elsewhere:
