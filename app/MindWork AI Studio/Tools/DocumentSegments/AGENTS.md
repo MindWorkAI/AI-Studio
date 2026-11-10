@@ -78,6 +78,22 @@ files hold here as well; its classes for the Slide Assistant are not used.
 - **Language and spell check are no formatting.** A run differs from another only in what changes its look;
   new runs carry the target language and no mark of an earlier spell check.
 
+## Web pages
+
+`Html/HtmlSegmentFormat` reads the runs of words between the blocks of a page, its title, its describing meta
+elements, and the attributes people read (`alt`, `title`, `placeholder`, `aria-label`). Like Markdown, it
+replaces the words in the source by their positions and leaves the rest byte for byte.
+
+- **Elements which mark up words are pairs, the rest of a run is a tag of its own.** Code, pictures, line
+  breaks, form fields, scripts, and comments stay as they are; preformatted blocks stay out entirely.
+- **Words travel decoded and come back encoded.** The model gets the words as a browser shows them, entities
+  decoded and white space collapsed. `HtmlSegmentReader.EncodedText` and `EncodedAttribute` encode them again,
+  so new words never break the markup.
+- **Attributes come first.** A readable attribute may lie within the markup of a block, e.g., a picture in a
+  paragraph, so the writer replaces the attributes, reads the blocks of that page again, and replaces them then.
+- **A run whose nodes leave markup in between stays as it is.** HtmlAgilityPack fixes broken markup in its
+  tree, not in the source; what the tree does not cover would otherwise go to the model as words.
+
 ## Tests
 
 The tests in `app/Tests/Tools/DocumentSegments/` play the model with a delegate, so they run without a
