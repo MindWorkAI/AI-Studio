@@ -970,6 +970,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295"] = "
 -- This conversation fills most of the context window of the model. Soon, you will have to start it over.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295::INFORMAL"] = "This conversation fills most of the context window of the model. Soon, you will have to start it over."
 
+-- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
+
+-- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T1150375027::INFORMAL"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
+
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T1809312323"] = "Please select a provider."
 
@@ -1458,6 +1464,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLONBOARDING::T180931232
 
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLONBOARDING::T1809312323::INFORMAL"] = "Please select a provider."
+
+-- The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1719028521"] = "The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab."
+
+-- The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1719028521::INFORMAL"] = "The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab."
 
 -- Test situation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Test situation"
@@ -10405,8 +10417,38 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T82
 -- Restore default
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T913168756"] = "Restore default"
 
+-- Hide Expert Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T1108876344"] = "Hide Expert Settings"
+
+-- Could not open the test folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T1196482976"] = "Could not open the test folder."
+
+-- The test folder holds every prompt already. AI Studio changed no file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T1367912036"] = "The test folder holds every prompt already. AI Studio changed no file."
+
+-- Could not open the test folder: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T1478589470"] = "Could not open the test folder: {0}"
+
+-- These settings serve the further development of the lab, e.g., by the research team behind it. You do not need them to prepare an appearance.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T15706444"] = "These settings serve the further development of the lab, e.g., by the research team behind it. You do not need them to prepare an appearance."
+
+-- These settings serve the further development of the lab, e.g., by the research team behind it. You do not need them to prepare an appearance.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T15706444::INFORMAL"] = "These settings serve the further development of the lab, e.g., by the research team behind it. You do not need them to prepare an appearance."
+
+-- The lab uses its own prompts
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T1931375136"] = "The lab uses its own prompts"
+
 -- Assistant: BeyondFacts Lab Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T19824556"] = "Assistant: BeyondFacts Lab Options"
+
+-- Files copied into the test folder: {0}. Files which were there already stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2064303845"] = "Files copied into the test folder: {0}. Files which were there already stay as they are."
+
+-- A file in the test folder replaces the prompt of the same name, e.g., 'Prompts/core.md'. The lab takes every other prompt from AI Studio. While a file replaces a prompt, the lab shows a notice above every step.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2174086011"] = "A file in the test folder replaces the prompt of the same name, e.g., 'Prompts/core.md'. The lab takes every other prompt from AI Studio. While a file replaces a prompt, the lab shows a notice above every step."
+
+-- A file in the test folder replaces the prompt of the same name, e.g., 'Prompts/core.md'. The lab takes every other prompt from AI Studio. While a file replaces a prompt, the lab shows a notice above every step.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2174086011::INFORMAL"] = "A file in the test folder replaces the prompt of the same name, e.g., 'Prompts/core.md'. The lab takes every other prompt from AI Studio. While a file replaces a prompt, the lab shows a notice above every step."
 
 -- Form of address
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2183481736"] = "Form of address"
@@ -10417,8 +10459,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T257
 -- Select a minimum confidence level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2579793544::INFORMAL"] = "Select a minimum confidence level"
 
+-- Use prompts from the test folder?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2718589875"] = "Use prompts from the test folder?"
+
+-- Copy the built-in prompts into the test folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T2787777151"] = "Copy the built-in prompts into the test folder"
+
+-- Files in the test folder replace the prompts of the lab
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T320994561"] = "Files in the test folder replace the prompts of the lab"
+
+-- Show Expert Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3361153305"] = "Show Expert Settings"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3448155331"] = "Close"
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3461425987"] = "Unknown error"
+
+-- Could not copy the prompts into the test folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3478020269"] = "Could not copy the prompts into the test folder."
 
 -- Whether the lab addresses you formally or informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T3883838251"] = "Whether the lab addresses you formally or informally."
@@ -10431,6 +10491,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T400
 
 -- Your preparations usually contain unpublished research. Therefore, the lab accepts only providers with at least medium confidence. You can raise this minimum, e.g., to use only self-hosted models.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T4002746484::INFORMAL"] = "Your preparations usually contain unpublished research. Therefore, the lab accepts only providers with at least medium confidence. You can raise this minimum, e.g., to use only self-hosted models."
+
+-- Open test folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T567935877"] = "Open test folder"
 
 -- Files are sent as they were first read
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1320692831"] = "Files are sent as they were first read"
