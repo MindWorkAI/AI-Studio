@@ -43,6 +43,22 @@ the repository root and to `app/AGENTS.md`, which apply here as well.
   hold for every format of Office documents: no copy of the whole file in memory, and `TemplateCopy` from
   `app/MindWork AI Studio/Tools/OpenXml/` for the copy in the temporary folder.
 
+## Markdown files and other text
+
+`MarkdownSegmentFormat` reads the paragraphs, headings, list items, quotes, table cells, and footnotes of a Markdown
+file at the positions Markdig reports for them. Every format of documents which are text themselves works this way:
+`TextSegmentBuilder` puts a segment together with the markup of its tags, and `TextSegmentWriter` replaces the words
+of each segment in the source, so everything else stays byte for byte, and `TextDocumentFile` keeps the encoding.
+
+- **A segment without new words keeps its source.** The writer copies it as it is, so writing every segment back
+  unchanged yields the same file; only new words get the markup of the tags as the format recorded it.
+- **New words go into one line.** A model may write line breaks, and in Markdown or LaTeX a blank line would end a
+  paragraph or a table row, so their words functions replace line breaks with spaces; in HTML, a line break is white
+  space like any other. A segment which needs words of another kind, e.g., within an optional argument of LaTeX,
+  brings its own function, see `TextSegment.FormatWords`.
+- **Code, formulas, link targets, and embedded HTML are tags of their own or stay out.** Emphasis and links are
+  pairs around their words, so a model never sees an address.
+
 ## Word documents
 
 `Word/WordSegmentFormat` reads the paragraphs of the body, the tables, the text boxes, the headers and

@@ -3657,6 +3657,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T33
 -- Simple language, e.g., for children
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T530584375"] = "Einfache Sprache, zum Beispiel für Kinder"
 
+-- Translate a document or a text from one language to another.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T109146452"] = "Ein Dokument oder einen Text aus einer Sprache in eine andere übersetzen."
+
 -- Please select a target language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1173859091"] = "Bitte wählen Sie eine Zielsprache aus."
 
@@ -3666,17 +3669,62 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T12497
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T137304886"] = "Bitte geben Sie einen Text ein. Sie können den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
+-- Please choose another file than the original document, which stays as it is.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1458687639"] = "Bitte wählen Sie eine andere Datei als das Originaldokument aus; dieses bleibt unverändert."
+
+-- Save the translated document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1500801172"] = "Übersetztes Dokument speichern"
+
+-- In {0} sections, the AI model did not keep all marks of the formatting, so parts of their formatting, such as links or bold words, are missing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T15009020"] = "In {0} Abschnitten hat das KI-Modell nicht alle Formatierungsmerkmale beibehalten, sodass Teile der Formatierung, wie z. B. Links oder fett gedruckte Wörter, fehlen."
+
+-- Reading the document …
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T153794455"] = "Dokument wird gelesen …"
+
+-- Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1928036000"] = "Übersetzen Sie einen Text, den Sie eingeben oder einfügen, oder den Sie aus einer Datei oder einer Webseite laden. Die Übersetzung erscheint hier."
+
 -- Translate
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2028202101"] = "Übersetzen"
+
+-- The original document has changed since it was translated. Please translate it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2043472603"] = "Das Originaldokument hat sich seit der Übersetzung geändert. Bitte übersetzen Sie es erneut."
+
+-- Translated sections: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2117028431"] = "Übersetzte Abschnitte: {0}"
+
+-- Save translated document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2123468759"] = "Übersetztes Dokument speichern"
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T237828418"] = "Zielsprache"
 
+-- Sections left as they are, because the security check found suspicious content in them: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2485297946"] = "Unverändert belassene Abschnitte, weil die Prüfung auf Prompt-Injections darin verdächtige Inhalte gefunden hat: {0}"
+
 -- Translate the following text to {0}:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2578812023"] = "Übersetze den folgenden Text in {0}:"
 
--- Translate text from one language to another.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3230457846"] = "Text aus einer Sprache in eine andere übersetzen."
+-- '{0}' is translated into {1}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2642929898"] = "„{0}“ ist übersetzt. Zielsprache: {1}."
+
+-- The document could not be read. Please check that it is a valid file and that no other program locks it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T269135711"] = "Das Dokument konnte nicht gelesen werden. Bitte überprüfen Sie, ob es sich um eine gültige Datei handelt und ob diese nicht von einem anderen Programm gesperrt ist."
+
+-- Switch to document translation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2998957500"] = "Zur Dokumentenübersetzung wechseln"
+
+-- Please choose a document to translate.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3177554507"] = "Bitte wählen Sie ein Dokument zur Übersetzung aus."
+
+-- Sections left as they are, because the AI model delivered no usable translation for them: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3202337371"] = "Unverändert belassene Abschnitte, weil das KI-Modell keine brauchbare Übersetzung dafür geliefert hat: {0}"
+
+-- The document holds no text to translate.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3269084646"] = "Das Dokument enthält keinen zu übersetzenden Text."
+
+-- Documents of this kind cannot be translated yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3431680150"] = "Dokumente dieser Art können noch nicht übersetzt werden."
 
 -- No live translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3556243327"] = "Keine Live-Übersetzung"
@@ -3684,14 +3732,47 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T35562
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
+-- Translated document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3954880992"] = "Übersetztes Dokument"
+
+-- The translated document could not be saved. Please check that the original document can be read and that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4118735159"] = "Das übersetzte Dokument konnte nicht gespeichert werden. Bitte überprüfen Sie, ob das Originaldokument lesbar ist und ob die Zieldatei nicht in einem anderen Programm geöffnet ist."
+
+-- {0} of {1} sections translated …
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4132032341"] = "{0} von {1} Abschnitten übersetzt …"
+
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4165204724"] = "Dokument"
+
+-- Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4264268496"] = "Übersetzen Sie eine Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei. Die Übersetzung wird als neue Datei desselben Typs gespeichert, und die Formatierung des Originals bleibt so weit wie möglich erhalten."
+
 -- Live translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4279308324"] = "Live-Übersetzung"
+
+-- Select a document to translate
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T551715734"] = "Dokument zum Übersetzen auswählen"
+
+-- The translated document was saved.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T578628381"] = "Das übersetzte Dokument wurde gespeichert."
+
+-- Switch to text translation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T589253298"] = "Zur Textübersetzung wechseln"
 
 -- Translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T613888204"] = "Übersetzung"
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
+
+-- Translate document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T673837466"] = "Dokument übersetzen"
+
+-- This kind of file cannot be translated. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T693130064"] = "Dateien dieser Art können nicht übersetzt werden. Bitte wählen Sie eine Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei aus."
+
+-- Translate text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T922529912"] = "Text übersetzen"
 
 -- confidential
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1052709079"] = "vertraulich"
@@ -11085,6 +11166,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T170112
 -- Live translation is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1825690873"] = "Live-Übersetzung ist nicht vorausgewählt"
 
+-- How should the translator start?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1945562480"] = "Wie soll der Übersetzer starten?"
+
 -- Content cleaner agent is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
 
@@ -11120,6 +11204,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T364177
 
 -- Preselect the content cleaner agent?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
+
+-- Choose whether the translator asks you every time whether to translate a document or a text, or whether it always starts with one of them. You can switch between both at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T4241081248"] = "Wählen Sie, ob der Übersetzer Sie jedes Mal fragt, ob ein Dokument oder ein Text übersetzt werden soll, oder ob immer direkt mit einem davon begonnen wird. Sie können jederzeit zwischen beiden Optionen wechseln, indem Sie auf die Schaltfläche neben dem Zahnradsymbol klicken."
 
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T629158142"] = "Den Web-Content-Reader vorauswählen?"
@@ -13413,6 +13500,15 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T28881410
 -- Formal address
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T3439873254"] = "Formelle Anrede (Sie)"
 
+-- Always start with a document
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T204202312"] = "Immer mit einem Dokument beginnen"
+
+-- Ask every time
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T648770414"] = "Jedes Mal fragen"
+
+-- Always start with a text
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T97323650"] = "Immer mit einem Text beginnen"
+
 -- This data source can be used with any LLM provider. Your data may be sent to a cloud-based provider.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T1531417967"] = "Diese Datenquelle kann mit jedem LLM-Anbieter verwendet werden. Ihre Daten können an einen cloudbasierten Anbieter gesendet werden."
 
@@ -14084,6 +14180,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Datenquelle
 
 -- The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "Der Index der Datenquelle „{0}“ kann nicht mehr gelesen werden. Bei einer Reparatur wird der Index vollständig neu erstellt: Alle bisher indexierten Daten werden verworfen und jedes Dokument dieser Datenquelle erneut an Ihren Einbettungsanbieter gesendet. Bei einem Cloud-Anbieter entstehen dadurch Kosten, und bei einer großen Datenquelle kann dies einige Zeit dauern. Möchten Sie diese Datenquelle jetzt reparieren?"
+
+-- Scripts, styles, code, preformatted text, and embedded graphics stay as they are. Pages in an older encoding than UTF-8 may show wrong characters.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::HTML::HTMLSEGMENTFORMAT::T3194149578"] = "Skripte, Stile, Code, vorformatierter Text und eingebettete Grafiken bleiben unverändert. Seiten mit einer älteren Kodierung als UTF-8 können falsche Zeichen anzeigen."
+
+-- Formulas, code, drawings, comments, and the preamble apart from the title stay as they are, as does text in commands which the document defines itself. The language settings, e.g., of babel or polyglossia, stay unchanged, and a language with another script may need further packages. Documents in an older encoding than UTF-8 may show wrong characters.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::LATEX::LATEXSEGMENTFORMAT::T426201132"] = "Formeln, Code, Zeichnungen, Kommentare und die Präambel mit Ausnahme des Titels bleiben unverändert, ebenso wie Text in Befehlen, die das Dokument selbst definiert. Die Spracheinstellungen, z. B. von babel oder polyglossia, bleiben unverändert, und eine Sprache mit einem anderen Schriftsystem kann zusätzliche Pakete erfordern. Dokumente mit einer älteren Kodierung als UTF-8 können falsche Zeichen anzeigen."
+
+-- Code, formulas, link targets, and embedded HTML stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::MARKDOWNSEGMENTFORMAT::T4053772832"] = "Code, Formeln, Linkziele und eingebettetes HTML bleiben unverändert."
+
+-- Charts, SmartArt, the alternative texts of pictures, the properties of the presentation, such as its title, and the masters and layouts of the slides stay as they are. Paragraphs keep their direction, so a translation into a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check the text boxes on your slides.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::POWERPOINT::POWERPOINTSEGMENTFORMAT::T7791926"] = "Diagramme, SmartArt, die Alternativtexte von Bildern, die Eigenschaften der Präsentation, wie z. B. deren Titel, sowie die Folienmaster und Layouts bleiben unverändert. Absätze behalten ihre Textrichtung bei, sodass eine Übersetzung in eine von rechts nach links geschriebene Sprache, wie Arabisch oder Hebräisch, möglicherweise Anpassungen erfordert. Neuer Text benötigt oft mehr Platz als der Originaltext. Bitte überprüfen Sie daher die Textfelder auf Ihren Folien."
+
+-- Charts, SmartArt, comments, the alternative texts of pictures, and the properties of the document, such as its title, stay as they are. Paragraphs keep their direction, so a translation into a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::WORD::WORDSEGMENTFORMAT::T2476688991"] = "Diagramme, SmartArt, Kommentare, die Alternativtexte von Bildern sowie die Eigenschaften des Dokuments, wie z. B. dessen Titel, bleiben unverändert. Absätze behalten ihre Textrichtung bei, sodass bei einer Übersetzung in eine von rechts nach links geschriebene Sprache, wie Arabisch oder Hebräisch, Anpassungen erforderlich sein können. Neuer Text benötigt oft mehr Platz als der Originaltext. Bitte überprüfen Sie daher Textfelder und Tabellenzellen mit fester Größe."
 
 -- Please drop a file, not a folder.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFILE::T1472251601"] = "Bitte legen Sie eine Datei ab, keinen Ordner."

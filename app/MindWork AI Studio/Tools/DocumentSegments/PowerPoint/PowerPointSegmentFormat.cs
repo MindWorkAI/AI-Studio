@@ -27,7 +27,7 @@ public sealed class PowerPointSegmentFormat : IDocumentSegmentFormat
     public FileTypeFilter FileType => FileTypes.POWER_POINT_PRESENTATION;
 
     /// <inheritdoc />
-    public string LimitsNotice => TB("Charts, SmartArt, the alternative texts of pictures, and the masters and layouts of the slides stay as they are. New text often needs more room than the original, so please check the text boxes on your slides.");
+    public string LimitsNotice => TB("Charts, SmartArt, the alternative texts of pictures, the properties of the presentation, such as its title, and the masters and layouts of the slides stay as they are. Paragraphs keep their direction, so a translation into a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check the text boxes on your slides.");
 
     /// <inheritdoc />
     public Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token) => Task.Run<IReadOnlyList<DocumentSegment>>(() =>

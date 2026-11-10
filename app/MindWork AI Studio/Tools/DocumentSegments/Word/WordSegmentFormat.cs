@@ -27,7 +27,7 @@ public sealed class WordSegmentFormat : IDocumentSegmentFormat
     public FileTypeFilter FileType => FileTypes.MS_WORD;
 
     /// <inheritdoc />
-    public string LimitsNotice => TB("Charts, SmartArt, comments, and the alternative texts of pictures stay as they are. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.");
+    public string LimitsNotice => TB("Charts, SmartArt, comments, the alternative texts of pictures, and the properties of the document, such as its title, stay as they are. Paragraphs keep their direction, so a translation into a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.");
 
     /// <inheritdoc />
     public Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token) => Task.Run<IReadOnlyList<DocumentSegment>>(() =>
