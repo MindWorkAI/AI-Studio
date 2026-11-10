@@ -147,6 +147,14 @@
                                 }
 
                                 <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+
+                                <BflWorkStatePanel Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))"
+                                                   WorkStates="@this.workStates"
+                                                   Forms="@this.forms"
+                                                   FormChanged="@(() => this.SaveFormAsync(this.activeStep))"
+                                                   WorkStateStored="@this.WorkStateStoredAsync"
+                                                   Provider="@this.providerSettings"
+                                                   ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
                             </div>
                         </MudItem>
                         <MudItem xs="12" lg="4">

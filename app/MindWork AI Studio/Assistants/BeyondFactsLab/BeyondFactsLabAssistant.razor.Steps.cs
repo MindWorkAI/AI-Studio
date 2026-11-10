@@ -8,6 +8,12 @@ public partial class BeyondFactsLabAssistant
     private Dictionary<BflStep, BflStepFormData> forms = [];
 
     /// <summary>
+    /// The work states of the preparation shown, by their steps. A step missing here has a work state this version
+    /// cannot open.
+    /// </summary>
+    private Dictionary<BflStep, BflWorkState> workStates = [];
+
+    /// <summary>
     /// The step shown.
     /// </summary>
     private BflStep activeStep = BflStep.FRAMEWORK;
@@ -28,13 +34,44 @@ public partial class BeyondFactsLabAssistant
         if (project?.Project is { } openedProject)
         {
             this.forms = new(await this.Store.LoadFormsAsync(openedProject.ProjectId));
+            this.workStates = new(await this.Store.LoadWorkStatesAsync(openedProject.ProjectId));
             this.activeStep = openedProject.CurrentStep;
         }
         else
         {
             this.forms = [];
+            this.workStates = [];
             this.activeStep = BflStep.FRAMEWORK;
         }
+    }
+
+    /// <summary>
+    /// Shows a work state after the panel of its step stored it.
+    /// </summary>
+    /// <param name="project">The preparation with its new time of change.</param>
+    private Task WorkStateStoredAsync(BflProject project)
+    {
+        this.ReplaceProject(project);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Reads the work states of the preparation shown again once the generator started, ended, or stored a draft.
+    /// </summary>
+    /// <param name="location">The step whose work state changed.</param>
+    private Task OnWorkStateChangedAsync(BflStepThreadLocation location)
+    {
+        if (this.selectedProject?.ProjectId != location.ProjectId)
+            return Task.CompletedTask;
+
+        return this.InvokeAsync(async () =>
+        {
+            this.workStates = new(await this.Store.LoadWorkStatesAsync(location.ProjectId));
+            if (await this.Store.LoadAsync(location.ProjectId) is { } project)
+                this.ReplaceProject(project);
+
+            this.StateHasChanged();
+        });
     }
 
     /// <summary>
