@@ -1,0 +1,137 @@
+@inherits MSGComponentBase
+
+<MudText Typo="Typo.h6" Class="mt-6 mb-1">@T("Research")</MudText>
+<MudText Typo="Typo.body2" Class="mb-3">@TA("Research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. The conversation of this step builds on what they find.")</MudText>
+
+@* What the research receives, and what it never receives: *@
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.Shield" Class="mb-3">
+    <MudText Typo="Typo.body2">@TA("The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.")</MudText>
+    @if (this.PublicDetails.Count > 0)
+    {
+        <MudText Typo="Typo.body2" Class="mt-2">@T("The research receives these details:")</MudText>
+        <ul class="ml-4">
+            @foreach (var detail in this.PublicDetails)
+            {
+                <li><MudText Typo="Typo.body2">@LabelOf(detail): @detail.Value</MudText></li>
+            }
+        </ul>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Class="mt-2">@string.Format(Culture, TA("You have not entered any public details yet. Enter them in the step '{0}', such as the topic of the event or its link."), BflStep.FRAMEWORK.Title)</MudText>
+    }
+</MudAlert>
+
+@if (this.ProviderIssue is { } providerIssue)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-3">@providerIssue</MudAlert>
+}
+else if (this.availability is { CanResearch: false } unavailable)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-3">@unavailable.Message</MudAlert>
+}
+
+<MudButton Variant="@(this.research.Count > 0 ? Variant.Outlined : Variant.Filled)"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.TravelExplore"
+           OnClick="@this.StartAllAsync"
+           Disabled="@(!this.CanStart)"
+           Class="mb-3">
+    @(this.research.Count > 0 ? T("Research all topics again") : T("Start the research"))
+</MudButton>
+
+@* Only one topic is open at a time, so that the step stays clear: *@
+<MudExpansionPanels MultiExpansion="@false" Class="mb-3">
+    @foreach (var topic in BflResearchTopic.All)
+    {
+        var found = this.research.GetValueOrDefault(topic);
+        var isRunning = this.IsRunning(topic);
+        <MudExpansionPanel @key="topic" Class="border-solid border rounded-lg" Expanded="@(this.expandedTopic == topic)" ExpandedChanged="@(expanded => this.SetExpanded(topic, expanded))">
+            <TitleContent>
+                <div class="d-flex align-center">
+                    @if (isRunning)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" Class="mr-3"/>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@this.StatusIcon(found)" Color="@this.StatusColor(found)" Class="mr-3"/>
+                    }
+                    <MudText Typo="Typo.h6">@topic.Title</MudText>
+                    <MudTooltip Text="@topic.Description" Placement="Placement.Top">
+                        <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Color="Color.Info" Class="ml-2"/>
+                    </MudTooltip>
+                    <MudSpacer/>
+                    <MudText Typo="Typo.caption" Class="mr-2">@this.StatusText(found, isRunning)</MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                @if (isRunning)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1"/>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                        <MudText Typo="Typo.caption">@T("The agent researches this topic")</MudText>
+                        <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Stop" OnClick="@(() => this.CancelAsync(topic))">@T("Stop")</MudButton>
+                    </MudStack>
+                }
+
+                @if (found is null)
+                {
+                    <MudText Typo="Typo.body2" Class="mb-3">@topic.Description</MudText>
+                }
+                else
+                {
+                    @if (found.IsOutdated(this.PublicDetails))
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2">
+                            @TA("The public details changed since this research. You can research this topic again.")
+                        </MudAlert>
+                    }
+
+                    <div class="border rounded pa-2 mb-3" style="max-height: 400px; overflow-y: auto;">
+                        <MudMarkdown Value="@found.Text" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                    </div>
+
+                    @* What left AI Studio for this research: *@
+                    <MudText Typo="Typo.subtitle2">@T("Queries sent to the web search")</MudText>
+                    @if (found.SearchQueries.Count is 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mb-2">@T("None")</MudText>
+                    }
+                    else
+                    {
+                        <ul class="ml-4 mb-2">
+                            @foreach (var query in found.SearchQueries)
+                            {
+                                <li><MudText Typo="Typo.body2">@query</MudText></li>
+                            }
+                        </ul>
+                    }
+
+                    <MudText Typo="Typo.subtitle2">@T("Web pages opened")</MudText>
+                    @if (found.Pages.Count is 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mb-2">@T("None")</MudText>
+                    }
+                    else
+                    {
+                        <ul class="ml-4 mb-2">
+                            @foreach (var webPage in found.Pages)
+                            {
+                                <li><MudLink Href="@webPage.Url" Target="_blank" Typo="Typo.body2">@webPage.Title</MudLink></li>
+                            }
+                        </ul>
+                    }
+                }
+
+                <MudButton Size="Size.Small"
+                           Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="@(() => this.StartAsync(topic))"
+                           Disabled="@(!this.CanStart)">
+                    @(found is null ? T("Research this topic") : T("Research this topic again"))
+                </MudButton>
+            </ChildContent>
+        </MudExpansionPanel>
+    }
+</MudExpansionPanels>

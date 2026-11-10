@@ -36,9 +36,10 @@ public static class BflPromptComposer
     /// <param name="responseLanguage">The name of the language the model answers in, e.g., the language of the app.</param>
     /// <param name="workStates">The work states of the preparation, by their steps; only the confirmed ones reach the prompt. Null when there are none.</param>
     /// <param name="tools">What keeps the tools of the lab from being offered with the provider of the preparation; null counts as no tools at all.</param>
+    /// <param name="research">The research of the preparation, by its topics; only the step "Strategy" gets it. Null when there is none.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The core prompt has a placeholder without a value.</exception>
-    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null, IReadOnlyDictionary<BflResearchTopic, BflResearch>? research = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
@@ -46,6 +47,7 @@ public static class BflPromptComposer
         [BflPromptTemplate.STEP] = parts.Step.Trim(),
         [BflPromptTemplate.MATERIALS] = Materials(materials),
         [BflPromptTemplate.TOOLS] = BflToolStatus.ForStep(tools ?? NO_TOOLS).Trim(),
+        [BflPromptTemplate.RESEARCH] = Research(step, research ?? new Dictionary<BflResearchTopic, BflResearch>(), PublicDetailsOf(forms)),
         [BflPromptTemplate.WORK_STATES] = WorkStates(step, workStates ?? new Dictionary<BflStep, BflWorkState>(), forms),
         [BflPromptTemplate.DETAILS] = Details(step, forms),
         [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms)
@@ -139,6 +141,42 @@ public static class BflPromptComposer
         }
 
         return details;
+    }
+
+    /// <summary>
+    /// Lists what the research agents found, for the step "Strategy".
+    /// </summary>
+    /// <remarks>
+    /// The other steps leave the research out: what the person takes over from it, such as the participants, reaches
+    /// them through the confirmed work state of the step "Strategy". A research whose public details changed since is
+    /// marked, so that the model checks it with the person. The research comes in the order of its topics, each with
+    /// the day it was done.
+    /// </remarks>
+    /// <param name="step">The step the chat belongs to.</param>
+    /// <param name="research">The research of the preparation, by its topics.</param>
+    /// <param name="details">The public details about the event as they are now.</param>
+    private static string Research(BflStep step, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, IReadOnlyList<BflResearchDetail> details)
+    {
+        if (step is not BflStep.STRATEGY)
+            return "Die Recherche nutzt der Schritt „Strategie“. Was die Person daraus übernimmt, steht in dessen bestätigtem Arbeitsstand.";
+
+        var text = new StringBuilder();
+        foreach (var topic in BflResearchTopic.All)
+        {
+            if (!research.TryGetValue(topic, out var found) || found.Text.Trim().Length is 0)
+                continue;
+
+            if (text.Length > 0)
+                text.Append(LINE_BREAK);
+
+            text.Append($"<thema titel=\"{topic.Title}\" stand=\"{found.CreatedAtUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}\">").Append(LINE_BREAK);
+            if (found.IsOutdated(details))
+                text.Append("(Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Sie passt womöglich nicht mehr zur Veranstaltung.)").Append(LINE_BREAK);
+
+            text.Append(found.Text.Trim().ReplaceLineEndings(LINE_BREAK.ToString())).Append(LINE_BREAK).Append("</thema>").Append(LINE_BREAK);
+        }
+
+        return text.Length is 0 ? "Es gibt noch keine Recherche." : text.ToString().TrimEnd();
     }
 
     /// <summary>

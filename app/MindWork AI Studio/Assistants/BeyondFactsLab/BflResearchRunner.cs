@@ -87,6 +87,41 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
     public Task RunAllAsync(Guid projectId, AIStudio.Settings.Provider provider) => Task.WhenAll(BflResearchTopic.All.Select(topic => this.RunAsync(new BflResearchLocation(projectId, topic), provider)));
 
     /// <summary>
+    /// Starts the research on every topic which has none yet, or whose public details changed since, e.g., once the
+    /// person confirmed the event details.
+    /// </summary>
+    /// <remarks>
+    /// It starts nothing and tells nothing while the research cannot search the web, or while the person entered no
+    /// public detail yet: then the area "Research" says why. It returns once the agents started, not when they are
+    /// done; what goes wrong in their work is reported through the message bus.
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="provider">The provider of the preparation.</param>
+    /// <param name="forms">The forms of the preparation, by their steps.</param>
+    /// <returns>The topics whose research started.</returns>
+    public async Task<IReadOnlyList<BflResearchTopic>> StartWhenDueAsync(Guid projectId, AIStudio.Settings.Provider provider, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
+    {
+        var details = BflPromptComposer.PublicDetailsOf(forms);
+        if (details.Count is 0 || !(await this.CheckAvailabilityAsync(provider)).CanResearch)
+            return [];
+
+        var topics = TopicsDue(await store.LoadAllResearchAsync(projectId), details).Where(topic => !this.IsRunning(new BflResearchLocation(projectId, topic))).ToList();
+        if (topics.Count > 0)
+            _ = Task.WhenAll(topics.Select(topic => this.RunAsync(new BflResearchLocation(projectId, topic), provider)));
+
+        return topics;
+    }
+
+    /// <summary>
+    /// Finds the topics which need a research: those without one, and those whose public details changed since.
+    /// </summary>
+    /// <param name="research">The research of the preparation, by its topics.</param>
+    /// <param name="details">The public details about the event as they are now.</param>
+    /// <returns>The topics, in their order.</returns>
+    public static IReadOnlyList<BflResearchTopic> TopicsDue(IReadOnlyDictionary<BflResearchTopic, BflResearch> research, IReadOnlyList<BflResearchDetail> details) =>
+        [.. BflResearchTopic.All.Where(topic => !research.TryGetValue(topic, out var found) || found.IsOutdated(details))];
+
+    /// <summary>
     /// Lets the agent of a topic research and stores what it found, replacing its earlier research.
     /// </summary>
     /// <remarks>

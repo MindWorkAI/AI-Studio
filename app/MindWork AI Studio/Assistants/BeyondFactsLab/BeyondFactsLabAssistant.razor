@@ -146,6 +146,15 @@
                                     </MudAlert>
                                 }
 
+                                @if (this.activeStep is BflStep.STRATEGY)
+                                {
+                                    <BflResearchPanel ProjectId="@project.ProjectId"
+                                                      Forms="@this.forms"
+                                                      ResearchStored="@this.ProjectStoredAsync"
+                                                      Provider="@this.providerSettings"
+                                                      ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                                }
+
                                 <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
 
                                 <BflWorkStatePanel Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))"
@@ -153,6 +162,7 @@
                                                    Forms="@this.forms"
                                                    FormChanged="@(() => this.SaveFormAsync(this.activeStep))"
                                                    WorkStateStored="@this.ProjectStoredAsync"
+                                                   WorkStateConfirmed="@this.WorkStateConfirmedAsync"
                                                    Provider="@this.providerSettings"
                                                    ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
 

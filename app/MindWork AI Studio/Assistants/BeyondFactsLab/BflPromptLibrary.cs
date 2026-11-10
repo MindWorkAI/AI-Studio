@@ -75,6 +75,7 @@ public static class BflPromptLibrary
         BflPromptTemplate.STEP,
         BflPromptTemplate.MATERIALS,
         BflPromptTemplate.TOOLS,
+        BflPromptTemplate.RESEARCH,
         BflPromptTemplate.DETAILS,
         BflPromptTemplate.MISSING_DETAILS,
         BflPromptTemplate.WORK_STATES);

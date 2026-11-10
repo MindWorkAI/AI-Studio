@@ -41,6 +41,9 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
 
+    [Inject]
+    private BflResearchRunner ResearchRunner { get; init; } = null!;
+
     /// <summary>
     /// Whether the person may open the lab, so that the page did not send them away.
     /// </summary>

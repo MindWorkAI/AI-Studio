@@ -56,6 +56,21 @@ public partial class BeyondFactsLabAssistant
     }
 
     /// <summary>
+    /// Starts the research once the person confirmed the event details, on every topic without one and on every topic
+    /// whose public details changed since, and tells the person.
+    /// </summary>
+    /// <param name="step">The step whose work state the person confirmed.</param>
+    private async Task WorkStateConfirmedAsync(BflStep step)
+    {
+        if (step is not BflStep.FRAMEWORK || this.selectedProject?.Project is not { } project || this.ValidateProvider(this.providerSettings) is not null)
+            return;
+
+        var started = await this.ResearchRunner.StartWhenDueAsync(project.ProjectId, this.providerSettings, this.forms);
+        if (started.Count > 0)
+            await this.MessageBus.SendInfo(new(Icons.Material.Filled.TravelExplore, string.Format(TA("The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'."), BflStep.STRATEGY.Title)));
+    }
+
+    /// <summary>
     /// Reads the work states of the preparation shown again once the generator started, ended, or stored a draft.
     /// </summary>
     /// <param name="location">The step whose work state changed.</param>

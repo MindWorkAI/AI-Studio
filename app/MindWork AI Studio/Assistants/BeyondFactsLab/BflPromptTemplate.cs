@@ -73,6 +73,11 @@ public static partial class BflPromptTemplate
     public const string TOOLS = "TOOLS";
 
     /// <summary>
+    /// What the research agents found about the event, for the step "Strategy".
+    /// </summary>
+    public const string RESEARCH = "RESEARCH";
+
+    /// <summary>
     /// What a research agent looks into, see BflResearchTopic.
     /// </summary>
     public const string TOPIC = "TOPIC";
