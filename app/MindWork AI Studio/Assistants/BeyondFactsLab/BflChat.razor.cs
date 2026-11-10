@@ -66,6 +66,16 @@ public partial class BflChat : MSGComponentBase
     private readonly CancellationTokenSource countCancellation = new();
 
     /// <summary>
+    /// The token of countCancellation, taken while the source still lives.
+    /// </summary>
+    /// <remarks>
+    /// A count goes on after an await, when the component may have gone away meanwhile, e.g., because the person moved
+    /// on to another step. The source is disposed by then and refuses to hand out its token; the token taken before
+    /// still tells that the count was cancelled.
+    /// </remarks>
+    private CancellationToken countToken;
+
+    /// <summary>
     /// What the next request carries, as far as it was counted.
     /// </summary>
     private ConversationTokens tokens = ConversationTokens.UNAVAILABLE;
@@ -133,6 +143,7 @@ public partial class BflChat : MSGComponentBase
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        this.countToken = this.countCancellation.Token;
         this.ConversationService.ConversationChanged += this.OnConversationChangedAsync;
         this.MaterialService.MaterialsChanged += this.OnMaterialsChangedAsync;
         this.SettingsManager.InjectSpellchecking(this.inputAttributes);
@@ -221,7 +232,7 @@ public partial class BflChat : MSGComponentBase
         {
             var systemPrompt = await this.ConversationService.ComposeSystemPromptAsync(this.Location, this.Provider);
             var parts = ConversationParts.Of(thread, systemPrompt, string.Empty, null, false, null);
-            this.tokens = await this.TokenCounter.CountAsync(this.Provider, parts, thread.ReportedHistoryFor(this.Provider.Model), this.countCancellation.Token);
+            this.tokens = await this.TokenCounter.CountAsync(this.Provider, parts, thread.ReportedHistoryFor(this.Provider.Model), this.countToken);
         }
         catch (OperationCanceledException)
         {
