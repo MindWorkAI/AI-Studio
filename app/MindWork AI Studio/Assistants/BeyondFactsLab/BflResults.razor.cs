@@ -2,9 +2,12 @@ using System.Globalization;
 
 using AIStudio.Chat;
 using AIStudio.Components;
+using AIStudio.Dialogs;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.BeyondFactsLab;
 
@@ -33,6 +36,9 @@ public partial class BflResults : MSGComponentBase
 
     [Inject]
     private AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
     private ILogger<BflResults> Logger { get; init; } = null!;
@@ -154,6 +160,15 @@ public partial class BflResults : MSGComponentBase
     private bool IsBusy(BflResultKind kind) => this.saving.Contains(kind) || this.IsGenerating(kind);
 
     /// <summary>
+    /// Gets the results which "Create all materials in parallel" creates: every one which can be opened and is idle.
+    /// </summary>
+    private IReadOnlyList<BflResultKind> CreatableKinds => [.. BflResultKind.All.Where(kind => this.results.ContainsKey(kind) && !this.IsBusy(kind))];
+
+    private bool CanCreateAll => this.ProviderIssue is null && this.CreatableKinds.Count > 0;
+
+    private bool AnyCreated => this.results.Values.Any(result => result.Draft is not null || result.Confirmed is not null);
+
+    /// <summary>
     /// Tells where a result stands, for the header of its panel.
     /// </summary>
     /// <param name="kind">The kind of result.</param>
@@ -267,6 +282,36 @@ public partial class BflResults : MSGComponentBase
         {
             this.saving.Remove(kind);
         }
+    }
+
+    /// <summary>
+    /// Creates every idle result at once: the model writes the four of them in parallel, while AI Studio puts the
+    /// reflection folder together with the choices of its panel.
+    /// </summary>
+    /// <remarks>
+    /// Like "Create anew", a new draft replaces an earlier one, while a confirmed version stays until the person
+    /// confirms the new draft. Since a draft may hold edits of the person, the component asks first when there is one.
+    /// </remarks>
+    private async Task CreateAllAsync()
+    {
+        var kinds = this.CreatableKinds;
+        if (this.ProviderIssue is not null || kinds.Count is 0)
+            return;
+
+        if (kinds.Any(kind => this.results[kind].Draft is not null))
+        {
+            var parameters = new DialogParameters<ConfirmDialog>
+            {
+                { dialog => dialog.Message, TA("Replace the drafts you have not confirmed yet? Materials you confirmed stay until you confirm their new drafts.") }
+            };
+
+            var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Create all materials in parallel"), parameters, DialogOptions.FULLSCREEN);
+            var answer = await reference.Result;
+            if (answer is null || answer.Canceled)
+                return;
+        }
+
+        await Task.WhenAll(kinds.Select(this.CreateAsync));
     }
 
     private Task CancelAsync(BflResultKind kind) => this.Generator.CancelAsync(new BflResultLocation(this.ProjectId, kind));

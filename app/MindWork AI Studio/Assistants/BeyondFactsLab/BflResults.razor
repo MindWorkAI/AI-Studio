@@ -10,6 +10,15 @@
     </MudAlert>
 }
 
+<MudButton Variant="@(this.AnyCreated ? Variant.Outlined : Variant.Filled)"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.AutoAwesome"
+           OnClick="@this.CreateAllAsync"
+           Disabled="@(!this.CanCreateAll)"
+           Class="mb-3">
+    @T("Create all materials in parallel")
+</MudButton>
+
 @* Only one material is open at a time, so that the list stays clear: *@
 <MudExpansionPanels MultiExpansion="@false">
     @foreach (var kind in BflResultKind.All)
