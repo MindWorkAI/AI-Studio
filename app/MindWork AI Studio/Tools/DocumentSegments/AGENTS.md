@@ -60,12 +60,28 @@ footers, and the notes as segments, and leaves everything else of the document a
   so a range only widens to its paragraph.
 - **Changes of formatting are pairs as well.** Within a pair, or outside of any, the words in the most common
   formatting stay words, and those in any other formatting, e.g., a word in bold, get a pair of their own.
-  Spaces never get one. A paragraph with more than `MAX_FORMAT_PAIRS` such pairs keeps one formatting for
-  its new words instead and counts as simplified: every pair is one more thing a model has to keep in place.
+  Spaces never get one. A paragraph with more than `FormatSpans.MAX_PAIRS` such pairs keeps one formatting
+  for its new words instead and counts as simplified: every pair is one more thing a model has to keep in
+  place. `FormatSpans` serves every format which works this way, PowerPoint included.
+
+## PowerPoint presentations
+
+`PowerPoint/PowerPointSegmentFormat` reads the paragraphs of the shapes, groups, and tables of every slide, and
+those of its notes, slide by slide. The rules of `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md` about
+files hold here as well; its classes for the Slide Assistant are not used.
+
+- **Masters and layouts stay as they are.** Their texts are prompts for authors, which every slide replaces.
+- **A link is formatting.** PowerPoint keeps it in the properties of a run, so it becomes a pair like bold.
+  Line breaks and fields, such as the number of the slide, are tags of their own.
+- **The properties of the end of a paragraph come last.** The writer inserts new runs before them, as the
+  schema demands.
+- **Language and spell check are no formatting.** A run differs from another only in what changes its look;
+  new runs carry the target language and no mark of an earlier spell check.
 
 ## Tests
 
 The tests in `app/Tests/Tools/DocumentSegments/` play the model with a delegate, so they run without a
 provider. Each format gets a test which writes every segment back unchanged and expects the same document.
-Office documents are built in code, e.g., by `TestWordDocument`, so no binary document is checked in, and a
-test which writes one compares what the `OpenXmlValidator` finds with what it finds in the source.
+Office documents are built in code, e.g., by `TestWordDocument` or by `TestTemplate` of the Slide Assistant,
+so no binary document is checked in, and a test which writes one compares what the `OpenXmlValidator` finds
+with what it finds in the source.

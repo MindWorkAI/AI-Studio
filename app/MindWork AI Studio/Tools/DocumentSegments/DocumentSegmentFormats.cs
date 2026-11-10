@@ -1,3 +1,4 @@
+using AIStudio.Tools.DocumentSegments.PowerPoint;
 using AIStudio.Tools.DocumentSegments.Word;
 using AIStudio.Tools.Rust;
 
@@ -11,6 +12,7 @@ public static class DocumentSegmentFormats
     private static readonly IReadOnlyList<IDocumentSegmentFormat> FORMATS =
     [
         new WordSegmentFormat(),
+        new PowerPointSegmentFormat(),
         new MarkdownSegmentFormat(),
     ];
 

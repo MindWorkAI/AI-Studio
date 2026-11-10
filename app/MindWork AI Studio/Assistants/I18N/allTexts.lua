@@ -14182,6 +14182,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "The index of
 -- Code, formulas, link targets, and embedded HTML stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::MARKDOWNSEGMENTFORMAT::T4053772832"] = "Code, formulas, link targets, and embedded HTML stay as they are."
 
+-- Charts, SmartArt, the alternative texts of pictures, and the masters and layouts of the slides stay as they are. New text often needs more room than the original, so please check the text boxes on your slides.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::POWERPOINT::POWERPOINTSEGMENTFORMAT::T251805316"] = "Charts, SmartArt, the alternative texts of pictures, and the masters and layouts of the slides stay as they are. New text often needs more room than the original, so please check the text boxes on your slides."
+
 -- Charts, SmartArt, comments, and the alternative texts of pictures stay as they are. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::WORD::WORDSEGMENTFORMAT::T3092504446"] = "Charts, SmartArt, comments, and the alternative texts of pictures stay as they are. New text often needs more room than the original, so please check text boxes and table cells of a fixed size."
 

@@ -27,11 +27,6 @@ namespace AIStudio.Tools.DocumentSegments.Word;
 internal static class WordSegmentReader
 {
     /// <summary>
-    /// How many changes of formatting one paragraph may carry as pairs of tags.
-    /// </summary>
-    private const int MAX_FORMAT_PAIRS = 12;
-
-    /// <summary>
     /// Reads the paragraphs which can be segments, in the order of the document.
     /// </summary>
     /// <param name="document">The document.</param>
@@ -88,18 +83,13 @@ internal static class WordSegmentReader
     }
 
     /// <summary>
-    /// Reads a paragraph, with its changes of formatting as pairs as long as they are few.
+    /// Reads a paragraph, with its changes of formatting as pairs as long as they are few, see FormatSpans.MAX_PAIRS.
     /// </summary>
-    /// <remarks>
-    /// Every pair is one more thing a model has to keep in place. A paragraph whose formatting changes
-    /// more often, e.g., a list of terms in bold, keeps one formatting for its new words instead and counts
-    /// as simplified.
-    /// </remarks>
     private static WordParagraph? ReadParagraph(W.Paragraph paragraph)
     {
         var reader = new ParagraphReader(usesFormatPairs: true);
         var read = reader.TryRead(paragraph);
-        return reader.FormatPairCount <= MAX_FORMAT_PAIRS ? read : new ParagraphReader(usesFormatPairs: false).TryRead(paragraph);
+        return reader.FormatPairCount <= FormatSpans.MAX_PAIRS ? read : new ParagraphReader(usesFormatPairs: false).TryRead(paragraph);
     }
 
     private static bool IsInBoundContentControl(W.Paragraph paragraph) => paragraph.Ancestors<W.SdtElement>().Any(contentControl => !IsEditable(contentControl));
@@ -316,7 +306,7 @@ internal static class WordSegmentReader
                     break;
             }
 
-            foreach (var span in this.SpansOf(words, baseFormatKey))
+            foreach (var span in FormatSpans.Of(words.Select(word => (word.Text, word.Format, this.FormatKeyOf(word.Format))), baseFormatKey))
             {
                 this.hasTagLikeWords |= TaggedText.ContainsTagLikeText(span.Text);
                 if (!usesFormatPairs || span.FormatKey == baseFormatKey)
@@ -340,7 +330,7 @@ internal static class WordSegmentReader
         /// <summary>
         /// Notes the formatting of words outside of a pair of formatting, and whether it differs from earlier ones.
         /// </summary>
-        private void NoteFormat(int pairId, WordSpan span)
+        private void NoteFormat(int pairId, FormatSpan<W.RunProperties?> span)
         {
             if (this.textFormatKeys.TryAdd(pairId, span.FormatKey))
                 this.textFormats[pairId] = span.Format;
@@ -349,40 +339,9 @@ internal static class WordSegmentReader
         }
 
         /// <summary>
-        /// Joins runs which follow each other into spans of the same formatting.
-        /// </summary>
-        /// <remarks>
-        /// A run of nothing but spaces in a formatting of its own joins its neighbor, since nobody sees the
-        /// formatting of a space, and a pair around it would only burden the model. Spaces in the most common
-        /// formatting stay apart, e.g., between a word in bold and one in italics.
-        /// </remarks>
-        private List<WordSpan> SpansOf(List<TextItem> words, string baseFormatKey)
-        {
-            var spans = new List<WordSpan>();
-            foreach (var word in words)
-            {
-                var formatKey = this.FormatKeyOf(word.Format);
-                var isBlankOfItsOwn = string.IsNullOrWhiteSpace(word.Text) && formatKey != baseFormatKey;
-                if (spans.Count > 0 && (spans[^1].FormatKey == formatKey || isBlankOfItsOwn))
-                    spans[^1] = spans[^1] with { Text = spans[^1].Text + word.Text };
-                else if (spans.Count > 0 && string.IsNullOrWhiteSpace(spans[^1].Text) && spans[^1].FormatKey != baseFormatKey)
-                    spans[^1] = new WordSpan(formatKey, word.Format, spans[^1].Text + word.Text);
-                else
-                    spans.Add(new WordSpan(formatKey, word.Format, word.Text));
-            }
-
-            return spans;
-        }
-
-        /// <summary>
         /// Finds the formatting most words of a pair have, or of the paragraph outside of any pair.
         /// </summary>
-        private string BaseFormatKeyOf(List<Item> items) => items
-            .OfType<TextItem>()
-            .GroupBy(word => this.FormatKeyOf(word.Format))
-            .OrderByDescending(group => group.Sum(word => word.Text.Count(char.IsLetter)))
-            .Select(group => group.Key)
-            .FirstOrDefault() ?? string.Empty;
+        private string BaseFormatKeyOf(List<Item> items) => FormatSpans.BaseKeyOf(items.OfType<TextItem>().Select(word => (word.Text, this.FormatKeyOf(word.Format))));
 
         private void AddPlaceholder(List<Item> items, int first, int last)
         {
@@ -431,14 +390,14 @@ internal static class WordSegmentReader
             copy.Languages = null;
             copy.NoProof = null;
             formatKey = copy.OuterXml;
+
+            // A run without anything that changes its look counts as having no properties at all:
+            if (!copy.HasAttributes && !copy.HasChildren)
+                formatKey = string.Empty;
+
             this.formatKeys[format] = formatKey;
             return formatKey;
         }
-
-        /// <summary>
-        /// Words which follow each other in the same formatting.
-        /// </summary>
-        private sealed record WordSpan(string FormatKey, W.RunProperties? Format, string Text);
 
         private static List<Item> ItemsOf(OpenXmlElement parent)
         {
