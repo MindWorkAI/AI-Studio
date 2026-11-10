@@ -20,6 +20,7 @@ public static class BflFieldTexts
             BflFieldCatalog.FORMAT => TB("Format of the event"),
             BflFieldCatalog.EVENT_TOPIC => TB("Topic of the event"),
             BflFieldCatalog.AUDIENCE => TB("Audience"),
+            BflFieldCatalog.EVENT_VISIBILITY => TB("Is the event public?"),
             BflFieldCatalog.CONTRIBUTION_TOPIC => TA("Topic of your contribution or your specific assignment"),
             BflFieldCatalog.EVENT_DATE => TB("Date and time"),
             BflFieldCatalog.EVENT_LOCATION => TB("Place"),
@@ -91,6 +92,9 @@ public static class BflFieldTexts
         /// </summary>
         public string Label => option.Id switch
         {
+            BflFieldCatalog.EVENT_PUBLIC => TB("Public"),
+            BflFieldCatalog.EVENT_NOT_PUBLIC => TB("Not public"),
+
             BflFieldCatalog.GOAL_INFORM => TB("Inform"),
             BflFieldCatalog.GOAL_MODERATE => TB("Moderate the discussion"),
             BflFieldCatalog.GOAL_TAKE_POSITION => TB("Take a position in the debate"),

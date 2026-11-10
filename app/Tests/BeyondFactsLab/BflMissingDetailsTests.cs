@@ -24,7 +24,7 @@ public sealed class BflMissingDetailsTests
 
         var missing = BflMissingDetails.Of(BflStep.FRAMEWORK, form);
 
-        Assert.That(missing.Select(field => field.Id), Is.EqualTo(new[] { BflFieldCatalog.FORMAT, BflFieldCatalog.AUDIENCE, BflFieldCatalog.CONTRIBUTION_TOPIC }));
+        Assert.That(missing.Select(field => field.Id), Is.EqualTo(new[] { BflFieldCatalog.FORMAT, BflFieldCatalog.AUDIENCE, BflFieldCatalog.EVENT_VISIBILITY, BflFieldCatalog.CONTRIBUTION_TOPIC }));
     }
 
     [Test]
