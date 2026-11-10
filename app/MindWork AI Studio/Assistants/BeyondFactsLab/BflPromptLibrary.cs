@@ -41,6 +41,11 @@ public static class BflPromptLibrary
     public const string WORK_STATE_PATH = FOLDER + "/Prompts/work-state.md";
 
     /// <summary>
+    /// The folder of the requests which let the model write a result, one for each kind a model writes.
+    /// </summary>
+    private const string RESULTS_FOLDER = FOLDER + "/Prompts/results/";
+
+    /// <summary>
     /// The instruction to address the person formally.
     /// </summary>
     private const string ADDRESS_FORMAL_PATH = FOLDER + "/Prompts/snippets/address-formal.md";
@@ -78,6 +83,12 @@ public static class BflPromptLibrary
         BflPromptTemplate.FIELDS);
 
     /// <summary>
+    /// The placeholders BflPromptComposer fills in the request for a result.
+    /// </summary>
+    private static readonly FrozenSet<string> RESULT_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
+        BflPromptTemplate.MISSING_WORK_STATES);
+
+    /// <summary>
     /// The placeholders of every other file: none, because BflPromptComposer inserts these files as values.
     /// </summary>
     private static readonly FrozenSet<string> NO_PLACEHOLDERS = FrozenSet<string>.Empty;
@@ -87,6 +98,21 @@ public static class BflPromptLibrary
     /// </summary>
     /// <param name="step">The step.</param>
     public static string StepPath(BflStep step) => $"{FOLDER}/Prompts/steps/{step.FolderName}.md";
+
+    /// <summary>
+    /// Gets the request which lets the model write a result.
+    /// </summary>
+    /// <param name="kind">The kind of result, one a model writes.</param>
+    /// <exception cref="ArgumentOutOfRangeException">No model writes this kind of result.</exception>
+    public static string ResultPath(BflResultKind kind) => kind switch
+    {
+        BflResultKind.POSITION_PAPER => RESULTS_FOLDER + "position-paper.md",
+        BflResultKind.CONVERSATION_GUIDE => RESULTS_FOLDER + "conversation-guide.md",
+        BflResultKind.QUESTIONS_AND_ANSWERS => RESULTS_FOLDER + "questions-and-answers.md",
+        BflResultKind.OPEN_POINTS => RESULTS_FOLDER + "open-points.md",
+
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "No model writes this result.")
+    };
 
     /// <summary>
     /// Gets the instruction for a form of address.
@@ -103,6 +129,7 @@ public static class BflPromptLibrary
         KNOWLEDGE_PATH,
         ONBOARDING_PATH,
         WORK_STATE_PATH,
+        ..BflResultKind.All.Where(kind => kind.IsWrittenByModel).Select(ResultPath),
         ..Enum.GetValues<AddressForm>().Select(AddressPath).Distinct(),
         ..BflStep.All.Select(StepPath)
     ];
@@ -118,9 +145,9 @@ public static class BflPromptLibrary
     /// Gets the placeholders a file of the lab's prompts may contain.
     /// </summary>
     /// <remarks>
-    /// BflPromptComposer fills placeholders in the core, in the prompt of the onboarding, and in the request for a work
-    /// state only. It inserts every other file as a value, whose placeholders it leaves as they are, so that they would
-    /// reach the model as text.
+    /// BflPromptComposer fills placeholders in the core, in the prompt of the onboarding, and in the requests for a work
+    /// state and for a result only. It inserts every other file as a value, whose placeholders it leaves as they are, so
+    /// that they would reach the model as text.
     /// </remarks>
     /// <param name="path">The file, one of the paths of this class.</param>
     public static IReadOnlySet<string> PlaceholdersOf(string path) => path switch
@@ -128,6 +155,7 @@ public static class BflPromptLibrary
         CORE_PATH => CORE_PLACEHOLDERS,
         ONBOARDING_PATH => ONBOARDING_PLACEHOLDERS,
         WORK_STATE_PATH => WORK_STATE_PLACEHOLDERS,
+        _ when path.StartsWith(RESULTS_FOLDER, StringComparison.Ordinal) => RESULT_PLACEHOLDERS,
         _ => NO_PLACEHOLDERS
     };
 
