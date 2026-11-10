@@ -5,7 +5,7 @@ using AIStudio.Tools;
 namespace AIStudio.Tests.Icons;
 
 /// <summary>
-/// Checks that every icon of the app is a glyph of the Lucide font, apart from the brand logos.
+/// Checks that every icon of the app is a glyph of the Lucide font, apart from the few that keep an icon of MudBlazor.
 /// </summary>
 /// <remarks>
 /// AppIcons is the one place where the app picks its icons. A constant that takes its value from anywhere
@@ -15,16 +15,26 @@ namespace AIStudio.Tests.Icons;
 public sealed class AppIconsTests
 {
     /// <summary>
-    /// Brand logos keep their own marks instead of a Lucide icon.
+    /// The icons that keep the SVG of MudBlazor: brand logos keep their own marks, and the numbered steps keep
+    /// their numbers, because Lucide has no numbered icons.
     /// </summary>
-    private static readonly HashSet<string> BRAND_LOGOS = [nameof(AppIcons.GITHUB)];
+    private static readonly HashSet<string> KEPT_MUDBLAZOR_ICONS =
+    [
+        nameof(AppIcons.GITHUB),
+        nameof(AppIcons.STEP_1),
+        nameof(AppIcons.STEP_2),
+        nameof(AppIcons.STEP_3),
+        nameof(AppIcons.STEP_4),
+        nameof(AppIcons.STEP_5),
+        nameof(AppIcons.STEP_6)
+    ];
 
     [Test]
-    public void EveryIconIsALucideGlyphOrABrandLogo()
+    public void EveryIconIsALucideGlyphOrAKeptMudBlazorIcon()
     {
         var lucideGlyphs = Constants(typeof(LucideIcons)).Values.ToHashSet(StringComparer.Ordinal);
         var foreign = Constants(typeof(AppIcons))
-            .Where(icon => !BRAND_LOGOS.Contains(icon.Key) && !lucideGlyphs.Contains(icon.Value))
+            .Where(icon => !KEPT_MUDBLAZOR_ICONS.Contains(icon.Key) && !lucideGlyphs.Contains(icon.Value))
             .Select(icon => icon.Key)
             .ToList();
 
@@ -32,14 +42,14 @@ public sealed class AppIconsTests
     }
 
     [Test]
-    public void EveryBrandLogoStaysTheMarkOfItsBrand()
+    public void EveryKeptMudBlazorIconStaysAnSvg()
     {
         var icons = Constants(typeof(AppIcons));
 
         using (Assert.EnterMultipleScope())
         {
-            foreach (var logo in BRAND_LOGOS)
-                Assert.That(icons[logo], Does.StartWith("<"), $"{logo} has to stay an SVG logo.");
+            foreach (var icon in KEPT_MUDBLAZOR_ICONS)
+                Assert.That(icons[icon], Does.StartWith("<"), $"{icon} has to stay an SVG of MudBlazor.");
         }
     }
 

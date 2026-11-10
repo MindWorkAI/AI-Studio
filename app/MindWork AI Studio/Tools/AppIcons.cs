@@ -11,13 +11,14 @@ namespace AIStudio.Tools;
 /// constant here.
 ///
 /// The values come from LucideIcons, which LucideIconGenerator writes from the code points of the Lucide font,
-/// see app/SourceGeneratedMappings/Lucide/README.md. MudBlazor renders them as glyphs of that font. Brand logos
-/// are the exception: they keep their own marks, such as GITHUB.
+/// see app/SourceGeneratedMappings/Lucide/README.md. MudBlazor renders them as glyphs of that font. Two kinds
+/// of icons keep the ones of MudBlazor: brand logos, such as GITHUB, and the numbered steps STEP_1 to STEP_6,
+/// because Lucide has no numbered icons.
 /// </remarks>
 public static class AppIcons
 {
     /// <summary>Adds a new item, such as a provider, a profile, a message, or a file.</summary>
-    public const string ADD = LucideIcons.PLUS;
+    public const string ADD = LucideIcons.SQUARE_PLUS;
 
     /// <summary>Creates a new workspace.</summary>
     public const string ADD_WORKSPACE = LucideIcons.FOLDER_PLUS;
@@ -26,7 +27,7 @@ public static class AppIcons
     public const string ADVANCED_SETTINGS = LucideIcons.SLIDERS_HORIZONTAL;
 
     /// <summary>Marks an AI agent that works in the background, such as the security audit agent or the content cleaner when it has no usable provider.</summary>
-    public const string AGENT = LucideIcons.BRAIN_COG;
+    public const string AGENT = LucideIcons.BOT;
 
     /// <summary>Marks the agent that cleans text content, such as removing navigation and ads from a loaded web page.</summary>
     public const string AGENT_CONTENT_CLEANER = LucideIcons.BRUSH_CLEANING;
@@ -56,7 +57,7 @@ public static class AppIcons
     public const string APP = LucideIcons.APP_WINDOW;
 
     /// <summary>Marks an update of AI Studio, such as checking for one or one being available.</summary>
-    public const string APP_UPDATE = LucideIcons.CIRCLE_FADING_ARROW_UP;
+    public const string APP_UPDATE = LucideIcons.PACKAGE_CHECK;
 
     /// <summary>Marks the assistants, such as their page in the navigation.</summary>
     public const string ASSISTANTS = LucideIcons.LAYOUT_GRID;
@@ -65,22 +66,22 @@ public static class AppIcons
     public const string ASSISTANT_AGENDA = LucideIcons.CALENDAR_CLOCK;
 
     /// <summary>Marks the batch processing assistant.</summary>
-    public const string ASSISTANT_BATCH_PROCESSING = LucideIcons.FOLDER_COG;
+    public const string ASSISTANT_BATCH_PROCESSING = LucideIcons.FILE_STACK;
 
     /// <summary>Stands for the assistant BeyondFacts Lab.</summary>
     public const string ASSISTANT_BEYOND_FACTS_LAB = LucideIcons.SPEECH;
 
     /// <summary>Stands for the assistant Bias of the Day.</summary>
-    public const string ASSISTANT_BIAS_OF_THE_DAY = LucideIcons.BRAIN_COG;
+    public const string ASSISTANT_BIAS_OF_THE_DAY = LucideIcons.NOTEBOOK_TEXT;
 
     /// <summary>Marks the assistant builder, which generates new assistants.</summary>
-    public const string ASSISTANT_BUILDER = LucideIcons.BOT;
+    public const string ASSISTANT_BUILDER = LucideIcons.WRENCH;
 
     /// <summary>Marks the coding assistant.</summary>
     public const string ASSISTANT_CODING = LucideIcons.CODE_XML;
 
     /// <summary>Marks the component tree of an assistant plugin, such as its root form.</summary>
-    public const string ASSISTANT_COMPONENTS = LucideIcons.LIST_TREE;
+    public const string ASSISTANT_COMPONENTS = LucideIcons.DIAGRAM_FLOW_HORIZONTAL;
 
     /// <summary>Marks the accordion section component of an assistant plugin.</summary>
     public const string ASSISTANT_COMPONENT_ACCORDION_SECTION = LucideIcons.ROWS_2;
@@ -89,7 +90,7 @@ public static class AppIcons
     public const string ASSISTANT_COMPONENT_GRID = LucideIcons.LAYOUT_GRID;
 
     /// <summary>Marks the document analysis assistant and its policies.</summary>
-    public const string ASSISTANT_DOCUMENT_ANALYSIS = LucideIcons.FILE_SEARCH;
+    public const string ASSISTANT_DOCUMENT_ANALYSIS = LucideIcons.SCAN_TEXT;
 
     /// <summary>Marks the assistant that writes e-mails.</summary>
     public const string ASSISTANT_EMAIL = LucideIcons.MAIL_PEN;
@@ -143,7 +144,7 @@ public static class AppIcons
     public const string ASSISTANT_VISUAL_BRIEFING = LucideIcons.LAYOUT_DASHBOARD;
 
     /// <summary>Shows all files attached to a chat.</summary>
-    public const string ATTACHED_FILES = LucideIcons.FILES;
+    public const string ATTACHED_FILES = LucideIcons.FILE_STACK;
 
     /// <summary>Attaches files or marks attachments, such as those of a chat or a mail.</summary>
     public const string ATTACH_FILE = LucideIcons.PAPERCLIP;
@@ -212,7 +213,7 @@ public static class AppIcons
     public const string CHANGELOG = LucideIcons.FILE_CLOCK;
 
     /// <summary>Marks a chat, such as the chat page or a chat in a workspace.</summary>
-    public const string CHAT = LucideIcons.MESSAGE_SQUARE;
+    public const string CHAT = LucideIcons.MESSAGE_SQUARE_TEXT;
 
     /// <summary>Marks a chat template.</summary>
     public const string CHAT_TEMPLATE = LucideIcons.MESSAGE_SQUARE_TEXT;
@@ -239,7 +240,7 @@ public static class AppIcons
     public const string COMPANY = LucideIcons.BUILDING;
 
     /// <summary>Marks the messages of a compiler that the coding assistant takes as input.</summary>
-    public const string COMPILER_MESSAGES = LucideIcons.TERMINAL;
+    public const string COMPILER_MESSAGES = LucideIcons.TRIANGLE_EXCLAMATION_POINT;
 
     /// <summary>Marks the accordion layout component of an assistant plugin.</summary>
     public const string COMPONENT_ACCORDION = LucideIcons.LIST_COLLAPSE;
@@ -335,7 +336,7 @@ public static class AppIcons
     public const string DELETE_CHAT_AND_START_NEW = LucideIcons.MESSAGE_SQUARE_X;
 
     /// <summary>Marks a free-text description or context, such as the description of a data source, a plugin, or the context of a word.</summary>
-    public const string DESCRIPTION = LucideIcons.TEXT_ALIGN_START;
+    public const string DESCRIPTION = LucideIcons.SCROLL_TEXT;
 
     /// <summary>Selects the desktop device, such as for the preview of a visual briefing.</summary>
     public const string DEVICE_DESKTOP = LucideIcons.MONITOR;
@@ -397,8 +398,8 @@ public static class AppIcons
     /// <summary>Marks a saved ERI server configuration.</summary>
     public const string ERI_SERVER = LucideIcons.SERVER;
 
-    /// <summary>Reports an error or a failed state.</summary>
-    public const string ERROR = LucideIcons.CIRCLE_X;
+    /// <summary>Reports a real error, such as a failed operation or a failed state. Shown in red; a danger or a notice takes WARNING instead.</summary>
+    public const string ERROR = LucideIcons.MONITOR_X;
 
     /// <summary>Marks an event or occasion, such as an upcoming event in the BeyondFacts Lab or the occasion of a presentation.</summary>
     public const string EVENT = LucideIcons.CALENDAR;
@@ -452,7 +453,7 @@ public static class AppIcons
     public const string FILE_FORMAT_LATEX = LucideIcons.SIGMA;
 
     /// <summary>Marks the Markdown file format, such as for an export.</summary>
-    public const string FILE_FORMAT_MARKDOWN = LucideIcons.HASH;
+    public const string FILE_FORMAT_MARKDOWN = LucideIcons.TEXT_INITIAL;
 
     /// <summary>Marks the OpenDocument text format for exports.</summary>
     public const string FILE_FORMAT_ODT = LucideIcons.FILE_TEXT;
@@ -608,7 +609,7 @@ public static class AppIcons
     public const string LAYOUT_PURPOSE_GENERAL = LucideIcons.LAYOUT_TEMPLATE;
 
     /// <summary>Marks the slide layouts for science.</summary>
-    public const string LAYOUT_PURPOSE_SCIENCE = LucideIcons.MICROSCOPE;
+    public const string LAYOUT_PURPOSE_SCIENCE = LucideIcons.TEST_TUBE_DIAGONAL;
 
     /// <summary>Marks the slide layouts for teaching.</summary>
     public const string LAYOUT_PURPOSE_TEACHING = LucideIcons.GRADUATION_CAP;
@@ -629,7 +630,7 @@ public static class AppIcons
     public const string LIST = LucideIcons.LIST;
 
     /// <summary>Stands for an LLM provider, such as configuring providers or selecting one.</summary>
-    public const string LLM_PROVIDER = LucideIcons.BOT;
+    public const string LLM_PROVIDER = LucideIcons.CPU_AI;
 
     /// <summary>Marks a field for a location, such as a meeting place or a work location.</summary>
     public const string LOCATION = LucideIcons.MAP_PIN;
@@ -701,7 +702,7 @@ public static class AppIcons
     public const string MICROPHONE_OFF = LucideIcons.MIC_OFF;
 
     /// <summary>Marks the AI model a provider uses.</summary>
-    public const string MODEL = LucideIcons.BRAIN_CIRCUIT;
+    public const string MODEL = LucideIcons.CPU_AI;
 
     /// <summary>Marks a field for the moderator of a meeting.</summary>
     public const string MODERATOR = LucideIcons.USER_STAR;
@@ -764,7 +765,7 @@ public static class AppIcons
     public const string OPEN_SOURCE_PROJECTS = LucideIcons.LIBRARY;
 
     /// <summary>Marks what the organization manages, such as an enterprise configuration, a provider, or a profile.</summary>
-    public const string ORGANIZATION = LucideIcons.BUILDING_COMPLEX;
+    public const string ORGANIZATION = LucideIcons.BUILDING;
 
     /// <summary>Shows or sets where a chat may send data after reading a data source.</summary>
     public const string OUTBOUND_DATA_RESTRICTION = LucideIcons.GLOBE_LOCK;
@@ -776,7 +777,7 @@ public static class AppIcons
     public const string OUTPUT = LucideIcons.LOG_OUT;
 
     /// <summary>Marks Pandoc, the document converter that AI Studio uses.</summary>
-    public const string PANDOC = LucideIcons.SQUARE_TERMINAL;
+    public const string PANDOC = LucideIcons.FILE_COG;
 
     /// <summary>Reports that Pandoc is missing or not usable, for example in a wrong version.</summary>
     public const string PANDOC_UNAVAILABLE = LucideIcons.PACKAGE_X;
@@ -803,7 +804,7 @@ public static class AppIcons
     public const string PICTURE_LIBRARY = LucideIcons.IMAGES;
 
     /// <summary>Marks a plugin, such as an assistant plugin, a configuration plugin, or the plugins page.</summary>
-    public const string PLUGIN = LucideIcons.PUZZLE;
+    public const string PLUGIN = LucideIcons.BLOCKS;
 
     /// <summary>Marks the file structure of a plugin.</summary>
     public const string PLUGIN_STRUCTURE = LucideIcons.FOLDER_TREE;
@@ -827,7 +828,7 @@ public static class AppIcons
     public const string PREVIEW_EXPERIMENTAL = LucideIcons.FLASK_CONICAL;
 
     /// <summary>Marks a feature in the prototype preview stage.</summary>
-    public const string PREVIEW_PROTOTYPE = LucideIcons.DRAFTING_COMPASS;
+    public const string PREVIEW_PROTOTYPE = LucideIcons.HOURGLASS;
 
     /// <summary>Marks a preview feature that is a release candidate.</summary>
     public const string PREVIEW_RELEASE_CANDIDATE = LucideIcons.ROCKET;
@@ -860,7 +861,7 @@ public static class AppIcons
     public const string PROVIDER = LucideIcons.SERVER;
 
     /// <summary>Shows or sets a provider confidence level, such as the confidence of a provider or the one a data source or tool requires.</summary>
-    public const string PROVIDER_CONFIDENCE = LucideIcons.SHIELD_HALF;
+    public const string PROVIDER_CONFIDENCE = LucideIcons.SHIELD_LOCK;
 
     /// <summary>Reports that a request to an AI provider or another remote service failed.</summary>
     public const string PROVIDER_ERROR = LucideIcons.CLOUD_OFF;
@@ -970,8 +971,14 @@ public static class AppIcons
     /// <summary>Marks security in general, such as the security badge of an assistant plugin.</summary>
     public const string SECURITY = LucideIcons.SHIELD;
 
-    /// <summary>Stands for the security audit of assistant plugins.</summary>
-    public const string SECURITY_AUDIT = LucideIcons.SHIELD_CHECK;
+    /// <summary>Stands for the security audit of assistant plugins itself, such as starting it or its settings.</summary>
+    public const string SECURITY_AUDIT = LucideIcons.SHIELD;
+
+    /// <summary>Shows that an assistant plugin failed its security audit: the result is below the required minimum level.</summary>
+    public const string SECURITY_AUDIT_FAILED = LucideIcons.SHIELD_EXCLAMATION_POINT;
+
+    /// <summary>Shows that an assistant plugin passed its security audit: the result meets the required minimum level.</summary>
+    public const string SECURITY_AUDIT_PASSED = LucideIcons.SHIELD_CHECK;
 
     /// <summary>Marks something blocked for security reasons, such as a failed integrity check or a provider below the required confidence level.</summary>
     public const string SECURITY_BLOCKED = LucideIcons.SHIELD_X;
@@ -980,10 +987,10 @@ public static class AppIcons
     public const string SECURITY_DANGEROUS = LucideIcons.OCTAGON_X;
 
     /// <summary>Marks the findings of the security audit of a plugin.</summary>
-    public const string SECURITY_FINDINGS = LucideIcons.BUG;
+    public const string SECURITY_FINDINGS = LucideIcons.TRIANGLE_EXCLAMATION_POINT;
 
     /// <summary>Marks an assistant plugin that has no security audit yet.</summary>
-    public const string SECURITY_NOT_AUDITED = LucideIcons.SHIELD_QUESTION_MARK;
+    public const string SECURITY_NOT_AUDITED = LucideIcons.SHIELD_X;
 
     /// <summary>Warns about a possible security risk, such as suspected prompt injections or an assistant plugin that needs an audit.</summary>
     public const string SECURITY_WARNING = LucideIcons.SHIELD_EXCLAMATION_POINT;
@@ -1036,23 +1043,23 @@ public static class AppIcons
     /// <summary>Shows a status as a colored dot, such as the indexing status of a data source.</summary>
     public const string STATUS_INDICATOR = LucideIcons.CIRCLE;
 
-    /// <summary>Marks the first step of a numbered procedure.</summary>
-    public const string STEP_1 = LucideIcons.DICE_1;
+    /// <summary>Marks the first step of a numbered procedure. Lucide has no numbered icons, so it stays the one of MudBlazor.</summary>
+    public const string STEP_1 = Icons.Material.Filled.LooksOne;
 
-    /// <summary>Marks the second step of a numbered procedure.</summary>
-    public const string STEP_2 = LucideIcons.DICE_2;
+    /// <summary>Marks the second step of a numbered procedure. Lucide has no numbered icons, so it stays the one of MudBlazor.</summary>
+    public const string STEP_2 = Icons.Material.Filled.LooksTwo;
 
-    /// <summary>Marks the third step of a numbered procedure.</summary>
-    public const string STEP_3 = LucideIcons.DICE_3;
+    /// <summary>Marks the third step of a numbered procedure. Lucide has no numbered icons, so it stays the one of MudBlazor.</summary>
+    public const string STEP_3 = Icons.Material.Filled.Looks3;
 
-    /// <summary>Marks the fourth step of a numbered procedure.</summary>
-    public const string STEP_4 = LucideIcons.DICE_4;
+    /// <summary>Marks the fourth step of a numbered procedure. Lucide has no numbered icons, so it stays the one of MudBlazor.</summary>
+    public const string STEP_4 = Icons.Material.Filled.Looks4;
 
-    /// <summary>Marks the fifth step of a numbered procedure.</summary>
-    public const string STEP_5 = LucideIcons.DICE_5;
+    /// <summary>Marks the fifth step of a numbered procedure. Lucide has no numbered icons, so it stays the one of MudBlazor.</summary>
+    public const string STEP_5 = Icons.Material.Filled.Looks5;
 
-    /// <summary>Marks the sixth step of a numbered procedure.</summary>
-    public const string STEP_6 = LucideIcons.DICE_6;
+    /// <summary>Marks the sixth step of a numbered procedure. Lucide has no numbered icons, so it stays the one of MudBlazor.</summary>
+    public const string STEP_6 = Icons.Material.Filled.Looks6;
 
     /// <summary>Stops running work, such as generating an answer, recording, or transcribing media.</summary>
     public const string STOP = LucideIcons.SQUARE;
@@ -1085,7 +1092,7 @@ public static class AppIcons
     public const string TEXT_AREA = LucideIcons.TEXT_ALIGN_START;
 
     /// <summary>Marks the choice of how complex a text should be.</summary>
-    public const string TEXT_COMPLEXITY = LucideIcons.CHART_NO_AXES_COLUMN_INCREASING;
+    public const string TEXT_COMPLEXITY = LucideIcons.LAYERS;
 
     /// <summary>Marks a single-line text input, such as the text component of an assistant plugin.</summary>
     public const string TEXT_INPUT = LucideIcons.TEXT_CURSOR_INPUT;
@@ -1172,7 +1179,7 @@ public static class AppIcons
     public const string VISIBLE = LucideIcons.EYE;
 
     /// <summary>Marks the transcription of speech into text, such as of a voice recording or a media file.</summary>
-    public const string VOICE_TRANSCRIPTION = LucideIcons.CAPTIONS;
+    public const string VOICE_TRANSCRIPTION = LucideIcons.AUDIO_LINES;
 
     /// <summary>Signals a warning.</summary>
     public const string WARNING = LucideIcons.TRIANGLE_EXCLAMATION_POINT;
@@ -1183,8 +1190,8 @@ public static class AppIcons
     /// <summary>Marks a website, such as the homepage of MindWork AI.</summary>
     public const string WEBSITE = LucideIcons.GLOBE;
 
-    /// <summary>Marks research on the web, such as the research of the BeyondFacts Lab and the public details it receives.</summary>
-    public const string WEB_RESEARCH = LucideIcons.TELESCOPE;
+    /// <summary>Marks the research of the BeyondFacts Lab on the web and the report it writes from it.</summary>
+    public const string WEB_RESEARCH = LucideIcons.SCROLL_TEXT;
 
     /// <summary>Withdraws a confirmation, such as of a work state in the BeyondFacts Lab.</summary>
     public const string WITHDRAW = LucideIcons.UNDO_2;
