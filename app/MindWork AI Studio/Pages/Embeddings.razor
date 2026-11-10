@@ -8,7 +8,7 @@
             <MudText Typo="Typo.h5">@T("Background embeddings")</MudText>
             <MudSpacer/>
             <MudTooltip Text="@T("Manage your data sources")" Placement="Placement.Top">
-                <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenDataSourceSettings"/>
+                <MudIconButton Icon="@AppIcons.SETTINGS" OnClick="@this.OpenDataSourceSettings"/>
             </MudTooltip>
         </MudStack>
         <MudText Typo="Typo.body1" Class="mt-2">
@@ -69,13 +69,13 @@
                                     ExpansionPanel component, which behaves the same way.
                                 *@
                                 <MudTooltip Text="@T("Refresh this data source")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Sync" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.RefreshDataSource(status))" />
+                                    <MudIconButton Icon="@AppIcons.REFRESH" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.RefreshDataSource(status))" />
                                 </MudTooltip>
                             }
                             @if (this.CanRepair(status))
                             {
                                 <MudTooltip Text="@T("Repair this data source by indexing it anew")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Build" Color="Color.Warning" Size="Size.Small" OnClick="@(async () => await this.RepairDataSource(status))" />
+                                    <MudIconButton Icon="@AppIcons.REPAIR" Color="Color.Warning" Size="Size.Small" OnClick="@(async () => await this.RepairDataSource(status))" />
                                 </MudTooltip>
                             }
                         </div>
@@ -138,7 +138,7 @@
                                                     }
                                                     @if (group.Cause.NeedsProviderSettings)
                                                     {
-                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenProviderSettings">
+                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@AppIcons.SETTINGS" OnClick="@this.OpenProviderSettings">
                                                             @T("Open the settings")
                                                         </MudButton>
                                                     }
@@ -178,7 +178,7 @@
                                                             @if (CanShowInFileManager(status, context))
                                                             {
                                                                 <MudTooltip Text="@T("Show this file in the file browser of your system")">
-                                                                    <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context))"/>
+                                                                    <MudIconButton Icon="@AppIcons.FOLDER_OPEN" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context))"/>
                                                                 </MudTooltip>
                                                             }
                                                         </MudTd>
@@ -205,13 +205,13 @@
                                                     }
                                                     @if (group.Cause.NeedsTranscriptionSettings)
                                                     {
-                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenProviderSettings">
+                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@AppIcons.SETTINGS" OnClick="@this.OpenProviderSettings">
                                                             @T("Open the transcription settings")
                                                         </MudButton>
                                                     }
                                                     @if (group.Cause.NeedsDataSourceSettings)
                                                     {
-                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenDataSourceSettings">
+                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@AppIcons.SETTINGS" OnClick="@this.OpenDataSourceSettings">
                                                             @T("Manage the data sources")
                                                         </MudButton>
                                                     }
@@ -234,7 +234,7 @@
                                                             @if (CanShowInFileManager(status, context.FilePath))
                                                             {
                                                                 <MudTooltip Text="@T("Show this file in the file browser of your system")">
-                                                                    <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context.FilePath))"/>
+                                                                    <MudIconButton Icon="@AppIcons.FOLDER_OPEN" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context.FilePath))"/>
                                                                 </MudTooltip>
                                                             }
                                                         </MudTd>
@@ -254,10 +254,10 @@
                                 <MudPaper Class="pa-3 border-dashed border rounded-lg mt-2" Elevation="0">
                                     <MudStack Spacing="2">
                                         <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
-                                            <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Default" Size="Size.Small"/>
+                                            <MudIcon Icon="@AppIcons.FILE_FILTER" Color="Color.Default" Size="Size.Small"/>
                                             <MudText Typo="Typo.subtitle1">@T("Outside the selection")</MudText>
                                             <MudSpacer/>
-                                            <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenDataSourceSettings">
+                                            <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@AppIcons.SETTINGS" OnClick="@this.OpenDataSourceSettings">
                                                 @T("Manage the data sources")
                                             </MudButton>
                                         </MudStack>
@@ -267,7 +267,7 @@
                                         <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="1">
                                             @foreach (var group in status.ExcludedFolders)
                                             {
-                                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.FolderOff">
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Icon="@AppIcons.EXCLUDED_FOLDERS">
                                                     @this.GetExcludedFolderGroupText(group)
                                                 </MudChip>
                                             }
@@ -302,10 +302,10 @@
                             @if (status.Attention is DataSourceAttention.AUTH_FAILED)
                             {
                                 <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="2">
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Key" OnClick="@(async () => await this.ChangeMailboxSettings(status))">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.KEY" OnClick="@(async () => await this.ChangeMailboxSettings(status))">
                                         @T("Change the password")
                                     </MudButton>
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Sync" OnClick="@(async () => await this.RefreshDataSource(status))">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.REFRESH" OnClick="@(async () => await this.RefreshDataSource(status))">
                                         @T("Try to sign in again")
                                     </MudButton>
                                 </MudStack>
@@ -313,10 +313,10 @@
                             else if (status is { Attention: DataSourceAttention.MASS_REMOVAL_PENDING, PendingRemovalCount: not null })
                             {
                                 <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="2">
-                                    <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.PlaylistRemove" OnClick="@(async () => await this.ApproveMailRemoval(status))">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@AppIcons.REMOVE_FROM_INDEX" OnClick="@(async () => await this.ApproveMailRemoval(status))">
                                         @T("Remove them from the index")
                                     </MudButton>
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.ChangeMailboxSettings(status))">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.SETTINGS" OnClick="@(async () => await this.ChangeMailboxSettings(status))">
                                         @T("Change the settings of the mailbox")
                                     </MudButton>
                                 </MudStack>
@@ -324,7 +324,7 @@
                             else if (status.Attention is DataSourceAttention.LOCATION_UNREACHABLE && this.CanEditDataSource(status))
                             {
                                 <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="2">
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(async () => await this.EditDataSource(status))">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.EDIT" OnClick="@(async () => await this.EditDataSource(status))">
                                         @T("Edit this data source")
                                     </MudButton>
                                 </MudStack>

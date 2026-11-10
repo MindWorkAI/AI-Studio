@@ -134,7 +134,8 @@
     --custom-icon-color: #000000;
 }
 
-.custom-icon-color > a > svg {
+/* The icon of a link in the navigation bar: an SVG of MudBlazor or a span with a glyph of the Lucide font. */
+.custom-icon-color > a > .mud-icon-root {
     color: var(--custom-icon-color) !important;
 }
 

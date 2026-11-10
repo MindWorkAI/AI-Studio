@@ -9,7 +9,7 @@
 
         <MudExpansionPanels>
             
-            <ExpansionPanel HeaderText="@T("Financial Support")" IsExpanded="@true" HeaderIcon="@Icons.Material.Filled.AttachMoney">
+            <ExpansionPanel HeaderText="@T("Financial Support")" IsExpanded="@true" HeaderIcon="@AppIcons.FINANCIAL_SUPPORT">
                 <div class="border-solid border-2 rounded-lg pa-3 mb-6">
                     <MudText Typo="Typo.h4" Class="mb-2">
                         @T("Our Titans")
@@ -25,7 +25,7 @@
                         <Titan Name="@T("German Aerospace Center (DLR)")" Type="SupporterType.ORGANIZATION" URL="https://www.dlr.de/" ImageSrc="svg/titans/DLR.svg" Acknowledgment="@T("We would like to thank the DLR for its courage in supporting MindWork AI Studio at an early stage. The DLR not only uses AI Studio in various projects but also supports its further development with personnel resources.")"/>
                     </MudList>
                     
-                    <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
+                    <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@AppIcons.BUSINESS_SUPPORTER" Variant="Variant.Filled" Target="_blank">
                         @T("Become one of our titans")
                     </MudButton>
                 </div>
@@ -35,11 +35,11 @@
                     <MudItem Class="pa-0 pr-md-2" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
-                                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.PEOPLE" Size="Size.Large" class="mr-2"/>
                                 @T("Individual Contributors")
                             </MudText>
 
-                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Target="_blank">
+                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@AppIcons.PEOPLE" Variant="Variant.Filled" Target="_blank">
                                 @T("Become a contributor")
                             </MudButton>
 
@@ -64,11 +64,11 @@
                     <MudItem Class="pa-0 pl-md-2 mt-4 mt-md-0" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
-                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.BUSINESS_SUPPORTER" Size="Size.Large" class="mr-2"/>
                                 @T("Business Contributors")
                             </MudText>
 
-                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
+                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@AppIcons.BUSINESS_SUPPORTER" Variant="Variant.Filled" Target="_blank">
                                 @T("Become a contributor")
                             </MudButton>
                         </MudPaper>
@@ -76,14 +76,14 @@
                 </MudGrid>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderText="@T("Content Contributors")" HeaderIcon="@Icons.Material.Filled.Code">
+            <ExpansionPanel HeaderText="@T("Content Contributors")" HeaderIcon="@AppIcons.CONTRIBUTORS">
 
                 @* Two columns from the breakpoint md on; in a narrower window, the boxes follow each other. *@
                 <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
                     <MudItem Class="pa-0 pr-md-2" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
-                                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.CODE" Size="Size.Large" class="mr-2"/>
                                 @T("Code Contributions")
                             </MudText>
 
@@ -108,7 +108,7 @@
                     <MudItem Class="pa-0 pl-md-2 mt-4 mt-md-0" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
-                                <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.CONTRIBUTION_DESIGN_AND_DOCS" Size="Size.Large" class="mr-2"/>
                                 @T("Moderation, Design, Wiki, and Documentation")
                             </MudText>
 
@@ -119,7 +119,7 @@
 
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3 mt-4">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
-                                <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.IDEA" Size="Size.Large" class="mr-2"/>
                                 @T("Ideas, Expertise, and Concepts")
                             </MudText>
 

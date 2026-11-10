@@ -42,13 +42,6 @@ public partial class Plugins : MSGComponentBase
     
     private bool isSharingPlugin;
 
-    private const string IMPORT_ICON =
-        @"<svg class=""mud-icon-root mud-svg-icon mud-dark-text mud-icon-size-medium"" focusable=""false"" viewBox=""0 0 24 24"" aria-hidden=""true"" role=""img"">
-    <path d=""M0 0h24v24H0V0z"" fill=""none""></path>
-    <path d=""M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4z"" transform=""rotate(180 12 10)""></path>
-    <path d=""M20 10v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z""></path>
-  </svg>";
-
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -278,7 +271,7 @@ public partial class Plugins : MSGComponentBase
     /// user's choice instead: on Linux, which has none, and once the share sheet failed or did not
     /// respond, until AI Studio restarts. The action must be labeled accordingly.
     /// </summary>
-    private string SharePluginIcon => this.PluginShareService.UsesExport ? Icons.Material.Filled.FileDownload : Icons.Material.Filled.IosShare;
+    private string SharePluginIcon => this.PluginShareService.UsesExport ? AppIcons.EXPORT : AppIcons.SHARE;
 
     private string SharePluginTooltip => this.PluginShareService.UsesExport ? this.T("Export plugin archive") : this.T("Share plugin archive");
 
@@ -297,7 +290,7 @@ public partial class Plugins : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not AssistantPluginEditorDialogResult result)
             return;
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The assistant plugin '{0}' has been successfully saved."), result.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.SAVE, string.Format(this.T("The assistant plugin '{0}' has been successfully saved."), result.PluginName)));
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
 
         // Saving the plugin ran LoadAll, which already sent PLUGINS_RELOADED. Editing the plugin
@@ -329,7 +322,7 @@ public partial class Plugins : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not AssistantPluginRevisionDialogResult result)
             return;
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant plugin '{0}' has been successfully revised."), result.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.REVISE_ASSISTANT, string.Format(this.T("The assistant plugin '{0}' has been successfully revised."), result.PluginName)));
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully revised.");
 
         // Saving the revision ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
@@ -351,7 +344,7 @@ public partial class Plugins : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DirectChatLauncherSettingsDialogResult result)
             return;
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.SAVE, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
         LOG.LogInformation($"The chat launcher '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
 
         // Saving ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
@@ -395,12 +388,12 @@ public partial class Plugins : MSGComponentBase
                 // that would only unpack the archive, at least on macOS.
                 //
                 case PluginShareOutcome.EXPORTED:
-                    await exportFeedback.SucceededAsync(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath), shareResult.ArchivePath, false);
+                    await exportFeedback.SucceededAsync(AppIcons.EXPORT, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath), shareResult.ArchivePath, false);
                     break;
 
                 case PluginShareOutcome.FAILED:
                     LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
-                    await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, isExport ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
+                    await this.MessageBus.SendError(new(AppIcons.ERROR, isExport ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
                     break;
 
                 // The share sheet takes it from here, and a canceled export needs no message. The
@@ -490,7 +483,7 @@ public partial class Plugins : MSGComponentBase
             // We do not announce the reload ourselves: a successful installation ran LoadAll, which
             // already sent PLUGINS_RELOADED. The import changes no settings either, so there is
             // nothing to report as a configuration change:
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Extension, message));
+            await this.MessageBus.SendSuccess(new(AppIcons.PLUGIN, message));
         }
         finally
         {
@@ -521,7 +514,7 @@ public partial class Plugins : MSGComponentBase
         var dialogParameters = new DialogParameters<InformationDialog>
         {
             { x => x.Message, string.Format(this.T("The plugin could not be imported: {0}"), issue) },
-            { x => x.Icon, Icons.Material.Filled.ReportProblem },
+            { x => x.Icon, AppIcons.ERROR },
             { x => x.IconColor, Color.Error },
         };
 
@@ -562,7 +555,7 @@ public partial class Plugins : MSGComponentBase
                 var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
                 if (audit.Level is AssistantAuditLevel.UNKNOWN)
                 {
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(this.T("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."), assistantPlugin.Name)));
+                    await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.T("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."), assistantPlugin.Name)));
                     continue;
                 }
 
@@ -629,11 +622,11 @@ public partial class Plugins : MSGComponentBase
         switch (archivePaths.Count)
         {
             case 0:
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.ReportProblem, string.Format(this.T("Please drop a plugin archive with the extension {0} or .zip."), PluginArchive.PLUGIN_FILE_EXTENSION)));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, string.Format(this.T("Please drop a plugin archive with the extension {0} or .zip."), PluginArchive.PLUGIN_FILE_EXTENSION)));
                 return;
 
             case > 1:
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.ReportProblem, this.T("Please drop only one plugin archive at a time.")));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.T("Please drop only one plugin archive at a time.")));
                 return;
         }
 
