@@ -16,7 +16,7 @@ public static class AssistantCategoryExtensions
             AssistantCategory.BUSINESS => TB("Business"),
             AssistantCategory.PRODUCTIVITY => TB("Productivity"),
             AssistantCategory.DEVELOPMENT => TB("Software Development"),
-            AssistantCategory.LEARNING => TB("Learning"),
+            AssistantCategory.LEARNING => TB("Learning & Reflecting"),
             AssistantCategory.AI_STUDIO => TB("AI Studio Development"),
             AssistantCategory.OTHER => TB("Other"),
 
