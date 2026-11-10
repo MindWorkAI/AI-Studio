@@ -5,13 +5,7 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 
-using Microsoft.Extensions.FileProviders;
-
 using SharedTools;
-
-#if RELEASE
-using System.Reflection;
-#endif
 
 namespace AIStudio.Assistants.I18N;
 
@@ -23,6 +17,9 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     protected override string Description => T("Translate MindWork AI Studio text content into another language.");
     
+    // This assistant writes language plugins, so no chat continues its conversation:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         $"""
         # Assignment
@@ -39,7 +36,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         daily lives with it. The app offers the regular chat mode for which LLMs have become
         known. However, AI Studio also offers so-called assistants, where users no longer
         have to prompt.
-        
+
+        Some texts are longer notes in Markdown, with headings, paragraphs, or lists. Keep their
+        Markdown and their line breaks exactly as they are, and translate only the words.
+
+        {I18NAddressPrompt.Section(this.SystemPromptLanguage(), this.translatesInformalVariant, this.formalTranslationOfText)}
+
         # Target Audience
         The app is intended for everyone, not just IT specialists or scientists. When translating,
         make sure the texts are easy for everyone to understand.
@@ -124,6 +126,16 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private Dictionary<string, string> localizedContent = [];
     private StringBuilder finalLuaCode = new();
     private string? activeSystemPromptLanguage;
+
+    /// <summary>
+    /// Whether the text translated now is the informal variant of a text; see I18NAddressPrompt.
+    /// </summary>
+    private bool translatesInformalVariant;
+
+    /// <summary>
+    /// The formal translation of the text translated now, when it is an informal variant and has one.
+    /// </summary>
+    private string? formalTranslationOfText;
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
     private static readonly AssistantSessionStateKey<bool> IS_LOADING_STATE_KEY = new(nameof(isLoading));
@@ -247,17 +259,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         //
         // Read the file `Assistants\I18N\allTexts.lua`:
         //
-        #if DEBUG
-        var filePath = Path.Join(Environment.CurrentDirectory, "Assistants", "I18N");
-        var resourceFileProvider = new PhysicalFileProvider(filePath);
-        #else
-        var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Assistants/I18N");
-        #endif
-
-        var file = resourceFileProvider.GetFileInfo("allTexts.lua");
-        await using var fileStream = file.CreateReadStream();
-        using var reader = new StreamReader(fileStream);
-        var newI18NDataLuaCode = await reader.ReadToEndAsync();
+        var newI18NDataLuaCode = await AppResources.ReadTextAsync("Assistants/I18N/allTexts.lua");
         
         //
         // Next, we try to load the text as a language plugin -- without
@@ -372,7 +374,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             if (this.selectedTargetLanguage is not CommonLanguages.EN_US)
             {
                 // Phase 1: Translate added content
-                await this.Phase1TranslateAddedContent(addedContentSnapshot);
+                var translatedBefore = selectedLanguageContentSnapshot.ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value, StringComparer.Ordinal);
+                await this.Phase1TranslateAddedContent(addedContentSnapshot, translatedBefore);
             }
             else
             {
@@ -417,6 +420,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         finally
         {
             this.activeSystemPromptLanguage = null;
+            this.translatesInformalVariant = false;
+            this.formalTranslationOfText = null;
         }
     }
 
@@ -424,12 +429,15 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     /// Translates the added text content from a stable snapshot.
     /// </summary>
     /// <param name="addedContentSnapshot">The added text entries captured when the job started.</param>
+    /// <param name="translatedBefore">The texts of the language plugin, whose formal translations the informal variants start from.</param>
     /// <returns>A task that completes when all added text entries were translated or cancellation was requested.</returns>
-    private async Task Phase1TranslateAddedContent(KeyValuePair<string, string>[] addedContentSnapshot)
+    private async Task Phase1TranslateAddedContent(KeyValuePair<string, string>[] addedContentSnapshot, IReadOnlyDictionary<string, string> translatedBefore)
     {
         var stopwatch = new Stopwatch();
         var minimumTime = TimeSpan.FromMilliseconds(500);
-        foreach (var keyValuePair in addedContentSnapshot)
+
+        // The informal variants start from the formal translations, so those come first:
+        foreach (var keyValuePair in I18NAddressPrompt.FormalFirst(addedContentSnapshot))
         {
             if(this.CancellationTokenSource!.IsCancellationRequested)
                 break;
@@ -443,8 +451,11 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             stopwatch.Start();
             
             //
-            // Translate one text at a time:
+            // Translate one text at a time. Its own chat thread gets the system prompt
+            // with the form of address of this text:
             //
+            this.translatesInformalVariant = I18NAddressVariant.TryGetFormalKey(keyValuePair.Key, out _);
+            this.formalTranslationOfText = this.translatesInformalVariant ? I18NAddressPrompt.FindFormalTranslation(keyValuePair.Key, this.localizedContent, translatedBefore) : null;
             this.CreateChatThread();
             var time = this.AddUserRequest(keyValuePair.Value);
             this.localizedContent.Add(keyValuePair.Key, await this.AddAIResponseAsync(time));

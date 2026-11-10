@@ -124,7 +124,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         // chat. Without saying so, the chat page would replace them with the chat defaults again:
         //
         var dataSourcesWereChosen = chatTemplate.DataSourceOptions is not null || launchConfiguration.DataSourceIds is not null;
-        return new(new(chatThread, ApplySelectedChatTemplateToComposer: true, PreserveDataSourceOptions: dataSourcesWereChosen), string.Empty);
+        return new(new(chatThread, PreserveDataSourceOptions: dataSourcesWereChosen), string.Empty);
     }
 
     /// <remarks>

@@ -516,6 +516,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.OptimizeImages, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
+        // Config: BeyondFacts Lab defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.AddressForm, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.AllowPromptOverrides, this.Id, settingsTable, dryRun);
+
         // Config: Assistant Builder defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);

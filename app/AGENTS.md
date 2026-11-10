@@ -72,6 +72,23 @@ The app's texts are localized in two steps, and the developer always does the fi
 **Moving a `TB()` text into another class gives it a new I18N key**, so its translation is made anew during
 the next localization run.
 
+**A text with several lines**, such as a notice in Markdown, is one raw string literal right after the
+parenthesis: `TB("""`, the indented lines of the text, and `""")` on a line of its own. The collector reads
+every literal as the compiler does, with its escape sequences and without the indentation of a raw literal,
+and the translations keep the line breaks. A text which is not one literal, such as an interpolated string
+or a concatenation, gets no translation; the collector warns about it.
+
+**A text which addresses the reader**, with "you" or by asking them to do something in a sentence, uses `TA()`
+instead of `T()` or `TB()`; labels, buttons, titles, and examples stay with those. A static class gets a `TA()` of
+its own next to its `TB()`: `private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(X).Namespace, nameof(X));`.
+The collector files such a text under two keys: the usual one, translated with the formal address, such as "Sie"
+in German, and the same key ending in `::INFORMAL`, translated with the informal address, such as "du". The
+localization assistant writes the informal variant from the formal translation and changes only the form of
+address; whoever corrects a formal translation in the review corrects its informal variant alike. Which one
+the app shows follows `I18N.I.AddressForm`; when the language in use lacks the informal variant, it shows the
+formal one. So far, only the BeyondFacts Lab uses `TA()`, and its option "Form of address" decides, see
+`Program.cs`. The rest of the app addresses the reader formally until it gets a setting of its own for this.
+
 ## Plugin System
 
 **Location:** `app/MindWork AI Studio/Plugins/`

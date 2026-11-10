@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.SWOTAnalysis;
 using AIStudio.Chat;
 using AIStudio.Settings;
@@ -59,6 +60,14 @@ public static partial class JsonTestRoots
         // The text around a passage which the provenance store keeps:
         yield return Case(new(typeof(IReadOnlyList<string>), SqliteProvenanceStoreClientImplementation.JSON_OPTIONS));
         yield return Case(new(typeof(List<string>), SqliteProvenanceStoreClientImplementation.JSON_OPTIONS));
+
+        // The preparations of the BeyondFacts Lab, their forms, materials, work states, and results, and the preparation selected last:
+        yield return Case(new(typeof(BflProject), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflStepFormData), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflMaterial), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflWorkState), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflResult), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(Guid?), BeyondFactsLabJson.PERSISTENCE), "selected preparation");
     }
 
     private static TestCaseData Case(JsonTestRoot root, string? purpose = null)

@@ -1,9 +1,5 @@
 using Microsoft.Extensions.FileProviders;
 
-#if RELEASE
-using System.Reflection;
-#endif
-
 namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
@@ -48,13 +44,7 @@ public static partial class PluginFactory
     {
         try
         {
-            #if DEBUG
-            var basePath = Path.Join(Environment.CurrentDirectory, "Plugins");
-            var resourceFileProvider = new PhysicalFileProvider(basePath);
-            #else
-            var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Plugins");
-            #endif
-            
+            var resourceFileProvider = AppResources.FolderProvider("Plugins");
             var metaData = plugin.MetaData();
             var mainResourcePath = $"{metaData.ResourcePath}/plugin.lua";
             var resourceInfo = resourceFileProvider.GetFileInfo(mainResourcePath);

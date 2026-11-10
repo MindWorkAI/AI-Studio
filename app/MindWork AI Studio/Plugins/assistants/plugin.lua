@@ -88,7 +88,16 @@ ASSISTANT = {
     ["ToolIds"] = {
         "web_search",
     },
-    
+
+    -- Optional: the system prompt of a chat which continues the result of your assistant, when users
+    -- choose "Send to ..." -> "New Chat". "AI_STUDIO_DEFAULT" gives the default prompt of AI Studio,
+    -- also when the field is missing; "ASSISTANT" gives your SystemPrompt; "CUSTOM" gives the prompt
+    -- in CustomChatSystemPrompt, which you write for follow-up questions in the chat. AI Studio wraps
+    -- that prompt like your SystemPrompt, and the security audit checks it as well.
+    -- Requires AI Studio v26.11.1 or newer; older versions ignore both fields.
+    ["ChatSystemPrompt"] = "CUSTOM",
+    ["CustomChatSystemPrompt"] = "<role and context of your assistant, and that the model answers follow-up questions about the result>",
+
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {

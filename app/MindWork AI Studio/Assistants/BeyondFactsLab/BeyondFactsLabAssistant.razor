@@ -1,0 +1,188 @@
+@attribute [Route(Routes.ASSISTANT_BEYOND_FACTS_LAB)]
+@inherits MSGComponentBase
+
+<CascadingValue Value="Components.BEYOND_FACTS_LAB_ASSISTANT">
+    @* The lab does not inherit AssistantBase, so it sets up the inner scrolling itself, the way the
+       Visual Briefing assistant does, and is a drop area of its own: a document dropped anywhere on
+       the page lands in the material of the open preparation. *@
+    <PathDropZone IsArea="@true" Class="inner-scrolling-context">
+        <PreviewPrototype ApplyInnerScrollingFix="true"/>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3 mr-3" StretchItems="StretchItems.Start">
+            <MudText Typo="Typo.h3">@T("BeyondFacts Lab")</MudText>
+            <MudSpacer/>
+            <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialogAsync"/>
+        </MudStack>
+
+        <InnerScrolling>
+            @* How to work with the lab opens by itself while there is no preparation yet. *@
+            <MudExpansionPanels MultiExpansion="@true" Class="mb-6 mr-3">
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.School" HeaderText="@T("Working with the lab")" IsExpanded="@this.introductionExpanded" ExpandedChanged="@this.IntroductionExpandedChanged">
+                    <BflIntroduction/>
+                </ExpansionPanel>
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.HelpOutline" HeaderText="@T("Is the lab right for my task?")">
+                    <BflOnboarding/>
+                </ExpansionPanel>
+            </MudExpansionPanels>
+
+            <MudText Typo="Typo.h5" Class="mb-1">@TA("Your preparations")</MudText>
+            @if (this.projects.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Class="mb-3">@TA("You have no preparations yet. Create one for the event you want to prepare for.")</MudText>
+            }
+            else
+            {
+                <MudList T="Guid"
+                         Color="Color.Primary"
+                         Class="mb-1"
+                         SelectedValue="@(this.selectedProject?.ProjectId ?? Guid.Empty)"
+                         SelectedValueChanged="@this.SelectProjectAsync">
+                    @foreach (var project in this.projects)
+                    {
+                        <MudListItem T="Guid" @key="project.ProjectId" Value="@project.ProjectId" Icon="@ProjectIcon(project)">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.body1">@this.ProjectDisplayName(project)</MudText>
+                                <MudText Typo="Typo.caption">@this.ProjectCaption(project)</MudText>
+                                @if (this.projectsWithMissingDetails.Contains(project.ProjectId))
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Warning">@T("Details missing")</MudText>
+                                }
+                                @if (!project.IsAvailable)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Error">@this.ProjectStatusName(project.Status)</MudText>
+                                }
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@this.CreateProjectAsync" Disabled="@this.isBusy" Class="mt-1">
+                @T("New preparation")
+            </MudButton>
+
+            <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6"/>
+
+            @if (this.selectedProject is { IsAvailable: false } unavailableProject)
+            {
+                <MudPaper Outlined="true" Class="pa-6 mr-3">
+                    <MudStack Spacing="3">
+                        <MudText Typo="Typo.h4">@this.ProjectDisplayName(unavailableProject)</MudText>
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                            @this.ProjectRecoveryMessage(unavailableProject.Status)
+                        </MudAlert>
+                        <MudText Typo="Typo.body1">@T("AI Studio has left the files of this preparation unchanged. A future update may make it accessible again.")</MudText>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudText Typo="Typo.body2"><strong>@T("Preparation ID"):</strong> @unavailableProject.ProjectId.ToString("D")</MudText>
+                            <MudCopyClipboardButton TooltipMessage="@T("Copy preparation ID")" StringContent="@unavailableProject.ProjectId.ToString("D")"/>
+                        </MudStack>
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+            }
+            else if (this.selectedProject?.Project is { } project)
+            {
+                @* Stays at the top while the person scrolls, like the header of the workspaces: the preparation, its
+                   provider, and the steps remain in view, and only the list of preparations scrolls away. The empty
+                   anchor before it marks where the header sits in the flow, to scroll back there for another step.
+                   Its background is that of the page, which lies on the paper of MainLayout: the background of the
+                   palette is darker in the dark mode. *@
+                <div @ref="@this.stickyHeaderAnchor"></div>
+                <div @ref="@this.stickyHeader" class="mr-3" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-surface);">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.h4">@project.Name</MudText>
+                            @if (project.HappenedAtUtc is { } happenedAtUtc)
+                            {
+                                <MudText Typo="Typo.caption">@string.Format(Culture, T("Marked on {0}."), happenedAtUtc.ToLocalTime().ToString("d", Culture))</MudText>
+                            }
+                        </MudStack>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudSwitch T="bool" Value="@(project.HappenedAtUtc is not null)" ValueChanged="@this.SetHappenedAsync" Disabled="@this.isBusy" Color="Color.Primary" Class="mr-2">
+                                @T("The event has taken place")
+                            </MudSwitch>
+                            <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameProjectAsync" Disabled="@this.isBusy">@T("Rename")</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
+                        </MudStack>
+                    </MudStack>
+
+                    <ProviderSelection ProviderSettings="@this.providerSettings" ProviderSettingsChanged="@this.SelectProviderAsync" ValidateProvider="@this.ValidateProvider" Disabled="@this.isBusy"/>
+
+                    @* The steps have no content of their own: only the navigation of the stepper stays in view, and the
+                       step shown follows below. *@
+                    <MudStepperWithoutActions NonLinear="@true" ActiveIndex="@this.ActiveStepIndex" ActiveIndexChanged="@this.SelectStepAsync">
+                        <ChildContent>
+                            @foreach (var step in BflStep.All)
+                            {
+                                <MudStep @key="step" Title="@step.Title" SecondaryText="@this.StepSecondaryText(step)" Completed="@this.IsStepCompleted(step)"/>
+                            }
+                        </ChildContent>
+                    </MudStepperWithoutActions>
+                </div>
+
+                @* The material stands beside the step, as it applies to all steps, and below it on a narrow window. It
+                   stays out of the key of the step, so that reading a document goes on when the person picks another step.
+                   Beside the step, it stays in view below the header, see the scoped CSS of this page. *@
+                <div class="mr-3">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" lg="8">
+                            <div @key="@this.activeStep" class="px-6">
+                                @* It checks the test folder anew for every step, as the key of the step recreates it: *@
+                                <BflPromptOverrideNotice Class="mt-2 mb-2"/>
+                                <MudText Typo="Typo.h5" Class="mt-2">@this.activeStep.Title</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-4">@this.activeStep.Description</MudText>
+
+                                <MudText Typo="Typo.h6" Class="mb-2">@TA("Your details")</MudText>
+                                @if (this.forms.TryGetValue(this.activeStep, out var form))
+                                {
+                                    var step = this.activeStep;
+                                    <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                                        @TA("AI Studio cannot open your details for this step. Their file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
+                                    </MudAlert>
+                                }
+
+                                <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+
+                                <BflWorkStatePanel Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))"
+                                                   WorkStates="@this.workStates"
+                                                   Forms="@this.forms"
+                                                   FormChanged="@(() => this.SaveFormAsync(this.activeStep))"
+                                                   WorkStateStored="@this.ProjectStoredAsync"
+                                                   Provider="@this.providerSettings"
+                                                   ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+
+                                @if (this.activeStep is BflStep.RESULTS)
+                                {
+                                    <BflResults ProjectId="@project.ProjectId"
+                                                ProjectName="@project.Name"
+                                                WorkStates="@this.workStates"
+                                                Forms="@this.forms"
+                                                ResultStored="@this.ProjectStoredAsync"
+                                                Provider="@this.providerSettings"
+                                                ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                                }
+                            </div>
+                        </MudItem>
+                        <MudItem xs="12" lg="4">
+                            <div class="bfl-material-column">
+                                <BflMaterials ProjectId="@project.ProjectId" Step="@this.activeStep" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                                <BflConfirmedWorkStates WorkStates="@this.workStates" Forms="@this.forms" Class="mt-3"/>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </div>
+            }
+            else
+            {
+                <MudPaper Outlined="true" Class="pa-6 mr-3">
+                    <MudText Typo="Typo.h5">@TA("Create a preparation to begin.")</MudText>
+                </MudPaper>
+            }
+        </InnerScrolling>
+    </PathDropZone>
+</CascadingValue>

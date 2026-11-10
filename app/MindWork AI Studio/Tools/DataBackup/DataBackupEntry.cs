@@ -18,6 +18,7 @@ public sealed record DataBackupEntry(DataBackupLocation Location, string Relativ
         or DataBackupEntryKind.PLUGINS
         or DataBackupEntryKind.TOKENIZERS
         or DataBackupEntryKind.VISUAL_BRIEFINGS
+        or DataBackupEntryKind.BEYOND_FACTS_LAB
         or DataBackupEntryKind.DATA_SOURCE_INDEX
         or DataBackupEntryKind.VECTOR_STORES
         or DataBackupEntryKind.MEDIA_TRANSCRIPTS;

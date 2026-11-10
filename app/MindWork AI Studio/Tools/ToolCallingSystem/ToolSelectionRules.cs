@@ -33,12 +33,24 @@ public static class ToolSelectionRules
             : null;
     }
 
+    /// <summary>
+    /// The tools whose usage policy goes into the system prompt.
+    /// </summary>
+    /// <remarks>
+    /// A tool without instructions is offered all the same, but adds nothing to the system prompt.
+    /// BuildToolPolicyPrompt writes the policy of exactly these tools, and the system prompt names
+    /// them as the source of that part, so the two cannot disagree about which tools take part.
+    /// </remarks>
+    /// <param name="definitions">The tools a request offers.</param>
+    /// <returns>The tools with instructions, in the order given.</returns>
+    public static IReadOnlyList<ToolDefinition> GetInstructedTools(IEnumerable<ToolDefinition> definitions) => definitions
+        .Where(x => !string.IsNullOrWhiteSpace(x.SystemPromptInstructions))
+        .ToList();
+
     public static string BuildToolPolicyPrompt(IEnumerable<ToolDefinition> definitions)
     {
-        var policySections = definitions
-            .Select(x => (ToolName: x.Function.Name, PolicyLines: x.SystemPromptInstructions.Trim()))
-            .Where(x => !string.IsNullOrWhiteSpace(x.PolicyLines))
-            .Select(x => $"## Tool `{x.ToolName}`{Environment.NewLine}{x.PolicyLines}")
+        var policySections = GetInstructedTools(definitions)
+            .Select(x => $"## Tool `{x.Function.Name}`{Environment.NewLine}{x.SystemPromptInstructions.Trim()}")
             .Distinct(StringComparer.Ordinal)
             .ToList();
         if (policySections.Count == 0)

@@ -86,7 +86,9 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     /// <summary>
     /// Hide the policy definition section in the UI?
     /// If true, the policy definition panel will be hidden and only the document selection will be shown.
-    /// This is useful for enterprise configurations where users should not see or modify the policy details.
+    /// This is useful for enterprise configurations where users would find the policy details overwhelming.
+    /// It keeps the assistant simple, not the policy a secret: a chat which continues an analysis gets the
+    /// whole policy as its system prompt.
     /// </summary>
     public bool HidePolicyDefinition { get; set; }
 

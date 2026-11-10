@@ -10,11 +10,6 @@ using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
-#if !DEBUG
-using System.Reflection;
-using Microsoft.Extensions.FileProviders;
-#endif
-
 namespace AIStudio.Assistants.PromptOptimizer;
 
 public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialogPromptOptimizer>
@@ -36,6 +31,9 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     protected override string Title => T("Prompt Optimizer");
 
     protected override string Description => T("Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.");
+
+    // Sending to a new chat puts the optimized prompt into its input field, so no chat continues this conversation:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
 
     protected override string SystemPrompt =>
         $"""
@@ -125,11 +123,6 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     protected override Func<Task> SubmitAction => this.OptimizePromptAsync;
 
     protected override bool SubmitDisabled => this.useCustomPromptGuide && this.customPromptGuideFiles.Count == 0;
-
-    protected override ChatThread ConvertToChatThread => (this.ChatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
 
     protected override void ResetForm()
     {
@@ -580,24 +573,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         });
     }
 
-    private static async Task<string> ReadPromptingGuidelineAsync()
-    {
-#if DEBUG
-        var guidelinePath = Path.Join(Environment.CurrentDirectory, "Assistants", "PromptOptimizer", "prompting_guideline.md");
-        return File.Exists(guidelinePath)
-            ? await File.ReadAllTextAsync(guidelinePath)
-            : string.Empty;
-#else
-        var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Assistants/PromptOptimizer");
-        var file = resourceFileProvider.GetFileInfo("prompting_guideline.md");
-        if (!file.Exists)
-            return string.Empty;
-
-        await using var fileStream = file.CreateReadStream();
-        using var reader = new StreamReader(fileStream);
-        return await reader.ReadToEndAsync();
-#endif
-    }
+    private static async Task<string> ReadPromptingGuidelineAsync() => await AppResources.ReadTextAsync("Assistants/PromptOptimizer/prompting_guideline.md");
 
     private async Task<string> GetPromptingGuidelineForOptimizationAsync()
     {

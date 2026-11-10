@@ -42,6 +42,34 @@ the window as an HttpOnly session cookie before the window opens the app (`chang
   `APP_HOST` and in `Program.cs` together, since no test compares them. `AppAccessRuntimeAgreementTests`
   only checks that both sides use the same cookie name and environment variable.
 
+**Only the runtime lets links leave the window.** AI Studio shows a single window, and a browser outside
+it cannot show the app, since it lacks the session cookie. Therefore:
+
+- `should_open_in_system_browser` in `app_window.rs` alone decides which address goes to the system: a
+  website, another local server, or a `mailto:` or `tel:` link, but never an address of the app. The
+  handlers for navigations and for new windows both ask it.
+- On Linux, `open_in_system_browser` hands such an address to the desktop portal, as the Flatpak does
+  anyway; the opener plugin only steps in when there is no portal. Started from an AppImage, xdg-open
+  inherits the environment of the AppImage, and the browser stays closed without any error.
+- The handler for new windows always denies the window. Only a window which `setup` builds itself can
+  have that handler, which is why `tauri.conf.json` sets `"create": false`.
+- Keep the link script of the opener plugin switched off (`open_js_links_on_click(false)`): it opens
+  every link clicked while holding Shift or Ctrl in the system browser, links of the app included. The
+  shell plugin has a link script as well, which cannot be switched off and opens every link with a
+  target the same way.
+- `link_guard.js` takes every click which would open a link somewhere else away from both scripts and
+  from the page. On a link of the app, the click does nothing; on any other link, it goes on to the
+  webview, whose request for a new window or a navigation reaches the runtime. Therefore, give a link
+  with a target no click handler of its own: no script of the page sees its click.
+- No script of the page may open or start anything, so `capabilities/default.json` grants the opener
+  and shell plugins nothing. The runtime calls both from Rust, which needs no permission, e.g., to
+  start the .NET server in `dotnet.rs`.
+
+**The right-click menu shows only in text fields and on selected text,** never on a link: its other
+entries, such as going back, reloading, or opening a link in a new window, make no sense in the app.
+`context_menu_guard.js` hides it everywhere else, in every frame, but only in release builds, since
+development builds need the menu to open the developer tools.
+
 **Runtime API handlers never block.** All calls of the .NET app share one HTTP/2 connection, and the
 task driving it may wait on exactly the Tokio worker which a blocking handler occupies, so a single
 blocking handler can hold up the whole app. Therefore:

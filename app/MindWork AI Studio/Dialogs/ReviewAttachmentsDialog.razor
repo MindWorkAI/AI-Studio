@@ -9,7 +9,14 @@
                       Disabled="@this.IsZoneDisabled"
                       Context="isDropTarget">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
+            @if (this.CanRemove)
+            {
+                @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
+            }
+            else
+            {
+                @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name.")
+            }
         </MudJustifiedText>
 
         @if (this.CanAttach)
@@ -31,8 +38,10 @@
 
             @{
                 var currentFolder = string.Empty;
+                var pathsWithSeveralVersions = this.PathsWithSeveralVersions;
                 foreach (var fileAttachment in this.OrderedAttachments)
                 {
+                    var versionLabel = this.VersionLabel(fileAttachment, pathsWithSeveralVersions);
                     var folderPath = Path.GetDirectoryName(fileAttachment.FilePath);
                     if (folderPath != currentFolder)
                     {
@@ -55,6 +64,12 @@
                                         <MudText Style="white-space: nowrap;">
                                             @fileAttachment.FileName
                                         </MudText>
+                                        @if (versionLabel is not null)
+                                        {
+                                            <MudText Typo="Typo.body2" Class="ml-2 mud-text-secondary" Style="white-space: nowrap;">
+                                                @versionLabel
+                                            </MudText>
+                                        }
                                     </span>
                                 </MudTooltip>
                             </div>
@@ -66,11 +81,14 @@
                                                    OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
                                 </MudTooltip>
                             
-                                <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
-                                </MudTooltip>
+                                @if (this.CanRemove)
+                                {
+                                    <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
+                                    </MudTooltip>
+                                }
                             </MudToolBar>
                         </MudStack>
                     }
@@ -84,6 +102,12 @@
                                         <MudText Style="white-space: nowrap;">
                                             <s>@fileAttachment.FileName</s>
                                         </MudText>
+                                        @if (versionLabel is not null)
+                                        {
+                                            <MudText Typo="Typo.body2" Class="ml-2 mud-text-secondary" Style="white-space: nowrap;">
+                                                @versionLabel
+                                            </MudText>
+                                        }
                                     </span>
                                 </MudTooltip>
                             </div>
@@ -105,11 +129,14 @@
                                                    Disabled="true"/>
                                 }
 
-                                <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
-                                </MudTooltip>
+                                @if (this.CanRemove)
+                                {
+                                    <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
+                                    </MudTooltip>
+                                }
                             </MudToolBar>
                         </MudStack>
                     }

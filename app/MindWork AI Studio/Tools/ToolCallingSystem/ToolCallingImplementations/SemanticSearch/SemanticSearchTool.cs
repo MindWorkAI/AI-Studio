@@ -64,17 +64,18 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     private const int MAX_QUERY_CHARACTERS = 500;
 
     /// <summary>
-    /// How much text one search returns at most, over all data sources searched.
+    /// How much text one page of a search returns at most, over all data sources searched.
     /// </summary>
     /// <remarks>
-    /// Passages are returned whole or not at all, so nothing has to be filtered again after
-    /// cutting it. A chunk is as long as the embedding model takes at once, by default 8,192
-    /// tokens, so a single passage may already fill tens of thousands of characters. The limit is
-    /// the one a web search has by default, and it leaves room for about three searches within the
-    /// budget of all tool results of an answer, see ToolSelectionRules.MAX_TOOL_RESULT_CHARACTERS:
+    /// A chunk is as long as the embedding model takes at once, by default 8,192 tokens, so a
+    /// single passage may already fill tens of thousands of characters. A passage which does not
+    /// fit starts the next page, see SearchAsync. Only a passage longer than a whole page is
+    /// shortened, and filtered again, see IRetrievalContextExtensions.ShortenToFitAsync. The limit
+    /// is the one a web search has by default, and it leaves room for about three searches within
+    /// the budget of all tool results of an answer, see ToolSelectionRules.MAX_TOOL_RESULT_CHARACTERS:
     /// a question with several aspects gets one search per aspect.
     /// </remarks>
-    private const int MAX_RESULT_CHARACTERS = 100_000;
+    internal const int MAX_RESULT_CHARACTERS = 100_000;
 
     public string ImplementationKey => ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID;
 
@@ -162,6 +163,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                 - When a question has several aspects, search for each of them separately.
                 - Leave out `data_source_ids` to search all listed data sources. Name some of them only when the question clearly concerns those.
                 - When the results do not fit, rephrase the query before you turn to a further page. To get a further page, name exactly one data source.
+                - A search of several data sources shares one page among them. When it reports passages of a data source which did not fit, search that data source alone, starting at page 1.
                 - A data source which reports that it could not be searched did not find nothing: its results are missing, and your answer has to say so when it matters.
                 - Name the documents your answer is based on.
                 - When your searches find nothing relevant, say so before you answer from your own knowledge.
@@ -269,8 +271,10 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// exactly their IDs.
     /// </summary>
     /// <remarks>
-    /// The model learns the name, the kind, and the description of each data source, and how far it
-    /// can page through it. Where a data source lies stays out: the model has no use for a path.
+    /// The model learns the name, the kind, and the description of each data source. How many
+    /// passages a page holds, and how many pages there are, depends on how long the passages of a
+    /// query are, so the result of each search tells whether a further page holds more instead.
+    /// Where a data source lies stays out: the model has no use for a path.
     /// What the user describes and what the server of an ERI data source describes both arrive in a
     /// single line, and the latter already filtered for prompt injections, see
     /// DataSourceDescriptionService.
@@ -287,7 +291,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         description.AppendLine($"The data sources you may search, by the ID to pass in {DATA_SOURCE_IDS_ARGUMENT}:");
         foreach (var (dataSource, dataSourceDescription) in dataSources)
         {
-            description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}, results per page={dataSource.MaxMatches}, last page={dataSource.GetLastPage()}");
+            description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}");
             if (!string.IsNullOrWhiteSpace(dataSourceDescription))
                 description.Append($", description='{dataSourceDescription.Trim().Shorten(MAX_DESCRIPTION_CHARACTERS)}'");
 
@@ -311,7 +315,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     private static JsonElement BuildParameters(params string[] dataSourceIds) => ToolParameterSchemaBuilder.Create()
         .RequiredString(QUERY_ARGUMENT, $"What to search for: a self-contained question, statement, or a few keywords, naming the subject instead of referring to earlier messages. A single line of at most {MAX_QUERY_CHARACTERS} characters.")
         .OptionalStringArray(DATA_SOURCE_IDS_ARGUMENT, "Optional IDs of the data sources to search, out of those listed in the description of this tool. Leave it out to search all of them.", dataSourceIds)
-        .OptionalInteger(PAGE_ARGUMENT, "Optional page of results, starting at 1. A page after the first needs exactly one data source in data_source_ids. Later pages are less relevant, so rephrase the query before you turn pages.")
+        .OptionalInteger(PAGE_ARGUMENT, "Optional page of results, starting at 1. A page after the first needs exactly one data source in data_source_ids, and follows its first page when searched alone, not a search of several data sources. Later pages are less relevant, so rephrase the query before you turn pages.")
         .Build();
 
     private static string GetKind(IDataSource dataSource) => dataSource switch
@@ -367,72 +371,19 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         if (thread.Blocks.Count > 0 && thread.Blocks[^1].Role is ChatRole.AI)
             thread = thread with { Blocks = thread.Blocks[..^1] };
 
-        var pages = await Task.WhenAll(request.DataSources.Select(dataSource => this.SearchAsync(dataSource, request, thread, token)));
-
-        var textContent = new StringBuilder();
-        var sources = new List<Source>();
-        var passages = new List<SourcePassage>();
-        var resultCounts = new int[pages.Length];
-        var leftOutCounts = new int[pages.Length];
-        var passageCount = 0;
-
-        //
-        // Every passage goes through the same filter for prompt injections and into the same shape
-        // as with the classic RAG process. All of them are filtered in one request, so the user
-        // hears about what was filtered once for the whole search, not once per passage.
-        //
-        // The data sources take turns: first the best passage of each, then the second best of
-        // each, and so on. Otherwise, the data source offered first would take the budget, and the
-        // others would get what it left over.
-        //
+        SemanticSearchResult result;
         await using (var reportingScope = guardService.BeginAction())
-        {
-            var preparedContexts = await pages.SelectMany(page => page.Contexts).ToList().PrepareForModelAsync(guardService, reportingScope, token);
-
-            // Where the prepared contexts of each data source begin, since they are prepared all together:
-            var firstOfPage = new int[pages.Length];
-            for (var index = 1; index < pages.Length; index++)
-                firstOfPage[index] = firstOfPage[index - 1] + pages[index - 1].Contexts.Count;
-
-            var mostPassages = pages.Select(page => page.Contexts.Count).DefaultIfEmpty(0).Max();
-            for (var rank = 0; rank < mostPassages; rank++)
-            {
-                for (var index = 0; index < pages.Length; index++)
-                {
-                    if (rank >= pages[index].Contexts.Count)
-                        continue;
-
-                    var preparedContext = preparedContexts[firstOfPage[index] + rank];
-                    var markdown = preparedContext.ToMarkdown(passageCount + 1);
-
-                    // A passage too long for what is left makes room for shorter ones after it:
-                    if (textContent.Length + markdown.Length > MAX_RESULT_CHARACTERS)
-                    {
-                        leftOutCounts[index]++;
-                        continue;
-                    }
-
-                    passageCount++;
-                    resultCounts[index]++;
-                    textContent.Append(markdown);
-
-                    // The user is shown what the model received, so only the passages which fit:
-                    sources.AddRange(preparedContext.Sources);
-                    if (preparedContext.Passage is not null)
-                        passages.Add(preparedContext.Passage);
-                }
-            }
-        }
+            result = await SearchAsync(request, (dataSource, page) => this.RetrievePageAsync(dataSource, request.Query, page, thread, token), guardService, reportingScope, token);
 
         var dataSourceResults = new JsonArray();
-        for (var index = 0; index < pages.Length; index++)
-            dataSourceResults.Add(DescribeResult(request.DataSources[index], pages[index], resultCounts[index], leftOutCounts[index]));
+        foreach (var outcome in result.Outcomes)
+            dataSourceResults.Add(DescribeResult(outcome));
 
         foreach (var dataSource in unreachableDataSources)
             dataSourceResults.Add(DescribeUnreachableResult(dataSource));
 
-        var leftOutCount = leftOutCounts.Sum();
-        logger.LogInformation("Semantic search finished. ToolCallId={ToolCallId}, DataSourceCount={DataSourceCount}, UnreachableCount={UnreachableCount}, Page={Page}, PassageCount={PassageCount}, LeftOutCount={LeftOutCount}", context.ToolCallId, request.DataSources.Count, unreachableDataSources.Count, request.Page, passageCount, leftOutCount);
+        var resultCounts = result.Outcomes.Select(outcome => outcome.ResultCount).ToList();
+        logger.LogInformation("Semantic search finished. ToolCallId={ToolCallId}, DataSourceCount={DataSourceCount}, UnreachableCount={UnreachableCount}, Page={Page}, PassageCount={PassageCount}, LeftOutCount={LeftOutCount}", context.ToolCallId, request.DataSources.Count, unreachableDataSources.Count, request.Page, resultCounts.Sum(), result.Outcomes.Sum(outcome => outcome.LeftOutCount));
 
         // Finding nothing is no error; the model reads it from the result counts:
         var requirements = GetRequirements(request.DataSources, resultCounts, settingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction);
@@ -443,14 +394,234 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                 ["query"] = request.Query,
                 ["page"] = request.Page,
                 ["data_sources"] = dataSourceResults,
-                ["text_content"] = textContent.ToString(),
+                ["text_content"] = result.TextContent,
             },
-            Sources = sources,
-            Passages = passages,
+            Sources = result.Sources,
+            Passages = result.Passages,
             RequiredProviderConfidence = requirements.Confidence,
             RequiredDataSecurity = requirements.Security,
             RequiredOutboundDataRestriction = requirements.OutboundData,
         };
+    }
+
+    /// <summary>
+    /// Searches the data sources of a request, and puts together the page the model receives.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every passage goes through the same filter for prompt injections and into the same shape as
+    /// with the classic RAG process, before anything measures it: the filter may make a passage
+    /// longer, as its marker can be longer than what it removed.
+    /// </para>
+    /// <para>
+    /// A data source returns what it found page by page, as many matches per page as it is set to
+    /// return, see RetrievalPaging. A page of the search is something else, namely as many passages
+    /// as fit into MAX_RESULT_CHARACTERS. Each page of a data source is therefore cut into one or
+    /// more pages of the search, see CharacterPaging, and those are numbered on across the pages of
+    /// the data source. Where everything fits, both are the same.
+    /// </para>
+    /// <para>
+    /// A passage longer than a whole page would hold up every passage after it, so it is shortened
+    /// to fill a page of its own, see IRetrievalContextExtensions.ShortenToFitAsync.
+    /// </para>
+    /// </remarks>
+    /// <param name="request">The search to run.</param>
+    /// <param name="retrievePage">Retrieves a page of a data source for the query, and reports the data source as not searched when that fails.</param>
+    /// <param name="guardService">The prompt injection filter.</param>
+    /// <param name="reportingScope">The action the search belongs to.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The page of the search.</returns>
+    /// <exception cref="ArgumentException">The page lies beyond the last one this query has in the data source, with a message for the model to correct it by.</exception>
+    internal static Task<SemanticSearchResult> SearchAsync(SemanticSearchRequest request, Func<IDataSource, int, Task<RetrievalPage>> retrievePage, PromptInjectionGuardService guardService, PromptInjectionReportingScope reportingScope, CancellationToken token) =>
+        request.DataSources.Count == 1
+            ? SearchOneAsync(request.DataSources[0], request.Page, retrievePage, guardService, reportingScope, token)
+            : SearchSeveralAsync(request.DataSources, retrievePage, guardService, reportingScope, token);
+
+    /// <summary>
+    /// Searches a single data source on any page.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is kept between two searches, since tool results do not travel into later turns. To
+    /// find a page, the search therefore retrieves the pages of the data source from the first one
+    /// on, filters and measures their passages, and cuts them again, until it reaches the page
+    /// asked for. A page of the search never reaches across two pages of the data source, so that
+    /// cutting one of them needs nothing but its own passages. Of the pages before, only their
+    /// number and the number of their passages are kept.
+    /// </remarks>
+    private static async Task<SemanticSearchResult> SearchOneAsync(IDataSource dataSource, int page, Func<IDataSource, int, Task<RetrievalPage>> retrievePage, PromptInjectionGuardService guardService, PromptInjectionReportingScope reportingScope, CancellationToken token)
+    {
+        var gaps = new List<RetrievalGap>();
+        var pagesBefore = 0;
+        var passagesBefore = 0;
+        for (var retrievalPageNumber = 1; retrievalPageNumber <= dataSource.GetLastPage(); retrievalPageNumber++)
+        {
+            var retrievalPage = await retrievePage(dataSource, retrievalPageNumber);
+            foreach (var gap in retrievalPage.Gaps)
+            {
+                if (!gaps.Contains(gap))
+                    gaps.Add(gap);
+            }
+
+            // Without this page of the data source, nobody knows where the pages after it start:
+            if (retrievalPage.Gaps.Contains(RetrievalGap.NOT_SEARCHED))
+                return new(string.Empty, [], [], [new(dataSource, 0, false, gaps)]);
+
+            var preparedContexts = new List<PreparedRetrievalContext>();
+            var markdowns = new List<string>();
+            foreach (var preparedContext in await retrievalPage.Contexts.PrepareForModelAsync(guardService, reportingScope, token))
+            {
+                var number = passagesBefore + preparedContexts.Count + 1;
+                var fittingContext = await preparedContext.ShortenToFitAsync(MAX_RESULT_CHARACTERS, context => context.ToMarkdown(number).Length, guardService, reportingScope, token);
+                preparedContexts.Add(fittingContext);
+                markdowns.Add(fittingContext.ToMarkdown(number));
+            }
+
+            var cuts = CharacterPaging.Cut(markdowns.Select(markdown => markdown.Length).ToList(), MAX_RESULT_CHARACTERS);
+            if (page <= pagesBefore + cuts.Count)
+            {
+                var cut = cuts[page - pagesBefore - 1];
+                var hasMore = cut.End < markdowns.Count || retrievalPage.HasMore && await HoldsPassagesAsync(dataSource, retrievalPageNumber + 1, retrievePage);
+
+                var textContent = new StringBuilder();
+                var sources = new List<Source>();
+                var passages = new List<SourcePassage>();
+                for (var index = cut.Start; index < cut.End; index++)
+                    Append(preparedContexts[index], markdowns[index], textContent, sources, passages);
+
+                return new(textContent.ToString(), sources, passages, [new(dataSource, cut.Count, hasMore, gaps)]);
+            }
+
+            pagesBefore += cuts.Count;
+            passagesBefore += preparedContexts.Count;
+            if (!retrievalPage.HasMore)
+                break;
+        }
+
+        // A search which found nothing still has its first page, an empty one:
+        if (page == 1)
+            return new(string.Empty, [], [], [new(dataSource, 0, false, gaps)]);
+
+        var lastPage = Math.Max(1, pagesBefore);
+        throw new ArgumentException($"Argument '{PAGE_ARGUMENT}' must be at most {lastPage} for the data source '{dataSource.Id}' and this query, but was {page}. Rephrase the query to find other passages.");
+    }
+
+    /// <summary>
+    /// Searches several data sources, on the first page only, which they share.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// All passages are filtered in one request, so the user hears about what was filtered once for
+    /// the whole search, not once per data source.
+    /// </para>
+    /// <para>
+    /// The data sources take turns: first the best passage of each, then the second best of each,
+    /// and so on. Otherwise, the data source offered first would take the budget, and the others
+    /// would get what it left over. A data source stops at its first passage which no longer fits,
+    /// while the others go on: a shorter passage after it must not take its place, or a passage
+    /// would go missing in the middle of what the data source found. A passage longer than a whole
+    /// page is shortened first, as in a search of one data source, and then has to fit like any
+    /// other.
+    /// </para>
+    /// <para>
+    /// Turning to a further page means something for a single data source only, as each of them
+    /// runs out at another point, see ReadRequest. So the model learns how many passages of a data
+    /// source did not fit, and that searching it alone from the first page on shows them. That
+    /// search repeats the passages read here already, which is the price of keeping nothing between
+    /// two searches.
+    /// </para>
+    /// </remarks>
+    private static async Task<SemanticSearchResult> SearchSeveralAsync(IReadOnlyList<IDataSource> dataSources, Func<IDataSource, int, Task<RetrievalPage>> retrievePage, PromptInjectionGuardService guardService, PromptInjectionReportingScope reportingScope, CancellationToken token)
+    {
+        var retrievalPages = await Task.WhenAll(dataSources.Select(dataSource => retrievePage(dataSource, 1)));
+        var preparedContexts = await retrievalPages.SelectMany(retrievalPage => retrievalPage.Contexts).ToList().PrepareForModelAsync(guardService, reportingScope, token);
+
+        // Where the prepared contexts of each data source begin, since they are prepared all together:
+        var firstOfPage = new int[retrievalPages.Length];
+        for (var index = 1; index < retrievalPages.Length; index++)
+            firstOfPage[index] = firstOfPage[index - 1] + retrievalPages[index - 1].Contexts.Count;
+
+        var textContent = new StringBuilder();
+        var sources = new List<Source>();
+        var passages = new List<SourcePassage>();
+        var resultCounts = new int[retrievalPages.Length];
+        var isFull = new bool[retrievalPages.Length];
+        var passageCount = 0;
+
+        var mostPassages = retrievalPages.Select(retrievalPage => retrievalPage.Contexts.Count).DefaultIfEmpty(0).Max();
+        for (var rank = 0; rank < mostPassages; rank++)
+        {
+            for (var index = 0; index < retrievalPages.Length; index++)
+            {
+                if (isFull[index] || rank >= retrievalPages[index].Contexts.Count)
+                    continue;
+
+                var number = passageCount + 1;
+                var preparedContext = await preparedContexts[firstOfPage[index] + rank].ShortenToFitAsync(MAX_RESULT_CHARACTERS, context => context.ToMarkdown(number).Length, guardService, reportingScope, token);
+                var markdown = preparedContext.ToMarkdown(number);
+                if (textContent.Length + markdown.Length > MAX_RESULT_CHARACTERS)
+                {
+                    isFull[index] = true;
+                    continue;
+                }
+
+                passageCount++;
+                resultCounts[index]++;
+                Append(preparedContext, markdown, textContent, sources, passages);
+            }
+        }
+
+        var outcomes = await Task.WhenAll(retrievalPages.Select(async (retrievalPage, index) =>
+        {
+            var leftOutCount = retrievalPage.Contexts.Count - resultCounts[index];
+            var hasMore = leftOutCount > 0 || retrievalPage.HasMore && await HoldsPassagesAsync(dataSources[index], 2, retrievePage);
+            return new DataSourceSearchOutcome(dataSources[index], resultCounts[index], hasMore, retrievalPage.Gaps, leftOutCount);
+        }));
+
+        return new(textContent.ToString(), sources, passages, outcomes);
+    }
+
+    /// <summary>
+    /// Whether the pages of a data source from the given one on hold a passage at all.
+    /// </summary>
+    /// <remarks>
+    /// A data source only says that its next page may hold more: the matches there may have
+    /// nothing to show, e.g., a chunk without text. The model should not turn to a page which
+    /// turns out empty, so the search looks for itself. That a page holds a passage is enough, so
+    /// nothing is filtered here. When a page could not be retrieved, the data source is taken at
+    /// its word.
+    /// </remarks>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="firstRetrievalPage">The first page of the data source to look at.</param>
+    /// <param name="retrievePage">Retrieves a page of a data source for the query.</param>
+    /// <returns>True when one of these pages holds a passage, or could not be retrieved.</returns>
+    private static async Task<bool> HoldsPassagesAsync(IDataSource dataSource, int firstRetrievalPage, Func<IDataSource, int, Task<RetrievalPage>> retrievePage)
+    {
+        for (var retrievalPageNumber = firstRetrievalPage; retrievalPageNumber <= dataSource.GetLastPage(); retrievalPageNumber++)
+        {
+            var retrievalPage = await retrievePage(dataSource, retrievalPageNumber);
+            if (retrievalPage.Contexts.Count > 0 || retrievalPage.Gaps.Contains(RetrievalGap.NOT_SEARCHED))
+                return true;
+
+            if (!retrievalPage.HasMore)
+                return false;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Adds a passage to the page of a search.
+    /// </summary>
+    /// <remarks>
+    /// The user is shown what the model received, so the sources and the passage go along with the
+    /// text, and only for the passages on the page.
+    /// </remarks>
+    private static void Append(PreparedRetrievalContext preparedContext, string markdown, StringBuilder textContent, List<Source> sources, List<SourcePassage> passages)
+    {
+        textContent.Append(markdown);
+        sources.AddRange(preparedContext.Sources);
+        if (preparedContext.Passage is not null)
+            passages.Add(preparedContext.Passage);
     }
 
     /// <summary>
@@ -479,7 +650,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// </remarks>
     internal static JsonObject DescribeUnreachableResult(IDataSource dataSource)
     {
-        var result = DescribeResult(dataSource, RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] }, 0, 0);
+        var result = DescribeResult(new DataSourceSearchOutcome(dataSource, 0, false, [RetrievalGap.NOT_SEARCHED]));
         result.Remove("id");
         return result;
     }
@@ -537,12 +708,24 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         if (dataSources.Count != 1)
             throw new ArgumentException($"Argument '{PAGE_ARGUMENT}' may be above 1 only for exactly one data source in '{DATA_SOURCE_IDS_ARGUMENT}', but was {page} for {dataSources.Count}. Name the one data source to page through, or leave '{PAGE_ARGUMENT}' out to get the first page of each.");
 
-        var lastPage = dataSources[0].GetLastPage();
-        if (page > lastPage)
-            throw new ArgumentException($"Argument '{PAGE_ARGUMENT}' must be at most {lastPage} for the data source '{dataSources[0].Id}', but was {page}. Rephrase the query to find other passages.");
+        //
+        // How many pages a query has depends on how long its passages are, which only the search
+        // finds out, see SearchAsync. A page holds at least one passage, though, so no query has
+        // more pages than the data source returns passages for it at all:
+        //
+        var mostPages = GetMostPages(dataSources[0]);
+        if (page > mostPages)
+            throw new ArgumentException($"Argument '{PAGE_ARGUMENT}' must be at most {mostPages} for the data source '{dataSources[0].Id}', but was {page}. Rephrase the query to find other passages.");
 
         return new(query, dataSources, page);
     }
+
+    /// <summary>
+    /// How many pages a search in a data source can have at most, for any query.
+    /// </summary>
+    /// <param name="dataSource">The data source.</param>
+    /// <returns>As many pages as the data source returns passages for a query at most, since a page holds at least one of them.</returns>
+    internal static int GetMostPages(IDataSource dataSource) => dataSource.GetLastPage() * dataSource.MaxMatches;
 
     /// <summary>
     /// Searches one data source, and reports it as not searched when that fails.
@@ -551,11 +734,11 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// The other data sources still answer. The failed one is reported rather than left out, so
     /// that the model does not take its silence for finding nothing.
     /// </remarks>
-    private async Task<RetrievalPage> SearchAsync(IDataSource dataSource, SemanticSearchRequest request, ChatThread thread, CancellationToken token)
+    private async Task<RetrievalPage> RetrievePageAsync(IDataSource dataSource, string query, int page, ChatThread thread, CancellationToken token)
     {
         try
         {
-            return await dataSource.RetrieveDataAsync(request.Query, request.Page, thread, token);
+            return await dataSource.RetrieveDataAsync(query, page, thread, token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -575,10 +758,11 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// Only AI Studio's own values: the ID and the name as configured, counts, and sentences of its
     /// own. Whatever a data source returned is in the passages, which went through the filter.
     /// </remarks>
-    internal static JsonObject DescribeResult(IDataSource dataSource, RetrievalPage page, int resultCount, int leftOutCount)
+    internal static JsonObject DescribeResult(DataSourceSearchOutcome outcome)
     {
+        var (dataSource, resultCount, hasMore, gaps, leftOutCount) = outcome;
         var issues = new JsonArray();
-        foreach (var gap in page.Gaps)
+        foreach (var gap in gaps)
         {
             issues.Add(gap switch
             {
@@ -590,14 +774,14 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         }
 
         if (leftOutCount > 0)
-            issues.Add($"{leftOutCount} further passages of this page were left out to keep the result within its size limit. Search this data source with a narrower query to see them.");
+            issues.Add($"{leftOutCount} further passages of this data source did not fit into this search of several data sources. Search this data source alone, starting at page 1, to see them.");
 
         var result = new JsonObject
         {
             ["id"] = dataSource.Id,
             ["name"] = dataSource.Name,
             ["result_count"] = resultCount,
-            ["has_more"] = page.HasMore,
+            ["has_more"] = hasMore,
         };
 
         if (issues.Count > 0)

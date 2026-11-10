@@ -1,0 +1,83 @@
+@inherits MSGComponentBase
+
+<MudPaper Outlined="true" Class="pa-4">
+    <MudText Typo="Typo.h6">@T("Material")</MudText>
+    <MudText Typo="Typo.body2" Class="mb-3">@TA("Applies to all steps: the lab reads it in every conversation and asks you about it.")</MudText>
+
+    @* The whole page takes dropped files; the paperclip opens the file chooser. Recordings come to this component,
+       which transcribes them through the material service instead of the attachment control. *@
+    <div class="border-dashed border rounded-lg pa-2 mb-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <AttachDocuments Name="BeyondFacts Lab material"
+                             DocumentPaths="@this.attachments"
+                             OnChange="@this.AttachedAsync"
+                             OnMediaFiles="@this.RecordingsAttachedAsync"
+                             UseSmallForm="@true"
+                             CatchAllDocuments="@true"
+                             ShowMediaStatus="@false"
+                             ValidateMediaFileTypes="@false"
+                             AllowedFileTypes="@ALLOWED_FILE_TYPES"
+                             Disabled="@(this.MaterialInProgress is not null)"/>
+            <MudText Typo="Typo.body2">@TA("Drag documents such as notes or papers, recordings of interviews, or images such as posters here, or click the paperclip.")</MudText>
+        </MudStack>
+    </div>
+
+    @if (this.MaterialInProgress is { } materialInProgress)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1"/>
+        <MudText Typo="Typo.caption" Class="mb-3">
+            @(materialInProgress.Kind is BflMaterialKind.RECORDING
+                ? string.Format(T("Transcribing '{0}'; a long recording takes a while"), materialInProgress.Name)
+                : string.Format(T("Reading '{0}'"), materialInProgress.Name))
+        </MudText>
+    }
+
+    @if (this.materials.Count > 0)
+    {
+        <MudStack Spacing="2" Class="mb-3">
+            @foreach (var entry in this.materials)
+            {
+                <MudStack @key="entry.MaterialId" Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                    <MudIcon Icon="@Icon(entry)" Color="@(entry.IsAvailable ? Color.Default : Color.Error)" Size="Size.Small" Class="mt-1"/>
+                    <MudStack Spacing="0" Style="min-width: 0; flex: 1 1 auto;">
+                        @if (entry.Material is { } material)
+                        {
+                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@material.Name</MudText>
+                            <MudText Typo="Typo.caption">@this.Caption(material)</MudText>
+                            @if (this.ShareNotice(material) is { } shareNotice)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Info">@shareNotice</MudText>
+                            }
+                            @if (material.IsIncomplete)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Warning">@T("Some parts of it could not be read.")</MudText>
+                            }
+                            @if (material.IsShortened)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Info">@T("Only its beginning was kept.")</MudText>
+                            }
+                            @if (material.FilteredPassages > 0)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Warning">@string.Format(T("Suspicious passages removed: {0}"), material.FilteredPassages)</MudText>
+                            }
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">@T("Material which cannot be opened")</MudText>
+                            <MudText Typo="Typo.caption">@T("Its files may be damaged, or a newer version of AI Studio stored it.")</MudText>
+                        }
+                    </MudStack>
+                    <MudTooltip Text="@T("Remove material")">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="@(() => this.DeleteAsync(entry))"/>
+                    </MudTooltip>
+                </MudStack>
+            }
+        </MudStack>
+    }
+    else if (this.MaterialInProgress is null)
+    {
+        <MudText Typo="Typo.body2" Class="mb-3">@TA("You have not added any material yet.")</MudText>
+    }
+
+    <MudText Typo="Typo.caption">@TA("Add only material which you may process with the selected provider. Recordings also go to the transcription provider of AI Studio.")</MudText>
+</MudPaper>

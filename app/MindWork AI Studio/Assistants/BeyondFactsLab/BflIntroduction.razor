@@ -1,0 +1,72 @@
+@inherits MSGComponentBase
+
+<MudText Typo="Typo.subtitle1" Class="mb-2"><b>@T("Reflect. Take a position. Communicate.")</b></MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @TA("The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.")
+</MudJustifiedText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @T("The knowledge base of the lab is a guide on science in public debates by Lara Wüster from the Technical University of Munich (TUM).")
+</MudJustifiedText>
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Schedule" Class="mb-4">
+    <MudJustifiedText Typo="Typo.body1">
+        @TA("Plan about 30 to 60 minutes for a preparation. You can pause at any time: AI Studio saves your details and conversations, and you continue where you left off.")
+    </MudJustifiedText>
+</MudAlert>
+
+<MudText Typo="Typo.h6" Class="mb-1">@T("What the lab does not do")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-4">
+    @TA("The lab writes no press releases or other PR texts, and it checks no facts. It replaces neither your own expert review nor the legal and data protection advice of your institution, and it makes no political or normative decision for you. For a quick text, use the chat or another assistant of AI Studio.")
+</MudJustifiedText>
+
+@* Laid out like MudTextList, whose items have a header of their own: justified and hyphenated, with the icon at the first line. *@
+<MudText Typo="Typo.h6">@T("How to proceed")</MudText>
+<MudList T="string" ReadOnly="@true" Dense="@true" Class="mud-text-list mb-3">
+    <MudListItem T="string" Icon="@Icons.Material.Filled.LooksOne" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("Create a preparation for your event with 'New preparation'.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.LooksTwo" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Looks3" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("Fill in what you know. Fields may stay empty: the lab shows which key details are missing and asks for them in the conversation.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Looks4" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Looks5" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Looks6" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.TaskAlt" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document.")</MudJustifiedText>
+    </MudListItem>
+</MudList>
+
+<MudText Typo="Typo.h6">@T("How to recognize good results")</MudText>
+<MudList T="string" ReadOnly="@true" Dense="@true" Class="mud-text-list mb-3">
+    <MudListItem T="string" Icon="@Icons.Material.Filled.TaskAlt" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("The answers refer to your event and your details.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.TaskAlt" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("You can tell evidence, interpretation, assumptions about values, and recommendations apart.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.TaskAlt" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("Uncertainties and the limits of your expertise stay visible.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.TaskAlt" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@T("Counterarguments are presented fairly.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.TaskAlt" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("The strategy fits your real speaking time and focuses on a few key messages.")</MudJustifiedText>
+    </MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.TaskAlt" Style="@LIST_ITEM_STYLE">
+        <MudJustifiedText Typo="Typo.body1">@TA("You keep the decision about which position you take.")</MudJustifiedText>
+    </MudListItem>
+</MudList>
+
+<MudJustifiedText Typo="Typo.body1">
+    @TA("Not sure whether the lab fits your task? Ask it in 'Is the lab right for my task?'.")
+</MudJustifiedText>

@@ -22,6 +22,7 @@ public static class PreviewFeaturesExtensions
             PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026 => TB("Visual Briefing Assistant: Turn source material into an interactive briefing"),
             PreviewFeatures.PRE_MAILBOXES_2026 => TB("Mailboxes: Let the AI search and read your e-mails, kept in a local index on your computer"),
             PreviewFeatures.PRE_MATHEMATICS_2026 => TB("Mathematics: Let the AI calculate exactly and work with formulas, right on your computer"),
+            PreviewFeatures.PRE_BEYOND_FACTS_LAB_2026 => TB("BeyondFacts Lab: Prepare for challenging conversations about your research, step by step"),
 
             _ => TB("Unknown preview feature")
         };

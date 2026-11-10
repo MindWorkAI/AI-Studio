@@ -914,7 +914,7 @@ CONFIG["SETTINGS"] = {}
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
 --   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
---   VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
+--   VISUAL_BRIEFING_ASSISTANT, BEYOND_FACTS_LAB_ASSISTANT, I18N_ASSISTANT,
 --   LOG_VIEWER_ASSISTANT
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
@@ -981,6 +981,34 @@ CONFIG["SETTINGS"] = {}
 -- Source material is sent to the selected provider, so this acts as a guard for confidential
 -- documents. Providers below this level cannot be selected in the assistant.
 -- CONFIG["SETTINGS"]["DataVisualBriefing.MinimumProviderConfidence"] = "NONE"
+
+-- Configure organization defaults for the BeyondFacts Lab.
+-- The lab guides researchers step by step through the preparation of a challenging appearance,
+-- such as a panel discussion or an interview. It is a prototype: users see it only when they allow
+-- prototypes and enable the preview feature PRE_BEYOND_FACTS_LAB_2026.
+--
+-- Configure the provider which new preparations start with.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum provider confidence required by the lab.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Unpublished research is the usual material of the lab, so the lab never accepts less than MEDIUM.
+-- A lower value has no effect; HIGH allows only self-hosted models in the built-in confidence schemes.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.MinimumProviderConfidence"] = "MEDIUM"
+--
+-- Configure how the lab addresses users in languages with a formal and an informal address, such as German.
+-- In a language with one form of address only, such as English, the setting has no effect, and the options
+-- of the lab do not show it.
+-- Allowed values are: FORMAL, INFORMAL
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.AddressForm"] = "FORMAL"
+--
+-- Configure whether files in the folder for prompt overrides replace the prompts which come with the lab.
+-- The option serves the further development of the prompts, e.g., by the research team behind the lab.
+-- Preparing an appearance does not need it. Such files count as instructions of the users themselves,
+-- and the lab shows a banner while one of them replaces a prompt. Set it to false and lock it to keep
+-- users with the prompts which come with AI Studio.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.AllowPromptOverrides"] = false
 
 -- Configure defaults for the Assistant Builder.
 -- Preselection must be enabled for the remaining Assistant Builder settings to take effect.
@@ -1806,7 +1834,9 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Optional: hide the policy definition section in the UI.
 --     -- When set to true, users will only see the document selection interface
 --     -- and cannot view or modify the policy settings.
---     -- This is useful for enterprise configurations where policy details should remain hidden.
+--     -- This is useful for enterprise configurations where users would find the policy details overwhelming.
+--     -- It keeps the assistant simple, but it does not keep the policy a secret: a chat which continues
+--     -- an analysis gets the whole policy as its system prompt, and users can read it there.
 --     -- Allowed values are: true, false (default: false)
 --     ["HidePolicyDefinition"] = false
 -- }

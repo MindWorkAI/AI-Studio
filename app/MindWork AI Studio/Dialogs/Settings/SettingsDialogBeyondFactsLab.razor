@@ -1,0 +1,45 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.RecordVoiceOver" Class="mr-2"/>
+            @T("Assistant: BeyondFacts Lab Options")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            @if (this.offersFormOfAddress)
+            {
+                <ConfigurationSelect OptionDescription="@T("Form of address")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BeyondFactsLab.AddressForm)" Data="@ConfigurationSelectDataFactory.GetBeyondFactsLabAddressFormData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BeyondFactsLab.AddressForm = value)" OptionHelp="@TA("Whether the lab addresses you formally or informally.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BeyondFactsLab, x => x.AddressForm, out var meta) && meta.IsLocked"/>
+            }
+            <ConfigurationSelect OptionDescription="@TA("Select a minimum confidence level")" SelectedValue="@this.SelectedMinimumConfidence" Data="@ConfigurationSelectDataFactory.GetBeyondFactsLabConfidenceLevelsData(this.SettingsManager)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BeyondFactsLab.MinimumProviderConfidence = value)" OptionHelp="@TA("Your preparations usually contain unpublished research. Therefore, the lab accepts only providers with at least medium confidence. You can raise this minimum, e.g., to use only self-hosted models.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BeyondFactsLab, x => x.MinimumProviderConfidence, out var meta) && meta.IsLocked"/>
+            <ConfigurationProviderSelection Component="Components.BEYOND_FACTS_LAB_ASSISTANT" Data="@this.AvailableLLMProviders" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BeyondFactsLab.PreselectedProvider)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BeyondFactsLab.PreselectedProvider = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BeyondFactsLab, x => x.PreselectedProvider, out var meta) && meta.IsLocked"/>
+        </MudPaper>
+
+        @* Only whoever develops the prompts further needs these settings, so they stay folded away. *@
+        <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+            @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+        </MudButton>
+        <MudCollapse Expanded="@this.showExpertSettings">
+            <MudPaper Class="pa-3 mt-3 mb-8 border-dashed border rounded-lg">
+                <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+                    @TA("These settings serve the further development of the lab, e.g., by the research team behind it. You do not need them to prepare an appearance.")
+                </MudJustifiedText>
+                <ConfigurationOption OptionDescription="@T("Use prompts from the test folder?")" LabelOn="@T("Files in the test folder replace the prompts of the lab")" LabelOff="@T("The lab uses its own prompts")" State="@(() => this.SettingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides)" StateUpdate="@(value => this.SettingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides = value)" OptionHelp="@TA("A file in the test folder replaces the prompt of the same name, e.g., 'Prompts/core.md'. The lab takes every other prompt from AI Studio. While a file replaces a prompt, the lab shows a notice above every step.")" IsLocked="() => IsPromptOverridesLocked"/>
+                <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Class="mt-3">
+                    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" OnClick="@this.OpenTestFolderAsync" Disabled="@this.ArePromptOverridesLockedOff">
+                        @T("Open test folder")
+                    </MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined" OnClick="@this.CopyPromptsAsync" Disabled="@(this.ArePromptOverridesLockedOff || this.isCopyingPrompts)">
+                        @T("Copy the built-in prompts into the test folder")
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudCollapse>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">@T("Close")</MudButton>
+    </DialogActions>
+</MudDialog>

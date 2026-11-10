@@ -45,6 +45,7 @@ public static class DataBackupContents
         new(DataBackupLocation.DATA_DIRECTORY, PLUGINS_FOLDER, DataBackupEntryKind.PLUGINS),
         new(DataBackupLocation.DATA_DIRECTORY, "tokenizers/", DataBackupEntryKind.TOKENIZERS),
         new(DataBackupLocation.DATA_DIRECTORY, "visualBriefings/", DataBackupEntryKind.VISUAL_BRIEFINGS),
+        new(DataBackupLocation.DATA_DIRECTORY, "beyondFactsLab/", DataBackupEntryKind.BEYOND_FACTS_LAB),
         new(DataBackupLocation.DATA_DIRECTORY, "databases/sqlite/", DataBackupEntryKind.DATA_SOURCE_INDEX),
         new(DataBackupLocation.DATA_DIRECTORY, "databases/vector_database/stores/", DataBackupEntryKind.VECTOR_STORES),
         new(DataBackupLocation.DATA_DIRECTORY, "mediaTranscripts/", DataBackupEntryKind.MEDIA_TRANSCRIPTS),

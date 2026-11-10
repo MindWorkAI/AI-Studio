@@ -34,6 +34,18 @@ public partial class AttachDocuments : MSGComponentBase
     public Func<HashSet<FileAttachment>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
 
     /// <summary>
+    /// Takes the audio and video files the user dropped or chose, for an owner which transcribes them itself.
+    /// </summary>
+    /// <remarks>
+    /// Without it, this control transcribes them, after asking the user, and attaches their transcripts. With it, the
+    /// files go to the owner as they arrived, once their format passed AllowedFileTypes: the owner checks the
+    /// transcription provider against rules of its own, asks the user, and keeps the transcripts where it wants them,
+    /// as the BeyondFacts Lab does.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<IReadOnlyList<string>> OnMediaFiles { get; set; }
+
+    /// <summary>
     /// Makes this component the default target of its area, meaning of its page, assistant, or
     /// dialog: it then also takes the drops which land anywhere in that area without hitting a zone
     /// of their own.
@@ -335,7 +347,7 @@ public partial class AttachDocuments : MSGComponentBase
     /// <returns>
     /// The files this call attached, in the order they arrived. Media files are never among them:
     /// they go to the transcription service and become attachments only once their transcript is
-    /// ready, which is long after this call has returned.
+    /// ready, which is long after this call has returned, or they go to OnMediaFiles.
     /// </returns>
     private async Task<IReadOnlyList<FileAttachment>> AddFileBatchAsync(IEnumerable<string> paths)
     {
@@ -399,6 +411,12 @@ public partial class AttachDocuments : MSGComponentBase
 
         if (mediaPaths.Count is 0)
             return attached;
+
+        if (this.OnMediaFiles.HasDelegate)
+        {
+            await this.OnMediaFiles.InvokeAsync(mediaPaths);
+            return attached;
+        }
 
         if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
         {
