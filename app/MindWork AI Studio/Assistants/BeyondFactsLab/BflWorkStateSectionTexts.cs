@@ -46,6 +46,7 @@ public static class BflWorkStateSectionTexts
             (BflStep.STRATEGY, "LANGUAGE") => TB("Language"),
             (BflStep.STRATEGY, "UNCERTAINTY") => TB("Making uncertainty visible"),
             (BflStep.STRATEGY, "FRAMING") => TB("Framing"),
+            (BflStep.STRATEGY, "PARTICIPANTS") => TB("Participants and counterparts"),
             (BflStep.STRATEGY, "COUNTERARGUMENTS") => TB("Counterarguments"),
             (BflStep.STRATEGY, "WORRIES") => TB("Dealing with worries"),
 

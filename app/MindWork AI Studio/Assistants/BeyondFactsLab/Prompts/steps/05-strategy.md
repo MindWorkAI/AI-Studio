@@ -34,3 +34,5 @@ Die Prinzipien in Abschnitt 6 des Leitfadens, etwa Formatkenntnis, Robustheit un
 ### Im weiteren Gespräch
 
 Am Ende soll eine Strategie stehen: Kernbotschaften, Einstieg und Struktur, Sprache, Umgang mit Unsicherheit, Framing, Gegenargumente und der Umgang mit den Sorgen, dazu offene Punkte für die Recherche. Fasse sie auf Wunsch in dieser Gliederung zusammen. Ist sie geklärt, weise auf den nächsten Schritt „Testsituation“ hin.
+
+Kläre dabei auch, mit wem die Person es zu tun hat: die anderen Teilnehmenden und die Moderation, je mit Rolle und ihren öffentlichen Positionen zum Thema. Lass die Person bestätigen oder korrigieren, was die Recherche über sie gefunden hat. Der Arbeitsstand dieses Schritts hält die bestätigten Teilnehmenden fest; die Testsituation kann sie später als Gegenüber nutzen.
