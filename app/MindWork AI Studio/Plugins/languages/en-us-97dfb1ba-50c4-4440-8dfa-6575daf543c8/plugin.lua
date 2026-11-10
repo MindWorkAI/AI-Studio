@@ -1641,6 +1641,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T1470884556"]
 -- AI Studio cannot open this material. Its file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T1470884556::INFORMAL"] = "AI Studio cannot open this material. Its file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged."
 
+-- Replace the drafts you have not confirmed yet? Materials you confirmed stay until you confirm their new drafts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T1551694648"] = "Replace the drafts you have not confirmed yet? Materials you confirmed stay until you confirm their new drafts."
+
+-- Replace the drafts you have not confirmed yet? Materials you confirmed stay until you confirm their new drafts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T1551694648::INFORMAL"] = "Replace the drafts you have not confirmed yet? Materials you confirmed stay until you confirm their new drafts."
+
 -- A work state changed since the lab wrote this draft. You can create it anew.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T1597401023"] = "A work state changed since the lab wrote this draft. You can create it anew."
 
@@ -1721,6 +1727,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3560413436"]
 
 -- Export
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3898821075"] = "Export"
+
+-- Create all materials in parallel
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3926195314"] = "Create all materials in parallel"
 
 -- Include personal disclosures
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T4086721095"] = "Include personal disclosures"
