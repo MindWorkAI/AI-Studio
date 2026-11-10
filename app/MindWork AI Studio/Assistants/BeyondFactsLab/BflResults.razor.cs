@@ -315,18 +315,31 @@ public partial class BflResults : MSGComponentBase
     }
 
     /// <summary>
-    /// Exports the confirmed version of a result as a document, with the notice that AI generated it when the person
-    /// or the organization switched that on.
+    /// Exports the confirmed version of a result, with the notice that AI generated it when the person or the
+    /// organization switched that on.
     /// </summary>
+    /// <remarks>
+    /// The format knows who writes it, as in the chat: Pandoc writes documents and HTML, AI Studio itself writes
+    /// Markdown.
+    /// </remarks>
     /// <param name="kind">The kind of result.</param>
     /// <param name="confirmed">The confirmed version.</param>
-    /// <param name="format">The format of the document.</param>
+    /// <param name="format">The format of the file.</param>
     private async Task ExportAsync(BflResultKind kind, BflResultVersion confirmed, FileExportFormat format)
     {
+        var fileName = $"{this.ProjectName} - {kind.Title}";
         this.saving.Add(kind);
         try
         {
-            await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, kind.Title, format, new ContentText { Text = confirmed.Text }, $"{this.ProjectName} - {kind.Title}");
+            if (format.UsesPandoc)
+                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, kind.Title, format, new ContentText { Text = confirmed.Text }, fileName);
+            else
+                await PlainFileExport.ToFile(this.RustService, kind.Title, format, this.DisclosureService.AddDisclosureToMarkdown(confirmed.Text), fileName);
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            this.Logger.LogError(exception, "Could not export a result of the BeyondFacts Lab, because no exporter writes the format {ExportFormat}.", format);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Error, TA("AI Studio could not export this material. Please try another format.")));
         }
         finally
         {

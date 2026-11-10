@@ -107,10 +107,23 @@
                         </div>
 
                         <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mb-3">
-                            @foreach (var format in FileExportFormat.DocumentFormats)
-                            {
-                                <MudButton @key="format" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@format.Icon" OnClick="@(() => this.ExportAsync(kind, confirmed, format))" Disabled="@this.IsBusy(kind)">@format.Name</MudButton>
-                            }
+                            <MudMenu Label="@T("Export")"
+                                     StartIcon="@Icons.Material.Filled.Save"
+                                     EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                     Variant="Variant.Filled"
+                                     Color="Color.Primary"
+                                     MaxHeight="@MenuDefaults.MAX_HEIGHT"
+                                     Disabled="@this.IsBusy(kind)">
+                                @foreach (var format in FileExportFormat.DocumentFormats)
+                                {
+                                    <MudMenuItem @key="format" OnClick="@(() => this.ExportAsync(kind, confirmed, format))" Icon="@format.Icon" Label="@format.Name"/>
+                                }
+                                <MudDivider/>
+                                @foreach (var format in FileExportFormat.TextFormats)
+                                {
+                                    <MudMenuItem @key="format" OnClick="@(() => this.ExportAsync(kind, confirmed, format))" Icon="@format.Icon" Label="@format.Name"/>
+                                }
+                            </MudMenu>
                             <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditAsync(kind))" Disabled="@this.IsBusy(kind)">@T("Edit")</MudButton>
                         </MudStack>
                     }
