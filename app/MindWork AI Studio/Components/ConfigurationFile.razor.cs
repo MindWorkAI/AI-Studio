@@ -25,7 +25,7 @@ public partial class ConfigurationFile : ConfigurationBaseCore
     /// The icon to display next to the textfield.
     /// </summary>
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.AttachFile;
+    public string Icon { get; set; } = AppIcons.FILE;
 
     /// <summary>
     /// The color of the icon to use.
@@ -135,7 +135,7 @@ public partial class ConfigurationFile : ConfigurationBaseCore
         if (path is null)
         {
             this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a file.", paths.Count);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, DroppedFile.WarningFor(paths)));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, DroppedFile.WarningFor(paths)));
             return;
         }
 

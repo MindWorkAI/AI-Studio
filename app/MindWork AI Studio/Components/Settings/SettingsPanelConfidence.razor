@@ -2,7 +2,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Security" HeaderText="@T("Provider Confidence")">
+<ExpansionPanel HeaderIcon="@AppIcons.PROVIDER_CONFIDENCE" HeaderText="@T("Provider Confidence")">
     <MudText Typo="Typo.h4" Class="mb-3">
         @T("Provider Confidence")
     </MudText>
@@ -47,7 +47,7 @@
                         }
                     </MudTd>
                     <MudTd Style="vertical-align: top;">
-                        <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsConfidenceLevelLocked(context)">
+                        <MudMenu StartIcon="@AppIcons.PROVIDER_CONFIDENCE" EndIcon="@AppIcons.DROPDOWN_MENU" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsConfidenceLevelLocked(context)">
                             @foreach (var confidenceLevel in Enum.GetValues<ConfidenceLevel>().OrderBy(n => n))
                             {
                                 if(confidenceLevel is ConfidenceLevel.NONE or ConfidenceLevel.UNKNOWN)

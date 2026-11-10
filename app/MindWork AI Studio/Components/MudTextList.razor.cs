@@ -11,7 +11,7 @@ public partial class MudTextList : ComponentBase
     public IList<TextItem> Items { get; set; } = [];
 
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.CheckCircle;
+    public string Icon { get; set; } = AppIcons.CHECKLIST_ITEM;
     
     [Parameter]
     public string Class { get; set; } = string.Empty;

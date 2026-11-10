@@ -30,7 +30,7 @@ else
             TextChanged="@this.InternalUpdate"
             Disabled="@this.IsDisabled"
             Adornment="@(this.ResetButtonIconOnly ? Adornment.End : this.IconAdornment)"
-            AdornmentIcon="@(this.ResetButtonIconOnly ? Icons.Material.Filled.Restore : this.Icon)"
+            AdornmentIcon="@(this.ResetButtonIconOnly ? AppIcons.RESTORE_DEFAULT : this.Icon)"
             OnAdornmentClick="@this.ResetAdornmentClick"
             AdornmentAriaLabel="@(this.ResetButtonIconOnly ? this.ResetButtonText : null)"
             AdornmentColor="@this.IconColor"

@@ -5,7 +5,7 @@
 {
     <div class="d-flex">
         <MudTooltip Text="@T("Select the data you want to use here.")" Placement="Placement.Top">
-            <MudIconButton Icon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
+            <MudIconButton Icon="@AppIcons.DATA_SOURCE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
         </MudTooltip>
 
         <MudPopover Open="@this.showDataSourceSelection" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" DropShadow="@true" Class="border-solid border-4 rounded-lg">
@@ -19,7 +19,7 @@
                             <PreviewBeta ChipClass=""/>
                             <MudSpacer/>
                             <MudTooltip Text="@T("Manage your data sources")" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialog"/>
+                                <MudIconButton Icon="@AppIcons.SETTINGS" OnClick="@this.OpenSettingsDialog"/>
                             </MudTooltip>
                         </MudStack>
                     </CardHeaderContent>
@@ -38,10 +38,10 @@
                         </MudJustifiedText>
                         
                         <MudStack StretchItems="StretchItems.None" AlignItems="AlignItems.Start">
-                            <MudButton Variant="Variant.Filled" OnClick="this.OpenSettingsDialog" StartIcon="@Icons.Material.Filled.Settings">
+                            <MudButton Variant="Variant.Filled" OnClick="this.OpenSettingsDialog" StartIcon="@AppIcons.SETTINGS">
                                 @T("Manage Data Sources")
                             </MudButton>
-                            <MudButton Variant="Variant.Filled" Href="https://mindworkai.org/#eri---external-retrieval-interface" Target="_blank" StartIcon="@Icons.Material.Filled.Settings">
+                            <MudButton Variant="Variant.Filled" Href="https://mindworkai.org/#eri---external-retrieval-interface" Target="_blank" StartIcon="@AppIcons.OPEN_EXTERNAL">
                                 @T("Read more about ERI")
                             </MudButton>
                         </MudStack>
@@ -118,7 +118,7 @@
                                     }
 
                                     <MudExpansionPanels MultiExpansion="@false" Class="mt-3" Style="max-height: 14em;">
-                                        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.TouchApp" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("Available Data Sources")">
+                                        <ExpansionPanel HeaderIcon="@AppIcons.MANUAL_SELECTION" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("Available Data Sources")">
                                             <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.SingleSelection" SelectedValues="@this.selectedDataSources" Style="max-height: 14em;">
                                                 @foreach (var source in this.GetListedDataSources())
                                                 {
@@ -133,7 +133,7 @@
                                         *@
                                         @if (!this.IsSemanticSearchEffective && this.DataSourcesAISelected.Count > 0)
                                         {
-                                            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Filter" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("AI-Selected Data Sources")">
+                                            <ExpansionPanel HeaderIcon="@AppIcons.AI_SELECTED_DATA_SOURCES" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("AI-Selected Data Sources")">
                                                 <MudList T="DataSourceAgentSelected" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
                                                     @foreach (var source in this.DataSourcesAISelected)
                                                     {
@@ -147,7 +147,7 @@
                                                                     {
                                                                         <MudSpacer/>
                                                                         <MudTooltip Text="@internalSource.ConfidenceLevel.Name">
-                                                                            <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
+                                                                            <MudIcon Icon="@AppIcons.PROVIDER_CONFIDENCE" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                                         </MudTooltip>
                                                                     }
                                                                 </MudStack>
