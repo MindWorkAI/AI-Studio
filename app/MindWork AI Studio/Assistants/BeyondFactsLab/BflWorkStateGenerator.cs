@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Tools.AssistantSessions;
 
@@ -93,11 +92,11 @@ public sealed class BflWorkStateGenerator(BeyondFactsLabStore store, BflConversa
             sessionId = (await sessionService.TryBeginAsync(sessionKey, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT.Name, cancellation, null, new(StringComparer.Ordinal))).SessionId;
             await this.NotifyAsync(location);
 
-            var answer = BflMarkdownSections.Read(await AskAsync(hidden, provider, request, requestMaterial.Images, cancellation.Token), location.Step, form);
+            var answer = BflMarkdownSections.Read(await BflHiddenRequest.AskAsync(hidden, provider, request, requestMaterial.Images, cancellation.Token), location.Step, form);
             if (answer.Problems.Count > 0 && !cancellation.IsCancellationRequested)
             {
                 logger.LogInformation("The model wrote a work state of the BeyondFacts Lab with {Count} problems; it may correct them once.", answer.Problems.Count);
-                answer = BflMarkdownSections.Read(await AskAsync(hidden, provider, BflPromptComposer.ComposeWorkStateRepairRequest(answer.Problems), requestMaterial.Images, cancellation.Token), location.Step, form);
+                answer = BflMarkdownSections.Read(await BflHiddenRequest.AskAsync(hidden, provider, BflPromptComposer.ComposeWorkStateRepairRequest(answer.Problems), requestMaterial.Images, cancellation.Token), location.Step, form);
             }
 
             if (cancellation.IsCancellationRequested)
@@ -163,41 +162,6 @@ public sealed class BflWorkStateGenerator(BeyondFactsLabStore store, BflConversa
     /// </summary>
     /// <param name="location">The step.</param>
     public Task CancelAsync(BflStepThreadLocation location) => sessionService.CancelAsync(SessionKey(location));
-
-    /// <summary>
-    /// Sends a request in the hidden copy of a conversation and waits for the whole answer.
-    /// </summary>
-    /// <param name="hidden">The hidden copy of the conversation, which keeps the request and the answer.</param>
-    /// <param name="provider">The provider which answers.</param>
-    /// <param name="text">The request.</param>
-    /// <param name="images">The images of the material, which go along with the first message.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>The answer, empty when the provider failed.</returns>
-    private static async Task<string> AskAsync(ChatThread hidden, AIStudio.Settings.Provider provider, string text, IReadOnlyList<FileAttachmentImage> images, CancellationToken token)
-    {
-        var request = new ContentText { Text = text };
-        hidden.Blocks.Add(new ContentBlock
-        {
-            Time = DateTimeOffset.Now,
-            ContentType = ContentType.TEXT,
-            Role = ChatRole.USER,
-            Content = request,
-            HideFromUser = true
-        });
-
-        var answer = new ContentText { InitialRemoteWait = true };
-        hidden.Blocks.Add(new ContentBlock
-        {
-            Time = DateTimeOffset.Now,
-            ContentType = ContentType.TEXT,
-            Role = ChatRole.AI,
-            Content = answer,
-            HideFromUser = true
-        });
-
-        await answer.CreateFromProviderAsync(provider.CreateProvider(), provider.Model, request, BflConversationService.WithImages(hidden, images), token);
-        return answer.Text;
-    }
 
     /// <summary>
     /// Tells every page which listens that a work state changed.

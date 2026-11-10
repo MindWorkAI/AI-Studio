@@ -4,13 +4,13 @@ using System.Text;
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// Tells whether a confirmed work state of the BeyondFacts Lab still fits what it builds on.
+/// Tells whether a confirmed work state or a result of the BeyondFacts Lab still fits what it builds on.
 /// </summary>
 /// <remarks>
 /// The answer is computed whenever it is needed and never stored, so that it cannot drift from the work states. A
 /// confirmed work state remembers the revisions of the earlier steps and a fingerprint of the form of its step;
 /// comparing both with the present ones gives the answer. A changed form weighs less than a changed earlier step:
-/// the person may have only corrected a typo.
+/// the person may have only corrected a typo. A result remembers the revisions of the work states of all steps.
 /// </remarks>
 public static class BflStaleness
 {
@@ -58,6 +58,36 @@ public static class BflStaleness
         }
 
         return revisions;
+    }
+
+    /// <summary>
+    /// Gets the revisions of the confirmed work states of all steps, which a result remembers when the lab writes it.
+    /// </summary>
+    /// <param name="workStates">The work states of the preparation, by their steps.</param>
+    /// <returns>The revision of each step with a confirmed work state.</returns>
+    public static IReadOnlyDictionary<BflStep, int> ConfirmedRevisionsOf(IReadOnlyDictionary<BflStep, BflWorkState> workStates)
+    {
+        var revisions = new Dictionary<BflStep, int>();
+        foreach (var step in BflStep.All)
+        {
+            if (workStates.GetValueOrDefault(step)?.Confirmed is { } confirmed)
+                revisions[step] = confirmed.Revision;
+        }
+
+        return revisions;
+    }
+
+    /// <summary>
+    /// Tells whether a version of a result no longer fits the work states: a step was confirmed for the first time,
+    /// confirmed anew, or withdrawn since the lab wrote it.
+    /// </summary>
+    /// <param name="version">The version of the result.</param>
+    /// <param name="workStates">The work states of the preparation, by their steps.</param>
+    /// <returns>True, when the result is outdated.</returns>
+    public static bool IsOutdated(BflResultVersion version, IReadOnlyDictionary<BflStep, BflWorkState> workStates)
+    {
+        var revisions = ConfirmedRevisionsOf(workStates);
+        return revisions.Count != version.WorkStateRevisions.Count || revisions.Any(revision => version.WorkStateRevisions.GetValueOrDefault(revision.Key) != revision.Value);
     }
 
     /// <summary>

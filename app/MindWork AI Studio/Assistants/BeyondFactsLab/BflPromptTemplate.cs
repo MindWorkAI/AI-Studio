@@ -63,6 +63,11 @@ public static partial class BflPromptTemplate
     public const string FIELDS = "FIELDS";
 
     /// <summary>
+    /// The steps without a confirmed work state, whose topics a result must not fill with guesses.
+    /// </summary>
+    public const string MISSING_WORK_STATES = "MISSING_WORK_STATES";
+
+    /// <summary>
     /// Fills every placeholder of a template.
     /// </summary>
     /// <param name="template">The template.</param>

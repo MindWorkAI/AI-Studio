@@ -72,6 +72,29 @@ public static class BflPromptComposer
     }).ReplaceLineEndings(LINE_BREAK.ToString()).Trim();
 
     /// <summary>
+    /// Puts together the request which lets the model write a result, at the end of a hidden copy of the conversation
+    /// of the last step.
+    /// </summary>
+    /// <param name="template">The request, see BflPromptLibrary.ResultPath.</param>
+    /// <param name="workStates">The work states of the preparation, by their steps, to name the steps without a confirmed one.</param>
+    /// <returns>The request.</returns>
+    /// <exception cref="FormatException">The request has a placeholder without a value.</exception>
+    public static string ComposeResultRequest(string template, IReadOnlyDictionary<BflStep, BflWorkState> workStates) => BflPromptTemplate.Fill(template, new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [BflPromptTemplate.MISSING_WORK_STATES] = MissingWorkStates(workStates)
+    }).ReplaceLineEndings(LINE_BREAK.ToString()).Trim();
+
+    /// <summary>
+    /// Names the steps without a confirmed work state, in their order.
+    /// </summary>
+    /// <param name="workStates">The work states of the preparation, by their steps.</param>
+    private static string MissingWorkStates(IReadOnlyDictionary<BflStep, BflWorkState> workStates)
+    {
+        var missing = BflStep.All.Where(step => workStates.GetValueOrDefault(step)?.Confirmed is null).Select(step => $"„{step.Title}“").ToList();
+        return missing.Count is 0 ? "keine; alle Schritte sind bestätigt." : $"{string.Join(", ", missing)}.";
+    }
+
+    /// <summary>
     /// Puts together the request which asks the model once to correct the sections of a work state.
     /// </summary>
     /// <param name="problems">What is wrong with the sections, see BflWorkStateAnswer.Problems.</param>

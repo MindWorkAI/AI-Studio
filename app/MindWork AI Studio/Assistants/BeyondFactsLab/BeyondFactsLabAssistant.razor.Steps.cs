@@ -46,10 +46,10 @@ public partial class BeyondFactsLabAssistant
     }
 
     /// <summary>
-    /// Shows a work state after the panel of its step stored it.
+    /// Shows the new time of change of a preparation after a work state or a result of it was stored.
     /// </summary>
     /// <param name="project">The preparation with its new time of change.</param>
-    private Task WorkStateStoredAsync(BflProject project)
+    private Task ProjectStoredAsync(BflProject project)
     {
         this.ReplaceProject(project);
         return Task.CompletedTask;
