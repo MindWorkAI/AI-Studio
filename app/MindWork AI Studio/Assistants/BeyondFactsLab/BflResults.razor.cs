@@ -93,6 +93,11 @@ public partial class BflResults : MSGComponentBase
     private Guid loadedProjectId;
 
     /// <summary>
+    /// The result whose panel is open, or null while all are closed. Only one is open at a time.
+    /// </summary>
+    private BflResultKind? expandedKind = BflResultKind.All[0];
+
+    /// <summary>
     /// The results whose draft the person edits as text instead of reading its preview.
     /// </summary>
     private readonly HashSet<BflResultKind> editing = [];
@@ -147,6 +152,67 @@ public partial class BflResults : MSGComponentBase
     private bool IsGenerating(BflResultKind kind) => this.Generator.IsRunning(new BflResultLocation(this.ProjectId, kind));
 
     private bool IsBusy(BflResultKind kind) => this.saving.Contains(kind) || this.IsGenerating(kind);
+
+    /// <summary>
+    /// Tells where a result stands, for the header of its panel.
+    /// </summary>
+    /// <param name="kind">The kind of result.</param>
+    private BflResultStatus StatusOf(BflResultKind kind)
+    {
+        if (this.IsGenerating(kind))
+            return BflResultStatus.WRITING;
+
+        return this.results.GetValueOrDefault(kind) switch
+        {
+            null => BflResultStatus.UNREADABLE,
+            { Draft: not null } => BflResultStatus.DRAFT,
+            { Confirmed: { } confirmed } => BflStaleness.IsOutdated(confirmed, this.WorkStates) ? BflResultStatus.OUTDATED : BflResultStatus.CONFIRMED,
+            _ => BflResultStatus.NOT_CREATED
+        };
+    }
+
+    private static string StatusIcon(BflResultStatus status) => status switch
+    {
+        BflResultStatus.UNREADABLE => Icons.Material.Filled.Error,
+        BflResultStatus.WRITING => Icons.Material.Filled.HourglassTop,
+        BflResultStatus.DRAFT => Icons.Material.Filled.EditNote,
+        BflResultStatus.CONFIRMED => Icons.Material.Filled.CheckCircle,
+        BflResultStatus.OUTDATED => Icons.Material.Filled.Update,
+        _ => Icons.Material.Filled.RadioButtonUnchecked
+    };
+
+    private static Color StatusColor(BflResultStatus status) => status switch
+    {
+        BflResultStatus.UNREADABLE => Color.Error,
+        BflResultStatus.WRITING => Color.Primary,
+        BflResultStatus.DRAFT => Color.Info,
+        BflResultStatus.CONFIRMED => Color.Success,
+        BflResultStatus.OUTDATED => Color.Warning,
+        _ => Color.Default
+    };
+
+    private string StatusText(BflResultStatus status) => status switch
+    {
+        BflResultStatus.UNREADABLE => T("Cannot be opened"),
+        BflResultStatus.WRITING => T("Being written"),
+        BflResultStatus.DRAFT => T("Draft"),
+        BflResultStatus.CONFIRMED => T("Confirmed"),
+        BflResultStatus.OUTDATED => T("Outdated"),
+        _ => T("Not created yet")
+    };
+
+    /// <summary>
+    /// Opens the panel of a result and closes the others, or closes it.
+    /// </summary>
+    /// <param name="kind">The kind of result.</param>
+    /// <param name="expanded">Whether the panel is open now.</param>
+    private void SetExpanded(BflResultKind kind, bool expanded)
+    {
+        if (expanded)
+            this.expandedKind = kind;
+        else if (this.expandedKind == kind)
+            this.expandedKind = null;
+    }
 
     /// <summary>
     /// Reads the results of the preparation again once the generator started, ended, or stored a draft.
