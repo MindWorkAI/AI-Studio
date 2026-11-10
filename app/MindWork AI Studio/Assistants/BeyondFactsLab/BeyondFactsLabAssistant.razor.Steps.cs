@@ -149,6 +149,28 @@ public partial class BeyondFactsLabAssistant
         if (!this.forms.TryGetValue(step, out var form))
             return T("Cannot be opened");
 
-        return BflMissingDetails.Of(step, form).Count > 0 ? T("Details missing") : string.Empty;
+        var notes = new List<string>(2);
+        if (BflMissingDetails.Of(step, form).Count > 0)
+            notes.Add(T("Details missing"));
+
+        switch (BflStaleness.Of(step, this.workStates, this.forms))
+        {
+            case BflWorkStateStatus.OUTDATED:
+                notes.Add(T("Outdated"));
+                break;
+
+            case BflWorkStateStatus.DETAILS_CHANGED:
+                notes.Add(T("Details changed"));
+                break;
+        }
+
+        return string.Join(" · ", notes);
     }
+
+    /// <summary>
+    /// Tells whether the stepper shows a step as done: the person confirmed its work state, and no earlier step changed
+    /// since.
+    /// </summary>
+    /// <param name="step">The step.</param>
+    private bool IsStepCompleted(BflStep step) => BflStaleness.Of(step, this.workStates, this.forms) is BflWorkStateStatus.CONFIRMED or BflWorkStateStatus.DETAILS_CHANGED;
 }

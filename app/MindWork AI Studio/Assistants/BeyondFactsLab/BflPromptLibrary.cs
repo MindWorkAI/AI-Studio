@@ -60,7 +60,8 @@ public static class BflPromptLibrary
         BflPromptTemplate.STEP,
         BflPromptTemplate.MATERIALS,
         BflPromptTemplate.DETAILS,
-        BflPromptTemplate.MISSING_DETAILS);
+        BflPromptTemplate.MISSING_DETAILS,
+        BflPromptTemplate.WORK_STATES);
 
     /// <summary>
     /// The placeholders BflPromptComposer fills in the prompt of the onboarding.

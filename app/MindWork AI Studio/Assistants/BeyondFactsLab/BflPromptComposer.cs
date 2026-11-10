@@ -26,15 +26,17 @@ public static class BflPromptComposer
     /// <param name="forms">The forms of the preparation, by their steps; a step this version cannot open is missing.</param>
     /// <param name="materials">What the prompt carries of the material of the preparation, see BflMaterialBudget.</param>
     /// <param name="responseLanguage">The name of the language the model answers in, e.g., the language of the app.</param>
+    /// <param name="workStates">The work states of the preparation, by their steps; only the confirmed ones reach the prompt. Null when there are none.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The core prompt has a placeholder without a value.</exception>
-    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
         [BflPromptTemplate.KNOWLEDGE] = parts.Knowledge.Trim(),
         [BflPromptTemplate.STEP] = parts.Step.Trim(),
         [BflPromptTemplate.MATERIALS] = Materials(materials),
+        [BflPromptTemplate.WORK_STATES] = WorkStates(step, workStates ?? new Dictionary<BflStep, BflWorkState>(), forms),
         [BflPromptTemplate.DETAILS] = Details(step, forms),
         [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms)
     }).ReplaceLineEndings(LINE_BREAK.ToString());
@@ -186,6 +188,52 @@ public static class BflPromptComposer
         }
 
         return text.ToString().TrimEnd();
+    }
+
+    /// <summary>
+    /// Lists the work states the person confirmed, step by step, each with the sections which hold text.
+    /// </summary>
+    /// <remarks>
+    /// A draft never reaches a prompt: the person has not checked it yet. Like a personal field of a form, a personal
+    /// section reaches only the chat of its own step. A section this version does not know, e.g., one a newer version
+    /// added, has no title and is left out.
+    /// </remarks>
+    /// <param name="step">The step the chat belongs to.</param>
+    /// <param name="workStates">The work states of the preparation, by their steps.</param>
+    /// <param name="forms">The forms of the preparation, by their steps, which tell whether a work state is outdated.</param>
+    private static string WorkStates(BflStep step, IReadOnlyDictionary<BflStep, BflWorkState> workStates, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
+    {
+        var text = new StringBuilder();
+        foreach (var candidate in BflStep.All)
+        {
+            if (workStates.GetValueOrDefault(candidate)?.Confirmed is not { } confirmed)
+                continue;
+
+            var sections = new StringBuilder();
+            foreach (var section in BflWorkStateSections.ForStep(candidate))
+            {
+                if (section.IsPersonalDisclosure && candidate != step)
+                    continue;
+
+                var value = confirmed.Sections.GetValueOrDefault(section.Key, string.Empty).Trim().ReplaceLineEndings(LINE_BREAK.ToString());
+                if (value.Length is 0)
+                    continue;
+
+                var marker = section.IsPersonalDisclosure ? " (persönliche Angabe)" : string.Empty;
+                sections.Append("### ").Append(section.Title).Append(marker).Append(LINE_BREAK).Append(value).Append(LINE_BREAK);
+            }
+
+            if (sections.Length is 0)
+                continue;
+
+            if (text.Length > 0)
+                text.Append(LINE_BREAK);
+
+            var outdated = BflStaleness.Of(candidate, workStates, forms) is BflWorkStateStatus.OUTDATED ? " (veraltet)" : string.Empty;
+            text.Append("## ").Append(StepHeading(candidate, step)).Append(outdated).Append(LINE_BREAK).Append(sections);
+        }
+
+        return text.Length is 0 ? "Die Person hat noch keinen Arbeitsstand bestätigt." : text.ToString().TrimEnd();
     }
 
     /// <summary>
