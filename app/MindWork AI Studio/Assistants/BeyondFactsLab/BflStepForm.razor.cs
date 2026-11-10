@@ -43,6 +43,28 @@ public partial class BflStepForm : MSGComponentBase
 
     private bool HasKeyDetails => this.Fields.Any(definition => definition.IsKeyDetail);
 
+    /// <summary>
+    /// The symbol which marks a field whose value the research of the lab receives.
+    /// </summary>
+    private const string PUBLIC_DETAIL_ICON = Icons.Material.Filled.TravelExplore;
+
+    /// <summary>
+    /// Gets whether the step has fields whose values the research receives, so that the form explains their symbol.
+    /// </summary>
+    private bool HasPublicDetails => this.Fields.Any(definition => definition.IsSharedWithResearch);
+
+    /// <summary>
+    /// Gets what a screen reader announces for the symbol of a public detail.
+    /// </summary>
+    private string PublicDetailLabel => T("Public detail: the research of the lab receives it");
+
+    /// <summary>
+    /// Gets where a field shows the symbol of a public detail: at its end, or nowhere when the research never receives
+    /// its value.
+    /// </summary>
+    /// <param name="field">The field.</param>
+    private static Adornment AdornmentOf(BflFieldDefinition field) => field.IsSharedWithResearch ? Adornment.End : Adornment.None;
+
     private static string LabelOf(BflFieldDefinition field) => field.IsKeyDetail ? $"{field.Label} *" : field.Label;
 
     private async Task SetValueAsync(BflFieldDefinition field, string? value)

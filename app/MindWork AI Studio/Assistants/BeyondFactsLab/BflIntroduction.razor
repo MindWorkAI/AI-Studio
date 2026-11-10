@@ -45,6 +45,16 @@
     </MudListItem>
 </MudList>
 
+<MudText Typo="Typo.h6">@T("Research on the web")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @string.Format(Culture, TA("In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time."), BflStep.STRATEGY.Title)
+</MudJustifiedText>
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Shield" Class="mb-4">
+    <MudJustifiedText Typo="Typo.body1">
+        @TA("The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event.")
+    </MudJustifiedText>
+</MudAlert>
+
 <MudText Typo="Typo.h6">@T("How to recognize good results")</MudText>
 <MudList T="string" ReadOnly="@true" Dense="@true" Class="mud-text-list mb-3">
     <MudListItem T="string" Icon="@Icons.Material.Filled.TaskAlt" Style="@LIST_ITEM_STYLE">
