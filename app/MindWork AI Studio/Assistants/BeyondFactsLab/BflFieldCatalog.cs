@@ -13,6 +13,7 @@ public static class BflFieldCatalog
     public const string FORMAT = "format";
     public const string EVENT_TOPIC = "event_topic";
     public const string AUDIENCE = "audience";
+    public const string EVENT_VISIBILITY = "event_visibility";
     public const string CONTRIBUTION_TOPIC = "contribution_topic";
     public const string EVENT_DATE = "event_date";
     public const string EVENT_LOCATION = "event_location";
@@ -47,6 +48,10 @@ public static class BflFieldCatalog
     // Results and materials:
     public const string POSITION_CHANGES = "position_changes";
 
+    // The options of whether the event is public:
+    public const string EVENT_PUBLIC = "event_public";
+    public const string EVENT_NOT_PUBLIC = "event_not_public";
+
     // The options of the directions of a goal:
     public const string GOAL_INFORM = "goal_inform";
     public const string GOAL_MODERATE = "goal_moderate";
@@ -75,6 +80,13 @@ public static class BflFieldCatalog
         new(FORMAT, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsKeyDetail = true, IsSharedWithResearch = true },
         new(EVENT_TOPIC, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsKeyDetail = true, IsSharedWithResearch = true },
         new(AUDIENCE, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsKeyDetail = true },
+
+        // Whether the event is public, which decides whether the lab may research it on the web at all:
+        new(EVENT_VISIBILITY, BflStep.FRAMEWORK, BflFieldKind.CHOICE)
+        {
+            IsKeyDetail = true,
+            Options = [new(EVENT_PUBLIC), new(EVENT_NOT_PUBLIC)],
+        },
 
         // The topic of the contribution may be unpublished, so it never reaches the research:
         new(CONTRIBUTION_TOPIC, BflStep.FRAMEWORK, BflFieldKind.MULTI_LINE) { IsKeyDetail = true },

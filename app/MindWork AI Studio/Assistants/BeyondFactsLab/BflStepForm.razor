@@ -14,6 +14,19 @@
     <MudText Typo="Typo.body2" Class="mb-3">@this.Step.FormHint</MudText>
 }
 
+@if (this.HasPublicDetails && this.IsEventNotPublic)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.PublicOff" Class="mb-3">
+        @TA("The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol.")
+    </MudAlert>
+}
+else if (this.HasPublicDetails)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@PUBLIC_DETAIL_ICON" Class="mb-3">
+        @TA("Fields marked with this symbol hold public details about the event. Only these reach the research of the lab, which searches the web. All your other details stay in your preparation.")
+    </MudAlert>
+}
+
 <MudStack Spacing="3">
     @foreach (var field in this.Fields)
     {
@@ -30,6 +43,10 @@
                               MaxLength="@field.Kind.MaxLength"
                               Validation="@this.ValidationOf(field)"
                               Disabled="@this.Disabled"
+                              Adornment="@AdornmentOf(field)"
+                              AdornmentIcon="@PUBLIC_DETAIL_ICON"
+                              AdornmentColor="Color.Info"
+                              AdornmentAriaLabel="@this.PublicDetailLabel"
                               Variant="Variant.Outlined"/>
                 break;
 
@@ -42,6 +59,10 @@
                               HelperText="@field.Hint"
                               MaxLength="@field.Kind.MaxLength"
                               Disabled="@this.Disabled"
+                              Adornment="@AdornmentOf(field)"
+                              AdornmentIcon="@PUBLIC_DETAIL_ICON"
+                              AdornmentColor="Color.Info"
+                              AdornmentAriaLabel="@this.PublicDetailLabel"
                               Variant="Variant.Outlined"
                               Lines="3"
                               Sizing="InputSizing.Auto"

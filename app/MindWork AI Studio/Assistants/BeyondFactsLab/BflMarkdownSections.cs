@@ -82,8 +82,8 @@ public static partial class BflMarkdownSections
             if (section.Key.StartsWith(FIELD_PREFIX, StringComparison.OrdinalIgnoreCase))
             {
                 var fieldId = section.Key[FIELD_PREFIX.Length..].Trim().ToLowerInvariant();
-                if (suggestable.TryGetValue(fieldId, out var field) && !suggestions.ContainsKey(fieldId) && Fits(field, section.Text))
-                    suggestions[fieldId] = section.Text;
+                if (suggestable.TryGetValue(fieldId, out var field) && !suggestions.ContainsKey(fieldId) && ValueOf(field, section.Text) is { } value)
+                    suggestions[fieldId] = value;
 
                 continue;
             }
@@ -104,35 +104,54 @@ public static partial class BflMarkdownSections
     }
 
     /// <summary>
-    /// Gets the fields of a step for which the model may suggest a value: the empty text fields.
+    /// Gets the fields of a step for which the model may suggest a value: the empty fields with a text or a single
+    /// choice.
     /// </summary>
     /// <remarks>
     /// A field which holds something personal gets no suggestion: the lab never ascribes such things to the person.
-    /// The fields with a choice get none either; the person chooses quickly enough.
+    /// A field with a single choice gets one, because the person may answer its question in the conversation, such as
+    /// whether the event is public; the fields with several choices get none, since the person chooses quickly enough.
     /// </remarks>
     /// <param name="step">The step.</param>
     /// <param name="form">The form of the step.</param>
     /// <returns>The fields, in the order the form shows them.</returns>
     public static IReadOnlyList<BflFieldDefinition> SuggestableFields(BflStep step, BflStepFormData form) =>
-        [.. BflFieldCatalog.ForStep(step).Where(field => field.Kind is BflFieldKind.SINGLE_LINE or BflFieldKind.MULTI_LINE or BflFieldKind.LINK && !field.IsPersonalDisclosure && string.IsNullOrWhiteSpace(form.Get(field.Id)))];
+        [.. BflFieldCatalog.ForStep(step).Where(field => field.Kind is BflFieldKind.SINGLE_LINE or BflFieldKind.MULTI_LINE or BflFieldKind.LINK or BflFieldKind.CHOICE && !field.IsPersonalDisclosure && string.IsNullOrWhiteSpace(form.Get(field.Id)))];
 
     /// <summary>
-    /// Checks whether a suggestion fits its field.
+    /// Gets the option of a field with a single choice which a suggestion names, by its ID or its label.
+    /// </summary>
+    /// <remarks>
+    /// The request lists the options by their labels, but the model may write the ID as well. Quotation marks and
+    /// emphasis around the name are no part of it; anything else must match the name exactly, apart from case.
+    /// </remarks>
+    /// <param name="field">The field.</param>
+    /// <param name="value">The suggested value.</param>
+    /// <returns>The option, or null when the suggestion names none of the options of the field.</returns>
+    private static BflFieldOption? OptionOf(BflFieldDefinition field, string value)
+    {
+        var name = value.Trim().Trim('"', '\'', '„', '“', '”', '‚', '‘', '’', '*', '.').Trim();
+        return field.Options.FirstOrDefault(option => string.Equals(option.Id, name, StringComparison.OrdinalIgnoreCase) || string.Equals(option.Label, name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Gets the value a suggestion gives its field, if it fits.
     /// </summary>
     /// <param name="field">The field.</param>
     /// <param name="value">The suggested value.</param>
-    /// <returns>True when the field takes the value as it is.</returns>
-    private static bool Fits(BflFieldDefinition field, string value)
+    /// <returns>The value as the form stores it, such as the ID of the option chosen, or null when it does not fit.</returns>
+    private static string? ValueOf(BflFieldDefinition field, string value)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Length > field.Kind.MaxLength)
-            return false;
+            return null;
 
         return field.Kind switch
         {
-            BflFieldKind.SINGLE_LINE => !value.Contains('\n'),
-            BflFieldKind.LINK => Uri.TryCreate(value, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp),
+            BflFieldKind.SINGLE_LINE => value.Contains('\n') ? null : value,
+            BflFieldKind.LINK => Uri.TryCreate(value, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp) ? value : null,
+            BflFieldKind.CHOICE => OptionOf(field, value)?.Id,
 
-            _ => true,
+            _ => value,
         };
     }
 

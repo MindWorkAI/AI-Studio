@@ -11,6 +11,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 [JsonSerializable(typeof(BflMaterial))]
 [JsonSerializable(typeof(BflWorkState))]
 [JsonSerializable(typeof(BflResult))]
+[JsonSerializable(typeof(BflResearch))]
 
 // The preparation selected last:
 [JsonSerializable(typeof(Guid?))]

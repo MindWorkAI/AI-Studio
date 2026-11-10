@@ -61,6 +61,13 @@ public partial class BflWorkStatePanel : MSGComponentBase
     public EventCallback<BflProject> WorkStateStored { get; set; }
 
     /// <summary>
+    /// Gets or sets the callback raised after the person confirmed the work state and it was stored, with its step,
+    /// e.g., to start the research once the event details are confirmed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BflStep> WorkStateConfirmed { get; set; }
+
+    /// <summary>
     /// Gets or sets the provider which writes the work state.
     /// </summary>
     [Parameter, EditorRequired]
@@ -96,6 +103,10 @@ public partial class BflWorkStatePanel : MSGComponentBase
     /// <summary>
     /// Gets the suggestions for fields which are still empty, in the order the form shows the fields.
     /// </summary>
+    /// <remarks>
+    /// A suggestion for a field with a choice holds the ID of an option; one this version does not know, e.g., one a
+    /// newer version added, is left out.
+    /// </remarks>
     private IReadOnlyList<KeyValuePair<BflFieldDefinition, string>> VisibleSuggestions
     {
         get
@@ -105,9 +116,17 @@ public partial class BflWorkStatePanel : MSGComponentBase
 
             return [.. BflMarkdownSections.SuggestableFields(this.Step, form)
                 .Where(definition => workState.FieldSuggestions.ContainsKey(definition.Id))
-                .Select(definition => new KeyValuePair<BflFieldDefinition, string>(definition, workState.FieldSuggestions[definition.Id]))];
+                .Select(definition => new KeyValuePair<BflFieldDefinition, string>(definition, workState.FieldSuggestions[definition.Id]))
+                .Where(suggestion => !suggestion.Key.Kind.HasOptions || suggestion.Key.Options.Any(option => string.Equals(option.Id, suggestion.Value, StringComparison.Ordinal)))];
         }
     }
+
+    /// <summary>
+    /// Gets the text which shows a suggestion: the label of the option for a field with a choice, else the value.
+    /// </summary>
+    /// <param name="field">The field.</param>
+    /// <param name="value">The suggested value.</param>
+    private static string TextOf(BflFieldDefinition field, string value) => field.Options.FirstOrDefault(option => string.Equals(option.Id, value, StringComparison.Ordinal))?.Label ?? value;
 
     private Task GenerateAsync() => this.Generator.GenerateAsync(this.Location, this.Provider);
 
@@ -128,7 +147,8 @@ public partial class BflWorkStatePanel : MSGComponentBase
             return;
 
         this.Confirm(workState, draft);
-        await this.SaveAsync(workState);
+        if (await this.SaveAsync(workState))
+            await this.WorkStateConfirmed.InvokeAsync(this.Step);
     }
 
     private async Task ConfirmAgainAsync()
@@ -137,7 +157,8 @@ public partial class BflWorkStatePanel : MSGComponentBase
             return;
 
         this.Confirm(workState, confirmed.Sections);
-        await this.SaveAsync(workState);
+        if (await this.SaveAsync(workState))
+            await this.WorkStateConfirmed.InvokeAsync(this.Step);
     }
 
     private void Confirm(BflWorkState workState, IReadOnlyDictionary<string, string> sections)
@@ -203,18 +224,25 @@ public partial class BflWorkStatePanel : MSGComponentBase
     /// <param name="sections">The texts, by the keys of their sections.</param>
     private Dictionary<string, string> DraftOf(IReadOnlyDictionary<string, string> sections) => this.Sections.ToDictionary(section => section.Key, section => sections.GetValueOrDefault(section.Key, string.Empty), StringComparer.Ordinal);
 
-    private async Task SaveAsync(BflWorkState workState)
+    /// <summary>
+    /// Stores the work state and tells the page.
+    /// </summary>
+    /// <param name="workState">The work state.</param>
+    /// <returns>True when it was stored; what went wrong, the person was told.</returns>
+    private async Task<bool> SaveAsync(BflWorkState workState)
     {
         this.isSaving = true;
         try
         {
             var project = await this.Store.SaveWorkStateAsync(this.Location.ProjectId, this.Step, workState);
             await this.WorkStateStored.InvokeAsync(project);
+            return true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             this.Logger.LogError(exception, "Could not save the work state of a step in the BeyondFacts Lab.");
             await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not save the work state. Please try again.")));
+            return false;
         }
         finally
         {

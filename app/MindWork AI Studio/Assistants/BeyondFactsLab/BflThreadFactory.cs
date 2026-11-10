@@ -8,26 +8,49 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// </summary>
 /// <remarks>
 /// A chat of the lab has no profile, no chat template, and no data sources: its context is the prompt of the lab,
-/// the guide, and the details of the preparation. The lab manages its tools itself; so far, it offers none.
+/// the guide, and the details of the preparation. The lab manages its tools itself: it names them for each request.
 /// </remarks>
 public static class BflThreadFactory
 {
     /// <summary>
-    /// Creates a chat of the lab, without any messages.
+    /// Creates a chat which the person never sees and the lab never stores, e.g., for a research agent.
     /// </summary>
-    /// <param name="location">Where the chat belongs, e.g., to a step of a preparation.</param>
-    /// <returns>The chat.</returns>
-    public static ChatThread Create(BflThreadLocation location) => new()
+    /// <param name="name">The name of the chat, for the log.</param>
+    /// <returns>The chat, with an ID of its own and without any messages.</returns>
+    public static ChatThread CreateHidden(string name) => new()
     {
-        ChatId = location.ChatId,
+        ChatId = Guid.NewGuid(),
         WorkspaceId = Guid.Empty,
-        Name = location.ChatName,
+        Name = name,
         IncludeDateTime = true,
         SelectedProfile = Profile.NO_PROFILE.Id,
         SelectedChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE.Id,
         SelectedToolIds = [],
         Blocks = []
     };
+
+    /// <summary>
+    /// Creates a chat of the lab, without any messages, restricted as its place demands, see BflChatTools.
+    /// </summary>
+    /// <param name="location">Where the chat belongs, e.g., to a step of a preparation.</param>
+    /// <returns>The chat.</returns>
+    public static ChatThread Create(BflThreadLocation location)
+    {
+        var thread = new ChatThread
+        {
+            ChatId = location.ChatId,
+            WorkspaceId = Guid.Empty,
+            Name = location.ChatName,
+            IncludeDateTime = true,
+            SelectedProfile = Profile.NO_PROFILE.Id,
+            SelectedChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE.Id,
+            SelectedToolIds = [],
+            Blocks = []
+        };
+
+        BflChatTools.Restrict(thread, location);
+        return thread;
+    }
 
     /// <summary>
     /// Readies a chat for the next request: its prompt and provider, and what a chat does not store.
@@ -39,7 +62,8 @@ public static class BflThreadFactory
     /// <param name="thread">The chat.</param>
     /// <param name="provider">The provider which answers.</param>
     /// <param name="systemPrompt">The system prompt of the chat, see BflPromptComposer.</param>
-    public static void PrepareForRequest(ChatThread thread, AIStudio.Settings.Provider provider, string systemPrompt)
+    /// <param name="toolIds">The tools the model may use in this request; none when left out. The request still leaves out every tool which may not run, see ToolRegistry.GetRunnableToolsAsync.</param>
+    public static void PrepareForRequest(ChatThread thread, AIStudio.Settings.Provider provider, string systemPrompt, IEnumerable<string>? toolIds = null)
     {
         thread.SystemPrompt = systemPrompt;
         thread.SelectedProvider = provider.Id;
@@ -48,7 +72,7 @@ public static class BflThreadFactory
         thread.DataSourceOptions.DisableDataSources = true;
         thread.RuntimeComponent = Tools.Components.BEYOND_FACTS_LAB_ASSISTANT;
         thread.RuntimeAssistantName = string.Empty;
-        thread.RuntimeSelectedToolIds = [];
+        thread.RuntimeSelectedToolIds = [.. toolIds ?? []];
         thread.RuntimeToolsAreAssistantManaged = true;
     }
 }

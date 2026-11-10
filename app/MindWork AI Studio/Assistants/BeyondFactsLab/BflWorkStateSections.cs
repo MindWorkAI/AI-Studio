@@ -52,6 +52,7 @@ public static class BflWorkStateSections
         new("LANGUAGE", BflStep.STRATEGY, "Sprache: Begriffe, Bilder und Beispiele für das Publikum."),
         new("UNCERTAINTY", BflStep.STRATEGY, "Wie die Person Evidenz, Wertabwägungen und Unsicherheit erkennbar macht."),
         new("FRAMING", BflStep.STRATEGY, "Framing des Themas und des eigenen Beitrags."),
+        new("PARTICIPANTS", BflStep.STRATEGY, "Teilnehmende und Gegenüber: wer außer der Person spricht oder moderiert, je mit Rolle und den öffentlichen Positionen zum Thema, soweit die Recherche, die Angaben oder das Material sie belegen, mit Quelle. Nur, was die Person im Gespräch bestätigt hat; sonst leer."),
         new("COUNTERARGUMENTS", BflStep.STRATEGY, "Gegenargumente und wie die Person ihnen begegnet."),
         new("WORRIES", BflStep.STRATEGY, "Umgang mit den kommunikativen Sorgen der Person."),
         new(OPEN_POINTS, BflStep.STRATEGY, "Offene Punkte, etwa für die Recherche."),

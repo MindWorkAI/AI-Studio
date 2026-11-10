@@ -103,7 +103,7 @@ else
             {
                 <MudPaper @key="field.Id" Outlined="true" Class="pa-3">
                     <MudText Typo="Typo.subtitle2">@field.Label</MudText>
-                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@value</MudText>
+                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@TextOf(field, value)</MudText>
                     <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-2">
                         <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" OnClick="@(() => this.TakeOverSuggestionAsync(field, value))" Disabled="@this.IsBusy">@T("Take over")</MudButton>
                         <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Close" OnClick="@(() => this.DismissSuggestionAsync(field))" Disabled="@this.IsBusy">@T("Dismiss")</MudButton>
