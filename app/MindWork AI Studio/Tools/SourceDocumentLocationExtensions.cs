@@ -39,7 +39,7 @@ public static class SourceDocumentLocationExtensions
             catch (Exception e)
             {
                 LOGGER.LogWarning(e, "Could not open a source document.");
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, TB("Could not open the document.")));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, TB("Could not open the document.")));
                 return;
             }
 
@@ -47,7 +47,7 @@ public static class SourceDocumentLocationExtensions
                 return;
 
             var issue = string.IsNullOrWhiteSpace(response.Issue) ? TB("Unknown error") : response.Issue;
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, string.Format(TB("Could not open the document: {0}"), issue)));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, string.Format(TB("Could not open the document: {0}"), issue)));
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ public static class SourceDocumentLocationExtensions
             catch (Exception e)
             {
                 LOGGER.LogWarning(e, "Could not show a source document in the file manager.");
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.FolderOpen, TB("Could not open the file location.")));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.FOLDER_OPEN, TB("Could not open the file location.")));
                 return;
             }
 
@@ -77,7 +77,7 @@ public static class SourceDocumentLocationExtensions
                 return;
 
             var issue = string.IsNullOrWhiteSpace(response.Issue) ? TB("Unknown error") : response.Issue;
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.FolderOpen, string.Format(TB("Could not open the file location: {0}"), issue)));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.FOLDER_OPEN, string.Format(TB("Could not open the file location: {0}"), issue)));
         }
     }
 }

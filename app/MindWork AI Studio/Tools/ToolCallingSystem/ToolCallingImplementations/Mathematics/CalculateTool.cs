@@ -65,7 +65,7 @@ public sealed class CalculateTool(SettingsManager settingsManager, MathComputati
         },
     };
 
-    public string Icon => Icons.Material.Filled.Calculate;
+    public string Icon => AppIcons.MATHEMATICS;
 
     public bool IsAvailable => PreviewFeatures.PRE_MATHEMATICS_2026.IsEnabled(settingsManager);
 

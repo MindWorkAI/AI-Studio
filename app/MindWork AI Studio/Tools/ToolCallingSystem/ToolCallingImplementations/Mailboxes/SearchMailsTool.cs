@@ -167,7 +167,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         .Where(mailbox => mailbox.MaxMatches > 0)
         .ToList();
 
-    public string Icon => Icons.Material.Filled.Mail;
+    public string Icon => AppIcons.MAIL_SEARCH;
 
     // Only while both previews are switched on, the one for local RAG and the one for mailboxes:
     public bool IsAvailable => retrievalService.AreMailboxesEnabled;

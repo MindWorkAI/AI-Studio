@@ -41,28 +41,32 @@ public static class PluginAssistantSecurityResolver
     private static string GetAvailabilityIcon(bool requiresAudit, bool hasAudit, bool hasHashMismatch, bool isBlocked, bool canOverride)
     {
         if (hasHashMismatch)
-            return MudBlazor.Icons.Material.Filled.Warning;
+            return AppIcons.WARNING;
         if (requiresAudit)
-            return MudBlazor.Icons.Material.Filled.GppMaybe;
+            return AppIcons.SECURITY_WARNING;
         if (!hasAudit)
-            return MudBlazor.Icons.Material.Filled.HelpOutline;
+            return AppIcons.UNKNOWN;
         if (isBlocked)
-            return MudBlazor.Icons.Material.Filled.Lock;
+            return AppIcons.LOCK;
         if (canOverride)
-            return MudBlazor.Icons.Material.Filled.ReportProblem;
+            return AppIcons.WARNING;
 
-        return MudBlazor.Icons.Material.Filled.LockOpen;
+        return AppIcons.UNLOCK;
     }
     
     // ReSharper disable UnusedParameter.Local
     private static string GetSecurityBadgeIcon(bool requiresAudit, bool hasAudit, bool hasHashMismatch, bool isBlocked, bool canOverride)
     {
         if (hasHashMismatch)
-            return MudBlazor.Icons.Material.Filled.RemoveModerator;
+            return AppIcons.AUDIT_MISMATCH;
         if (!hasAudit)
-            return MudBlazor.Icons.Material.Filled.AddModerator;
+            return AppIcons.SECURITY_NOT_AUDITED;
 
-        return MudBlazor.Icons.Material.Filled.Security;
+        // An audit below the required minimum level never shows the check mark of a passed audit:
+        if (isBlocked || canOverride)
+            return AppIcons.SECURITY_AUDIT_FAILED;
+
+        return AppIcons.SECURITY_AUDIT_PASSED;
     }
     // ReSharper restore UnusedParameter.Local
 
@@ -113,12 +117,12 @@ public static class PluginAssistantSecurityResolver
                 StatusLabel = TB("Unlocked"),
                 SourceLabel = TB("Approved by your organization"),
                 SourceColor = Color.Success,
-                SourceIcon = MudBlazor.Icons.Material.Filled.Business,
-                BadgeIcon = MudBlazor.Icons.Material.Filled.Business,
+                SourceIcon = AppIcons.ORGANIZATION,
+                BadgeIcon = AppIcons.ORGANIZATION,
                 Headline = enterpriseHeadline,
                 Description = TB("The current plugin hash matches an enterprise-managed approval. No manual security audit is required for activation or usage."),
                 StatusColor = Color.Success,
-                StatusIcon = MudBlazor.Icons.Material.Filled.VerifiedUser,
+                StatusIcon = AppIcons.TRUSTED,
                 ActionLabel = TB("Open Security Details"),
             };
         }
@@ -161,7 +165,7 @@ public static class PluginAssistantSecurityResolver
                 StatusLabel = GetAvailabilityLabel(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 SourceLabel = TB("No Approval"),
                 SourceColor = Color.Default,
-                SourceIcon = MudBlazor.Icons.Material.Filled.HelpOutline,
+                SourceIcon = AppIcons.UNKNOWN,
                 BadgeIcon = GetSecurityBadgeIcon(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 Headline = requiresAudit ? TB("This assistant is currently locked.") : TB("This assistant currently has no stored audit."),
                 Description = requiresAudit
@@ -200,7 +204,7 @@ public static class PluginAssistantSecurityResolver
                 StatusLabel = GetAvailabilityLabel(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 SourceLabel = TB("No Approval"),
                 SourceColor = Color.Default,
-                SourceIcon = MudBlazor.Icons.Material.Filled.Warning,
+                SourceIcon = AppIcons.WARNING,
                 BadgeIcon = GetSecurityBadgeIcon(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 Headline = requiresAudit ? TB("This assistant is locked until it is audited again.") : TB("This assistant changed after its last audit."),
                 Description = requiresAudit
@@ -242,7 +246,7 @@ public static class PluginAssistantSecurityResolver
                 StatusLabel = GetAvailabilityLabel(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlockedByMinimum, canOverride),
                 SourceLabel = TB("User Audit"),
                 SourceColor = auditLevel.Color,
-                SourceIcon = MudBlazor.Icons.Material.Filled.Verified,
+                SourceIcon = AppIcons.SECURITY_AUDIT_FAILED,
                 BadgeIcon = GetSecurityBadgeIcon(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlockedByMinimum, canOverride),
                 Headline = isBlockedByMinimum
                     ? TB("This assistant is currently locked.")
@@ -287,7 +291,7 @@ public static class PluginAssistantSecurityResolver
             StatusLabel = GetAvailabilityLabel(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlocked: false, canOverride: false),
             SourceLabel = TB("User Audit"),
             SourceColor = auditLevelDefault.Color,
-            SourceIcon = MudBlazor.Icons.Material.Filled.Verified,
+            SourceIcon = AppIcons.SECURITY_AUDIT_PASSED,
             BadgeIcon = GetSecurityBadgeIcon(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlocked: false, canOverride: false),
             Headline = TB("This assistant is currently unlocked."),
             Description = string.Format(TB("The stored audit matches the current plugin code and meets your required minimum level '{0}'."), auditSettings.MinimumLevel.Name),

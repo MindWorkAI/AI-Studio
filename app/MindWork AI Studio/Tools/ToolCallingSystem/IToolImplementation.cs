@@ -65,7 +65,7 @@ public interface IToolImplementation
     public ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
         ValueTask.FromResult(definition.SystemPromptInstructions);
 
-    public string Icon => Icons.Material.Filled.Build;
+    public string Icon => AppIcons.TOOL;
 
     /// <summary>
     /// Whether this tool exists in this installation right now.

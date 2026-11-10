@@ -174,7 +174,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             .Build();
     }
 
-    public string Icon => Icons.Material.Filled.Language;
+    public string Icon => AppIcons.WEB;
 
     public bool ReturnsUntrustedExternalContent => true;
 

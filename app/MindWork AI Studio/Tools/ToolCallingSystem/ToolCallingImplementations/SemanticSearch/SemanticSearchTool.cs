@@ -326,7 +326,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         _ => "data source",
     };
 
-    public string Icon => Icons.Material.Filled.ManageSearch;
+    public string Icon => AppIcons.SEMANTIC_SEARCH;
 
     // An ERI data source is a server somebody else runs, and even a local document may hold text
     // written to steer a model:

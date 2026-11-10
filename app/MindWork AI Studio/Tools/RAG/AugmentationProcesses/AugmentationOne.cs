@@ -86,7 +86,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                     // The user switched this check on. Continuing without it silently would hide
                     // that the answer rests on unfiltered passages:
                     //
-                    await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FactCheck, TB("The check of which passages fit your question failed. This answer uses all passages that were found.")));
+                    await MessageBus.INSTANCE.SendWarning(new(AppIcons.PASSAGE_RELEVANCE_CHECK, TB("The check of which passages fit your question failed. This answer uses all passages that were found.")));
                 }
             }
             else
@@ -111,7 +111,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         // and each one may miss something else.
         //
         if (selection.LeftOutCount > 0)
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ContentCut, string.Format(TB("Not every passage found in your data sources fits into what the selected model can read. This answer had to do without {0} of them. To give the AI every passage, switch on Semantic Search for this chat, lower the token limit of your data sources, or choose fewer data sources."), selection.LeftOutCount.CompactCount())));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.CONTENT_SHORTENED, string.Format(TB("Not every passage found in your data sources fits into what the selected model can read. This answer had to do without {0} of them. To give the AI every passage, switch on Semantic Search for this chat, lower the token limit of your data sources, or choose fewer data sources."), selection.LeftOutCount.CompactCount())));
 
         //
         // Add the augmented data to the chat thread, as the very last step: the caller restricts

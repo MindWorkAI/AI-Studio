@@ -100,7 +100,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
             if (notifyUserWhenNoUpdate)
             {
-                await this.messageBus.SendError(new(Icons.Material.Filled.Error, TB("Failed to check for updates. Please try again later.")));
+                await this.messageBus.SendError(new(AppIcons.ERROR, TB("Failed to check for updates. Please try again later.")));
             }
 
             return;
@@ -127,7 +127,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
                 }
                 catch (Exception)
                 {
-                    await this.messageBus.SendError(new(Icons.Material.Filled.Error, TB("Failed to install update automatically. Please try again manually.")));
+                    await this.messageBus.SendError(new(AppIcons.ERROR, TB("Failed to install update automatically. Please try again manually.")));
                 }
             }
             else
@@ -137,7 +137,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         {
             if (notifyUserWhenNoUpdate)
             {
-                await this.messageBus.SendInfo(new(Icons.Material.Filled.Update, TB("No update found.")));
+                await this.messageBus.SendInfo(new(AppIcons.APP_UPDATE, TB("No update found.")));
             }
         }
     }
