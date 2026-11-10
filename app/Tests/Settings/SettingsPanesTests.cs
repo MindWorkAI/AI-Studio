@@ -38,13 +38,6 @@ public sealed class SettingsPanesTests
     }
 
     [Test]
-    public void EveryIconHasAPositiveScale()
-    {
-        var wrong = SettingsPanes.ALL.Where(pane => pane.IconScale is <= 0 or > 1).Select(pane => pane.Path.Value);
-        Assert.That(wrong, Is.Empty, "The scale of an icon shrinks an icon which looks larger than the others; it lies above 0 and at most 1.");
-    }
-
-    [Test]
     public void EveryDeeperPaneHasAParentPane()
     {
         var orphans = SettingsPanes.ALL

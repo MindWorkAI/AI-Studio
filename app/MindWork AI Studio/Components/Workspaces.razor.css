@@ -22,12 +22,17 @@
 }
 
 /*
- * The buttons have icons of the usual 24 pixels, like everywhere else in the app. Their usual padding
- * of 12 pixels would make them 48 pixels tall, though, half again as tall as a row. With 4 pixels of
- * padding, a button fills its row from top to bottom.
+ * The buttons act on a row or a section, so their icons take the compact size, as the entries of the
+ * row's menu do, see app.css. The icon which names a row, its folder or its chat bubble, keeps the
+ * usual 24 pixels. MudBlazor's usual padding of 12 pixels would make a button taller than its row; with
+ * 6 pixels, a button is 32 pixels tall and fills its row from top to bottom.
  */
 .workspace-list ::deep .mud-icon-button {
-    padding: 4px;
+    padding: 6px;
+}
+
+.workspace-list ::deep .mud-icon-button .mud-icon-root {
+    font-size: var(--icon-size-compact);
 }
 
 /*
@@ -91,15 +96,14 @@
 }
 
 /*
- * Whatever shows the state of a chat sits in a slot of 20 pixels, in the 24 of a folder's icon. The
- * outlined chat bubble fills more of its box than the folder does, and at the same size it looks the
- * larger one. The margin keeps the names of chats and workspaces in line, and the fixed size keeps a
- * name in its place while the icon in front of it changes.
+ * Whatever shows the state of a chat sits in a slot as large as the icon of a folder, so that the names
+ * of chats and workspaces line up. The fixed size keeps a name in its place while the icon in front of
+ * it changes. Like every icon, the chat bubble is drawn on Material's grid, see documentation/Icons.md.
  *
- * The slot sizes its content, so that a new state needs no rule of its own. A Material icon fills the
- * slot, since it draws within the inner 20 of its 24 units and brings its padding along. Anything else,
- * such as the spinner, fills its whole box and therefore gets those inner 20 units only: it is as large
- * as the drawing of an icon.
+ * The slot sizes its content, so that a new state needs no rule of its own. An icon fills the slot,
+ * since it draws within the inner 20 of its 24 units and brings its padding along. So does the sign of
+ * the search, a magnifier wrapped in an element of its own. Anything else, such as the spinner, fills its
+ * whole box and therefore gets those inner 20 units only: it is as large as the drawing of an icon.
  *
  * The slot is an HTML element, so its size follows the interface size on every system, and the icon
  * in it with it. The fix for SVG icons in app.css is not needed here.
@@ -109,30 +113,30 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.25rem;
-    height: 1.25rem;
-    margin: 0 2px;
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
-.workspace-list ::deep .workspace-chat-icon > .mud-icon-root {
+.workspace-list ::deep .workspace-chat-icon > :is(.mud-icon-root, .search-found-icon) {
     width: 100%;
     height: 100%;
 }
 
-.workspace-list ::deep .workspace-chat-icon > :not(.mud-icon-root, .workspace-chat-badge) {
+.workspace-list ::deep .workspace-chat-icon > :not(.mud-icon-root, .search-found-icon, .workspace-chat-badge) {
     width: calc(100% * 20 / 24);
     height: calc(100% * 20 / 24);
 }
 
 /*
  * The badge of an icon, such as the one of a chat which a search found, tells the state of the chat
- * in its bottom-left corner: the magnifier of the search keeps its handle on the right free. A ring in
- * the color of the list sets it apart from the icon below.
+ * in its bottom-left corner, which the magnifier of the search leaves free: its lens fills the top left,
+ * its handle the bottom right. The badge sits three of the slot's 24 units out of that corner, so it
+ * touches neither of them. A ring in the color of the list sets it apart from the icon.
  */
 .workspace-list ::deep .workspace-chat-badge {
     position: absolute;
-    left: -1px;
-    bottom: -1px;
+    left: -12.5%;
+    bottom: -12.5%;
     width: 50%;
     height: 50%;
     display: flex;
@@ -148,11 +152,22 @@
 }
 
 /*
+ * The row of the open chat, or of the collapsed workspace or section which hides it, takes a faint tint
+ * of the primary color, besides the primary color of its name and icon.
+ */
+.workspace-list ::deep .mud-list-item.is-current {
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
+}
+
+/*
  * The words of a search look as SearchHighlightedText draws them, in the strong tint for the result
- * the user stepped to. That result also carries a bar on its left, since a chat found inside has no
- * words in its name.
+ * the user stepped to. That result also carries a bar on its left and the faint yellow behind its row,
+ * as the row which finds in the open chat does, since a chat found inside has no words in its name.
+ * When the result is the open chat, the yellow takes the place of the open chat's tint: its name and
+ * icon show the primary color anyway. That is why this rule comes after the one above.
  */
 .workspace-list ::deep .mud-list-item.is-search-current {
+    background-color: var(--chat-search-highlight-faint);
     box-shadow: inset 3px 0 0 var(--chat-search-highlight-strong);
 }
 
@@ -193,8 +208,9 @@
  * A clicked list item keeps the focus, and MudBlazor gives a focused item the background of a hovered
  * one until the user clicks elsewhere. That background is meant for the keyboard. A click on a
  * workspace would otherwise leave its row looking hovered, so only focus from the keyboard keeps it.
+ * The current result of a search keeps its yellow, see above.
  */
-.workspace-list ::deep .mud-list-item-clickable:focus:not(:focus-visible):not(:hover):not(.mud-selected-item) {
+.workspace-list ::deep .mud-list-item-clickable:focus:not(:focus-visible):not(:hover):not(.mud-selected-item):not(.is-search-current) {
     background-color: transparent;
 }
 

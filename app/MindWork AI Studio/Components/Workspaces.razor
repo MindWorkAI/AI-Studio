@@ -234,7 +234,7 @@ else
                     {
                         @* Disabled while an answer is being written, just like the save button of the chat's toolbar: *@
                         <MudTooltip Text="@T("Save chat")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                            <MudIconButton Icon="@Icons.Material.Filled.Save" aria-label="@T("Save chat")" Disabled="@this.AIJobService.IsChatGenerationActive(chat.ChatId)" OnClick="@this.SaveChatAsync"/>
+                            <MudIconButton Icon="@Icons.Material.Outlined.Save" aria-label="@T("Save chat")" Disabled="@this.AIJobService.IsChatGenerationActive(chat.ChatId)" OnClick="@this.SaveChatAsync"/>
                         </MudTooltip>
                     }
                     @if (!isNeverSaved)
@@ -274,7 +274,7 @@ else
             }
             else if (indicator.IsFoundBySearch)
             {
-                <SearchFoundIcon IsStrong="@(this.currentSearchResultId == chat.ChatId)"/>
+                <SearchFoundIcon/>
             }
             else
             {

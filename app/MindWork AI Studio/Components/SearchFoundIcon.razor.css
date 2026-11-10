@@ -1,6 +1,7 @@
 /*
- * A disc of the search's yellow, see app.css, with the magnifier in the color of the text around it. On
- * the full yellow, the magnifier turns dark, as text does there.
+ * The magnifier in the sign color of the search, see app.css: a darker yellow than the one behind found
+ * words, since that one would hardly show as an icon. It needs no highlight behind it, so it is an icon
+ * like any other and fills the sign, as an icon fills its place.
  */
 .search-found-icon {
     display: inline-flex;
@@ -9,18 +10,11 @@
     justify-content: center;
     width: 1.25em;
     height: 1.25em;
-    border-radius: 50%;
-    background-color: var(--chat-search-highlight);
-    color: inherit;
-}
-
-.search-found-icon.is-strong {
-    background-color: var(--chat-search-highlight-strong);
-    color: var(--chat-search-on-strong);
+    color: var(--chat-search-sign);
 }
 
 .search-found-icon ::deep .mud-icon-root {
-    width: 75%;
-    height: 75%;
+    width: 100%;
+    height: 100%;
     color: inherit;
 }

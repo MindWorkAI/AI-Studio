@@ -37,13 +37,12 @@
 }
 
 /*
- * The icon takes three quarters of its avatar, as MudBlazor sizes the fallback icon of an avatar, times
- * the scale of its pane: an icon which Material draws fuller than others, such as the chat bubble, gets
- * a smaller one, so all icons look alike in size, see SettingsPane.IconScale.
+ * The icon takes three quarters of its avatar, as MudBlazor sizes the fallback icon of an avatar. Every
+ * icon keeps the size Material gives it, see documentation/Icons.md.
  */
 .settings-window-list ::deep .mud-avatar .mud-icon-root {
-    width: calc(75% * var(--settings-window-icon-scale, 1));
-    height: calc(75% * var(--settings-window-icon-scale, 1));
+    width: 75%;
+    height: 75%;
 }
 
 /*

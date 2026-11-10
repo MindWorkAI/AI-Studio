@@ -22,7 +22,7 @@
                                 var path = firstLevelPane.Path;
                                 <MudListItem T="SettingsPath" Value="@path" Text="@firstLevelPane.Title()" OnClick="@(() => this.NavigateTo(path))">
                                     <AvatarContent>
-                                        <MudAvatar Color="@firstLevelPane.IconColor" Variant="Variant.Filled" Rounded="@true" Size="Size.Small" Style="@GetIconScaleStyle(firstLevelPane)">
+                                        <MudAvatar Color="@firstLevelPane.IconColor" Variant="Variant.Filled" Rounded="@true" Size="Size.Small">
                                             <MudIcon Icon="@firstLevelPane.Icon"/>
                                         </MudAvatar>
                                     </AvatarContent>

@@ -31,7 +31,7 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     /// </summary>
     public bool IsFoundBySearch { get; init; }
 
-    public static readonly ChatIndicator PLAIN = new(Icons.Material.Outlined.ChatBubbleOutline, IsSpinning: false, Color.Inherit, IsStatus: false);
+    public static readonly ChatIndicator PLAIN = new(AppIcons.CHAT_BUBBLE_OUTLINED, IsSpinning: false, Color.Inherit, IsStatus: false);
 
     /// <summary>
     /// A chat whose messages, attached files, or sources hold words of the search: the magnifier on a disc
@@ -70,12 +70,12 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     /// In the tertiary color, which marks nothing else in the list: the primary color marks the open
     /// chat, and the colors of states tell how a transcript went.
     /// </remarks>
-    public static readonly ChatIndicator ANSWER_UNREAD = new(Icons.Material.Outlined.MarkChatUnread, IsSpinning: false, Color.Tertiary, IsStatus: true);
+    public static readonly ChatIndicator ANSWER_UNREAD = new(AppIcons.CHAT_BUBBLE_UNREAD_OUTLINED, IsSpinning: false, Color.Tertiary, IsStatus: true);
 
     /// <summary>
     /// An answer which failed while the chat was not open, before the user saw it.
     /// </summary>
-    public static readonly ChatIndicator ANSWER_FAILED = new(Icons.Material.Outlined.SmsFailed, IsSpinning: false, Color.Error, IsStatus: true);
+    public static readonly ChatIndicator ANSWER_FAILED = new(AppIcons.CHAT_BUBBLE_FAILED_OUTLINED, IsSpinning: false, Color.Error, IsStatus: true);
 
     /// <summary>
     /// What each state of a transcript shows.

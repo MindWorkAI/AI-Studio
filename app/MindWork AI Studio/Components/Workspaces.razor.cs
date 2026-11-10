@@ -92,10 +92,11 @@ public partial class Workspaces : MSGComponentBase
     private const string CLICKABLE_ITEM_CLASSES = "mud-list-item-clickable";
 
     /// <summary>
-    /// The mark of the open chat: MudBlazor's own look of a selected item, plus the class the list
-    /// scrolls to.
+    /// The mark of the open chat: MudBlazor's own look of a selected item in the primary color, plus the
+    /// class the list scrolls to. That class also gives the row its tint, see Workspaces.razor.css, since
+    /// MudBlazor's tint is too faint to see and would hide the one of the current search result.
     /// </summary>
-    private const string CURRENT_ITEM_CLASSES = "is-current mud-selected-item mud-primary-text mud-primary-hover";
+    private const string CURRENT_ITEM_CLASSES = "is-current mud-selected-item mud-primary-text";
 
     private readonly SemaphoreSlim treeLoadingSemaphore = new(1, 1);
     private readonly HashSet<Guid> loadingWorkspaceChatLists = [];

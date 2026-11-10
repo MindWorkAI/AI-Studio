@@ -86,7 +86,7 @@
                 @if (this.CanExportAnswer)
                 {
                     <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
-                        <MudMenu Icon="@Icons.Material.Filled.Save" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                        <MudMenu Icon="@Icons.Material.Filled.FileDownload" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                             @foreach (var documentFormat in FileExportFormatExtensions.DOCUMENT_FORMATS)
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
@@ -248,7 +248,7 @@
                                             <ExportableMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" Files="@this.FilesWithSaveButton" ValueStart="@segment.Start">
                                                 <CodeBlockActions Context="file">
                                                     <MudTooltip Text="@this.SaveAsLabel(file)" Placement="Placement.Top">
-                                                        <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Primary" Variant="Variant.Filled" Class="ma-2" OnClick="@(() => this.ExportFile(file))"/>
+                                                        <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" Variant="Variant.Filled" Class="ma-2" OnClick="@(() => this.ExportFile(file))"/>
                                                     </MudTooltip>
                                                 </CodeBlockActions>
                                             </ExportableMarkdown>

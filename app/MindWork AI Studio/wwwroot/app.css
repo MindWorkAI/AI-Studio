@@ -136,11 +136,21 @@
 }
 
 /*
+   Icons which act on an item of a compact list, such as the buttons of a row in the workspace sidebar
+   and the entries of the row's menu, take 20 pixels, MudBlazor's small size. The icon which names the
+   item itself, such as its folder or its chat bubble, keeps the usual 24. An action thus shows the same
+   icon at the same size in the row and in its menu. See documentation/Icons.md.
+*/
+:root {
+    --icon-size-compact: 1.25rem;
+}
+
+/*
    The menus of CompactMenu keep the spacing of a dense menu, but their text gets the size it has in
    every other menu of the app. A dense MudMenu sets the text of its items to body2 and leaves their
-   icons at 24 pixels, so the text would look too small next to them. The icons get 20 pixels instead:
-   at 24, the outlined icons outweigh the text in a menu this compact. The menu opens in a popover
-   outside of every component, which is why these rules live here rather than with the component.
+   icons at 24 pixels, so the text would look too small next to them. The icons act on the item the
+   menu belongs to and take the compact size, see above. The menu opens in a popover outside of every
+   component, which is why these rules live here rather than with the component.
 */
 .compact-menu-list .mud-menu-item-text {
     font-size: var(--mud-typography-body1-size);
@@ -150,7 +160,7 @@
 }
 
 .compact-menu-list .mud-menu-item-icon {
-    font-size: 1.25rem;
+    font-size: var(--icon-size-compact);
 }
 
 /*
@@ -447,14 +457,18 @@ html[data-resizing-sidebar] * {
    see ChatFindBar. The soft and faint ones blend a lemon yellow with the surface rather than lie over it,
    so they stay calm in dark mode. The strong one is a deeper golden yellow, so the current result stands
    out from the soft marks around it. Text on it is always dark, in light and dark mode, since light text
-   would not show on it. Yellow serves as a background only: as an icon or a thin line, it would hardly
-   show on white. */
+   would not show on it. These yellows serve as backgrounds only: as an icon or a thin line, they would
+   hardly show on white. The sign of the search, see SearchFoundIcon, takes a fourth one instead: amber,
+   a warmer yellow, toned almost halfway towards the color of the text. That darkens it on a light
+   surface and lightens it on a dark one, so the sign shows on both, and its warmth keeps it golden
+   rather than olive next to the marks. */
 :root {
     --chat-search-yellow: #ffeb3b;
     --chat-search-highlight: color-mix(in srgb, var(--chat-search-yellow) 45%, var(--mud-palette-surface));
     --chat-search-highlight-strong: #ffd700;
     --chat-search-highlight-faint: color-mix(in srgb, var(--chat-search-yellow) 14%, var(--mud-palette-surface));
     --chat-search-on-strong: #212121;
+    --chat-search-sign: color-mix(in srgb, #ffc107 55%, var(--mud-palette-text-primary));
 }
 
 /* The same colors for the matches in the open chat, which the script paints without changing the

@@ -107,9 +107,4 @@ public partial class SettingsWindow : SettingsDialogBase
     }
 
     private bool IsAvailable(SettingsPane candidate) => candidate.IsAvailable?.Invoke(this.SettingsManager) ?? true;
-
-    /// <summary>
-    /// Hands the scale of the icon of a pane to the style sheet, which sizes the icon within its avatar.
-    /// </summary>
-    private static string GetIconScaleStyle(SettingsPane pane) => FormattableString.Invariant($"--settings-window-icon-scale: {pane.IconScale};");
 }

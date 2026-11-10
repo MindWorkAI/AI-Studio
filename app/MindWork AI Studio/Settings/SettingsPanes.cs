@@ -19,7 +19,7 @@ public static class SettingsPanes
     /// </summary>
     public static readonly IReadOnlyList<SettingsPane> ALL =
     [
-        new(SettingsPath.CHAT, () => TB("Chat"), Icons.Material.Filled.ChatBubble, Color.Primary, typeof(SettingsPaneChat), IconScale: 0.85),
+        new(SettingsPath.CHAT, () => TB("Chat"), Icons.Material.Filled.ChatBubble, Color.Primary, typeof(SettingsPaneChat)),
         new(SettingsPath.WORKSPACES, () => TB("Workspaces"), Icons.Material.Filled.Folder, Color.Info, typeof(SettingsPaneWorkspaces)),
     ];
 
