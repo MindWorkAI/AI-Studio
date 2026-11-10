@@ -834,6 +834,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- This preparation cannot be opened. Permanently delete it with all of its files?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3647862078::INFORMAL"] = "This preparation cannot be opened. Permanently delete it with all of its files?"
 
+-- The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3657264819"] = "The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'."
+
+-- The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3657264819::INFORMAL"] = "The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'."
+
 -- Name the event you want to prepare for, e.g., the title of a panel discussion.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T3679923414"] = "Name the event you want to prepare for, e.g., the title of a panel discussion."
 
@@ -1263,6 +1269,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652
 -- In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652635::INFORMAL"] = "In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document."
 
+-- Research on the web
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1322369504"] = "Research on the web"
+
 -- You keep the decision about which position you take.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1509612483"] = "You keep the decision about which position you take."
 
@@ -1311,6 +1320,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3741175
 -- Not sure whether the lab fits your task? Ask it in 'Is the lab right for my task?'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3741175627::INFORMAL"] = "Not sure whether the lab fits your task? Ask it in 'Is the lab right for my task?'."
 
+-- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476"] = "In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time."
+
+-- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476::INFORMAL"] = "In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time."
+
 -- Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3813171730"] = "Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one."
 
@@ -1337,6 +1352,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4050768
 
 -- Counterarguments are presented fairly.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4133199796"] = "Counterarguments are presented fairly."
+
+-- The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036922"] = "The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event."
+
+-- The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036922::INFORMAL"] = "The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event."
 
 -- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T551596393"] = "The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions."
@@ -1559,6 +1580,159 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLREFLECTIONFOLDER::T416
 
 -- An earlier step changed after this confirmation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLREFLECTIONFOLDER::T4271561391"] = "An earlier step changed after this confirmation."
+
+-- The tool 'Web Search' is not set up yet. Therefore, the lab cannot research the event on the web. To let the lab research, set the tool up in the tool settings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1533623659"] = "The tool 'Web Search' is not set up yet. Therefore, the lab cannot research the event on the web. To let the lab research, set the tool up in the tool settings."
+
+-- The tool 'Web Search' is not set up yet. Therefore, the lab cannot research the event on the web. To let the lab research, set the tool up in the tool settings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1533623659::INFORMAL"] = "The tool 'Web Search' is not set up yet. Therefore, the lab cannot research the event on the web. To let the lab research, set the tool up in the tool settings."
+
+-- Your organization has switched tools off. Therefore, the lab cannot research the event on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1534990687"] = "Your organization has switched tools off. Therefore, the lab cannot research the event on the web."
+
+-- Your organization has switched tools off. Therefore, the lab cannot research the event on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1534990687::INFORMAL"] = "Your organization has switched tools off. Therefore, the lab cannot research the event on the web."
+
+-- The selected model cannot use tools. Therefore, the lab cannot research the event on the web. To let the lab research, select a provider whose model can use tools.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1553118338"] = "The selected model cannot use tools. Therefore, the lab cannot research the event on the web. To let the lab research, select a provider whose model can use tools."
+
+-- The selected model cannot use tools. Therefore, the lab cannot research the event on the web. To let the lab research, select a provider whose model can use tools.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1553118338::INFORMAL"] = "The selected model cannot use tools. Therefore, the lab cannot research the event on the web. To let the lab research, select a provider whose model can use tools."
+
+-- You switched the tool 'Web Search' off in the tool settings. Therefore, the lab cannot research the event on the web. To let the lab research, switch the tool on again there.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1738390190"] = "You switched the tool 'Web Search' off in the tool settings. Therefore, the lab cannot research the event on the web. To let the lab research, switch the tool on again there."
+
+-- You switched the tool 'Web Search' off in the tool settings. Therefore, the lab cannot research the event on the web. To let the lab research, switch the tool on again there.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1738390190::INFORMAL"] = "You switched the tool 'Web Search' off in the tool settings. Therefore, the lab cannot research the event on the web. To let the lab research, switch the tool on again there."
+
+-- Your organization has switched the tool 'Web Search' off. Therefore, the lab cannot research the event on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1823760665"] = "Your organization has switched the tool 'Web Search' off. Therefore, the lab cannot research the event on the web."
+
+-- Your organization has switched the tool 'Web Search' off. Therefore, the lab cannot research the event on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T1823760665::INFORMAL"] = "Your organization has switched the tool 'Web Search' off. Therefore, the lab cannot research the event on the web."
+
+-- The tool 'Web Search' is not available in the BeyondFacts Lab. Therefore, the lab cannot research the event on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T4133073030"] = "The tool 'Web Search' is not available in the BeyondFacts Lab. Therefore, the lab cannot research the event on the web."
+
+-- The tool 'Web Search' cannot be used here. Therefore, the lab cannot research the event on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T4233310216"] = "The tool 'Web Search' cannot be used here. Therefore, the lab cannot research the event on the web."
+
+-- The tool 'Web Search' may not send data from here. Therefore, the lab cannot research the event on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T749654025"] = "The tool 'Web Search' may not send data from here. Therefore, the lab cannot research the event on the web."
+
+-- The selected provider is not trusted enough for the tool 'Web Search'. Therefore, the lab cannot research the event on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHAVAILABILITY::T782133941"] = "The selected provider is not trusted enough for the tool 'Web Search'. Therefore, the lab cannot research the event on the web."
+
+-- Not researched yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T1044513948"] = "Not researched yet"
+
+-- Research all topics again
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T1211115477"] = "Research all topics again"
+
+-- Stop
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T1266644741"] = "Stop"
+
+-- Research
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T1554954732"] = "Research"
+
+-- Researching
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2197065228"] = "Researching"
+
+-- Research this topic
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2205528655"] = "Research this topic"
+
+-- Web pages opened
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2410802222"] = "Web pages opened"
+
+-- Researched on {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2673061400"] = "Researched on {0}"
+
+-- The public details changed since this research. You can research this topic again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2733639699"] = "The public details changed since this research. You can research this topic again."
+
+-- The public details changed since this research. You can research this topic again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2733639699::INFORMAL"] = "The public details changed since this research. You can research this topic again."
+
+-- Research this topic again
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2874128087"] = "Research this topic again"
+
+-- Research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. The conversation of this step builds on what they find.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3469262706"] = "Research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. The conversation of this step builds on what they find."
+
+-- Research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. The conversation of this step builds on what they find.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3469262706::INFORMAL"] = "Research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. The conversation of this step builds on what they find."
+
+-- The research receives these details:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3642289030"] = "The research receives these details:"
+
+-- You have not entered any public details yet. Enter them in the step '{0}', such as the topic of the event or its link.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3655939277"] = "You have not entered any public details yet. Enter them in the step '{0}', such as the topic of the event or its link."
+
+-- You have not entered any public details yet. Enter them in the step '{0}', such as the topic of the event or its link.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3655939277::INFORMAL"] = "You have not entered any public details yet. Enter them in the step '{0}', such as the topic of the event or its link."
+
+-- Start the research
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3771505473"] = "Start the research"
+
+-- Queries sent to the web search
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3846014079"] = "Queries sent to the web search"
+
+-- The agent researches this topic
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3855362913"] = "The agent researches this topic"
+
+-- Outdated
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T724820205"] = "Outdated"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T810547195"] = "None"
+
+-- The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726"] = "The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search."
+
+-- The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726::INFORMAL"] = "The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search."
+
+-- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
+
+-- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1150375027::INFORMAL"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
+
+-- AI Studio could not finish this research. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1909297408"] = "AI Studio could not finish this research. Please try again."
+
+-- AI Studio could not finish this research. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T1909297408::INFORMAL"] = "AI Studio could not finish this research. Please try again."
+
+-- The research ended without a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564"] = "The research ended without a result. Please try again, or try another provider."
+
+-- The research ended without a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564::INFORMAL"] = "The research ended without a result. Please try again, or try another provider."
+
+-- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850"] = "Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."
+
+-- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850::INFORMAL"] = "Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."
+
+-- Participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T1161681831"] = "Participants"
+
+-- How the topic is discussed in public: positions, points of dispute, and the framing of others.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T2464060444"] = "How the topic is discussed in public: positions, points of dispute, and the framing of others."
+
+-- Organizer, format and schedule, moderation, and earlier editions of the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3694495177"] = "Organizer, format and schedule, moderation, and earlier editions of the event."
+
+-- Debate and framing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3934414907"] = "Debate and framing"
+
+-- The event
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T4207163500"] = "The event"
+
+-- Who else speaks or moderates, in which role, and which public positions they have taken on the topic.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T821312467"] = "Who else speaks or moderates, in which role, and which public positions they have taken on the topic."
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTGENERATOR::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
@@ -1821,6 +1995,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1474406854"
 -- Some details are still missing. The chat will ask for them, and you can continue anyway.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1474406854::INFORMAL"] = "Some details are still missing. The chat will ask for them, and you can continue anyway."
 
+-- Fields marked with this symbol hold public details about the event. Only these reach the research of the lab, which searches the web. All your other details stay in your preparation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1772905417"] = "Fields marked with this symbol hold public details about the event. Only these reach the research of the lab, which searches the web. All your other details stay in your preparation."
+
+-- Fields marked with this symbol hold public details about the event. Only these reach the research of the lab, which searches the web. All your other details stay in your preparation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1772905417::INFORMAL"] = "Fields marked with this symbol hold public details about the event. Only these reach the research of the lab, which searches the web. All your other details stay in your preparation."
+
 -- Please enter an address that begins with https:// or http://.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T2837809367"] = "Please enter an address that begins with https:// or http://."
 
@@ -1832,6 +2012,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288"
 
 -- * The chat works best when you fill in these details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288::INFORMAL"] = "* The chat works best when you fill in these details."
+
+-- Public detail: the research of the lab receives it
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3459633363"] = "Public detail: the research of the lab receives it"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
@@ -2000,6 +2183,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS:
 
 -- Possible lines of conflict
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2862635340"] = "Possible lines of conflict"
+
+-- Participants and counterparts
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2936747296"] = "Participants and counterparts"
 
 -- Important values
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2989269189"] = "Important values"
@@ -14312,6 +14498,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSION
 
 -- This chat holds content from the data source '{0}', found while its setting 'Where a chat may send data after reading this data source' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3148548820"] = "This chat holds content from the data source '{0}', found while its setting 'Where a chat may send data after reading this data source' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again."
+
+-- This chat holds a preparation of the BeyondFacts Lab, which may be unpublished, so it reads only web pages whose addresses stand in the chat. This tool would send data beyond that, so it is not available in this chat. The lab searches the web in a research of its own, which receives only the public details about the event. A new chat without this content can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3396106925"] = "This chat holds a preparation of the BeyondFacts Lab, which may be unpublished, so it reads only web pages whose addresses stand in the chat. This tool would send data beyond that, so it is not available in this chat. The lab searches the web in a research of its own, which receives only the public details about the event. A new chat without this content can use it again."
 
 -- This chat holds internal content, read while a chat was restricted to '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T348053469"] = "This chat holds internal content, read while a chat was restricted to '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again."
