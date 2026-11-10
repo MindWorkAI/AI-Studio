@@ -20,3 +20,4 @@
  MWAIS0014 | Usage    | Error    | MissingInterpolationAnalyzer
  MWAIS0015 | Usage    | Error    | JsonSourceGenerationAnalyzer
  MWAIS0016 | Style    | Error    | ClassicExtensionMethodAnalyzer
+ MWAIS0017 | Usage    | Error    | IconCatalogAnalyzer
