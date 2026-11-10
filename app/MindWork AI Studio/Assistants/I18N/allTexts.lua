@@ -886,6 +886,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- New preparation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T851005164"] = "New preparation"
 
+-- The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259"] = "The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'."
+
+-- The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259::INFORMAL"] = "The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'."
+
 -- Your preparations
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272"] = "Your preparations"
 
@@ -1039,6 +1045,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 -- AI Studio could not save this conversation. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884::INFORMAL"] = "AI Studio could not save this conversation. Please try again."
 
+-- The event is not public. Therefore, the lab does not research it on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLEVENTVISIBILITY::T2308862256"] = "The event is not public. Therefore, the lab does not research it on the web."
+
 -- Moderate the discussion
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1131866893"] = "Moderate the discussion"
 
@@ -1068,6 +1077,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T188508193
 
 -- Other perspectives: Whose point of view would you like to understand better, or have you hardly considered so far?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1885081930::INFORMAL"] = "Other perspectives: Whose point of view would you like to understand better, or have you hardly considered so far?"
+
+-- If not, the lab does not research the event on the web, e.g., for an internal meeting or a closed examination
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1902702216"] = "If not, the lab does not research the event on the web, e.g., for an internal meeting or a closed examination"
 
 -- Stays in your preparation and never goes into the research on the web
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1949096445"] = "Stays in your preparation and never goes into the research on the web"
@@ -1165,11 +1177,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T321747943
 -- E.g., panel, keynote, or interview; online, on site, or hybrid
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3297023821"] = "E.g., panel, keynote, or interview; online, on site, or hybrid"
 
+-- Public
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3437215648"] = "Public"
+
 -- Values and concerns: What matters most to you about this topic?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3444467007"] = "Values and concerns: What matters most to you about this topic?"
 
 -- Values and concerns: What matters most to you about this topic?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3444467007::INFORMAL"] = "Values and concerns: What matters most to you about this topic?"
+
+-- Not public
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3459564967"] = "Not public"
 
 -- Audience
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T3506118019"] = "Audience"
@@ -1194,6 +1212,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T405189494
 
 -- Influence policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T4052553234"] = "Influence policy"
+
+-- Is the event public?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T4083554472"] = "Is the event public?"
 
 -- You can raise the difficulty after each question.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T519332031"] = "You can raise the difficulty after each question."
@@ -1248,6 +1269,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T974131333
 
 -- Demanding
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T985014450"] = "Demanding"
+
+-- If you state in the event details that the event is not public, the lab never researches it on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788"] = "If you state in the event details that the event is not public, the lab never researches it on the web."
+
+-- If you state in the event details that the event is not public, the lab never researches it on the web.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788::INFORMAL"] = "If you state in the event details that the event is not public, the lab never researches it on the web."
 
 -- Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1198247392"] = "Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio."
@@ -1633,6 +1660,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T126664
 -- Research
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T1554954732"] = "Research"
 
+-- The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search. If the event is public after all, change this in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2133645823"] = "The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search. If the event is public after all, change this in the step '{0}'."
+
+-- The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search. If the event is public after all, change this in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2133645823::INFORMAL"] = "The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search. If the event is public after all, change this in the step '{0}'."
+
 -- Researching
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2197065228"] = "Researching"
 
@@ -1986,6 +2019,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T76252
 
 -- What you know for sure, what is uncertain, and where your expertise ends.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T762525208::INFORMAL"] = "What you know for sure, what is uncertain, and where your expertise ends."
+
+-- The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T134792596"] = "The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol."
+
+-- The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T134792596::INFORMAL"] = "The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol."
 
 -- Some details are still missing. The chat will ask for them, and you can continue anyway.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T1474406854"] = "Some details are still missing. The chat will ask for them, and you can continue anyway."
