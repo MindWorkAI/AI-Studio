@@ -27,6 +27,11 @@ namespace AIStudio.Tools.DocumentSegments.Word;
 internal static class WordSegmentReader
 {
     /// <summary>
+    /// How many changes of formatting one paragraph may carry as pairs of tags.
+    /// </summary>
+    private const int MAX_FORMAT_PAIRS = 12;
+
+    /// <summary>
     /// Reads the paragraphs which can be segments, in the order of the document.
     /// </summary>
     /// <param name="document">The document.</param>
@@ -40,7 +45,7 @@ internal static class WordSegmentReader
                 if (IsInBoundContentControl(paragraph))
                     continue;
 
-                if (new ParagraphReader().TryRead(paragraph) is { } read)
+                if (ReadParagraph(paragraph) is { } read)
                     paragraphs.Add(read);
             }
         }
@@ -80,6 +85,21 @@ internal static class WordSegmentReader
             foreach (var endnote in endnotes.Elements<W.Endnote>().Where(note => note.Type is null || note.Type.Value == W.FootnoteEndnoteValues.Normal))
                 yield return endnote;
         }
+    }
+
+    /// <summary>
+    /// Reads a paragraph, with its changes of formatting as pairs as long as they are few.
+    /// </summary>
+    /// <remarks>
+    /// Every pair is one more thing a model has to keep in place. A paragraph whose formatting changes
+    /// more often, e.g., a list of terms in bold, keeps one formatting for its new words instead and counts
+    /// as simplified.
+    /// </remarks>
+    private static WordParagraph? ReadParagraph(W.Paragraph paragraph)
+    {
+        var reader = new ParagraphReader(usesFormatPairs: true);
+        var read = reader.TryRead(paragraph);
+        return reader.FormatPairCount <= MAX_FORMAT_PAIRS ? read : new ParagraphReader(usesFormatPairs: false).TryRead(paragraph);
     }
 
     private static bool IsInBoundContentControl(W.Paragraph paragraph) => paragraph.Ancestors<W.SdtElement>().Any(contentControl => !IsEditable(contentControl));
@@ -129,18 +149,24 @@ internal static class WordSegmentReader
     /// <summary>
     /// Reads one paragraph.
     /// </summary>
-    private sealed class ParagraphReader
+    private sealed class ParagraphReader(bool usesFormatPairs)
     {
         private readonly TaggedTextBuilder builder = new();
         private readonly Dictionary<int, WordPair> pairs = [];
         private readonly Dictionary<int, WordAtom> placeholders = [];
         private readonly Dictionary<int, W.RunProperties?> textFormats = [];
         private readonly Dictionary<int, string> textFormatKeys = [];
+        private readonly Dictionary<W.RunProperties, string> formatKeys = new(ReferenceEqualityComparer.Instance);
         private readonly List<OpenXmlElement> startMarkers = [];
         private readonly List<OpenXmlElement> endMarkers = [];
         private bool hasTagLikeWords;
         private bool hasMixedFormatting;
         private int nextOrder;
+
+        /// <summary>
+        /// How many changes of formatting became pairs.
+        /// </summary>
+        public int FormatPairCount { get; private set; }
 
         public WordParagraph? TryRead(W.Paragraph paragraph)
         {
@@ -155,14 +181,14 @@ internal static class WordSegmentReader
 
         private void Build(List<Item> items, int pairId)
         {
+            var baseFormatKey = this.BaseFormatKeyOf(items);
             var index = 0;
             while (index < items.Count)
             {
                 switch (items[index])
                 {
-                    case TextItem text:
-                        this.AddWords(text, pairId);
-                        index++;
+                    case TextItem:
+                        index = this.BuildWords(items, index, pairId, baseFormatKey);
                         break;
 
                     case PieceItem { Kind: PieceKind.DROPPED }:
@@ -265,17 +291,98 @@ internal static class WordSegmentReader
             return (separate, null);
         }
 
-        private void AddWords(TextItem text, int pairId)
+        /// <summary>
+        /// Reads the words which follow each other from the given item on, up to the next tag.
+        /// </summary>
+        /// <remarks>
+        /// Bookmarks and hints for the layout between the runs do not end the words. Where their formatting
+        /// changes, the words in the most common formatting of this pair stay words, and those in any other
+        /// formatting go into a pair of their own.
+        /// </remarks>
+        /// <returns>The index of the first item after the words.</returns>
+        private int BuildWords(List<Item> items, int start, int pairId, string baseFormatKey)
         {
-            this.hasTagLikeWords |= TaggedText.ContainsTagLikeText(text.Text);
-            this.builder.Words(text.Text);
+            var words = new List<TextItem>();
+            var index = start;
+            for (; index < items.Count; index++)
+            {
+                if (items[index] is TextItem text)
+                    words.Add(text);
+                else if (items[index] is PieceItem { Kind: PieceKind.MARKER_START } startMarker)
+                    this.startMarkers.Add(startMarker.Piece.Element);
+                else if (items[index] is PieceItem { Kind: PieceKind.MARKER_END } endMarker)
+                    this.endMarkers.Add(endMarker.Piece.Element);
+                else if (items[index] is not PieceItem { Kind: PieceKind.DROPPED })
+                    break;
+            }
 
-            var formatKey = FormatKeyOf(text.Format);
-            if (this.textFormatKeys.TryAdd(pairId, formatKey))
-                this.textFormats[pairId] = text.Format;
-            else if (this.textFormatKeys[pairId] != formatKey && text.Text.Any(character => !char.IsWhiteSpace(character)))
+            foreach (var span in this.SpansOf(words, baseFormatKey))
+            {
+                this.hasTagLikeWords |= TaggedText.ContainsTagLikeText(span.Text);
+                if (!usesFormatPairs || span.FormatKey == baseFormatKey)
+                {
+                    this.builder.Words(span.Text);
+                    this.NoteFormat(pairId, span);
+                    continue;
+                }
+
+                var formatPair = this.builder.Open();
+                this.pairs[formatPair] = new WordFormatPair(span.Format);
+                this.textFormats[formatPair] = span.Format;
+                this.builder.Words(span.Text);
+                this.builder.Close(formatPair);
+                this.FormatPairCount++;
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        /// Notes the formatting of words outside of a pair of formatting, and whether it differs from earlier ones.
+        /// </summary>
+        private void NoteFormat(int pairId, WordSpan span)
+        {
+            if (this.textFormatKeys.TryAdd(pairId, span.FormatKey))
+                this.textFormats[pairId] = span.Format;
+            else if (this.textFormatKeys[pairId] != span.FormatKey && !string.IsNullOrWhiteSpace(span.Text))
                 this.hasMixedFormatting = true;
         }
+
+        /// <summary>
+        /// Joins runs which follow each other into spans of the same formatting.
+        /// </summary>
+        /// <remarks>
+        /// A run of nothing but spaces in a formatting of its own joins its neighbor, since nobody sees the
+        /// formatting of a space, and a pair around it would only burden the model. Spaces in the most common
+        /// formatting stay apart, e.g., between a word in bold and one in italics.
+        /// </remarks>
+        private List<WordSpan> SpansOf(List<TextItem> words, string baseFormatKey)
+        {
+            var spans = new List<WordSpan>();
+            foreach (var word in words)
+            {
+                var formatKey = this.FormatKeyOf(word.Format);
+                var isBlankOfItsOwn = string.IsNullOrWhiteSpace(word.Text) && formatKey != baseFormatKey;
+                if (spans.Count > 0 && (spans[^1].FormatKey == formatKey || isBlankOfItsOwn))
+                    spans[^1] = spans[^1] with { Text = spans[^1].Text + word.Text };
+                else if (spans.Count > 0 && string.IsNullOrWhiteSpace(spans[^1].Text) && spans[^1].FormatKey != baseFormatKey)
+                    spans[^1] = new WordSpan(formatKey, word.Format, spans[^1].Text + word.Text);
+                else
+                    spans.Add(new WordSpan(formatKey, word.Format, word.Text));
+            }
+
+            return spans;
+        }
+
+        /// <summary>
+        /// Finds the formatting most words of a pair have, or of the paragraph outside of any pair.
+        /// </summary>
+        private string BaseFormatKeyOf(List<Item> items) => items
+            .OfType<TextItem>()
+            .GroupBy(word => this.FormatKeyOf(word.Format))
+            .OrderByDescending(group => group.Sum(word => word.Text.Count(char.IsLetter)))
+            .Select(group => group.Key)
+            .FirstOrDefault() ?? string.Empty;
 
         private void AddPlaceholder(List<Item> items, int first, int last)
         {
@@ -312,16 +419,26 @@ internal static class WordSegmentReader
         /// <summary>
         /// Tells the formatting of runs apart, leaving out what changes nothing about how words look.
         /// </summary>
-        private static string FormatKeyOf(W.RunProperties? format)
+        private string FormatKeyOf(W.RunProperties? format)
         {
             if (format is null)
                 return string.Empty;
 
+            if (this.formatKeys.TryGetValue(format, out var formatKey))
+                return formatKey;
+
             var copy = (W.RunProperties)format.CloneNode(true);
             copy.Languages = null;
             copy.NoProof = null;
-            return copy.OuterXml;
+            formatKey = copy.OuterXml;
+            this.formatKeys[format] = formatKey;
+            return formatKey;
         }
+
+        /// <summary>
+        /// Words which follow each other in the same formatting.
+        /// </summary>
+        private sealed record WordSpan(string FormatKey, W.RunProperties? Format, string Text);
 
         private static List<Item> ItemsOf(OpenXmlElement parent)
         {

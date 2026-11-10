@@ -11,10 +11,10 @@ namespace AIStudio.Tools.DocumentSegments.Word;
 /// <param name="Segment">Its words with tags.</param>
 /// <param name="Pairs">What each pair of tags stands for.</param>
 /// <param name="Placeholders">What each tag of its own stands for.</param>
-/// <param name="TextFormats">The properties of the first run with words within each pair, and with 0 outside of any pair.</param>
+/// <param name="TextFormats">The properties of the runs with words within each pair, and with 0 outside of any pair: the most common formatting there, or the formatting of a pair of formatting.</param>
 /// <param name="StartMarkers">The starts of bookmarks, comments, and the like, which go before the words.</param>
 /// <param name="EndMarkers">The ends of bookmarks, comments, and the like, which go after the words.</param>
-/// <param name="HasMixedFormatting">Whether runs with words within the same pair differ in their formatting, which the new words do not keep.</param>
+/// <param name="HasMixedFormatting">Whether runs with words within the same pair differ in their formatting, which the new words do not keep; only when the formatting changes too often for pairs of formatting.</param>
 internal sealed record WordParagraph(
     W.Paragraph Paragraph,
     DocumentSegment Segment,

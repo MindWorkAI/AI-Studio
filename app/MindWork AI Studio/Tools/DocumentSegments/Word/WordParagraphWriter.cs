@@ -14,7 +14,7 @@ namespace AIStudio.Tools.DocumentSegments.Word;
 /// <remarks>
 /// The properties of the paragraph stay, and so do all elements its tags stand for: the writer moves them into
 /// the new paragraph rather than copying them, so that a text box keeps the new words of its own paragraphs,
-/// whichever paragraph is written first. New words get the properties of the first words of their pair.
+/// whichever paragraph is written first. New words get the formatting of their innermost pair.
 /// </remarks>
 internal static class WordParagraphWriter
 {
@@ -86,6 +86,10 @@ internal static class WordParagraphWriter
                         case WordFieldPair field:
                             AppendAtom(target, field.Opening);
                             writtenAtoms.Add(field.Opening);
+                            break;
+
+                        // The words within the pair take its formatting, see WordParagraph.TextFormatOf:
+                        case WordFormatPair:
                             break;
                     }
 

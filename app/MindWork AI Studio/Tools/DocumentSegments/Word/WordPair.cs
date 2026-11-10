@@ -1,5 +1,7 @@
 using DocumentFormat.OpenXml;
 
+using W = DocumentFormat.OpenXml.Wordprocessing;
+
 namespace AIStudio.Tools.DocumentSegments.Word;
 
 /// <summary>
@@ -22,3 +24,10 @@ internal sealed record WordContainerPair(OpenXmlElement Container) : WordPair;
 /// <param name="Opening">The start of the field, its instruction, and the mark which separates the result.</param>
 /// <param name="Closing">The end of the field.</param>
 internal sealed record WordFieldPair(WordAtom Opening, WordAtom Closing) : WordPair;
+
+/// <summary>
+/// Words in a formatting other than the most common one of their surroundings, e.g., a word in bold. The
+/// writer gives the new words within the pair this formatting.
+/// </summary>
+/// <param name="Format">The properties of the runs of these words.</param>
+internal sealed record WordFormatPair(W.RunProperties? Format) : WordPair;

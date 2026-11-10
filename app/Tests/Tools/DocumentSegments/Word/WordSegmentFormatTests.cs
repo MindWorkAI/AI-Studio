@@ -48,7 +48,7 @@ public sealed class WordSegmentFormatTests
             Assert.That(keys, Does.Contain("See the note<1/>"), "The reference to a footnote is a tag of its own.");
             Assert.That(keys, Does.Contain("<1>Introduction</1>"), "The result of a field is words within a pair.");
             Assert.That(keys, Does.Contain("Chapter"), "Bookmarks are no tags.");
-            Assert.That(keys, Does.Contain("Mixed bold words"));
+            Assert.That(keys, Does.Contain("Mixed <1>bold</1> words"), "A word in bold is a pair.");
             Assert.That(keys, Does.Contain("Confidential"), "Headers are read.");
             Assert.That(keys, Does.Contain("<1/> A note."), "Footnotes are read, without their separators.");
         });
@@ -80,7 +80,7 @@ public sealed class WordSegmentFormatTests
         Assert.Multiple(() =>
         {
             Assert.That(ValidationErrorsOf(document), Is.EqualTo(ValidationErrorsOf(sourceDocument)), "The new document is as valid as the source.");
-            Assert.That(result.SimplifiedCount, Is.EqualTo(1), "Only the paragraph with mixed formatting loses some of it.");
+            Assert.That(result.SimplifiedCount, Is.Zero, "Every paragraph keeps its inline structure and formatting.");
 
             Assert.That(paragraphs[0].InnerText, Is.EqualTo("GETTING STARTED"));
             Assert.That(link?.InnerText, Is.EqualTo("MANUAL"), "The link encloses its new words.");
@@ -99,6 +99,7 @@ public sealed class WordSegmentFormatTests
             Assert.That(paragraphs[4].InnerText, Is.EqualTo("CHAPTER"));
 
             Assert.That(paragraphs[5].InnerText, Is.EqualTo("MIXED BOLD WORDS"));
+            Assert.That(paragraphs[5].Elements<W.Run>().Where(run => run.RunProperties?.Bold is not null).Select(run => run.InnerText), Is.EqualTo(new[] { "BOLD" }), "The word in bold stays bold.");
             Assert.That(paragraphs[6].InnerText, Is.EqualTo("2026"));
 
             Assert.That(document.MainDocumentPart!.HeaderParts.Single().Header!.InnerText, Is.EqualTo("CONFIDENTIAL"));

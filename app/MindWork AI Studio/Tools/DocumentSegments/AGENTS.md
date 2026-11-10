@@ -45,8 +45,8 @@ the repository root and to `app/AGENTS.md`, which apply here as well.
 
 ## Word documents
 
-`Word/WordSegmentFormat` translates the paragraphs of the body, the tables, the text boxes, the headers and
-footers, and the notes, and leaves everything else of the document alone.
+`Word/WordSegmentFormat` reads the paragraphs of the body, the tables, the text boxes, the headers and
+footers, and the notes as segments, and leaves everything else of the document alone.
 
 - **Move, never copy.** The writer moves the elements a tag stands for into the new paragraph. A text box
   holds paragraphs of its own, which are segments as well; only moving keeps their new words, whichever
@@ -58,8 +58,10 @@ footers, and the notes, and leaves everything else of the document alone.
   as they are.
 - **Bookmarks and comment ranges are no tags.** Their starts go before the new words, their ends after them,
   so a range only widens to its paragraph.
-- **New words take the properties of the first words of their pair.** A paragraph whose words differ in
-  their formatting within a pair counts as simplified.
+- **Changes of formatting are pairs as well.** Within a pair, or outside of any, the words in the most common
+  formatting stay words, and those in any other formatting, e.g., a word in bold, get a pair of their own.
+  Spaces never get one. A paragraph with more than `MAX_FORMAT_PAIRS` such pairs keeps one formatting for
+  its new words instead and counts as simplified: every pair is one more thing a model has to keep in place.
 
 ## Tests
 

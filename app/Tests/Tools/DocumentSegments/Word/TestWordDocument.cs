@@ -10,8 +10,25 @@ namespace AIStudio.Tests.Tools.DocumentSegments.Word;
 /// </summary>
 internal static class TestWordDocument
 {
-    private const string LINK_ID = "rIdManual";
+    /// <summary>
+    /// The relationship of the link which every document of the tests has, for a W.Hyperlink to point to.
+    /// </summary>
+    public const string LINK_ID = "rIdManual";
+
     private const string HEADER_ID = "rIdHeader";
+
+    /// <summary>
+    /// A document with nothing but the given paragraphs.
+    /// </summary>
+    /// <param name="path">Where to create the document.</param>
+    /// <param name="paragraphs">The paragraphs of its body.</param>
+    public static void Create(string path, params W.Paragraph[] paragraphs)
+    {
+        using var document = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
+        var mainPart = document.AddMainDocumentPart();
+        mainPart.AddHyperlinkRelationship(new Uri("https://example.org/manual"), true, LINK_ID);
+        mainPart.Document = new W.Document(new W.Body(paragraphs));
+    }
 
     /// <summary>
     /// A document with what Word documents commonly hold: a link, a tab, a reference to a footnote, a field
@@ -44,7 +61,7 @@ internal static class TestWordDocument
                 Run("Introduction"),
                 new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.End })),
             Paragraph(new W.BookmarkStart { Id = "1", Name = "_Ref1" }, Run("Chapter"), new W.BookmarkEnd { Id = "1" }),
-            Paragraph(Run("Mixed "), Run("bold", new W.RunProperties(new W.Bold())), Run(" words")),
+            Paragraph(Run("Mixed "), Bold("bold"), Run(" words")),
             Paragraph(Run("2026")),
             new W.SectionProperties(new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = HEADER_ID })));
     }
@@ -54,4 +71,10 @@ internal static class TestWordDocument
     public static W.Run Run(string text, W.RunProperties? properties = null) => properties is null
         ? new W.Run(new W.Text(text) { Space = SpaceProcessingModeValues.Preserve })
         : new W.Run(properties, new W.Text(text) { Space = SpaceProcessingModeValues.Preserve });
+
+    public static W.Run Bold(string text) => Run(text, new W.RunProperties(new W.Bold()));
+
+    public static W.Run Italic(string text) => Run(text, new W.RunProperties(new W.Italic()));
+
+    public static W.Hyperlink Link(string text) => new(Run(text)) { Id = LINK_ID };
 }
