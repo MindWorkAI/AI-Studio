@@ -26,7 +26,7 @@ public sealed class BflWorkStateRequestTests
     }
 
     [Test]
-    public void TheRequestOffersSuggestionsOnlyForEmptyTextFields()
+    public void TheRequestOffersSuggestionsOnlyForEmptyFields()
     {
         var form = new BflStepFormData();
         form.Set(BflFieldCatalog.FORMAT, "Podium");
@@ -38,6 +38,21 @@ public sealed class BflWorkStateRequestTests
             Assert.That(request, Does.Contain($"[{BflMarkdownSections.FIELD_PREFIX}{BflFieldCatalog.AUDIENCE}]"));
             Assert.That(request, Does.Contain($"[{BflMarkdownSections.FIELD_PREFIX}{BflFieldCatalog.EVENT_LINK}]"));
             Assert.That(request, Does.Not.Contain($"[{BflMarkdownSections.FIELD_PREFIX}{BflFieldCatalog.FORMAT}]"));
+        }
+    }
+
+    [Test]
+    public void TheRequestNamesTheOptionsOfAnEmptyChoice()
+    {
+        var difficulty = BflFieldCatalog.FIELDS.Single(field => field.Id == BflFieldCatalog.DIFFICULTY);
+
+        var request = BflPromptComposer.ComposeWorkStateRequest("{{FIELDS}}", BflStep.TEST_SITUATION, new BflStepFormData());
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(request, Does.Contain($"[{BflMarkdownSections.FIELD_PREFIX}{BflFieldCatalog.DIFFICULTY}]"));
+            foreach (var option in difficulty.Options)
+                Assert.That(request, Does.Contain($"„{option.Label}“"), option.Id);
         }
     }
 

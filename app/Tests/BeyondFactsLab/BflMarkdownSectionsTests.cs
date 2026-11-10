@@ -199,16 +199,57 @@ public sealed class BflMarkdownSectionsTests
     }
 
     [Test]
-    public void OnlyEmptyTextFieldsWhichAreNotPersonalGetSuggestions()
+    public void OnlyEmptyFieldsWithATextOrASingleChoiceWhichAreNotPersonalGetSuggestions()
     {
+        var goals = BflMarkdownSections.SuggestableFields(BflStep.GOALS_AND_ROLE, new BflStepFormData()).Select(field => field.Id);
         var values = BflMarkdownSections.SuggestableFields(BflStep.VALUES_AND_PERSPECTIVES, new BflStepFormData()).Select(field => field.Id);
         var test = BflMarkdownSections.SuggestableFields(BflStep.TEST_SITUATION, new BflStepFormData()).Select(field => field.Id);
 
         using (Assert.EnterMultipleScope())
         {
+            Assert.That(goals, Is.EqualTo(new[] { BflFieldCatalog.GOALS }), "A field with several choices gets no suggestion.");
             Assert.That(values, Is.EqualTo(new[] { BflFieldCatalog.VALUES_AND_CONCERNS, BflFieldCatalog.OTHER_PERSPECTIVES }));
-            Assert.That(test, Is.EqualTo(new[] { BflFieldCatalog.TEST_NOTES }));
+            Assert.That(test, Is.EqualTo(new[] { BflFieldCatalog.QUESTION_TYPE, BflFieldCatalog.DIFFICULTY, BflFieldCatalog.TEST_NOTES }));
         }
+    }
+
+    [Test]
+    public void ASuggestionForAChoiceNamesItsOptionByLabelOrIdAndKeepsTheId()
+    {
+        var label = BflFieldCatalog.FIELDS.Single(field => field.Id == BflFieldCatalog.DIFFICULTY).Options.Single(option => option.Id == BflFieldCatalog.DIFFICULTY_DEMANDING).Label;
+        string[] suggestions = [label, label.ToUpperInvariant(), $"„{label}“", $"\"{label}\"", $"**{label}**", $"{label}.", BflFieldCatalog.DIFFICULTY_DEMANDING];
+
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var suggestion in suggestions)
+            {
+                var answer = BflMarkdownSections.Read($"## [FIELD:difficulty]\n{suggestion}", BflStep.TEST_SITUATION, new BflStepFormData());
+                Assert.That(answer.FieldSuggestions, Is.EqualTo(new Dictionary<string, string> { [BflFieldCatalog.DIFFICULTY] = BflFieldCatalog.DIFFICULTY_DEMANDING }), suggestion);
+            }
+        }
+    }
+
+    [TestCase("## [FIELD:difficulty]\nSomewhat demanding", TestName = "ASuggestionWhichNamesNoOptionIsLeftOut")]
+    [TestCase("## [FIELD:difficulty]\ndifficulty_moderate, difficulty_demanding", TestName = "ASuggestionWithSeveralOptionsIsLeftOut")]
+    [TestCase("## [FIELD:goal_directions]\ngoal_inform", TestName = "AFieldWithSeveralChoicesGetsNoSuggestion")]
+    public void ASuggestionForAChoiceWhichDoesNotFitIsLeftOut(string suggestion)
+    {
+        var step = suggestion.Contains("goal_", StringComparison.Ordinal) ? BflStep.GOALS_AND_ROLE : BflStep.TEST_SITUATION;
+
+        var answer = BflMarkdownSections.Read(suggestion, step, new BflStepFormData());
+
+        Assert.That(answer.FieldSuggestions, Is.Empty);
+    }
+
+    [Test]
+    public void AChoiceWhichHoldsAnOptionGetsNoSuggestion()
+    {
+        var form = new BflStepFormData();
+        form.Set(BflFieldCatalog.DIFFICULTY, BflFieldCatalog.DIFFICULTY_MODERATE);
+
+        var answer = BflMarkdownSections.Read($"## [FIELD:difficulty]\n{BflFieldCatalog.DIFFICULTY_DEMANDING}", BflStep.TEST_SITUATION, form);
+
+        Assert.That(answer.FieldSuggestions, Is.Empty);
     }
 
     private static BflWorkStateAnswer Read(string answer) => BflMarkdownSections.Read(answer, BflStep.GOALS_AND_ROLE, new BflStepFormData());

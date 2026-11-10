@@ -262,6 +262,7 @@ public static class BflPromptComposer
             {
                 BflFieldKind.SINGLE_LINE => $"eine Zeile, höchstens {field.Kind.MaxLength} Zeichen",
                 BflFieldKind.LINK => "eine vollständige Webadresse, die mit https:// oder http:// beginnt",
+                BflFieldKind.CHOICE => $"genau eine dieser Optionen, so geschrieben: {string.Join(", ", field.Options.Select(option => $"„{option.Label}“"))}",
 
                 _ => $"Text, höchstens {field.Kind.MaxLength} Zeichen",
             };
