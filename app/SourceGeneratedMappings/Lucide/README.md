@@ -43,3 +43,4 @@ Lucide is licensed under the [ISC License](https://github.com/lucide-icons/lucid
    - `cpu-ai` and `server` in `wwwroot/images/provider-icons/`, see the README there,
    - `blocks` as the default icon of plugins, `DEFAULT_ICON_SVG` in `Tools/PluginSystem/PluginBase.Icon.cs`,
    - `settings` in the `icon.lua` of `Plugins/assistants/` and `Plugins/configuration/`.
+6. Generate the banner of the start page anew, since its icons come from the font, see `media/Banner/README.md`.
