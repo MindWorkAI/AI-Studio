@@ -46,6 +46,16 @@ public static class BflPromptLibrary
     private const string RESULTS_FOLDER = FOLDER + "/Prompts/results/";
 
     /// <summary>
+    /// The folder of the prompts of the research agents: the prompt they share, and the task of each topic.
+    /// </summary>
+    private const string RESEARCH_FOLDER = FOLDER + "/Prompts/research/";
+
+    /// <summary>
+    /// The prompt every research agent starts with: its role, its rules, and the public details about the event.
+    /// </summary>
+    public const string RESEARCH_PATH = RESEARCH_FOLDER + "research.md";
+
+    /// <summary>
     /// The instruction to address the person formally.
     /// </summary>
     private const string ADDRESS_FORMAL_PATH = FOLDER + "/Prompts/snippets/address-formal.md";
@@ -89,6 +99,19 @@ public static class BflPromptLibrary
         BflPromptTemplate.MISSING_WORK_STATES);
 
     /// <summary>
+    /// The placeholders BflPromptComposer fills in the prompt of the research agents.
+    /// </summary>
+    /// <remarks>
+    /// Nothing but the public details about the event: no placeholder brings the material, the work states, or any
+    /// other detail of a preparation into a research.
+    /// </remarks>
+    private static readonly FrozenSet<string> RESEARCH_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
+        BflPromptTemplate.RESPONSE_LANGUAGE,
+        BflPromptTemplate.TOPIC,
+        BflPromptTemplate.TOOL_CALLS,
+        BflPromptTemplate.PUBLIC_DETAILS);
+
+    /// <summary>
     /// The placeholders of every other file: none, because BflPromptComposer inserts these files as values.
     /// </summary>
     private static readonly FrozenSet<string> NO_PLACEHOLDERS = FrozenSet<string>.Empty;
@@ -115,6 +138,12 @@ public static class BflPromptLibrary
     };
 
     /// <summary>
+    /// Gets the task of the research agent of a topic.
+    /// </summary>
+    /// <param name="topic">The topic of the research.</param>
+    public static string ResearchTopicPath(BflResearchTopic topic) => $"{RESEARCH_FOLDER}{topic.FileStem}.md";
+
+    /// <summary>
     /// Gets the instruction for a form of address.
     /// </summary>
     /// <param name="addressForm">The form of address.</param>
@@ -130,6 +159,8 @@ public static class BflPromptLibrary
         ONBOARDING_PATH,
         WORK_STATE_PATH,
         ..BflResultKind.All.Where(kind => kind.IsWrittenByModel).Select(ResultPath),
+        RESEARCH_PATH,
+        ..BflResearchTopic.All.Select(ResearchTopicPath),
         ..Enum.GetValues<AddressForm>().Select(AddressPath).Distinct(),
         ..BflStep.All.Select(StepPath)
     ];
@@ -145,9 +176,9 @@ public static class BflPromptLibrary
     /// Gets the placeholders a file of the lab's prompts may contain.
     /// </summary>
     /// <remarks>
-    /// BflPromptComposer fills placeholders in the core, in the prompt of the onboarding, and in the requests for a work
-    /// state and for a result only. It inserts every other file as a value, whose placeholders it leaves as they are, so
-    /// that they would reach the model as text.
+    /// BflPromptComposer fills placeholders in the core, in the prompt of the onboarding, in the requests for a work
+    /// state and for a result, and in the prompt of the research agents only. It inserts every other file as a value,
+    /// whose placeholders it leaves as they are, so that they would reach the model as text.
     /// </remarks>
     /// <param name="path">The file, one of the paths of this class.</param>
     public static IReadOnlySet<string> PlaceholdersOf(string path) => path switch
@@ -155,6 +186,7 @@ public static class BflPromptLibrary
         CORE_PATH => CORE_PLACEHOLDERS,
         ONBOARDING_PATH => ONBOARDING_PLACEHOLDERS,
         WORK_STATE_PATH => WORK_STATE_PLACEHOLDERS,
+        RESEARCH_PATH => RESEARCH_PLACEHOLDERS,
         _ when path.StartsWith(RESULTS_FOLDER, StringComparison.Ordinal) => RESULT_PLACEHOLDERS,
         _ => NO_PLACEHOLDERS
     };
@@ -187,6 +219,19 @@ public static class BflPromptLibrary
     public static async Task<BflOnboardingPromptParts> LoadOnboardingPartsAsync(AddressForm addressForm, string? overrideDirectory = null, CancellationToken token = default) => new(
         await ReadAsync(ONBOARDING_PATH, overrideDirectory, token),
         await ReadAsync(AddressPath(addressForm), overrideDirectory, token));
+
+    /// <summary>
+    /// Reads the texts of the system prompt of a research agent.
+    /// </summary>
+    /// <param name="topic">The topic of the research.</param>
+    /// <param name="overrideDirectory">The folder whose files replace the prompts, or null while the person does not allow it.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The texts, which BflPromptComposer puts together.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without one of the files.</exception>
+    /// <exception cref="BflPromptOverrideException">A file which replaces a prompt contains a placeholder which the lab does not fill in it.</exception>
+    public static async Task<BflResearchPromptParts> LoadResearchPartsAsync(BflResearchTopic topic, string? overrideDirectory = null, CancellationToken token = default) => new(
+        await ReadAsync(RESEARCH_PATH, overrideDirectory, token),
+        await ReadAsync(ResearchTopicPath(topic), overrideDirectory, token));
 
     /// <summary>
     /// Reads a file of the lab's prompts: the file which replaces it, if there is one, or else the file which comes

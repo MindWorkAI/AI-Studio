@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Text;
+
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Assistants.BeyondFactsLab;
 
@@ -83,6 +86,70 @@ public static class BflPromptComposer
     {
         [BflPromptTemplate.MISSING_WORK_STATES] = MissingWorkStates(workStates)
     }).ReplaceLineEndings(LINE_BREAK.ToString()).Trim();
+
+    /// <summary>
+    /// Puts together the system prompt of a research agent.
+    /// </summary>
+    /// <remarks>
+    /// It carries nothing but the public details about the event: no other detail, no material, no work state, and no
+    /// conversation of the preparation, so that none of them can get into a query to the web search.
+    /// </remarks>
+    /// <param name="parts">The texts of the prompt.</param>
+    /// <param name="details">The public details about the event, see PublicDetailsOf.</param>
+    /// <param name="responseLanguage">The name of the language the agent writes in, e.g., the language of the app.</param>
+    /// <returns>The system prompt.</returns>
+    /// <exception cref="FormatException">The prompt has a placeholder without a value.</exception>
+    public static string ComposeResearch(BflResearchPromptParts parts, IReadOnlyList<BflResearchDetail> details, string responseLanguage) => BflPromptTemplate.Fill(parts.Research, new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
+        [BflPromptTemplate.TOPIC] = parts.Topic.Trim(),
+        [BflPromptTemplate.TOOL_CALLS] = ToolSelectionRules.MAX_TOOL_CALLS.ToString(CultureInfo.InvariantCulture),
+        [BflPromptTemplate.PUBLIC_DETAILS] = PublicDetails(details)
+    }).ReplaceLineEndings(LINE_BREAK.ToString());
+
+    /// <summary>
+    /// Gets the public details about the event from the forms of a preparation: the only details a research receives.
+    /// </summary>
+    /// <remarks>
+    /// Only fields marked with BflFieldDefinition.IsSharedWithResearch count, in the order of the catalog, and only
+    /// those with a value.
+    /// </remarks>
+    /// <param name="forms">The forms of the preparation, by their steps; a missing form counts as empty.</param>
+    /// <returns>The public details, as a research receives them.</returns>
+    public static IReadOnlyList<BflResearchDetail> PublicDetailsOf(IReadOnlyDictionary<BflStep, BflStepFormData> forms)
+    {
+        List<BflResearchDetail> details = [];
+        foreach (var field in BflFieldCatalog.FIELDS.Where(field => field.IsSharedWithResearch))
+        {
+            if (!forms.TryGetValue(field.Step, out var form))
+                continue;
+
+            var value = ValueOf(field, form);
+            if (value.Length > 0)
+                details.Add(new BflResearchDetail { FieldId = field.Id, Value = value });
+        }
+
+        return details;
+    }
+
+    /// <summary>
+    /// Lists the public details about the event for a research agent.
+    /// </summary>
+    /// <param name="details">The public details.</param>
+    private static string PublicDetails(IReadOnlyList<BflResearchDetail> details)
+    {
+        var lines = new List<string>();
+        foreach (var detail in details)
+        {
+            // A detail whose field is not public, or which this version does not know, never reaches a research:
+            if (BflFieldCatalog.FIELDS.FirstOrDefault(candidate => string.Equals(candidate.Id, detail.FieldId, StringComparison.Ordinal)) is not { IsSharedWithResearch: true } field)
+                continue;
+
+            lines.Add($"- {field.Label}: {detail.Value.Replace("\n", "\n  ", StringComparison.Ordinal)}");
+        }
+
+        return lines.Count is 0 ? "Die Person hat noch keine öffentlichen Angaben gemacht." : string.Join(LINE_BREAK, lines);
+    }
 
     /// <summary>
     /// Names the steps without a confirmed work state, in their order.
