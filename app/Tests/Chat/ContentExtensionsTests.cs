@@ -224,7 +224,7 @@ public sealed class ContentExtensionsTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(exported, Does.StartWith(file.Content), "The document stays as the model wrote it.");
-            Assert.That(appended.Split(Environment.NewLine), Has.All.StartWith("%"), "A line LaTeX would read could stop the whole run.");
+            Assert.That(appended.Split('\n'), Has.All.StartWith("%"), "A line LaTeX would read could stop the whole run.");
             Assert.That(appended, Does.Contain(TOOL_SOURCE.URL));
         }
     }
@@ -347,5 +347,5 @@ public sealed class ContentExtensionsTests
         .Select(block => block is HeadingBlock heading ? $"h{heading.Level}" : block.GetType().Name)
         .ToList();
 
-    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
+    private static string Lines(params string[] lines) => string.Join('\n', lines);
 }

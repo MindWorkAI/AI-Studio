@@ -296,7 +296,7 @@ public sealed class SourceExtensionsTests
     /// <param name="markdown">The Markdown of the sources.</param>
     /// <returns>The entries, in the order they stand in.</returns>
     private static IReadOnlyList<string> EntriesOf(string markdown) => markdown
-        .Split(Environment.NewLine, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+        .Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .Where(line => line.StartsWith("- [", StringComparison.Ordinal))
         .ToList();
 }

@@ -202,12 +202,12 @@ public static class FileExportFormatExtensions
             switch (format)
             {
                 case FileExportFormat.HTML or FileExportFormat.MARKDOWN:
-                    var commentText = string.Join(Environment.NewLine, lines).Replace("-->", "-- >").Replace("--!>", "--! >");
-                    comment = $"<!--{Environment.NewLine}{commentText}{Environment.NewLine}-->";
+                    var commentText = string.Join('\n', lines).Replace("-->", "-- >").Replace("--!>", "--! >");
+                    comment = $"<!--\n{commentText}\n-->";
                     return true;
 
                 case FileExportFormat.LATEX:
-                    comment = string.Join(Environment.NewLine, lines.Select(line => line.Length is 0 ? "%" : $"% {line}"));
+                    comment = string.Join('\n', lines.Select(line => line.Length is 0 ? "%" : $"% {line}"));
                     return true;
 
                 default:

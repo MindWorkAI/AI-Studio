@@ -226,10 +226,10 @@ public static partial class SourceExtensions
             foreach (var group in sources.GroupSources())
             {
                 if (sb.Length > 0)
-                    sb.AppendLine();
+                    sb.AppendLineLF();
 
                 sb.Append("## ");
-                sb.AppendLine(group.Heading);
+                sb.AppendLineLF(group.Heading);
 
                 foreach (var numberedSource in group.Sources)
                 {
@@ -241,7 +241,7 @@ public static partial class SourceExtensions
                     else
                         AppendMarkdownLink(sb, numberedSource.Source.Title, keepPageAnchors ? numberedSource.Source.URL : WithoutPageAnchor(numberedSource.Source.URL));
 
-                    sb.AppendLine();
+                    sb.AppendLineLF();
                 }
             }
 
@@ -265,7 +265,7 @@ public static partial class SourceExtensions
             if (string.IsNullOrWhiteSpace(sourcesMarkdown))
                 return string.Empty;
 
-            return $"# {TB("Sources")}{Environment.NewLine}{Environment.NewLine}{sourcesMarkdown}";
+            return $"# {TB("Sources")}\n\n{sourcesMarkdown}";
         }
 
         /// <summary>
