@@ -144,8 +144,8 @@ public sealed class RetrievalContextDescriptionTests
         };
 
         var builder = new StringBuilder();
-        IRetrievalContextExtensions.AppendContextDescription(builder, image);
-        IRetrievalContextExtensions.AppendImageMatch(builder);
+        RetrievalContextExtensions.AppendContextDescription(builder, image);
+        RetrievalContextExtensions.AppendImageMatch(builder);
         var description = builder.ToString();
 
         using (Assert.EnterMultipleScope())
@@ -161,7 +161,7 @@ public sealed class RetrievalContextDescriptionTests
     private static string Describe(IRetrievalContext retrievalContext)
     {
         var builder = new StringBuilder();
-        IRetrievalContextExtensions.AppendContextDescription(builder, retrievalContext);
+        RetrievalContextExtensions.AppendContextDescription(builder, retrievalContext);
         return builder.ToString();
     }
 

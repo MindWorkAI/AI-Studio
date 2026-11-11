@@ -16,7 +16,7 @@ namespace AIStudio.Tests.Chat;
 /// way the one can run into the other -- an open code fence above all. A document has no such seam.
 /// </remarks>
 [TestFixture]
-public sealed class IContentExtensionsTests
+public sealed class ContentExtensionsTests
 {
     private static readonly Source TOOL_SOURCE = new("Search result", "https://example.org/search", SourceOrigin.TOOL);
 

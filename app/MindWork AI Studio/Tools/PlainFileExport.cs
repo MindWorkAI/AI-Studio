@@ -256,7 +256,7 @@ public static class PlainFileExport
     /// <param name="dialogTitle">The title of the save dialog.</param>
     /// <param name="file">The file, as ExtractFiles read it out of the message. Its format must be a
     /// plain text format, see FileExportFormatExtensions.IsPlainText.</param>
-    /// <param name="fileContent">The finished file, see IContentExtensions.ToExportContent.</param>
+    /// <param name="fileContent">The finished file, see ContentExtensions.ToExportContent.</param>
     /// <param name="fileName">What the file is about, used to suggest a name in the save dialog.
     /// Null falls back to a generic name.</param>
     /// <returns>True, when the file was written.</returns>

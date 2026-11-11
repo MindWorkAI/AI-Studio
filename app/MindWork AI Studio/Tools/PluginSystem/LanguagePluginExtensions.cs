@@ -2,7 +2,7 @@ using SharedTools;
 
 namespace AIStudio.Tools.PluginSystem;
 
-public static class ILanguagePluginExtensions
+public static class LanguagePluginExtensions
 {
     /// <param name="plugin">The language plugin.</param>
     extension(ILanguagePlugin plugin)

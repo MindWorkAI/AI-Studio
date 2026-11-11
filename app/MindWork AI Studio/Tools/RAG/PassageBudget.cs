@@ -84,7 +84,7 @@ public sealed class PassageBudget(int limit, Func<string, CancellationToken, Tas
     /// </para>
     /// <para>
     /// A passage longer than the whole budget is shortened until it fits, and filtered again, see
-    /// IRetrievalContextExtensions.ShortenToFitAsync. It then has to fit into what is left like any
+    /// RetrievalContextExtensions.ShortenToFitAsync. It then has to fit into what is left like any
     /// other passage.
     /// </para>
     /// </remarks>
