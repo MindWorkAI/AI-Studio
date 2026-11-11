@@ -174,6 +174,27 @@ public sealed class BflReflectionFolderTests
         Assert.That(folder.Split('\n')[0], Does.StartWith("# ").And.Contain("Panel").And.Contain("Kopf"));
     }
 
+    [Test]
+    public void EveryLineEndsWithLfAlsoWhenATextComesWithCrLf()
+    {
+        var workStates = new Dictionary<BflStep, BflWorkState>();
+        Confirm(workStates, BflStep.KNOWLEDGE, new() { ["ESTABLISHED"] = "GESICHERT-1\r\nGESICHERT-2", ["OPEN_POINTS"] = "OFFEN-1\r\nOFFEN-2" });
+        var conversations = new Dictionary<BflStep, IReadOnlyList<BflConversationMessage>>
+        {
+            [BflStep.STRATEGY] = [new(false, "ANTWORT-1\r\n\r\nANTWORT-2")],
+        };
+
+        var folder = Build(workStates, conversations: conversations);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(folder, Does.Not.Contain("\r"), "The folder must never mix two kinds of line breaks, also not on Windows.");
+            Assert.That(folder, Does.Contain("GESICHERT-1\nGESICHERT-2\n"));
+            Assert.That(folder, Does.Contain("OFFEN-1\nOFFEN-2\n"));
+            Assert.That(folder, Does.Contain("ANTWORT-1\n\nANTWORT-2\n"));
+        }
+    }
+
     private static string Build(IReadOnlyDictionary<BflStep, BflWorkState> workStates, bool includePersonalDisclosures = false, IReadOnlyDictionary<BflStep, IReadOnlyList<BflConversationMessage>>? conversations = null) => BflReflectionFolder.Build(new BflReflectionFolderInput("Panel", workStates, Forms(), [], conversations ?? new Dictionary<BflStep, IReadOnlyList<BflConversationMessage>>(), includePersonalDisclosures, CultureInfo.InvariantCulture));
 
     private static Dictionary<BflStep, BflStepFormData> Forms() => BflStep.All.ToDictionary(step => step, _ => new BflStepFormData());

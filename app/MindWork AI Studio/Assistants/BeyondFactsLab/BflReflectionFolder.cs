@@ -26,6 +26,14 @@ public static class BflReflectionFolder
     private const string OPEN_POINTS_KEY = "OPEN_POINTS";
 
     /// <summary>
+    /// The line break of the folder, the same on every system.
+    /// </summary>
+    /// <remarks>
+    /// StringBuilder.AppendLine would write the line break of the system, which is CR LF on Windows.
+    /// </remarks>
+    private const char LINE_BREAK = '\n';
+
+    /// <summary>
     /// Puts the reflection folder together.
     /// </summary>
     /// <param name="input">What the folder is put together from.</param>
@@ -33,7 +41,7 @@ public static class BflReflectionFolder
     public static string Build(BflReflectionFolderInput input)
     {
         var text = new StringBuilder();
-        text.Append("# ").Append(Markdown.EscapeInlineText(BflResultKind.REFLECTION_FOLDER.Title)).Append(": ").AppendLine(Markdown.EscapeInlineText(input.ProjectName));
+        text.Append("# ").Append(Markdown.EscapeInlineText(BflResultKind.REFLECTION_FOLDER.Title)).Append(": ").Append(Markdown.EscapeInlineText(input.ProjectName)).Append(LINE_BREAK);
 
         foreach (var step in BflStep.All)
             AppendStep(text, step, input);
@@ -43,7 +51,7 @@ public static class BflReflectionFolder
         if (input.Conversations.Count > 0)
             AppendConversations(text, input);
 
-        return text.ToString().TrimEnd() + "\n";
+        return text.ToString().TrimEnd() + LINE_BREAK;
     }
 
     /// <summary>
@@ -78,15 +86,15 @@ public static class BflReflectionFolder
     /// <param name="input">What the folder is put together from.</param>
     private static void AppendStep(StringBuilder text, BflStep step, BflReflectionFolderInput input)
     {
-        text.AppendLine().Append("## ").AppendLine(Markdown.EscapeInlineText(step.Title)).AppendLine();
+        text.Append(LINE_BREAK).Append("## ").Append(Markdown.EscapeInlineText(step.Title)).Append(LINE_BREAK).Append(LINE_BREAK);
         if (input.WorkStates.GetValueOrDefault(step)?.Confirmed is not { } confirmed)
         {
-            text.Append('_').Append(Markdown.EscapeInlineText(TB("No confirmed work state."))).AppendLine("_");
+            text.Append('_').Append(Markdown.EscapeInlineText(TB("No confirmed work state."))).Append('_').Append(LINE_BREAK);
             return;
         }
 
         var confirmedAt = confirmed.ConfirmedAtUtc.ToLocalTime().ToString("d", input.Culture);
-        text.Append('_').Append(Markdown.EscapeInlineText(string.Format(input.Culture, TB("Version {0}, confirmed on {1}."), confirmed.Revision, confirmedAt))).AppendLine("_");
+        text.Append('_').Append(Markdown.EscapeInlineText(string.Format(input.Culture, TB("Version {0}, confirmed on {1}."), confirmed.Revision, confirmedAt))).Append('_').Append(LINE_BREAK);
         var notice = BflStaleness.Of(step, input.WorkStates, input.Forms) switch
         {
             BflWorkStateStatus.OUTDATED => TB("An earlier step changed after this confirmation."),
@@ -95,14 +103,14 @@ public static class BflReflectionFolder
         };
 
         if (notice.Length > 0)
-            text.AppendLine().Append('_').Append(Markdown.EscapeInlineText(notice)).AppendLine("_");
+            text.Append(LINE_BREAK).Append('_').Append(Markdown.EscapeInlineText(notice)).Append('_').Append(LINE_BREAK);
 
         foreach (var section in BflWorkStateSections.ForStep(step))
         {
             if (section.Key is OPEN_POINTS_KEY || section.IsPersonalDisclosure && !input.IncludePersonalDisclosures || !confirmed.Sections.TryGetValue(section.Key, out var sectionText) || string.IsNullOrWhiteSpace(sectionText))
                 continue;
 
-            text.AppendLine().Append("### ").AppendLine(Markdown.EscapeInlineText(section.Title)).AppendLine().AppendLine(sectionText.Trim());
+            text.Append(LINE_BREAK).Append("### ").Append(Markdown.EscapeInlineText(section.Title)).Append(LINE_BREAK).Append(LINE_BREAK).Append(WithLineBreaks(sectionText)).Append(LINE_BREAK);
         }
     }
 
@@ -113,7 +121,7 @@ public static class BflReflectionFolder
     /// <param name="input">What the folder is put together from.</param>
     private static void AppendOpenPoints(StringBuilder text, BflReflectionFolderInput input)
     {
-        text.AppendLine().Append("## ").AppendLine(Markdown.EscapeInlineText(TB("Open questions"))).AppendLine();
+        text.Append(LINE_BREAK).Append("## ").Append(Markdown.EscapeInlineText(TB("Open questions"))).Append(LINE_BREAK).Append(LINE_BREAK);
         var any = false;
         foreach (var step in BflStep.All)
         {
@@ -121,11 +129,11 @@ public static class BflReflectionFolder
                 continue;
 
             any = true;
-            text.Append("### ").AppendLine(Markdown.EscapeInlineText(step.Title)).AppendLine().AppendLine(openPoints.Trim()).AppendLine();
+            text.Append("### ").Append(Markdown.EscapeInlineText(step.Title)).Append(LINE_BREAK).Append(LINE_BREAK).Append(WithLineBreaks(openPoints)).Append(LINE_BREAK).Append(LINE_BREAK);
         }
 
         if (!any)
-            text.Append('_').Append(Markdown.EscapeInlineText(TB("No confirmed work state names open questions."))).AppendLine("_");
+            text.Append('_').Append(Markdown.EscapeInlineText(TB("No confirmed work state names open questions."))).Append('_').Append(LINE_BREAK);
     }
 
     /// <summary>
@@ -135,15 +143,15 @@ public static class BflReflectionFolder
     /// <param name="input">What the folder is put together from.</param>
     private static void AppendMaterials(StringBuilder text, BflReflectionFolderInput input)
     {
-        text.AppendLine().Append("## ").AppendLine(Markdown.EscapeInlineText(TB("Material"))).AppendLine();
+        text.Append(LINE_BREAK).Append("## ").Append(Markdown.EscapeInlineText(TB("Material"))).Append(LINE_BREAK).Append(LINE_BREAK);
         if (input.Materials.Count is 0)
         {
-            text.Append('_').Append(Markdown.EscapeInlineText(TB("No material was added."))).AppendLine("_");
+            text.Append('_').Append(Markdown.EscapeInlineText(TB("No material was added."))).Append('_').Append(LINE_BREAK);
             return;
         }
 
         foreach (var material in input.Materials.OrderBy(material => material.AddedAtUtc))
-            text.Append("- ").Append(Markdown.EscapeInlineText(material.Name)).Append(" (").Append(Markdown.EscapeInlineText(KindName(material.Kind))).AppendLine(")");
+            text.Append("- ").Append(Markdown.EscapeInlineText(material.Name)).Append(" (").Append(Markdown.EscapeInlineText(KindName(material.Kind))).Append(')').Append(LINE_BREAK);
     }
 
     /// <summary>
@@ -153,26 +161,35 @@ public static class BflReflectionFolder
     /// <param name="input">What the folder is put together from.</param>
     private static void AppendConversations(StringBuilder text, BflReflectionFolderInput input)
     {
-        text.AppendLine().Append("## ").AppendLine(Markdown.EscapeInlineText(TB("Appendix: the conversations"))).AppendLine();
+        text.Append(LINE_BREAK).Append("## ").Append(Markdown.EscapeInlineText(TB("Appendix: the conversations"))).Append(LINE_BREAK).Append(LINE_BREAK);
         foreach (var step in BflStep.All)
         {
             if (!input.Conversations.TryGetValue(step, out var messages) || messages.Count is 0)
                 continue;
 
-            text.Append("### ").AppendLine(Markdown.EscapeInlineText(step.Title)).AppendLine();
+            text.Append("### ").Append(Markdown.EscapeInlineText(step.Title)).Append(LINE_BREAK).Append(LINE_BREAK);
             if (!input.IncludePersonalDisclosures && MayHoldPersonalDisclosures(step))
             {
-                text.Append('_').Append(Markdown.EscapeInlineText(TB("Left out, as it may contain personal disclosures."))).AppendLine("_").AppendLine();
+                text.Append('_').Append(Markdown.EscapeInlineText(TB("Left out, as it may contain personal disclosures."))).Append('_').Append(LINE_BREAK).Append(LINE_BREAK);
                 continue;
             }
 
             foreach (var message in messages)
             {
                 var speaker = message.IsFromPerson ? TA("You") : TB("Lab");
-                text.Append("**").Append(Markdown.EscapeInlineText(speaker)).AppendLine(":**").AppendLine().AppendLine(message.Text).AppendLine();
+                text.Append("**").Append(Markdown.EscapeInlineText(speaker)).Append(":**").Append(LINE_BREAK).Append(LINE_BREAK).Append(WithLineBreaks(message.Text)).Append(LINE_BREAK).Append(LINE_BREAK);
             }
         }
     }
+
+    /// <summary>
+    /// Gets a text which the person or a model wrote, trimmed and with the line breaks of the folder.
+    /// </summary>
+    /// <remarks>
+    /// A model may answer with CR LF; without this, the folder would mix two kinds of line breaks.
+    /// </remarks>
+    /// <param name="text">The text.</param>
+    private static string WithLineBreaks(string text) => text.Trim().ReplaceLineEndings(LINE_BREAK.ToString());
 
     /// <summary>
     /// Gets the name of a kind of material.
