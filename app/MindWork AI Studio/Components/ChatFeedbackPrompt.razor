@@ -6,6 +6,13 @@
 {
     case FeedbackPromptState.ASK:
         <MudPaper Outlined="@true" Elevation="0" Class="px-3 py-2 mb-3 rounded-lg">
+            @if (this.step is Question.RATING)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">
+                    @T("We, the AI Studio team, would like to improve AI Studio. Answering these questions helps us with that.")
+                </MudText>
+            }
+
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
                 <MudText Typo="Typo.body2">
                     @this.QuestionText
@@ -19,9 +26,6 @@
                     <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.Rate(FeedbackRating.GOOD))">@T("Good")</MudButton>
                 }
 
-                <MudText Typo="Typo.caption" Class="mud-text-secondary ml-2">
-                    @($"{this.QuestionNumber}/{this.QuestionCount}")
-                </MudText>
                 <MudTooltip Text="@this.CloseTooltip" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="mud-text-secondary" Disabled="@this.isSending" OnClick="@this.Close"/>
                 </MudTooltip>
@@ -29,17 +33,6 @@
 
             @switch (this.step)
             {
-                case Question.TIME:
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap" Class="mt-1">
-                        <MudButton Variant="@(this.timeLost ? Variant.Text : Variant.Outlined)" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.timeLost = false)">@T("Saved")</MudButton>
-                        <MudButton Variant="@(this.timeLost ? Variant.Outlined : Variant.Text)" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.timeLost = true)">@T("Lost")</MudButton>
-                        <MudNumericField T="double" @bind-Value="@this.hours" Min="0" Max="@MAX_HOURS" Step="0.5" Adornment="Adornment.End" AdornmentText="@T("hours")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width: 9em;" Class="ml-2"/>
-                        <MudSpacer/>
-                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="@this.SkipTime">@T("Skip")</MudButton>
-                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" OnClick="@this.ConfirmTime">@T("Next")</MudButton>
-                    </MudStack>
-                    break;
-
                 case Question.REASON:
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap" Class="mt-1">
                         <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ChooseReason(FeedbackReason.NO_ANSWER))">@T("No answer")</MudButton>
@@ -51,7 +44,28 @@
                     </MudStack>
                     break;
 
+                case Question.TIME:
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap" Class="mt-1">
+                        @foreach (var (value, label) in this.TimeSavedOptions)
+                        {
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ChooseTimeSaved(value))">@label</MudButton>
+                        }
+                        <MudSpacer/>
+                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ChooseTimeSaved(FeedbackTimeSaved.NONE))">@T("Skip")</MudButton>
+                    </MudStack>
+                    break;
+
                 case Question.COMMENT:
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap" Class="mt-1">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary mr-1">
+                            @T("Topic:")
+                        </MudText>
+                        @foreach (var (value, label) in this.TopicOptions)
+                        {
+                            <MudButton Variant="@(this.topic == value ? Variant.Filled : Variant.Outlined)" Size="Size.Small" Color="Color.Default" DropShadow="@false" OnClick="@(() => this.ToggleTopic(value))">@label</MudButton>
+                        }
+                    </MudStack>
+
                     <MudStack Row="true" AlignItems="AlignItems.End" Spacing="1" Class="mt-1">
                         <MudTextField T="string" @bind-Value="@this.comment" Placeholder="@T("Optional")" AutoGrow="@true" Lines="1" MaxLines="4" MaxLength="@FeedbackService.MAX_COMMENT_LENGTH" Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1"/>
                         <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" Disabled="@this.isSending" OnClick="@this.Send">@T("Send")</MudButton>

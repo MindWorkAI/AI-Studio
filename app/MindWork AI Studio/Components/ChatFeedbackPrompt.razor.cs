@@ -17,12 +17,10 @@ public partial class ChatFeedbackPrompt : MSGComponentBase
     private enum Question
     {
         RATING,
-        TIME,
         REASON,
+        TIME,
         COMMENT,
     }
-
-    private const double MAX_HOURS = FeedbackService.MAX_SAVED_TIME_MINUTES / 60.0;
 
     /// <summary>
     /// The chat this prompt is shown in.
@@ -41,33 +39,19 @@ public partial class ChatFeedbackPrompt : MSGComponentBase
 
     private Question step = Question.RATING;
     private FeedbackRating rating = FeedbackRating.NONE;
-    private bool timeLost;
-    private double hours;
-    private int? savedTimeMinutes;
     private FeedbackReason reason = FeedbackReason.NONE;
+    private FeedbackTimeSaved timeSaved = FeedbackTimeSaved.NONE;
+    private FeedbackTopic topic = FeedbackTopic.NONE;
     private string comment = string.Empty;
     private bool isSending;
     private bool sendFailed;
     private bool wasSent;
 
-    /// <summary>
-    /// A bad rating adds the question for the reason.
-    /// </summary>
-    private int QuestionCount => this.rating is FeedbackRating.BAD ? 4 : 3;
-
-    private int QuestionNumber => this.step switch
-    {
-        Question.RATING => 1,
-        Question.TIME => 2,
-        Question.REASON => 3,
-        _ => this.QuestionCount,
-    };
-
     private string QuestionText => this.step switch
     {
         Question.RATING => this.T("How did AI Studio perform for you this week?"),
-        Question.TIME => this.T("How much time did AI Studio save you this week?"),
         Question.REASON => this.T("What went wrong?"),
+        Question.TIME => this.T("Did you save time this week by using AI Studio?"),
         _ => this.T("Is there anything else you would like to tell us?"),
     };
 
@@ -77,32 +61,52 @@ public partial class ChatFeedbackPrompt : MSGComponentBase
 
     private FeedbackContext Context => FeedbackContext.From(this.Provider);
 
+    /// <summary>
+    /// The answers to the time question, from lost time to much time saved, with "don't know" in the middle.
+    /// </summary>
+    private IEnumerable<(FeedbackTimeSaved Value, string Label)> TimeSavedOptions =>
+    [
+        (FeedbackTimeSaved.LOST, this.T("No, I lost time")),
+        (FeedbackTimeSaved.NOT_SAVED, this.T("No")),
+        (FeedbackTimeSaved.UNKNOWN, this.T("Don't know")),
+        (FeedbackTimeSaved.SAVED_SOME, this.T("Yes, a little")),
+        (FeedbackTimeSaved.SAVED_MUCH, this.T("Yes, a lot")),
+    ];
+
+    private IEnumerable<(FeedbackTopic Value, string Label)> TopicOptions =>
+    [
+        (FeedbackTopic.TECHNICAL_PROBLEMS, this.T("Technical problems")),
+        (FeedbackTopic.NEW_FEATURE, this.T("New feature")),
+        (FeedbackTopic.MISSING_FUNCTIONS, this.T("Missing functions")),
+        (FeedbackTopic.CONFUSING_UI, this.T("Confusing interface")),
+        (FeedbackTopic.OTHER, this.T("Other")),
+    ];
+
+    /// <summary>
+    /// A bad rating first asks for the reason, before the question about the time.
+    /// </summary>
     private void Rate(FeedbackRating selected)
     {
         this.rating = selected;
-        this.step = Question.TIME;
+        this.step = selected is FeedbackRating.BAD ? Question.REASON : Question.TIME;
     }
-
-    private void ConfirmTime()
-    {
-        var minutes = (int)Math.Round(Math.Clamp(this.hours, 0, MAX_HOURS) * 60);
-        this.savedTimeMinutes = this.timeLost ? -minutes : minutes;
-        this.step = this.NextAfterTime;
-    }
-
-    private void SkipTime()
-    {
-        this.savedTimeMinutes = null;
-        this.step = this.NextAfterTime;
-    }
-
-    private Question NextAfterTime => this.rating is FeedbackRating.BAD ? Question.REASON : Question.COMMENT;
 
     private void ChooseReason(FeedbackReason selected)
     {
         this.reason = selected;
+        this.step = Question.TIME;
+    }
+
+    private void ChooseTimeSaved(FeedbackTimeSaved selected)
+    {
+        this.timeSaved = selected;
         this.step = Question.COMMENT;
     }
+
+    /// <summary>
+    /// Selects a topic, or clears it when the user clicks the selected topic again.
+    /// </summary>
+    private void ToggleTopic(FeedbackTopic selected) => this.topic = this.topic == selected ? FeedbackTopic.NONE : selected;
 
     private async Task Close()
     {
@@ -120,7 +124,7 @@ public partial class ChatFeedbackPrompt : MSGComponentBase
         this.isSending = true;
         this.sendFailed = false;
 
-        this.wasSent = await this.FeedbackService.SendAsync(this.rating, this.savedTimeMinutes, this.reason, this.comment, this.Context);
+        this.wasSent = await this.FeedbackService.SendAsync(this.rating, this.timeSaved, this.reason, this.topic, this.comment, this.Context);
         this.sendFailed = !this.wasSent;
         this.isSending = false;
     }
@@ -132,7 +136,7 @@ public partial class ChatFeedbackPrompt : MSGComponentBase
         if (this.rating is FeedbackRating.NONE)
             this.FeedbackService.Release(this.ChatId);
         else if (!this.wasSent && !this.isSending)
-            this.FeedbackService.SendInBackground(this.rating, this.savedTimeMinutes, this.reason, this.comment, this.Context);
+            this.FeedbackService.SendInBackground(this.rating, this.timeSaved, this.reason, this.topic, this.comment, this.Context);
 
         base.DisposeResources();
     }

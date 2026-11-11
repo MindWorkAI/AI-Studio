@@ -11,8 +11,9 @@ namespace AIStudio.Tools.Feedback;
 public sealed record FeedbackPayload(
     [property: JsonPropertyName("weekOf")] string WeekOf,
     [property: JsonPropertyName("performance")] string Performance,
-    [property: JsonPropertyName("savedTimeMinutes")] int? SavedTimeMinutes,
+    [property: JsonPropertyName("timeSaved")] string TimeSaved,
     [property: JsonPropertyName("reason")] string Reason,
+    [property: JsonPropertyName("topic")] string Topic,
     [property: JsonPropertyName("comment")] string Comment,
     [property: JsonPropertyName("provider")] string Provider,
     [property: JsonPropertyName("model")] string Model,

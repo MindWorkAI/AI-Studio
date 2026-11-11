@@ -21,10 +21,6 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
     private static readonly string APP_VERSION = Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? string.Empty;
     private static readonly TimeSpan SEND_TIMEOUT = TimeSpan.FromSeconds(10);
 
-    /// <summary>
-    /// The time saved or lost in one week can be at most one week.
-    /// </summary>
-    public const int MAX_SAVED_TIME_MINUTES = 7 * 24 * 60;
     public const int MAX_COMMENT_LENGTH = 2_000;
 
     /// <summary>
@@ -143,11 +139,11 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
     /// The prompt left the screen after the user rated, but before they finished all questions.
     /// Sends what they answered so far, without anybody waiting for it.
     /// </summary>
-    public void SendInBackground(FeedbackRating rating, int? savedTimeMinutes, FeedbackReason reason, string comment, FeedbackContext context) => _ = Task.Run(async () =>
+    public void SendInBackground(FeedbackRating rating, FeedbackTimeSaved timeSaved, FeedbackReason reason, FeedbackTopic topic, string comment, FeedbackContext context) => _ = Task.Run(async () =>
     {
         try
         {
-            await this.SendAsync(rating, savedTimeMinutes, reason, comment, context);
+            await this.SendAsync(rating, timeSaved, reason, topic, comment, context);
         }
         catch (Exception e)
         {
@@ -171,7 +167,7 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
         await this.MarkWeekHandledAsync(week);
     }
 
-    public async Task<bool> SendAsync(FeedbackRating rating, int? savedTimeMinutes, FeedbackReason reason, string comment, FeedbackContext context, CancellationToken token = default)
+    public async Task<bool> SendAsync(FeedbackRating rating, FeedbackTimeSaved timeSaved, FeedbackReason reason, FeedbackTopic topic, string comment, FeedbackContext context, CancellationToken token = default)
     {
         if (rating is FeedbackRating.NONE || !this.TryGetEndpoint(out var endpoint))
             return false;
@@ -183,8 +179,9 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
         var payload = new FeedbackPayload(
             week.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             rating.ToString().ToLowerInvariant(),
-            savedTimeMinutes is { } minutes ? Math.Clamp(minutes, -MAX_SAVED_TIME_MINUTES, MAX_SAVED_TIME_MINUTES) : null,
-            reason is FeedbackReason.NONE ? string.Empty : reason.ToString().ToLowerInvariant(),
+            ToWireValue(timeSaved),
+            ToWireValue(reason),
+            ToWireValue(topic),
             comment.Trim(),
             context.Provider,
             context.Model,
@@ -246,6 +243,11 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
         settingsManager.ConfigurationData.Feedback.DebugShortInterval = enabled;
         await settingsManager.StoreSettings();
     }
+
+    /// <summary>
+    /// The server receives an enum member in lowercase, e.g. <c>saved_some</c>, and an unanswered question as an empty string.
+    /// </summary>
+    private static string ToWireValue<TEnum>(TEnum value) where TEnum : struct, Enum => value.ToString() is "NONE" ? string.Empty : value.ToString().ToLowerInvariant();
 
     private async Task MarkWeekHandledAsync(DateOnly week)
     {
