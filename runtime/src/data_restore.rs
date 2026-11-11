@@ -52,7 +52,7 @@ const SETTINGS_FILE_NAME: &str = "settings.json";
 /// (`DataBackupContents`) includes. The runtime refuses a plan which names anything else, so that
 /// whatever goes wrong in the app, a restore never replaces the logs, the downloaded tools, or the
 /// data folder as a whole.
-const REPLACEABLE_ELEMENTS: [(Location, &str); 11] = [
+const REPLACEABLE_ELEMENTS: [(Location, &str); 12] = [
     (Location::ConfigDirectory, SETTINGS_FILE_NAME),
     (Location::DataDirectory, "workspaces/"),
     (Location::DataDirectory, "tempChats/"),
@@ -64,6 +64,7 @@ const REPLACEABLE_ELEMENTS: [(Location, &str); 11] = [
     (Location::DataDirectory, "databases/sqlite/"),
     (Location::DataDirectory, "databases/vector_database/stores/"),
     (Location::DataDirectory, "mediaTranscripts/"),
+    (Location::DataDirectory, "glossaries/"),
 ];
 
 /// Paths which a restore always keeps, whatever the plan says: the plugins which come with AI Studio

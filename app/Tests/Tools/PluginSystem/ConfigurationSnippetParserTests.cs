@@ -4,6 +4,8 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
+using AIStudio.Tools.Glossaries;
 using AIStudio.Tools.PluginSystem;
 
 using Lua;
@@ -55,6 +57,7 @@ public sealed class ConfigurationSnippetParserTests
         PluginConfigurationObjectType.CHAT_TEMPLATE,
         PluginConfigurationObjectType.DATA_SOURCE,
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY,
+        PluginConfigurationObjectType.GLOSSARY,
     ];
 
     [TestCaseSource(nameof(EXPORTABLE_TYPES))]
@@ -248,6 +251,22 @@ public sealed class ConfigurationSnippetParserTests
             PreselectedProvider = Guid.NewGuid().ToString(),
             HidePolicyDefinition = true,
         }.ExportAsConfigurationSection(),
+
+        PluginConfigurationObjectType.GLOSSARY => new Glossary
+        {
+            Num = 1,
+            Id = Guid.NewGuid().ToString(),
+            Name = QUOTED_TEXT,
+            Type = GlossaryType.TRANSLATION,
+            Description = MULTILINE_TEXT,
+            SourceLanguage = CommonLanguages.DE_DE,
+            TargetLanguage = CommonLanguages.OTHER,
+            CustomTargetLanguage = "Klingon",
+        }.ExportAsConfigurationSection(
+        [
+            new GlossaryEntry("Arbeitszeit", QUOTED_TEXT, ["Arbeitszeiten", "Arbeits-Zeit"], MULTILINE_TEXT),
+            new GlossaryEntry("Urlaub", "vacation"),
+        ]),
 
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "This test knows no export for this type."),
     };

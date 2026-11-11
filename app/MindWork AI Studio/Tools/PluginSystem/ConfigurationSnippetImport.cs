@@ -54,6 +54,17 @@ public static class ConfigurationSnippetImport
         // and checked here, without touching a share:
         //
         var attachmentPaths = type is PluginConfigurationObjectType.CHAT_TEMPLATE ? TakeAttachmentPaths(table) : [];
+
+        //
+        // A glossary may take its entries from a file of the configuration plugin it came from. That
+        // file is not on this computer, and a pasted snippet has no folder to look in anyway:
+        //
+        if (type is PluginConfigurationObjectType.GLOSSARY && table.TryGetValue("File", out var fileValue) && fileValue.Type is not LuaValueType.Nil)
+        {
+            issue = TB("This glossary takes its entries from a file of a configuration plugin, which is not on this computer. Only glossaries which list their entries can be imported.");
+            return false;
+        }
+
         if (!PluginConfigurationObjectDescriptors.Get(type).TryParseSnippet(table, out var configObject))
         {
             issue = DescribeInvalidSnippet(type, table);
@@ -110,6 +121,17 @@ public static class ConfigurationSnippetImport
 
             case Profile profile:
                 result = new(MakeLocal(profile), string.Empty, hints, []);
+                return true;
+
+            //
+            // The entries travel along with the glossary as its PluginSource, which the settings never
+            // store; whoever adds the glossary saves them in the GlossaryStore:
+            //
+            case Glossary glossary:
+                if (glossary.PluginSource is not { Entries.Count: > 0 })
+                    hints.Add(TB("The glossary contains no entries."));
+
+                result = new(MakeLocal(glossary), string.Empty, hints, []);
                 return true;
 
             default:

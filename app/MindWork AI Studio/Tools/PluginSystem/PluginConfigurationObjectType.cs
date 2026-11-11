@@ -12,4 +12,5 @@ public enum PluginConfigurationObjectType
     EMBEDDING_PROVIDER,
     TRANSCRIPTION_PROVIDER,
     DOCUMENT_ANALYSIS_POLICY,
+    GLOSSARY,
 }

@@ -4650,11 +4650,26 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T53
 -- Please select a target language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1173859091"] = "Please select a target language."
 
+-- Your Glossaries
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1237246066"] = "Your Glossaries"
+
 -- Your input
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1249704194"] = "Your input"
 
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T137304886"] = "Please provide a text as input. You might copy the desired text from a document or a website."
+
+-- {0} (reference)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1495175485"] = "{0} (reference)"
+
+-- No glossary suits this target language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1513881501"] = "No glossary suits this target language."
+
+-- You can choose several glossaries; the translation follows all of them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1958158876"] = "You can choose several glossaries; the translation follows all of them."
+
+-- You have no glossaries yet. Use 'Manage glossaries' to add one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1994520029"] = "You have no glossaries yet. Use 'Manage glossaries' to add one."
 
 -- Translate
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2028202101"] = "Translate"
@@ -4664,6 +4679,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T23782
 
 -- Translate the following text to {0}:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2578812023"] = "Translate the following text to {0}:"
+
+-- Manage glossaries
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2714695686"] = "Manage glossaries"
+
+-- (Optional) Which glossaries should the translation follow?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T319204810"] = "(Optional) Which glossaries should the translation follow?"
 
 -- Translate text from one language to another.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3230457846"] = "Translate text from one language to another."
@@ -5970,6 +5991,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1981169629"] = "Keys with w
 -- Tools which AI Studio downloaded for this OS, such as Pandoc. On another computer, AI Studio downloads them again.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1992121437"] = "Tools which AI Studio downloaded for this OS, such as Pandoc. On another computer, AI Studio downloads them again."
 
+-- The entries of your glossaries.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2027910930"] = "The entries of your glossaries."
+
 -- What a backup can leave out
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2120934651"] = "What a backup can leave out"
 
@@ -6560,6 +6584,108 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNHELP::T967949655"] = "Include 
 
 -- Pattern help and examples
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1369669520"] = "Pattern help and examples"
+
+-- AI Studio could not read the entries of this glossary.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1173179019"] = "AI Studio could not read the entries of this glossary."
+
+-- Import Glossary Configuration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1249864150"] = "Import Glossary Configuration"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1469573738"] = "Delete"
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1582017048"] = "View"
+
+-- Delete Glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T1913598146"] = "Delete Glossary"
+
+-- Languages
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T207826488"] = "Languages"
+
+-- Add Glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T2091244660"] = "Add Glossary"
+
+-- For experts: paste the configuration of a glossary which somebody exported from AI Studio, e.g. a colleague or your IT department.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T2581434064"] = "For experts: paste the configuration of a glossary which somebody exported from AI Studio, e.g. a colleague or your IT department."
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T266367750"] = "Name"
+
+-- Reference
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T2915615546"] = "Reference"
+
+-- Edit Glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3060106679"] = "Edit Glossary"
+
+-- Unreadable Glossary Entries
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3099041474"] = "Unreadable Glossary Entries"
+
+-- AI Studio could not read the entries of the glossary '{0}'. When you continue, the glossary starts without entries, and saving it replaces the stored entries for good. Do you want to continue?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3169818286"] = "AI Studio could not read the entries of the glossary '{0}'. When you continue, the glossary starts without entries, and saving it replaces the stored entries for good. Do you want to continue?"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3267849393"] = "Edit"
+
+-- No glossaries configured yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3452917058"] = "No glossaries configured yet."
+
+-- Type
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3512062061"] = "Type"
+
+-- Entries
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3702301331"] = "Entries"
+
+-- Glossaries hold terms together with a fixed translation or an explanation. A translation glossary makes the AI always translate its terms the same way, for example the names of your departments. A reference glossary explains terms the AI cannot know, such as the technical terms of your organization or invented words.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3725628047"] = "Glossaries hold terms together with a fixed translation or an explanation. A translation glossary makes the AI always translate its terms the same way, for example the names of your departments. A reference glossary explains terms the AI cannot know, such as the technical terms of your organization or invented words."
+
+-- View Glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3743333320"] = "View Glossary"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3865031940"] = "Actions"
+
+-- Are you sure you want to delete the glossary '{0}' with all of its entries?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T3941975424"] = "Are you sure you want to delete the glossary '{0}' with all of its entries?"
+
+-- This glossary is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T4236124819"] = "This glossary is managed by your organization."
+
+-- Translation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T613888204"] = "Translation"
+
+-- Import Glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYMANAGEMENT::T99577620"] = "Import Glossary"
+
+-- {0} (reference)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1495175485"] = "{0} (reference)"
+
+-- None of the chosen glossaries contains a term of your text.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T1804170386"] = "None of the chosen glossaries contains a term of your text."
+
+-- Glossary entries for this translation: {0} from 1 glossary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2015588230"] = "Glossary entries for this translation: {0} from 1 glossary"
+
+-- Explanation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T2840582448"] = "Explanation"
+
+-- Note
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T339788125"] = "Note"
+
+-- Other forms
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T374506898"] = "Other forms"
+
+-- Glossary entries for this translation: {0} from {1} glossaries
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T424767458"] = "Glossary entries for this translation: {0} from {1} glossaries"
+
+-- Term
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T586836727"] = "Term"
+
+-- Translation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T613888204"] = "Translation"
+
+-- The glossary '{0}' could not be loaded, so the translation did not follow it. Try again, or check the glossary under 'Manage glossaries'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::GLOSSARYUSAGESUMMARY::T815876924"] = "The glossary '{0}' could not be loaded, so the translation did not follow it. Try again, or check the glossary under 'Manage glossaries'."
 
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
@@ -7493,6 +7619,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T80509
 
 -- Example text to embed
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T816748904"] = "Example text to embed"
+
+-- Configure Glossaries
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELGLOSSARIES::T3606388421"] = "Configure Glossaries"
 
 -- Cannot export the encrypted API key: No enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T1832230847"] = "Cannot export the encrypted API key: No enterprise encryption secret is configured."
@@ -8628,6 +8757,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2156367745
 -- {0} profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2342765572"] = "{0} profile"
 
+-- {0} glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2396010207"] = "{0} glossary"
+
 -- {0} introduction on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2426110502"] = "{0} introduction on the welcome page"
 
@@ -8636,6 +8768,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2438407498
 
 -- Yes, delete it
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2466176832"] = "Yes, delete it"
+
+-- {0} glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2509714007"] = "{0} glossaries"
 
 -- This also removes everything the configuration plugin had set up:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T264970454"] = "This also removes everything the configuration plugin had set up:"
@@ -9978,6 +10113,222 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T1173984541"] = "Embe
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T3448155331"] = "Close"
 
+-- Add Entry
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1004266576"] = "Add Entry"
+
+-- Terms with an explanation, such as technical terms of your organization. The AI uses them to understand your texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1141907449"] = "Terms with an explanation, such as technical terms of your organization. The AI uses them to understand your texts."
+
+-- Language of the translations
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1278330309"] = "Language of the translations"
+
+-- Please select a language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1341486352"] = "Please select a language"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1469573738"] = "Delete"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1847791252"] = "Update"
+
+-- {0}-{1} of {2}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T190824384"] = "{0}-{1} of {2}"
+
+-- Reference glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1933960658"] = "Reference glossary"
+
+-- {0} terms appear more than once. The AI gets all of their entries, which may contradict each other.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T1963102348"] = "{0} terms appear more than once. The AI gets all of their entries, which may contradict each other."
+
+-- Your organization provides this glossary, so you can view its entries but not change them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2040342261"] = "Your organization provides this glossary, so you can view its entries but not change them."
+
+-- e.g. plural; other spelling
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2521431984"] = "e.g. plural; other spelling"
+
+-- Custom language of the translations
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2565751330"] = "Custom language of the translations"
+
+-- Translation glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2578606380"] = "Translation glossary"
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2646845972"] = "Add"
+
+-- Terms with their fixed translation. The AI always translates these terms the same way.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T26727658"] = "Terms with their fixed translation. The AI always translates these terms the same way."
+
+-- Explanation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T2840582448"] = "Explanation"
+
+-- Enter the translation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T290872409"] = "Enter the translation"
+
+-- The glossary name must be unique; the chosen name is already in use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3164669679"] = "The glossary name must be unique; the chosen name is already in use."
+
+-- Glossary Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3167853804"] = "Glossary Name"
+
+-- Please enter a glossary name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3280779301"] = "Please enter a glossary name."
+
+-- Enter a term
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3324647716"] = "Enter a term"
+
+-- Note
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T339788125"] = "Note"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3448155331"] = "Close"
+
+-- Source term
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3510283274"] = "Source term"
+
+-- Language of the terms
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3511223348"] = "Language of the terms"
+
+-- Enter the explanation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T366497705"] = "Enter the explanation"
+
+-- Entries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3702301331"] = "Entries"
+
+-- Other forms
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T374506898"] = "Other forms"
+
+-- Other forms are further spellings or forms which count as the same term, such as a plural; separate them with semicolons. A note is a remark which the AI reads along with the entry, for example, when the entry applies.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3774806049"] = "Other forms are further spellings or forms which count as the same term, such as a plural; separate them with semicolons. A note is a remark which the AI reads along with the entry, for example, when the entry applies."
+
+-- No entries yet.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3828706890"] = "No entries yet."
+
+-- Please enter the name of the language.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3901960177"] = "Please enter the name of the language."
+
+-- Click into a cell to change it. Add entries one by one or import them from a spreadsheet or a CSV file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3929776243"] = "Click into a cell to change it. Add entries one by one or import them from a spreadsheet or a CSV file."
+
+-- Optional remark
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T4026958627"] = "Optional remark"
+
+-- Preselect in the translation assistant when you translate into its target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T414477771"] = "Preselect in the translation assistant when you translate into its target language"
+
+-- The glossary name must not exceed {0} characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T439557359"] = "The glossary name must not exceed {0} characters."
+
+-- Preselect in the translation assistant
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T44665345"] = "Preselect in the translation assistant"
+
+-- Custom language of the terms
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T467022713"] = "Custom language of the terms"
+
+-- What the glossary is about and when it applies. The AI relies on this description to tell your glossaries apart, e.g. when a term means something different in another glossary, so describe the subject and the purpose precisely.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T485793022"] = "What the glossary is about and when it applies. The AI relies on this description to tell your glossaries apart, e.g. when a term means something different in another glossary, so describe the subject and the purpose precisely."
+
+-- Please select a language.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T493326490"] = "Please select a language."
+
+-- Import from File
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T495151834"] = "Import from File"
+
+-- Entries per page:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T534977259"] = "Entries per page:"
+
+-- Term
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T586836727"] = "Term"
+
+-- Translation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T613888204"] = "Translation"
+
+-- Search entries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T699019113"] = "Search entries"
+
+-- {0} entries lack a term or a value. Please complete or delete them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T717961447"] = "{0} entries lack a term or a value. Please complete or delete them."
+
+-- Import Glossary Entries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T776937348"] = "Import Glossary Entries"
+
+-- Show other forms and notes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T797339941"] = "Show other forms and notes"
+
+-- Description (optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T837228388"] = "Description (optional)"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T900713019"] = "Cancel"
+
+-- The import adds {0} entries, replaces {1}, and removes {2}. It leaves out {3} rows without a term or a value.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T1434635876"] = "The import adds {0} entries, replaces {1}, and removes {2}. It leaves out {3} rows without a term or a value."
+
+-- Import
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T1463683828"] = "Import"
+
+-- Add the entries; replace entries with the same term
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T1621412551"] = "Add the entries; replace entries with the same term"
+
+-- Replace all entries of the glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T1747022526"] = "Replace all entries of the glossary"
+
+-- Column of the translations or explanations
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T1820052142"] = "Column of the translations or explanations"
+
+-- Select the file to import
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T2142580610"] = "Select the file to import"
+
+-- File to import
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T2376496261"] = "File to import"
+
+-- Choose a spreadsheet or a CSV file. Its first row names the columns, and every further row becomes one entry. Afterward, choose which column holds the terms and which one their translations or explanations.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T2614974080"] = "Choose a spreadsheet or a CSV file. Its first row names the columns, and every further row becomes one entry. Afterward, choose which column holds the terms and which one their translations or explanations."
+
+-- Column of notes (optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T2903668384"] = "Column of notes (optional)"
+
+-- The file does not exist or is not reachable right now.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T3131456168"] = "The file does not exist or is not reachable right now."
+
+-- Further spellings or forms of the terms, such as plurals, separated by semicolons.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T3332384649"] = "Further spellings or forms of the terms, such as plurals, separated by semicolons."
+
+-- Column of the terms
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T3420766256"] = "Column of the terms"
+
+-- AI Studio could not read the file. Please choose a spreadsheet or a CSV file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T3527007662"] = "AI Studio could not read the file. Please choose a spreadsheet or a CSV file."
+
+-- Table
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T3607948159"] = "Table"
+
+-- The file holds no usable table. Its first row must name at least two columns, and at least one further row must hold an entry.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T3710586822"] = "The file holds no usable table. Its first row must name at least two columns, and at least one further row must hold an entry."
+
+-- Table {0}: {1}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T3762691218"] = "Table {0}: {1}"
+
+-- Remarks which the AI reads along with the entries.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T4163841121"] = "Remarks which the AI reads along with the entries."
+
+-- The terms and their translations or explanations must come from different columns.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T454390650"] = "The terms and their translations or explanations must come from different columns."
+
+-- Column of other forms (optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T764730892"] = "Column of other forms (optional)"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T810547195"] = "None"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYIMPORTDIALOG::T900713019"] = "Cancel"
+
+-- Your Glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYMANAGEMENTDIALOG::T1237246066"] = "Your Glossaries"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYMANAGEMENTDIALOG::T3448155331"] = "Close"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::INFORMATIONDIALOG::T3448155331"] = "Close"
 
@@ -10113,11 +10464,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2163853103"] = "You are
 -- {0} profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2342765572"] = "{0} profile"
 
+-- {0} glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2396010207"] = "{0} glossary"
+
 -- {0} introduction on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2426110502"] = "{0} introduction on the welcome page"
 
 -- Support contact
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2434966596"] = "Support contact"
+
+-- {0} glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2509714007"] = "{0} glossaries"
 
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T266367750"] = "Name"
@@ -15879,6 +16236,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 -- The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T995107927"] = "The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used."
 
+-- This glossary takes its entries from a file of a configuration plugin, which is not on this computer. Only glossaries which list their entries can be imported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T1027423715"] = "This glossary takes its entries from a file of a configuration plugin, which is not on this computer. Only glossaries which list their entries can be imported."
+
+-- The glossary contains no entries.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T1791473798"] = "The glossary contains no entries."
+
 -- The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T186946778"] = "The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured."
 
@@ -16139,6 +16502,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T1148682011
 
 -- The CONFIG table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3331620576"] = "The CONFIG table does not exist or is not a valid table."
+
+-- Glossary
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T1350120821"] = "Glossary"
 
 -- Document Analysis Policy
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T16338172"] = "Document Analysis Policy"
@@ -18221,6 +18587,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- Searching your company's wiki requires a High-confidence provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T882060522"] = "Searching your company's wiki requires a High-confidence provider."
+
+-- Glossary Lookup
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::GLOSSARIES::GLOSSARYLOOKUPTOOL::T179607545"] = "Glossary Lookup"
+
+-- Look up the fixed translations and explanations of your glossaries.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::GLOSSARIES::GLOSSARYLOOKUPTOOL::T4129457151"] = "Look up the fixed translations and explanations of your glossaries."
 
 -- No mailbox can be counted in this chat right now.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::COUNTMAILSTOOL::T117512288"] = "No mailbox can be counted in this chat right now."

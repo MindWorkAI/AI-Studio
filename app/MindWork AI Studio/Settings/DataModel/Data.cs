@@ -72,6 +72,11 @@ public sealed class Data
     public List<ChatTemplate> ChatTemplates { get; set; } = [];
 
     /// <summary>
+    /// List of configured glossaries. Their entries live in files of their own, cf. GlossaryStore.
+    /// </summary>
+    public List<Glossary> Glossaries { get; set; } = [];
+
+    /// <summary>
     /// List of enabled plugins.
     /// </summary>
     public List<Guid> EnabledPlugins { get; set; } = [];
@@ -160,6 +165,11 @@ public sealed class Data
     /// The next document analysis policy number to use.
     /// </summary>
     public uint NextDocumentAnalysisPolicyNum { get; set; } = 1;
+
+    /// <summary>
+    /// The next glossary number to use.
+    /// </summary>
+    public uint NextGlossaryNum { get; set; } = 1;
 
     public DataApp App { get; set; } = new(x => x.App);
 

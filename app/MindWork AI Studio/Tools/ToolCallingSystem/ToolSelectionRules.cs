@@ -14,6 +14,7 @@ public static class ToolSelectionRules
     public const string SEARCH_MAILS_TOOL_ID = "search_mails";
     public const string READ_MAIL_TOOL_ID = "read_mail";
     public const string COUNT_MAILS_TOOL_ID = "count_mails";
+    public const string GLOSSARY_LOOKUP_TOOL_ID = "glossary_lookup";
     public const string MAILBOXES_COLLECTION_ID = "mailboxes";
     public const string CALCULATE_TOOL_ID = "calculate";
     public const string COMPUTE_SYMBOLICALLY_TOOL_ID = "compute_symbolically";

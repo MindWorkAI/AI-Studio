@@ -9,6 +9,7 @@ using AIStudio.Settings.DataModel.PreviousModels;
 using AIStudio.Tools;
 using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.DataBackup;
+using AIStudio.Tools.Glossaries;
 
 namespace AIStudio.Tests.Serialization;
 
@@ -39,6 +40,9 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(DataV1V3), SettingsManager.JSON_OPTIONS));
         yield return Case(new(typeof(DataV4), SettingsManager.JSON_OPTIONS));
         yield return Case(new(typeof(DataV5), SettingsManager.JSON_OPTIONS));
+
+        // The entries stored separately from the glossary settings:
+        yield return Case(new(typeof(GlossaryStore.GlossaryFile), GlossaryStore.JSON_OPTIONS));
 
         //
         // The values of managed settings, which get written and read on their own, as the type of their
