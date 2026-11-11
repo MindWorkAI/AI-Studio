@@ -101,7 +101,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
 
     protected override string SystemPrompt(string additionalData) => string.IsNullOrWhiteSpace(additionalData)
         ? this.JobDescription
-        : $"{this.JobDescription}{Environment.NewLine}{Environment.NewLine}{additionalData}";
+        : $"{this.JobDescription}\n\n{additionalData}";
 
     public override AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
 
@@ -343,11 +343,11 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             var definition = toolRegistry.GetDefinition(toolId);
             if (definition is null)
             {
-                builder.AppendLine($"- {toolId}: unknown to this installation");
+                builder.AppendLineLF($"- {toolId}: unknown to this installation");
                 continue;
             }
 
-            builder.AppendLine($"- {toolId}: {definition.Function.DescriptionForLLM}");
+            builder.AppendLineLF($"- {toolId}: {definition.Function.DescriptionForLLM}");
         }
 
         return builder.ToString().TrimEnd();
@@ -368,11 +368,11 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         foreach (var luaFile in luaFiles.OrderBy(file => file.Key, StringComparer.Ordinal))
         {
             if (builder.Length > 0)
-                builder.AppendLine().AppendLine();
+                builder.AppendLineLF().AppendLineLF();
 
             builder.Append("-- File: ");
-            builder.AppendLine(luaFile.Key);
-            builder.AppendLine(luaFile.Value);
+            builder.AppendLineLF(luaFile.Key);
+            builder.AppendLineLF(luaFile.Value);
         }
 
         return builder.ToString().TrimEnd();

@@ -153,7 +153,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private string GetExternalHttpCustomRootCertificateAllowedHostsText()
     {
-        return string.Join(Environment.NewLine, this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts.Order(StringComparer.OrdinalIgnoreCase));
+        return string.Join('\n',this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts.Order(StringComparer.OrdinalIgnoreCase));
     }
 
     private bool AreExternalHttpCustomRootCertificateDetailsDisabled()

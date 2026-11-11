@@ -188,13 +188,13 @@ public partial class VisualBriefingAssistant
             return;
 
         if (outcome.Failures.Count > 0)
-            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"))));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, string.Join('\n',outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"))));
 
         else if (outcome.Status is MediaImportStatus.FAILED)
             await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, T("The media file could not be transcribed.")));
 
         if (outcome.Warnings.Count > 0)
-            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"))));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, string.Join('\n',outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"))));
 
         if (outcome.Status is MediaImportStatus.CANCELLED)
             await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, T("The media transcription was canceled.")));

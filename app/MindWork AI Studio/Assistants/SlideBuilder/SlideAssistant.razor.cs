@@ -542,7 +542,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if (prompts.Count == 0)
             return "            - Do not tailor the text to a specific audience.";
 
-        return string.Join(Environment.NewLine, prompts.Select(prompt => $"            - {prompt}"));
+        return string.Join('\n',prompts.Select(prompt => $"            - {prompt}"));
     }
     
     private string GetDocumentTaskDescription()
@@ -577,7 +577,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
         if (documents.Count > 0)
         {
-            sb.AppendLine("""
+            sb.AppendLineLF("""
                           # DOCUMENTS:
 
                           """);
@@ -614,7 +614,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             }
 
             var fileContent = extraction.Content;
-            sb.AppendLine($"""
+            sb.AppendLineLF($"""
                            
                            ## DOCUMENT {numDocuments}:
                            File path: {document.FilePath}
@@ -634,7 +634,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         {
             if (documents.Count == 0)
             {
-                sb.AppendLine($"""
+                sb.AppendLineLF($"""
 
                                There are {numImages} image file(s) attached as source material.
                                Please consider them as documents as well and use them to
@@ -644,7 +644,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             }
             else
             {
-                sb.AppendLine($"""
+                sb.AppendLineLF($"""
 
                                Additionally, there are {numImages} image file(s) attached as source material.
                                Please consider them as documents as well and use them to

@@ -256,9 +256,9 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
             return string.Empty;
         
         var sb = new StringBuilder();
-        sb.AppendLine("I want to amplify the following points:");
+        sb.AppendLineLF("I want to amplify the following points:");
         foreach (var focus in this.selectedFoci)
-            sb.AppendLine($"- {focus}");
+            sb.AppendLineLF($"- {focus}");
         
         return sb.ToString();
     }

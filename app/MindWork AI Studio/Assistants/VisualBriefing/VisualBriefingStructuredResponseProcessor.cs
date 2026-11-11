@@ -78,7 +78,7 @@ internal static partial class VisualBriefingStructuredResponseProcessor
         var root = GetContract(typeof(T));
         var shapes = EnumerateObjectShapes(root);
         var builder = new StringBuilder();
-        builder.AppendLine("Strict JSON grammar generated from the active response contract:");
+        builder.AppendLineLF("Strict JSON grammar generated from the active response contract:");
         foreach (var shape in shapes)
         {
             builder.Append(shape.Name);
@@ -98,7 +98,7 @@ internal static partial class VisualBriefingStructuredResponseProcessor
                 if (property.AllowsNull)
                     builder.Append(" | null");
             }
-            builder.AppendLine("}");
+            builder.AppendLineLF("}");
         }
         builder.Append(
             "Every object may contain only the properties shown above. Required properties must be present even when their value is null.");

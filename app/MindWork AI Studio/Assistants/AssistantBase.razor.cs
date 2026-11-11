@@ -1090,7 +1090,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         if (outcome.Failures.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            var message = string.Join('\n',outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
             await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
         else if (outcome.Status is MediaImportStatus.FAILED)
@@ -1100,7 +1100,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         if (outcome.Warnings.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            var message = string.Join('\n',outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
             await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
 

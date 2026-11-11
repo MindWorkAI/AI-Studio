@@ -357,7 +357,7 @@ public partial class SlideAssistant
         if (this.SourceImagesOfRequest().Count > 0)
             rules.Add("    - Images attached as source material are for reading only. Never place them on a slide.");
 
-        return string.Join(Environment.NewLine, rules);
+        return string.Join('\n',rules);
     }
 
     /// <summary>
@@ -376,7 +376,7 @@ public partial class SlideAssistant
         if (pictures.Count == 0)
             return string.Empty;
 
-        var list = string.Join(Environment.NewLine, pictures.Select((picture, index) => $"- Picture {index + 1}: {picture.FileName}"));
+        var list = string.Join('\n',pictures.Select((picture, index) => $"- Picture {index + 1}: {picture.FileName}"));
         var seeing = modelSeesPictures
             ? "The images attached to this request start with these pictures, in this order."
             : "You cannot see these pictures. Place them by what their names say.";
@@ -516,7 +516,7 @@ public partial class SlideAssistant
 
     private static string RepairPromptOf(IReadOnlyList<string> issues)
     {
-        var listedIssues = string.Join(Environment.NewLine, issues.Take(MAX_REPORTED_ISSUES).Select(issue => $"- {issue}"));
+        var listedIssues = string.Join('\n',issues.Take(MAX_REPORTED_ISSUES).Select(issue => $"- {issue}"));
         return $"""
                 Your JSON does not fit the layouts yet:
                 {listedIssues}
