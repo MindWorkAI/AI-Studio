@@ -5375,16 +5375,16 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T373499115"] = "Your data sources 
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T713722424"] = "AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it."
 
 -- The local image file does not exist. Skipping the image.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T255679918"] = "The local image file does not exist. Skipping the image."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::IMAGESOURCEEXTENSIONS::T255679918"] = "The local image file does not exist. Skipping the image."
 
 -- Failed to download the image from the URL. Skipping the image.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T2996654916"] = "Failed to download the image from the URL. Skipping the image."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::IMAGESOURCEEXTENSIONS::T2996654916"] = "Failed to download the image from the URL. Skipping the image."
 
 -- The local image file is too large (>10 MB). Skipping the image.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T3219823625"] = "The local image file is too large (>10 MB). Skipping the image."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::IMAGESOURCEEXTENSIONS::T3219823625"] = "The local image file is too large (>10 MB). Skipping the image."
 
 -- The image at the URL is too large (>10 MB). Skipping the image.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "The image at the URL is too large (>10 MB). Skipping the image."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::IMAGESOURCEEXTENSIONS::T349928509"] = "The image at the URL is too large (>10 MB). Skipping the image."
 
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ADMINEXPORTBUTTON::T975426229"] = "Export configuration"

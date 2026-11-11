@@ -12,7 +12,7 @@ namespace AIStudio.Tools.RAG;
 /// so it is not shown as if it had.<br/><br/>
 /// A passage belongs to the source it is listed under, which is why it is only made for a context
 /// with a source, see SourceUrl. A context which names nothing to open, e.g., by a path which only
-/// its ERI server knows, gets a source named as text, see IRetrievalContextExtensions.ToSources.<br/><br/>
+/// its ERI server knows, gets a source named as text, see RetrievalContextExtensions.ToSources.<br/><br/>
 /// Plain stored values only: a computed property would be written into every chat file as well.
 /// </remarks>
 public sealed record SourcePassage

@@ -1,6 +1,6 @@
 namespace AIStudio.Chat;
 
-public static class IContentExtensions
+public static class ContentExtensions
 {
     /// <param name="content">The content of a message in the chat.</param>
     extension(IContent content)

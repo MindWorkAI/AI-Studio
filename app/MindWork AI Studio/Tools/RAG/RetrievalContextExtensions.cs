@@ -4,7 +4,7 @@ using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.RAG;
 
-public static class IRetrievalContextExtensions
+public static class RetrievalContextExtensions
 {
     private static readonly ILogger<IRetrievalContext> LOGGER = Program.LOGGER_FACTORY.CreateLogger<IRetrievalContext>();
 

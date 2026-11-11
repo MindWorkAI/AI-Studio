@@ -120,8 +120,8 @@ public sealed class RetrievalContextPreparationTests
 
         var expected = new StringBuilder();
         expected.AppendLine("# Retrieval context");
-        IRetrievalContextExtensions.AppendContextDescription(expected, image);
-        IRetrievalContextExtensions.AppendImageMatch(expected);
+        RetrievalContextExtensions.AppendContextDescription(expected, image);
+        RetrievalContextExtensions.AppendImageMatch(expected);
         expected.AppendLine();
 
         using (Assert.EnterMultipleScope())

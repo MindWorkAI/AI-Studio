@@ -22,37 +22,37 @@ public sealed class RetrievalContextShorteningTests
     {
         const string TEXT = "first line\nsecond line";
 
-        Assert.That(IRetrievalContextExtensions.CutAtLineEnd(TEXT, TEXT.Length), Is.SameAs(TEXT));
+        Assert.That(RetrievalContextExtensions.CutAtLineEnd(TEXT, TEXT.Length), Is.SameAs(TEXT));
     }
 
     [Test]
     public void ACutEndsAtTheLastLineEndWhichFits()
     {
-        Assert.That(IRetrievalContextExtensions.CutAtLineEnd("first\nsecond\nthird", 15), Is.EqualTo("first\nsecond"));
+        Assert.That(RetrievalContextExtensions.CutAtLineEnd("first\nsecond\nthird", 15), Is.EqualTo("first\nsecond"));
     }
 
     [Test]
     public void ACutKeepsNoHalfOfAWindowsLineEnd()
     {
-        Assert.That(IRetrievalContextExtensions.CutAtLineEnd("first\r\nsecond\r\nthird", 17), Is.EqualTo("first\r\nsecond"));
+        Assert.That(RetrievalContextExtensions.CutAtLineEnd("first\r\nsecond\r\nthird", 17), Is.EqualTo("first\r\nsecond"));
     }
 
     [Test]
     public void ACutGivesUpAtMostHalfOfWhatFitsForALineEnd()
     {
-        Assert.That(IRetrievalContextExtensions.CutAtLineEnd("a\nbcdefghijkl", 10), Is.EqualTo("a\nbcdefghi"), "With its only line end right at the start, the text would lose nearly everything.");
+        Assert.That(RetrievalContextExtensions.CutAtLineEnd("a\nbcdefghijkl", 10), Is.EqualTo("a\nbcdefghi"), "With its only line end right at the start, the text would lose nearly everything.");
     }
 
     [Test]
     public void ACutNeverSplitsASurrogatePair()
     {
-        Assert.That(IRetrievalContextExtensions.CutAtLineEnd("ab😀cd", 3), Is.EqualTo("ab"));
+        Assert.That(RetrievalContextExtensions.CutAtLineEnd("ab😀cd", 3), Is.EqualTo("ab"));
     }
 
     [Test]
     public void NothingIsLeftOfATextWithoutRoom()
     {
-        Assert.That(IRetrievalContextExtensions.CutAtLineEnd("text", 0), Is.Empty);
+        Assert.That(RetrievalContextExtensions.CutAtLineEnd("text", 0), Is.Empty);
     }
 
     [Test]

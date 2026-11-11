@@ -7,7 +7,7 @@ namespace AIStudio.Tools.RAG;
 /// ready to be numbered.
 /// </summary>
 /// <remarks>
-/// Made by IRetrievalContextExtensions.PrepareForModelAsync. Which number a context gets depends on
+/// Made by RetrievalContextExtensions.PrepareForModelAsync. Which number a context gets depends on
 /// which contexts the caller hands on in the end, so the header is written only then, see
 /// ToMarkdown. The app writes it itself, which is why it needs no filter.
 /// </remarks>
