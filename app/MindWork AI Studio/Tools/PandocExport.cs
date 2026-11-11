@@ -137,7 +137,7 @@ public static class PandocExport
         if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors))
         {
             LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.WARNING, TB("Only text messages can be exported.")));
             return false;
         }
 
@@ -165,11 +165,11 @@ public static class PandocExport
         feedback.ShowRunning(response.SaveFilePath);
         if (!await ConvertAsync(rustService, markdownText, response.SaveFilePath, format))
         {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, TB("The export failed.")));
             return false;
         }
 
-        await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, TB("The export succeeded."), response.SaveFilePath, true);
+        await feedback.SucceededAsync(AppIcons.SUCCESS, TB("The export succeeded."), response.SaveFilePath, true);
         return true;
     }
 }

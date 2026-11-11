@@ -93,7 +93,7 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
         var route = destination.GetData().Route;
         if (destination.HasSingleSessionSlot && assistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
         {
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Apps, TB("This assistant is already running. AI Studio opens the running session instead.")));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.ASSISTANTS, TB("This assistant is already running. AI Studio opens the running session instead.")));
             navigationManager.NavigateTo(route);
             return;
         }

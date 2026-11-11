@@ -12,4 +12,4 @@ namespace AIStudio.Tools.ToolCallingSystem;
 /// <param name="Label">What the user reads on the button.</param>
 /// <param name="Url">Where the button leads. It opens in the browser, not in AI Studio.</param>
 /// <param name="Icon">The icon shown before the label.</param>
-public sealed record ToolSettingsGroupLink(string Label, string Url, string Icon = Icons.Material.Filled.OpenInBrowser);
+public sealed record ToolSettingsGroupLink(string Label, string Url, string Icon = AppIcons.OPEN_EXTERNAL);

@@ -258,7 +258,7 @@ public partial class BflMaterials : MSGComponentBase
     {
         if (this.MaterialService.UsableTranscriptionProvider() is not { } provider)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.MaterialService.NoTranscriptionProviderMessage));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.MaterialService.NoTranscriptionProviderMessage));
             return;
         }
 
@@ -291,10 +291,10 @@ public partial class BflMaterials : MSGComponentBase
     /// <param name="entry">The material.</param>
     private static string Icon(BflMaterialEntry entry) => entry.Material?.Kind switch
     {
-        null => Icons.Material.Filled.ErrorOutline,
-        BflMaterialKind.RECORDING => Icons.Material.Filled.Mic,
-        BflMaterialKind.IMAGE => Icons.Material.Filled.Image,
-        _ => Icons.Material.Filled.Description,
+        null => AppIcons.FILE_NOT_FOUND,
+        BflMaterialKind.RECORDING => AppIcons.MICROPHONE,
+        BflMaterialKind.IMAGE => AppIcons.IMAGE,
+        _ => AppIcons.DOCUMENT,
     };
 
     /// <summary>

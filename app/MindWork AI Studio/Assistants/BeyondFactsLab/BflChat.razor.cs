@@ -341,7 +341,7 @@ public partial class BflChat : MSGComponentBase
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             this.Logger.LogError(exception, "Could not delete the chat '{Location}' of the BeyondFacts Lab.", this.Location.Key);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.DeleteForever, TA("AI Studio could not delete this conversation. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.DELETE, TA("AI Studio could not delete this conversation. Please try again.")));
         }
     }
 }

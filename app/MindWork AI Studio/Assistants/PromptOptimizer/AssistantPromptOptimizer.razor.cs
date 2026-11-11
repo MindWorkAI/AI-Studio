@@ -105,7 +105,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         {
             Text = T("Improve further"),
             Tooltip = T("Moves the optimized prompt into the prompt field so you can optimize it again."),
-            Icon = Icons.Material.Filled.Input,
+            Icon = AppIcons.USE_AS_INPUT,
             Color = Color.Default,
             AsyncAction = this.UseOptimizedPromptAsInput,
             DisabledActionParam = () => !this.CanImproveFurther,
@@ -626,7 +626,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.currentCustomPromptGuidePath = filePath;
 
         if (replacedPrevious)
-            await this.MessageBus.SendInfo(new(Icons.Material.Filled.SwapHoriz, T("Replaced the previously selected custom prompt guide file.")));
+            await this.MessageBus.SendInfo(new(AppIcons.REPLACE, T("Replaced the previously selected custom prompt guide file.")));
     }
 
     private async Task LoadCustomPromptGuidelineContentAsync(FileAttachment fileAttachment)
@@ -634,7 +634,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         if (!fileAttachment.Exists)
         {
             this.customPromptingGuidelineContent = string.Empty;
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.FindInPage, T("The selected custom prompt guide file could not be found.")));
+            await this.MessageBus.SendWarning(new(AppIcons.FILE_NOT_FOUND, T("The selected custom prompt guide file could not be found.")));
             return;
         }
 
@@ -649,7 +649,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         catch
         {
             this.customPromptingGuidelineContent = string.Empty;
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Description, T("Failed to load custom prompt guide content.")));
+            await this.MessageBus.SendError(new(AppIcons.DOCUMENT, T("Failed to load custom prompt guide content.")));
         }
         finally
         {
@@ -663,7 +663,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         var promptingGuideline = await ReadPromptingGuidelineAsync();
         if (string.IsNullOrWhiteSpace(promptingGuideline))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.MenuBook, T("The prompting guideline file could not be loaded.")));
+            await this.MessageBus.SendWarning(new(AppIcons.PROMPT_GUIDE, T("The prompting guideline file could not be loaded.")));
             return;
         }
 

@@ -13254,6 +13254,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1378412877"] = "Sobald die Zeich
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "Diese Bibliothek wird verwendet, um PDF-Dateien zu lesen. Das ist zum Beispiel notwendig, um PDFs als Datenquelle für einen Chat zu nutzen."
 
+-- The icons of AI Studio come from Lucide, an open-source icon set. AI Studio ships them as a font, so showing them never sends a request to the internet. Lucide is licensed under ISC; the icons it took over from Feather remain under MIT.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1390097716"] = "Die Icons von AI Studio stammen aus Lucide, einer Open-Source-Sammlung von Icons. AI Studio liefert sie als Schriftart mit, daher wird beim Anzeigen keine Anfrage ins Internet gesendet. Lucide steht unter der ISC-Lizenz; die aus Feather übernommenen Icons stehen weiterhin unter der MIT-Lizenz."
+
 -- Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1402243995"] = "Updates werden von Ihrer Organisation verwaltet. Wenn Sie Fragen zur Aktualisierung von AI Studio haben, wenden Sie sich an Ihre IT-Abteilung."
 

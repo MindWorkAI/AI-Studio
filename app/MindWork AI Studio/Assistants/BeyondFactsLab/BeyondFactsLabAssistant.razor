@@ -10,16 +10,16 @@
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3 mr-3" StretchItems="StretchItems.Start">
             <MudText Typo="Typo.h3">@T("BeyondFacts Lab")</MudText>
             <MudSpacer/>
-            <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialogAsync"/>
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SETTINGS" OnClick="@this.OpenSettingsDialogAsync"/>
         </MudStack>
 
         <InnerScrolling>
             @* How to work with the lab opens by itself while there is no preparation yet. *@
             <MudExpansionPanels MultiExpansion="@true" Class="mb-6 mr-3">
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.School" HeaderText="@T("Working with the lab")" IsExpanded="@this.introductionExpanded" ExpandedChanged="@this.IntroductionExpandedChanged">
+                <ExpansionPanel HeaderIcon="@AppIcons.INTRODUCTION" HeaderText="@T("Working with the lab")" IsExpanded="@this.introductionExpanded" ExpandedChanged="@this.IntroductionExpandedChanged">
                     <BflIntroduction/>
                 </ExpansionPanel>
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.HelpOutline" HeaderText="@T("Is the lab right for my task?")">
+                <ExpansionPanel HeaderIcon="@AppIcons.HELP" HeaderText="@T("Is the lab right for my task?")">
                     <BflOnboarding/>
                 </ExpansionPanel>
             </MudExpansionPanels>
@@ -56,7 +56,7 @@
                 </MudList>
             }
 
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@this.CreateProjectAsync" Disabled="@this.isBusy" Class="mt-1">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.CreateProjectAsync" Disabled="@this.isBusy" Class="mt-1">
                 @T("New preparation")
             </MudButton>
 
@@ -76,7 +76,7 @@
                             <MudCopyClipboardButton TooltipMessage="@T("Copy preparation ID")" StringContent="@unavailableProject.ProjectId.ToString("D")"/>
                         </MudStack>
                         <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
-                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
+                            <MudButton Variant="Variant.Filled" StartIcon="@AppIcons.DELETE" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
                         </MudStack>
                     </MudStack>
                 </MudPaper>
@@ -102,8 +102,8 @@
                             <MudSwitch T="bool" Value="@(project.HappenedAtUtc is not null)" ValueChanged="@this.SetHappenedAsync" Disabled="@this.isBusy" Color="Color.Primary" Class="mr-2">
                                 @T("The event has taken place")
                             </MudSwitch>
-                            <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameProjectAsync" Disabled="@this.isBusy">@T("Rename")</MudButton>
-                            <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
+                            <MudButton StartIcon="@AppIcons.RENAME" OnClick="@this.RenameProjectAsync" Disabled="@this.isBusy">@T("Rename")</MudButton>
+                            <MudButton StartIcon="@AppIcons.DELETE" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
                         </MudStack>
                     </MudStack>
 

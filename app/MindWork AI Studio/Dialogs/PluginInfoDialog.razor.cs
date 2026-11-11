@@ -52,7 +52,7 @@ public partial class PluginInfoDialog : MSGComponentBase
 
     private string SourceLabel => this.IsSourceAMail ? this.T("Email contact") : this.T("Related link");
 
-    private string SourceIcon => this.IsSourceAMail ? Icons.Material.Filled.ContactMail : Icons.Material.Filled.Link;
+    private string SourceIcon => this.IsSourceAMail ? AppIcons.EMAIL : AppIcons.LINK;
 
     /// <summary>
     /// Shows a link the way the user recognizes it: a mail address without its scheme, and a placeholder

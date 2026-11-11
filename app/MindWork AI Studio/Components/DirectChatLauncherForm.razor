@@ -1,7 +1,7 @@
 @using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
-<WorkspaceNameField WorkspaceName="@this.WorkspaceName" WorkspaceNameChanged="@this.SetWorkspaceName" SelectLabel="@T("Existing workspace (Optional)")" Label="@T("Workspace name (Optional)")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" AdornmentIcon="@(this.OpensTemporaryChat ? Icons.Material.Filled.Timer : Icons.Material.Filled.CreateNewFolder)" AdornmentIconSize="Size.Small" TextFieldClass="mb-1"/>
+<WorkspaceNameField WorkspaceName="@this.WorkspaceName" WorkspaceNameChanged="@this.SetWorkspaceName" SelectLabel="@T("Existing workspace (Optional)")" Label="@T("Workspace name (Optional)")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" AdornmentIcon="@(this.OpensTemporaryChat ? AppIcons.TEMPORARY_CHAT : AppIcons.NEW_FOLDER)" AdornmentIconSize="Size.Small" TextFieldClass="mb-1"/>
 
 @* The tile behaves differently with and without a workspace, so the form says which of the two is
    chosen right now instead of only explaining that both are possible. *@
@@ -16,7 +16,7 @@
         @string.Format(T("The chosen chat template keeps its chats in the workspace '{0}', so the tile opens its chat there instead. A workspace entered here wins over the one of the template."), templateWorkspaceName)
     </MudText>
 }
-<MudSelect T="string" Value="@this.ProviderId" ValueChanged="@this.SetProviderId" Label="@T("Chat provider")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.SmartToy">
+<MudSelect T="string" Value="@this.ProviderId" ValueChanged="@this.SetProviderId" Label="@T("Chat provider")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.LLM_PROVIDER">
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     @foreach (var provider in this.SettingsManager.GetConfidentProviders(Components.CHAT))
     {
@@ -31,7 +31,7 @@
         @T("The chosen chat template preselects a provider of its own, and it wins over a selection made here as long as that provider can be used for chats.")
     </MudText>
 }
-<MudSelect T="string" Value="@this.ProfileId" ValueChanged="@this.SetProfileId" Label="@T("Chat profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
+<MudSelect T="string" Value="@this.ProfileId" ValueChanged="@this.SetProfileId" Label="@T("Chat profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.PROFILE">
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no profile")</MudSelectItem>
     @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
@@ -45,7 +45,7 @@
         @T("The chosen chat template preselects a profile of its own, and it wins over a selection made here as long as that profile exists.")
     </MudText>
 }
-<MudSelect T="string" Value="@this.ChatTemplateId" ValueChanged="@this.SetChatTemplateId" Label="@T("Chat template")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Article">
+<MudSelect T="string" Value="@this.ChatTemplateId" ValueChanged="@this.SetChatTemplateId" Label="@T("Chat template")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.CHAT_TEMPLATE">
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no chat template")</MudSelectItem>
     @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates)
@@ -57,7 +57,7 @@
    selection made before stays with the launcher and counts once RAG is switched on again: *@
 @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
 {
-    <MudSelect T="string" Label="@T("Data sources (Optional)")" MultiSelection="@true" SelectedValues="@this.DataSourceIds" SelectedValuesChanged="@this.SetDataSourceIds" MultiSelectionTextFunc="@this.GetSelectedDataSourceText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.DATABASE">
+    <MudSelect T="string" Label="@T("Data sources (Optional)")" MultiSelection="@true" SelectedValues="@this.DataSourceIds" SelectedValuesChanged="@this.SetDataSourceIds" MultiSelectionTextFunc="@this.GetSelectedDataSourceText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.DATA_SOURCE">
         @foreach (var dataSource in this.SettingsManager.ConfigurationData.DataSources)
         {
             <MudSelectItem T="string" Value="@dataSource.Id">@dataSource.Name</MudSelectItem>

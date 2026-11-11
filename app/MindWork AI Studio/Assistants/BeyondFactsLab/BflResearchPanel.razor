@@ -6,14 +6,14 @@
 @if (this.IsNotPublic)
 {
     @* An event which is not public is never researched, and earlier research no longer counts: *@
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.PublicOff" Class="mb-3">
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@AppIcons.NOT_PUBLIC" Class="mb-3">
         @string.Format(Culture, TA("The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search. If the event is public after all, change this in the step '{0}'."), BflStep.FRAMEWORK.Title)
     </MudAlert>
 }
 else
 {
     @* What the research receives, and what it never receives: *@
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.Shield" Class="mb-3">
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@AppIcons.PRIVACY" Class="mb-3">
         <MudText Typo="Typo.body2">@TA("The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.")</MudText>
         @if (this.PublicDetails.Count > 0)
         {
@@ -42,7 +42,7 @@ else
 
     <MudButton Variant="@(this.research.Count > 0 ? Variant.Outlined : Variant.Filled)"
                Color="Color.Primary"
-               StartIcon="@Icons.Material.Filled.TravelExplore"
+               StartIcon="@AppIcons.WEB_RESEARCH"
                OnClick="@this.StartAllAsync"
                Disabled="@(!this.CanStart)"
                Class="mb-3">
@@ -68,7 +68,7 @@ else
                         }
                         <MudText Typo="Typo.h6">@topic.Title</MudText>
                         <MudTooltip Text="@topic.Description" Placement="Placement.Top">
-                            <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Color="Color.Info" Class="ml-2"/>
+                            <MudIcon Icon="@AppIcons.INFO" Size="Size.Small" Color="Color.Info" Class="ml-2"/>
                         </MudTooltip>
                         <MudSpacer/>
                         <MudText Typo="Typo.caption" Class="mr-2">@this.StatusText(found, isRunning)</MudText>
@@ -80,7 +80,7 @@ else
                         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1"/>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
                             <MudText Typo="Typo.caption">@T("The agent researches this topic")</MudText>
-                            <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Stop" OnClick="@(() => this.CancelAsync(topic))">@T("Stop")</MudButton>
+                            <MudButton Size="Size.Small" StartIcon="@AppIcons.STOP" OnClick="@(() => this.CancelAsync(topic))">@T("Stop")</MudButton>
                         </MudStack>
                     }
 
@@ -135,7 +135,7 @@ else
 
                     <MudButton Size="Size.Small"
                                Variant="Variant.Outlined"
-                               StartIcon="@Icons.Material.Filled.Refresh"
+                               StartIcon="@AppIcons.WEB"
                                OnClick="@(() => this.StartAsync(topic))"
                                Disabled="@(!this.CanStart)">
                         @(found is null ? T("Research this topic") : T("Research this topic again"))

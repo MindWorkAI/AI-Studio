@@ -49,14 +49,14 @@ public partial class LayoutChoicePanels : ComponentBase
 
     private static string IconOf(LayoutPurposeArea area) => area switch
     {
-        LayoutPurposeArea.FRAMING => Icons.Material.Filled.FormatListNumbered,
-        LayoutPurposeArea.GENERAL => Icons.Material.Filled.ViewQuilt,
-        LayoutPurposeArea.TEACHING => Icons.Material.Filled.School,
-        LayoutPurposeArea.BUSINESS => Icons.Material.Filled.BusinessCenter,
-        LayoutPurposeArea.SCIENCE => Icons.Material.Filled.Science,
-        LayoutPurposeArea.MEDICINE => Icons.Material.Filled.MedicalServices,
-        LayoutPurposeArea.LAW => Icons.Material.Filled.Gavel,
+        LayoutPurposeArea.FRAMING => AppIcons.SLIDE_LAYOUT_STRUCTURE,
+        LayoutPurposeArea.GENERAL => AppIcons.LAYOUT_PURPOSE_GENERAL,
+        LayoutPurposeArea.TEACHING => AppIcons.LAYOUT_PURPOSE_TEACHING,
+        LayoutPurposeArea.BUSINESS => AppIcons.LAYOUT_PURPOSE_BUSINESS,
+        LayoutPurposeArea.SCIENCE => AppIcons.LAYOUT_PURPOSE_SCIENCE,
+        LayoutPurposeArea.MEDICINE => AppIcons.MEDICINE,
+        LayoutPurposeArea.LAW => AppIcons.LEGAL,
 
-        _ => Icons.Material.Filled.ViewQuilt,
+        _ => AppIcons.LAYOUT_PURPOSE_GENERAL,
     };
 }

@@ -170,7 +170,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
                 ? TB("The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.")
                 : TB("No provider is configured for the Security Audit Agent.");
 
-            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, message));
+            await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, message));
 
             return new AssistantAuditResult
             {
@@ -270,7 +270,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         if (response.Content is not ContentText content || string.IsNullOrWhiteSpace(content.Text))
         {
             logger.LogWarning($"The assistant plugin audit agent did not return text: {response}");
-            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.PendingActions, string.Format(TB("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
+            await MessageBus.INSTANCE.SendWarning(new (AppIcons.AUDIT_INCOMPLETE, string.Format(TB("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
             
             return new AssistantAuditResult
             {

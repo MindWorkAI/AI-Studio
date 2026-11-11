@@ -4,6 +4,11 @@ namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 internal static class AssistantComponentPropHelper
 {
+    /// <summary>
+    /// The prefix with which an assistant plugin names a Lucide icon.
+    /// </summary>
+    private const string LUCIDE_PREFIX = "lucide:";
+
     public static string ReadString(Dictionary<string, object> props, string key)
     {
         if (props.TryGetValue(key, out var value))
@@ -52,7 +57,22 @@ internal static class AssistantComponentPropHelper
     public static Color GetColor(string value, Color fallback) => Enum.TryParse<Color>(value, out var color) ? color : fallback;
     public static Variant GetVariant(string value, Variant fallback) => Enum.TryParse<Variant>(value, out var variant) ? variant : fallback;
     public static Adornment GetAdornment(string value, Adornment fallback) => Enum.TryParse<Adornment>(value, out var adornment) ? adornment : fallback;
-    public static string GetIconSvg(string value) => MudBlazorIconRegistry.TryGetSvg(value.TrimStart('@'), out var svg) ? svg : string.Empty;
+    /// <summary>
+    /// Finds the icon an assistant plugin names: a Lucide icon as "lucide:" followed by its name on lucide.dev,
+    /// such as "lucide:house", or an icon of MudBlazor, such as "Icons.Material.Filled.Home".
+    /// </summary>
+    /// <param name="value">The icon as the plugin names it.</param>
+    /// <returns>The icon in the form MudBlazor renders, or an empty string for an unknown name.</returns>
+    public static string GetIcon(string value)
+    {
+        var name = value.TrimStart('@');
+        if (name.StartsWith(LUCIDE_PREFIX, StringComparison.Ordinal))
+            return LucideIconRegistry.TryGet(name[LUCIDE_PREFIX.Length..], out var lucideIcon) ? lucideIcon : string.Empty;
+
+        return MudBlazorIconRegistry.TryGetSvg(name, out var svg) ? svg : string.Empty;
+    }
+
+
     public static Size GetComponentSize(string value, Size fallback) => Enum.TryParse<Size>(value, out var size) ? size : fallback;
     public static Justify? GetJustify(string value) => Enum.TryParse<Justify>(value, out var justify) ? justify : null;
     public static AlignItems? GetItemsAlignment(string value) => Enum.TryParse<AlignItems>(value, out var alignment) ? alignment : null;

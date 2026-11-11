@@ -284,14 +284,14 @@ public static class PlainFileExport
         try
         {
             await File.WriteAllTextAsync(response.SaveFilePath, fileContent, encoding);
-            await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, TB("The export succeeded."), response.SaveFilePath, true);
+            await feedback.SucceededAsync(AppIcons.SUCCESS, TB("The export succeeded."), response.SaveFilePath, true);
 
             return true;
         }
         catch (Exception ex)
         {
             LOGGER.LogError(ex, "Error during {ExportFormat} export.", format);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, TB("The export failed.")));
             return false;
         }
     }

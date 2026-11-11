@@ -51,9 +51,9 @@ public partial class ProfileSelection : MSGComponentBase
     private string ProfileIcon(Profile profile)
     {
         if (profile.IsEnterpriseConfiguration)
-            return Icons.Material.Filled.Business;
+            return AppIcons.ORGANIZATION;
         
-        return Icons.Material.Filled.Person4;
+        return AppIcons.PROFILE;
     }
     
     private async Task SelectionChanged(Profile profile)

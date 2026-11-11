@@ -53,7 +53,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         new ButtonData
         {
             Text = T("Open in chat"),
-            Icon = Icons.Material.Filled.Chat,
+            Icon = AppIcons.CHAT,
             Color = Color.Default,
             AsyncAction = this.OpenInChat,
             DisabledActionParam = () => !this.CanOpenInChat,
@@ -398,7 +398,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         {
             if (await this.WebRootFiles.CopyToAsync(specificationPath, response.SaveFilePath))
             {
-                await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, T("The ERI specification was saved."), response.SaveFilePath, true);
+                await feedback.SucceededAsync(AppIcons.SUCCESS, T("The ERI specification was saved."), response.SaveFilePath, true);
                 return;
             }
 
@@ -409,7 +409,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             this.Logger.LogError(exception, "Failed to save the ERI specification {ERIVersion}.", this.selectedERIVersion);
         }
 
-        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, T("The ERI specification could not be saved.")));
+        await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, T("The ERI specification could not be saved.")));
     }
 
     /// <summary>
@@ -917,7 +917,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         if (!ERIServerFileList.TryParse(fileListAnswer, out var filesToGenerate))
         {
             this.Logger.LogWarning("The list of files could not be read from the answer of the model: '{Answer}'", fileListAnswer);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.SaveAs, T("The list of files in the answer of the model could not be read, so no files were created. Please try again.")));
+            await this.MessageBus.SendWarning(new(AppIcons.SAVE_FAILED, T("The list of files in the answer of the model could not be read, so no files were created. Please try again.")));
             return;
         }
 
@@ -986,7 +986,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                 if (outcome is ERIServerFileOutcome.WRITTEN)
                     generatedFiles.Add(ERIServerFiles.PathOf(baseDirectorySnapshot, file));
                 else
-                    await this.MessageBus.SendWarning(new(Icons.Material.Filled.SaveAs, outcome.ToUserMessage(file)));
+                    await this.MessageBus.SendWarning(new(AppIcons.SAVE_FAILED, outcome.ToUserMessage(file)));
             }
         }
         

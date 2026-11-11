@@ -13254,6 +13254,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1378412877"] = "Once the encodin
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
 
+-- The icons of AI Studio come from Lucide, an open-source icon set. AI Studio ships them as a font, so showing them never sends a request to the internet. Lucide is licensed under ISC; the icons it took over from Feather remain under MIT.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1390097716"] = "The icons of AI Studio come from Lucide, an open-source icon set. AI Studio ships them as a font, so showing them never sends a request to the internet. Lucide is licensed under ISC; the icons it took over from Feather remain under MIT."
+
 -- Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1402243995"] = "Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio."
 

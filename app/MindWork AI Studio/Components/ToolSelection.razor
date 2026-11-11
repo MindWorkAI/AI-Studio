@@ -3,7 +3,7 @@
 
 <div class="d-flex">
     <MudTooltip Text="@this.ToolButtonTooltip" Placement="Placement.Top">
-        <MudIconButton Icon="@Icons.Material.Filled.Build" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleSelection"/>
+        <MudIconButton Icon="@AppIcons.TOOL" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleSelection"/>
     </MudTooltip>
 
     <MudPopover Open="@this.showSelection" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" DropShadow="@true" Class="border-solid border-4 rounded-lg">
@@ -61,7 +61,7 @@
 
                     @if (unavailableItems.Count > 0)
                     {
-                        <MudButton StartIcon="@(this.showUnavailableTools ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                        <MudButton StartIcon="@(this.showUnavailableTools ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)"
                                    Size="Size.Small"
                                    Variant="Variant.Text"
                                    Class="mt-1"
@@ -123,7 +123,7 @@
                     @if (!item.IsActive)
                     {
                         <MudTooltip Text="@T("This tool has been disabled by your organization.")">
-                            <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" />
+                            <MudIcon Icon="@AppIcons.LOCK" Color="Color.Error" Size="Size.Small" />
                         </MudTooltip>
                     }
                     <MudTooltip Text="@item.Description">
@@ -131,7 +131,7 @@
                     </MudTooltip>
                 </MudStack>
             </MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="@(async () => await this.OpenSettings(item))" />
+            <MudIconButton Icon="@AppIcons.SETTINGS" Size="Size.Small" OnClick="@(async () => await this.OpenSettings(item))" />
         </MudStack>
         @if (this.GetWarningText(item) is var warningText && !string.IsNullOrWhiteSpace(warningText))
         {

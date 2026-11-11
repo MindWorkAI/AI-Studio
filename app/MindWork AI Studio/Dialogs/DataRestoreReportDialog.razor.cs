@@ -44,9 +44,9 @@ public partial class DataRestoreReportDialog : MSGComponentBase
 
     private string Icon => this.Report.Outcome switch
     {
-        DataRestoreOutcome.APPLIED => Icons.Material.Filled.CheckCircle,
-        DataRestoreOutcome.ROLLBACK_FAILED => Icons.Material.Filled.Error,
-        _ => Icons.Material.Filled.WarningAmber,
+        DataRestoreOutcome.APPLIED => AppIcons.SUCCESS,
+        DataRestoreOutcome.ROLLBACK_FAILED => AppIcons.ERROR,
+        _ => AppIcons.WARNING,
     };
 
     private Color IconColor => this.Report.Outcome switch

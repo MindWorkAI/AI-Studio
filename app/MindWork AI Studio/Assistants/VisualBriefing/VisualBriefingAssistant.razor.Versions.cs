@@ -118,14 +118,14 @@ public partial class VisualBriefingAssistant
 
         if (PathComparer().Equals(Path.GetFullPath(sourcePath), Path.GetFullPath(response.SaveFilePath)))
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, T("Choose a different export location so the immutable briefing version is not overwritten.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, T("Choose a different export location so the immutable briefing version is not overwritten.")));
             return;
         }
 
         var verified = await this.Store.OpenIntegrityCheckedVersionAsync(this.selectedBriefing.BriefingId, this.selectedRevisionId);
         if (verified is null)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.GppBad, T("The selected briefing version failed its integrity check and cannot be exported.")));
+            await this.MessageBus.SendError(new(AppIcons.SECURITY_BLOCKED, T("The selected briefing version failed its integrity check and cannot be exported.")));
             return;
         }
 
@@ -152,7 +152,7 @@ public partial class VisualBriefingAssistant
             exportedVersion.DocumentHash,
             source.Length);
 
-        await feedback.SucceededAsync(Icons.Material.Filled.FileDownload, T("The visual briefing was exported."), response.SaveFilePath, true);
+        await feedback.SucceededAsync(AppIcons.EXPORT, T("The visual briefing was exported."), response.SaveFilePath, true);
     }
 
     /// <summary>
@@ -176,7 +176,7 @@ public partial class VisualBriefingAssistant
         catch (Exception e)
         {
             this.Logger.LogError(e, "The visual briefing could not be exported, because the file '{FilePath}' cannot be opened for writing.", targetPath);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.FileDownload, T("The visual briefing could not be exported. Please check that the target file is not open in another program.")));
+            await this.MessageBus.SendError(new(AppIcons.EXPORT, T("The visual briefing could not be exported. Please check that the target file is not open in another program.")));
             return false;
         }
 
@@ -199,7 +199,7 @@ public partial class VisualBriefingAssistant
                 this.Logger.LogWarning(deleteFailure, "The incomplete export '{FilePath}' cannot be deleted.", targetPath);
             }
 
-            await this.MessageBus.SendError(new(Icons.Material.Filled.FileDownload, T("The visual briefing could not be written completely.")));
+            await this.MessageBus.SendError(new(AppIcons.EXPORT, T("The visual briefing could not be written completely.")));
             return false;
         }
     }
@@ -231,7 +231,7 @@ public partial class VisualBriefingAssistant
 
         if (!imported.Success)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.FileUpload, imported.Issue));
+            await this.MessageBus.SendError(new(AppIcons.IMPORT, imported.Issue));
             return;
         }
 
@@ -245,7 +245,7 @@ public partial class VisualBriefingAssistant
             imported.RevisionId,
             imported.WasDeduplicated);
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileUpload, imported.WasDeduplicated ? T("This briefing revision was already imported.") : T("The visual briefing was imported.")));
+        await this.MessageBus.SendSuccess(new(AppIcons.IMPORT, imported.WasDeduplicated ? T("This briefing revision was already imported.") : T("The visual briefing was imported.")));
     }
 
     /// <summary>

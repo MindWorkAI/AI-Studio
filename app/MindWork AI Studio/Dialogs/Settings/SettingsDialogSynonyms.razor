@@ -4,7 +4,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Spellcheck" Class="mr-2" />
+            <MudIcon Icon="@AppIcons.ASSISTANT_SYNONYMS" Class="mr-2" />
             @T("Assistant: Synonyms Options")
         </MudText>
     </TitleContent>
@@ -14,7 +14,7 @@
             <ConfigurationSelect OptionDescription="@T("Preselect the language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.PreselectedLanguage = selectedValue)" OptionHelp="@T("Which language should be preselected?")"/>
             @if (this.SettingsManager.ConfigurationData.Synonyms.PreselectedLanguage is CommonLanguages.OTHER)
             {
-                <ConfigurationText OptionDescription="@T("Preselect another language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage = updatedText)"/>
+                <ConfigurationText OptionDescription="@T("Preselect another language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" Icon="@AppIcons.LANGUAGE" Text="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage = updatedText)"/>
             }
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.SYNONYMS_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.PreselectedProvider = selectedValue)"/>

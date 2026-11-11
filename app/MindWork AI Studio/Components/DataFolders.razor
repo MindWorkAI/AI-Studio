@@ -21,13 +21,13 @@
         @this.FolderName(location)
     </MudText>
     <MudList T="string" Class="mb-3">
-        <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+        <MudListItem T="string" Icon="@AppIcons.FOLDER">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%; min-width: 0;">
                 <MudLink OnClick="@(() => this.CopyPath(folder))" Style="min-width: 0; overflow-wrap: anywhere;">
                     @folder
                 </MudLink>
                 <MudTooltip Text="@T("Open in your file manager")">
-                    <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                    <MudIconButton Icon="@AppIcons.FOLDER_OPEN"
                                    Size="Size.Medium"
                                    Disabled="@string.IsNullOrWhiteSpace(folder)"
                                    OnClick="@(() => this.OpenInFileManager(folder))"/>

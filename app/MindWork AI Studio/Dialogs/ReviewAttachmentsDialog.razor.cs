@@ -160,7 +160,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
         // so it never gets in the way of the next drop.
         //
         if (attached.Count > 0)
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AttachFile, attached.Count is 1
+            await this.MessageBus.SendSuccess(new(AppIcons.ATTACH_FILE, attached.Count is 1
                 ? string.Format(T("Attached {0}."), attached[0].FileName)
                 : string.Format(T("Attached {0} files."), attached.Count)));
 

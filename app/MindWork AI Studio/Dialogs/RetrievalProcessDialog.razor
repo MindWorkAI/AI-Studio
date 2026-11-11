@@ -22,7 +22,7 @@
                 HelperText="@T("The name of your retrieval process.")"
                 Class="mb-3"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Label"
+                AdornmentIcon="@AppIcons.NAME"
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidateName"
                 Counter="26"
@@ -44,7 +44,7 @@
                 Variant="Variant.Outlined"
                 Class="mb-3"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Extension"
+                AdornmentIcon="@AppIcons.DESCRIPTION"
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidateDescription"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
@@ -58,7 +58,7 @@
                 HelperText="@T("A link to the retrieval process, e.g., the source code, the paper, it's Wikipedia page, etc. Make sense for common retrieval processes. Leave empty if not applicable.")"
                 Class="mb-6"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Link"
+                AdornmentIcon="@AppIcons.LINK"
                 AdornmentColor="Color.Info"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
@@ -79,7 +79,7 @@
                         <MudList T="RetrievalParameter" Class="mb-1" @bind-SelectedValue="@this.selectedParameter">
                             @foreach (var parameter in this.retrievalParameters)
                             {
-                                <MudListItem T="RetrievalParameter" Icon="@Icons.Material.Filled.Tune" Value="@parameter">
+                                <MudListItem T="RetrievalParameter" Icon="@AppIcons.PARAMETER" Value="@parameter">
                                     @parameter.Name
                                 </MudListItem>
                             }
@@ -117,7 +117,7 @@
                             HelperText="@T("The parameter name. It must be unique within the retrieval process.")"
                             Class="mb-3"
                             Adornment="Adornment.Start"
-                            AdornmentIcon="@Icons.Material.Filled.Label"
+                            AdornmentIcon="@AppIcons.NAME"
                             AdornmentColor="Color.Info"
                             Counter="26"
                             MaxLength="26"
@@ -138,7 +138,7 @@
                             Variant="Variant.Outlined"
                             Class="mb-3"
                             Adornment="Adornment.Start"
-                            AdornmentIcon="@Icons.Material.Filled.Extension"
+                            AdornmentIcon="@AppIcons.DESCRIPTION"
                             AdornmentColor="Color.Info"
                             Validation="@this.ValidateParameterDescription"
                             UserAttributes="@SPELLCHECK_ATTRIBUTES"/>

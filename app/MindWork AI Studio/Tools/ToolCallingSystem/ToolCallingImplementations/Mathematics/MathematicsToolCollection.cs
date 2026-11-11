@@ -26,7 +26,7 @@ public sealed class MathematicsToolCollection : IToolCollection
         DescriptionForLLM = "Calculate exactly or to a stated number of digits, and work with formulas: simplify, factor, differentiate, integrate, take limits, and solve equations. Everything is computed locally, and each result is checked numerically where possible.",
     };
 
-    public string Icon => Icons.Material.Filled.Calculate;
+    public string Icon => AppIcons.MATHEMATICS;
 
     public string GetDisplayName() => TB("Mathematics");
 

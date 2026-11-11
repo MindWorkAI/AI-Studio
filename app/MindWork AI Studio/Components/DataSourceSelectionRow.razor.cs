@@ -46,8 +46,8 @@ public partial class DataSourceSelectionRow : MSGComponentBase
 
     private string GetBlockedIcon() => this.BlockReason switch
     {
-        DataSourceBlockReason.NEEDS_REPAIR => Icons.Material.Filled.ReportProblem,
-        _ => Icons.Material.Filled.HourglassTop,
+        DataSourceBlockReason.NEEDS_REPAIR => AppIcons.WARNING,
+        _ => AppIcons.PENDING,
     };
 
     private Color GetBlockedIconColor() => this.BlockReason switch

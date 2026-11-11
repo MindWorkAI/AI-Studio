@@ -923,21 +923,21 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             if (!extraction.HasUsableContent)
             {
                 this.Logger.LogError("Reading the document '{FilePath}' failed and it will not be analyzed: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                await this.MessageBus.SendError(new(AppIcons.DOCUMENT, extraction.ToUserMessage(document.FileName)));
                 continue;
             }
 
             if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
             {
                 this.Logger.LogWarning("Parts of the document '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+                await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, extraction.ToPartialUserMessage(document.FileName)));
             }
 
             // The file was read correctly, but its extension lies about what it contains:
             if (extraction.HasExtensionMismatch)
             {
                 this.Logger.LogWarning("The document '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+                await this.MessageBus.SendWarning(new(AppIcons.FILE_TYPE_MISMATCH, extraction.ToExtensionMismatchUserMessage(document.FileName)));
             }
 
             var fileContent = extraction.Content;
@@ -1007,7 +1007,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     {
         if (this.IsNoPolicySelected)
         {
-            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("No policy is selected. Please select a policy to export.")));
+            await this.MessageBus.SendError(new (AppIcons.ANALYSIS_POLICY, this.T("No policy is selected. Please select a policy to export.")));
             return;
         }
 
@@ -1031,7 +1031,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                 policyIssues.Count,
                 string.Join(" | ", policyIssues));
 
-            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, $"{this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")} {string.Join(" ", policyIssues)}"));
+            await this.MessageBus.SendError(new (AppIcons.ANALYSIS_POLICY, $"{this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")} {string.Join(" ", policyIssues)}"));
             return;
         }
 

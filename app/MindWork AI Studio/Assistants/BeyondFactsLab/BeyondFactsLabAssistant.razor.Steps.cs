@@ -72,19 +72,19 @@ public partial class BeyondFactsLabAssistant
 
         if (BflEventVisibility.IsNotPublic(this.forms))
         {
-            await this.MessageBus.SendInfo(new(Icons.Material.Filled.PublicOff, BflEventVisibility.NotPublicMessage));
+            await this.MessageBus.SendInfo(new(AppIcons.NOT_PUBLIC, BflEventVisibility.NotPublicMessage));
             return;
         }
 
         if (BflEventVisibility.IsSuggestionPending(this.workStates, this.forms))
         {
-            await this.MessageBus.SendInfo(new(Icons.Material.Filled.TravelExplore, string.Format(TA("The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'."), BflStep.STRATEGY.Title)));
+            await this.MessageBus.SendInfo(new(AppIcons.WEB_RESEARCH, string.Format(TA("The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'."), BflStep.STRATEGY.Title)));
             return;
         }
 
         var started = await this.ResearchRunner.StartWhenDueAsync(project.ProjectId, this.providerSettings, this.forms);
         if (started.Count > 0)
-            await this.MessageBus.SendInfo(new(Icons.Material.Filled.TravelExplore, string.Format(TA("The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'."), BflStep.STRATEGY.Title)));
+            await this.MessageBus.SendInfo(new(AppIcons.WEB_RESEARCH, string.Format(TA("The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'."), BflStep.STRATEGY.Title)));
     }
 
     /// <summary>
@@ -156,7 +156,7 @@ public partial class BeyondFactsLabAssistant
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             this.Logger.LogError(exception, "Could not save the details of a step in the BeyondFacts Lab.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.RecordVoiceOver, TA("AI Studio could not save your details. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_BEYOND_FACTS_LAB, TA("AI Studio could not save your details. Please try again.")));
         }
     }
 

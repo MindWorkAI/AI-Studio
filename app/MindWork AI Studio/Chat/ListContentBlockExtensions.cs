@@ -118,7 +118,7 @@ public static class ListContentBlockExtensions
                 if (prepared.IsPrepared)
                     return imageSubContentFactory(prepared);
 
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, prepared.ErrorCode.ToUserMessage(image.FileName)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.IMAGE_NOT_SUPPORTED, prepared.ErrorCode.ToUserMessage(image.FileName)));
                 return null;
             }
         }

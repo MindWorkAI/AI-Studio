@@ -30,7 +30,7 @@ public static class UserFile
         if (string.IsNullOrEmpty(filePath))
         {
             LOGGER.LogError("Can't load from an empty or null file path.");
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The file path is null or empty and the file therefore can not be loaded.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, TB("The file path is null or empty and the file therefore can not be loaded.")));
             return FileExtractionResult.Failed(FileExtractionErrorCode.INVALID_REQUEST, "The file path is null or empty.");
         }
 
@@ -47,7 +47,7 @@ public static class UserFile
             if (!pandocState.IsAvailable)
             {
                 LOGGER.LogError("Pandoc is not available after installation attempt, so '{FilePath}' cannot be read.", filePath);
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(fileName)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PANDOC_UNAVAILABLE, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(fileName)));
                 return FileExtractionResult.Failed(FileExtractionErrorCode.PANDOC_UNAVAILABLE, "Pandoc is required to read this file, but it is not available.");
             }
         }
@@ -64,19 +64,19 @@ public static class UserFile
         if (!result.HasUsableContent)
         {
             LOGGER.LogError("Reading the file '{FilePath}' failed: code={ErrorCode}, message='{ErrorMessage}'.", filePath, result.ErrorCode, result.ErrorMessage);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, result.ToUserMessage(fileName)));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, result.ToUserMessage(fileName)));
         }
         else if (result.Outcome is FileExtractionOutcome.PARTIAL)
         {
             LOGGER.LogWarning("Parts of the file '{FilePath}' could not be read: pages={FailedPages}.", filePath, string.Join(", ", result.FailedPages));
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, result.ToPartialUserMessage(fileName)));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.DOCUMENT, result.ToPartialUserMessage(fileName)));
         }
 
         // The file was read correctly, but its extension lies about what it contains:
         if (result.HasExtensionMismatch)
         {
             LOGGER.LogWarning("The file '{FilePath}' is actually a '{DetectedFormat}'.", filePath, result.DetectedFormat);
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, result.ToExtensionMismatchUserMessage(fileName)));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.FILE_TYPE_MISMATCH, result.ToExtensionMismatchUserMessage(fileName)));
         }
 
         return result;

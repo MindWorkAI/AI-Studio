@@ -52,7 +52,7 @@
                 Label="@this.InputLabel"
                 Placeholder="@this.ProviderPlaceholder"
                 Adornment="Adornment.End"
-                AdornmentIcon="@(this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner) ? Icons.Material.Filled.HourglassTop : Icons.Material.Filled.Send)"
+                AdornmentIcon="@(this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner) ? AppIcons.PENDING : AppIcons.SEND)"
                 OnAdornmentClick="() => this.SendMessage()"
                 Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
@@ -69,25 +69,25 @@
                 && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
             {
                 <MudTooltip Text="@T("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.SnippetFolder" OnClick="@(() => this.ToggleWorkspaceOverlay())"/>
+                    <MudIconButton Icon="@AppIcons.WORKSPACES" OnClick="@(() => this.ToggleWorkspaceOverlay())"/>
                 </MudTooltip>
             }
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
             {
                 <MudTooltip Text="@T("Save chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@(() => this.SaveThread())" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)"/>
+                    <MudIconButton Icon="@AppIcons.SAVE" OnClick="@(() => this.SaveThread())" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)"/>
                 </MudTooltip>
             }
 
             <MudTooltip Text="@T("Start temporary chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.AddComment" OnClick="@(() => this.StartNewChat(useSameWorkspace: false))"/>
+                <MudIconButton Icon="@AppIcons.NEW_TEMPORARY_CHAT" OnClick="@(() => this.StartNewChat(useSameWorkspace: false))"/>
             </MudTooltip>
 
             @if (!string.IsNullOrWhiteSpace(this.currentWorkspaceName))
             {
                 <MudTooltip Text="@this.TooltipAddChatToWorkspace" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.CommentBank" OnClick="@(() => this.StartNewChat(useSameWorkspace: true))"/>
+                    <MudIconButton Icon="@AppIcons.NEW_CHAT" OnClick="@(() => this.StartNewChat(useSameWorkspace: true))"/>
                 </MudTooltip>
             }
 
@@ -97,49 +97,49 @@
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 <MudTooltip Text="@T("Delete this chat & start a new one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep" Color="Color.Error" OnClick="@(() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true))" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)"/>
+                    <MudIconButton Icon="@AppIcons.DELETE_CHAT_AND_START_NEW" Color="Color.Error" OnClick="@(() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true))" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)"/>
                 </MudTooltip>
             }
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
             {
                 <MudTooltip Text="@T("Move the chat to a workspace, or to another if it is already in one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeMoved)" OnClick="@this.MoveChatToWorkspace"/>
+                    <MudIconButton Icon="@AppIcons.MOVE_TO_WORKSPACE" Disabled="@(!this.CanThreadBeMoved)" OnClick="@this.MoveChatToWorkspace"/>
                 </MudTooltip>
 
                 <MudTooltip Text="@T("Copy this chat & continue in the copy.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanThreadBeCopied)" OnClick="@this.CopyCurrentChat"/>
+                    <MudIconButton Icon="@AppIcons.DUPLICATE" Disabled="@(!this.CanThreadBeCopied)" OnClick="@this.CopyCurrentChat"/>
                 </MudTooltip>
             }
             
             <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" KeepPreviewedText="@this.KeepPreviewedTextAsync" Disabled="@(!this.CanAttachFiles)"/>
             
             <MudTooltip Text="@T("Show all files attached to this chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.LibraryBooks" Disabled="@(!this.HasSentFileAttachments)" OnClick="@this.ShowSentFileAttachments"/>
+                <MudIconButton Icon="@AppIcons.ATTACHED_FILES" Disabled="@(!this.HasSentFileAttachments)" OnClick="@this.ShowSentFileAttachments"/>
             </MudTooltip>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
             <MudTooltip Text="@T("Bold")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.FormatBold" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_BOLD))" Disabled="@this.IsInputForbidden()"/>
+                <MudIconButton Icon="@AppIcons.FORMAT_BOLD" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_BOLD))" Disabled="@this.IsInputForbidden()"/>
             </MudTooltip>
             <MudTooltip Text="@T("Italic")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.FormatItalic" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_ITALIC))" Disabled="@this.IsInputForbidden()"/>
+                <MudIconButton Icon="@AppIcons.FORMAT_ITALIC" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_ITALIC))" Disabled="@this.IsInputForbidden()"/>
             </MudTooltip>
             <MudTooltip Text="@T("Heading")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.TextFields" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_HEADING))" Disabled="@this.IsInputForbidden()"/>
+                <MudIconButton Icon="@AppIcons.HEADING" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_HEADING))" Disabled="@this.IsInputForbidden()"/>
             </MudTooltip>
             <MudTooltip Text="@T("Bulleted List")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.FormatListBulleted" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_BULLET_LIST))" Disabled="@this.IsInputForbidden()"/>
+                <MudIconButton Icon="@AppIcons.FORMAT_BULLET_LIST" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_BULLET_LIST))" Disabled="@this.IsInputForbidden()"/>
             </MudTooltip>
             <MudTooltip Text="@T("Code")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.Code" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_CODE))" Disabled="@this.IsInputForbidden()"/>
+                <MudIconButton Icon="@AppIcons.FORMAT_CODE" OnClick="@(() => this.ApplyMarkdownFormat(MARKDOWN_CODE))" Disabled="@this.IsInputForbidden()"/>
             </MudTooltip>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
             <MudTooltip Text="@T("Show the complete system prompt the AI receives")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="@this.ShowSystemPrompt"/>
+                <MudIconButton Icon="@AppIcons.PREVIEW" OnClick="@this.ShowSystemPrompt"/>
             </MudTooltip>
 
             <ProfileSelection MarginLeft="" CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.CanProfileBeChanged)" DisabledText="@this.ProfileDisabledText"/>
@@ -162,14 +162,14 @@
             @if (this.IsCurrentChatStreaming)
             {
                 <MudTooltip Text="@T("Stop generation")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@this.CancelStreaming"/>
+                    <MudIconButton Icon="@AppIcons.STOP" Color="Color.Error" OnClick="@this.CancelStreaming"/>
                 </MudTooltip>
             }
 
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
                 <MudTooltip Text="@(this.SettingsManager.IsProviderProhibited(this.Provider.UsedLLMProvider) ? T("The use of this provider has been prohibited by your organization. Please select a different provider.") : T("The selected provider is not allowed in this chat due to data security or confidence-level requirements."))" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                    <MudIconButton Icon="@AppIcons.WARNING" Color="Color.Error"/>
                 </MudTooltip>
             }
             

@@ -15,7 +15,7 @@
                 var confirmed = this.WorkStates[step].Confirmed!;
                 var isOutdated = BflStaleness.Of(step, this.WorkStates, this.Forms) is BflWorkStateStatus.OUTDATED;
                 <ExpansionPanel @key="step"
-                                HeaderIcon="@(isOutdated ? Icons.Material.Filled.Update : Icons.Material.Filled.CheckCircle)"
+                                HeaderIcon="@(isOutdated ? AppIcons.OUTDATED : AppIcons.SUCCESS)"
                                 IconColor="@(isOutdated ? Color.Warning : Color.Success)"
                                 HeaderText="@(isOutdated ? string.Format(T("{0} (outdated)"), step.Title) : step.Title)">
                     @foreach (var section in BflWorkStateSections.ForStep(step).Where(section => !string.IsNullOrWhiteSpace(confirmed.Sections.GetValueOrDefault(section.Key))))

@@ -1,6 +1,6 @@
 @inherits MSGComponentBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Key" IconColor="Color.Warning" HeaderText="@this.Title" IsExpanded="@this.IsExpanded" ExpandedChanged="@this.ExpandedChanged">
+<ExpansionPanel HeaderIcon="@AppIcons.KEY" IconColor="Color.Warning" HeaderText="@this.Title" IsExpanded="@this.IsExpanded" ExpandedChanged="@this.ExpandedChanged">
     @if (this.Group.Prompt is not null)
     {
         <MudJustifiedMarkdown Value="@this.Group.Prompt.Markdown"/>
@@ -22,7 +22,7 @@
     }
 
     <MudStack Row="@true" AlignItems="AlignItems.Center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(this.isBusy || string.IsNullOrWhiteSpace(this.apiKey))" OnClick="@this.StoreAPIKeyAsync">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" Disabled="@(this.isBusy || string.IsNullOrWhiteSpace(this.apiKey))" OnClick="@this.StoreAPIKeyAsync">
             @T("Check and save API key")
         </MudButton>
         @if (this.isBusy)

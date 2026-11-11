@@ -42,9 +42,9 @@ public sealed partial class RustService
         finally
         {
             if (succeeded)
-                await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.ContentCopy, message));
+                await MessageBus.INSTANCE.SendSuccess(new(AppIcons.COPY, message));
             else
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ContentCopy, message));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.COPY, message));
         }
     }
 }

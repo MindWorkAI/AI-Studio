@@ -112,11 +112,11 @@ public partial class PluginDeleteAction : MSGComponentBase
             if (!result.Success)
             {
                 this.Logger.LogError("Failed to delete {PluginType} plugin '{PluginName}' ({PluginId}) from '{PluginDirectory}' with issue '{Issue}'.", this.Plugin.Type, result.PluginName, result.PluginId, result.PluginDirectory, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.DeleteForever, string.Format(this.T("The plugin '{0}' could not be deleted: {1}"), this.Plugin.Name, result.Issue)));
+                await this.MessageBus.SendError(new(AppIcons.DELETE, string.Format(this.T("The plugin '{0}' could not be deleted: {1}"), this.Plugin.Name, result.Issue)));
                 return;
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Check, string.Format(this.T("The plugin '{0}' has been successfully removed."), result.PluginName)));
+            await this.MessageBus.SendSuccess(new(AppIcons.SUCCESS, string.Format(this.T("The plugin '{0}' has been successfully removed."), result.PluginName)));
         }
         finally
         {

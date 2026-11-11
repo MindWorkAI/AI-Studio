@@ -52,7 +52,7 @@
                     <MudExpansionPanel Expanded="true">
                         <TitleContent>
                             <div class="d-flex">
-                                <MudIcon Icon="@Icons.Material.Filled.EditNote" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudIcon Icon="@AppIcons.PROMPT" class="mr-3" Color="Color.Primary"></MudIcon>
                                 <MudText>@T("System Prompt")</MudText>
                             </div>
                         </TitleContent>
@@ -63,7 +63,7 @@
                     <MudExpansionPanel Expanded="false">
                         <TitleContent>
                             <div class="d-flex">
-                                <MudIcon Icon="@Icons.Material.Filled.Preview" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudIcon Icon="@AppIcons.PREVIEW" class="mr-3" Color="Color.Primary"></MudIcon>
                                 <MudText>@T("User Prompt Preview")</MudText>
                             </div>
                         </TitleContent>
@@ -77,10 +77,10 @@
                                 var fallbackText = promptBuilder ? T("Fallback Prompt") : T("User Prompt");
                                 
                                 <MudTabs Centered="true" SortDirection="@sortDirection" Rounded="true" ApplyEffectsToContainer="true">
-                                    <MudTabPanel SortKey="A" Text="@T("Advanced Prompt Building")" Icon="@Icons.Material.Filled.Build" BadgeDot="@true" BadgeColor="@badgeColor" Disabled="@(!promptBuilder)">
+                                    <MudTabPanel SortKey="A" Text="@T("Advanced Prompt Building")" Icon="@AppIcons.PROMPT_BUILDING" BadgeDot="@true" BadgeColor="@badgeColor" Disabled="@(!promptBuilder)">
                                         <MudTextField T="string" Text="@this.promptPreview" ReadOnly="true" Variant="Variant.Outlined" Lines="10"/>
                                     </MudTabPanel>
-                                    <MudTabPanel SortKey="B" Text="@fallbackText" Icon="@Icons.Material.Filled.EditNote" BadgeDot="@true" BadgeColor="@fallbackBadgeColor">
+                                    <MudTabPanel SortKey="B" Text="@fallbackText" Icon="@AppIcons.PROMPT" BadgeDot="@true" BadgeColor="@fallbackBadgeColor">
                                         <MudTextField T="string" Text="@this.promptFallbackPreview" ReadOnly="true" Variant="Variant.Outlined" Lines="10"/>
                                     </MudTabPanel>
                                 </MudTabs>
@@ -90,7 +90,7 @@
                     <MudExpansionPanel KeepContentAlive="false">
                         <TitleContent>
                             <div class="d-flex">
-                                <MudIcon Icon="@Icons.Material.Filled.AccountTree" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudIcon Icon="@AppIcons.ASSISTANT_COMPONENTS" class="mr-3" Color="Color.Primary"></MudIcon>
                                 <MudText>@T("Components")</MudText>
                             </div>
                         </TitleContent>
@@ -131,7 +131,7 @@
                     <MudExpansionPanel KeepContentAlive="false">
                         <TitleContent>
                             <div class="d-flex">
-                                <MudIcon Icon="@Icons.Material.Filled.FolderZip" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudIcon Icon="@AppIcons.PLUGIN_STRUCTURE" class="mr-3" Color="Color.Primary"></MudIcon>
                                 <MudText>@T("Plugin Structure")</MudText>
                             </div>
                         </TitleContent>
@@ -163,7 +163,7 @@
                     <MudExpansionPanel KeepContentAlive="false">
                         <TitleContent>
                             <div class="d-flex">
-                                <MudIcon Icon="@Icons.Material.Filled.Code" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudIcon Icon="@AppIcons.CODE" class="mr-3" Color="Color.Primary"></MudIcon>
                                 <MudText>@T("Lua Manifest")</MudText>
                             </div>
                         </TitleContent>
@@ -172,12 +172,12 @@
                                 @foreach (var file in this.luaFiles)
                                 {
                                     var fileInfo = new FileInfo(Path.Combine(this.plugin.PluginPath, file.Key));
-                                    <MudExpansionPanel Expanded="false" Icon="@Icons.Material.Outlined.ArrowDropDown">
+                                    <MudExpansionPanel Expanded="false" Icon="@AppIcons.EXPAND_MORE">
                                         <TitleContent>
                                             <div class="d-flex align-center justify-start">
                                                 <MudTooltip Placement="Placement.Left" Arrow="true">
                                                     <ChildContent>
-                                                        <MudIconButton Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Color="Color.Info" Class="mr-1"/>
+                                                        <MudIconButton Icon="@AppIcons.INFO" Size="Size.Small" Color="Color.Info" Class="mr-1"/>
                                                     </ChildContent>
                                                     <TooltipContent>
                                                         <MudPaper Class="pa-3" >
@@ -212,7 +212,7 @@
 
                         @if (this.audit.Findings.Count == 0 && this.audit.Level is not AssistantAuditLevel.UNKNOWN)
                         {
-                            <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Icon="@Icons.Material.Filled.VerifiedUser">
+                            <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Icon="@AppIcons.AUDIT_SAFE">
                                 <strong>@T("Safe")</strong><span>: @T("No security issues were found during this check.")</span>
                             </MudAlert>
                         }
@@ -224,13 +224,13 @@
 
                             @if (this.IsActivationBlockedBySettings)
                             {
-                                <MudAlert Severity="Severity.Error" Variant="Variant.Text" Dense="true" Icon="@Icons.Material.Filled.Block">
+                                <MudAlert Severity="Severity.Error" Variant="Variant.Text" Dense="true" Icon="@AppIcons.BLOCKED">
                                     @T("This plugin cannot be activated because its audit result is below the required safety level and your settings block activation in this case.")
                                 </MudAlert>
                             }
                             else if (this.RequiresActivationConfirmation)
                             {
-                                <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Dense="true" Icon="@Icons.Material.Filled.WarningAmber">
+                                <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Dense="true" Icon="@AppIcons.WARNING">
                                     @T("This plugin is below the required safety level. Your settings still allow activation, but enabling it requires an extra confirmation because it may be unsafe.")
                                 </MudAlert>
                             }
@@ -243,27 +243,27 @@
                                     {
                                         AssistantAuditLevel.UNKNOWN => (
                                             AlertStyling: "color: rgb(12,128,223); background-color: rgba(33,150,243,0.06);",
-                                            AlertIcon: Icons.Material.Filled.QuestionMark,
+                                            AlertIcon: AppIcons.UNKNOWN,
                                             ChipColor: Color.Info
                                         ),
                                         AssistantAuditLevel.DANGEROUS => (
                                             AlertStyling: "color: rgb(242,28,13); background-color: rgba(244,67,54,0.06);",
-                                            AlertIcon: Icons.Material.Filled.Dangerous,
+                                            AlertIcon: AppIcons.SECURITY_DANGEROUS,
                                             ChipColor: Color.Error
                                         ),
                                         AssistantAuditLevel.CAUTION => (
                                             AlertStyling: "color: rgb(214,129,0); background-color: rgba(255,152,0,0.06);",
-                                            AlertIcon: Icons.Material.Filled.Warning,
+                                            AlertIcon: AppIcons.WARNING,
                                             ChipColor: Color.Warning
                                         ),
                                         AssistantAuditLevel.SAFE => (
                                             AlertStyling: "color: rgb(0,163,68); background-color: rgba(0,200,83,0.06);",
-                                            AlertIcon: Icons.Material.Filled.Verified,
+                                            AlertIcon: AppIcons.AUDIT_SAFE,
                                             ChipColor: Color.Success
                                         ),
                                         _ => (
                                             AlertStyling: "color: rgb(12,128,223); background-color: rgba(33,150,243,0.06);",
-                                            AlertIcon: Icons.Material.Filled.QuestionMark,
+                                            AlertIcon: AppIcons.UNKNOWN,
                                             ChipColor: Color.Info
                                         )
                                     };

@@ -64,7 +64,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             #else
             Text = T("Copy Lua code to clipboard"),
             #endif
-            Icon = Icons.Material.Filled.Extension,
+            Icon = AppIcons.PLUGIN,
             Color = Color.Default,
             #if DEBUG
             AsyncAction = async () => await this.WriteToPluginFile(),
@@ -488,13 +488,13 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     {
         if (this.selectedLanguagePlugin is null)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Translate, T("No language plugin selected.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_LOCALIZATION, T("No language plugin selected.")));
             return;
         }
 
         if (this.finalLuaCode.Length == 0)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Code, T("No Lua code generated yet.")));
+            await this.MessageBus.SendError(new(AppIcons.CODE, T("No Lua code generated yet.")));
             return;
         }
 
@@ -510,7 +510,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             if (!File.Exists(pluginFilePath))
             {
                 this.Logger.LogError("Plugin file not found: {PluginFilePath}.", pluginFilePath);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.FindInPage, T("Plugin file not found.")));
+                await this.MessageBus.SendError(new(AppIcons.FILE_NOT_FOUND, T("Plugin file not found.")));
                 return;
             }
 
@@ -524,7 +524,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             if (markerIndex == -1)
             {
                 this.Logger.LogError("Could not find 'UI_TEXT_CONTENT = {{}}' marker in plugin file: {PluginFilePath}", pluginFilePath);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.FindInPage, T("Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file.")));
+                await this.MessageBus.SendError(new(AppIcons.FILE_NOT_FOUND, T("Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file.")));
                 return;
             }
 
@@ -534,12 +534,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
 
             // Write the updated content back to the file:
             await File.WriteAllTextAsync(pluginFilePath, newContent);
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Translate, T("Successfully updated plugin file.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.ASSISTANT_LOCALIZATION, T("Successfully updated plugin file.")));
         }
         catch (Exception ex)
         {
             this.Logger.LogError(ex, "Error writing to plugin file.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Translate, T("Error writing to plugin file.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_LOCALIZATION, T("Error writing to plugin file.")));
         }
     }
     #endif

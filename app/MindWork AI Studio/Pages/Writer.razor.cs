@@ -129,7 +129,7 @@ public partial class Writer : MSGComponentBase
         catch (ProviderRequestException e)
         {
             LOGGER.LogError(e, "The provider request failed for writer suggestions. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", e.StatusCode, e.ReasonPhrase, e.ResponseBody);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            await this.MessageBus.SendError(new(AppIcons.PROVIDER_ERROR, e.UserMessage));
             this.suggestion = string.Empty;
 
             if (string.IsNullOrWhiteSpace(aiText.Text))

@@ -85,15 +85,15 @@ public static class FileExportFormatExtensions
         /// <value>The icon of the format.</value>
         public string Icon => format switch
         {
-            FileExportFormat.MICROSOFT_WORD => Icons.Custom.FileFormats.FileWord,
-            FileExportFormat.OPEN_DOCUMENT_TEXT => Icons.Custom.FileFormats.FileDocument,
-            FileExportFormat.LATEX => Icons.Material.Filled.Functions,
-            FileExportFormat.MARKDOWN => Icons.Material.Filled.TextFields,
-            FileExportFormat.HTML => Icons.Material.Filled.Html,
-            FileExportFormat.CSV or FileExportFormat.TSV => Icons.Material.Filled.TableChart,
-            FileExportFormat.SOURCE_CODE => Icons.Material.Filled.Code,
+            FileExportFormat.MICROSOFT_WORD => AppIcons.FILE_FORMAT_WORD,
+            FileExportFormat.OPEN_DOCUMENT_TEXT => AppIcons.FILE_FORMAT_ODT,
+            FileExportFormat.LATEX => AppIcons.FILE_FORMAT_LATEX,
+            FileExportFormat.MARKDOWN => AppIcons.FILE_FORMAT_MARKDOWN,
+            FileExportFormat.HTML => AppIcons.FILE_FORMAT_HTML,
+            FileExportFormat.CSV or FileExportFormat.TSV => AppIcons.FILE_FORMAT_TABLE,
+            FileExportFormat.SOURCE_CODE => AppIcons.CODE,
 
-            _ => Icons.Material.Filled.Help,
+            _ => AppIcons.UNKNOWN,
         };
 
         /// <summary>

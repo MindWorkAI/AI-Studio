@@ -64,16 +64,16 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
             // Hence, a failure to store the key goes into a message of its own instead of into this panel:
             //
             if (result.FailedProviderNames.Count > 0)
-                await this.MessageBus.SendError(new DataErrorMessage(Icons.Material.Filled.Key, string.Format(T("AI Studio could not store the API key for these providers: {0}"), string.Join(", ", result.FailedProviderNames))));
+                await this.MessageBus.SendError(new DataErrorMessage(AppIcons.KEY, string.Format(T("AI Studio could not store the API key for these providers: {0}"), string.Join(", ", result.FailedProviderNames))));
 
             if (result.FailedProviderNames.Count == this.Group.Targets.Count)
                 return;
 
             this.apiKey = string.Empty;
             if (result.Check is UserAPIKeyCheckOutcome.ACCEPTED)
-                await this.MessageBus.SendSuccess(new DataSuccessMessage(Icons.Material.Filled.Key, T("AI Studio checked your API key and stored it. You can now use the AI providers of your organization.")));
+                await this.MessageBus.SendSuccess(new DataSuccessMessage(AppIcons.KEY, T("AI Studio checked your API key and stored it. You can now use the AI providers of your organization.")));
             else
-                await this.MessageBus.SendWarning(new DataWarningMessage(Icons.Material.Filled.Key, T("AI Studio stored your API key but could not check it. If the AI providers of your organization do not work, please correct the key in the settings.")));
+                await this.MessageBus.SendWarning(new DataWarningMessage(AppIcons.KEY, T("AI Studio stored your API key but could not check it. If the AI providers of your organization do not work, please correct the key in the settings.")));
 
             // Tell everyone that the providers are usable now. The home page removes this panel once no provider waits any longer:
             await this.SendMessage<bool>(Event.CONFIGURATION_CHANGED);

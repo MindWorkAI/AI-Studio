@@ -128,7 +128,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
                 logger.LogError(exception, "Could not list the material of the preparation '{ProjectId}' of the BeyondFacts Lab.", projectId);
-                await messageBus.SendError(new(Icons.Material.Filled.Description, TA("AI Studio could not read the material of this preparation. Please try again.")));
+                await messageBus.SendError(new(AppIcons.DOCUMENT, TA("AI Studio could not read the material of this preparation. Please try again.")));
                 return;
             }
 
@@ -182,7 +182,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             logger.LogError(exception, "Could not delete the material '{MaterialId}' of the preparation '{ProjectId}' of the BeyondFacts Lab.", materialId, projectId);
-            await messageBus.SendError(new(Icons.Material.Filled.DeleteForever, TA("AI Studio could not delete the material. Please try again.")));
+            await messageBus.SendError(new(AppIcons.DELETE, TA("AI Studio could not delete the material. Please try again.")));
             return false;
         }
 
@@ -233,14 +233,14 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             logger.LogWarning(exception, "The BeyondFacts Lab could not open the file '{Path}'.", path);
-            await messageBus.SendError(new(Icons.Material.Filled.Description, string.Format(TB("AI Studio could not open the file '{0}'."), name)));
+            await messageBus.SendError(new(AppIcons.DOCUMENT, string.Format(TB("AI Studio could not open the file '{0}'."), name)));
             return;
         }
 
         // Before anything is read, and above all before a recording is paid for:
         if (!knownHashes.Add(hash))
         {
-            await messageBus.SendInfo(new(Icons.Material.Filled.Description, string.Format(TB("The material of this preparation contains '{0}' already."), name)));
+            await messageBus.SendInfo(new(AppIcons.DOCUMENT, string.Format(TB("The material of this preparation contains '{0}' already."), name)));
             return;
         }
 
@@ -279,9 +279,9 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         {
             var addition = await store.AddMaterialAsync(projectId, material, extraction.Content);
             if (addition.IsDuplicate)
-                await messageBus.SendInfo(new(Icons.Material.Filled.Description, string.Format(TB("The material of this preparation contains '{0}' already."), addition.Material.Name)));
+                await messageBus.SendInfo(new(AppIcons.DOCUMENT, string.Format(TB("The material of this preparation contains '{0}' already."), addition.Material.Name)));
             else if (addition.Material.IsShortened)
-                await messageBus.SendInfo(new(Icons.Material.Filled.ContentCut, string.Format(TB("The lab keeps only the beginning of '{0}': a conversation never takes more of one material."), addition.Material.Name)));
+                await messageBus.SendInfo(new(AppIcons.CONTENT_SHORTENED, string.Format(TB("The lab keeps only the beginning of '{0}': a conversation never takes more of one material."), addition.Material.Name)));
         }
         catch (FileNotFoundException)
         {
@@ -292,7 +292,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         {
             knownHashes.Remove(hash);
             logger.LogError(exception, "The BeyondFacts Lab could not store the material '{Name}' of the preparation '{ProjectId}'.", name, projectId);
-            await messageBus.SendError(new(Icons.Material.Filled.SaveAs, string.Format(TA("AI Studio could not save the material '{0}'. Please try again."), name)));
+            await messageBus.SendError(new(AppIcons.SAVE_FAILED, string.Format(TA("AI Studio could not save the material '{0}'. Please try again."), name)));
         }
     }
 
@@ -317,7 +317,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         if (!prepared.IsPrepared)
         {
             logger.LogWarning("The BeyondFacts Lab could not prepare the image '{Path}': {ErrorCode}.", path, prepared.ErrorCode);
-            await messageBus.SendError(new(Icons.Material.Filled.Image, prepared.ErrorCode.ToUserMessage(name)));
+            await messageBus.SendError(new(AppIcons.IMAGE, prepared.ErrorCode.ToUserMessage(name)));
             return false;
         }
 
@@ -339,7 +339,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         {
             var addition = await store.AddImageMaterialAsync(projectId, material, Convert.FromBase64String(prepared.Base64));
             if (addition.IsDuplicate)
-                await messageBus.SendInfo(new(Icons.Material.Filled.Image, string.Format(TB("The material of this preparation contains '{0}' already."), addition.Material.Name)));
+                await messageBus.SendInfo(new(AppIcons.IMAGE, string.Format(TB("The material of this preparation contains '{0}' already."), addition.Material.Name)));
 
             return true;
         }
@@ -351,7 +351,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or FormatException or ArgumentException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not store the image '{Name}' of the preparation '{ProjectId}'.", name, projectId);
-            await messageBus.SendError(new(Icons.Material.Filled.SaveAs, string.Format(TA("AI Studio could not save the material '{0}'. Please try again."), name)));
+            await messageBus.SendError(new(AppIcons.SAVE_FAILED, string.Format(TA("AI Studio could not save the material '{0}'. Please try again."), name)));
             return false;
         }
     }
@@ -372,7 +372,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
     {
         if (this.UsableTranscriptionProvider() is not { } provider)
         {
-            await messageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.NoTranscriptionProviderMessage));
+            await messageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.NoTranscriptionProviderMessage));
             return FileExtractionResult.Failed(FileExtractionErrorCode.INVALID_REQUEST, "No transcription provider may hear the recordings of the BeyondFacts Lab.");
         }
 
@@ -386,7 +386,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
             if (transcript.Status is not PersistentMediaTranscriptStatus.READY)
             {
                 logger.LogWarning("The BeyondFacts Lab could not transcribe the recording '{Path}': {Status}.", path, transcript.Status);
-                await messageBus.SendError(new(Icons.Material.Filled.VoiceChat, string.Format(TB("AI Studio could not transcribe the recording '{0}': {1}"), name, transcript.UserMessage)));
+                await messageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, string.Format(TB("AI Studio could not transcribe the recording '{0}': {1}"), name, transcript.UserMessage)));
                 return FileExtractionResult.Failed(FileExtractionErrorCode.INTERNAL, transcript.UserMessage);
             }
 
@@ -394,7 +394,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
             if (!extraction.HasUsableContent)
             {
                 logger.LogError("The BeyondFacts Lab could not read the transcript of the recording '{Path}': code={ErrorCode}, message='{ErrorMessage}'.", path, extraction.ErrorCode, extraction.ErrorMessage);
-                await messageBus.SendError(new(Icons.Material.Filled.VoiceChat, extraction.ToUserMessage(name)));
+                await messageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, extraction.ToUserMessage(name)));
             }
 
             return extraction;

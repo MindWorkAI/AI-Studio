@@ -4,7 +4,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.DashboardCustomize" Class="mr-2"/>
+            <MudIcon Icon="@AppIcons.ASSISTANT_VISUAL_BRIEFING" Class="mr-2"/>
             @T("Assistant: Visual Briefing defaults")
         </MudText>
     </TitleContent>
@@ -13,7 +13,7 @@
             <ConfigurationSelect OptionDescription="@T("Default target language")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedTargetLanguage = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.VisualBriefing, x => x.PreselectedTargetLanguage, out var meta) && meta.IsLocked"/>
             @if (this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedTargetLanguage is CommonLanguages.OTHER)
             {
-                <ConfigurationText OptionDescription="@T("Default custom target language")" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedOtherLanguage)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedOtherLanguage = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.VisualBriefing, x => x.PreselectedOtherLanguage, out var meta) && meta.IsLocked"/>
+                <ConfigurationText OptionDescription="@T("Default custom target language")" Icon="@AppIcons.LANGUAGE" Text="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedOtherLanguage)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedOtherLanguage = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.VisualBriefing, x => x.PreselectedOtherLanguage, out var meta) && meta.IsLocked"/>
             }
             <ConfigurationSelect OptionDescription="@T("Default audience profile")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceProfile)" Data="@ConfigurationSelectDataFactory.GetSlideBuilderAudienceProfileData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceProfile = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.VisualBriefing, x => x.PreselectedAudienceProfile, out var meta) && meta.IsLocked"/>
             <ConfigurationSelect OptionDescription="@T("Default audience age group")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceAgeGroup)" Data="@ConfigurationSelectDataFactory.GetSlideBuilderAudienceAgeGroupData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceAgeGroup = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.VisualBriefing, x => x.PreselectedAudienceAgeGroup, out var meta) && meta.IsLocked"/>
