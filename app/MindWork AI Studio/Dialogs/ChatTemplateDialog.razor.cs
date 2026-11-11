@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -138,6 +139,105 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
+
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplateDialog).Namespace, nameof(ChatTemplateDialog));
+
+    /// <summary>
+    /// Lets the user fill in a new chat template and stores it once saved.
+    /// </summary>
+    /// <remarks>
+    /// Every new template comes this way, whether the user adds, imports, or creates it from a chat, so
+    /// each one gets the next number and reaches every place which lists the templates.
+    /// </remarks>
+    /// <param name="dialogService">The dialog service of the caller.</param>
+    /// <param name="settingsManager">The settings which keep the templates.</param>
+    /// <param name="parameters">What the dialog starts with, such as an imported template or the chat to build on.</param>
+    /// <param name="isImport">Whether the template comes from an import, which the organization may lock meanwhile.</param>
+    /// <returns>True when a template was stored.</returns>
+    public static async Task<bool> AddAsync(IDialogService dialogService, SettingsManager settingsManager, DialogParameters<ChatTemplateDialog> parameters, bool isImport)
+    {
+        var dialogReference = await dialogService.ShowAsync<ChatTemplateDialog>(TB("Add Chat Template"), parameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return false;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported chat template is stored:
+        //
+        if (isImport && !settingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
+            return false;
+
+        var addedChatTemplate = (ChatTemplate)dialogResult.Data!;
+        addedChatTemplate = addedChatTemplate with { Num = settingsManager.ConfigurationData.NextChatTemplateNum++ };
+        settingsManager.ConfigurationData.ChatTemplates.Add(addedChatTemplate);
+
+        await settingsManager.StoreSettings();
+        await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+        return true;
+    }
+
+    /// <summary>
+    /// Lets the user change one of their chat templates and stores the change once saved.
+    /// </summary>
+    /// <remarks>
+    /// The templates of an organization cannot be changed, see <see cref="ViewAsync"/>.
+    /// </remarks>
+    /// <param name="dialogService">The dialog service of the caller.</param>
+    /// <param name="settingsManager">The settings which keep the templates.</param>
+    /// <param name="chatTemplate">The template to change.</param>
+    /// <returns>True when the template was changed.</returns>
+    public static async Task<bool> EditAsync(IDialogService dialogService, SettingsManager settingsManager, ChatTemplate chatTemplate)
+    {
+        if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
+            return false;
+
+        var dialogReference = await dialogService.ShowAsync<ChatTemplateDialog>(TB("Edit Chat Template"), CreateParameters(chatTemplate, isEditing: true), DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return false;
+
+        var editedChatTemplate = (ChatTemplate)dialogResult.Data!;
+        var chatTemplates = settingsManager.ConfigurationData.ChatTemplates;
+        chatTemplates[chatTemplates.IndexOf(chatTemplate)] = editedChatTemplate;
+
+        await settingsManager.StoreSettings();
+        await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+        return true;
+    }
+
+    /// <summary>
+    /// Shows a chat template without letting the user change it, as the templates of an organization.
+    /// </summary>
+    /// <param name="dialogService">The dialog service of the caller.</param>
+    /// <param name="chatTemplate">The template to show.</param>
+    public static Task ViewAsync(IDialogService dialogService, ChatTemplate chatTemplate) => dialogService.ShowAsync<ChatTemplateDialog>(TB("View Chat Template"), CreateParameters(chatTemplate, isEditing: true, isReadOnly: true), DialogOptions.FULLSCREEN);
+
+    /// <summary>
+    /// What the dialog starts with to show an existing chat template, such as one to edit or to import.
+    /// </summary>
+    /// <param name="chatTemplate">The template to show.</param>
+    /// <param name="isEditing">Whether the template exists already, rather than being added.</param>
+    /// <param name="isReadOnly">Whether the user may only look at the template.</param>
+    public static DialogParameters<ChatTemplateDialog> CreateParameters(ChatTemplate chatTemplate, bool isEditing, bool isReadOnly = false) => new()
+    {
+        { x => x.DataNum, chatTemplate.Num },
+        { x => x.DataId, chatTemplate.Id },
+        { x => x.DataName, chatTemplate.Name },
+        { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
+        { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
+        { x => x.IsEditing, isEditing },
+        { x => x.IsReadOnly, isReadOnly },
+        { x => x.ExampleConversation, chatTemplate.ExampleConversation },
+        { x => x.FileAttachments, chatTemplate.FileAttachments },
+        { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
+        { x => x.ToolIds, chatTemplate.ToolIds },
+        { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
+        { x => x.ProfileId, chatTemplate.ProfileId },
+        { x => x.ProviderId, chatTemplate.ProviderId },
+        { x => x.WorkspaceName, chatTemplate.WorkspaceName },
+    };
 
     #region Overrides of ComponentBase
 

@@ -17,9 +17,9 @@ namespace AIStudio.Dialogs.Settings;
 /// the list on the left keeps the pane of the first level marked meanwhile.
 /// </para>
 /// <para>
-/// So far, the window holds the options of the chat and of the workspaces. The settings page and the
-/// settings dialogs of the assistants are meant to move into it as further panes, see
-/// <see cref="SettingsPanes"/>.
+/// So far, the window holds the options of the chat, the chat templates, and the options of the
+/// workspaces. The settings page and the settings dialogs of the assistants are meant to move into it
+/// as further panes, see <see cref="SettingsPanes"/>.
 /// </para>
 /// </remarks>
 public partial class SettingsWindow : SettingsDialogBase

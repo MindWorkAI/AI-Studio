@@ -76,6 +76,19 @@ public sealed class SettingsPanesTests
     }
 
     [Test]
+    public void TheTrailOfADeeperPaneStartsAtTheFirstLevel()
+    {
+        var chat = SettingsPanes.Find(SettingsPath.CHAT)!;
+        var chatTemplates = SettingsPanes.Resolve(SettingsPath.CHAT_TEMPLATES, _ => true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(chatTemplates.Path, Is.EqualTo(SettingsPath.CHAT_TEMPLATES));
+            Assert.That(SettingsPanes.Trail(chatTemplates), Is.EqualTo(new[] { chat, chatTemplates }));
+        }
+    }
+
+    [Test]
     public void APathOfTheFirstLevelHasNoParent()
     {
         Assert.That(SettingsPath.CHAT.Parent, Is.Null);

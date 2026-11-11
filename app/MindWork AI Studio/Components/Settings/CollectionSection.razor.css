@@ -1,0 +1,42 @@
+/*
+ * The section: its title and what the collection is, with "Manage" on the right, then a few of its
+ * entries. It comes below the options it belongs to, and a line above sets it apart from them.
+ */
+.collection-section {
+    padding-top: 16px;
+    margin-top: 8px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.collection-section-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.collection-section-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.collection-section-text ::deep .collection-section-title {
+    font-weight: 500;
+}
+
+.collection-section-preview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 8px;
+}
+
+/* An entry which leads nowhere is plain text, without the border and hover of a chip. */
+.collection-section-static {
+    margin: 4px 8px 4px 0;
+    font-size: var(--mud-typography-body2-size);
+}
+
+/* The chip which adds an entry, rather than opening one, says so with its dashed border. */
+.collection-section-preview ::deep .collection-section-new {
+    border-style: dashed;
+}

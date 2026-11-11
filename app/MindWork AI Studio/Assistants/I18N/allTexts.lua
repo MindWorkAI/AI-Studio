@@ -4153,9 +4153,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1112722156"] = "C
 -- Start a new chat with a chat template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1333844707"] = "Start a new chat with a chat template"
 
--- Open Chat Template Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1335399555"] = "Open Chat Template Options"
-
 -- Manage your templates
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T3058934130"] = "Manage your templates"
 
@@ -5392,11 +5389,26 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T1984243691"] = "You can also
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Choose File"
 
+-- New template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATTEMPLATESSECTION::T2657590801"] = "New template"
+
+-- Your own instructions, example messages, and settings for a chat, ready to start from.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATTEMPLATESSECTION::T351174781"] = "Your own instructions, example messages, and settings for a chat, ready to start from."
+
+-- +{0} more
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::COLLECTIONSECTION::T262396253"] = "+{0} more"
+
+-- Manage
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::COLLECTIONSECTION::T3618631958"] = "Manage"
+
 -- Files are sent as they were first read
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1320692831"] = "Files are sent as they were first read"
 
 -- Preselect one of your chat templates?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1402022556"] = "Preselect one of your chat templates?"
+
+-- Would you like to set one of your chat templates as the default for chats? A template overrides only what it sets itself; everything else keeps the defaults above.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T1416990715"] = "Would you like to set one of your chat templates as the default for chats? A template overrides only what it sets itself; everything else keeps the defaults above."
 
 -- Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T172255919"] = "Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat."
@@ -5455,14 +5467,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3079510748"]
 -- Opening chats
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3091652376"] = "Opening chats"
 
--- Would you like to set one of your chat templates as the default for chats?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3234927721"] = "Would you like to set one of your chat templates as the default for chats?"
-
 -- No chat options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3383186996"] = "No chat options are preselected"
 
 -- First (oldest) message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3507181366"] = "First (oldest) message is shown, after loading a chat"
+
+-- When enabled, new chats start with the provider, the profile, and the chat template you choose here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T361247271"] = "When enabled, new chats start with the provider, the profile, and the chat template you choose here."
 
 -- Preselect chat options?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T3728624759"] = "Preselect chat options?"
@@ -5482,9 +5494,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T4060508809"]
 -- Private: your chats are never stored. A chat exists only while it is open, and once you start a new chat or close AI Studio, it is gone.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T4284326705"] = "Private: your chats are never stored. A chat exists only while it is open, and once you start a new chat or close AI Studio, it is gone."
 
--- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
-
 -- You can set default data sources and options for new chats. You can change these settings later for each individual chat.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T492357592"] = "You can set default data sources and options for new chats. You can change these settings later for each individual chat."
 
@@ -5496,6 +5505,66 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T9864746"] = 
 
 -- Chat history
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHAT::T996713843"] = "Chat history"
+
+-- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T1172171653"] = "Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them."
+
+-- Copy attachments into plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T1345613295"] = "Copy attachments into plugin"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T1469573738"] = "Delete"
+
+-- Add Chat Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T1548314416"] = "Add Chat Template"
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T1582017048"] = "View"
+
+-- Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T1909110760"] = "Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts."
+
+-- Use shared attachment paths
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T2054531878"] = "Use shared attachment paths"
+
+-- No chat templates configured yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T2319860307"] = "No chat templates configured yet."
+
+-- This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T2563631533"] = "This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?"
+
+-- Import Chat Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T263213584"] = "Import Chat Template"
+
+-- Chat Template Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T275026390"] = "Chat Template Name"
+
+-- Are you sure you want to delete the chat template '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T3102555824"] = "Are you sure you want to delete the chat template '{0}'?"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T3267849393"] = "Edit"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T3448155331"] = "Close"
+
+-- This template is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T3576775249"] = "This template is managed by your organization."
+
+-- Select configuration plugin folder
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T3576816894"] = "Select configuration plugin folder"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T3865031940"] = "Actions"
+
+-- Delete Chat Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T4025180906"] = "Delete Chat Template"
+
+-- Export Chat Template
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T491504763"] = "Export Chat Template"
+
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANECHATTEMPLATES::T975426229"] = "Export configuration"
 
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "External Assistants rated below this audit level are treated as insufficiently reviewed."
@@ -6991,6 +7060,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1442266827"] = "The sam
 -- Preselected provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1469984996"] = "Preselected provider"
 
+-- Add Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1548314416"] = "Add Chat Template"
+
 -- Please enter a name for the chat template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1548747185"] = "Please enter a name for the chat template."
 
@@ -7144,6 +7216,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T349281189"] = "The prov
 -- Unsupported content type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3570316759"] = "Unsupported content type"
 
+-- Edit Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3596030597"] = "Edit Chat Template"
+
 -- A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise go into no workspace, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3602548001"] = "A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise go into no workspace, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace."
 
@@ -7173,6 +7248,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3893704289"] = "Message
 
 -- Does this chat template preselect tools?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T399377711"] = "Does this chat template preselect tools?"
+
+-- View Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4042112076"] = "View Chat Template"
 
 -- Use the default system prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4051106111"] = "Use the default system prompt"
@@ -9750,75 +9828,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T82
 
 -- Restore default
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T913168756"] = "Restore default"
-
--- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them."
-
--- Copy attachments into plugin
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1345613295"] = "Copy attachments into plugin"
-
--- Delete
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1469573738"] = "Delete"
-
--- Add Chat Template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1548314416"] = "Add Chat Template"
-
--- View
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1582017048"] = "View"
-
--- Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1909110760"] = "Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts."
-
--- Use shared attachment paths
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2054531878"] = "Use shared attachment paths"
-
--- No chat templates configured yet.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2319860307"] = "No chat templates configured yet."
-
--- This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2563631533"] = "This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?"
-
--- Import Chat Template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T263213584"] = "Import Chat Template"
-
--- Chat Template Name
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T275026390"] = "Chat Template Name"
-
--- Are you sure you want to delete the chat template '{0}'?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3102555824"] = "Are you sure you want to delete the chat template '{0}'?"
-
--- Edit
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3267849393"] = "Edit"
-
--- Close
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3448155331"] = "Close"
-
--- This template is managed by your organization.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576775249"] = "This template is managed by your organization."
-
--- Select configuration plugin folder
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576816894"] = "Select configuration plugin folder"
-
--- Edit Chat Template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3596030597"] = "Edit Chat Template"
-
--- Your Chat Templates
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3824122683"] = "Your Chat Templates"
-
--- Actions
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3865031940"] = "Actions"
-
--- Delete Chat Template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T4025180906"] = "Delete Chat Template"
-
--- View Chat Template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T4042112076"] = "View Chat Template"
-
--- Export Chat Template
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T491504763"] = "Export Chat Template"
-
--- Export configuration
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T975426229"] = "Export configuration"
 
 -- Compiler messages are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1110902070"] = "Compiler messages are preselected"
@@ -12966,6 +12975,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::TRANSCRIPTIONOPUSBITRATEEXTENSIO
 
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::PROFILE::T2205839602"] = "Use no profile"
+
+-- Chat templates
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::SETTINGSPANES::T3857645580"] = "Chat templates"
 
 -- Workspaces
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::SETTINGSPANES::T4048389951"] = "Workspaces"

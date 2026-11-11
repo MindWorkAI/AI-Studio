@@ -1,31 +1,23 @@
-using AIStudio.Chat;
+using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
-using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Dialogs.Settings;
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
-public partial class SettingsDialogChatTemplate : SettingsDialogBase
+namespace AIStudio.Components.Settings;
+
+/// <summary>
+/// The pane of the settings window with the chat templates, see <see cref="SettingsPath.CHAT_TEMPLATES"/>:
+/// the list of the templates, and adding, importing, editing, exporting, and deleting them.
+/// </summary>
+/// <remarks>
+/// A template is shown, added, and changed in <see cref="ChatTemplateDialog"/>, which opens over the window
+/// and stores what the user saves, the same way for the shelf of templates in the pane of the chat and for
+/// a template created from a chat.
+/// </remarks>
+public partial class SettingsPaneChatTemplates : SettingsPanelBase
 {
     private bool isPluginDirectoryDialogOpen;
-
-    [Parameter]
-    public bool CreateTemplateFromExistingChatThread { get; set; }
-
-    [Parameter]
-    public ChatThread? ExistingChatThread { get; set; }
-
-    #region Overrides of ComponentBase
-
-    /// <inheritdoc />
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-        if (this.CreateTemplateFromExistingChatThread)
-            await this.AddChatTemplate();
-    }
-
-    #endregion
 
     private async Task AddChatTemplate()
     {
@@ -34,13 +26,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             { x => x.IsEditing, false },
         };
 
-        if (this.CreateTemplateFromExistingChatThread)
-        {
-            dialogParameters.Add(x => x.CreateFromExistingChatThread, this.CreateTemplateFromExistingChatThread);
-            dialogParameters.Add(x => x.ExistingChatThread, this.ExistingChatThread);
-        }
-
-        await this.AddChatTemplate(dialogParameters, isImport: false);
+        await ChatTemplateDialog.AddAsync(this.DialogService, this.SettingsManager, dialogParameters, isImport: false);
     }
 
     private async Task ImportChatTemplate()
@@ -49,75 +35,14 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         if (import?.ConfigurationObject is not ChatTemplate chatTemplate)
             return;
 
-        var dialogParameters = CreateDialogParameters(chatTemplate, isEditing: false);
+        var dialogParameters = ChatTemplateDialog.CreateParameters(chatTemplate, isEditing: false);
         dialogParameters.Add(x => x.AttachmentsToRelink, import.AttachmentsToRelink);
-        await this.AddChatTemplate(dialogParameters, isImport: true);
+        await ChatTemplateDialog.AddAsync(this.DialogService, this.SettingsManager, dialogParameters, isImport: true);
     }
 
-    private async Task AddChatTemplate(DialogParameters<ChatTemplateDialog> dialogParameters, bool isImport)
-    {
-        var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Add Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
+    private Task EditChatTemplate(ChatTemplate chatTemplate) => ChatTemplateDialog.EditAsync(this.DialogService, this.SettingsManager, chatTemplate);
 
-        //
-        // An organization can lock the import while the user is still filling in the form, e.g.,
-        // with a new version of its configuration plugin. Hence, the permission is checked once
-        // more before the imported chat template is stored:
-        //
-        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
-            return;
-
-        var addedChatTemplate = (ChatTemplate)dialogResult.Data!;
-        addedChatTemplate = addedChatTemplate with { Num = this.SettingsManager.ConfigurationData.NextChatTemplateNum++ };
-
-        this.SettingsManager.ConfigurationData.ChatTemplates.Add(addedChatTemplate);
-
-        await this.SettingsManager.StoreSettings();
-        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-    }
-
-    private async Task EditChatTemplate(ChatTemplate chatTemplate)
-    {
-        if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
-            return;
-
-        var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), CreateDialogParameters(chatTemplate, isEditing: true), DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
-
-        var editedChatTemplate = (ChatTemplate)dialogResult.Data!;
-        this.SettingsManager.ConfigurationData.ChatTemplates[this.SettingsManager.ConfigurationData.ChatTemplates.IndexOf(chatTemplate)] = editedChatTemplate;
-
-        await this.SettingsManager.StoreSettings();
-        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-    }
-
-    private async Task ViewChatTemplate(ChatTemplate chatTemplate)
-    {
-        await this.DialogService.ShowAsync<ChatTemplateDialog>(T("View Chat Template"), CreateDialogParameters(chatTemplate, isEditing: true, isReadOnly: true), DialogOptions.FULLSCREEN);
-    }
-
-    private static DialogParameters<ChatTemplateDialog> CreateDialogParameters(ChatTemplate chatTemplate, bool isEditing, bool isReadOnly = false) => new()
-    {
-        { x => x.DataNum, chatTemplate.Num },
-        { x => x.DataId, chatTemplate.Id },
-        { x => x.DataName, chatTemplate.Name },
-        { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
-        { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
-        { x => x.IsEditing, isEditing },
-        { x => x.IsReadOnly, isReadOnly },
-        { x => x.ExampleConversation, chatTemplate.ExampleConversation },
-        { x => x.FileAttachments, chatTemplate.FileAttachments },
-        { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
-        { x => x.ToolIds, chatTemplate.ToolIds },
-        { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
-        { x => x.ProfileId, chatTemplate.ProfileId },
-        { x => x.ProviderId, chatTemplate.ProviderId },
-        { x => x.WorkspaceName, chatTemplate.WorkspaceName },
-    };
+    private Task ViewChatTemplate(ChatTemplate chatTemplate) => ChatTemplateDialog.ViewAsync(this.DialogService, chatTemplate);
 
     private async Task DeleteChatTemplate(ChatTemplate chatTemplate)
     {

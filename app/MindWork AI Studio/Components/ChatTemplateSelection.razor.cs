@@ -1,9 +1,9 @@
 using AIStudio.Chat;
+using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
@@ -56,23 +56,23 @@ public partial class ChatTemplateSelection : MSGComponentBase
         await this.CurrentChatTemplateChanged.InvokeAsync(chatTemplate);
     }
 
-    private async Task OpenSettingsDialog()
-    {
-        var dialogParameters = new DialogParameters();
-        await this.DialogService.ShowAsync<SettingsDialogChatTemplate>(T("Open Chat Template Options"), dialogParameters, DialogOptions.FULLSCREEN);
-    }
+    private Task OpenSettingsDialog() => SettingsWindow.OpenAsync(this.DialogService, SettingsPath.CHAT_TEMPLATES);
 
+    /// <summary>
+    /// Opens a new template filled in from the current chat, without the list of templates in between.
+    /// </summary>
     private async Task CreateNewChatTemplateFromChat()
     {
         if (!this.CanChatThreadBeUsedForTemplate)
             return;
 
-        var dialogParameters = new DialogParameters<SettingsDialogChatTemplate>
+        var dialogParameters = new DialogParameters<ChatTemplateDialog>
         {
-            { x => x.CreateTemplateFromExistingChatThread, true },
-            { x => x.ExistingChatThread, this.CurrentChatThread }
+            { x => x.IsEditing, false },
+            { x => x.CreateFromExistingChatThread, true },
+            { x => x.ExistingChatThread, this.CurrentChatThread },
         };
-        await this.DialogService.ShowAsync<SettingsDialogChatTemplate>(T("Open Chat Template Options"), dialogParameters, DialogOptions.FULLSCREEN);
+        await ChatTemplateDialog.AddAsync(this.DialogService, this.SettingsManager, dialogParameters, isImport: false);
     }
 
     #region Overrides of MSGComponentBase

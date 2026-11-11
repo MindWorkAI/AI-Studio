@@ -1,0 +1,48 @@
+@inherits MSGComponentBase
+
+<section class="collection-section">
+    <div class="collection-section-head">
+        <div class="collection-section-text">
+            <MudText Typo="Typo.subtitle1" Class="collection-section-title">
+                @this.Title
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                @this.Description
+            </MudText>
+        </div>
+        <SettingsPaneLink Path="@this.Path" Text="@T("Manage")"/>
+    </div>
+    <div class="collection-section-preview">
+        @if (!string.IsNullOrWhiteSpace(this.Preview.Label))
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mr-1">
+                @this.Preview.Label
+            </MudText>
+        }
+        @foreach (var item in this.Preview.Items)
+        {
+            if (item.Open is { } open)
+            {
+                <MudChip @key="@item.Id" T="string" Variant="Variant.Outlined" Icon="@item.Icon" OnClick="@(() => open())">
+                    @item.Name
+                </MudChip>
+            }
+            else
+            {
+                <span @key="@item.Id" class="collection-section-static">@item.Name</span>
+            }
+        }
+        @if (this.Preview.Overflow > 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mx-1">
+                @string.Format(T("+{0} more"), this.Preview.Overflow)
+            </MudText>
+        }
+        @if (this.CanCreate)
+        {
+            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" Class="collection-section-new" OnClick="@(() => this.OnCreate.InvokeAsync())">
+                @this.CreateText
+            </MudChip>
+        }
+    </div>
+</section>

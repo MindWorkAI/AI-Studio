@@ -8,8 +8,9 @@ namespace AIStudio.Settings;
 /// <para>
 /// Every place which offers settings opens the same window at the path of what it offers, see
 /// <see cref="AIStudio.Dialogs.Settings.SettingsWindow.OpenAsync"/>. The paths of the first level are
-/// written down here, and only here; a deeper path is built from its parent with
-/// <see cref="Append"/>, so that a segment can also be an ID, such as the one of a plugin.
+/// written down here, and only here, and so are the deeper paths which places outside the window open.
+/// A deeper path is built from its parent with <see cref="Append"/>, so that a segment can also be an ID,
+/// such as the one of a plugin.
 /// </para>
 /// <para>
 /// A path belongs to the window, not to the routes of the app: the window opens over whatever page is
@@ -29,6 +30,11 @@ public readonly record struct SettingsPath
     /// How the workspaces store and show the chats.
     /// </summary>
     public static readonly SettingsPath WORKSPACES = new("workspaces");
+
+    /// <summary>
+    /// The chat templates, below the options of all chats.
+    /// </summary>
+    public static readonly SettingsPath CHAT_TEMPLATES = CHAT.Append("templates");
 
     private readonly string? value;
 
