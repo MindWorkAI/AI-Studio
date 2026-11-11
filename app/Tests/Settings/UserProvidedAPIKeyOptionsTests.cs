@@ -77,7 +77,7 @@ public sealed class UserProvidedAPIKeyOptionsTests
 
         var descriptor = PluginConfigurationObjectDescriptors.Get(type);
         var section = descriptor.LuaTableName;
-        var optionLines = string.Join(Environment.NewLine, options.Select(option => $"CONFIG[\"{section}\"][1]{option}"));
+        var optionLines = string.Join('\n', options.Select(option => $"CONFIG[\"{section}\"][1]{option}"));
 
         var state = LuaState.Create();
         state.OpenBasicLibrary();

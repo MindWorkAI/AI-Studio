@@ -1,5 +1,7 @@
 using System.Text;
 
+using SharedTools.Text;
+
 namespace SharedTools;
 
 public static class LuaTable
@@ -9,7 +11,7 @@ public static class LuaTable
         //
         // Add the UI_TEXT_CONTENT table:
         //
-        sb.AppendLine($$"""{{tableVariableName}} = {}""");
+        sb.AppendLineLF($$"""{{tableVariableName}} = {}""");
         foreach (var kvp in keyValuePairs.OrderBy(x => x.Key))
         {
             if (cancellationToken.IsCancellationRequested)
@@ -32,11 +34,11 @@ public static class LuaTable
             keyWithoutPrefix = keyWithoutPrefix.Replace(".", "::");
             
             // Add a comment with the original text content:
-            sb.AppendLine();
-            sb.AppendLine($"-- {commentValue}");
+            sb.AppendLineLF();
+            sb.AppendLineLF($"-- {commentValue}");
             
             // Add the assignment to the UI_TEXT_CONTENT table:
-            sb.AppendLine($"""
+            sb.AppendLineLF($"""
                            UI_TEXT_CONTENT["{keyWithoutPrefix}"] = "{LuaTools.EscapeLuaString(value)}"
                            """);
         }

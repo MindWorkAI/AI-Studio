@@ -113,7 +113,7 @@ internal sealed class AssistantDropdown : StatefulAssistantComponentBase
     public override string UserPromptFallback(AssistantState state)
     {
         if (this.IsMultiselect && state.MultiSelect.TryGetValue(this.Name, out var selections))
-            return this.BuildAuditPromptBlock(string.Join(Environment.NewLine, selections.OrderBy(static value => value, StringComparer.Ordinal)));
+            return this.BuildAuditPromptBlock(string.Join('\n', selections.OrderBy(static value => value, StringComparer.Ordinal)));
 
         state.SingleSelect.TryGetValue(this.Name, out var userInput);
         return this.BuildAuditPromptBlock(userInput);

@@ -574,7 +574,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
     private static string BuildSecureSystemPrompt(string pluginSystemPrompt)
     {
-        var separator = $"{Environment.NewLine}{Environment.NewLine}";
+        var separator = "\n\n";
         return string.IsNullOrWhiteSpace(pluginSystemPrompt) ? $"{SECURITY_SYSTEM_PROMPT_PREAMBLE}{separator}{SECURITY_SYSTEM_PROMPT_POSTAMBLE}" : $"{SECURITY_SYSTEM_PROMPT_PREAMBLE}{separator}{pluginSystemPrompt.Trim()}{separator}{SECURITY_SYSTEM_PROMPT_POSTAMBLE}";
     }
 
@@ -939,7 +939,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 builder.Append(string.IsNullOrWhiteSpace(stateful.UserPrompt) ? "empty" : "set");
             }
 
-            builder.AppendLine();
+            builder.AppendLineLF();
 
             if (component.Children.Count > 0)
                 AppendComponentSummary(builder, component.Children, depth + 1);
