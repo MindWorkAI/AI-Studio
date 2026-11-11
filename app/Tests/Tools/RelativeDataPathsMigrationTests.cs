@@ -89,7 +89,7 @@ public sealed class RelativeDataPathsMigrationTests
         Directory.CreateDirectory(transcriptDirectory);
 
         var transcriptPath = Path.Combine(transcriptDirectory, "meeting-transcript-0001.md");
-        File.WriteAllText(transcriptPath, $"# Transcription: meeting.mp4{Environment.NewLine}{Environment.NewLine}Hello and welcome.");
+        File.WriteAllText(transcriptPath, $"# Transcription: meeting.mp4\n\nHello and welcome.");
         var transcript = new ManagedTranscriptAttachment("meeting-transcript-0001.md", transcriptPath, new FileInfo(transcriptPath).Length, "meeting.mp4", false);
 
         var chat = new ChatThread

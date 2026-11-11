@@ -55,7 +55,7 @@ public static class CompilationHarness
             .Where(diagnostic => diagnostic.Severity is DiagnosticSeverity.Error)
             .Select(diagnostic => diagnostic.ToString());
 
-        return string.Join(Environment.NewLine, errors);
+        return string.Join('\n', errors);
     }
 
     /// <summary>
