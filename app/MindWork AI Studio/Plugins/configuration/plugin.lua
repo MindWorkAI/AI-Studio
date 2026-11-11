@@ -1273,8 +1273,9 @@ CONFIG["SETTINGS"] = {}
 --   minContentCharactersPerResult    Per-result content allocation.
 --
 -- Field names of the Read Web Page tool:
---   timeoutSeconds        Page-loading timeout in seconds.
---   maxContentCharacters  Content-character limit.
+--   timeoutSeconds        Page-loading timeout in seconds. Reading the text of a document has the
+--                         same timeout once more.
+--   maxContentCharacters  Content-character limit, at most 100000. Default: 80000.
 --   freeAddressChoice     Whether the AI may read web addresses it chose itself. Allowed values are:
 --                           OFF -> the AI reads only addresses which appear in the chat, such as in
 --                                  a message, an attached document, or a data source, or which a
@@ -1310,6 +1311,19 @@ CONFIG["SETTINGS"] = {}
 --                           UNRESTRICTED             -> no restriction beyond the ones of each tool.
 --                         Lock it to ONLY_CONFIGURED_SERVICES when the AI must not even choose which
 --                         of the given links to follow.
+--   documentAccess        From where the AI reads documents such as PDF, Word, PowerPoint, Excel,
+--                         or OpenDocument files. AI Studio recognizes the format by the content,
+--                         filters the text for prompt injections, and cuts it at
+--                         maxContentCharacters. Documents from a private or VPN address or from the
+--                         Confluence wiki require a provider with HIGH confidence and raise the
+--                         chat to HIGH. Allowed values are:
+--                           OFF           -> no documents, only web pages and text formats.
+--                           INTERNAL_ONLY -> only documents of the wiki and of the allowed private
+--                                            hosts. This is the default.
+--                           ALL_ADDRESSES -> documents from every address the tool may read.
+--   maxDocumentMegabytes  The largest document the AI may download, in megabytes, as an integer
+--                         string, at most 200. Default: 50. The document lands in a temporary file
+--                         while its text is read and is deleted right after.
 --
 -- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
 -- Cloud is not supported yet.
@@ -1319,7 +1333,18 @@ CONFIG["SETTINGS"] = {}
 --                    read_web_page and uses the current user's operating-system sign-in when the
 --                    wiki has a private or VPN address. Redirects outside this URL are refused. A
 --                    provider must have HIGH confidence to receive search results.
---   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
+--   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30. Reading the best
+--                    results along with the search takes at most twice as long in total.
+--   readTopHits      How many of the best results the search reads right away, wiki pages and
+--                    attachments alike, as an integer string from 0 to 10. Default: 5, as many as
+--                    web_search reads. 0 switches this off, and so does switching read_web_page
+--                    off, since these are the pages it would read. Only results within the wiki
+--                    are read, and documents follow read_web_page.documentAccess and
+--                    read_web_page.maxDocumentMegabytes.
+--   maxHitContentCharacters
+--                    How many characters of content these results bring together, at most 200000.
+--                    Default: 100000, as for web_search. The results share them; a result which
+--                    fails or is short leaves the rest to the others.
 -- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
 -- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
 -- Where a chat may send data after a search is set by read_web_page.internalPageOutboundDataRestriction.
@@ -1332,6 +1357,7 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["read_web_page.internalPageOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT",
+--     ["read_web_page.documentAccess"] = "INTERNAL_ONLY",
 --     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }
 --
@@ -1340,6 +1366,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.defaultSafeSearch"] = "MODERATE",
 --     ["web_search.tavily.searchDepth"] = "basic",
 --     ["read_web_page.timeoutSeconds"] = "30",
+--     ["read_web_page.maxDocumentMegabytes"] = "50",
 --     ["search_confluence.timeoutSeconds"] = "30"
 -- }
 

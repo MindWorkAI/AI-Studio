@@ -60,6 +60,9 @@ internal static class WebPageContentExtractor
         var contentBaseUrl = ResolveUrl(finalUrl, GetAttribute(document.DocumentNode.SelectSingleNode("//base[@href]"), "href")) ?? finalUrl;
         var sourceRoot = document.DocumentNode.SelectSingleNode("//body") ?? document.DocumentNode;
         var cleanedRoot = sourceRoot.CloneNode(true);
+
+        // Before the noise goes, which takes every frame along, the embedded documents with it:
+        EmbeddedDocumentLinks.ReplaceWithLinks(cleanedRoot, contentBaseUrl);
         RemoveHardNoise(cleanedRoot);
 
         var contentRoot = SelectContentRoot(cleanedRoot);

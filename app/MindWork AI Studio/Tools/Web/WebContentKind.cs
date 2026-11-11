@@ -16,4 +16,10 @@ public enum WebContentKind
     /// as the server sent it, so nothing of it was left out.
     /// </summary>
     TEXT_DOCUMENT,
+
+    /// <summary>
+    /// A document such as a PDF, a Word file, a presentation, or a spreadsheet. The runtime read
+    /// its text, recognizing the format by the content rather than by what the server claimed.
+    /// </summary>
+    DOCUMENT,
 }

@@ -46,7 +46,8 @@ public sealed partial class RustService
     /// <param name="maxCharacters">
     /// How many characters of the content to keep at most. The content beyond is left out, and the result says so
     /// with IsShortened. The runtime still reads the whole file, because it tells what its filter removed only at the
-    /// end; the content left out never reaches memory, though.
+    /// end, and the user has to hear of it even when the passage lies behind the limit; the content left out never
+    /// reaches memory, though.
     /// </param>
     public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, PromptInjectionSource? reportAs = null, PromptInjectionReportingScope? reportingScope = null, int maxCharacters = int.MaxValue, CancellationToken token = default)
     {
@@ -186,7 +187,7 @@ public sealed partial class RustService
                             promptInjectionFindings.AddRange(findings);
                     }
                     else if (processedEvent.Content is not null)
-                        isShortened |= !AppendWithinLimit(resultBuilder, processedEvent.Content, maxCharacters);
+                        AppendWithinLimit(processedEvent.Content);
 
                     chunkCount++;
                 }
@@ -230,18 +231,7 @@ public sealed partial class RustService
         {
             // Reading the whole file at once needs no token counts, so only the content is used here:
             if (ContentStreamSseHandler.Clear(streamId) is { } finalContentChunk && !string.IsNullOrWhiteSpace(finalContentChunk.Content))
-                isShortened |= !AppendWithinLimit(resultBuilder, finalContentChunk.Content, maxCharacters);
-        }
-
-        // The last piece taken in may reach beyond the limit:
-        if (resultBuilder.Length > maxCharacters)
-        {
-            var end = maxCharacters;
-            if (char.IsHighSurrogate(resultBuilder[end - 1]))
-                end--;
-
-            resultBuilder.Length = end;
-            isShortened = true;
+                AppendWithinLimit(finalContentChunk.Content);
         }
 
         if (failureCode is not FileExtractionErrorCode.NONE)
@@ -286,26 +276,33 @@ public sealed partial class RustService
             PromptInjectionFindings = promptInjectionFindings,
             PromptInjectionRedactedCount = promptInjectionRedactedCount,
         };
-    }
 
-    /// <summary>
-    /// Appends a piece of content as a line, unless the content reached its limit already.
-    /// </summary>
-    /// <remarks>
-    /// The piece which crosses the limit is taken in whole and cut back once the stream is read, so the content in
-    /// memory exceeds the limit by one piece at most.
-    /// </remarks>
-    /// <param name="content">The content read so far.</param>
-    /// <param name="piece">The piece to append.</param>
-    /// <param name="maxCharacters">How many characters of the content to keep at most.</param>
-    /// <returns>False when the piece was left out although it carries text.</returns>
-    private static bool AppendWithinLimit(StringBuilder content, string piece, int maxCharacters)
-    {
-        if (content.Length >= maxCharacters)
-            return string.IsNullOrWhiteSpace(piece);
+        void AppendWithinLimit(string text)
+        {
+            if (isShortened)
+                return;
 
-        content.AppendLine(piece);
-        return true;
+            // Measured without the line break, so a text which ends right at the limit is not cut:
+            var room = maxCharacters - resultBuilder.Length;
+            if (text.Length <= room)
+            {
+                resultBuilder.AppendLine(text);
+                return;
+            }
+
+            // The line breaks count toward the limit, so a blank chunk may find no room left, while
+            // nothing of the content is lost without it:
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            // Never between the two halves of a surrogate pair, which would leave half a character:
+            var keep = Math.Max(room, 0);
+            if (keep > 0 && char.IsHighSurrogate(text[keep - 1]))
+                keep--;
+
+            resultBuilder.Append(text, 0, keep);
+            isShortened = true;
+        }
     }
 
     /// <summary>

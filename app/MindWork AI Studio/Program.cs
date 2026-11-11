@@ -197,7 +197,9 @@ internal sealed class Program
         builder.Services.AddSingleton<PromptInjectionGuardService>();
         builder.Services.AddSingleton<ModelImageService>();
         builder.Services.AddSingleton<ToolSettingsService>();
+        builder.Services.AddSingleton<WebDocumentReader>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
+        builder.Services.AddSingleton<SearchHitReader>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
         builder.Services.AddSingleton<IToolImplementation, ConfluenceSearchTool>();
         builder.Services.AddSingleton<IWebSearchBackend, SearXNGSearchBackend>();

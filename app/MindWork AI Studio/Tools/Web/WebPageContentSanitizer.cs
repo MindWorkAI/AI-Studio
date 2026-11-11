@@ -24,9 +24,10 @@ public static class WebPageContentSanitizer
     /// </summary>
     /// <param name="guardService">The guard service performing the filtering.</param>
     /// <param name="pages">The page contents to filter, each with the source it came from.</param>
+    /// <param name="reportingScope">The action the pages are read for, or null to report what was removed right away.</param>
     /// <returns>The filtered contents, in the order they came in.</returns>
     public static async Task<IReadOnlyList<WebPageModelContent>> SanitizeAsync(PromptInjectionGuardService guardService,
-        IReadOnlyList<(WebPageModelContent Content, PromptInjectionSource Source)> pages)
+        IReadOnlyList<(WebPageModelContent Content, PromptInjectionSource Source)> pages, PromptInjectionReportingScope? reportingScope = null)
     {
         if (pages.Count is 0)
             return [];
@@ -45,7 +46,7 @@ public static class WebPageContentSanitizer
                 texts.Add(new(author, source));
         }
 
-        var sanitizedTexts = await guardService.SanitizeAsync(texts);
+        var sanitizedTexts = await guardService.SanitizeAsync(texts, reportingScope);
         var sanitizedPages = new List<WebPageModelContent>(pages.Count);
         var offset = 0;
         
@@ -76,5 +77,6 @@ public static class WebPageContentSanitizer
     public static async Task<WebPageModelContent> SanitizeAsync(
         PromptInjectionGuardService guardService,
         WebPageModelContent content,
-        PromptInjectionSource source) => (await SanitizeAsync(guardService, [(content, source)]))[0];
+        PromptInjectionSource source,
+        PromptInjectionReportingScope? reportingScope = null) => (await SanitizeAsync(guardService, [(content, source)], reportingScope))[0];
 }

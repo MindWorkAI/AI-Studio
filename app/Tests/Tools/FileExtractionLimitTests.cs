@@ -93,6 +93,20 @@ public sealed class FileExtractionLimitTests
     }
 
     [Test]
+    public async Task AFileWhichEndsRightAtTheLimitIsNotShortened()
+    {
+        var path = await this.WriteFileAsync(new string('a', 600));
+
+        var extraction = await this.rustService.ReadArbitraryFileData(path, int.MaxValue, maxCharacters: 600);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(extraction.IsShortened, Is.False, "A file which ends right at the limit is complete.");
+            Assert.That(extraction.Content.TrimEnd(), Is.EqualTo(new string('a', 600)));
+        }
+    }
+
+    [Test]
     public async Task WithoutALimitTheWholeFileIsKept()
     {
         var text = new string('a', 10_000);
