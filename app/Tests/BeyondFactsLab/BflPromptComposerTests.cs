@@ -46,8 +46,8 @@ public sealed class BflPromptComposerTests
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(prompt, Does.Not.Contain("{{"), step.ToString());
-                Assert.That(prompt, Does.Contain(parts.Step.Trim()), step.ToString());
-                Assert.That(prompt, Does.Contain(parts.Knowledge.Trim()[..200]), step.ToString());
+                Assert.That(prompt, Does.Contain(WithLf(parts.Step)), step.ToString());
+                Assert.That(prompt, Does.Contain(WithLf(parts.Knowledge)[..200]), step.ToString());
             }
         }
     }
@@ -79,7 +79,7 @@ public sealed class BflPromptComposerTests
         {
             Assert.That(prompt, Does.Not.Contain("{{"));
             Assert.That(prompt, Does.Contain("Antworte auf Deutsch."));
-            Assert.That(prompt, Does.Not.Contain(knowledge.Trim()[..200]), "The onboarding stays short, so it leaves out the guide.");
+            Assert.That(prompt, Does.Not.Contain(WithLf(knowledge)[..200]), "The onboarding stays short, so it leaves out the guide.");
         }
     }
 
@@ -279,7 +279,7 @@ public sealed class BflPromptComposerTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(prompt.IndexOf(parts.Step.Trim(), StringComparison.Ordinal), Is.LessThan(material), "The material changes less often than the details, so it comes first for the prompt caching.");
+            Assert.That(prompt.IndexOf(WithLf(parts.Step), StringComparison.Ordinal), Is.GreaterThanOrEqualTo(0).And.LessThan(material), "The material changes less often than the details, so it comes first for the prompt caching.");
             Assert.That(material, Is.LessThan(prompt.IndexOf("THESE-4711", StringComparison.Ordinal)));
         }
     }
@@ -330,4 +330,14 @@ public sealed class BflPromptComposerTests
     }
 
     private static BflMaterialExcerpt Excerpt(string name, string text, int textLength) => new(new(new BflMaterial { MaterialId = Guid.NewGuid(), Name = name, TextLength = textLength }, textLength), text);
+
+    /// <summary>
+    /// Gets a file of the lab's prompts as the composer inserts it: trimmed and with LF line breaks.
+    /// </summary>
+    /// <remarks>
+    /// The files keep the line endings of the checkout, CR LF on Windows with core.autocrlf. Compared as they are, a
+    /// check for a part fails there, and a check for its absence passes without checking anything.
+    /// </remarks>
+    /// <param name="text">The text of the file.</param>
+    private static string WithLf(string text) => text.ReplaceLineEndings("\n").Trim();
 }
