@@ -50,7 +50,7 @@ public static class ToolSelectionRules
     public static string BuildToolPolicyPrompt(IEnumerable<ToolDefinition> definitions)
     {
         var policySections = GetInstructedTools(definitions)
-            .Select(x => $"## Tool `{x.Function.Name}`{Environment.NewLine}{x.SystemPromptInstructions.Trim()}")
+            .Select(x => $"## Tool `{x.Function.Name}`\n{x.SystemPromptInstructions.Trim()}")
             .Distinct(StringComparer.Ordinal)
             .ToList();
         if (policySections.Count == 0)
@@ -60,7 +60,7 @@ public static class ToolSelectionRules
                             # Tool usage instructions:
                             You have multiple tools available. Each tool has a different purpose and usage policy. Choose wisely and if you are not sure, always ask the user for clarification. You must follow the usage policy of each tool to ensure accurate and reliable results. Here are the usage policies for each tool:
 
-                            {string.Join(Environment.NewLine+Environment.NewLine, policySections)}
+                            {string.Join("\n\n", policySections)}
                             """;
 
         return toolPolicyPrompt;

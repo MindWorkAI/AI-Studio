@@ -330,7 +330,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
 
         var builder = new StringBuilder(augmentedData);
         if (builder.Length > 0)
-            builder.AppendLine();
+            builder.AppendLineLF();
 
         UnreachableDataSources.AppendTo(builder, unreachableDataSources);
         return builder.ToString();

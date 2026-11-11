@@ -138,8 +138,8 @@ public sealed class AugmentationOne : IAugmentationProcess
         var sb = new StringBuilder();
         if (selection.Contexts.Count > 0)
         {
-            sb.AppendLine("The following useful information will help you in processing the user prompt:");
-            sb.AppendLine();
+            sb.AppendLineLF("The following useful information will help you in processing the user prompt:");
+            sb.AppendLineLF();
 
             // Let's convert the retrieval contexts to Markdown:
             for (var index = 0; index < selection.Contexts.Count; index++)
@@ -147,7 +147,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         }
 
         if (selection.LeftOutCount > 0)
-            sb.AppendLine(selection.LeftOutCount is 1
+            sb.AppendLineLF(selection.LeftOutCount is 1
                 ? "Of the passages which the search found in the data sources, 1 did not fit into this request and was left out. An answer based on the data sources may therefore be incomplete."
                 : $"Of the passages which the search found in the data sources, {selection.LeftOutCount} did not fit into this request and were left out. An answer based on the data sources may therefore be incomplete.");
 

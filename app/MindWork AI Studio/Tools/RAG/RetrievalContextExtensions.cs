@@ -23,23 +23,23 @@ public static class RetrievalContextExtensions
     /// <param name="retrievalContext">The context to describe.</param>
     internal static void AppendContextDescription(StringBuilder contextBuilder, IRetrievalContext retrievalContext)
     {
-        contextBuilder.AppendLine($"Data source name: {retrievalContext.DataSourceName}");
-        contextBuilder.AppendLine($"Content category: {retrievalContext.Category}");
+        contextBuilder.AppendLineLF($"Data source name: {retrievalContext.DataSourceName}");
+        contextBuilder.AppendLineLF($"Content category: {retrievalContext.Category}");
         if(!string.IsNullOrWhiteSpace(retrievalContext.SourceCategory))
-            contextBuilder.AppendLine($"Source category: {retrievalContext.SourceCategory.ReplaceLineEndings(" ").Trim()}");
+            contextBuilder.AppendLineLF($"Source category: {retrievalContext.SourceCategory.ReplaceLineEndings(" ").Trim()}");
 
-        contextBuilder.AppendLine($"Content type: {retrievalContext.Type}");
-        contextBuilder.AppendLine($"Content path: {retrievalContext.Path}");
+        contextBuilder.AppendLineLF($"Content type: {retrievalContext.Type}");
+        contextBuilder.AppendLineLF($"Content path: {retrievalContext.Path}");
 
         if(retrievalContext is RetrievalTextContext textContext && DescribeLocation(textContext.PageNumber, textContext.EndPageNumber, textContext.SheetName, textContext.StartRow, textContext.EndRow, textContext.StartLine, textContext.EndLine) is { } location)
-            contextBuilder.AppendLine($"Content location: {location}");
+            contextBuilder.AppendLineLF($"Content location: {location}");
 
         if(retrievalContext.Links.Count is 0)
             return;
 
-        contextBuilder.AppendLine("Additional links:");
+        contextBuilder.AppendLineLF("Additional links:");
         foreach(var link in retrievalContext.Links)
-            contextBuilder.AppendLine($"- {link}");
+            contextBuilder.AppendLineLF($"- {link}");
     }
 
     /// <summary>
@@ -86,8 +86,8 @@ public static class RetrievalContextExtensions
     /// <param name="contextBuilder">The builder to write into, after the description of the context.</param>
     internal static void AppendImageMatch(StringBuilder contextBuilder)
     {
-        contextBuilder.AppendLine();
-        contextBuilder.AppendLine("Matched image content: an image matched here, but it is not shown to you. Do not guess what it shows. When it matters for the answer, tell the user that an image matched, and where to find it, using the path and the links above.");
+        contextBuilder.AppendLineLF();
+        contextBuilder.AppendLineLF("Matched image content: an image matched here, but it is not shown to you. Do not guess what it shows. When it matters for the answer, tell the user that an image matched, and where to find it, using the path and the links above.");
     }
 
     /// <param name="retrievalContexts">The contexts to prepare.</param>
@@ -295,31 +295,31 @@ public static class RetrievalContextExtensions
     /// <param name="surroundingContent">The surrounding content, filtered.</param>
     private static void AppendTextMatch(StringBuilder contextBuilder, RetrievalTextContext textContext, string matchedText, IReadOnlyList<string> surroundingContent)
     {
-        contextBuilder.AppendLine();
-        contextBuilder.AppendLine(textContext.IsMatchedTextShortened ? "Matched text content, shortened to fit the size limit:" : "Matched text content:");
-        contextBuilder.AppendLine("````");
-        contextBuilder.AppendLine(matchedText);
-        contextBuilder.AppendLine("````");
+        contextBuilder.AppendLineLF();
+        contextBuilder.AppendLineLF(textContext.IsMatchedTextShortened ? "Matched text content, shortened to fit the size limit:" : "Matched text content:");
+        contextBuilder.AppendLineLF("````");
+        contextBuilder.AppendLineLF(matchedText);
+        contextBuilder.AppendLineLF("````");
 
         if (surroundingContent.Count is 0)
         {
             if (textContext.IsSurroundingContentShortened)
             {
-                contextBuilder.AppendLine();
-                contextBuilder.AppendLine("Surrounding text content: left out to fit the size limit.");
+                contextBuilder.AppendLineLF();
+                contextBuilder.AppendLineLF("Surrounding text content: left out to fit the size limit.");
             }
 
             return;
         }
 
-        contextBuilder.AppendLine();
-        contextBuilder.AppendLine(textContext.IsSurroundingContentShortened ? "Surrounding text content, shortened to fit the size limit:" : "Surrounding text content:");
+        contextBuilder.AppendLineLF();
+        contextBuilder.AppendLineLF(textContext.IsSurroundingContentShortened ? "Surrounding text content, shortened to fit the size limit:" : "Surrounding text content:");
         foreach (var surrounding in surroundingContent)
         {
-            contextBuilder.AppendLine();
-            contextBuilder.AppendLine("````");
-            contextBuilder.AppendLine(surrounding);
-            contextBuilder.AppendLine("````");
+            contextBuilder.AppendLineLF();
+            contextBuilder.AppendLineLF("````");
+            contextBuilder.AppendLineLF(surrounding);
+            contextBuilder.AppendLineLF("````");
         }
     }
 

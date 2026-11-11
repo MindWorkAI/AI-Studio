@@ -9,6 +9,8 @@ using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
+using SharedTools.Text;
+
 namespace AIStudio.Tests.Tools;
 
 /// <summary>
@@ -87,7 +89,7 @@ public sealed class RetrievalContextPreparationTests
             "",
         ];
 
-        Assert.That(prepared.Single().ToMarkdown(2, 5), Is.EqualTo(string.Join(Environment.NewLine, expectedLines) + Environment.NewLine), "The model reads the passages in a layout it was prompted for, so preparing them must not change it.");
+        Assert.That(prepared.Single().ToMarkdown(2, 5), Is.EqualTo(string.Join('\n', expectedLines) + "\n"), "The model reads the passages in a layout it was prompted for, so preparing them must not change it.");
     }
 
     [Test]
@@ -97,9 +99,9 @@ public sealed class RetrievalContextPreparationTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(prepared.ToMarkdown(3), Does.StartWith($"# Retrieval context 3{Environment.NewLine}Data source name:"), "Semantic Search numbers its passages without knowing how many fit its budget.");
-            Assert.That(prepared.ToMarkdown(), Does.StartWith($"# Retrieval context{Environment.NewLine}Data source name:"), "A context standing alone has no number.");
-            Assert.That(prepared.ToMarkdown(2, 5), Is.EqualTo($"# Retrieval context 2 of 5{Environment.NewLine}{prepared.Body}{Environment.NewLine}"), "Below its header, a context is its body.");
+            Assert.That(prepared.ToMarkdown(3), Does.StartWith("# Retrieval context 3\nData source name:"), "Semantic Search numbers its passages without knowing how many fit its budget.");
+            Assert.That(prepared.ToMarkdown(), Does.StartWith("# Retrieval context\nData source name:"), "A context standing alone has no number.");
+            Assert.That(prepared.ToMarkdown(2, 5), Is.EqualTo($"# Retrieval context 2 of 5\n{prepared.Body}\n"), "Below its header, a context is its body.");
         }
     }
 
@@ -119,10 +121,10 @@ public sealed class RetrievalContextPreparationTests
         var prepared = (await this.PrepareAsync(image)).Single();
 
         var expected = new StringBuilder();
-        expected.AppendLine("# Retrieval context");
+        expected.AppendLineLF("# Retrieval context");
         RetrievalContextExtensions.AppendContextDescription(expected, image);
         RetrievalContextExtensions.AppendImageMatch(expected);
-        expected.AppendLine();
+        expected.AppendLineLF();
 
         using (Assert.EnterMultipleScope())
         {

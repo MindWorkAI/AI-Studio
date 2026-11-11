@@ -54,9 +54,9 @@ internal static class MailToolResults
 
         if (!string.IsNullOrWhiteSpace(text))
         {
-            builder.AppendLine();
-            builder.AppendLine("---");
-            builder.AppendLine();
+            builder.AppendLineLF();
+            builder.AppendLineLF("---");
+            builder.AppendLineLF();
             builder.Append(text);
         }
 
@@ -65,7 +65,7 @@ internal static class MailToolResults
         void AppendField(string label, string? value)
         {
             if (!string.IsNullOrWhiteSpace(value))
-                builder.AppendLine($"- **{label}:** {value}");
+                builder.AppendLineLF($"- **{label}:** {value}");
         }
     }
 

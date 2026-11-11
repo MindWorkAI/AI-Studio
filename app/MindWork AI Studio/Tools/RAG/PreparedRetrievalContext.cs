@@ -29,20 +29,20 @@ public sealed record PreparedRetrievalContext(IRetrievalContext Context, string 
         switch (index)
         {
             case > 0 when numTotalRetrievalContexts is null:
-                sb.AppendLine($"# Retrieval context {index}");
+                sb.AppendLineLF($"# Retrieval context {index}");
                 break;
 
             case > 0 when numTotalRetrievalContexts > 0:
-                sb.AppendLine($"# Retrieval context {index} of {numTotalRetrievalContexts}");
+                sb.AppendLineLF($"# Retrieval context {index} of {numTotalRetrievalContexts}");
                 break;
 
             default:
-                sb.AppendLine("# Retrieval context");
+                sb.AppendLineLF("# Retrieval context");
                 break;
         }
 
         sb.Append(this.Body);
-        sb.AppendLine();
+        sb.AppendLineLF();
         return sb.ToString();
     }
 }
