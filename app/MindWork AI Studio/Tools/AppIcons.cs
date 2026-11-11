@@ -120,7 +120,7 @@ public static class AppIcons
     public const string ASSISTANT_MY_TASKS = LucideIcons.LIST_TODO;
 
     /// <summary>Marks an installed assistant that comes from an assistant plugin.</summary>
-    public const string ASSISTANT_PLUGIN = LucideIcons.BLOCKS;
+    public const string ASSISTANT_PLUGIN = LucideIcons.PLUG;
 
     /// <summary>Marks the prompt optimizer assistant.</summary>
     public const string ASSISTANT_PROMPT_OPTIMIZER = LucideIcons.WAND_SPARKLES;
@@ -801,7 +801,7 @@ public static class AppIcons
     public const string PICTURE_LIBRARY = LucideIcons.IMAGES;
 
     /// <summary>Marks a plugin, such as an assistant plugin, a configuration plugin, or the plugins page.</summary>
-    public const string PLUGIN = LucideIcons.BLOCKS;
+    public const string PLUGIN = LucideIcons.PLUG;
 
     /// <summary>Marks the file structure of a plugin.</summary>
     public const string PLUGIN_STRUCTURE = LucideIcons.FOLDER_TREE;
