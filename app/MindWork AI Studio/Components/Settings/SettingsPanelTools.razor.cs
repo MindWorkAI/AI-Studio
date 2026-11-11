@@ -110,7 +110,7 @@ public partial class SettingsPanelTools : SettingsPanelBase
         : confidenceLevel.Name;
 
     private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item) =>
-        $"background-color: {GetMinimumProviderConfidence(item).GetColor(this.SettingsManager)};";
+        $"background-color: {GetMinimumProviderConfidence(item).GetBackgroundColor(this.SettingsManager)};";
 
     private bool IsToolConfidenceManaged() =>
         ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var meta) && meta.IsLocked;

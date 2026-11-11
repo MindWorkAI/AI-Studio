@@ -508,7 +508,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             yield return new(T("Writer"), AppIcons.WRITER, defaultLightColor, defaultDarkColor, Routes.WRITER, false);
 
         yield return new(T("Plugins"), AppIcons.PLUGIN, defaultLightColor, defaultDarkColor, Routes.PLUGINS, false);
-        yield return new(T("Supporters"), AppIcons.SUPPORTERS, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
+        yield return new(T("Supporters"), AppIcons.SUPPORTERS, this.ColorTheme.PaletteLight.Error.Value, this.ColorTheme.PaletteDark.ErrorLighten, Routes.SUPPORTERS, false);
         yield return new(T("Information"), AppIcons.INFO, defaultLightColor, defaultDarkColor, Routes.ABOUT, false);
         yield return new(T("Settings"), AppIcons.SETTINGS, defaultLightColor, defaultDarkColor, Routes.SETTINGS, false);
     }
