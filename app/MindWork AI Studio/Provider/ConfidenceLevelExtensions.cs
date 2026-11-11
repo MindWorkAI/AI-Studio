@@ -73,7 +73,7 @@ public static class ConfidenceLevelExtensions
         public string GetBackgroundColor(SettingsManager settingsManager) => settingsManager.IsDarkMode ? level switch
         {
             ConfidenceLevel.NONE => "#666666",
-            ConfidenceLevel.UNKNOWN => "#aaaaaa",
+            ConfidenceLevel.UNKNOWN => "#555555",
             ConfidenceLevel.UNTRUSTED => "#800000",
             ConfidenceLevel.VERY_LOW => "#803300",
             ConfidenceLevel.LOW => "#806600",
