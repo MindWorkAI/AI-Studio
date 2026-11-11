@@ -9,6 +9,11 @@ namespace AIStudio.Tools;
 public static class CsvWriter
 {
     /// <summary>
+    /// The end of every row: CR LF, as RFC 4180 asks for, on every system.
+    /// </summary>
+    public const string ROW_END = "\r\n";
+
+    /// <summary>
     /// The separator a spreadsheet expects from a CSV file written for the given language.
     /// </summary>
     /// <remarks>

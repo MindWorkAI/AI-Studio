@@ -99,8 +99,8 @@ public sealed class ClassicRagPassagesTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(augmentation.UsedContexts.Select(context => context.Context), Is.EqualTo(new IRetrievalContext[] { handbook, manual }), "Without the check, the AI receives every context, in the order it was retrieved.");
-            Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain($"# Retrieval context 1 of 2{Environment.NewLine}"));
-            Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain($"# Retrieval context 2 of 2{Environment.NewLine}"));
+            Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain("# Retrieval context 1 of 2\n"));
+            Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain("# Retrieval context 2 of 2\n"));
             Assert.That(this.runtime.FilteredBatches, Has.Count.EqualTo(1), "All contexts are filtered together, in one request.");
             Assert.That(this.runtime.FilteredTexts, Has.Count.EqualTo(4), "Each description and each matched text is filtered once, and nothing a second time on its own.");
         }
@@ -124,9 +124,9 @@ public sealed class ClassicRagPassagesTests
             {
                 Assert.That(augmentation.UsedContexts.Select(context => context.Context), Is.EqualTo(new IRetrievalContext[] { handbookIntroduction, manual }), "The best passage of each data source fits; the second best of the handbook does not.");
                 Assert.That(augmentation.PassageCounts, Is.EqualTo(new[] { 1, 1 }));
-                Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain($"# Retrieval context 2 of 2{Environment.NewLine}"));
+                Assert.That(augmentation.ChatThread.AugmentedData, Does.Contain("# Retrieval context 2 of 2\n"));
                 Assert.That(augmentation.ChatThread.AugmentedData, Does.Not.Contain("The results of the handbook."));
-                Assert.That(augmentation.ChatThread.AugmentedData, Does.EndWith($"1 did not fit into this request and was left out. An answer based on the data sources may therefore be incomplete.{Environment.NewLine}"), "The model learns that it did not read everything the search found.");
+                Assert.That(augmentation.ChatThread.AugmentedData, Does.EndWith("1 did not fit into this request and was left out. An answer based on the data sources may therefore be incomplete.\n"), "The model learns that it did not read everything the search found.");
                 Assert.That(warnings.Messages, Has.Count.EqualTo(1));
                 Assert.That(warnings.Messages.SingleOrDefault(), Does.Contain("had to do without 1 of them"), "The user learns about it with the answer.");
             }

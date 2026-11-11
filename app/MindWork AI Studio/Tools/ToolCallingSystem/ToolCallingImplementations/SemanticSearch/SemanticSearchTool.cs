@@ -286,21 +286,21 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     internal static ToolFunctionDefinition DescribeDataSources(ToolFunctionDefinition function, IReadOnlyList<(IDataSource DataSource, string Description)> dataSources, IReadOnlyList<IDataSource>? unreachableDataSources = null)
     {
         var description = new StringBuilder(DESCRIPTION);
-        description.AppendLine();
-        description.AppendLine();
-        description.AppendLine($"The data sources you may search, by the ID to pass in {DATA_SOURCE_IDS_ARGUMENT}:");
+        description.AppendLineLF();
+        description.AppendLineLF();
+        description.AppendLineLF($"The data sources you may search, by the ID to pass in {DATA_SOURCE_IDS_ARGUMENT}:");
         foreach (var (dataSource, dataSourceDescription) in dataSources)
         {
             description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}");
             if (!string.IsNullOrWhiteSpace(dataSourceDescription))
                 description.Append($", description='{dataSourceDescription.Trim().Shorten(MAX_DESCRIPTION_CHARACTERS)}'");
 
-            description.AppendLine();
+            description.AppendLineLF();
         }
 
         if (unreachableDataSources is { Count: > 0 })
         {
-            description.AppendLine();
+            description.AppendLineLF();
             UnreachableDataSources.AppendTo(description, unreachableDataSources);
         }
 

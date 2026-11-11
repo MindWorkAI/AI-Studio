@@ -89,11 +89,11 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
     internal static ToolFunctionDefinition DescribeMailboxes(ToolFunctionDefinition function, IReadOnlyList<DataSourceMailbox> mailboxes)
     {
         var description = new StringBuilder(DESCRIPTION);
-        description.AppendLine();
-        description.AppendLine();
-        description.AppendLine($"The mailboxes you may count, by the ID to pass in {MailToolArguments.MAILBOX_IDS_ARGUMENT}:");
+        description.AppendLineLF();
+        description.AppendLineLF();
+        description.AppendLineLF($"The mailboxes you may count, by the ID to pass in {MailToolArguments.MAILBOX_IDS_ARGUMENT}:");
         foreach (var mailbox in mailboxes)
-            description.AppendLine($"- id={mailbox.Id}, name='{mailbox.Name}'");
+            description.AppendLineLF($"- id={mailbox.Id}, name='{mailbox.Name}'");
 
         return function with
         {

@@ -775,7 +775,7 @@ public sealed class ContentText : IContent
     {
         var sb = new StringBuilder();
         var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);
-        sb.AppendLine(this.Text);
+        sb.AppendLineLF(this.Text);
 
         if(this.FileAttachments.Count > 0)
         {
@@ -856,13 +856,13 @@ public sealed class ContentText : IContent
                         content = extraction.Content;
                     }
 
-                    documentBlocks.AppendLine();
-                    documentBlocks.AppendLine("---------------------------------------");
-                    documentBlocks.AppendLine($"File path: {document.FilePath}");
-                    documentBlocks.AppendLine("File content:");
-                    documentBlocks.AppendLine("````");
-                    documentBlocks.AppendLine(content);
-                    documentBlocks.AppendLine("````");
+                    documentBlocks.AppendLineLF();
+                    documentBlocks.AppendLineLF("---------------------------------------");
+                    documentBlocks.AppendLineLF($"File path: {document.FilePath}");
+                    documentBlocks.AppendLineLF("File content:");
+                    documentBlocks.AppendLineLF("````");
+                    documentBlocks.AppendLineLF(content);
+                    documentBlocks.AppendLineLF("````");
 
                     foreach (var address in WebAddresses.Find(content))
                         if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
@@ -871,17 +871,17 @@ public sealed class ContentText : IContent
 
                 if (documentBlocks.Length > 0)
                 {
-                    sb.AppendLine();
-                    sb.AppendLine("The following files are attached to this message:");
+                    sb.AppendLineLF();
+                    sb.AppendLineLF("The following files are attached to this message:");
                     sb.Append(documentBlocks);
                 }
 
                 var numImages = normalizedAttachments.Count(x => x is { IsImage: true, Exists: true });
                 if (numImages > 0)
                 {
-                    sb.AppendLine();
-                    sb.AppendLine($"Additionally, there are {numImages} image file(s) attached to this message. ");
-                    sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
+                    sb.AppendLineLF();
+                    sb.AppendLineLF($"Additionally, there are {numImages} image file(s) attached to this message. ");
+                    sb.AppendLineLF("Please consider them as part of the message content and use them to answer accordingly.");
                 }
             }
 

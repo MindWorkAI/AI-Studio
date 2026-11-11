@@ -113,7 +113,7 @@ public static class PlainFileExport
     /// Turns a formula into a file of LaTeX, between \[ and \] as a formula of its own, so that it can be
     /// pasted into a document as it is.
     /// </summary>
-    private static FoundFile ReadFormula(string formula) => new(string.Empty, FileExportFormat.LATEX, SourceCodeLanguage.NONE, $@"\[{Environment.NewLine}{formula}{Environment.NewLine}\]");
+    private static FoundFile ReadFormula(string formula) => new(string.Empty, FileExportFormat.LATEX, SourceCodeLanguage.NONE, $"\\[\n{formula}\n\\]");
 
     /// <summary>
     /// Turns a Markdown table into a file.
@@ -130,7 +130,7 @@ public static class PlainFileExport
 
         var text = new StringBuilder();
         foreach (var fields in rows)
-            text.AppendLine(CsvWriter.ToRow(separator, fields));
+            text.Append(CsvWriter.ToRow(separator, fields)).Append(CsvWriter.ROW_END);
 
         return new(rows[0].FirstOrDefault() ?? string.Empty, FileExportFormat.CSV, SourceCodeLanguage.NONE, text.ToString());
     }

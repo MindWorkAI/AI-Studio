@@ -304,7 +304,7 @@ public sealed partial class RustService
         if (content.Length >= maxCharacters)
             return string.IsNullOrWhiteSpace(piece);
 
-        content.AppendLine(piece);
+        content.AppendLineLF(piece);
         return true;
     }
 

@@ -111,12 +111,12 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
         var sb = new StringBuilder();
         if (this.biasOfTheDay.Links.Count > 0)
         {
-            sb.AppendLine();
-            sb.AppendLine("Please share the following sources with the user as a Markdown list:");
+            sb.AppendLineLF();
+            sb.AppendLineLF("Please share the following sources with the user as a Markdown list:");
             foreach (var link in this.biasOfTheDay.Links)
-                sb.AppendLine($"- {link}");
+                sb.AppendLineLF($"- {link}");
             
-            sb.AppendLine();
+            sb.AppendLineLF();
         }
         
         return sb.ToString();

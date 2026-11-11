@@ -897,7 +897,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         if (documents.Count > 0)
         {
-            sb.AppendLine("""
+            sb.AppendLineLF("""
                           # DOCUMENTS:
 
                           """);
@@ -941,7 +941,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             }
 
             var fileContent = extraction.Content;
-            sb.AppendLine($"""
+            sb.AppendLineLF($"""
                            
                            ## DOCUMENT {numDocuments}:
                            File path: {document.FilePath}
@@ -961,7 +961,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         {
             if (documents.Count == 0)
             {
-                sb.AppendLine($"""
+                sb.AppendLineLF($"""
 
                                There are {numImages} image file(s) attached as documents.
                                Please consider them as documents as well and use them to
@@ -971,7 +971,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             }
             else
             {
-                sb.AppendLine($"""
+                sb.AppendLineLF($"""
 
                                Additionally, there are {numImages} image file(s) attached.
                                Please consider them as documents as well and use them to

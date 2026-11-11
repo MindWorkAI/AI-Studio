@@ -108,7 +108,7 @@ public static class ContentExtensions
             if (sources.Length is 0 || !file.Format.TryToComment(sources, out var comment))
                 return file.Content;
 
-            return $"{file.Content}{Environment.NewLine}{Environment.NewLine}{comment}";
+            return $"{file.Content}\n\n{comment}";
         }
     }
 

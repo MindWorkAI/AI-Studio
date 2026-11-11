@@ -345,24 +345,24 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             var componentSummary = this.assistantPlugin.CreateAuditComponentSummary();
             if (!string.IsNullOrWhiteSpace(componentSummary))
             {
-                builder.AppendLine("Current component overview:");
-                builder.AppendLine(componentSummary);
-                builder.AppendLine();
+                builder.AppendLineLF("Current component overview:");
+                builder.AppendLineLF(componentSummary);
+                builder.AppendLineLF();
             }
         }
 
         var promptPreview = await this.CollectUserPromptAsync();
         if (!string.IsNullOrWhiteSpace(promptPreview))
         {
-            builder.AppendLine("Current prompt preview from the assistant form:");
-            builder.AppendLine(promptPreview);
-            builder.AppendLine();
+            builder.AppendLineLF("Current prompt preview from the assistant form:");
+            builder.AppendLineLF(promptPreview);
+            builder.AppendLineLF();
         }
 
         if (this.ResultingContentBlock?.Content is ContentText text && !string.IsNullOrWhiteSpace(text.Text))
         {
-            builder.AppendLine("Last assistant response visible in this session:");
-            builder.AppendLine(text.Text);
+            builder.AppendLineLF("Last assistant response visible in this session:");
+            builder.AppendLineLF(text.Text);
         }
 
         return builder.ToString().Trim();
@@ -740,6 +740,6 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             }
         }
         
-        return prompt.Append(Environment.NewLine).ToString();
+        return prompt.AppendLineLF().ToString();
     }
 }

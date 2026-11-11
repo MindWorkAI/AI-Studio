@@ -261,24 +261,24 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
                 continue;
             }
 
-            builder.AppendLine($"# {contextFile.Title}");
-            builder.AppendLine($"Source: {contextFile.RelativePath}");
-            builder.AppendLine("<context>");
-            builder.AppendLine(content.Trim());
-            builder.AppendLine("</context>");
-            builder.AppendLine();
+            builder.AppendLineLF($"# {contextFile.Title}");
+            builder.AppendLineLF($"Source: {contextFile.RelativePath}");
+            builder.AppendLineLF("<context>");
+            builder.AppendLineLF(content.Trim());
+            builder.AppendLineLF("</context>");
+            builder.AppendLineLF();
         }
 
         //
         // Unlike the files above, this list is not the same on two installations. It is the only
         // place the model learns which tool IDs exist, so an assistant cannot name a tool without it:
         //
-        builder.AppendLine("# Available tools");
-        builder.AppendLine("Source: the tools installed in this AI Studio");
-        builder.AppendLine("<context>");
-        builder.AppendLine(await this.FormatAvailableToolsAsync());
-        builder.AppendLine("</context>");
-        builder.AppendLine();
+        builder.AppendLineLF("# Available tools");
+        builder.AppendLineLF("Source: the tools installed in this AI Studio");
+        builder.AppendLineLF("<context>");
+        builder.AppendLineLF(await this.FormatAvailableToolsAsync());
+        builder.AppendLineLF("</context>");
+        builder.AppendLineLF();
 
         return builder.ToString().Trim();
     }
@@ -302,7 +302,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         var builder = new StringBuilder();
         foreach (var tool in activeTools)
-            builder.AppendLine($"- {tool.Id}: {tool.DescriptionForLLM}");
+            builder.AppendLineLF($"- {tool.Id}: {tool.DescriptionForLLM}");
 
         return builder.ToString().TrimEnd();
     }
@@ -729,11 +729,11 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         var builder = new StringBuilder();
         foreach (var (relativePath, content) in luaFiles)
         {
-            builder.AppendLine($"# {relativePath}");
-            builder.AppendLine("```lua");
-            builder.AppendLine(content.Trim());
-            builder.AppendLine("```");
-            builder.AppendLine();
+            builder.AppendLineLF($"# {relativePath}");
+            builder.AppendLineLF("```lua");
+            builder.AppendLineLF(content.Trim());
+            builder.AppendLineLF("```");
+            builder.AppendLineLF();
         }
 
         return builder.ToString().Trim();

@@ -93,6 +93,6 @@ public static class ExportedTokenizerPath
             field,
         ];
 
-        return string.Join($"{Environment.NewLine}{indentation}", lines);
+        return string.Join($"\n{indentation}", lines);
     }
 }

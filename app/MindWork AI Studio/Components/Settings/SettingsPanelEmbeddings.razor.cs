@@ -118,7 +118,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         //
         var dialogParameters = string.IsNullOrEmpty(affectedDataSources)
             ? new DialogParameters<ConfirmDialog> { { x => x.Message, question } }
-            : new DialogParameters<ConfirmDialog> { { x => x.MarkdownBody, $"{affectedDataSources}{Environment.NewLine}{question}" } };
+            : new DialogParameters<ConfirmDialog> { { x => x.MarkdownBody, $"{affectedDataSources}\n{question}" } };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
@@ -227,7 +227,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             return;
         }
 
-        var resultText = string.Join(Environment.NewLine, vector.Select(value => value.ToString("G9", CultureInfo.InvariantCulture)));
+        var resultText = string.Join('\n',vector.Select(value => value.ToString("G9", CultureInfo.InvariantCulture)));
         var resultParameters = new DialogParameters<EmbeddingResultDialog>
         {
             { x => x.ResultText, resultText },
