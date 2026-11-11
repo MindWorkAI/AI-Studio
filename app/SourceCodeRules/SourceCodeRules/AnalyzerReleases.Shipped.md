@@ -21,3 +21,4 @@
  MWAIS0015 | Usage    | Error    | JsonSourceGenerationAnalyzer
  MWAIS0016 | Style    | Error    | ClassicExtensionMethodAnalyzer
  MWAIS0017 | Usage    | Error    | IconCatalogAnalyzer
+ MWAIS0018 | Usage    | Error    | SystemLineBreakAnalyzer

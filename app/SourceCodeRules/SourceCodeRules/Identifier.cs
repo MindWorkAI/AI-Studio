@@ -19,4 +19,5 @@ public static class Identifier
     public const string JSON_SOURCE_GENERATION_ANALYZER = $"{Tools.ID_PREFIX}0015";
     public const string CLASSIC_EXTENSION_METHOD_ANALYZER = $"{Tools.ID_PREFIX}0016";
     public const string ICON_CATALOG_ANALYZER = $"{Tools.ID_PREFIX}0017";
+    public const string SYSTEM_LINE_BREAK_ANALYZER = $"{Tools.ID_PREFIX}0018";
 }
