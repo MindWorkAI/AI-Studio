@@ -62,6 +62,36 @@ window.scrollFirstMatchIntoView = function (container, selector) {
     container?.querySelector(selector)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
 }
 
+// How many frames the settings window waits for the part to come back to, see showSettingsPane: a
+// pane may render that part only once its data arrived. About half a second.
+const SETTINGS_ANCHOR_FRAMES = 30
+
+// Shows the pane which just took the place of another one in the settings window, see SettingsWindow:
+// from its top, where its new scrolling box starts anyway, or, coming back up from a deeper pane, at the
+// whole part of it which leads down there. That part carries the path of the deeper pane in
+// data-settings-anchor, see SettingsAnchor. It gets the focus, whose frame shows the user where they came
+// from until they click elsewhere. Without that part, the pane stays at its top.
+window.showSettingsPane = function (options, anchor) {
+    if (!options || !anchor)
+        return
+
+    let framesLeft = SETTINGS_ANCHOR_FRAMES
+    const show = function () {
+        const part = [...options.querySelectorAll('[data-settings-anchor]')].find(element => element.dataset.settingsAnchor === anchor)
+        if (!part) {
+            if (--framesLeft > 0)
+                requestAnimationFrame(show)
+
+            return
+        }
+
+        part.scrollIntoView({ block: 'center' })
+        part.focus({ preventScroll: true })
+    }
+
+    show()
+}
+
 // The nearest element around the given one which scrolls, and with it the box sticky headers stick to.
 const findScrollingBox = function (element) {
     let scrollingBox = element?.parentElement

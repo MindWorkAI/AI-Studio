@@ -18,6 +18,10 @@ namespace AIStudio.Components.Settings;
 /// Entries the user cannot change, such as those of an organization, stay out of the preview. The page
 /// of the collection still lists them.
 /// </para>
+/// <para>
+/// The whole section is a <see cref="SettingsAnchor"/>: coming back from the page of the collection, the
+/// settings window shows the section again, whichever entry the user opened or deleted there.
+/// </para>
 /// </remarks>
 public partial class CollectionSection : MSGComponentBase
 {

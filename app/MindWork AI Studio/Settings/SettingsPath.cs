@@ -72,6 +72,28 @@ public readonly record struct SettingsPath
     }
 
     /// <summary>
+    /// The path one level below the given one on the way down to this path, such as <c>chat/templates</c>
+    /// below <c>chat</c> on the way to <c>chat/templates/abc</c>.
+    /// </summary>
+    /// <remarks>
+    /// Going up from this path to the given one, the window returns to the part of the page there which
+    /// leads down again, see <see cref="AIStudio.Components.Settings.SettingsAnchor"/>, and that part
+    /// carries this path.
+    /// </remarks>
+    /// <param name="ancestor">A path above this one.</param>
+    /// <returns>The path one level below the given one, or null when the given path is not above this one.</returns>
+    public SettingsPath? StepBelow(SettingsPath ancestor)
+    {
+        foreach (var path in this.SelfAndAncestors())
+        {
+            if (path.Parent == ancestor)
+                return path;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// This path and the ones above it, from this one up to the first level.
     /// </summary>
     public IReadOnlyList<SettingsPath> SelfAndAncestors()

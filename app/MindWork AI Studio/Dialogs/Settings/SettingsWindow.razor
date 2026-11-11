@@ -47,7 +47,8 @@
                             @this.pane.Title()
                         </MudText>
                     </div>
-                    <div class="settings-window-options">
+                    @* A new pane gets a new scrolling box, so it starts at its top; going up, the window then scrolls to where the user came from: *@
+                    <div class="settings-window-options" @key="@this.pane.Path" @ref="this.optionsElement">
                         <DynamicComponent @key="@this.pane.Path" Type="@this.pane.Component" Parameters="@this.paneParameters"/>
                     </div>
                 </section>

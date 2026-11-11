@@ -89,6 +89,30 @@ public sealed class SettingsPanesTests
     }
 
     [Test]
+    public void GoingUpReturnsToThePartWhichLeadsDownAgain()
+    {
+        var deeper = SettingsPath.CHAT_TEMPLATES.Append("abc");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(SettingsPath.CHAT_TEMPLATES.StepBelow(SettingsPath.CHAT), Is.EqualTo(SettingsPath.CHAT_TEMPLATES));
+            Assert.That(deeper.StepBelow(SettingsPath.CHAT), Is.EqualTo(SettingsPath.CHAT_TEMPLATES));
+            Assert.That(deeper.StepBelow(SettingsPath.CHAT_TEMPLATES), Is.EqualTo(deeper));
+        }
+    }
+
+    [Test]
+    public void GoingSidewaysOrDownReturnsToNothing()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(SettingsPath.CHAT_TEMPLATES.StepBelow(SettingsPath.WORKSPACES), Is.Null);
+            Assert.That(SettingsPath.CHAT.StepBelow(SettingsPath.CHAT), Is.Null);
+            Assert.That(SettingsPath.CHAT.StepBelow(SettingsPath.CHAT_TEMPLATES), Is.Null);
+        }
+    }
+
+    [Test]
     public void APathOfTheFirstLevelHasNoParent()
     {
         Assert.That(SettingsPath.CHAT.Parent, Is.Null);

@@ -1,0 +1,14 @@
+/*
+ * The part the user comes back to has the focus, and shows it with the frame MudBlazor draws around a
+ * field with the focus: two pixels in the primary color. The frame lies on the edges of the part itself,
+ * inside its box, so a scrolling box around it cannot cut it off; the part keeps the room inside which
+ * the frame needs. It goes as soon as the user clicks or tabs elsewhere, as the frame of a field does.
+ */
+.settings-anchor {
+    border-radius: 8px;
+}
+
+.settings-anchor:focus {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: -2px;
+}

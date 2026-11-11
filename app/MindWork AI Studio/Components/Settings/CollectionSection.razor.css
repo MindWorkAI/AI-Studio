@@ -1,11 +1,18 @@
 /*
+ * The section comes below the options it belongs to, and a line above sets it apart from them.
+ */
+.collection-section-line {
+    margin: 8px 0 4px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+/*
  * The section: its title and what the collection is, with "Manage" on the right, then a few of its
- * entries. It comes below the options it belongs to, and a line above sets it apart from them.
+ * entries. It keeps room inside, as much as MudBlazor's fields keep beside their text, so the frame of
+ * the focus does not touch it when the settings window returns here, see SettingsAnchor.
  */
 .collection-section {
-    padding-top: 16px;
-    margin-top: 8px;
-    border-top: 1px solid var(--mud-palette-lines-default);
+    padding: 12px 14px;
 }
 
 .collection-section-head {

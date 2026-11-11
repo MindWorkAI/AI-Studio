@@ -17,6 +17,13 @@ namespace AIStudio.Dialogs.Settings;
 /// the list on the left keeps the pane of the first level marked meanwhile.
 /// </para>
 /// <para>
+/// Going up, by the back button or by the list, the window shows the part of the pane above which leads
+/// down to where the user was, see <see cref="SettingsAnchor"/>: it scrolls that part into view and gives
+/// it the focus, whose frame stays until the user clicks elsewhere. That holds however the user reached
+/// the deeper pane, also straight from elsewhere, such as from the chat. Every other change of the pane
+/// starts at its top, since each pane gets a scrolling box of its own.
+/// </para>
+/// <para>
 /// So far, the window holds the options of the chat, the chat templates, and the options of the
 /// workspaces. The settings page and the settings dialogs of the assistants are meant to move into it
 /// as further panes, see <see cref="SettingsPanes"/>.
@@ -33,6 +40,16 @@ public partial class SettingsWindow : SettingsDialogBase
     private SettingsPane pane = SettingsPanes.ALL[0];
     private IReadOnlyList<SettingsPane> trail = [SettingsPanes.ALL[0]];
     private Dictionary<string, object> paneParameters = new();
+
+    // The scrolling box of the pane shown, and the part of it to return to once the window went up:
+    private ElementReference optionsElement;
+    private SettingsPath? returnAnchor;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+
+    [Inject]
+    private ILogger<SettingsWindow> Logger { get; init; } = null!;
 
     /// <summary>
     /// Opens the settings window at a pane.
@@ -80,9 +97,39 @@ public partial class SettingsWindow : SettingsDialogBase
     /// <param name="path">The path of the pane to show.</param>
     public void NavigateTo(SettingsPath path)
     {
+        var previousPath = this.pane.Path;
         this.Show(path);
+
+        // Going up returns to the part of the pane which leads down to where the user was; null otherwise:
+        this.returnAnchor = previousPath.StepBelow(this.pane.Path);
+
         this.StateHasChanged();
     }
+
+    #region Overrides of ComponentBase
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (this.returnAnchor is { } anchor)
+        {
+            this.returnAnchor = null;
+            try
+            {
+                await this.JsRuntime.InvokeVoidAsync("showSettingsPane", this.optionsElement, anchor.Value);
+            }
+            catch (JSException e)
+            {
+                // Finding the way back is a help, not a must: without it, the pane still works, it only
+                // stays at its top. The script may be missing, e.g., from an old copy of app.js in the cache:
+                this.Logger.LogWarning(e, "The settings window could not show where the user came from.");
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    #endregion
 
     /// <summary>
     /// The path of the pane of the first level which holds the pane shown, marked in the list.
