@@ -4,7 +4,7 @@ using SharedTools;
 
 namespace AIStudio.Tools.PluginSystem;
 
-public static class ILangExtensions
+public static class LangExtensions
 {
     private static readonly ILogger<ILang> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ILang>();
 
