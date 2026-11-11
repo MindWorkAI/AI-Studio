@@ -1275,7 +1275,7 @@ CONFIG["SETTINGS"] = {}
 -- Field names of the Read Web Page tool:
 --   timeoutSeconds        Page-loading timeout in seconds. Reading the text of a document has the
 --                         same timeout once more.
---   maxContentCharacters  Content-character limit.
+--   maxContentCharacters  Content-character limit, at most 100000. Default: 80000.
 --   freeAddressChoice     Whether the AI may read web addresses it chose itself. Allowed values are:
 --                           OFF -> the AI reads only addresses which appear in the chat, such as in
 --                                  a message, an attached document, or a data source, or which a

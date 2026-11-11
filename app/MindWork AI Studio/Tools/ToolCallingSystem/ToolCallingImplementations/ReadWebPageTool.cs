@@ -16,7 +16,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
 
     private const int DEFAULT_TIMEOUT_SECONDS = 60;
-    private const int DEFAULT_MAX_CONTENT_CHARACTERS = 30000;
+    private const int DEFAULT_MAX_CONTENT_CHARACTERS = 80000;
     private const int MAX_TIMEOUT_SECONDS = 240;
     private const int MAX_CONTENT_CHARACTERS = 100000;
     private const int MAX_LOG_URL_LENGTH = 2000;
