@@ -2,8 +2,6 @@ using System.Text;
 
 using AIStudio.Chat;
 
-using SharedTools;
-
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>

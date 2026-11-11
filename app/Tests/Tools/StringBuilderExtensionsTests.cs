@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-using SharedTools;
+using SharedTools.Text;
 
 namespace AIStudio.Tests.Tools;
 

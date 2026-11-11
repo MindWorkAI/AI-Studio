@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace SharedTools;
+namespace SharedTools.Text;
 
 /// <summary>
 /// Appends lines with LF, the same line break on every system.
