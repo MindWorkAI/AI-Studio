@@ -1333,7 +1333,8 @@ CONFIG["SETTINGS"] = {}
 --                    read_web_page and uses the current user's operating-system sign-in when the
 --                    wiki has a private or VPN address. Redirects outside this URL are refused. A
 --                    provider must have HIGH confidence to receive search results.
---   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
+--   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30. Reading the best
+--                    results along with the search takes at most twice as long in total.
 --   readTopHits      How many of the best results the search reads right away, wiki pages and
 --                    attachments alike, as an integer string from 0 to 10. Default: 5, as many as
 --                    web_search reads. 0 switches this off, and so does switching read_web_page
@@ -1342,7 +1343,8 @@ CONFIG["SETTINGS"] = {}
 --                    read_web_page.maxDocumentMegabytes.
 --   maxHitContentCharacters
 --                    How many characters of content these results bring together, at most 200000.
---                    Default: 100000, as for web_search. The results share them equally.
+--                    Default: 100000, as for web_search. The results share them; a result which
+--                    fails or is short leaves the rest to the others.
 -- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
 -- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
 -- Where a chat may send data after a search is set by read_web_page.internalPageOutboundDataRestriction.

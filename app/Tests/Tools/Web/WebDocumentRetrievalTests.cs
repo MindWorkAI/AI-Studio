@@ -257,6 +257,26 @@ public sealed class WebDocumentRetrievalTests
         });
     }
 
+    [TestCase(FileExtractionErrorCode.FILE_NOT_FOUND)]
+    [TestCase(FileExtractionErrorCode.FILE_NOT_READABLE)]
+    [TestCase(FileExtractionErrorCode.FILE_LOCKED)]
+    [TestCase(FileExtractionErrorCode.INTERNAL)]
+    [TestCase(FileExtractionErrorCode.UNKNOWN)]
+    public void AFailureNeverHandsTheModelThePathOfTheTemporaryFile(FileExtractionErrorCode errorCode)
+    {
+        // Such as when a virus scanner removed the file before the runtime opened it:
+        const string PATH = @"C:\Users\someone\AppData\Roaming\com.github.mindwork-ai.ai-studio\data\webDocuments\0123456789abcdef";
+        var extraction = FileExtractionResult.Failed(errorCode, $"The file does not exist: '{PATH}'.");
+
+        var failure = WebPageRetrievalService.DescribeFailure(extraction);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(failure, Does.Not.Contain(PATH), "The path names the data directory and the user name of this computer.");
+            Assert.That(failure, Does.Not.Contain("someone"));
+        });
+    }
+
     [Test]
     public async Task AnHtmlPageIsStillReadAsAPage()
     {

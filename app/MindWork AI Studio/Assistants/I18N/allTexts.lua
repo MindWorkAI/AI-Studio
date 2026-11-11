@@ -18202,9 +18202,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Confluence returned a search page without readable results.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2900295830"] = "Confluence returned a search page without readable results."
 
--- (Optional) How many characters of content the results read along bring together, at most {0}. The results share them equally.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2906698420"] = "(Optional) How many characters of content the results read along bring together, at most {0}. The results share them equally."
-
 -- Confluence redirected the search outside the configured wiki.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3023598641"] = "Confluence redirected the search outside the configured wiki."
 
@@ -18219,6 +18216,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- (Optional) Search request timeout in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3778965668"] = "(Optional) Search request timeout in seconds."
+
+-- (Optional) How many characters of content the results read along bring together, at most {0}. The results share them, and a result which fails or is short leaves the rest to the others.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3933012389"] = "(Optional) How many characters of content the results read along bring together, at most {0}. The results share them, and a result which fails or is short leaves the rest to the others."
 
 -- The setting '{0}' must be a positive integer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T4199432074"] = "The setting '{0}' must be a positive integer."

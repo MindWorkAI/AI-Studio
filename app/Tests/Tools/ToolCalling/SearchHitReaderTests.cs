@@ -103,6 +103,48 @@ public sealed class SearchHitReaderTests
     }
 
     [Test]
+    public async Task AFailedHitLeavesItsShareToTheOthers()
+    {
+        using var server = new LoopbackWebServer();
+        var refused = server.Address("/refused");
+
+        var contents = await this.reader.ReadAsync([refused, server.Address("/page")], 20, (_, documents) => Options(documents, target => target != refused));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(contents[0].Failure, Is.Not.Null);
+            Assert.That(contents[1].Markdown.Length, Is.GreaterThan(10), "The hit which was read gets the share of the one which failed.");
+            Assert.That(contents[1].Markdown.Length, Is.LessThanOrEqualTo(20), "The budget of all hits still holds.");
+        });
+    }
+
+    [Test]
+    public async Task AHitWhichIsNotReadInTimeCostsThatHitOnly()
+    {
+        using var server = new LoopbackWebServer(document: new("application/pdf", System.Text.Encoding.UTF8.GetBytes("The travel guideline.")));
+        var directory = Path.Combine(Path.GetTempPath(), $"ai-studio-search-hits-{Guid.NewGuid():N}");
+        var documentReader = new WebDocumentReader(this.rustService, NullLogger<WebDocumentReader>.Instance, new WebDocumentFiles(directory));
+        var reader = new SearchHitReader(new WebPageRetrievalService(new HTMLParser(), documentReader), this.guardService, this.toolSettingsService, NullLogger<SearchHitReader>.Instance);
+        this.runtime.ReadDelay = TimeSpan.FromSeconds(30);
+
+        try
+        {
+            var contents = await reader.ReadAsync([server.Address("/document"), server.Address("/page")], 10_000, (_, documents) => Options(documents), maxDuration: TimeSpan.FromSeconds(2));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(contents[0].Failure, Does.Contain("time"), "A slow document must not hold up the search beyond its time.");
+                Assert.That(contents[1].Failure, Is.Null, "The other hits are read all the same.");
+            });
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+    }
+
+    [Test]
     public async Task AHitWhichCannotBeReadCostsThatHitOnly()
     {
         using var server = new LoopbackWebServer();

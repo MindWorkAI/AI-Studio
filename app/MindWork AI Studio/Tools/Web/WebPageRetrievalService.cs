@@ -152,16 +152,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
             if (timeoutCts.IsCancellationRequested)
                 throw new TimeoutException($"Reading the text of the document timed out after {timeoutSeconds} seconds.");
 
-            // English, like every other failure here, because it reaches the model:
-            throw new InvalidOperationException(extraction.ErrorCode switch
-            {
-                FileExtractionErrorCode.UNSUPPORTED when extraction.DetectedFormat is not null => $"The document is a {extraction.DetectedFormat}, which AI Studio cannot read.",
-                FileExtractionErrorCode.UNSUPPORTED => "The document has a format which AI Studio cannot read.",
-                FileExtractionErrorCode.EXECUTABLE_REJECTED => "The address returned a program instead of a document, which is never read.",
-                FileExtractionErrorCode.PDF_ENCRYPTED => "The document is protected and cannot be opened.",
-                FileExtractionErrorCode.NO_TEXT_EXTRACTED or FileExtractionErrorCode.NO_CONTENT => "No text could be read from the document. It might contain images only, such as a scanned PDF without a text layer.",
-                _ => $"Reading the document failed: {extraction.ErrorMessage}",
-            });
+            throw new InvalidOperationException(DescribeFailure(extraction));
         }
 
         return new RetrievedWebPage
@@ -188,6 +179,28 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
             HasUnreadableParts = extraction.Outcome is FileExtractionOutcome.PARTIAL,
         };
     }
+
+    /// <summary>
+    /// Why the text of a document could not be read, as the model learns it.
+    /// </summary>
+    /// <remarks>
+    /// English, like every other failure here, because it reaches the model. Only the code of the
+    /// failure decides the text, never the message of the runtime: that one may name the path of
+    /// the temporary file, such as when a virus scanner removed it before it was read, and with it
+    /// the data directory and the user name of this computer. RustService logs the message.
+    /// </remarks>
+    /// <param name="extraction">The failed extraction.</param>
+    internal static string DescribeFailure(FileExtractionResult extraction) => extraction.ErrorCode switch
+    {
+        FileExtractionErrorCode.UNSUPPORTED when extraction.DetectedFormat is not null => $"The document is a {extraction.DetectedFormat}, which AI Studio cannot read.",
+        FileExtractionErrorCode.UNSUPPORTED => "The document has a format which AI Studio cannot read.",
+        FileExtractionErrorCode.EXECUTABLE_REJECTED => "The address returned a program instead of a document, which is never read.",
+        FileExtractionErrorCode.PDF_ENCRYPTED => "The document is protected and cannot be opened.",
+        FileExtractionErrorCode.NO_TEXT_EXTRACTED or FileExtractionErrorCode.NO_CONTENT => "No text could be read from the document. It might contain images only, such as a scanned PDF without a text layer.",
+        FileExtractionErrorCode.NOT_A_VALID_PDF or FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET or FileExtractionErrorCode.NOT_A_VALID_DOCUMENT or FileExtractionErrorCode.NOT_TEXT_CONTENT => "The document is damaged or not what it claims to be, so its text cannot be read.",
+        FileExtractionErrorCode.TIMEOUT => "Reading the text of the document took too long.",
+        _ => "AI Studio could not read the text of the document.",
+    };
 
     /// <summary>
     /// Whether a response of this media type may hold a document such as a PDF.

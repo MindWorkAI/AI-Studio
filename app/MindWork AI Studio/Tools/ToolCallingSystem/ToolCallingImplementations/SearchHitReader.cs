@@ -19,7 +19,11 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 /// the operating system's sign-in to the site only. Documents follow the settings of Read Web Page,
 /// since they are the ones that tool would read; a hit within the site is internal, so the default
 /// reads them. The hits share one character budget, so a search of several hits does not grow
-/// larger than an ordinary page. Each hit is cut to its share, a document while it is read.<br/><br/>
+/// larger than an ordinary page. The budget is shared once all hits are read, among those which
+/// were read: a hit which failed or is shorter than its share leaves the rest to the others. A
+/// document is therefore read up to the whole budget, which keeps it far below its size limit.<br/><br/>
+/// All hits together may take a given time at most, so slow documents cannot hold up the chat for
+/// several rounds of the timeout. A hit which is not read by then fails like any other.<br/><br/>
 /// Every hit is filtered for prompt injections, the pages in one request and the documents while
 /// the runtime reads them, all within the action of the search, so the user hears of one search
 /// rather than of every page. A hit which cannot be read costs that hit only, whatever went wrong:
@@ -36,37 +40,47 @@ public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalServ
     // As many as web search reads at once:
     private const int MAX_PARALLEL_READS = 4;
 
+    private const string OUT_OF_TIME = "The time for reading the results of the search ran out before this one was read.";
+
     /// <summary>
     /// Reads the given hits, each to its share of the character budget.
     /// </summary>
     /// <param name="hits">The hits to read, in the order of their relevance. All must lie within the searched site.</param>
     /// <param name="maxContentCharacters">The character budget of all hits together.</param>
     /// <param name="createOptions">Builds the options of the request for one hit, given the document options to pass on. They keep the request within the site.</param>
+    /// <param name="maxDuration">How long reading all hits may take, or null for no limit beyond the timeout of each request.</param>
     /// <param name="reportingScope">The action of the search, or null to report what the filter removed right away.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>What came of each hit, in the order of the hits.</returns>
-    public async Task<IReadOnlyList<SearchHitContent>> ReadAsync(IReadOnlyList<Uri> hits, int maxContentCharacters, Func<Uri, WebDocumentOptions, WebPageRetrievalOptions> createOptions, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    public async Task<IReadOnlyList<SearchHitContent>> ReadAsync(IReadOnlyList<Uri> hits, int maxContentCharacters, Func<Uri, WebDocumentOptions, WebPageRetrievalOptions> createOptions, TimeSpan? maxDuration = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         if (hits.Count is 0 || maxContentCharacters <= 0)
             return [];
 
-        var share = Math.Max(1, maxContentCharacters / hits.Count);
         var (documentAccess, maxDocumentBytes) = await ReadWebPageTool.ReadDocumentSettingsAsync(toolSettingsService);
         var documents = new WebDocumentOptions
         {
             // A hit lies within the site, so it is internal; the request cannot leave the site:
             IsAllowed = (_, _) => ReadWebPageTool.IsDocumentAllowed(documentAccess, isInternal: true),
             MaxBytes = maxDocumentBytes,
-            MaxCharacters = share,
+
+            // The whole budget, since a document may get it all when the other hits fail:
+            MaxCharacters = maxContentCharacters,
             ReportingScope = reportingScope,
         };
 
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        if (maxDuration is { } duration)
+            deadline.CancelAfter(duration);
+
         using var semaphore = new SemaphoreSlim(MAX_PARALLEL_READS);
-        var reads = await Task.WhenAll(hits.Select((hit, index) => this.ReadHitAsync(hit, index, share, createOptions(hit, documents), semaphore, token)));
+        var reads = await Task.WhenAll(hits.Select((hit, index) => this.ReadHitAsync(hit, index, createOptions(hit, documents), semaphore, deadline.Token, token)));
+        reads = ShareBudget(reads, maxContentCharacters);
 
         //
         // One request for all hits that were read, so the user hears of the search once, grouped
-        // by page, rather than once per hit:
+        // by page, rather than once per hit. It comes after the cut, so only what the model gets
+        // is filtered:
         //
         var read = reads.Where(hit => hit.Content is not null).ToList();
         var sanitized = await WebPageContentSanitizer.SanitizeAsync(
@@ -81,27 +95,70 @@ public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalServ
             .ToList();
     }
 
-    private async Task<HitRead> ReadHitAsync(Uri hit, int index, int share, WebPageRetrievalOptions options, SemaphoreSlim semaphore, CancellationToken token)
+    /// <summary>
+    /// Shares the budget among the hits which were read and cuts each one to its share.
+    /// </summary>
+    /// <remarks>
+    /// The shortest hits come first: one shorter than an equal share keeps all of it and leaves the
+    /// rest to the longer ones. A hit which failed takes nothing.
+    /// </remarks>
+    /// <param name="reads">What came of each hit, in the order of the hits.</param>
+    /// <param name="maxContentCharacters">The character budget of all hits together.</param>
+    /// <returns>The hits, in the same order, each within its share.</returns>
+    private static HitRead[] ShareBudget(HitRead[] reads, int maxContentCharacters)
     {
-        await semaphore.WaitAsync(token);
+        var shared = reads.ToArray();
+        var readHits = shared.Where(hit => hit.Content is not null).OrderBy(hit => hit.Content!.Markdown.Length).ToList();
+        var remainingBudget = maxContentCharacters;
+        var remainingHits = readHits.Count;
+        foreach (var hit in readHits)
+        {
+            var share = Math.Max(1, remainingBudget / remainingHits);
+            remainingHits--;
+
+            var content = hit.Content!;
+            if (content.Markdown.Length <= share)
+            {
+                remainingBudget -= content.Markdown.Length;
+                continue;
+            }
+
+            var markdown = MarkdownTruncator.Truncate(content.Markdown, share);
+            remainingBudget -= markdown.Length;
+            shared[Array.IndexOf(shared, hit)] = hit with { Content = content with { Markdown = markdown }, IsPartial = true };
+        }
+
+        return shared;
+    }
+
+    private async Task<HitRead> ReadHitAsync(Uri hit, int index, WebPageRetrievalOptions options, SemaphoreSlim semaphore, CancellationToken deadlineToken, CancellationToken token)
+    {
+        try
+        {
+            await semaphore.WaitAsync(deadlineToken);
+        }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        {
+            logger.LogInformation("Did not read a search hit, because the time for reading the hits ran out. Index={Index}", index);
+            return new HitRead(index, hit, hit, null, false, OUT_OF_TIME);
+        }
+
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            var retrieved = await webPageRetrievalService.RetrieveAsync(hit, options, token);
-            var markdown = retrieved.ExtractedPage.Markdown;
+            var retrieved = await webPageRetrievalService.RetrieveAsync(hit, options, deadlineToken);
             var isPartial = retrieved.IsCutAtCharacterLimit || retrieved.HasUnreadableParts;
-            if (markdown.Length > share)
-            {
-                markdown = MarkdownTruncator.Truncate(markdown, share);
-                isPartial = true;
-            }
-
-            logger.LogInformation("Read a search hit. Index={Index}, ContentKind={ContentKind}, ReturnedCharacters={ReturnedCharacters}, IsPartial={IsPartial}, DurationMs={DurationMs}", index, retrieved.ContentKind, markdown.Length, isPartial, stopwatch.ElapsedMilliseconds);
-            return new HitRead(index, hit, retrieved.Page.FinalUrl, WebPageModelContent.From(retrieved.ExtractedPage, markdown), isPartial, null);
+            logger.LogInformation("Read a search hit. Index={Index}, ContentKind={ContentKind}, ReadCharacters={ReadCharacters}, IsPartial={IsPartial}, DurationMs={DurationMs}", index, retrieved.ContentKind, retrieved.ExtractedPage.Markdown.Length, isPartial, stopwatch.ElapsedMilliseconds);
+            return new HitRead(index, hit, retrieved.Page.FinalUrl, WebPageModelContent.From(retrieved.ExtractedPage, retrieved.ExtractedPage.Markdown), isPartial, null);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             throw;
+        }
+        catch (OperationCanceledException) when (deadlineToken.IsCancellationRequested)
+        {
+            logger.LogInformation("Stopped reading a search hit, because the time for reading the hits ran out. Index={Index}, DurationMs={DurationMs}", index, stopwatch.ElapsedMilliseconds);
+            return new HitRead(index, hit, hit, null, false, OUT_OF_TIME);
         }
         // Anything else as well, such as a temporary file the data directory refuses: the search was read, and one hit must not cost it:
         catch (Exception exception)

@@ -161,7 +161,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
         BASE_URL_SETTING => TB("The HTTPS address of your Confluence Data Center wiki, including its path if present, such as https://wiki.example.org/confluence/. Confluence Cloud is not supported yet. When your wiki has a private or VPN address, also add its host to the allowed private hosts of Read Web Page, which opens the pages found. Where a chat may send data after a search is decided by the setting 'Where a chat may send data after reading internal pages' of Read Web Page, which applies to wiki pages as well."),
         TIMEOUT_SECONDS_SETTING => TB("(Optional) Search request timeout in seconds."),
         READ_TOP_HITS_SETTING => string.Format(TB("(Optional) How many of the best results the search reads right away, wiki pages and attachments alike, at most {0}. The AI then needs no further step per result, and an answer which needs several searches does not run out of tool calls. 0 switches this off."), SearchHitReader.MAX_HITS_TO_READ),
-        MAX_HIT_CONTENT_CHARACTERS_SETTING => string.Format(TB("(Optional) How many characters of content the results read along bring together, at most {0}. The results share them equally."), SearchHitReader.MAX_CONTENT_CHARACTERS),
+        MAX_HIT_CONTENT_CHARACTERS_SETTING => string.Format(TB("(Optional) How many characters of content the results read along bring together, at most {0}. The results share them, and a result which fails or is short leaves the rest to the others."), SearchHitReader.MAX_CONTENT_CHARACTERS),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -302,7 +302,12 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             IsPrivateHostAllowed = host => IsWikiHost(baseUrl, host),
             IsTargetAllowed = target => IsWithinWiki(baseUrl, target),
             Documents = documents,
-        }, reportingScope, token);
+        },
+
+        // One download and the reading of its text, so slow documents do not hold up the chat for several rounds:
+        maxDuration: TimeSpan.FromSeconds(2 * timeoutSeconds),
+        reportingScope: reportingScope,
+        token: token);
 
         var readHits = new JsonArray();
         foreach (var content in readContents)
