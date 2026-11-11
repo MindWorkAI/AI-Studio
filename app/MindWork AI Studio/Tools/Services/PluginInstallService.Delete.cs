@@ -247,7 +247,7 @@ public sealed partial class PluginInstallService
     private static string CreateDeleteBackupDirectory(IAvailablePlugin plugin)
     {
         var backupRoot = Path.Join(SettingsManager.DataDirectory, DELETE_BACKUP_DIRECTORY);
-        return Path.Join(backupRoot, $"{plugin.Type.GetDirectory()}-{plugin.Id:N}-{Guid.NewGuid():N}");
+        return Path.Join(backupRoot, $"{plugin.Type.Directory}-{plugin.Id:N}-{Guid.NewGuid():N}");
     }
 
     private async Task TryRestoreDeletedPluginAsync(IAvailablePlugin plugin, string pluginDirectory, string backupDirectory, PluginDeleteSideEffects sideEffects, CancellationToken token)

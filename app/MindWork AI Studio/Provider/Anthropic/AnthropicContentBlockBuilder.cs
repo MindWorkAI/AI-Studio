@@ -117,8 +117,8 @@ public sealed class AnthropicContentBlockBuilder
             case TYPE_TEXT:
                 return this.BuildFromSeed(new()
                 {
-                    ["type"] = JsonSerializer.Serialize(TYPE_TEXT),
-                    ["text"] = JsonSerializer.Serialize(this.text.ToString()),
+                    ["type"] = JsonSerializer.Serialize(TYPE_TEXT, ProviderJsonOptions.OPTIONS),
+                    ["text"] = JsonSerializer.Serialize(this.text.ToString(), ProviderJsonOptions.OPTIONS),
                 });
             
             case TYPE_THINKING:
@@ -129,9 +129,9 @@ public sealed class AnthropicContentBlockBuilder
                 //
                 return this.BuildFromSeed(new()
                 {
-                    ["type"] = JsonSerializer.Serialize(TYPE_THINKING),
-                    ["thinking"] = JsonSerializer.Serialize(this.thinking.ToString()),
-                    ["signature"] = JsonSerializer.Serialize(this.signature),
+                    ["type"] = JsonSerializer.Serialize(TYPE_THINKING, ProviderJsonOptions.OPTIONS),
+                    ["thinking"] = JsonSerializer.Serialize(this.thinking.ToString(), ProviderJsonOptions.OPTIONS),
+                    ["signature"] = JsonSerializer.Serialize(this.signature, ProviderJsonOptions.OPTIONS),
                 });
             
             case TYPE_TOOL_USE:

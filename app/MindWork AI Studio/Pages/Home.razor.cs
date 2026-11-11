@@ -66,7 +66,7 @@ public partial class Home : MSGComponentBase
             return;
 
         this.SettingsManager.StartupStartPageRedirectHandled = true;
-        var startPageRoute = this.SettingsManager.ConfigurationData.App.StartPage.ToRoute();
+        var startPageRoute = this.SettingsManager.ConfigurationData.App.StartPage.Route;
         if (string.IsNullOrWhiteSpace(startPageRoute))
             return;
 

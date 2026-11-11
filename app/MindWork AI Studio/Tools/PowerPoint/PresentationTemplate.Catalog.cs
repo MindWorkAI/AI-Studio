@@ -185,7 +185,7 @@ internal sealed partial class PresentationTemplate
     /// <returns>The entry, e.g., <c>element 2 (text box, right, middle, overlaps picture 1) "Image source"</c>.</returns>
     private string DescribeElement(TemplateSlideElement element, IReadOnlyList<TemplateSlot> slotsOnSlide)
     {
-        var details = new List<string> { element.Kind.CatalogName() };
+        var details = new List<string> { element.Kind.CatalogName };
         if (element.Bounds is { } bounds)
         {
             if (bounds.Area >= (double)this.SlideWidth * this.SlideHeight * BACKGROUND_AREA_SHARE)
@@ -280,7 +280,7 @@ internal sealed partial class PresentationTemplate
     private static string NameOf(TemplateSlot slot, IReadOnlyList<TemplateSlot> slots)
     {
         var isOnlyOne = slot.Role is (PlaceholderRole.TITLE or PlaceholderRole.SUBTITLE) && slots.Count(other => other.Role == slot.Role) == 1;
-        return isOnlyOne ? slot.Role.CatalogName() : $"{slot.Role.CatalogName()} {slot.Ordinal}";
+        return isOnlyOne ? slot.Role.CatalogName : $"{slot.Role.CatalogName} {slot.Ordinal}";
     }
 
     private string DescribePlace(SlotBounds bounds)

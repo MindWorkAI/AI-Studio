@@ -16,23 +16,32 @@ namespace AIStudio.Settings;
 /// </remarks>
 public static class EnumNames
 {
-    /// <summary>
-    /// Reads the name of a member of the given enum.
-    /// </summary>
-    /// <param name="text">The text to read.</param>
-    /// <param name="value">The member named, or the default when the text names none.</param>
     /// <typeparam name="TEnum">The enum to read a member of.</typeparam>
-    /// <returns>True when the text names exactly one member.</returns>
-    public static bool TryParse<TEnum>(string? text, out TEnum value) where TEnum : struct, Enum
+    extension<TEnum>(TEnum) where TEnum : struct, Enum
     {
-        if (TryParse(typeof(TEnum), text, out var member))
+        /// <summary>
+        /// Reads the name of a member of the enum.
+        /// </summary>
+        /// <remarks>
+        /// Named TryParseName rather than TryParse: Enum.TryParse is reached through every enum as
+        /// well, and C# prefers it over an extension member of the same name. Code which knows the
+        /// enum only as a type parameter writes EnumNames.TryParseName&lt;TEnum&gt;(…), since C# looks
+        /// up no static member on a type parameter.
+        /// </remarks>
+        /// <param name="text">The text to read.</param>
+        /// <param name="value">The member named, or the default when the text names none.</param>
+        /// <returns>True when the text names exactly one member.</returns>
+        public static bool TryParseName(string? text, out TEnum value)
         {
-            value = (TEnum)member;
-            return true;
-        }
+            if (TryParse(typeof(TEnum), text, out var member))
+            {
+                value = (TEnum)member;
+                return true;
+            }
 
-        value = default;
-        return false;
+            value = default;
+            return false;
+        }
     }
 
     /// <summary>

@@ -10,7 +10,7 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.
 /// </remarks>
 internal sealed record StaanSearchResponse
 {
-    public StaanQueryInfo? Query { get; init; }
+    public StaanQueryInfo? Query { get; set; }
 
-    public StaanWebSection? Web { get; init; }
+    public StaanWebSection? Web { get; set; }
 }

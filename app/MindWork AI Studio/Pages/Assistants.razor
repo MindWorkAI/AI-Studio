@@ -65,11 +65,12 @@
             <AssistantBlock TSettings="SettingsDialogLegalCheck" Component="Components.LEGAL_CHECK_ASSISTANT" Name="@T("Legal Check")" Description="@T("Ask a question about a legal document.")" Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
             <AssistantBlock TSettings="SettingsDialogIconFinder" Component="Components.ICON_FINDER_ASSISTANT" Name="@T("Icon Finder")" Description="@T("Use an LLM to find an icon for a given context.")" Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
             <AssistantBlock TSettings="SettingsDialogSlideBuilder" Component="Components.SLIDE_BUILDER_ASSISTANT" Name="@T("Slide Assistant")" Description="@T("Turn texts and documents into slides, also as a PowerPoint file in the design of your template.")" Icon="@Icons.Material.Filled.Slideshow" Link="@Routes.ASSISTANT_SLIDE_BUILDER"/>
-            <AssistantBlock TSettings="SettingsDialogVisualBriefing" Component="Components.VISUAL_BRIEFING_ASSISTANT" RequiredPreviewFeature="Components.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature()" Name="@T("Visual Briefing Assistant")" Description="@T("Turn documents, data, images, audio, and video into an audience-ready interactive briefing.")" Icon="@Icons.Material.Filled.DashboardCustomize" Link="@Routes.ASSISTANT_VISUAL_BRIEFING" />
+            <AssistantBlock TSettings="SettingsDialogVisualBriefing" Component="Components.VISUAL_BRIEFING_ASSISTANT" RequiredPreviewFeature="Components.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature" Name="@T("Visual Briefing Assistant")" Description="@T("Turn documents, data, images, audio, and video into an audience-ready interactive briefing.")" Icon="@Icons.Material.Filled.DashboardCustomize" Link="@Routes.ASSISTANT_VISUAL_BRIEFING" />
         </AssistantCategoryBlock>
 
-        <AssistantCategoryBlock Title="@T("Learning")">
+        <AssistantCategoryBlock Title="@T("Learning & Reflecting")">
             <AssistantBlock TSettings="SettingsDialogAssistantBias" Component="Components.BIAS_DAY_ASSISTANT" Name="@T("Bias of the Day")" Description="@T("Learn about one cognitive bias every day.")" Icon="@Icons.Material.Filled.Psychology" Link="@Routes.ASSISTANT_BIAS"/>
+            <AssistantBlock TSettings="SettingsDialogBeyondFactsLab" Component="Components.BEYOND_FACTS_LAB_ASSISTANT" RequiredPreviewFeature="Components.BEYOND_FACTS_LAB_ASSISTANT.RequiredPreviewFeature" Name="@T("BeyondFacts Lab")" Description="@T("Prepare step by step for a challenging appearance as a researcher, e.g., a panel discussion or an interview.")" Icon="@Icons.Material.Filled.RecordVoiceOver" Link="@Routes.ASSISTANT_BEYOND_FACTS_LAB"/>
         </AssistantCategoryBlock>
 
         <AssistantCategoryBlock Title="@T("Software Engineering")">

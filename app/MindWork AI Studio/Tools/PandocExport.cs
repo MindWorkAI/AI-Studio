@@ -31,7 +31,7 @@ public static class PandocExport
     /// <returns>True, when the document was written.</returns>
     public static async Task<bool> ConvertAsync(RustService rustService, string markdownText, string targetFilePath, FileExportFormat format, CancellationToken token = default)
     {
-        if (!format.UsesPandoc())
+        if (!format.UsesPandoc)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
         var tempMarkdownFilePath = string.Empty;
@@ -49,7 +49,7 @@ public static class PandocExport
                 .Create()
                 .UseStandaloneMode()
                 .WithInputFormat("gfm+emoji+tex_math_dollars")
-                .WithOutputFormat(format.ToPandocOutputFormat())
+                .WithOutputFormat(format.PandocOutputFormat)
                 .WithOutputFile(targetFilePath)
                 .WithInputFile(tempMarkdownFilePath);
 
@@ -58,7 +58,7 @@ public static class PandocExport
             // reaches the page as a string which Pandoc escapes; only a file named true or false
             // is read as a switch and keeps the temporary name.
             //
-            if (format.NeedsPageTitle())
+            if (format.NeedsPageTitle)
                 pandocBuilder.AddArgument("-M").AddArgument($"pagetitle={Path.GetFileNameWithoutExtension(targetFilePath)}");
 
             var pandoc = await pandocBuilder.BuildAsync(rustService);
@@ -127,14 +127,14 @@ public static class PandocExport
     /// <returns>True, when the document was written.</returns>
     public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, AIGeneratedContentDisclosureService? disclosureService, string dialogTitle, FileExportFormat format, IContent markdownContent, string? fileName = null)
     {
-        if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!format.UsesPandoc || format.FileTypeFilter is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
         //
         // We read the text before we ask for a path: when there is nothing to convert, the user
         // should learn that right away instead of picking a file first and getting an error afterwards.
         //
-        if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors()))
+        if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors))
         {
             LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));

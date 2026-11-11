@@ -11,9 +11,9 @@ public sealed class VisualBriefingControlOption
 {
     /// <summary>Gets or sets the stored option value.</summary>
     [JsonRequired]
-    public string Value { get; init; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the visible option label.</summary>
     [JsonRequired]
-    public string Label { get; init; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
 }

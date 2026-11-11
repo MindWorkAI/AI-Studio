@@ -139,8 +139,9 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(function.DescriptionForLLM, Does.Contain($"- id={WORK.Id}, name='Work', results per page=10, last page=9"));
-            Assert.That(function.DescriptionForLLM, Does.Contain($"- id={PRIVATE.Id}, name='Private', results per page=5, last page=19"));
+            Assert.That(function.DescriptionForLLM, Does.Contain($"- id={WORK.Id}, name='Work'{Environment.NewLine}"));
+            Assert.That(function.DescriptionForLLM, Does.EndWith($"- id={PRIVATE.Id}, name='Private'"));
+            Assert.That(function.DescriptionForLLM, Does.Not.Contain("per page").And.Not.Contain("last page"), "How many mails a page holds depends on how long they are, so each result tells whether a further page holds more.");
             Assert.That(properties[MailToolArguments.MAILBOX_IDS_ARGUMENT]!["items"]!["enum"]!.AsArray().Select(id => id!.GetValue<string>()), Is.EqualTo(new[] { WORK.Id, PRIVATE.Id }));
             Assert.That(properties["query"], Is.Not.Null);
             Assert.That(properties["page"], Is.Not.Null);
@@ -183,11 +184,17 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     }
 
     [Test]
-    public void APageBeyondTheLastIsRefusedWithTheLastPage()
+    public void APageBeyondAnyASearchCanHaveIsRefusedBeforeSearching()
     {
-        var message = Refusal(() => SearchMailsTool.ReadRequest(Arguments($$"""{"page":10,"mailbox_ids":["{{WORK.Id}}"]}"""), [WORK, PRIVATE], TimeZoneInfo.Utc));
+        // Nine pages of ten mails each, and a page holds at least one mail:
+        var message = Refusal(() => SearchMailsTool.ReadRequest(Arguments($$"""{"page":91,"mailbox_ids":["{{WORK.Id}}"]}"""), [WORK, PRIVATE], TimeZoneInfo.Utc));
+        var request = SearchMailsTool.ReadRequest(Arguments($$"""{"page":90,"mailbox_ids":["{{WORK.Id}}"]}"""), [WORK, PRIVATE], TimeZoneInfo.Utc);
 
-        Assert.That(message, Does.Contain("must be at most 9"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(message, Does.Contain("must be at most 90"));
+            Assert.That(request.Page, Is.EqualTo(90), "Whether the search has that many pages only the search finds out.");
+        }
     }
 
     [Test]

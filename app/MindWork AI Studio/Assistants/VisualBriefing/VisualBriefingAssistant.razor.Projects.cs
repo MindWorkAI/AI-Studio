@@ -382,16 +382,15 @@ public partial class VisualBriefingAssistant
     /// The fingerprint is serialized from exactly the values that SaveCurrentAsync
     /// hands to the store. That is deliberate: a handwritten field list would silently stop
     /// auto-saving whenever a new setting is added and someone forgets to list it here. Sources are
-    /// projected into a named shape because <c>System.Text.Json</c> ignores tuple fields and would
+    /// projected into a named record because <c>System.Text.Json</c> ignores tuple fields and would
     /// otherwise serialize every source list into the same empty object.
     /// </remarks>
     /// <returns>The fingerprint of the current editor state.</returns>
     private string BuildPersistenceFingerprint() => JsonSerializer.Serialize(
-        new
-        {
+        new VisualBriefingPersistenceFingerprint(
             this.editor.Name,
             this.editor.Author,
-            Settings = this.editor.ToSettings(),
-            Sources = this.editor.ToSources().Select(source => new { source.Path, source.Kind }).ToArray(),
-        }, VisualBriefingJson.Canonical);
+            this.editor.ToSettings(),
+            [.. this.editor.ToSources().Select(source => new VisualBriefingSourceFingerprint(source.Path, source.Kind))]),
+        VisualBriefingJson.Canonical);
 }

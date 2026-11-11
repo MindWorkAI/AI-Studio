@@ -12,7 +12,7 @@ internal sealed partial class FileSourceIndexer
 
     private readonly ConcurrentDictionary<string, DataSourceWatcherRegistration> watchers = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, CancellationTokenSource> watcherDebounceTokens = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object watcherDebounceLock = new();
+    private readonly Lock watcherDebounceLock = new();
 
     /// <summary>
     /// The data sources handed in last, by their id. A watcher which failed is created anew from here.

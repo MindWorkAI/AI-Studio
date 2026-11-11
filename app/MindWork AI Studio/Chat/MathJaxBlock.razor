@@ -1,5 +1,15 @@
 @namespace AIStudio.Chat
+@using AIStudio.Components
 
-<div class="@this.RootClass" data-chat-math-block="true" style="white-space: pre-wrap;">
-    @this.MathText
+<div class="@this.RootClass">
+    <div class="chat-mathjax-block" data-chat-math-block="true" style="white-space: pre-wrap;">
+        @this.MathText
+    </div>
+    <div class="formula-block-actions">
+        @if (this.File is not null && this.Actions is not null)
+        {
+            @this.Actions(this.File)
+        }
+        <CodeBlockCopyButton Text="@this.Value"/>
+    </div>
 </div>

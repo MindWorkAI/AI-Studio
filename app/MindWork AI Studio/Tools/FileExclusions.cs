@@ -95,9 +95,10 @@ internal static class FileExclusions
     private static readonly string[] ALWAYS_EXCLUDED_FILES = ["Thumbs.db", "ehthumbs.db", "ehthumbs_vista.db", "desktop.ini", ".DS_Store", "Icon\r", OFFICE_LOCK_FILE_PATTERN];
 
     /// <summary>
-    /// Folders nobody ever wanted as content: what operating systems and ZIP files on macOS leave behind.
+    /// Folders nobody ever wanted as content: what operating systems and ZIP files on macOS leave behind,
+    /// and the recycle bin of a OneNote notebook, which holds the pages the user deleted.
     /// </summary>
-    private static readonly string[] ALWAYS_EXCLUDED_FOLDERS = ["__MACOSX", "$RECYCLE.BIN", "System Volume Information"];
+    private static readonly string[] ALWAYS_EXCLUDED_FOLDERS = ["__MACOSX", "$RECYCLE.BIN", "System Volume Information", "OneNote_RecycleBin"];
 
     private static readonly char[] SEPARATORS = [';', '\r', '\n'];
 

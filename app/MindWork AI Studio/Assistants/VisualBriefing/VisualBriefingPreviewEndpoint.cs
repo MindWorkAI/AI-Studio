@@ -15,55 +15,58 @@ internal static class VisualBriefingPreviewEndpoint
 {
     private const string ROUTE = "/visual-briefing/preview/{briefingId:guid}/{revisionId:guid}";
 
-    /// <summary>
-    /// Maps the visual briefing preview endpoint.
-    /// </summary>
     /// <param name="app">The web application.</param>
-    public static void MapVisualBriefingPreview(this WebApplication app) => app.MapGet(
-        ROUTE,
-        async (
-            Guid briefingId,
-            Guid revisionId,
-            string? token,
-            HttpContext context,
-            VisualBriefingPreviewTokenService tokenService,
-            VisualBriefingStore store,
-            ILoggerFactory loggerFactory,
-            CancellationToken cancellationToken) =>
-        {
-            var logger = loggerFactory.CreateLogger(nameof(VisualBriefingPreviewEndpoint));
-            if (!tokenService.Validate(token, briefingId, revisionId))
+    extension(WebApplication app)
+    {
+        /// <summary>
+        /// Maps the visual briefing preview endpoint.
+        /// </summary>
+        public void MapVisualBriefingPreview() => app.MapGet(
+            ROUTE,
+            async (
+                Guid briefingId,
+                Guid revisionId,
+                string? token,
+                HttpContext context,
+                VisualBriefingPreviewTokenService tokenService,
+                VisualBriefingStore store,
+                ILoggerFactory loggerFactory,
+                CancellationToken cancellationToken) =>
             {
-                logger.LogWarning(
-                    Event(VisualBriefingLogEventId.PREVIEW_REJECTED),
-                    "Visual briefing preview token rejected. BriefingId={BriefingId} RevisionId={RevisionId}",
-                    briefingId,
-                    revisionId);
+                var logger = loggerFactory.CreateLogger(nameof(VisualBriefingPreviewEndpoint));
+                if (!tokenService.Validate(token, briefingId, revisionId))
+                {
+                    logger.LogWarning(
+                        Event(VisualBriefingLogEventId.PREVIEW_REJECTED),
+                        "Visual briefing preview token rejected. BriefingId={BriefingId} RevisionId={RevisionId}",
+                        briefingId,
+                        revisionId);
 
-                return Results.NotFound();
-            }
+                    return Results.NotFound();
+                }
 
-            // The store re-validates the stored artifact before handing out a stream, so a manually
-            // modified file on disk never reaches the preview:
-            var preview = await store.OpenIntegrityCheckedVersionAsync(briefingId, revisionId, cancellationToken);
-            if (preview is null)
-            {
-                logger.LogWarning(
-                    Event(VisualBriefingLogEventId.SECURITY_REJECTED),
-                    "Visual briefing preview artifact rejected. BriefingId={BriefingId} RevisionId={RevisionId}",
-                    briefingId,
-                    revisionId);
+                // The store re-validates the stored artifact before handing out a stream, so a manually
+                // modified file on disk never reaches the preview:
+                var preview = await store.OpenIntegrityCheckedVersionAsync(briefingId, revisionId, cancellationToken);
+                if (preview is null)
+                {
+                    logger.LogWarning(
+                        Event(VisualBriefingLogEventId.SECURITY_REJECTED),
+                        "Visual briefing preview artifact rejected. BriefingId={BriefingId} RevisionId={RevisionId}",
+                        briefingId,
+                        revisionId);
 
-                return Results.NotFound();
-            }
+                    return Results.NotFound();
+                }
 
-            context.Response.Headers.CacheControl = "no-store";
-            context.Response.Headers.XContentTypeOptions = "nosniff";
-            context.Response.Headers["Referrer-Policy"] = "no-referrer";
-            context.Response.Headers.ContentSecurityPolicy = VisualBriefingArtifactService.GetContentSecurityPolicy(preview.Value.Parts);
+                context.Response.Headers.CacheControl = "no-store";
+                context.Response.Headers.XContentTypeOptions = "nosniff";
+                context.Response.Headers["Referrer-Policy"] = "no-referrer";
+                context.Response.Headers.ContentSecurityPolicy = VisualBriefingArtifactService.GetContentSecurityPolicy(preview.Value.Parts);
 
-            return Results.File(preview.Value.Stream, "text/html; charset=utf-8", enableRangeProcessing: false);
-        });
+                return Results.File(preview.Value.Stream, "text/html; charset=utf-8", enableRangeProcessing: false);
+            });
+    }
 
     /// <summary>
     /// Creates the log event ID for one visual briefing log event.

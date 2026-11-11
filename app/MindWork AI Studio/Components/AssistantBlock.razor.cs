@@ -125,8 +125,8 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     /// <returns><c>true</c> when this block represents the owner.</returns>
     private bool OwnedByThisBlock(MediaImportOwner owner)
     {
-        if (owner.Kind.PersistsOwnSources())
-            return owner.Kind == this.Component.MediaOwnerKind();
+        if (owner.Kind.PersistsOwnSources)
+            return owner.Kind == this.Component.MediaOwnerKind;
 
         if (string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId))
             return owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal);
@@ -167,7 +167,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (this.OwnedByThisBlock(owner))
-            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<TSettings>)}: rendering a media import change");
+            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<>)}: rendering a media import change");
     }
 
     protected override void DisposeResources()

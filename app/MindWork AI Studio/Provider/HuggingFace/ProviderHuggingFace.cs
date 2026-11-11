@@ -64,7 +64,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         if (endpointKind is HFEndpointKind.CHAT)
             return ROUTER_BASE_URL;
 
-        var providerBaseURL = hfProvider.ProviderBaseURL();
+        var providerBaseURL = hfProvider.ProviderBaseURL;
         return string.IsNullOrEmpty(providerBaseURL) ? ROUTER_BASE_URL : providerBaseURL;
     }
 
@@ -83,7 +83,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         if (string.IsNullOrWhiteSpace(modelId) || modelId.Contains(':'))
             return modelId;
 
-        return $"{modelId}{this.hfProvider.ModelSuffix()}";
+        return $"{modelId}{this.hfProvider.ModelSuffix}";
     }
 
     /// <summary>
@@ -141,7 +141,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         if (this.hfProvider is HFInferenceProvider.NONE or HFInferenceProvider.AUTOMATIC or HFInferenceProvider.CHEAPEST or HFInferenceProvider.PREFERRED)
             return TB("No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.");
 
-        return string.Format(TB("The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."), this.hfProvider.ToName());
+        return string.Format(TB("The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."), this.hfProvider.Name);
     }
 
     #endregion
@@ -149,7 +149,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.HUGGINGFACE.ToSecretId();
+    public override string Id => LLMProviders.HUGGINGFACE.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "HuggingFace";
@@ -247,7 +247,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <returns>One listing per model, which says nothing for the models nobody stated a window for.</returns>
     private IEnumerable<ModelListing> ListingsOf(ModelsResponse response)
     {
-        var providerSlug = this.hfProvider.EndpointsId();
+        var providerSlug = this.hfProvider.EndpointsId;
         return response.Data.Select(hfModel => ModelListing.For(hfModel.Id, hfModel.ContextWindowTokens(providerSlug)));
     }
 
@@ -265,7 +265,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     private IEnumerable<Model> SelectChatModels(ModelsResponse response)
     {
         var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel(this.Provider));
-        var providerSlug = this.hfProvider.EndpointsId();
+        var providerSlug = this.hfProvider.EndpointsId;
         if (string.IsNullOrEmpty(providerSlug))
             return ToModels(chatModels);
 
@@ -293,7 +293,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        if (!this.hfProvider.SupportsEmbeddings())
+        if (!this.hfProvider.SupportsEmbeddings)
             return Task.FromResult(ModelLoadResult.FromModels([]));
 
         return this.LoadHubModels(SecretStoreType.EMBEDDING_PROVIDER, "feature-extraction", apiKeyProvisional, token);
@@ -309,14 +309,14 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <returns>The models of that provider for that task.</returns>
     private Task<ModelLoadResult> LoadHubModels(SecretStoreType storeType, string pipelineTag, string? apiKeyProvisional, CancellationToken token)
     {
-        var requestURL = $"{HUB_MODELS_URL}{this.hfProvider.EndpointsId()}&pipeline_tag={pipelineTag}";
+        var requestURL = $"{HUB_MODELS_URL}{this.hfProvider.EndpointsId}&pipeline_tag={pipelineTag}";
         return this.LoadModelsResponse<IList<HubModel>>(storeType, requestURL, hubModels => hubModels.Select(hubModel => new Model(hubModel.Id, null)), apiKeyProvisional, token: token);
     }
     
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        if (!this.hfProvider.SupportsTranscription())
+        if (!this.hfProvider.SupportsTranscription)
             return Task.FromResult(ModelLoadResult.FromModels([]));
 
         return this.LoadHubModels(SecretStoreType.TRANSCRIPTION_PROVIDER, "automatic-speech-recognition", apiKeyProvisional, token);

@@ -15,20 +15,20 @@ public sealed class VisualBriefingPlanArtifact
     public int ContractVersion { get; set; } = VisualBriefingVersions.PLAN_CONTRACT;
     
     /// <summary>Gets or sets the immutable artifact identifier.</summary>
-    public Guid ArtifactId { get; init; }
+    public Guid ArtifactId { get; set; }
     
     /// <summary>Gets or sets the artifact creation time.</summary>
     public DateTimeOffset CreatedAtUtc { get; set; }
     
     /// <summary>Gets or sets the hash of the artifact payload.</summary>
-    public string PayloadHash { get; init; } = string.Empty;
+    public string PayloadHash { get; set; } = string.Empty;
     
     /// <summary>Gets or sets the ordered planned sections.</summary>
-    public List<VisualBriefingPlanSection> Sections { get; init; } = [];
+    public List<VisualBriefingPlanSection> Sections { get; set; } = [];
     
     /// <summary>Gets or sets the canonical structural signature.</summary>
-    public string StructuralSignature { get; init; } = string.Empty;
+    public string StructuralSignature { get; set; } = string.Empty;
     
     /// <summary>Gets or sets the contributing model name.</summary>
-    public string Model { get; init; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
 }

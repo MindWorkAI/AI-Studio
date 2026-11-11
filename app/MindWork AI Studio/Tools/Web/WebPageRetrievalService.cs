@@ -184,7 +184,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
             RetrievedAtUtc = DateTimeOffset.UtcNow,
             RequiredProviderConfidence = requiredProviderConfidence,
             ReachedNonPublicAddress = reachedNonPublicAddress,
-            IsCutAtCharacterLimit = extraction.IsCutAtCharacterLimit,
+            IsCutAtCharacterLimit = extraction.IsShortened,
             HasUnreadableParts = extraction.Outcome is FileExtractionOutcome.PARTIAL,
         };
     }

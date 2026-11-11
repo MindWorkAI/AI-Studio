@@ -406,7 +406,7 @@ public sealed class DataSourceService
             {
                 if (!provider.ConfidenceLevel.AllowsDataSourceConfidenceLevel(internalSource.ConfidenceLevel))
                 {
-                    this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) requires provider confidence '{internalSource.ConfidenceLevel.GetName()}'. The {provider.Role} only has confidence '{provider.ConfidenceLevel.GetName()}'. We skip this source.");
+                    this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) requires provider confidence '{internalSource.ConfidenceLevel.Name}'. The {provider.Role} only has confidence '{provider.ConfidenceLevel.Name}'. We skip this source.");
                     return null;
                 }
             }
@@ -420,7 +420,7 @@ public sealed class DataSourceService
             var embeddingProviderConfidence = embeddingProvider.GetConfidenceLevel(this.settingsManager);
             if (!embeddingProviderConfidence.AllowsDataSourceConfidenceLevel(internalSource.ConfidenceLevel))
             {
-                this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) requires provider confidence '{internalSource.ConfidenceLevel.GetName()}'. Its embedding provider '{embeddingProvider.Name}' only has confidence '{embeddingProviderConfidence.GetName()}'. We skip this source.");
+                this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) requires provider confidence '{internalSource.ConfidenceLevel.Name}'. Its embedding provider '{embeddingProvider.Name}' only has confidence '{embeddingProviderConfidence.Name}'. We skip this source.");
                 return null;
             }
 

@@ -256,7 +256,7 @@
                                                 <td>
                                                     <MudText Typo="Typo.body2"><b>@T("Required minimum")</b></MudText>
                                                 </td>
-                                                <td><MudText Typo="Typo.body2">@state.Settings.MinimumLevel.GetName()</MudText></td>
+                                                <td><MudText Typo="Typo.body2">@state.Settings.MinimumLevel.Name</MudText></td>
                                             </tr>
                                         </tbody>
                                     </MudSimpleTable>
@@ -290,7 +290,7 @@
                                     <MudStack Spacing="2">
                                         @foreach (var finding in state.Audit.Findings)
                                         {
-                                            <MudAlert Severity="@finding.Severity.GetSeverity()" Variant="Variant.Text" Dense="@true">
+                                            <MudAlert Severity="@finding.Severity.Severity" Variant="Variant.Text" Dense="@true">
                                                 <strong>@finding.Category</strong><span>: @finding.Description</span>
                                                 @if (!string.IsNullOrWhiteSpace(finding.Location))
                                                 {

@@ -128,14 +128,14 @@ public partial class SettingsPanelApp : SettingsPanelBase
         // Several configuration plugins may contribute at the same time, e.g. one preview feature
         // for the whole organization and another one for a single department:
         if (ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) && meta.HasPluginContribution)
-            return meta.PluginContributions.Values.SelectMany(contribution => contribution).Where(x => !x.IsReleased()).ToHashSet();
+            return meta.PluginContributions.Values.SelectMany(contribution => contribution).Where(x => !x.IsReleased).ToHashSet();
 
         return [];
     }
 
     private bool IsPluginContributedPreviewFeature(PreviewFeatures feature)
     {
-        if (feature.IsReleased())
+        if (feature.IsReleased)
             return false;
 
         if (!ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) || !meta.HasPluginContribution)
@@ -146,7 +146,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private HashSet<PreviewFeatures> GetSelectedPreviewFeatures()
     {
-        var enabled = this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Where(x => !x.IsReleased()).ToHashSet();
+        var enabled = this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Where(x => !x.IsReleased).ToHashSet();
         enabled.UnionWith(this.GetPluginContributedPreviewFeatures());
         return enabled;
     }

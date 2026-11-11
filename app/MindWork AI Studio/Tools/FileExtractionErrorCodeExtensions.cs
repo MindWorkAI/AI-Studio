@@ -15,98 +15,99 @@ internal static class FileExtractionErrorCodeExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExtractionErrorCodeExtensions).Namespace, nameof(FileExtractionErrorCodeExtensions));
 
-    /// <summary>
-    /// Gets a value indicating whether reading the file again will fail again, as long as the file
-    /// itself does not change.
-    /// </summary>
     /// <param name="code">The stable failure code.</param>
-    /// <returns>True, when the reason lies in the file itself.</returns>
-    internal static bool IsPermanentIndexingFailure(this FileExtractionErrorCode code) => code switch
+    extension(FileExtractionErrorCode code)
     {
-        //
-        // The reason lies in the file. Reading it again without changing it produces the same
-        // outcome, so the indexer waits for a new fingerprint:
-        //
-        FileExtractionErrorCode.NO_TEXT_EXTRACTED => true,
-        FileExtractionErrorCode.NO_CONTENT => true,
-        FileExtractionErrorCode.NOT_TEXT_CONTENT => true,
-        FileExtractionErrorCode.NOT_A_VALID_PDF => true,
-        FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET => true,
-        FileExtractionErrorCode.NOT_A_VALID_DOCUMENT => true,
-        FileExtractionErrorCode.PDF_ENCRYPTED => true,
-        FileExtractionErrorCode.FORMAT_DETECTION_FAILED => true,
-        FileExtractionErrorCode.EXECUTABLE_REJECTED => true,
-        FileExtractionErrorCode.UNSUPPORTED => true,
-        FileExtractionErrorCode.MEDIA_PROCESSING_FAILED => true,
+        /// <summary>
+        /// Gets a value indicating whether reading the file again will fail again, as long as the file
+        /// itself does not change.
+        /// </summary>
+        /// <value>True, when the reason lies in the file itself.</value>
+        internal bool IsPermanentIndexingFailure => code switch
+        {
+            //
+            // The reason lies in the file. Reading it again without changing it produces the same
+            // outcome, so the indexer waits for a new fingerprint:
+            //
+            FileExtractionErrorCode.NO_TEXT_EXTRACTED => true,
+            FileExtractionErrorCode.NO_CONTENT => true,
+            FileExtractionErrorCode.NOT_TEXT_CONTENT => true,
+            FileExtractionErrorCode.NOT_A_VALID_PDF => true,
+            FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET => true,
+            FileExtractionErrorCode.NOT_A_VALID_DOCUMENT => true,
+            FileExtractionErrorCode.PDF_ENCRYPTED => true,
+            FileExtractionErrorCode.FORMAT_DETECTION_FAILED => true,
+            FileExtractionErrorCode.EXECUTABLE_REJECTED => true,
+            FileExtractionErrorCode.UNSUPPORTED => true,
+            FileExtractionErrorCode.MEDIA_PROCESSING_FAILED => true,
 
-        // Pages holding nothing but images are one of the recurring cases here, and that is a
-        // property of the document, not of the environment:
-        FileExtractionErrorCode.PAGE_EXTRACTION_FAILED => true,
+            // Pages holding nothing but images are one of the recurring cases here, and that is a
+            // property of the document, not of the environment:
+            FileExtractionErrorCode.PAGE_EXTRACTION_FAILED => true,
 
-        //
-        // Everything else depends on the surroundings: an unavailable drive, a file someone else
-        // has open, a missing engine, or a runtime which did not answer in time. All of them are
-        // worth another attempt during the next run:
-        //
-        _ => false,
-    };
+            //
+            // Everything else depends on the surroundings: an unavailable drive, a file someone else
+            // has open, a missing engine, or a runtime which did not answer in time. All of them are
+            // worth another attempt during the next run:
+            //
+            _ => false,
+        };
 
-    /// <summary>
-    /// Names the cause in a few words.
-    /// </summary>
-    /// <remarks>
-    /// Used to group the files of an indexing run by what happened to them: nine hundred entries
-    /// which all say the same sentence are one cause, not nine hundred.
-    /// </remarks>
-    /// <param name="code">The stable failure code.</param>
-    /// <returns>The localized name of the cause, or an empty text when the code has none.</returns>
-    internal static string GetIndexingCauseName(this FileExtractionErrorCode code) => code switch
-    {
-        FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No readable text"),
-        FileExtractionErrorCode.NO_CONTENT => TB("No content"),
-        FileExtractionErrorCode.NOT_TEXT_CONTENT => TB("Not a text file"),
-        FileExtractionErrorCode.NOT_A_VALID_PDF => TB("Not a readable PDF"),
-        FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET => TB("Not a readable spreadsheet"),
-        FileExtractionErrorCode.NOT_A_VALID_DOCUMENT => TB("Not a readable document"),
-        FileExtractionErrorCode.PDF_ENCRYPTED => TB("Protected PDF"),
-        FileExtractionErrorCode.FORMAT_DETECTION_FAILED => TB("Unknown file type"),
-        FileExtractionErrorCode.EXECUTABLE_REJECTED => TB("Executable program"),
-        FileExtractionErrorCode.UNSUPPORTED => TB("Unsupported file type"),
-        FileExtractionErrorCode.MEDIA_PROCESSING_FAILED => TB("Media file could not be processed"),
-        FileExtractionErrorCode.PAGE_EXTRACTION_FAILED => TB("Pages without readable text"),
+        /// <summary>
+        /// Names the cause in a few words.
+        /// </summary>
+        /// <remarks>
+        /// Used to group the files of an indexing run by what happened to them: nine hundred entries
+        /// which all say the same sentence are one cause, not nine hundred.
+        /// </remarks>
+        /// <value>The localized name of the cause, or an empty text when the code has none.</value>
+        internal string IndexingCauseName => code switch
+        {
+            FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No readable text"),
+            FileExtractionErrorCode.NO_CONTENT => TB("No content"),
+            FileExtractionErrorCode.NOT_TEXT_CONTENT => TB("Not a text file"),
+            FileExtractionErrorCode.NOT_A_VALID_PDF => TB("Not a readable PDF"),
+            FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET => TB("Not a readable spreadsheet"),
+            FileExtractionErrorCode.NOT_A_VALID_DOCUMENT => TB("Not a readable document"),
+            FileExtractionErrorCode.PDF_ENCRYPTED => TB("Protected PDF"),
+            FileExtractionErrorCode.FORMAT_DETECTION_FAILED => TB("Unknown file type"),
+            FileExtractionErrorCode.EXECUTABLE_REJECTED => TB("Executable program"),
+            FileExtractionErrorCode.UNSUPPORTED => TB("Unsupported file type"),
+            FileExtractionErrorCode.MEDIA_PROCESSING_FAILED => TB("Media file could not be processed"),
+            FileExtractionErrorCode.PAGE_EXTRACTION_FAILED => TB("Pages without readable text"),
 
-        FileExtractionErrorCode.FILE_NOT_FOUND => TB("File does not exist anymore"),
-        FileExtractionErrorCode.FILE_NOT_READABLE => TB("File could not be read"),
-        FileExtractionErrorCode.FILE_LOCKED => TB("File is open elsewhere"),
-        FileExtractionErrorCode.TIMEOUT => TB("Reading took too long"),
-        FileExtractionErrorCode.PDFIUM_UNAVAILABLE => TB("PDF system unavailable"),
-        FileExtractionErrorCode.PANDOC_UNAVAILABLE => TB("Pandoc unavailable"),
+            FileExtractionErrorCode.FILE_NOT_FOUND => TB("File does not exist anymore"),
+            FileExtractionErrorCode.FILE_NOT_READABLE => TB("File could not be read"),
+            FileExtractionErrorCode.FILE_LOCKED => TB("File is open elsewhere"),
+            FileExtractionErrorCode.TIMEOUT => TB("Reading took too long"),
+            FileExtractionErrorCode.PDFIUM_UNAVAILABLE => TB("PDF system unavailable"),
+            FileExtractionErrorCode.PANDOC_UNAVAILABLE => TB("Pandoc unavailable"),
 
-        // Nothing about these lies in the file: AI Studio asked its runtime for the content and
-        // got back something it cannot work with. One name for all of them, because that is the
-        // one thing the user can tell from them:
-        FileExtractionErrorCode.INVALID_RESPONSE => TB("Internal error"),
-        FileExtractionErrorCode.INVALID_REQUEST => TB("Internal error"),
-        FileExtractionErrorCode.REQUEST_FAILED => TB("Internal error"),
-        FileExtractionErrorCode.INTERNAL => TB("Internal error"),
+            // Nothing about these lies in the file: AI Studio asked its runtime for the content and
+            // got back something it cannot work with. One name for all of them, because that is the
+            // one thing the user can tell from them:
+            FileExtractionErrorCode.INVALID_RESPONSE => TB("Internal error"),
+            FileExtractionErrorCode.INVALID_REQUEST => TB("Internal error"),
+            FileExtractionErrorCode.REQUEST_FAILED => TB("Internal error"),
+            FileExtractionErrorCode.INTERNAL => TB("Internal error"),
 
-        // Codes which say nothing beyond the message of the single file. The caller names those
-        // files itself and shows their messages instead:
-        _ => string.Empty,
-    };
+            // Codes which say nothing beyond the message of the single file. The caller names those
+            // files itself and shows their messages instead:
+            _ => string.Empty,
+        };
 
-    /// <summary>
-    /// Gets the localized message which explains why a file was not indexed.
-    /// </summary>
-    /// <remarks>
-    /// These texts are the counterpart of the ones used for chat attachments: there, a file which
-    /// cannot be read is simply not sent, while here it stays out of the index and the user needs
-    /// to know whether AI Studio will come back to it on its own.
-    /// </remarks>
-    /// <param name="code">The stable failure code.</param>
-    /// <param name="fileName">The name of the file, as shown to the user.</param>
-    /// <returns>The localized message.</returns>
-    internal static string ToIndexingUserMessage(this FileExtractionErrorCode code, string fileName) => string.Format(ToIndexingMessageFormat(code), fileName);
+        /// <summary>
+        /// Gets the localized message which explains why a file was not indexed.
+        /// </summary>
+        /// <remarks>
+        /// These texts are the counterpart of the ones used for chat attachments: there, a file which
+        /// cannot be read is simply not sent, while here it stays out of the index and the user needs
+        /// to know whether AI Studio will come back to it on its own.
+        /// </remarks>
+        /// <param name="fileName">The name of the file, as shown to the user.</param>
+        /// <returns>The localized message.</returns>
+        internal string ToIndexingUserMessage(string fileName) => string.Format(ToIndexingMessageFormat(code), fileName);
+    }
 
     private static string ToIndexingMessageFormat(FileExtractionErrorCode code) => code switch
     {

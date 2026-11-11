@@ -127,7 +127,7 @@ public sealed class ContentText : IContent
         try
         {
             // Most answers, those of the agents among them, received nothing to store, and need no database:
-            if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore()))
+            if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore))
                 return;
 
             if (await ChatProvenance.GetStoreAsync() is { } store && await this.StoreReceivedContentAsync(store, chatId))
@@ -158,7 +158,7 @@ public sealed class ContentText : IContent
         var passages = new List<SourcePassage>(this.SourcePassages.Count);
         foreach (var passage in this.SourcePassages)
         {
-            if (!passage.HoldsTextsToStore())
+            if (!passage.HoldsTextsToStore)
             {
                 passages.Add(passage);
                 continue;
@@ -168,7 +168,7 @@ public sealed class ContentText : IContent
             try
             {
                 // Not cancellable: the answer is complete, also when the user stopped it.
-                provenanceId = await store.StoreAsync(chatId, passage.GetProvenanceKind(), passage.Text, passage.SurroundingContent, CancellationToken.None);
+                provenanceId = await store.StoreAsync(chatId, passage.ProvenanceKind, passage.Text, passage.SurroundingContent, CancellationToken.None);
             }
             catch (Exception exception)
             {

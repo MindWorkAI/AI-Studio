@@ -23,7 +23,7 @@ public sealed class WebDocumentOptions
     public required long MaxBytes { get; init; }
 
     /// <summary>
-    /// How many characters of its text are kept at most, see FileExtractionResult.IsCutAtCharacterLimit.
+    /// How many characters of its text are kept at most, see FileExtractionResult.IsShortened.
     /// </summary>
     public required int MaxCharacters { get; init; }
 

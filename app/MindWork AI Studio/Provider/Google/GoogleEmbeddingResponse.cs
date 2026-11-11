@@ -6,9 +6,13 @@ namespace AIStudio.Provider.Google;
 public sealed record GoogleEmbeddingResponse
 {
     [JsonConverter(typeof(GoogleEmbeddingListConverter))]
-    public List<GoogleEmbedding>? Embedding { get; init; }
+    public List<GoogleEmbedding>? Embedding { get; set; }
 
-    private sealed class GoogleEmbeddingListConverter : JsonConverter<List<GoogleEmbedding>>
+    /// <remarks>
+    /// Internal rather than private: the JSON context of the providers has to reach the converter, else it reads
+    /// the embeddings without it.
+    /// </remarks>
+    internal sealed class GoogleEmbeddingListConverter : JsonConverter<List<GoogleEmbedding>>
     {
         public override List<GoogleEmbedding> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

@@ -25,6 +25,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     protected override string Description => T("The ERI is the External Retrieval Interface for AI Studio and other tools. The ERI acts as a contract between decentralized data sources and, e.g., AI Studio. The ERI is implemented by the data sources, allowing them to be integrated into AI Studio later. This means that the data sources assume the server role and AI Studio (or any other LLM tool) assumes the client role of the API. This approach serves to realize a Retrieval-Augmented Generation (RAG) process with external data.");
     
+    // The chat continues the work on the server, which needs the specification and the configuration of this prompt:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
+
     protected override string SystemPrompt => new ERIServerPrompt
     {
         ProgrammingLanguage = this.selectedProgrammingLanguage,
@@ -66,11 +69,6 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     protected override Func<Task> SubmitAction => this.GenerateServer;
 
     protected override bool SubmitDisabled => this.IsNoneERIServerSelected;
-
-    protected override ChatThread ConvertToChatThread => (this.ChatThread ?? new()) with
-    {
-        SystemPrompt = this.SystemPrompt,
-    };
 
     /// <summary>
     /// Indicates whether the generated ERI conversation can be opened in the chat view.
@@ -378,7 +376,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     /// <summary>
     /// Gets whether the selected ERI specification cannot be saved.
     /// </summary>
-    private bool IsSpecificationSavingDisabled => !this.selectedERIVersion.WasSpecificationSelected() || this.IsERIInputDisabled;
+    private bool IsSpecificationSavingDisabled => !this.selectedERIVersion.WasSpecificationSelected || this.IsERIInputDisabled;
 
     /// <summary>
     /// Lets the user save the selected ERI specification, a copy of the one the app carries.
@@ -389,7 +387,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     /// </remarks>
     private async Task SaveSpecificationAsync()
     {
-        var specificationPath = this.selectedERIVersion.SpecificationURL();
+        var specificationPath = this.selectedERIVersion.SpecificationURL;
         var response = await this.RustService.SaveFile(T("Save the ERI specification"), [FileTypes.JSON], Path.GetFileName(specificationPath));
         if (response.UserCancelled)
             return;

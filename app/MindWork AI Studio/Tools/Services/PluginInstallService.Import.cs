@@ -45,7 +45,7 @@ public sealed partial class PluginInstallService
             if (!this.TryCreateStagingDirectory(PLUGIN_IMPORT_DIRECTORY_PREFIX, out stagingDirectory, out var stagingIssue))
                 return Error(stagingIssue);
 
-            PluginArchive.Extract(archivePath, stagingDirectory);
+            await PluginArchive.ExtractAsync(archivePath, stagingDirectory, token);
 
             var pluginFiles = Directory.EnumerateFiles(stagingDirectory, PLUGIN_FILE_NAME, SearchOption.AllDirectories).ToArray();
             if (pluginFiles.Length != 1)

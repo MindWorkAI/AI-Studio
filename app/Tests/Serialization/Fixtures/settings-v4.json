@@ -1,0 +1,305 @@
+{
+  "Version": "V4",
+  "Providers": [
+    {
+      "Num": 7,
+      "Id": "Id sample 1",
+      "InstanceName": "InstanceName sample 2",
+      "UsedProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 3",
+        "DisplayName": "DisplayName sample 4",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "Hostname": "Hostname sample 5",
+      "Host": "LM_STUDIO"
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 6",
+      "InstanceName": "InstanceName sample 7",
+      "UsedProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 8",
+        "DisplayName": "DisplayName sample 9",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "Hostname": "Hostname sample 10",
+      "Host": "LM_STUDIO"
+    }
+  ],
+  "LLMProviders": {
+    "EnforceGlobalMinimumConfidence": true,
+    "GlobalMinimumConfidence": "UNTRUSTED",
+    "ShowProviderConfidence": true,
+    "ConfidenceScheme": "TRUST_USA_EUROPE",
+    "CustomConfidenceScheme": {
+      "OPEN_AI": "UNTRUSTED",
+      "ANTHROPIC": "UNKNOWN"
+    }
+  },
+  "Profiles": [
+    {
+      "Num": 7,
+      "Id": "Id sample 11",
+      "Name": "Name sample 12",
+      "NeedToKnow": "NeedToKnow sample 13",
+      "Actions": "Actions sample 14",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000015"
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 16",
+      "Name": "Name sample 17",
+      "NeedToKnow": "NeedToKnow sample 18",
+      "Actions": "Actions sample 19",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000020"
+    }
+  ],
+  "NextProviderNum": 7,
+  "NextProfileNum": 7,
+  "App": {
+    "LanguageBehavior": "MANUAL",
+    "LanguagePluginId": "00000000-0000-4000-8000-000000000021",
+    "PreferredTheme": "LIGHT",
+    "IsSavingEnergy": true,
+    "EnableSpellchecking": true,
+    "CloseExportMessagesAutomatically": true,
+    "UpdateInterval": "DISABLE_UPDATES",
+    "UpdateInstallation": "AUTOMATIC",
+    "NavigationBehavior": "NEVER_EXPAND_USE_TOOLTIPS",
+    "StartPage": "CHAT",
+    "InterfaceScreenSizes": [
+      {
+        "ScreenKey": "ScreenKey sample 22",
+        "Size": "SYSTEM_SCALING",
+        "CustomPercent": 63
+      },
+      {
+        "ScreenKey": "ScreenKey sample 24",
+        "Size": "SYSTEM_SCALING",
+        "CustomPercent": 65
+      }
+    ],
+    "ShowPromptInjectionAlert": true,
+    "ShowIntroduction": true,
+    "ShowQuickStartGuide": true,
+    "ShowLastChangelog": true,
+    "ShowVision": true,
+    "PreviewVisibility": "RELEASE_CANDIDATE",
+    "EnabledPreviewFeatures": [
+      "PRE_WRITER_MODE_2024",
+      "PRE_RAG_2024"
+    ],
+    "PreselectedProvider": "PreselectedProvider sample 26",
+    "PreselectedProfile": "PreselectedProfile sample 27",
+    "PreselectedChatTemplate": "PreselectedChatTemplate sample 28",
+    "UseTranscriptionProvider": "UseTranscriptionProvider sample 29",
+    "OpusBitrate": "KBPS_32",
+    "ShortcutVoiceRecording": "ShortcutVoiceRecording sample 30",
+    "ShortcutVoiceRecordingDisplayName": "ShortcutVoiceRecordingDisplayName sample 31",
+    "ShortcutVoiceRecordingDisplaySource": "ShortcutVoiceRecordingDisplaySource sample 32",
+    "HttpClientTimeoutSeconds": 73,
+    "ShareFeatureUsageWithSelfHostedServerOperators": true,
+    "ExternalHttpCustomRootCertificatesEnabled": true,
+    "ExternalHttpCustomRootCertificateBundlePath": "/samples/ExternalHttpCustomRootCertificateBundlePath-34.txt",
+    "ExternalHttpCustomRootCertificateAllowedHosts": [
+      "ExternalHttpCustomRootCertificateAllowedHosts sample 35",
+      "ExternalHttpCustomRootCertificateAllowedHosts sample 36"
+    ],
+    "AllowUserToAddProvider": true,
+    "AllowUserToAddLLMProvider": true,
+    "AllowUserToAddEmbeddingProvider": true,
+    "AllowUserToAddTranscriptionProvider": true,
+    "ProhibitedProviders": [
+      "OPEN_AI",
+      "ANTHROPIC"
+    ],
+    "AllowUserToAddMailbox": true,
+    "AllowUserToImportConfigurationSnippets": true,
+    "AllowUserToImportProfile": true,
+    "AllowUserToImportLLMProvider": true,
+    "AllowUserToImportEmbeddingProvider": true,
+    "AllowUserToImportTranscriptionProvider": true,
+    "AllowUserToImportChatTemplate": true,
+    "AllowUserToImportERIDataSource": true,
+    "AllowUserToImportDocumentAnalysisPolicy": true,
+    "AllowUserToImportPlugins": true,
+    "AllowUserToImportConfigurationPlugins": true,
+    "AllowUserToSharePlugins": true,
+    "AllowUserToBackUpData": true,
+    "AllowUserToRestoreData": true,
+    "ShowAdminSettings": true,
+    "EnterpriseEncryptionExportFormat": "V2",
+    "AddAIGeneratedContentDisclosure": true,
+    "DataSourceIndexing": {
+      "AutomaticRefresh": true,
+      "MinimumPauseBetweenStepsSeconds": 77,
+      "MaximumPauseBetweenStepsSeconds": 78
+    },
+    "HiddenAssistants": [
+      "UNKNOWN",
+      "GRAMMAR_SPELLING_ASSISTANT"
+    ]
+  },
+  "Chat": {
+    "ShortcutSendBehavior": "MODIFER_ENTER_IS_SENDING",
+    "LoadingProviderBehavior": "ALWAYS_USE_DEFAULT_CHAT_PROVIDER",
+    "AddChatProviderBehavior": "ADDED_CHATS_USE_LATEST_PROVIDER",
+    "SendToChatDataSourceBehavior": "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS",
+    "PreselectOptions": true,
+    "PreselectedProvider": "PreselectedProvider sample 39",
+    "PreselectedProfile": "PreselectedProfile sample 40",
+    "PreselectedChatTemplate": "PreselectedChatTemplate sample 41",
+    "PreselectedDataSourcesDisabled": true,
+    "PreselectedDataSourcesAutomaticSelection": true,
+    "PreselectedDataSourcesAutomaticValidation": true,
+    "PreselectedDataSourceIds": [
+      "PreselectedDataSourceIds sample 44",
+      "PreselectedDataSourceIds sample 45"
+    ],
+    "PreselectedDataSourcesRetrievalMode": "EVERY_MESSAGE",
+    "PreselectedDataSourceOptions": {
+      "DisableDataSources": true,
+      "AutomaticDataSourceSelection": true,
+      "AutomaticValidation": true,
+      "RetrievalMode": "EVERY_MESSAGE",
+      "PreselectedDataSourceIds": [
+        "PreselectedDataSourceIds sample 44",
+        "PreselectedDataSourceIds sample 45"
+      ]
+    },
+    "ShowLatestMessageAfterLoading": true,
+    "ReadChangedAttachmentsAgain": true
+  },
+  "Workspace": {
+    "StorageBehavior": "STORE_CHATS_AUTOMATICALLY",
+    "StorageTemporaryMaintenancePolicy": "DELETE_OLDER_THAN_7_DAYS",
+    "DisplayBehavior": "TOGGLE_SIDEBAR",
+    "IsSidebarVisible": true,
+    "SplitterPosition": 1.5
+  },
+  "IconFinder": {
+    "PreselectOptions": true,
+    "PreselectedSource": "ICONS8",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 46"
+  },
+  "Translation": {
+    "DebounceIntervalMilliseconds": 87,
+    "PreselectOptions": true,
+    "PreselectLiveTranslation": true,
+    "HideWebContentReader": true,
+    "PreselectWebContentReader": true,
+    "PreselectContentCleanerAgent": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectOtherLanguage": "PreselectOtherLanguage sample 48",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 49"
+  },
+  "Coding": {
+    "PreselectOptions": true,
+    "PreselectCompilerMessages": true,
+    "PreselectedProgrammingLanguage": "BASH",
+    "PreselectedOtherProgrammingLanguage": "PreselectedOtherProgrammingLanguage sample 50",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 51",
+    "PreselectedProfile": "PreselectedProfile sample 52"
+  },
+  "TextSummarizer": {
+    "PreselectOptions": true,
+    "HideWebContentReader": true,
+    "PreselectWebContentReader": true,
+    "PreselectContentCleanerAgent": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 53",
+    "PreselectedComplexity": "SIMPLE_LANGUAGE",
+    "PreselectedExpertInField": "PreselectedExpertInField sample 54",
+    "PreselectedImportantAspects": "PreselectedImportantAspects sample 55",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 56"
+  },
+  "TextContentCleaner": {
+    "PreselectAgentOptions": true,
+    "PreselectedAgentProvider": "PreselectedAgentProvider sample 57"
+  },
+  "Agenda": {
+    "PreselectOptions": true,
+    "PreselectName": "PreselectName sample 58",
+    "PreselectTopic": "PreselectTopic sample 59",
+    "PreselectObjective": "PreselectObjective sample 60",
+    "PreselectModerator": "PreselectModerator sample 61",
+    "PreselectDuration": "PreselectDuration sample 62",
+    "PreselectStartTime": "PreselectStartTime sample 63",
+    "PreselectIntroduceParticipants": true,
+    "PreselectNumberParticipants": "PEER_TO_PEER",
+    "PreselectActiveParticipation": true,
+    "PreselectIsMeetingVirtual": true,
+    "PreselectLocation": "PreselectLocation sample 64",
+    "PreselectJointDinner": true,
+    "PreselectSocialActivity": true,
+    "PreselectArriveAndDepart": true,
+    "PreselectLunchTime": 55,
+    "PreselectBreakTime": 56,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 67",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 68",
+    "PreselectedProfile": "PreselectedProfile sample 69"
+  },
+  "GrammarSpelling": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 70",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 71"
+  },
+  "RewriteImprove": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 72",
+    "PreselectedWritingStyle": "EVERYDAY",
+    "PreselectedSentenceStructure": "ACTIVE",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 73"
+  },
+  "EMail": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectOtherLanguage": "PreselectOtherLanguage sample 74",
+    "PreselectedWritingStyle": "BUSINESS_FORMAL",
+    "Greeting": "Greeting sample 75",
+    "SenderName": "SenderName sample 76",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 77",
+    "PreselectedProfile": "PreselectedProfile sample 78"
+  },
+  "LegalCheck": {
+    "PreselectOptions": true,
+    "HideWebContentReader": true,
+    "PreselectWebContentReader": true,
+    "PreselectContentCleanerAgent": true,
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 79",
+    "PreselectedProfile": "PreselectedProfile sample 80"
+  },
+  "Synonyms": {
+    "PreselectOptions": true,
+    "PreselectedLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 81",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 82"
+  },
+  "MyTasks": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectOtherLanguage": "PreselectOtherLanguage sample 83",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 84",
+    "PreselectedProfile": "PreselectedProfile sample 85"
+  }
+}

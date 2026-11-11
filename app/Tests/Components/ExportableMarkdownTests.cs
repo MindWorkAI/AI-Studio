@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Tools;
 
@@ -33,20 +34,50 @@ public sealed class ExportableMarkdownTests
             "<p>100</p>",
             "```");
 
-        var files = PlainFileExport.ExtractFiles(answer, ',');
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
         var foundFiles = Render(answer).Descendants<FencedCodeBlock>().Select(block => ExportableMarkdown.FileAt(files, block.Span.Start));
 
         Assert.That(foundFiles, Is.EqualTo(new[] { files[1], files[2] }), "The table comes first among the files, but it is no code block.");
     }
 
     [Test]
-    public void AFormulaFindsNoFile()
+    public void AFormulaIsNoPartOfTheMarkdown()
     {
         var answer = Lines("1. The energy follows from", string.Empty, "   $$", "   E = mc^2", "   $$");
 
-        var formula = Render(answer).Descendants<MathBlock>().Single();
+        var plan = MarkdownRenderPlanner.Build(answer);
+        var formulasOfTheMarkdown = plan.Segments
+            .Where(segment => segment.Type is MarkdownRenderSegmentType.MARKDOWN)
+            .SelectMany(segment => Render(segment.GetContent(plan.Source)).Descendants<MathBlock>());
 
-        Assert.That(ExportableMarkdown.FileAt(PlainFileExport.ExtractFiles(answer, ','), formula.Span.Start), Is.Null, "Markdig reads a formula as a fenced block, but nobody saves a formula as a text file.");
+        Assert.That(formulasOfTheMarkdown, Is.Empty, "The chat renders a formula and its actions itself, so the Markdown around it holds no formula to give a code block's actions to.");
+    }
+
+    [Test]
+    public void EveryFormulaFindsItsFile()
+    {
+        var answer = Lines(
+            "$$",
+            "a = b",
+            "$$",
+            @"\[",
+            "c = d",
+            @"\]",
+            "```latex",
+            "e = f",
+            "```",
+            "1. Item",
+            "   $$",
+            "   g = h",
+            "   $$");
+
+        var plan = MarkdownRenderPlanner.Build(answer);
+        var files = PlainFileExport.ExtractFiles(plan, ',');
+        var foundFiles = plan.Segments
+            .Where(segment => segment.Type is MarkdownRenderSegmentType.MATH_BLOCK)
+            .Select(segment => ExportableMarkdown.FileAt(files, segment.FileStart)?.Format);
+
+        Assert.That(foundFiles, Is.EqualTo(Enumerable.Repeat<FileExportFormat?>(FileExportFormat.LATEX, 4)), "The chat looks a formula's file up where its block starts, so that the formula gets the button to save it.");
     }
 
     [Test]
@@ -56,7 +87,7 @@ public sealed class ExportableMarkdownTests
 
         var block = Render(answer).Descendants<FencedCodeBlock>().Single();
 
-        Assert.That(ExportableMarkdown.FileAt(PlainFileExport.ExtractFiles(answer, ','), block.Span.Start), Is.Null, "The file would end wherever the answer broke off.");
+        Assert.That(ExportableMarkdown.FileAt(PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ','), block.Span.Start), Is.Null, "The file would end wherever the answer broke off.");
     }
 
     private static MarkdownDocument Render(string answer) => Markdig.Markdown.Parse(answer, Markdown.CHAT_MARKDOWN_PIPELINE);

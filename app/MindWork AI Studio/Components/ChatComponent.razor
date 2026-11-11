@@ -114,6 +114,10 @@
             
             <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" KeepPreviewedText="@this.KeepPreviewedTextAsync" Disabled="@(!this.CanAttachFiles)"/>
             
+            <MudTooltip Text="@T("Show all files attached to this chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.LibraryBooks" Disabled="@(!this.HasSentFileAttachments)" OnClick="@this.ShowSentFileAttachments"/>
+            </MudTooltip>
+            
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
             <MudTooltip Text="@T("Bold")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
@@ -134,6 +138,10 @@
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
+            <MudTooltip Text="@T("Show the complete system prompt the AI receives")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="@this.ShowSystemPrompt"/>
+            </MudTooltip>
+
             <ProfileSelection MarginLeft="" CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.CanProfileBeChanged)" DisabledText="@this.ProfileDisabledText"/>
 
             @if (this.SettingsManager.AreToolsEnabled())

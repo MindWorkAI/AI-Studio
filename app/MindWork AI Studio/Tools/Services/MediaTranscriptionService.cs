@@ -690,7 +690,7 @@ public sealed class MediaTranscriptionService(
         // unchanged when it already is a single mono 48 kHz Opus track in a WebM container and small
         // enough. Such a file keeps whatever bitrate it was made with, which is the better outcome --
         // re-encoding it could only take quality away, never add any.
-        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.GetBitsPerSecond();
+        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.BitsPerSecond;
 
         // Which quality an upload was produced with is the first question to ask when a transcript
         // comes back missing something, so it has to be in the log of the job it belongs to:

@@ -146,7 +146,7 @@
                                                                     @if (source.DataSource is IInternalDataSource internalSource)
                                                                     {
                                                                         <MudSpacer/>
-                                                                        <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
+                                                                        <MudTooltip Text="@internalSource.ConfidenceLevel.Name">
                                                                             <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                                         </MudTooltip>
                                                                     }

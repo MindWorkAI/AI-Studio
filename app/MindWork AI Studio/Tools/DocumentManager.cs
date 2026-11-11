@@ -26,12 +26,13 @@ public sealed class DocumentManager
 
             //
             // A Word or OpenDocument file carries no fixed page layout, so the runtime derives these
-            // boundaries from page breaks and heuristics. We note the estimate as a comment rather
-            // than as a heading: a heading would sit on the same level as the document's own first
-            // level headings, leaving the AI unable to tell the structure of the document apart from
-            // our boundaries. The presentation reader marks its slides the same way.
+            // boundaries from page breaks and heuristics and says so. The pages of a OneNote section,
+            // on the other hand, are those of the file. We note the page as a comment rather than as
+            // a heading: a heading would sit on the same level as the document's own first level
+            // headings, leaving the AI unable to tell the structure of the document apart from our
+            // boundaries. The presentation reader marks its slides the same way.
             //
-            this.currentPageContent.AppendLine($"<!-- Estimated page {pageNumber} -->");
+            this.currentPageContent.AppendLine(metadata.Document?.PageIsExact is true ? $"<!-- Page {pageNumber} -->" : $"<!-- Estimated page {pageNumber} -->");
             this.currentPageContent.AppendLine();
             this.currentPageContent.Append(content);
 

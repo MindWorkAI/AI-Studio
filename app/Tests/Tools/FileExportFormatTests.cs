@@ -13,11 +13,11 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormat.MICROSOFT_WORD.FollowsPageAnchors(), Is.False, "Word looks for a file whose name ends in the fragment, finds none, and refuses the link.");
-            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.FollowsPageAnchors(), Is.False, "LibreOffice does the same, verified on 2026-09-15 with an exported .odt.");
-            Assert.That(FileExportFormat.HTML.FollowsPageAnchors(), Is.True, "A browser opens the document on the page the fragment names.");
-            Assert.That(FileExportFormat.MARKDOWN.FollowsPageAnchors(), Is.True);
-            Assert.That(FileExportFormat.LATEX.FollowsPageAnchors(), Is.True);
+            Assert.That(FileExportFormat.MICROSOFT_WORD.FollowsPageAnchors, Is.False, "Word looks for a file whose name ends in the fragment, finds none, and refuses the link.");
+            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.FollowsPageAnchors, Is.False, "LibreOffice does the same, verified on 2026-09-15 with an exported .odt.");
+            Assert.That(FileExportFormat.HTML.FollowsPageAnchors, Is.True, "A browser opens the document on the page the fragment names.");
+            Assert.That(FileExportFormat.MARKDOWN.FollowsPageAnchors, Is.True);
+            Assert.That(FileExportFormat.LATEX.FollowsPageAnchors, Is.True);
         }
     }
 
@@ -27,7 +27,7 @@ public sealed class FileExportFormatTests
         // Whoever adds a format decides what its reader can follow, rather than inheriting an
         // assumption. This fails for a format which nobody thought about, because the list below
         // has to name it:
-        Assert.That(FileExportFormatExtensions.ANSWER_FORMATS, Is.EquivalentTo(new[]
+        Assert.That(FileExportFormat.AnswerFormats, Is.EquivalentTo(new[]
         {
             FileExportFormat.MICROSOFT_WORD,
             FileExportFormat.OPEN_DOCUMENT_TEXT,
@@ -59,10 +59,10 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormat.HTML.NeedsPageTitle(), Is.True, "Without one, the browser tab shows the random name of the temporary file Pandoc read.");
-            Assert.That(FileExportFormat.MICROSOFT_WORD.NeedsPageTitle(), Is.False, "Word would keep it as a document property nobody asked for.");
-            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.NeedsPageTitle(), Is.False, "The same goes for an OpenDocument file.");
-            Assert.That(FileExportFormat.LATEX.NeedsPageTitle(), Is.False);
+            Assert.That(FileExportFormat.HTML.NeedsPageTitle, Is.True, "Without one, the browser tab shows the random name of the temporary file Pandoc read.");
+            Assert.That(FileExportFormat.MICROSOFT_WORD.NeedsPageTitle, Is.False, "Word would keep it as a document property nobody asked for.");
+            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.NeedsPageTitle, Is.False, "The same goes for an OpenDocument file.");
+            Assert.That(FileExportFormat.LATEX.NeedsPageTitle, Is.False);
         }
     }
 
@@ -81,9 +81,9 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.True);
+            Assert.That(FileExportFormat.TryFromCodeFenceLanguage(language, out var format), Is.True);
             Assert.That(format, Is.EqualTo(expectedFormat));
-            Assert.That(format.IsPlainText(), Is.True, "A code block holds text, so the export writes it as it is.");
+            Assert.That(format.IsPlainText, Is.True, "A code block holds text, so the export writes it as it is.");
         }
     }
 
@@ -92,16 +92,16 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormat.MICROSOFT_WORD.IsPlainText(), Is.False, "A Word file is an archive, and writing text into one breaks it.");
-            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.IsPlainText(), Is.False);
-            Assert.That(FileExportFormat.NONE.IsPlainText(), Is.False, "No format means no file.");
-            Assert.That(FileExportFormat.UNKNOWN.IsPlainText(), Is.False);
-            Assert.That(FileExportFormat.HTML.IsPlainText(), Is.True, "A page the model wrote is a finished file, even though an entire answer needs Pandoc to become one.");
-            Assert.That(FileExportFormat.LATEX.IsPlainText(), Is.True);
-            Assert.That(FileExportFormat.MARKDOWN.IsPlainText(), Is.True);
-            Assert.That(FileExportFormat.CSV.IsPlainText(), Is.True);
-            Assert.That(FileExportFormat.TSV.IsPlainText(), Is.True);
-            Assert.That(FileExportFormat.SOURCE_CODE.IsPlainText(), Is.True, "Code is text, whatever its language.");
+            Assert.That(FileExportFormat.MICROSOFT_WORD.IsPlainText, Is.False, "A Word file is an archive, and writing text into one breaks it.");
+            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.IsPlainText, Is.False);
+            Assert.That(FileExportFormat.NONE.IsPlainText, Is.False, "No format means no file.");
+            Assert.That(FileExportFormat.UNKNOWN.IsPlainText, Is.False);
+            Assert.That(FileExportFormat.HTML.IsPlainText, Is.True, "A page the model wrote is a finished file, even though an entire answer needs Pandoc to become one.");
+            Assert.That(FileExportFormat.LATEX.IsPlainText, Is.True);
+            Assert.That(FileExportFormat.MARKDOWN.IsPlainText, Is.True);
+            Assert.That(FileExportFormat.CSV.IsPlainText, Is.True);
+            Assert.That(FileExportFormat.TSV.IsPlainText, Is.True);
+            Assert.That(FileExportFormat.SOURCE_CODE.IsPlainText, Is.True, "Code is text, whatever its language.");
         }
     }
 
@@ -110,9 +110,9 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormat.SOURCE_CODE.ToFileExtension(), Is.Empty, "Python and Rust share the format, but not the extension.");
-            Assert.That(FileExportFormat.SOURCE_CODE.ToFileTypeFilter(), Is.Null, "Without the language, the save dialog would offer the wrong files.");
-            Assert.That(FileExportFormatExtensions.ANSWER_FORMATS, Does.Not.Contain(FileExportFormat.SOURCE_CODE), "Code is one block out of an answer, never the answer itself.");
+            Assert.That(FileExportFormat.SOURCE_CODE.FileExtension, Is.Empty, "Python and Rust share the format, but not the extension.");
+            Assert.That(FileExportFormat.SOURCE_CODE.FileTypeFilter, Is.Null, "Without the language, the save dialog would offer the wrong files.");
+            Assert.That(FileExportFormat.AnswerFormats, Does.Not.Contain(FileExportFormat.SOURCE_CODE), "Code is one block out of an answer, never the answer itself.");
         }
     }
 
@@ -124,7 +124,7 @@ public sealed class FileExportFormatTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.False);
+            Assert.That(FileExportFormat.TryFromCodeFenceLanguage(language, out var format), Is.False);
             Assert.That(format, Is.EqualTo(FileExportFormat.NONE));
         }
     }

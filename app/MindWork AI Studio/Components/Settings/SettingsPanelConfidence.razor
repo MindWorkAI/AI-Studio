@@ -35,7 +35,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd Style="vertical-align: top;">
-                        @context.ToName()
+                        @context.Name
                     </MudTd>
                     <MudTd>
                         <MudMarkdown Value="@context.GetConfidence(this.SettingsManager).Description" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
@@ -54,7 +54,7 @@
                                     continue;
 
                                 <MudMenuItem OnClick="@(async () => await this.ChangeCustomConfidenceLevel(context, confidenceLevel))">
-                                    @confidenceLevel.GetName()
+                                    @confidenceLevel.Name
                                 </MudMenuItem>
                             }
                         </MudMenu>

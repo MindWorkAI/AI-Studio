@@ -58,7 +58,7 @@ public sealed class ContentImage : IContent, IImageSource
     /// <remarks>
     /// Is the image source a URL, a local file path, a base64 string, etc.?
     /// </remarks>
-    public required ContentImageSource SourceType { get; init; }
+    public required ContentImageSource SourceType { get; set; }
 
     /// <summary>
     /// The image source.

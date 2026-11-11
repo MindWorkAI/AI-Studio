@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider;
@@ -19,6 +21,16 @@ public readonly record struct Model(string Id, string? DisplayName)
     /// Creates a system-configured model placeholder.
     /// </summary>
     public static readonly Model SYSTEM_MODEL = new(SYSTEM_MODEL_ID, null);
+
+    /// <summary>
+    /// Orders model IDs by the numbers in them, as people read them.
+    /// </summary>
+    /// <remarks>
+    /// Compared digit by digit, "gpt-4.10" comes before "gpt-4.9", "o10" before "o3", and a list with the
+    /// newest models first puts an older one on top. The order does not depend on the language of the
+    /// operating system either.
+    /// </remarks>
+    public static readonly StringComparer ID_ORDER = StringComparer.Create(CultureInfo.InvariantCulture, CompareOptions.NumericOrdering);
 
     /// <summary>
     /// Checks if this model is the system-configured placeholder.

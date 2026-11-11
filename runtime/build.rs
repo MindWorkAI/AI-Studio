@@ -51,14 +51,62 @@ fn main() {
 
     println!("cargo:rustc-env=AI_STUDIO_ARCHITECTURE={rid}");
 
+    let metadata = include_str!("../metadata.txt");
+
+    //
+    // The runtime reports the Rust compiler which built it. Line 6 of
+    // metadata.txt names only the compiler our pipeline is supposed to
+    // use; other builds, such as the Flatpak, bring their own one.
+    //
+    let rust_version = rust_compiler_version().unwrap_or_else(|issue| {
+        let configured_version = metadata.lines().nth(5).unwrap();
+        println!("cargo:warning=Cannot determine the Rust compiler which builds the runtime: {issue}. The runtime reports the one in metadata.txt instead: {configured_version}");
+        configured_version.to_string()
+    });
+
+    println!("cargo:rustc-env=AI_STUDIO_RUST_VERSION={rust_version}");
+
     //
     // Read the current version and update the
     // Rust and Tauri configuration files:
     //
-    let metadata = include_str!("../metadata.txt");
     let version = metadata.lines().next().unwrap();
     update_cargo_toml("Cargo.toml", version);
     update_tauri_conf("tauri.conf.json", version);
+}
+
+/// Asks the compiler which Cargo uses for the runtime about its version,
+/// and returns it in the form of metadata.txt, e.g., "1.99.1 (commit 58cf8f9c3)".
+///
+/// Cargo hands every build script the compiler in `RUSTC`, which is the
+/// one building the runtime, also when we cross-compile. The first line of
+/// its answer reads, e.g., "rustc 1.99.1 (58cf8f9c3 2026-10-13)". The
+/// version stays as the compiler names it, e.g., with "-nightly".
+fn rust_compiler_version() -> Result<String, String> {
+    let rustc = std::env::var("RUSTC").map_err(|error| format!("Cargo did not name the compiler: {error}"))?;
+    let output = std::process::Command::new(&rustc)
+        .arg("-vV")
+        .output()
+        .map_err(|error| format!("'{rustc} -vV' did not run: {error}"))?;
+
+    if !output.status.success() {
+        return Err(format!("'{rustc} -vV' failed with {}", output.status));
+    }
+
+    let answer = String::from_utf8_lossy(&output.stdout);
+    let first_line = answer.lines().next().unwrap_or_default();
+    let unexpected = || format!("'{rustc} -vV' answered in an unexpected form: '{first_line}'");
+    let (version, rest) = first_line
+        .strip_prefix("rustc ")
+        .and_then(|rest| rest.split_once(" ("))
+        .ok_or_else(unexpected)?;
+
+    let commit = rest.split([' ', ')']).next().unwrap_or_default();
+    if version.is_empty() || commit.is_empty() || !commit.chars().all(|character| character.is_ascii_hexdigit()) {
+        return Err(unexpected());
+    }
+
+    Ok(format!("{version} (commit {commit})"))
 }
 
 /// Lets the linker embed our Windows application manifest into every program

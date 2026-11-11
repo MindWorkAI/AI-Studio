@@ -251,6 +251,35 @@ public sealed class IContentExtensionsTests
         Assert.That(TextWith(string.Empty).ToExportContent(file), Is.EqualTo("print(42)\n"));
     }
 
+    [TestCase("import sys\r\nprint(sys.argv)")]
+    [TestCase("import sys\r\nprint(sys.argv)\r\n")]
+    [TestCase("import sys\rprint(sys.argv)")]
+    public void CodeNeverMixesLineEndings(string code)
+    {
+        var file = new MessageFile(1, Position: 0, string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage("python"), code);
+
+        Assert.That(TextWith(string.Empty).ToExportContent(file), Is.EqualTo("import sys\nprint(sys.argv)\n"), "Every line ends with LF, whatever line breaks the code came with.");
+    }
+
+    [TestCase("@echo off\necho done")]
+    [TestCase("@echo off\r\necho done\r\n")]
+    [TestCase("@echo off\recho done")]
+    public void ABatchFileNeverMixesLineEndings(string code)
+    {
+        var file = new MessageFile(1, Position: 0, string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage("bat"), code);
+
+        Assert.That(TextWith(string.Empty).ToExportContent(file), Is.EqualTo("@echo off\r\necho done\r\n"), "Every line ends with CR LF, whatever line breaks the code came with.");
+    }
+
+    [TestCase("python", "print('a\fb\u2028c')", "print('a\fb\u2028c')\n")]
+    [TestCase("bat", "echo a\fb\u2028c", "echo a\fb\u2028c\r\n")]
+    public void AFormFeedOrALineSeparatorStaysInItsLine(string language, string code, string expected)
+    {
+        var file = new MessageFile(1, Position: 0, string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage(language), code);
+
+        Assert.That(TextWith(string.Empty).ToExportContent(file), Is.EqualTo(expected), "Markdown breaks lines only at LF and CR, and so does the file.");
+    }
+
     [Test]
     public void ABatchFileEndsItsLinesTheWindowsWay()
     {
@@ -298,7 +327,7 @@ public sealed class IContentExtensionsTests
     private static IReadOnlyList<MessageFile> FilesOf(IContent content)
     {
         content.TryGetMarkdownText(out var markdown);
-        return PlainFileExport.ExtractFiles(markdown, ',');
+        return PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(markdown), ',');
     }
 
     /// <summary>

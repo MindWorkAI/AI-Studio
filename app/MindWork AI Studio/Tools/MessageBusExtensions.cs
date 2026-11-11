@@ -4,13 +4,19 @@ namespace AIStudio.Tools;
 
 public static class MessageBusExtensions
 {
-    public static async Task SendMessage<T>(this ComponentBase component, Event triggeredEvent, T? data = default)
+    extension(ComponentBase component)
     {
-        await MessageBus.INSTANCE.SendMessage(component, triggeredEvent, data);
+        public async Task SendMessage<T>(Event triggeredEvent, T? data = default)
+        {
+            await MessageBus.INSTANCE.SendMessage(component, triggeredEvent, data);
+        }
     }
     
-    public static void ApplyFilters(this IMessageBusReceiver component, ComponentBase[] components, Event[] events)
+    extension(IMessageBusReceiver component)
     {
-        MessageBus.INSTANCE.ApplyFilters(component, components, events.ToHashSet());
+        public void ApplyFilters(ComponentBase[] components, Event[] events)
+        {
+            MessageBus.INSTANCE.ApplyFilters(component, components, events.ToHashSet());
+        }
     }
 }

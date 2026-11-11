@@ -63,8 +63,8 @@ public sealed class MailboxProviderTemplatesTests
     [Test]
     public void EveryUsernameFormatHasItsOwnDescription()
     {
-        var descriptions = Enum.GetValues<MailboxUsernameFormat>().Select(format => format.GetDescription()).ToList();
-        var fallback = ((MailboxUsernameFormat)int.MaxValue).GetDescription();
+        var descriptions = Enum.GetValues<MailboxUsernameFormat>().Select(format => format.Description).ToList();
+        var fallback = ((MailboxUsernameFormat)int.MaxValue).Description;
 
         using (Assert.EnterMultipleScope())
         {

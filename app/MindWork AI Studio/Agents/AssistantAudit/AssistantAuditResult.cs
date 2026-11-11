@@ -8,8 +8,8 @@ public sealed record AssistantAuditResult
     /// <summary>
     /// Gets the serialized audit level returned by the model before callers normalize it to <see cref="AssistantAuditLevel"/>.
     /// </summary>
-    public string Level { get; init; } = string.Empty;
-    public string Summary { get; init; } = string.Empty;
-    public float Confidence { get; init; }
-    public List<AssistantAuditFinding> Findings { get; init; } = [];
+    public string Level { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public float Confidence { get; set; }
+    public List<AssistantAuditFinding> Findings { get; set; } = [];
 }

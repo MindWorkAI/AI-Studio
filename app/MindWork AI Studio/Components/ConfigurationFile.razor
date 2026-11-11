@@ -13,6 +13,8 @@
             AdornmentColor="@(isDropTarget ? Color.Primary : this.IconColor)"
             UserAttributes="@SPELLCHECK_ATTRIBUTES"
             Immediate="@true"
+            Clearable="@this.Clearable"
+            OnClearButtonClick="@this.ClearFile"
             Underline="false"
             Class="flex-grow-1"
         />

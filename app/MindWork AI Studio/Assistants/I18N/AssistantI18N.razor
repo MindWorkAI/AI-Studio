@@ -2,7 +2,7 @@
 @using AIStudio.Settings
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogI18N>
 
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" SelectionUpdated="_ => this.OnChangedLanguage()" Disabled="@this.IsProcessing" />
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting)" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" SelectionUpdated="_ => this.OnChangedLanguage()" Disabled="@this.IsProcessing" />
 <ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.selectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(async void (id) => await this.OnLanguagePluginChanged(id))" OptionHelp="@T("Select the language plugin used for comparision.")" Disabled="@(() => this.IsProcessing)"/>
 @if (this.isLoading)
 {
@@ -38,9 +38,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
                     @context.Key
                 </pre>
             </MudTd>
-            <MudTd>
-                @context.Value
-            </MudTd>
+            <MudTd Style="white-space: pre-line;">@context.Value</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager />
@@ -68,9 +66,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
                     @context.Key
                 </pre>
             </MudTd>
-            <MudTd>
-                @context.Value
-            </MudTd>
+            <MudTd Style="white-space: pre-line;">@context.Value</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager />
@@ -112,9 +108,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
                     @context.Key
                 </pre>
                 </MudTd>
-                <MudTd>
-                    @context.Value
-                </MudTd>
+                <MudTd Style="white-space: pre-line;">@context.Value</MudTd>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager />

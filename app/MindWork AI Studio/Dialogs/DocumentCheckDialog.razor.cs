@@ -234,7 +234,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
             if (this.KeepReadText is not null)
                 version = await Task.Run(() => FileVersion.Of(documentToLoad.FilePath), cancellationToken);
 
-            var extraction = await UserFile.LoadFileData(documentToLoad.FilePath, this.RustService, this.PandocAvailability, cancellationToken);
+            var extraction = await UserFile.LoadFileData(documentToLoad.FilePath, this.RustService, this.PandocAvailability, token: cancellationToken);
             if (this.isDisposed || generation != this.loadGeneration)
                 return;
 

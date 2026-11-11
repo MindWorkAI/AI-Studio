@@ -1,0 +1,4 @@
+Target language: Use the language English (US) (EN_US) for your output.
+Scope instruction: instruction sample 11
+Sources, in the same order as the attached files: [{"sourceId":"s1","kind":"VISUAL_ASSET","assetId":"assetId sample 20","name":"path-17.txt"},{"sourceId":"s2","kind":"VISUAL_ASSET","assetId":"assetId sample 25","name":"path-22.txt"}]
+Media transcripts: {"s1":"The transcript of a recording, with Gr\u00F6\u00DFe and \u20AC."}

@@ -69,7 +69,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
-    private FileExportNotifications FileExportNotifications => this.fileExportNotifications ??= new(this.Snackbar);
+    private FileExportNotifications FileExportNotifications => field ??= new(this.Snackbar);
 
     private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
     
@@ -81,11 +81,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool navBarOpen;
     private bool performingUpdate;
     private UpdateResponse? currentUpdateResponse;
-    private MudThemeProvider themeProvider = null!;
+    private MudMarkdownThemeProvider themeProvider = null!;
     private bool useDarkMode;
     private bool startupCompleted;
     private bool settingsWriteProtectionWarningShown;
-    private FileExportNotifications? fileExportNotifications;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim dataRestorePendingDialogSemaphore = new(1, 1);
@@ -487,8 +486,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private IEnumerable<NavBarItem> GetNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
-        var activityIndicatorLightColor = this.ColorTheme.GetActivityIndicatorLightColor();
-        var activityIndicatorDarkColor = this.ColorTheme.GetActivityIndicatorDarkColor();
+        var activityIndicatorLightColor = this.ColorTheme.ActivityIndicatorLightColor;
+        var activityIndicatorDarkColor = this.ColorTheme.ActivityIndicatorDarkColor;
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
         var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();

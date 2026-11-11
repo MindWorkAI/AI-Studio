@@ -1,6 +1,11 @@
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Mathematics;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mathematics;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.Tools.ToolCalling;
 
@@ -185,6 +190,39 @@ public sealed class ToolCollectionTests : ToolRegistryTestBase
             Assert.That(definition.Id, Is.EqualTo(ToolSelectionRules.MAILBOXES_COLLECTION_ID));
             Assert.That(definition.ToolIds, Is.EqualTo(new[] { ToolSelectionRules.SEARCH_MAILS_TOOL_ID, ToolSelectionRules.READ_MAIL_TOOL_ID, ToolSelectionRules.COUNT_MAILS_TOOL_ID }));
             Assert.That(definition.MinimumProviderConfidence, Is.EqualTo(ConfidenceLevel.VERY_LOW), "Each mailbox asks for its own level, and none may ask for less.");
+        }
+    }
+
+    [Test]
+    public void TheMathematicsCollectionGathersTheToolsWhichCompute()
+    {
+        var definition = new MathematicsToolCollection().GetDefinition();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(definition.Id, Is.EqualTo(ToolSelectionRules.MATHEMATICS_COLLECTION_ID));
+            Assert.That(definition.ToolIds, Is.EqualTo(new[] { ToolSelectionRules.CALCULATE_TOOL_ID, ToolSelectionRules.COMPUTE_SYMBOLICALLY_TOOL_ID }));
+            Assert.That(definition.MinimumProviderConfidence, Is.EqualTo(ConfidenceLevel.NONE), "The tools see nothing but what the model writes into their arguments.");
+        }
+    }
+
+    [Test]
+    public async Task TheMathematicsCollectionAppearsOnlyWithItsPreview()
+    {
+        var computationService = new MathComputationService(NullLogger<MathComputationService>.Instance);
+        IToolImplementation[] tools = [new CalculateTool(this.SettingsManager, computationService), new ComputeSymbolicallyTool(this.SettingsManager, computationService)];
+        var registry = new ToolRegistry(tools, [new CodeToolDefinitionSource(tools)], [new MathematicsToolCollection()], this.SettingsManager, this.CreateToolSettingsService(), NullLogger<ToolRegistry>.Instance);
+
+        var withoutPreview = await registry.GetCatalogAsync(AIStudio.Tools.Components.CHAT);
+        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Add(PreviewFeatures.PRE_MATHEMATICS_2026);
+        var withPreview = await registry.GetCatalogAsync(AIStudio.Tools.Components.CHAT);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(withoutPreview, Is.Empty);
+            Assert.That(withPreview.Select(item => item.Id), Is.EqualTo(new[] { ToolSelectionRules.MATHEMATICS_COLLECTION_ID }), "Both tools appear as one collection.");
+            Assert.That(registry.GetCollectionId(ToolSelectionRules.COMPUTE_SYMBOLICALLY_TOOL_ID), Is.EqualTo(ToolSelectionRules.MATHEMATICS_COLLECTION_ID));
+            Assert.That(registry.ExpandSelection([ToolSelectionRules.MATHEMATICS_COLLECTION_ID]), Is.EquivalentTo(new[] { ToolSelectionRules.CALCULATE_TOOL_ID, ToolSelectionRules.COMPUTE_SYMBOLICALLY_TOOL_ID }));
         }
     }
 

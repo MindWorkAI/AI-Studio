@@ -4,10 +4,19 @@ namespace Build.Commands;
 
 public sealed class AssistantPluginHashCommand
 {
-    [Command("assistant-plugin-hash", Description = "Compute the canonical assistant-plugin hash for a plugin directory")]
-    public void ComputeAssistantPluginHash(
-        [Argument(Description = "Path to the assistant plugin directory")] string pluginDir,
-        [Option("lua-snippet", Description = "Also print a Lua snippet for CONFIG[\"SETTINGS\"]")] bool luaSnippet = false)
+    /// <summary>
+    /// Defines the command "assistant-plugin-hash".
+    /// </summary>
+    public static Command CreateCommand()
+    {
+        var pluginDir = new Argument<string>("pluginDir") { Description = "Path to the assistant plugin directory" };
+        var luaSnippet = new Option<bool>("--lua-snippet") { Description = "Also print a Lua snippet for CONFIG[\"SETTINGS\"]" };
+        var command = new Command("assistant-plugin-hash", "Compute the canonical assistant-plugin hash for a plugin directory") { pluginDir, luaSnippet };
+        command.SetAction(parseResult => new AssistantPluginHashCommand().ComputeAssistantPluginHash(parseResult.GetRequiredValue(pluginDir), parseResult.GetValue(luaSnippet)));
+        return command;
+    }
+
+    public void ComputeAssistantPluginHash(string pluginDir, bool luaSnippet = false)
     {
         if (!Environment.IsWorkingDirectoryValid())
             return;

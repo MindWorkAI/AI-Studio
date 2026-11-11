@@ -26,5 +26,5 @@ This applies to LLM provider, embedding provider, and transcription provider API
 - Remove `LEGACY_SELF_HOSTED_SECRET_ID_DE`.
 - Remove `LegacySelfHostedAPIKeys`.
 - Remove legacy lookup, migration, and cleanup calls from API key read, write, and delete paths.
-- Keep `LLMProvidersExtensions.ToSecretId()` and the canonical `Self-hosted` namespace.
+- Keep `LLMProvidersExtensions.SecretId` and the canonical `Self-hosted` namespace.
 - Update this document's status to `Removed`.

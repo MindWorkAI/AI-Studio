@@ -140,7 +140,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
                 // one next to it, which is what deleting and recreating would come down to.
                 //
                 await using var archiveStream = File.Create(archivePath);
-                ZipFile.CreateFromDirectory(pluginRoot, archiveStream, CompressionLevel.Optimal, false);
+                await ZipFile.CreateFromDirectoryAsync(pluginRoot, archiveStream, CompressionLevel.Optimal, false, token);
             }, token);
 
             logger.LogInformation("Exported plugin '{PluginName}' ({PluginId}) to the archive '{ArchivePath}'.", plugin.Name, plugin.Id, archivePath);
@@ -177,10 +177,10 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
             Directory.CreateDirectory(archiveDirectory);
             this.CleanUpExpiredArchives(archiveDirectory);
 
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 token.ThrowIfCancellationRequested();
-                ZipFile.CreateFromDirectory(pluginRoot, archivePath, CompressionLevel.Optimal, false);
+                await ZipFile.CreateFromDirectoryAsync(pluginRoot, archivePath, CompressionLevel.Optimal, false, token);
             }, token);
 
             token.ThrowIfCancellationRequested();

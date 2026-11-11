@@ -12,51 +12,55 @@ public static class FNVHash
     private const uint FNV_PRIME_32_BIT = 16_777_619;
     private const ulong FNV_PRIME_64_BIT = 1_099_511_628_211;
 
-    /// <summary>
-    /// Computes the 32bit FNV-1a hash of a string.
-    /// </summary>
     /// <param name="text">The string to hash.</param>
-    /// <returns>The 32bit FNV-1a hash of the string.</returns>
-    public static uint ToFNV32(this string text) => ToFNV32(text.AsSpan());
-
-    /// <summary>
-    /// Computes the 32bit FNV-1a hash of a string.
-    /// </summary>
-    /// <param name="text">The string to hash.</param>
-    /// <returns>The 32bit FNV-1a hash of the string.</returns>
-    public static uint ToFNV32(this ReadOnlySpan<char> text)
+    extension(string text)
     {
-        var hash = FNV_OFFSET_BASIS_32_BIT;
-        foreach (var c in text)
-        {
-            hash ^= c;
-            hash *= FNV_PRIME_32_BIT;
-        }
+        /// <summary>
+        /// Computes the 32bit FNV-1a hash of a string.
+        /// </summary>
+        /// <returns>The 32bit FNV-1a hash of the string.</returns>
+        public uint ToFNV32() => ToFNV32(text.AsSpan());
 
-        return hash;
+        /// <summary>
+        /// Computes the 64bit FNV-1a hash of a string.
+        /// </summary>
+        /// <returns>The 64bit FNV-1a hash of the string.</returns>
+        public ulong ToFNV64() => ToFNV64(text.AsSpan());
     }
-    
-    /// <summary>
-    /// Computes the 64bit FNV-1a hash of a string.
-    /// </summary>
+
     /// <param name="text">The string to hash.</param>
-    /// <returns>The 64bit FNV-1a hash of the string.</returns>
-    public static ulong ToFNV64(this string text) => ToFNV64(text.AsSpan());
-    
-    /// <summary>
-    /// Computes the 64bit FNV-1a hash of a string.
-    /// </summary>
-    /// <param name="text">The string to hash.</param>
-    /// <returns>The 64bit FNV-1a hash of the string.</returns>
-    public static ulong ToFNV64(this ReadOnlySpan<char> text)
+    extension(ReadOnlySpan<char> text)
     {
-        var hash = FNV_OFFSET_BASIS_64_BIT;
-        foreach (var c in text)
+        /// <summary>
+        /// Computes the 32bit FNV-1a hash of a string.
+        /// </summary>
+        /// <returns>The 32bit FNV-1a hash of the string.</returns>
+        public uint ToFNV32()
         {
-            hash ^= c;
-            hash *= FNV_PRIME_64_BIT;
+            var hash = FNV_OFFSET_BASIS_32_BIT;
+            foreach (var c in text)
+            {
+                hash ^= c;
+                hash *= FNV_PRIME_32_BIT;
+            }
+
+            return hash;
         }
 
-        return hash;
+        /// <summary>
+        /// Computes the 64bit FNV-1a hash of a string.
+        /// </summary>
+        /// <returns>The 64bit FNV-1a hash of the string.</returns>
+        public ulong ToFNV64()
+        {
+            var hash = FNV_OFFSET_BASIS_64_BIT;
+            foreach (var c in text)
+            {
+                hash ^= c;
+                hash *= FNV_PRIME_64_BIT;
+            }
+
+            return hash;
+        }
     }
 }

@@ -34,15 +34,41 @@ public sealed partial class RustService : BackgroundService
     private readonly SemaphoreSlim userLanguageLock = new(1, 1);
     private readonly SemaphoreSlim userNameLock = new(1, 1);
 
-    private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
+    /// <summary>
+    /// The JSON options of nearly every call to the runtime, which names its fields in snake case.
+    /// </summary>
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Converters =
         {
             new RustEnumConverter(),
         },
-    };
-    
+        TypeInfoResolver = RustJsonContext.Default,
+    }.AsReadOnly();
+
+    /// <summary>
+    /// The JSON options of the events of a file extraction, which name their fields themselves.
+    /// </summary>
+    /// <remarks>
+    /// The same as the defaults of System.Text.Json, with which these events were read before.
+    /// </remarks>
+    internal static readonly JsonSerializerOptions CONTENT_STREAM_JSON_OPTIONS = new JsonSerializerOptions
+    {
+        TypeInfoResolver = RustContentStreamJsonContext.Default,
+    }.AsReadOnly();
+
+    /// <summary>
+    /// The JSON options of the prompt injection filter, which names its fields in camel case.
+    /// </summary>
+    /// <remarks>
+    /// The same as the defaults of the JSON calls of HttpClient, with which the filter was called before.
+    /// </remarks>
+    internal static readonly JsonSerializerOptions PROMPT_INJECTION_JSON_OPTIONS = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+    {
+        TypeInfoResolver = RustPromptInjectionJsonContext.Default,
+    }.AsReadOnly();
+
     private ILogger<RustService>? logger;
     private Encryption? encryptor;
     private string? cachedUserLanguage;

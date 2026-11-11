@@ -1,0 +1,11 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedMarkdown Value="@this.Notice"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Primary">
+            @T("I have read the notes")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

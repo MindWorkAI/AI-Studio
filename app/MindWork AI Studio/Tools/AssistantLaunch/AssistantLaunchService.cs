@@ -91,7 +91,7 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
     public async Task LaunchAsync(Components destination, TextLaunchPayload payload)
     {
         var route = destination.GetData().Route;
-        if (destination.HasSingleSessionSlot() && assistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
+        if (destination.HasSingleSessionSlot && assistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
         {
             await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Apps, TB("This assistant is already running. AI Studio opens the running session instead.")));
             navigationManager.NavigateTo(route);
@@ -101,7 +101,7 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
         // Only components with a single session slot may be cleared as a group. The visual briefing
         // assistant keys its sessions per briefing, so clearing by component would discard the
         // status of every stored briefing instead of the one we are about to open.
-        if (destination.HasSingleSessionSlot())
+        if (destination.HasSingleSessionSlot)
             await assistantSessionService.ClearInactiveSessionsForComponentAsync(destination);
 
         MessageBus.INSTANCE.DeferMessage(null, TextEventFor(destination), payload);
@@ -117,7 +117,7 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
     /// </remarks>
     /// <param name="destination">The component which opens.</param>
     /// <returns>The text sent, or null when nothing was sent to the component.</returns>
-    public static TextLaunchPayload? TakeTextPayload(Components destination) => destination.AllowSendTo()
+    public static TextLaunchPayload? TakeTextPayload(Components destination) => destination.AllowSendTo
         ? MessageBus.INSTANCE.TakeDeferredMessages<TextLaunchPayload>(TextEventFor(destination)).LastOrDefault()
         : null;
 
@@ -146,11 +146,11 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
     /// <param name="isVisible">Whether the user sees the given assistant at all.</param>
     /// <returns>The destinations the user can choose from.</returns>
     internal static IReadOnlyList<Components> SelectDestinations(Components sender, Func<Components, bool> isVisible) => Enum.GetValues<Components>()
-        .Where(destination => destination.AllowSendTo())
+        .Where(destination => destination.AllowSendTo)
         .Where(destination => destination != sender || destination is Components.CHAT)
         .Where(isVisible)
-        .OrderBy(destination => destination.Name().Length)
+        .OrderBy(destination => destination.Name.Length)
         .ToArray();
 
-    private bool IsVisible(Components destination) => settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature());
+    private bool IsVisible(Components destination) => settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature);
 }

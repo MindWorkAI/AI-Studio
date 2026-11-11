@@ -36,6 +36,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     
     protected override string Description => T("Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.");
     
+    // This assistant generates a plugin and has no conversation for a chat to continue:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt =>
         $"""
          You are the Assistant Builder inside MindWork AI Studio.
@@ -72,7 +75,10 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override bool ShowResult => false;
     
     protected override bool ShowEntireChatThread => false;
-    
+
+    // Nothing to send: the plugin is installed by this assistant, and there is no conversation for a chat to continue:
+    protected override bool ShowSendTo => false;
+
     protected override bool AllowProfiles => false;
     
     protected override bool ShowProfileSelection => false;
@@ -520,14 +526,14 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     {
         AssistantCategory.AS_IS => string.Empty,
         AssistantCategory.OTHER => this.customCategory,
-        _ => this.selectedCategory.Name(),
+        _ => this.selectedCategory.Name,
     };
 
     private string GetSelectedOutputLanguageName() => this.selectedOutputLanguage switch
     {
         CommonLanguages.AS_IS => string.Empty,
         CommonLanguages.OTHER => this.customOutputLanguage,
-        _ => this.selectedOutputLanguage.Name(),
+        _ => this.selectedOutputLanguage.Name,
     };
 
     private string GetSelectedAssistantComponentText(IReadOnlyList<string?>? selectedValues)
@@ -625,7 +631,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string GetAssistantComponentDisplayName(string? typeName)
     {
         if (Enum.TryParse<AssistantComponentType>(typeName, out var type))
-            return type.GetDisplayName();
+            return type.DisplayName;
 
         return typeName ?? string.Empty;
     }
@@ -726,7 +732,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             this.UpsertAudit(this.pluginAudit);
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendSuccess(new(
-                this.pluginAudit.Level.GetIcon(),
+                this.pluginAudit.Level.Icon,
                 this.pluginAudit.Findings.Count == 0
                     ? T("Security check completed. No security issues were found.")
                     : T("Security check completed with findings.")));
@@ -787,8 +793,8 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
                 string.Format(
                     T("The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
                     this.pluginInstallResult?.PluginName ?? T("Unknown assistant"),
-                    this.pluginAudit?.Level.GetName() ?? T("Unknown"),
-                    this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.GetName())
+                    this.pluginAudit?.Level.Name ?? T("Unknown"),
+                    this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.Name)
             },
         };
 

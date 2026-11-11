@@ -4,22 +4,22 @@ using Microsoft.AspNetCore.Components.Rendering;
 namespace AIStudio.Components;
 
 /// <summary>
-/// Renders Markdown the way MudMarkdown does, and shows actions next to every code block which is
-/// one of the files of its message, such as a button to save that block.
+/// Renders Markdown the way HighlightedMarkdown does, and shows actions next to every code block which
+/// is one of the files of its message, such as a button to save that block.
 /// </summary>
 /// <remarks>
 /// In a long answer, the export menu at the top of the message lies far away from the code block
 /// the user is reading. MudMarkdown renders every code block through RenderCodeBlock, the highlighted
-/// code together with its copy button, and lets us override that. We wrap what it renders and put our
-/// actions beside it, so the copy button stays exactly as the library made it.
+/// code together with its copy button, and lets us override that. We wrap what HighlightedMarkdown
+/// renders and put our actions beside it, so the copy button stays exactly as it was made.
 ///
 /// A block finds its file by where it starts. The chat renders an answer in parts, cut around its
 /// formulas, and Markdig reads each part on its own: a block knows where it starts within its part
 /// only. Added to where the part starts in the answer, that is the position the file was read with.
-/// A block without a file, such as a formula or a block the model never closed, gets no actions,
-/// just as the export menu does not offer it.
+/// A block without a file, such as a block the model never closed, gets no actions, just as the export
+/// menu does not offer it. The formulas between the parts get the same actions from MathJaxBlock.
 /// </remarks>
-public sealed class ExportableMarkdown : MudMarkdown
+public sealed class ExportableMarkdown : HighlightedMarkdown
 {
     /// <summary>
     /// The files of the message, as PlainFileExport.ExtractFiles read them out of its text. Without
@@ -48,7 +48,7 @@ public sealed class ExportableMarkdown : MudMarkdown
     /// <returns>The file, or null when no file starts there.</returns>
     internal static MessageFile? FileAt(IReadOnlyList<MessageFile> files, int position) => files.FirstOrDefault(file => file.Position == position);
 
-    #region Overrides of MudMarkdown
+    #region Overrides of HighlightedMarkdown
 
     /// <inheritdoc />
     protected override void RenderCodeBlock(in RenderTreeBuilder builder, ref int elementIndex, in Markdig.Syntax.CodeBlock code, in string? info)

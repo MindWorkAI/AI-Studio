@@ -25,7 +25,7 @@ public sealed class SendToReceiverTests
     private static readonly Assembly APP = typeof(AssistantLaunchService).Assembly;
 
     private static IEnumerable<AIStudio.Tools.Components> Destinations() => Enum.GetValues<AIStudio.Tools.Components>()
-        .Where(component => component.AllowSendTo())
+        .Where(component => component.AllowSendTo)
         .Where(component => component is not AIStudio.Tools.Components.CHAT);
 
     [TestCaseSource(nameof(Destinations))]

@@ -24,10 +24,11 @@ public interface IAugmentationProcess
     /// Starts the augmentation process.
     /// </summary>
     /// <param name="provider">The LLM provider. Gets used, e.g., for automatic retrieval context validation.</param>
+    /// <param name="chatModel">The model which answers. Its context window decides how much room the retrieval contexts get.</param>
     /// <param name="lastUserPrompt">The last user prompt that was issued by the user.</param>
     /// <param name="chatThread">The chat thread.</param>
-    /// <param name="retrievalContexts">The retrieval contexts that were issued by the retrieval process.</param>
+    /// <param name="retrievalContextsByDataSource">The retrieval contexts that were issued by the retrieval process, per data source, each in the order of their rank.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The altered chat thread, together with the retrieval contexts handed to the AI.</returns>
-    public Task<AugmentationResult> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default);
+    public Task<AugmentationResult> ProcessAsync(IProvider provider, Model chatModel, IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IReadOnlyList<IRetrievalContext>> retrievalContextsByDataSource, CancellationToken token = default);
 }

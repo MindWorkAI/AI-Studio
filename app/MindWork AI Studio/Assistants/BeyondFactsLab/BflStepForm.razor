@@ -1,0 +1,118 @@
+@inherits MSGComponentBase
+
+@if (this.MissingFields.Count > 0)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+        @TA("Some details are still missing. The chat will ask for them, and you can continue anyway.")
+        <br/>
+        @string.Join(", ", this.MissingFields.Select(field => field.Label))
+    </MudAlert>
+}
+
+@if (!string.IsNullOrWhiteSpace(this.Step.FormHint))
+{
+    <MudText Typo="Typo.body2" Class="mb-3">@this.Step.FormHint</MudText>
+}
+
+@if (this.HasPublicDetails && this.IsEventNotPublic)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.PublicOff" Class="mb-3">
+        @TA("The event is not public. Therefore, the lab does not research it on the web, and none of your details reach a search, not even those marked with a symbol.")
+    </MudAlert>
+}
+else if (this.HasPublicDetails)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@PUBLIC_DETAIL_ICON" Class="mb-3">
+        @TA("Fields marked with this symbol hold public details about the event. Only these reach the research of the lab, which searches the web. All your other details stay in your preparation.")
+    </MudAlert>
+}
+
+<MudStack Spacing="3">
+    @foreach (var field in this.Fields)
+    {
+        switch (field.Kind)
+        {
+            case BflFieldKind.SINGLE_LINE:
+            case BflFieldKind.LINK:
+                <MudTextField @key="field.Id"
+                              T="string"
+                              Value="@this.Form.Get(field.Id)"
+                              ValueChanged="@(value => this.SetValueAsync(field, value))"
+                              Label="@LabelOf(field)"
+                              HelperText="@field.Hint"
+                              MaxLength="@field.Kind.MaxLength"
+                              Validation="@this.ValidationOf(field)"
+                              Disabled="@this.Disabled"
+                              Adornment="@AdornmentOf(field)"
+                              AdornmentIcon="@PUBLIC_DETAIL_ICON"
+                              AdornmentColor="Color.Info"
+                              AdornmentAriaLabel="@this.PublicDetailLabel"
+                              Variant="Variant.Outlined"/>
+                break;
+
+            case BflFieldKind.MULTI_LINE:
+                <MudTextField @key="field.Id"
+                              T="string"
+                              Value="@this.Form.Get(field.Id)"
+                              ValueChanged="@(value => this.SetValueAsync(field, value))"
+                              Label="@LabelOf(field)"
+                              HelperText="@field.Hint"
+                              MaxLength="@field.Kind.MaxLength"
+                              Disabled="@this.Disabled"
+                              Adornment="@AdornmentOf(field)"
+                              AdornmentIcon="@PUBLIC_DETAIL_ICON"
+                              AdornmentColor="Color.Info"
+                              AdornmentAriaLabel="@this.PublicDetailLabel"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Sizing="InputSizing.Auto"
+                              MaxLines="12"/>
+                break;
+
+            case BflFieldKind.CHOICE:
+                <MudSelect @key="field.Id"
+                           T="string"
+                           Value="@this.Form.Get(field.Id)"
+                           ValueChanged="@(value => this.SetValueAsync(field, value))"
+                           Label="@LabelOf(field)"
+                           HelperText="@field.Hint"
+                           Clearable="true"
+                           Disabled="@this.Disabled"
+                           Variant="Variant.Outlined">
+                    @foreach (var option in field.Options)
+                    {
+                        <MudSelectItem T="string" Value="@option.Id">@option.Label</MudSelectItem>
+                    }
+                </MudSelect>
+                break;
+
+            case BflFieldKind.MULTI_CHOICE:
+                <div @key="field.Id">
+                    <MudText Typo="Typo.body2">@LabelOf(field)</MudText>
+                    <MudChipSet T="string"
+                                SelectionMode="SelectionMode.MultiSelection"
+                                SelectedValues="@this.Form.GetChoices(field.Id)"
+                                SelectedValuesChanged="@(values => this.SetChoicesAsync(field, values))"
+                                CheckMark="true"
+                                Color="Color.Primary"
+                                Variant="Variant.Outlined"
+                                Disabled="@this.Disabled">
+                        @foreach (var option in field.Options)
+                        {
+                            <MudChip T="string" Value="@option.Id" Text="@option.Label"/>
+                        }
+                    </MudChipSet>
+                    @if (!string.IsNullOrWhiteSpace(field.Hint))
+                    {
+                        <MudText Typo="Typo.caption">@field.Hint</MudText>
+                    }
+                </div>
+                break;
+        }
+    }
+</MudStack>
+
+@if (this.HasKeyDetails)
+{
+    <MudText Typo="Typo.caption" Class="mt-2">@TA("* The chat works best when you fill in these details.")</MudText>
+}

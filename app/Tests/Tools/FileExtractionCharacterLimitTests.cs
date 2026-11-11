@@ -76,7 +76,7 @@ public sealed class FileExtractionCharacterLimitTests
         {
             Assert.That(extraction.IsSuccess, Is.True, "Reaching the limit is what the caller asked for, no failure.");
             Assert.That(extraction.Content, Is.EqualTo(new string('a', 50)));
-            Assert.That(extraction.IsCutAtCharacterLimit, Is.True);
+            Assert.That(extraction.IsShortened, Is.True);
         });
     }
 
@@ -90,7 +90,7 @@ public sealed class FileExtractionCharacterLimitTests
         Assert.Multiple(() =>
         {
             Assert.That(extraction.Content.TrimEnd(), Is.EqualTo(new string('a', 50)));
-            Assert.That(extraction.IsCutAtCharacterLimit, Is.False, "A file which ends right at the limit is complete.");
+            Assert.That(extraction.IsShortened, Is.False, "A file which ends right at the limit is complete.");
         });
     }
 
@@ -103,7 +103,7 @@ public sealed class FileExtractionCharacterLimitTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(extraction.IsCutAtCharacterLimit, Is.True);
+            Assert.That(extraction.IsShortened, Is.True);
             Assert.That(extraction.PromptInjectionRedactedCount, Is.EqualTo(1), "The user hears of what the filter removed, wherever it was in the file.");
         });
     }

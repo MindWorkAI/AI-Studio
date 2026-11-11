@@ -24,7 +24,7 @@ internal sealed partial class PresentationTemplate
     /// </remarks>
     private static GroupedLayouts GroupIntoFamilies(IReadOnlyList<TemplateLayout> layouts, long slideWidth, long slideHeight)
     {
-        var usableLayouts = layouts.Where(layout => layout.Slots.Any(slot => slot.Role.CarriesContent())).ToList();
+        var usableLayouts = layouts.Where(layout => layout.Slots.Any(slot => slot.Role.CarriesContent)).ToList();
         var byFirstWord = Group(usableLayouts, VariantWord.FIRST, slideWidth, slideHeight);
         var byLastWord = Group(usableLayouts, VariantWord.LAST, slideWidth, slideHeight);
         var groups = CountVariants(byLastWord) > CountVariants(byFirstWord) ? byLastWord : byFirstWord;
