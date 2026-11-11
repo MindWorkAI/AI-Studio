@@ -313,7 +313,7 @@ public sealed class BflMaterialService(BeyondFactsLabStore store, RustService ru
     /// <returns>True when the preparation has the image now, also as a material it had already.</returns>
     private async Task<bool> AddImageAsync(Guid projectId, string path, string name, long size, string hash)
     {
-        var prepared = await rustService.PrepareImageForModelAsync(path, IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES);
+        var prepared = await rustService.PrepareImageForModelAsync(path, ImageSourceExtensions.MAX_IMAGE_SIZE_BYTES);
         if (!prepared.IsPrepared)
         {
             logger.LogWarning("The BeyondFacts Lab could not prepare the image '{Path}': {ErrorCode}.", path, prepared.ErrorCode);

@@ -4,9 +4,9 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Chat;
 
-public static class IImageSourceExtensions
+public static class ImageSourceExtensions
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IImageSourceExtensions).Namespace, nameof(IImageSourceExtensions));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ImageSourceExtensions).Namespace, nameof(ImageSourceExtensions));
 
     /// <summary>
     /// The largest image, in bytes, we send anywhere: no image prepared for a model is larger, and
