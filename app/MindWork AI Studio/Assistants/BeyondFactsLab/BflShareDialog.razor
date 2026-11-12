@@ -109,23 +109,9 @@
                     @TA("First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.")
                 </MudJustifiedText>
                 <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
-                    <MudMenu Label="@T("Export")"
-                             StartIcon="@AppIcons.EXPORT"
-                             EndIcon="@AppIcons.DROPDOWN_MENU"
-                             Variant="Variant.Filled"
-                             Color="Color.Primary"
-                             MaxHeight="@MenuDefaults.MAX_HEIGHT"
-                             Disabled="@this.isExporting">
-                        @foreach (var format in FileExportFormat.DocumentFormats)
-                        {
-                            <MudMenuItem @key="format" OnClick="@(() => this.ExportAsync(format))" Icon="@format.Icon" Label="@format.Name"/>
-                        }
-                        <MudDivider/>
-                        @foreach (var format in FileExportFormat.TextFormats)
-                        {
-                            <MudMenuItem @key="format" OnClick="@(() => this.ExportAsync(format))" Icon="@format.Icon" Label="@format.Name"/>
-                        }
-                    </MudMenu>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.EXPORT" OnClick="@this.ExportAsync" Disabled="@this.isExporting">
+                        @T("Export as ODT")
+                    </MudButton>
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.EMAIL" Href="@this.MailUri" Target="_blank">
                         @T("Prepare the mail to the research team")
                     </MudButton>

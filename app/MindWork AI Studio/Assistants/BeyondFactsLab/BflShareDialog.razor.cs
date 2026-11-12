@@ -65,6 +65,15 @@ public partial class BflShareDialog : MSGComponentBase
     private static readonly string APP_VERSION = Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? "unknown";
 
     /// <summary>
+    /// The format of every shared session, so that the research team gets all of them in the same one.
+    /// </summary>
+    /// <remarks>
+    /// Whoever changes it, because the research team asks for another format, changes the label of the export button,
+    /// too. It needs Pandoc; PandocExport offers to install Pandoc when it is missing.
+    /// </remarks>
+    private const FileExportFormat EXPORT_FORMAT = FileExportFormat.OPEN_DOCUMENT_TEXT;
+
+    /// <summary>
     /// Gets the culture of the active language plugin, for numbers.
     /// </summary>
     private static CultureInfo Culture => Tools.PluginSystem.I18N.I.Culture;
@@ -194,30 +203,20 @@ public partial class BflShareDialog : MSGComponentBase
     }
 
     /// <summary>
-    /// Exports the preview, anonymized once more with the names and terms as they stand now, and with the notice that AI
-    /// generated it when the person or the organization switched that on.
+    /// Exports the preview in the one format the research team gets, anonymized once more with the names and terms as
+    /// they stand now, and with the notice that AI generated it when the person or the organization switched that on.
     /// </summary>
-    /// <param name="format">The format of the file.</param>
-    private async Task ExportAsync(FileExportFormat format)
+    private async Task ExportAsync()
     {
         if (this.preview is null)
             return;
 
         this.preview = this.preview.CombinedWith(this.Anonymize(this.preview.Text));
-        var title = T("Share with the research team");
         var fileName = $"{T("BeyondFacts Lab")} - {T("Shared session")}";
         this.isExporting = true;
         try
         {
-            if (format.UsesPandoc)
-                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, title, format, new ContentText { Text = this.preview.Text }, fileName);
-            else
-                await PlainFileExport.ToFile(this.RustService, title, format, this.DisclosureService.AddDisclosureToMarkdown(this.preview.Text), fileName);
-        }
-        catch (ArgumentOutOfRangeException exception)
-        {
-            this.Logger.LogError(exception, "Could not export a shared session of the BeyondFacts Lab, because no exporter writes the format {ExportFormat}.", format);
-            await this.MessageBus.SendError(new(AppIcons.ERROR, TA("AI Studio could not export the session. Please try another format.")));
+            await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, T("Share with the research team"), EXPORT_FORMAT, new ContentText { Text = this.preview.Text }, fileName);
         }
         finally
         {
