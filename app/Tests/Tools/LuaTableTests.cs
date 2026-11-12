@@ -84,6 +84,32 @@ public sealed class LuaTableTests
             """.ReplaceLineEndings("\n")));
     }
 
+    /// <summary>
+    /// The order of the texts must not depend on the region settings of the computer which writes them.
+    /// </summary>
+    /// <remarks>
+    /// A comparison by culture sorts the underscore before the letters, the ordinal one after them. The
+    /// language plugins were written in the first order before, so this test fails with it.
+    /// </remarks>
+    [Test]
+    [SetCulture("de-DE")]
+    public void TheTextsAreOrderedOrdinallyWhateverTheCulture()
+    {
+        var code = Create(new Dictionary<string, string>
+        {
+            ["UI_TEXT_CONTENT.AISTUDIO.DIALOGS.A_B.T1"] = "With an underscore",
+            ["UI_TEXT_CONTENT.AISTUDIO.DIALOGS.AB.T1"] = "Without an underscore"
+        });
+
+        var withoutUnderscore = code.IndexOf("AISTUDIO::DIALOGS::AB::T1", StringComparison.Ordinal);
+        var withUnderscore = code.IndexOf("AISTUDIO::DIALOGS::A_B::T1", StringComparison.Ordinal);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(withoutUnderscore, Is.GreaterThanOrEqualTo(0), code);
+            Assert.That(withUnderscore, Is.GreaterThan(withoutUnderscore), code);
+        }
+    }
+
     private static string Create(IReadOnlyDictionary<string, string> texts, IReadOnlyDictionary<string, string>? comments = null)
     {
         // The Lua runtime has a type of the same name, which stands for a table in Lua:

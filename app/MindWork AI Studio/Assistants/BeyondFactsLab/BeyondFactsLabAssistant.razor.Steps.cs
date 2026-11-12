@@ -57,7 +57,8 @@ public partial class BeyondFactsLabAssistant
 
     /// <summary>
     /// Starts the research once the person confirmed the event details, on every topic without one and on every topic
-    /// whose public details changed since, and tells the person.
+    /// whose public details changed since, and tells the person. Once the person confirmed the last step for the first
+    /// time, the lab offers to share the preparation with its research team instead.
     /// </summary>
     /// <remarks>
     /// Nothing starts for an event which is not public, nor while the work state suggests whether the event is public
@@ -67,6 +68,12 @@ public partial class BeyondFactsLabAssistant
     /// <param name="step">The step whose work state the person confirmed.</param>
     private async Task WorkStateConfirmedAsync(BflStep step)
     {
+        if (step is BflStep.RESULTS && this.selectedProject?.Project is { } finishedProject)
+        {
+            await this.OfferSharingAsync(finishedProject.ProjectId);
+            return;
+        }
+
         if (step is not BflStep.FRAMEWORK || this.selectedProject?.Project is not { } project || this.ValidateProvider(this.providerSettings) is not null)
             return;
 

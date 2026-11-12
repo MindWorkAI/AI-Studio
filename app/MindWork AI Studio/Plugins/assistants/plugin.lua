@@ -138,7 +138,6 @@ ASSISTANT = {
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                     ["IconPositon"] = "<Start|End>",
                     ["Variant"] = "<Text|Filled|Outlined>",
-                    ["ValueType"] = "<string|int|bool>", -- required
                     ["Default"] = { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" }, -- required
                     ["Items"] = {
                         { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" },
