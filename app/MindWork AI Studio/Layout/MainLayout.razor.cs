@@ -199,12 +199,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var reason = this.SettingsManager.SettingsWriteBlockReason;
         var message = reason switch
         {
-            SettingsWriteBlockReason.VERSION_NEWER_THAN_APP => T("Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update."),
-            SettingsWriteBlockReason.VERSION_MISSING => T("Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."),
-            SettingsWriteBlockReason.VERSION_UNKNOWN => T("AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."),
-            SettingsWriteBlockReason.FILE_UNREADABLE => T("AI Studio could not read your settings file. Changes in this session will not be saved to avoid overwriting recoverable settings. Please check for updates or contact support."),
-            SettingsWriteBlockReason.CURRENT_VERSION_INVALID => T("AI Studio found the current settings format but could not load it safely. Changes in this session will not be saved. Please check for updates or contact support."),
-            _ => T("AI Studio cannot safely save settings in this session. Please check for updates or contact support."),
+            SettingsWriteBlockReason.VERSION_NEWER_THAN_APP => TA("Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update."),
+            SettingsWriteBlockReason.VERSION_MISSING => TA("Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.VERSION_UNKNOWN => TA("AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.FILE_UNREADABLE => TA("AI Studio could not read your settings file. Changes in this session will not be saved to avoid overwriting recoverable settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.CURRENT_VERSION_INVALID => TA("AI Studio found the current settings format but could not load it safely. Changes in this session will not be saved. Please check for updates or contact support."),
+            _ => TA("AI Studio cannot safely save settings in this session. Please check for updates or contact support."),
         };
         message = $"{message} {T("Reason")}: {reason}";
 
@@ -621,7 +621,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, T("Are you sure you want to leave the chat page? All unsaved changes will be lost.") },
+                { x => x.Message, TA("Are you sure you want to leave the chat page? All unsaved changes will be lost.") },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Leave Chat Page"), dialogParameters, DialogOptions.FULLSCREEN);

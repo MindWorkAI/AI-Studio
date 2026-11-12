@@ -57,7 +57,7 @@ public partial class Assistants : MSGComponentBase
                 var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
                 if (audit.Level is AssistantAuditLevel.UNKNOWN)
                 {
-                    await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.T("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page."), assistantPlugin.Name)));
+                    await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.TA("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page."), assistantPlugin.Name)));
                     continue;
                 }
 

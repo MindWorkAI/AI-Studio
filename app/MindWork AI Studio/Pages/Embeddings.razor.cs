@@ -248,7 +248,7 @@ public partial class Embeddings : MSGComponentBase
 
     private string GetSkippedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
         ? string.Format(T("Skipped mails: {0}."), this.FormatNumber(status.PermanentlySkippedDocuments))
-        : string.Format(T("Skipped files: {0}. Open a group below to see why and what you can do."), this.FormatNumber(status.SkippedDocuments));
+        : string.Format(TA("Skipped files: {0}. Open a group below to see why and what you can do."), this.FormatNumber(status.SkippedDocuments));
 
     private string GetFailedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
         ? string.Format(T("Failed mails: {0}"), this.FormatNumber(status.FailedDocuments))
@@ -358,7 +358,7 @@ public partial class Embeddings : MSGComponentBase
         DataSourceEmbeddingIgnoreReason.TOO_LARGE => new IgnoredFileCause(
             0,
             T("Too large"),
-            string.Format(T("These files match the data source patterns, but they are larger than its limit of {0}. You can raise the limit in the expert settings of the data source."), this.GetMaxFileSizeText(status)),
+            string.Format(TA("These files match the data source patterns, but they are larger than its limit of {0}. You can raise the limit in the expert settings of the data source."), this.GetMaxFileSizeText(status)),
             AppIcons.FILE_SIZE,
             Color.Warning,
             true,
@@ -366,7 +366,7 @@ public partial class Embeddings : MSGComponentBase
         DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING => new IgnoredFileCause(
             0,
             T("No transcription provider"),
-            T("These audio or video files match the data source patterns, but no transcription provider is configured that AI Studio may use. Once you choose one in the settings, AI Studio transcribes the files and adds their text to the index."),
+            TA("These audio or video files match the data source patterns, but no transcription provider is configured that AI Studio may use. Once you choose one in the settings, AI Studio transcribes the files and adds their text to the index."),
             AppIcons.MICROPHONE_OFF,
             Color.Warning,
             false,
@@ -374,7 +374,7 @@ public partial class Embeddings : MSGComponentBase
         DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_NOT_ALLOWED => new IgnoredFileCause(
             0,
             T("Transcription provider not allowed"),
-            T("These audio or video files match the data source patterns, but your transcription provider does not meet the confidence level this data source requires. Choose another transcription provider, or change the confidence level of the data source."),
+            TA("These audio or video files match the data source patterns, but your transcription provider does not meet the confidence level this data source requires. Choose another transcription provider, or change the confidence level of the data source."),
             AppIcons.SECURITY_BLOCKED,
             Color.Warning,
             true,
@@ -555,7 +555,7 @@ public partial class Embeddings : MSGComponentBase
             return;
 
         if (!await this.DataSourceEmbeddingService.ApprovePendingMailRemovalAsync(status.DataSourceId, removalCount))
-            await this.MessageBus.SendWarning(new(AppIcons.REMOVE_FROM_INDEX, T("Your agreement could not be recorded: either the number of mails to remove changed in the meantime, or the index cannot be reached. AI Studio asks you again after the next sync.")));
+            await this.MessageBus.SendWarning(new(AppIcons.REMOVE_FROM_INDEX, TA("Your agreement could not be recorded: either the number of mails to remove changed in the meantime, or the index cannot be reached. AI Studio asks you again after the next sync.")));
 
         this.ReloadStatuses();
         await this.InvokeAsync(this.StateHasChanged);

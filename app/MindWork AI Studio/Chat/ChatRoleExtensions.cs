@@ -5,6 +5,8 @@ namespace AIStudio.Chat;
 public static class ChatRoleExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatRoleExtensions).Namespace, nameof(ChatRoleExtensions));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ChatRoleExtensions).Namespace, nameof(ChatRoleExtensions));
     
     /// <param name="role">The role.</param>
     extension(ChatRole role)
@@ -16,7 +18,7 @@ public static class ChatRoleExtensions
         public string Name => role switch
         {
             ChatRole.SYSTEM => TB("System"),
-            ChatRole.USER => TB("You"),
+            ChatRole.USER => TA("You"),
             ChatRole.AI => TB("AI"),
         
             _ => TB("Unknown"),
