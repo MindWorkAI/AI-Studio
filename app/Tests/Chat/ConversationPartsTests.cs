@@ -89,7 +89,7 @@ public sealed class ConversationPartsTests
         var answer = new ContentText
         {
             Text = "The page describes the travel rules.",
-            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" } }],
+            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" }, ArgumentsJson = """{"url":"https://example.org/travel"}""" }],
         };
 
         var time = new DateTimeOffset(2026, 11, 5, 14, 32, 0, TimeSpan.Zero);

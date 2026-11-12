@@ -603,6 +603,7 @@ public sealed class ContentText : IContent
             WasExecuted = x.WasExecuted,
             StatusMessage = x.StatusMessage,
             Arguments = new Dictionary<string, string>(x.Arguments, StringComparer.Ordinal),
+            ArgumentsJson = x.ArgumentsJson,
             Result = x.Result,
             JsonResult = x.JsonResult?.DeepClone(),
         })],

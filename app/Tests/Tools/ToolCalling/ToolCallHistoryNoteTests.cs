@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools;
@@ -20,6 +22,11 @@ public sealed class ToolCallHistoryNoteTests
 {
     private static readonly DateTimeOffset TIME = new(2026, 11, 5, 14, 32, 0, TimeSpan.FromHours(1));
 
+    /// <summary>
+    /// What the user sees in the trace for an argument the tool marked as sensitive.
+    /// </summary>
+    private const string MASK = "*****";
+
     [Test]
     public void AnAnswerWithoutToolsAndSourcesGetsNoNote()
     {
@@ -29,7 +36,7 @@ public sealed class ToolCallHistoryNoteTests
     [Test]
     public void ACallWhichRanIsNamedWithItsArguments()
     {
-        var note = Note(Success("web_search", 1, ("query", "Bahn Streik München"), ("max_results", "5"), ("include_pages", "true")));
+        var note = Note(Success("web_search", 1, """{"query":"Bahn Streik München","max_results":5,"include_pages":true}"""));
 
         using (Assert.EnterMultipleScope())
         {
@@ -38,6 +45,28 @@ public sealed class ToolCallHistoryNoteTests
             Assert.That(note, Does.Contain("""web_search {"include_pages":true,"max_results":5,"query":"Bahn Streik München"}"""), "Numbers and booleans go back as such, so the model can pass them again.");
             Assert.That(note, Does.Contain("2026-11-05 13:32 UTC"));
             Assert.That(note, Does.Contain("call the tool again"));
+        }
+    }
+
+    [Test]
+    public void EveryArgumentKeepsTheTypeTheModelPassed()
+    {
+        // The texts the user reads say "True" and "2026", so only the kept JSON tells a boolean from a text:
+        var note = Note(Success("search_mails", 1, """{"is_unread":true,"query":"2026"}"""));
+
+        Assert.That(note, Does.Contain("""search_mails {"is_unread":true,"query":"2026"}"""), "A tool refuses a boolean written as text, and a query written as a number.");
+    }
+
+    [Test]
+    public void ATraceWithoutKeptArgumentsHidesTheirValues()
+    {
+        // A trace from before the arguments were kept as JSON:
+        var note = Note(new ToolInvocationTrace { Order = 1, ToolId = "web_search", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["query"] = "budget 2027", ["max_results"] = "5" } });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(note, Does.Contain($$"""web_search {"max_results":"{{ToolCallHistoryNote.HIDDEN_VALUE}}","query":"{{ToolCallHistoryNote.HIDDEN_VALUE}}"}"""));
+            Assert.That(note, Does.Not.Contain("budget 2027"), "Its type is unknown, and a guess would make the model pass the value wrongly.");
         }
     }
 
@@ -62,7 +91,7 @@ public sealed class ToolCallHistoryNoteTests
     {
         var note = Note(
             new ToolInvocationTrace { Order = 1, ToolName = "Invalid tool call", Status = ToolInvocationTraceStatus.ERROR },
-            Success("read_web_page", 2, ("url", "https://example.org/a")));
+            Success("read_web_page", 2, """{"url":"https://example.org/a"}"""));
 
         Assert.That(note, Does.Not.Contain("Invalid"));
     }
@@ -70,7 +99,7 @@ public sealed class ToolCallHistoryNoteTests
     [Test]
     public void TheSameCallIsNamedOnce()
     {
-        var note = Note(Success("read_web_page", 1, ("url", "https://example.org/a")), Success("read_web_page", 2, ("url", "https://example.org/a")));
+        var note = Note(Success("read_web_page", 1, """{"url":"https://example.org/a"}"""), Success("read_web_page", 2, """{"url":"https://example.org/a"}"""));
 
         Assert.That(Count(note, "read_web_page"), Is.EqualTo(1));
     }
@@ -78,33 +107,43 @@ public sealed class ToolCallHistoryNoteTests
     [Test]
     public void ASensitiveArgumentStaysHiddenAndIsMarkedAsSuch()
     {
-        var note = Note(Success("confluence_search", 1, ("query", ToolExecutor.MASKED_ARGUMENT)));
+        var note = Note(Success("search_confluence", 1, "{}", hiddenNames: "query"));
+        var explanation = ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION;
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(note, Does.Contain($$"""confluence_search {"query":"{{ToolCallHistoryNote.HIDDEN_VALUE}}"}"""));
-            Assert.That(note, Does.Not.Contain(ToolExecutor.MASKED_ARGUMENT), "The model would pass the mask back and search for it.");
-            Assert.That(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION, Does.Contain(ToolCallHistoryNote.HIDDEN_VALUE), "The model has to learn what the marker means.");
+            Assert.That(note, Does.Contain($$"""search_confluence {"query":"{{ToolCallHistoryNote.HIDDEN_VALUE}}"}"""));
+            Assert.That(note, Does.Not.Contain(MASK), "The model would pass the mask back and search for it.");
+            Assert.That(explanation, Does.Contain(ToolCallHistoryNote.HIDDEN_VALUE), "The model has to learn what the marker means.");
         }
     }
 
     [Test]
     public void ALongArgumentIsShortenedAndMarkedAsSuch()
     {
-        var note = Note(Success("web_search", 1, ("query", new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS + 50))));
+        var note = Note(Success("web_search", 1, $$"""{"query":"{{new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS + 50)}}"}"""));
+        var explanation = ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION;
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(note, Does.Contain($"{new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS)}{ToolCallHistoryNote.SHORTENED_MARK}"));
             Assert.That(note, Does.Not.Contain(new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS + 1)));
-            Assert.That(ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION, Does.Contain(ToolCallHistoryNote.SHORTENED_MARK.TrimStart('…', ' ')), "The model has to learn what the marker means.");
+            Assert.That(explanation, Does.Contain(ToolCallHistoryNote.SHORTENED_MARK.TrimStart('…', ' ')), "The model has to learn what the marker means.");
         }
+    }
+
+    [Test]
+    public void ALongTextInAnArrayIsShortenedAndTheArrayStaysOne()
+    {
+        var note = Note(Success("web_search", 1, $$"""{"terms":["{{new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS + 50)}}","short"]}"""));
+
+        Assert.That(note, Does.Contain($$"""web_search {"terms":["{{new string('x', ToolCallHistoryNote.MAX_ARGUMENT_CHARACTERS)}}{{ToolCallHistoryNote.SHORTENED_MARK}}","short"]}"""));
     }
 
     [Test]
     public void ManyCallsAreCut()
     {
-        var calls = Enumerable.Range(1, ToolCallHistoryNote.MAX_CALLS + 3).Select(n => Success("read_web_page", n, ("url", $"https://example.org/{n}"))).ToArray();
+        var calls = Enumerable.Range(1, ToolCallHistoryNote.MAX_CALLS + 3).Select(n => Success("read_web_page", n, $$"""{"url":"https://example.org/{{n}}"}""")).ToArray();
 
         var note = Note(calls);
 
@@ -146,7 +185,7 @@ public sealed class ToolCallHistoryNoteTests
         var answer = new ContentText
         {
             Text = "Answer.",
-            ToolInvocations = [Success("read_web_page", 1, ("url", "https://example.org/a"))],
+            ToolInvocations = [Success("read_web_page", 1, """{"url":"https://example.org/a"}""")],
             Sources = [new Source("A", "https://example.org/a", SourceOrigin.TOOL), new Source("B", "https://example.org/b", SourceOrigin.TOOL)],
         };
 
@@ -170,7 +209,7 @@ public sealed class ToolCallHistoryNoteTests
     [Test]
     public void TheSystemPromptExplainsTheNoteOnceAConversationHoldsOne()
     {
-        var answer = new ContentText { Text = "The page describes the travel rules.", ToolInvocations = [Success("read_web_page", 1, ("url", "https://example.org/travel"))] };
+        var answer = new ContentText { Text = "The page describes the travel rules.", ToolInvocations = [Success("read_web_page", 1, """{"url":"https://example.org/travel"}""")] };
         var thread = new ChatThread
         {
             SystemPrompt = "You are helpful.",
@@ -227,14 +266,31 @@ public sealed class ToolCallHistoryNoteTests
 
     private static string Note(params ToolInvocationTrace[] traces) => ToolCallHistoryNote.Build(new ContentText { Text = "Answer.", ToolInvocations = [..traces] }, TIME)!;
 
-    private static ToolInvocationTrace Success(string toolId, int order, params (string Name, string Value)[] arguments) => new()
+    /// <summary>
+    /// A call which ran, with its arguments kept as the tool executor keeps them.
+    /// </summary>
+    /// <param name="toolId">The tool.</param>
+    /// <param name="order">Where the call stands among the calls of the answer.</param>
+    /// <param name="argumentsJson">The arguments the trace keeps with their values.</param>
+    /// <param name="hiddenNames">The arguments the tool marked as sensitive, whose values the trace does not keep.</param>
+    private static ToolInvocationTrace Success(string toolId, int order, string argumentsJson, params string[] hiddenNames)
     {
-        Order = order,
-        ToolId = toolId,
-        Status = ToolInvocationTraceStatus.SUCCESS,
-        WasExecuted = true,
-        Arguments = arguments.ToDictionary(argument => argument.Name, argument => argument.Value, StringComparer.Ordinal),
-    };
+        // The texts for the user, as JsonElement.ToString writes them: a boolean reads "True".
+        using var document = JsonDocument.Parse(argumentsJson);
+        var arguments = document.RootElement.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.ToString(), StringComparer.Ordinal);
+        foreach (var name in hiddenNames)
+            arguments[name] = MASK;
+
+        return new()
+        {
+            Order = order,
+            ToolId = toolId,
+            Status = ToolInvocationTraceStatus.SUCCESS,
+            WasExecuted = true,
+            Arguments = arguments,
+            ArgumentsJson = argumentsJson,
+        };
+    }
 
     private static int Count(string text, string part)
     {

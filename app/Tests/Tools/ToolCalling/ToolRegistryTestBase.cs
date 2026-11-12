@@ -150,7 +150,10 @@ public abstract class ToolRegistryTestBase
             return ValueTask.FromResult(resolveInstructions is null ? registeredDefinition.SystemPromptInstructions : resolveInstructions(registeredDefinition));
         }
 
-        public IReadOnlySet<string> SensitiveTraceArgumentNames { get; } = new HashSet<string>(StringComparer.Ordinal);
+        /// <summary>
+        /// The arguments whose values the trace hides; when left out, none.
+        /// </summary>
+        public IReadOnlySet<string> SensitiveTraceArgumentNames { get; init; } = new HashSet<string>(StringComparer.Ordinal);
 
         public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default) => Task.FromResult(execute is null ? new ToolExecutionResult() : execute(context));
     }

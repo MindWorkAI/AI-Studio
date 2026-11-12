@@ -116,7 +116,7 @@ public sealed class ListContentBlockExtensionsTests
         var answer = new ContentText
         {
             Text = "The page describes the travel rules.",
-            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" } }],
+            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" }, ArgumentsJson = """{"url":"https://example.org/travel"}""" }],
         };
 
         var blocks = new List<ContentBlock>
@@ -147,7 +147,7 @@ public sealed class ListContentBlockExtensionsTests
         {
             Text = "Let me read the page first.",
             IsStreaming = true,
-            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" } }],
+            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" }, ArgumentsJson = """{"url":"https://example.org/travel"}""" }],
         };
 
         var blocks = new List<ContentBlock> { new() { Role = ChatRole.AI, ContentType = ContentType.TEXT, Content = answer } };

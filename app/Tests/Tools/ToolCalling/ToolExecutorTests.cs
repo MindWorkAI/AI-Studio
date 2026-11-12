@@ -175,6 +175,22 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task TheTraceKeepsTheArgumentsWithTheirTypesButWithoutTheSensitiveOnes()
+    {
+        var tool = new TestTool(Definition()) { SensitiveTraceArgumentNames = new HashSet<string>(StringComparer.Ordinal) { "token" } };
+
+        var outcome = await this.Execute(tool, new ChatThread(), """{"is_unread":true,"query":"2026","token":"secret-token"}""");
+        var note = ToolCallHistoryNote.Build(new ContentText { Text = "Answer.", ToolInvocations = [outcome.Trace] }, DateTimeOffset.UnixEpoch);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(outcome.Trace.Arguments["is_unread"], Is.EqualTo("True"), "The text for the user loses the type, which is why the trace keeps the JSON as well.");
+            Assert.That(outcome.Trace.ArgumentsJson, Does.Not.Contain("secret-token"), "The chat is stored, so a sensitive value must not be kept.");
+            Assert.That(note, Does.Contain($$"""{{TOOL_ID}} {"is_unread":true,"query":"2026","token":"{{ToolCallHistoryNote.HIDDEN_VALUE}}"}"""), "The model passes the arguments again as they were, so a tool does not refuse them.");
+        }
+    }
+
+    [Test]
     public async Task WhatAToolReturnedIsKnownToTheChatAfterwards()
     {
         var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult { TextContent = "The newsletter links to https://example.org/newsletter/2026-10." });

@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -46,11 +47,12 @@ public static partial class ToolCallHistoryNote
     public const int MAX_ARGUMENT_CHARACTERS = 300;
 
     /// <summary>
-    /// What a note shows for an argument value the tool marked as sensitive, see ToolExecutor.MASKED_ARGUMENT.
+    /// What a note shows for an argument value the tool marked as sensitive, see
+    /// IToolImplementation.SensitiveTraceArgumentNames, or which the trace did not keep.
     /// </summary>
     /// <remarks>
-    /// Not the mask of the trace itself: the model would pass it back word for word and, e.g., search
-    /// for five asterisks.
+    /// Not the mask the user sees in the trace: the model would pass it back word for word and, e.g.,
+    /// search for five asterisks.
     /// </remarks>
     public const string HIDDEN_VALUE = "(hidden by AI Studio)";
 
@@ -167,7 +169,7 @@ public static partial class ToolCallHistoryNote
 
             var line = trace.Status switch
             {
-                ToolInvocationTraceStatus.SUCCESS when trace.WasExecuted => $"{trace.ToolId} {WriteArguments(trace.Arguments)}",
+                ToolInvocationTraceStatus.SUCCESS when trace.WasExecuted => $"{trace.ToolId} {WriteArguments(trace)}",
                 ToolInvocationTraceStatus.BLOCKED => $"{trace.ToolId} -> blocked",
                 ToolInvocationTraceStatus.ERROR => $"{trace.ToolId} -> failed",
                 _ => null,
@@ -194,49 +196,103 @@ public static partial class ToolCallHistoryNote
     /// The arguments of a call as one JSON object, so the model can pass them again as they are.
     /// </summary>
     /// <remarks>
-    /// The trace keeps every value as text, see ToolExecutor.FormatArguments. A value which reads as a
-    /// JSON number, boolean, array, or object was one, and goes back as such; everything else is a string.
-    /// A value the tool marked as sensitive stays hidden, and a long one is cut; both are marked, see
-    /// HIDDEN_VALUE and SHORTENED_MARK, so the model does not pass them back as they stand.
+    /// Read from ToolInvocationTrace.ArgumentsJson, which keeps every value with its JSON type, rather
+    /// than from the texts the user reads, which do not. An argument the trace names without keeping
+    /// its value was sensitive and stays hidden; so do all values of a trace from before ArgumentsJson
+    /// existed. A long text is cut, also inside an array or an object, so that every value keeps its
+    /// type. Both are marked, see HIDDEN_VALUE and SHORTENED_MARK, so the model does not pass them back
+    /// as they stand.
     /// </remarks>
-    private static string WriteArguments(Dictionary<string, string> arguments)
+    private static string WriteArguments(ToolInvocationTrace trace)
     {
-        using var stream = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(stream, ARGUMENT_WRITER_OPTIONS))
+        using var keptArguments = ReadKeptArguments(trace.ArgumentsJson);
+        var keptValues = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+        if (keptArguments is not null)
+        {
+            foreach (var property in keptArguments.RootElement.EnumerateObject())
+                keptValues.TryAdd(property.Name, property.Value);
+        }
+
+        var names = new SortedSet<string>(trace.Arguments.Keys, StringComparer.Ordinal);
+        names.UnionWith(keptValues.Keys);
+
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer, ARGUMENT_WRITER_OPTIONS))
         {
             writer.WriteStartObject();
-            foreach (var (name, value) in arguments.OrderBy(argument => argument.Key, StringComparer.Ordinal))
+            foreach (var name in names)
             {
                 writer.WritePropertyName(name);
-                if (value.Equals(ToolExecutor.MASKED_ARGUMENT, StringComparison.Ordinal))
-                    writer.WriteStringValue(HIDDEN_VALUE);
-                else if (value.Length > MAX_ARGUMENT_CHARACTERS)
-                    writer.WriteStringValue($"{value[..MAX_ARGUMENT_CHARACTERS]}{SHORTENED_MARK}");
-                else if (IsJsonValueOtherThanString(value))
-                    writer.WriteRawValue(value);
+                if (keptValues.TryGetValue(name, out var value))
+                    WriteValue(writer, value);
                 else
-                    writer.WriteStringValue(value);
+                    writer.WriteStringValue(HIDDEN_VALUE);
             }
 
             writer.WriteEndObject();
         }
 
-        return Encoding.UTF8.GetString(stream.ToArray());
+        return Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
 
-    private static bool IsJsonValueOtherThanString(string value)
+    /// <summary>
+    /// The arguments a trace kept with their values, or null when it kept none.
+    /// </summary>
+    /// <remarks>
+    /// AI Studio writes them itself, see ToolExecutor. Text which is no JSON object, as in a chat file
+    /// changed by hand, counts as nothing kept, so its arguments stay hidden.
+    /// </remarks>
+    private static JsonDocument? ReadKeptArguments(string argumentsJson)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return false;
+        if (string.IsNullOrWhiteSpace(argumentsJson))
+            return null;
 
         try
         {
-            using var document = JsonDocument.Parse(value);
-            return document.RootElement.ValueKind is not (JsonValueKind.String or JsonValueKind.Null or JsonValueKind.Undefined);
+            var document = JsonDocument.Parse(argumentsJson);
+            if (document.RootElement.ValueKind is JsonValueKind.Object)
+                return document;
+
+            document.Dispose();
+            return null;
         }
         catch (JsonException)
         {
-            return false;
+            return null;
+        }
+    }
+
+    private static void WriteValue(Utf8JsonWriter writer, JsonElement value)
+    {
+        switch (value.ValueKind)
+        {
+            case JsonValueKind.String:
+                var text = value.GetString() ?? string.Empty;
+                writer.WriteStringValue(text.Length > MAX_ARGUMENT_CHARACTERS ? $"{text[..MAX_ARGUMENT_CHARACTERS]}{SHORTENED_MARK}" : text);
+                break;
+
+            case JsonValueKind.Array:
+                writer.WriteStartArray();
+                foreach (var item in value.EnumerateArray())
+                    WriteValue(writer, item);
+
+                writer.WriteEndArray();
+                break;
+
+            case JsonValueKind.Object:
+                writer.WriteStartObject();
+                foreach (var property in value.EnumerateObject())
+                {
+                    writer.WritePropertyName(property.Name);
+                    WriteValue(writer, property.Value);
+                }
+
+                writer.WriteEndObject();
+                break;
+
+            default:
+                value.WriteTo(writer);
+                break;
         }
     }
 
