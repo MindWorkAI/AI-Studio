@@ -22,11 +22,6 @@ public static class BflShareMail
     public const string RECIPIENT = "xxx@xxx.xxx";
 
     /// <summary>
-    /// Who receives the mail, as the lab names her.
-    /// </summary>
-    public const string RECIPIENT_NAME = "Lara Wüster (TUM)";
-
-    /// <summary>
     /// The longest link the lab hands to a mail program. Some programs on Windows refuse longer ones.
     /// </summary>
     public const int MAX_URI_LENGTH = 1_800;

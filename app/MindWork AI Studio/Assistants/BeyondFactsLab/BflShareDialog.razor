@@ -102,7 +102,7 @@
 
                 <MudText Typo="Typo.h6" Class="mb-1">@T("Send it")</MudText>
                 <MudJustifiedText Typo="Typo.body2" Class="mb-2">
-                    @string.Format(Culture, TA("First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it."), BflShareMail.RECIPIENT_NAME)
+                    @TA("First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.")
                 </MudJustifiedText>
                 <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
                     <MudMenu Label="@T("Export")"
@@ -123,7 +123,7 @@
                         }
                     </MudMenu>
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.EMAIL" Href="@this.MailUri" Target="_blank">
-                        @string.Format(Culture, T("Prepare the mail to {0}"), BflShareMail.RECIPIENT_NAME)
+                        @T("Prepare the mail to the research team")
                     </MudButton>
                 </MudStack>
             }
