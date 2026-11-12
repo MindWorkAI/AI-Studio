@@ -539,7 +539,11 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         {
             Id = Guid.NewGuid().ToString(),
             Num = this.SettingsManager.ConfigurationData.NextDocumentAnalysisPolicyNum++,
-            PolicyName = string.Format(T("Policy {0}"), DateTimeOffset.UtcNow),
+            //
+            // The date follows the language of the app, like the rest of the name. With seconds, so that two
+            // policies added right after each other do not get the same name, which has to be unique:
+            //
+            PolicyName = string.Format(T("Policy {0}"), DateTime.Now.ToString("G", Tools.PluginSystem.I18N.I.Culture)),
         });
         
         await this.SettingsManager.StoreSettings();
