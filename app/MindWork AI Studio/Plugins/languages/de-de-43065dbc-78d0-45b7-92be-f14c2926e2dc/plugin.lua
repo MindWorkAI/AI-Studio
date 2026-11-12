@@ -12750,14 +12750,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3448155331"] = "Schlie�
 -- System prompt of the assistant '{0}'
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3462500758"] = "System-Prompt des Assistenten „{0}“"
 
--- Notes on earlier answers
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3653323664"] = "Notizen zu früheren Antworten"
+-- Instructions for the notes on earlier answers
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3801552165"] = "Anweisungen für die Notizen zu früheren Antworten"
 
 -- Default prompt of AI Studio
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3895504389"] = "Standard-Prompt von AI Studio"
 
--- AI Studio adds a note to earlier answers in this chat which names the tools and sources the AI used for them. The note is sent to the AI only; you do not see it in the chat. These instructions tell the AI what the note means.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3957007382"] = "AI Studio fügt früheren Antworten in diesem Chat eine Notiz hinzu, die die Werkzeuge und Quellen nennt, die die KI dafür verwendet hat. Die Notiz wird nur an die KI gesendet; im Chat sehen Sie sie nicht. Diese Anweisungen erklären der KI, was die Notiz bedeutet."
+-- When an earlier answer in this chat used tools or sources, AI Studio puts a note in front of it which names them. Only the AI receives this note; you do not see it in the chat. These instructions tell the AI what the note means.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4244132760"] = "Hat eine frühere Antwort in diesem Chat Werkzeuge oder Quellen genutzt, stellt AI Studio ihr eine Notiz voran, die diese nennt. Nur die KI erhält diese Notiz; im Chat sehen Sie sie nicht. Diese Anweisungen erklären der KI, was die Notiz bedeutet."
 
 -- The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4245380559"] = "Der Assistent „{0}“ hat diese Anweisungen für Ihre Rückfragen in diesem Chat geschrieben; sie unterscheiden sich von den Anweisungen, mit denen er sein Ergebnis erstellt hat."

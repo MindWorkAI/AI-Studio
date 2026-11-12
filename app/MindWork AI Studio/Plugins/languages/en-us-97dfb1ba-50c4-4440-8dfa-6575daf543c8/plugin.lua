@@ -12750,14 +12750,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3448155331"] = "Close"
 -- System prompt of the assistant '{0}'
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3462500758"] = "System prompt of the assistant '{0}'"
 
--- Notes on earlier answers
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3653323664"] = "Notes on earlier answers"
+-- Instructions for the notes on earlier answers
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3801552165"] = "Instructions for the notes on earlier answers"
 
 -- Default prompt of AI Studio
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3895504389"] = "Default prompt of AI Studio"
 
--- AI Studio adds a note to earlier answers in this chat which names the tools and sources the AI used for them. The note is sent to the AI only; you do not see it in the chat. These instructions tell the AI what the note means.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3957007382"] = "AI Studio adds a note to earlier answers in this chat which names the tools and sources the AI used for them. The note is sent to the AI only; you do not see it in the chat. These instructions tell the AI what the note means."
+-- When an earlier answer in this chat used tools or sources, AI Studio puts a note in front of it which names them. Only the AI receives this note; you do not see it in the chat. These instructions tell the AI what the note means.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4244132760"] = "When an earlier answer in this chat used tools or sources, AI Studio puts a note in front of it which names them. Only the AI receives this note; you do not see it in the chat. These instructions tell the AI what the note means."
 
 -- The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4245380559"] = "The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result."
