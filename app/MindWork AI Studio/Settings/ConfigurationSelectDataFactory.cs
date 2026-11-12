@@ -330,7 +330,7 @@ public static class ConfigurationSelectDataFactory
                 yield return new(level.Name, level);
     }
 
-    public static IEnumerable<ConfigurationSelectData<AddressForm>> GetBeyondFactsLabAddressFormData()
+    public static IEnumerable<ConfigurationSelectData<AddressForm>> GetAddressFormData()
     {
         foreach (var addressForm in Enum.GetValues<AddressForm>())
             yield return new(addressForm.Name, addressForm);

@@ -10,7 +10,12 @@
     {
         <ConfigurationSelect OptionDescription="@T("Language")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.LanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(selectedValue => this.UpdateManuallySelectedLanguage(selectedValue).Observe(nameof(this.UpdateManuallySelectedLanguage)))" OptionHelp="@T("Select the language for the app.")"/>
     }
-    
+
+    @if (this.offersFormOfAddress)
+    {
+        <ConfigurationSelect OptionDescription="@T("Form of address")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.AddressForm)" Data="@ConfigurationSelectDataFactory.GetAddressFormData()" SelectionUpdate="@(selectedValue => this.UpdateAddressForm(selectedValue).Observe(nameof(this.UpdateAddressForm)))" OptionHelp="@TA("Whether AI Studio addresses you formally or informally.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.AddressForm, out var meta) && meta.IsLocked"/>
+    }
+
     <ConfigurationSelect OptionDescription="@T("Color theme")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreferredTheme)" Data="@ConfigurationSelectDataFactory.GetThemesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.PreferredTheme = selectedValue)" OptionHelp="@T("Choose the color theme that best suits for you.")"/>
     <ConfigurationInterfaceSize/>
     <ConfigurationOption OptionDescription="@T("Save energy?")" LabelOn="@T("Energy saving is enabled")" LabelOff="@T("Energy saving is disabled")" State="@(() => this.SettingsManager.ConfigurationData.App.IsSavingEnergy)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.App.IsSavingEnergy = updatedState)" OptionHelp="@T("When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.IsSavingEnergy, out var meta) && meta.IsLocked"/>

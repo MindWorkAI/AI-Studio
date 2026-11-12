@@ -87,8 +87,9 @@ in German, and the same key ending in `::INFORMAL`, translated with the informal
 localization assistant writes the informal variant from the formal translation and changes only the form of
 address; whoever corrects a formal translation in the review corrects its informal variant alike. Which one
 the app shows follows `I18N.I.AddressForm`; when the language in use lacks the informal variant, it shows the
-formal one. So far, only the BeyondFacts Lab uses `TA()`, and its option "Form of address" decides, see
-`Program.cs`. The rest of the app addresses the reader formally until it gets a setting of its own for this.
+formal one. The option "Form of address" of the app settings decides, `DataApp.AddressForm`, see `Program.cs`;
+the settings show it only in a language with both forms. A change sends `Event.ADDRESS_FORM_CHANGED`, which
+every component handles by rendering again.
 
 ## Plugin System
 

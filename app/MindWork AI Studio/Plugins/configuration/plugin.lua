@@ -438,6 +438,12 @@ CONFIG["SETTINGS"] = {}
 -- every redraw of the screen is costly.
 -- CONFIG["SETTINGS"]["DataApp.IsSavingEnergy"] = true
 
+-- Configure how AI Studio addresses users in languages with a formal and an informal address, such as German.
+-- In a language with one form of address only, such as English, the setting has no effect, and the app
+-- settings do not show it.
+-- Allowed values are: FORMAL, INFORMAL
+-- CONFIG["SETTINGS"]["DataApp.AddressForm"] = "FORMAL"
+
 -- Configure whether the quick start guide is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
 
@@ -996,12 +1002,6 @@ CONFIG["SETTINGS"] = {}
 -- Unpublished research is the usual material of the lab, so the lab never accepts less than MEDIUM.
 -- A lower value has no effect; HIGH allows only self-hosted models in the built-in confidence schemes.
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.MinimumProviderConfidence"] = "MEDIUM"
---
--- Configure how the lab addresses users in languages with a formal and an informal address, such as German.
--- In a language with one form of address only, such as English, the setting has no effect, and the options
--- of the lab do not show it.
--- Allowed values are: FORMAL, INFORMAL
--- CONFIG["SETTINGS"]["DataBeyondFactsLab.AddressForm"] = "FORMAL"
 --
 -- Configure whether files in the folder for prompt overrides replace the prompts which come with the lab.
 -- The option serves the further development of the prompts, e.g., by the research team behind the lab.

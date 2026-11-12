@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -13,6 +14,12 @@ public partial class SettingsPanelApp : SettingsPanelBase
     private UpdatePolicy UpdatePolicy { get; init; } = null!;
 
     private UpdatePolicyMode updatePolicyMode;
+
+    /// <summary>
+    /// Whether the language of the app tells a formal address from an informal one, so that the form of address
+    /// is a choice at all.
+    /// </summary>
+    private bool offersFormOfAddress;
 
     private bool CannotUpdateItself => this.updatePolicyMode is UpdatePolicyMode.FLATPAK or UpdatePolicyMode.MANAGED_INSTALLATION or UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION or UpdatePolicyMode.DEVELOPMENT;
 
@@ -55,6 +62,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.GLOBAL_SHORTCUT_CHANGED ]);
         await base.OnInitializedAsync();
         this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+        this.offersFormOfAddress = (await this.SettingsManager.GetActiveLanguagePlugin()).HasInformalAddress();
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
@@ -64,6 +72,13 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
         if (triggeredEvent is Event.GLOBAL_SHORTCUT_CHANGED)
             this.StateHasChanged();
+
+        // Another language might offer the choice, or no longer:
+        if (triggeredEvent is Event.PLUGINS_RELOADED)
+        {
+            this.offersFormOfAddress = (await this.SettingsManager.GetActiveLanguagePlugin()).HasInformalAddress();
+            this.StateHasChanged();
+        }
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
@@ -193,5 +208,11 @@ public partial class SettingsPanelApp : SettingsPanelBase
     {
         this.SettingsManager.ConfigurationData.App.LanguagePluginId = pluginId;
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+    }
+
+    private async Task UpdateAddressForm(AddressForm addressForm)
+    {
+        this.SettingsManager.ConfigurationData.App.AddressForm = addressForm;
+        await this.MessageBus.SendMessage<bool>(this, Event.ADDRESS_FORM_CHANGED);
     }
 }
