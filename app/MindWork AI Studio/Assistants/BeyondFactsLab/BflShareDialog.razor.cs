@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Reflection;
 
-using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Tools.Metadata;
@@ -36,9 +35,6 @@ public partial class BflShareDialog : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
-    private PandocAvailabilityService PandocAvailability { get; init; } = null!;
-
-    [Inject]
     private AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
 
     [Inject]
@@ -68,10 +64,10 @@ public partial class BflShareDialog : MSGComponentBase
     /// The format of every shared session, so that the research team gets all of them in the same one.
     /// </summary>
     /// <remarks>
-    /// Whoever changes it, because the research team asks for another format, changes the label of the export button,
-    /// too. It needs Pandoc; PandocExport offers to install Pandoc when it is missing.
+    /// Markdown needs no Pandoc, so that everybody can share a session. The research team may ask for another format,
+    /// but only one which AI Studio writes itself, see FileExportFormatExtensions.IsPlainText.
     /// </remarks>
-    private const FileExportFormat EXPORT_FORMAT = FileExportFormat.OPEN_DOCUMENT_TEXT;
+    private const FileExportFormat EXPORT_FORMAT = FileExportFormat.MARKDOWN;
 
     /// <summary>
     /// Gets the culture of the active language plugin, for numbers.
@@ -216,7 +212,7 @@ public partial class BflShareDialog : MSGComponentBase
         this.isExporting = true;
         try
         {
-            await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, T("Share with the research team"), EXPORT_FORMAT, new ContentText { Text = this.preview.Text }, fileName);
+            await PlainFileExport.ToFile(this.RustService, T("Share with the research team"), EXPORT_FORMAT, this.DisclosureService.AddDisclosureToMarkdown(this.preview.Text), fileName);
         }
         finally
         {
