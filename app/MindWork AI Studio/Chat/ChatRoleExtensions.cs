@@ -41,11 +41,11 @@ public static class ChatRoleExtensions
         /// <value>The icon of the role.</value>
         public string Icon => role switch
         {
-            ChatRole.SYSTEM => Icons.Material.Filled.Settings,
-            ChatRole.USER => Icons.Material.Filled.Person,
-            ChatRole.AI => Icons.Material.Filled.AutoAwesome,
+            ChatRole.SYSTEM => AppIcons.SYSTEM_ROLE,
+            ChatRole.USER => AppIcons.USER,
+            ChatRole.AI => AppIcons.AI,
         
-            _ => Icons.Material.Filled.Help,
+            _ => AppIcons.UNKNOWN,
         };
 
         /// <summary>

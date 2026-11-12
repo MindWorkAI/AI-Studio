@@ -454,7 +454,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         }
 
         this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a tokenizer.", paths.Count);
-        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Please drop a tokenizer file in the JSON format.")));
+        await this.MessageBus.SendWarning(new(AppIcons.WARNING, T("Please drop a tokenizer file in the JSON format.")));
     }
 
     private async Task OnDataFilePathChanged(string? changedFilePath)

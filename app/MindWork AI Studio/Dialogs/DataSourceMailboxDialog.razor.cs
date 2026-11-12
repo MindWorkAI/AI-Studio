@@ -362,8 +362,8 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         : this.testFailure is null ? Color.Success : Color.Error;
 
     private string TestResultIcon => this.testedSettings != this.CurrentSettings
-        ? Icons.Material.Outlined.HourglassEmpty
-        : this.testFailure is null ? Icons.Material.Outlined.CheckCircle : Icons.Material.Outlined.Error;
+        ? AppIcons.PENDING
+        : this.testFailure is null ? AppIcons.SUCCESS : AppIcons.ERROR;
 
     private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);

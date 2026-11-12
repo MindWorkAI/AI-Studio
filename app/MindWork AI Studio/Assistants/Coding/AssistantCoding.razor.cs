@@ -197,12 +197,12 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         var sbCompilerMessages = new StringBuilder();
         if (this.provideCompilerMessages)
         {
-            sbCompilerMessages.AppendLine("I have the following compiler messages:");
-            sbCompilerMessages.AppendLine();
-            sbCompilerMessages.AppendLine("```");
-            sbCompilerMessages.AppendLine(this.compilerMessages);
-            sbCompilerMessages.AppendLine("```");
-            sbCompilerMessages.AppendLine();
+            sbCompilerMessages.AppendLineLF("I have the following compiler messages:");
+            sbCompilerMessages.AppendLineLF();
+            sbCompilerMessages.AppendLineLF("```");
+            sbCompilerMessages.AppendLineLF(this.compilerMessages);
+            sbCompilerMessages.AppendLineLF("```");
+            sbCompilerMessages.AppendLineLF();
         }
 
         this.CreateChatThread();

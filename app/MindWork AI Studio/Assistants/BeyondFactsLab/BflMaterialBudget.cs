@@ -16,7 +16,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// <para>
 /// A shortened material is the beginning of the text which passed the prompt injection filter when the person added
 /// it. It does not pass the filter again: cutting off the end of a text adds nothing which the filter did not see,
-/// unlike IRetrievalContextExtensions.ShortenToFitAsync, which cuts the unfiltered text of a data source.
+/// unlike RetrievalContextExtensions.ShortenToFitAsync, which cuts the unfiltered text of a data source.
 /// </para>
 /// <para>
 /// An image takes no characters: as many images as the model takes at once go along with the first message of the

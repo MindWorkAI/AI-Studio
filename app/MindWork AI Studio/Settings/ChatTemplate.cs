@@ -658,7 +658,7 @@ public record ChatTemplate(
             return true;
 
         var builder = new StringBuilder();
-        builder.AppendLine("{");
+        builder.AppendLineLF("{");
         for (var i = 0; i < this.ExampleConversation.Count; i++)
         {
             var block = this.ExampleConversation[i];
@@ -680,10 +680,10 @@ public record ChatTemplate(
                 return false;
             }
 
-            builder.AppendLine("        {");
-            builder.AppendLine($"            [\"Role\"] = \"{block.Role}\",");
-            builder.AppendLine($"            [\"Content\"] = {LuaTools.ToLuaStringLiteral(textContent.Text)},");
-            builder.AppendLine("        },");
+            builder.AppendLineLF("        {");
+            builder.AppendLineLF($"            [\"Role\"] = \"{block.Role}\",");
+            builder.AppendLineLF($"            [\"Content\"] = {LuaTools.ToLuaStringLiteral(textContent.Text)},");
+            builder.AppendLineLF("        },");
         }
 
         builder.Append("    }");
@@ -693,7 +693,7 @@ public record ChatTemplate(
 
     private static string BuildOptionalStringLua(string fieldName, string? value) => value is null
         ? string.Empty
-        : $"{Environment.NewLine}    [\"{fieldName}\"] = {LuaTools.ToLuaStringLiteral(value)},";
+        : $"\n    [\"{fieldName}\"] = {LuaTools.ToLuaStringLiteral(value)},";
 
     /// <remarks>
     /// An empty set is written out as an empty table rather than being left out: the two say
@@ -706,21 +706,21 @@ public record ChatTemplate(
             return string.Empty;
 
         var builder = new StringBuilder();
-        builder.AppendLine();
+        builder.AppendLineLF();
         if (this.ToolIds.Count == 0)
         {
             builder.Append("""    ["ToolIds"] = {},""");
             return builder.ToString();
         }
 
-        builder.AppendLine("""    ["ToolIds"] = {""");
+        builder.AppendLineLF("""    ["ToolIds"] = {""");
 
         //
         // A set has no order of its own, so exporting the same template twice would otherwise
         // produce two different files. Sorting keeps the plugin diffs readable:
         //
         foreach (var toolId in this.ToolIds.Order(StringComparer.Ordinal))
-            builder.AppendLine($"        {LuaTools.ToLuaStringLiteral(toolId)},");
+            builder.AppendLineLF($"        {LuaTools.ToLuaStringLiteral(toolId)},");
 
         builder.Append("    },");
         return builder.ToString();
@@ -732,22 +732,22 @@ public record ChatTemplate(
             return string.Empty;
 
         var builder = new StringBuilder();
-        builder.AppendLine();
-        builder.AppendLine("""    ["DataSourceOptions"] = {""");
-        builder.AppendLine($"""        ["DisableDataSources"] = {options.DisableDataSources.ToString().ToLowerInvariant()},""");
-        builder.AppendLine($"""        ["AutomaticDataSourceSelection"] = {options.AutomaticDataSourceSelection.ToString().ToLowerInvariant()},""");
-        builder.AppendLine($"""        ["AutomaticValidation"] = {options.AutomaticValidation.ToString().ToLowerInvariant()},""");
-        builder.AppendLine($"""        ["RetrievalMode"] = "{options.RetrievalMode}",""");
+        builder.AppendLineLF();
+        builder.AppendLineLF("""    ["DataSourceOptions"] = {""");
+        builder.AppendLineLF($"""        ["DisableDataSources"] = {options.DisableDataSources.ToString().ToLowerInvariant()},""");
+        builder.AppendLineLF($"""        ["AutomaticDataSourceSelection"] = {options.AutomaticDataSourceSelection.ToString().ToLowerInvariant()},""");
+        builder.AppendLineLF($"""        ["AutomaticValidation"] = {options.AutomaticValidation.ToString().ToLowerInvariant()},""");
+        builder.AppendLineLF($"""        ["RetrievalMode"] = "{options.RetrievalMode}",""");
 
         if (options.PreselectedDataSourceIds.Count == 0)
-            builder.AppendLine("""        ["PreselectedDataSourceIds"] = {},""");
+            builder.AppendLineLF("""        ["PreselectedDataSourceIds"] = {},""");
         else
         {
-            builder.AppendLine("""        ["PreselectedDataSourceIds"] = {""");
+            builder.AppendLineLF("""        ["PreselectedDataSourceIds"] = {""");
             foreach (var dataSourceId in options.PreselectedDataSourceIds)
-                builder.AppendLine($"            {LuaTools.ToLuaStringLiteral(dataSourceId)},");
+                builder.AppendLineLF($"            {LuaTools.ToLuaStringLiteral(dataSourceId)},");
 
-            builder.AppendLine("        },");
+            builder.AppendLineLF("        },");
         }
 
         builder.Append("    },");
@@ -801,9 +801,9 @@ public record ChatTemplate(
             return "{}";
 
         var builder = new StringBuilder();
-        builder.AppendLine("{");
+        builder.AppendLineLF("{");
         foreach (var path in paths)
-            builder.AppendLine($"        \"{LuaTools.EscapeLuaString(path)}\",");
+            builder.AppendLineLF($"        \"{LuaTools.EscapeLuaString(path)}\",");
 
         builder.Append("    }");
         return builder.ToString();

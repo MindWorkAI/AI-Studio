@@ -11,14 +11,14 @@
         @if (this.ShowCopy)
         {
             <MudTooltip Text="@string.Format(T("Copy the address: {0}"), this.Path)" Placement="@this.TooltipPlacement">
-                <MudIconButton Icon="@Icons.Material.Outlined.ContentCopy" Size="Size.Small" Class="icon-button-compact" OnClick="@this.CopyPath"/>
+                <MudIconButton Icon="@AppIcons.COPY" Size="Size.Small" Class="icon-button-compact" OnClick="@this.CopyPath"/>
             </MudTooltip>
         }
 
         @if (this.ShowOpen)
         {
             <MudTooltip Text="@T("Open this web page in your browser")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
-                <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" Href="@this.Path" Target="_blank"/>
+                <MudIconButton Icon="@AppIcons.OPEN_EXTERNAL" Size="Size.Small" Class="icon-button-compact" Href="@this.Path" Target="_blank"/>
             </MudTooltip>
         }
         break;
@@ -27,7 +27,7 @@
         @if (this.ShowCopy)
         {
             <MudTooltip Text="@string.Format(T("Copy the path: {0}"), this.Path)" Placement="@this.TooltipPlacement">
-                <MudIconButton Icon="@Icons.Material.Outlined.ContentCopy" Size="Size.Small" Class="icon-button-compact" OnClick="@this.CopyPath"/>
+                <MudIconButton Icon="@AppIcons.COPY" Size="Size.Small" Class="icon-button-compact" OnClick="@this.CopyPath"/>
             </MudTooltip>
         }
 
@@ -38,7 +38,7 @@
             {
                 @* Not necessarily gone: the server of an ERI data source may name a file of its own, which was never on this computer. *@
                 <MudTooltip Text="@string.Format(T("AI Studio cannot find the file {0} on this computer. It may have been moved, renamed, or deleted, or it is on another computer, such as the server of a data source."), this.Path)" Placement="@this.TooltipPlacement">
-                    <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Color="Color.Warning" Size="Size.Small" Class="file-action-warning"/>
+                    <MudIcon Icon="@AppIcons.WARNING" Color="Color.Warning" Size="Size.Small" Class="file-action-warning"/>
                 </MudTooltip>
             }
         }
@@ -47,14 +47,14 @@
             @if (this.ShowFileManager)
             {
                 <MudTooltip Text="@T("Show this file in the file manager of your system")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
-                    <MudIconButton Icon="@Icons.Material.Outlined.FolderOpen" Size="Size.Small" Class="icon-button-compact" OnClick="@this.ShowInFileManager"/>
+                    <MudIconButton Icon="@AppIcons.FOLDER_OPEN" Size="Size.Small" Class="icon-button-compact" OnClick="@this.ShowInFileManager"/>
                 </MudTooltip>
             }
 
             @if (this.ShowOpen)
             {
                 <MudTooltip Text="@GetOpenTooltip(this.PageNumber)" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
-                    <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" Size="Size.Small" Class="icon-button-compact" OnClick="@this.Open"/>
+                    <MudIconButton Icon="@AppIcons.OPEN_EXTERNAL" Size="Size.Small" Class="icon-button-compact" OnClick="@this.Open"/>
                 </MudTooltip>
             }
         }

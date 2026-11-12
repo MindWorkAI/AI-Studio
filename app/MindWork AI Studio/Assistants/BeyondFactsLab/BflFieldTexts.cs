@@ -20,6 +20,7 @@ public static class BflFieldTexts
             BflFieldCatalog.FORMAT => TB("Format of the event"),
             BflFieldCatalog.EVENT_TOPIC => TB("Topic of the event"),
             BflFieldCatalog.AUDIENCE => TB("Audience"),
+            BflFieldCatalog.EVENT_VISIBILITY => TB("Is the event public?"),
             BflFieldCatalog.CONTRIBUTION_TOPIC => TA("Topic of your contribution or your specific assignment"),
             BflFieldCatalog.EVENT_DATE => TB("Date and time"),
             BflFieldCatalog.EVENT_LOCATION => TB("Place"),
@@ -59,6 +60,7 @@ public static class BflFieldTexts
             BflFieldCatalog.FORMAT => TB("E.g., panel, keynote, or interview; online, on site, or hybrid"),
             BflFieldCatalog.EVENT_TOPIC => TB("The central question or the title"),
             BflFieldCatalog.AUDIENCE => TB("E.g., students, experts, or the general public"),
+            BflFieldCatalog.EVENT_VISIBILITY => TB("If not, the lab does not research the event on the web, e.g., for an internal meeting or a closed examination"),
             BflFieldCatalog.CONTRIBUTION_TOPIC => TA("Stays in your preparation and never goes into the research on the web"),
             BflFieldCatalog.EVENT_DATE => TB("E.g., December 10, 2 pm"),
             BflFieldCatalog.EVENT_LOCATION => TB("E.g., the venue and the city, or online"),
@@ -91,6 +93,9 @@ public static class BflFieldTexts
         /// </summary>
         public string Label => option.Id switch
         {
+            BflFieldCatalog.EVENT_PUBLIC => TB("Public"),
+            BflFieldCatalog.EVENT_NOT_PUBLIC => TB("Not public"),
+
             BflFieldCatalog.GOAL_INFORM => TB("Inform"),
             BflFieldCatalog.GOAL_MODERATE => TB("Moderate the discussion"),
             BflFieldCatalog.GOAL_TAKE_POSITION => TB("Take a position in the debate"),

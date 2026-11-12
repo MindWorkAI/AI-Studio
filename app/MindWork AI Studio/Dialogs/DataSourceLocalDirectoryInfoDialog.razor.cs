@@ -86,7 +86,7 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase
     private void UpdateFileList(string file)
     {
         this.directoryFiles.Append("- ");
-        this.directoryFiles.AppendLine(file);
+        this.directoryFiles.AppendLineLF(file);
         this.directoryFilesText = this.directoryFiles.ToString();
     }
 

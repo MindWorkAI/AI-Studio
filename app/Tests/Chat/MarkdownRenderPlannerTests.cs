@@ -100,7 +100,7 @@ public sealed class MarkdownRenderPlannerTests
     {
         var parts = Parts("<html><body><p>Hi</p></body></html>");
 
-        Assert.That(parts, Is.EqualTo(new[] { $"MARKDOWN: ```html{Environment.NewLine}<html><body><p>Hi</p></body></html>{Environment.NewLine}```" }));
+        Assert.That(parts, Is.EqualTo(new[] { "MARKDOWN: ```html\n<html><body><p>Hi</p></body></html>\n```" }));
     }
 
     [Test]

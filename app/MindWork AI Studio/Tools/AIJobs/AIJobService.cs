@@ -301,7 +301,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 // The answer is about to be created without the data the user expected it to use.
                 // Without this message, that answer is indistinguishable from one that did use it:
                 //
-                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
+                await MessageBus.INSTANCE.SendWarning(new(AppIcons.DATA_SOURCE, TB("Your data sources could not be used. This answer was created without them.")));
             }
 
             token.ThrowIfCancellationRequested();
@@ -344,13 +344,13 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             logger.LogError(e, "The provider request failed for chat generation job '{JobId}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", state.Snapshot.JobId, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
             RemoveEmptyAIResponse(state);
             await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, e.UserMessage);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, e.UserMessage));
         }
         catch (Exception e)
         {
             logger.LogError(e, "The chat generation job '{JobId}' failed.", state.Snapshot.JobId);
             await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, e.Message);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("The AI job failed. The message is: '{0}'"), e.Message)));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ANSWER_STREAM, string.Format(TB("The AI job failed. The message is: '{0}'"), e.Message)));
         }
     }
 
@@ -567,7 +567,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             {
                 var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.InstanceName);
                 if (!string.IsNullOrWhiteSpace(userMessage))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, userMessage));
 
                 logger.LogWarning("Skipping selected model availability check for '{ProviderInstanceName}' (provider={ProviderType}) because loading the model list failed with reason {FailureReason}.", provider.InstanceName, provider.Provider, modelLoadResult.FailureReason);
                 return false;
@@ -592,7 +592,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 TB("We could load models from '{0}', but the provider did not return any usable text models."),
                 provider.InstanceName);
 
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, emptyModelsMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, emptyModelsMessage));
             logger.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
             return false;
         }
@@ -606,7 +606,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             provider.InstanceName,
             provider.Provider);
 
-        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, message));
+        await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, message));
         logger.LogWarning("Skipping AI request because model '{ModelId}' is not available from '{ProviderInstanceName}' (provider={ProviderType}).", chatModel.Id, provider.InstanceName, provider.Provider);
         return false;
     }

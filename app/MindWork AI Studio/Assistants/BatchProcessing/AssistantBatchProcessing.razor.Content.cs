@@ -128,13 +128,13 @@ public partial class AssistantBatchProcessing
         if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
         {
             this.Logger.LogWarning("Parts of the batch file '{FilePath}' could not be read: pages={FailedPages}.", fileResult.FilePath, string.Join(", ", extraction.FailedPages));
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(fileResult.FileName)));
+            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, extraction.ToPartialUserMessage(fileResult.FileName)));
         }
 
         if (extraction.HasExtensionMismatch)
         {
             this.Logger.LogWarning("The batch file '{FilePath}' is actually a '{DetectedFormat}'.", fileResult.FilePath, extraction.DetectedFormat);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(fileResult.FileName)));
+            await this.MessageBus.SendWarning(new(AppIcons.FILE_TYPE_MISMATCH, extraction.ToExtensionMismatchUserMessage(fileResult.FileName)));
         }
 
         if (!string.IsNullOrWhiteSpace(extraction.Content))

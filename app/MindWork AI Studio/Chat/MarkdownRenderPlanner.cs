@@ -171,7 +171,7 @@ internal static class MarkdownRenderPlanner
             return cleaned;
 
         if (LooksLikeRawHtml(cleaned))
-            return $"{HTML_CODE_FENCE_PREFIX}{Environment.NewLine}{cleaned}{Environment.NewLine}{CODE_FENCE_MARKER_BACKTICK}";
+            return $"{HTML_CODE_FENCE_PREFIX}\n{cleaned}\n{CODE_FENCE_MARKER_BACKTICK}";
 
         return cleaned;
     }

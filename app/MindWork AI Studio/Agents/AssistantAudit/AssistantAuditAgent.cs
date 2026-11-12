@@ -101,7 +101,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
 
     protected override string SystemPrompt(string additionalData) => string.IsNullOrWhiteSpace(additionalData)
         ? this.JobDescription
-        : $"{this.JobDescription}{Environment.NewLine}{Environment.NewLine}{additionalData}";
+        : $"{this.JobDescription}\n\n{additionalData}";
 
     public override AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
 
@@ -170,7 +170,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
                 ? TB("The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.")
                 : TB("No provider is configured for the Security Audit Agent.");
 
-            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, message));
+            await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, message));
 
             return new AssistantAuditResult
             {
@@ -270,7 +270,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         if (response.Content is not ContentText content || string.IsNullOrWhiteSpace(content.Text))
         {
             logger.LogWarning($"The assistant plugin audit agent did not return text: {response}");
-            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.PendingActions, string.Format(TB("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
+            await MessageBus.INSTANCE.SendWarning(new (AppIcons.AUDIT_INCOMPLETE, string.Format(TB("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
             
             return new AssistantAuditResult
             {
@@ -343,11 +343,11 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             var definition = toolRegistry.GetDefinition(toolId);
             if (definition is null)
             {
-                builder.AppendLine($"- {toolId}: unknown to this installation");
+                builder.AppendLineLF($"- {toolId}: unknown to this installation");
                 continue;
             }
 
-            builder.AppendLine($"- {toolId}: {definition.Function.DescriptionForLLM}");
+            builder.AppendLineLF($"- {toolId}: {definition.Function.DescriptionForLLM}");
         }
 
         return builder.ToString().TrimEnd();
@@ -368,11 +368,11 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         foreach (var luaFile in luaFiles.OrderBy(file => file.Key, StringComparer.Ordinal))
         {
             if (builder.Length > 0)
-                builder.AppendLine().AppendLine();
+                builder.AppendLineLF().AppendLineLF();
 
             builder.Append("-- File: ");
-            builder.AppendLine(luaFile.Key);
-            builder.AppendLine(luaFile.Value);
+            builder.AppendLineLF(luaFile.Key);
+            builder.AppendLineLF(luaFile.Value);
         }
 
         return builder.ToString().TrimEnd();

@@ -20,7 +20,7 @@
         
         @if (this.HasSettingsPanel)
         {
-            <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettingsDialog())"/>
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SETTINGS" OnClick="@(async () => await this.OpenSettingsDialog())"/>
         }
     </MudStack>
 
@@ -48,7 +48,7 @@
                         @if (this.IsProcessing)
                         {
                             <MudTooltip Text="@TB("Stop generation")">
-                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(async () => await this.CancelStreaming())"/>
+                                <MudIconButton Variant="Variant.Filled" Icon="@AppIcons.STOP" Color="Color.Error" OnClick="@(async () => await this.CancelStreaming())"/>
                             </MudTooltip>
                         }
                     </MudStack>
@@ -127,7 +127,7 @@
                 {
                     @if (this.ShowSendTo && this.VisibleSendToAssistants.Count > 0)
                     {
-                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@AppIcons.SEND_TO" EndIcon="@AppIcons.DROPDOWN_MENU" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                             @foreach (var assistant in this.VisibleSendToAssistants)
                             {
                                 <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, new()))">
@@ -159,7 +159,7 @@
                         case SendToButton sendToButton:
                             @if (this.VisibleSendToAssistants.Count > 0)
                             {
-                                <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                                <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@AppIcons.SEND_TO" EndIcon="@AppIcons.DROPDOWN_MENU" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded" MaxHeight="@MenuDefaults.MAX_HEIGHT">
                                     @foreach (var assistant in this.VisibleSendToAssistants)
                                     {
                                         <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, sendToButton))">
@@ -174,14 +174,14 @@
                 
                 @if (this.ShowCopyResult)
                 {
-                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="@(async () => await this.CopyToClipboard())">
+                    <MudButton Variant="Variant.Filled" StartIcon="@AppIcons.COPY" OnClick="@(async () => await this.CopyToClipboard())">
                         @TB("Copy result")
                     </MudButton>
                 }
 
                 @if (this.ShowReset)
                 {
-                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)" OnClick="@(async () => await this.InnerResetForm())">
+                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@AppIcons.RESET" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)" OnClick="@(async () => await this.InnerResetForm())">
                         @TB("Reset")
                     </MudButton>
                 }

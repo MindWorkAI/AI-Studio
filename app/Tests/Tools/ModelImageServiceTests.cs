@@ -77,7 +77,7 @@ public sealed class ModelImageServiceTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(this.runtime.RequestedBudgets, Is.EqualTo(new[] { 3_932_160, IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES }));
+            Assert.That(this.runtime.RequestedBudgets, Is.EqualTo(new[] { 3_932_160, ImageSourceExtensions.MAX_IMAGE_SIZE_BYTES }));
             Assert.That(this.runtime.RequestedPaths, Is.All.EqualTo(new FileInfo(this.imagePath).FullName));
         }
     }

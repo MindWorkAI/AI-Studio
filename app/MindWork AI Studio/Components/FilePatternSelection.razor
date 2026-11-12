@@ -6,7 +6,7 @@
             @this.AllowedContent
         </div>
         <MudTooltip Text="@T("Pattern help and examples")" RootStyle="display: inline-flex;">
-            <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Color="@(this.showHelp ? Color.Info : Color.Default)" OnClick="@this.ToggleHelp" aria-label="@T("Pattern help and examples")" aria-expanded="@(this.showHelp ? "true" : "false")"/>
+            <MudIconButton Icon="@AppIcons.HELP" Color="@(this.showHelp ? Color.Info : Color.Default)" OnClick="@this.ToggleHelp" aria-label="@T("Pattern help and examples")" aria-expanded="@(this.showHelp ? "true" : "false")"/>
         </MudTooltip>
     </div>
     @if (this.HasExclusions)

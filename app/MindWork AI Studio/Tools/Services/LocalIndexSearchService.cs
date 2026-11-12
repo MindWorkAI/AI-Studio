@@ -215,7 +215,7 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
                 return;
         }
 
-        await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.SearchOff, userMessage));
+        await MessageBus.INSTANCE.SendWarning(new(AppIcons.RETRIEVAL_GAP, userMessage));
     }
 
     /// <summary>

@@ -106,9 +106,9 @@ public partial class AssistantBatchProcessing
     private async Task WriteLogAsync(string resolvedOutputDirectory)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details"), T("Tools used")));
+        sb.Append(CsvWriter.ToRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details"), T("Tools used"))).Append(CsvWriter.ROW_END);
         foreach (var fileResult in this.fileResults.Where(x => x.Status is not BatchProcessingFileStatus.QUEUED and not BatchProcessingFileStatus.PROCESSING))
-            sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message, fileResult.UsedTools));
+            sb.Append(CsvWriter.ToRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message, fileResult.UsedTools)).Append(CsvWriter.ROW_END);
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, LOG_FILENAME), sb.ToString());
     }
@@ -120,9 +120,9 @@ public partial class AssistantBatchProcessing
     {
         var separator = this.csvSeparator.Character(this.customCsvSeparator);
         var sb = new StringBuilder();
-        sb.AppendLine(CsvWriter.ToRow(separator, T("File"), this.ResultColumnHeader));
+        sb.Append(CsvWriter.ToRow(separator, T("File"), this.ResultColumnHeader)).Append(CsvWriter.ROW_END);
         foreach (var fileResult in this.fileResults.Where(x => x.Status is BatchProcessingFileStatus.DONE))
-            sb.AppendLine(CsvWriter.ToRow(separator, fileResult.RelativePath, fileResult.ResultText));
+            sb.Append(CsvWriter.ToRow(separator, fileResult.RelativePath, fileResult.ResultText)).Append(CsvWriter.ROW_END);
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, this.ResolveResultsFileName()), sb.ToString());
     }
@@ -162,7 +162,7 @@ public partial class AssistantBatchProcessing
                 return;
 
             this.hasReportedWriteFailure = true;
-            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, string.Format(T("Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"), Path.GetFileName(targetFilePath), e.Message)));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, string.Format(T("Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"), Path.GetFileName(targetFilePath), e.Message)));
         }
     }
 
@@ -195,7 +195,7 @@ public partial class AssistantBatchProcessing
 
             // Without this message, continuing the run would silently process
             // every document again, because we recognize nothing as completed:
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Was not able to read the log of the previous run. Continuing the run would process all documents again.")));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, T("Was not able to read the log of the previous run. Continuing the run would process all documents again.")));
         }
 
         return entries;
@@ -227,7 +227,7 @@ public partial class AssistantBatchProcessing
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Was not able to read the results table of the previous batch run at '{ResultsFilePath}'.", resultsFilePath);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.")));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, T("Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.")));
         }
 
         return results;

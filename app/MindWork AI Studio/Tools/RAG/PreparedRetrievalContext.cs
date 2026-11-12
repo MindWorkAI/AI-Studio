@@ -7,7 +7,7 @@ namespace AIStudio.Tools.RAG;
 /// ready to be numbered.
 /// </summary>
 /// <remarks>
-/// Made by IRetrievalContextExtensions.PrepareForModelAsync. Which number a context gets depends on
+/// Made by RetrievalContextExtensions.PrepareForModelAsync. Which number a context gets depends on
 /// which contexts the caller hands on in the end, so the header is written only then, see
 /// ToMarkdown. The app writes it itself, which is why it needs no filter.
 /// </remarks>
@@ -29,20 +29,20 @@ public sealed record PreparedRetrievalContext(IRetrievalContext Context, string 
         switch (index)
         {
             case > 0 when numTotalRetrievalContexts is null:
-                sb.AppendLine($"# Retrieval context {index}");
+                sb.AppendLineLF($"# Retrieval context {index}");
                 break;
 
             case > 0 when numTotalRetrievalContexts > 0:
-                sb.AppendLine($"# Retrieval context {index} of {numTotalRetrievalContexts}");
+                sb.AppendLineLF($"# Retrieval context {index} of {numTotalRetrievalContexts}");
                 break;
 
             default:
-                sb.AppendLine("# Retrieval context");
+                sb.AppendLineLF("# Retrieval context");
                 break;
         }
 
         sb.Append(this.Body);
-        sb.AppendLine();
+        sb.AppendLineLF();
         return sb.ToString();
     }
 }

@@ -21,7 +21,7 @@
 <div class="mt-6">
     <FilePatternSelection>
         <AllowedContent>
-            <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Files to include")" AdornmentIcon="@Icons.Material.Filled.Restore" Adornment="Adornment.End" OnAdornmentClick="@this.RestoreDefaultFilePatterns" AdornmentAriaLabel="@T("Restore default patterns")" Lines="1" Sizing="InputSizing.Auto" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Files to include")" AdornmentIcon="@AppIcons.RESTORE_DEFAULT" Adornment="Adornment.End" OnAdornmentClick="@this.RestoreDefaultFilePatterns" AdornmentAriaLabel="@T("Restore default patterns")" Lines="1" Sizing="InputSizing.Auto" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
         </AllowedContent>
     </FilePatternSelection>
 </div>
@@ -35,7 +35,7 @@
 </MudJustifiedText>
 
 <MudStack Class="mb-3">
-    <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+    <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@AppIcons.ADVANCED_SETTINGS">
         @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
     </MudButton>
     <MudDivider/>
@@ -59,7 +59,7 @@
     @T("Instructions")
 </MudText>
 
-<MudSelect T="BatchProcessingPromptSource" Value="@this.promptSource" ValueChanged="@this.PromptSourceChanged" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("Source of the instructions")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+<MudSelect T="BatchProcessingPromptSource" Value="@this.promptSource" ValueChanged="@this.PromptSourceChanged" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.PROMPT" Adornment="Adornment.Start" Label="@T("Source of the instructions")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
     @foreach (var source in Enum.GetValues<BatchProcessingPromptSource>())
     {
         <MudSelectItem Value="@source">
@@ -117,7 +117,7 @@ else
     }
     else
     {
-        <MudSelect T="DataDocumentAnalysisPolicy" Value="@this.selectedPolicy" ValueChanged="@this.SelectedPolicyChanged" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Policy" Adornment="Adornment.Start" Label="@T("Document analysis policy")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+        <MudSelect T="DataDocumentAnalysisPolicy" Value="@this.selectedPolicy" ValueChanged="@this.SelectedPolicyChanged" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.ANALYSIS_POLICY" Adornment="Adornment.Start" Label="@T("Document analysis policy")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
             @foreach (var policy in this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies)
             {
                 <MudSelectItem Value="@policy">
@@ -145,7 +145,7 @@ else
     @T("Output")
 </MudText>
 
-<MudSelect T="BatchProcessingOutputMode" @bind-Value="@this.outputMode" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Output" Adornment="Adornment.Start" Label="@T("Output mode")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+<MudSelect T="BatchProcessingOutputMode" @bind-Value="@this.outputMode" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.OUTPUT" Adornment="Adornment.Start" Label="@T("Output mode")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
     @foreach (var mode in Enum.GetValues<BatchProcessingOutputMode>())
     {
         <MudSelectItem Value="@mode">
@@ -156,7 +156,7 @@ else
 
 @if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
 {
-    <MudSelect T="FileExportFormat" @bind-Value="@this.resultFileFormat" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Label="@T("File format")" HelperText="@T("Choose the format of the result files. Everything except Markdown is converted by Pandoc, which AI Studio offers to install when it is missing.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+    <MudSelect T="FileExportFormat" @bind-Value="@this.resultFileFormat" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Label="@T("File format")" HelperText="@T("Choose the format of the result files. Everything except Markdown is converted by Pandoc, which AI Studio offers to install when it is missing.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
         @foreach (var format in FileExportFormat.AnswerFormats)
         {
             <MudSelectItem Value="@format">
@@ -171,11 +171,11 @@ else
 }
 else
 {
-    <MudTextField T="string" @bind-Text="@this.csvFileName" Validation="@this.ValidateCsvFileName" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Name of the results table (optional)")" HelperText="@T("The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.")" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" @bind-Text="@this.csvFileName" Validation="@this.ValidateCsvFileName" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Name of the results table (optional)")" HelperText="@T("The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.")" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-    <MudTextField T="string" @bind-Text="@this.resultColumnHeader" Disabled="@this.isProcessingBatch" Label="@T("Header of the result column (optional)")" HelperText="@T("The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.")" AdornmentIcon="@Icons.Material.Filled.TableChart" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" @bind-Text="@this.resultColumnHeader" Disabled="@this.isProcessingBatch" Label="@T("Header of the result column (optional)")" HelperText="@T("The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.")" AdornmentIcon="@AppIcons.RESULT_COLUMN" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-    <MudSelect T="BatchProcessingCsvSeparator" @bind-Value="@this.csvSeparator" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.FormatListBulleted" Adornment="Adornment.Start" Label="@T("Column separator")" HelperText="@T("Choose which character separates the columns of the results table.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+    <MudSelect T="BatchProcessingCsvSeparator" @bind-Value="@this.csvSeparator" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Label="@T("Column separator")" HelperText="@T("Choose which character separates the columns of the results table.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
         @foreach (var separator in Enum.GetValues<BatchProcessingCsvSeparator>())
         {
             <MudSelectItem Value="@separator">
@@ -186,7 +186,7 @@ else
 
     @if (this.csvSeparator is BatchProcessingCsvSeparator.CUSTOM)
     {
-        <MudTextField T="string" @bind-Text="@this.customCsvSeparator" Validation="@this.ValidateCustomCsvSeparator" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Custom column separator")" HelperText="@T("Enter one punctuation or symbol character.")" AdornmentIcon="@Icons.Material.Filled.Edit" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField T="string" @bind-Text="@this.customCsvSeparator" Validation="@this.ValidateCustomCsvSeparator" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Custom column separator")" HelperText="@T("Enter one punctuation or symbol character.")" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 }
 
@@ -219,7 +219,7 @@ else
 
 @if (this.pauseBeforeNextFileSeconds > 0)
 {
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.HourglassTop" Dense="true" Class="mb-3">
+    <MudAlert Severity="Severity.Info" Icon="@AppIcons.PENDING" Dense="true" Class="mb-3">
         @(string.Format(T("Waiting {0} seconds before starting the next file."), this.pauseBeforeNextFileSeconds))
     </MudAlert>
 }
@@ -248,7 +248,7 @@ else
 
     @if (this.isProcessingBatch)
     {
-        <MudButton OnClick="@this.CancelBatchProcessingAsync" Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" Class="mb-3">
+        <MudButton OnClick="@this.CancelBatchProcessingAsync" Variant="Variant.Filled" Color="Color.Error" StartIcon="@AppIcons.CANCEL" Class="mb-3">
             @T("Cancel the batch run")
         </MudButton>
     }
@@ -269,7 +269,7 @@ else
                         @switch (fileResult.Status)
                         {
                             case BatchProcessingFileStatus.QUEUED:
-                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Title="@T("Queued")"/>
+                                <MudIcon Icon="@AppIcons.PENDING" Size="Size.Small" Title="@T("Queued")"/>
                                 break;
 
                             case BatchProcessingFileStatus.PROCESSING:
@@ -277,15 +277,15 @@ else
                                 break;
 
                             case BatchProcessingFileStatus.DONE:
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Title="@T("Done")"/>
+                                <MudIcon Icon="@AppIcons.SUCCESS" Color="Color.Success" Size="Size.Small" Title="@T("Done")"/>
                                 break;
 
                             case BatchProcessingFileStatus.FAILED:
-                                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" Size="Size.Small" Title="@T("Failed")"/>
+                                <MudIcon Icon="@AppIcons.ERROR" Color="Color.Error" Size="Size.Small" Title="@T("Failed")"/>
                                 break;
 
                             case BatchProcessingFileStatus.CANCELED:
-                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" Size="Size.Small" Title="@T("Canceled")"/>
+                                <MudIcon Icon="@AppIcons.CANCELED" Color="Color.Warning" Size="Size.Small" Title="@T("Canceled")"/>
                                 break;
                         }
                     </td>

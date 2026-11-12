@@ -5,7 +5,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Dataset" Class="mr-2" />
+            <MudIcon Icon="@AppIcons.EXPORT_CONFIGURATION" Class="mr-2" />
             @T("Export tool configuration")
         </MudText>
     </TitleContent>
@@ -90,7 +90,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Text">@T("Cancel")</MudButton>
-        <MudButton OnClick="@this.Export" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanExport)">
+        <MudButton OnClick="@this.Export" Variant="Variant.Filled" StartIcon="@AppIcons.COPY" Disabled="@(!this.CanExport)">
             @T("Export to clipboard")
         </MudButton>
     </DialogActions>

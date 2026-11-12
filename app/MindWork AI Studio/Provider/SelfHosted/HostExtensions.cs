@@ -45,7 +45,7 @@ public static class HostExtensions
         /// <remarks>
         /// Like the limit of a cloud provider, see LLMProvidersExtensions.MaxImageSizeBytes, this
         /// belongs to the API of the engine, not to the model. What we actually send is asked through
-        /// IImageSourceExtensions.MaxImageSizeBytesFor.
+        /// ImageSourceExtensions.MaxImageSizeBytesFor.
         /// </remarks>
         /// <value>The size limit of one image file, or null when the engine states none we know of.</value>
         public long? MaxImageSizeBytes => host switch

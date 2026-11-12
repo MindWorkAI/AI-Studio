@@ -78,5 +78,5 @@ public sealed class AIGeneratedContentDisclosureServiceTests
 
     private static SettingsManager CreateSettingsManager() => new(NullLogger<SettingsManager>.Instance, null!);
 
-    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
+    private static string Lines(params string[] lines) => string.Join('\n', lines);
 }

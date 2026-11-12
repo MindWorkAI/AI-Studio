@@ -16,7 +16,7 @@ namespace AIStudio.Tests.Chat;
 /// way the one can run into the other -- an open code fence above all. A document has no such seam.
 /// </remarks>
 [TestFixture]
-public sealed class IContentExtensionsTests
+public sealed class ContentExtensionsTests
 {
     private static readonly Source TOOL_SOURCE = new("Search result", "https://example.org/search", SourceOrigin.TOOL);
 
@@ -224,7 +224,7 @@ public sealed class IContentExtensionsTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(exported, Does.StartWith(file.Content), "The document stays as the model wrote it.");
-            Assert.That(appended.Split(Environment.NewLine), Has.All.StartWith("%"), "A line LaTeX would read could stop the whole run.");
+            Assert.That(appended.Split('\n'), Has.All.StartWith("%"), "A line LaTeX would read could stop the whole run.");
             Assert.That(appended, Does.Contain(TOOL_SOURCE.URL));
         }
     }
@@ -347,5 +347,5 @@ public sealed class IContentExtensionsTests
         .Select(block => block is HeadingBlock heading ? $"h{heading.Level}" : block.GetType().Name)
         .ToList();
 
-    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
+    private static string Lines(params string[] lines) => string.Join('\n', lines);
 }

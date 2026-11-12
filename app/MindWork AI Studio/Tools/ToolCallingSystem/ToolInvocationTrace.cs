@@ -11,7 +11,7 @@ public sealed class ToolInvocationTrace
 
     public string ToolName { get; set; } = string.Empty;
 
-    public string ToolIcon { get; set; } = Icons.Material.Filled.Build;
+    public string ToolIcon { get; set; } = AppIcons.TOOL;
 
     public string ToolCallId { get; set; } = string.Empty;
 

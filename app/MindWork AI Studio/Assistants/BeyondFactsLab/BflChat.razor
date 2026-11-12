@@ -14,7 +14,7 @@ else if (this.conversation.Thread is not { } thread)
     <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
         @TA("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.")
     </MudAlert>
-    <MudButton StartIcon="@Icons.Material.Filled.RestartAlt" Color="Color.Error" OnClick="@this.ResetAsync">@T("Start over")</MudButton>
+    <MudButton StartIcon="@AppIcons.RESET" Color="Color.Error" OnClick="@this.ResetAsync">@T("Start over")</MudButton>
 }
 else
 {
@@ -22,7 +22,7 @@ else
     {
         <MudText Typo="Typo.body2" Class="mb-3">@this.Introduction</MudText>
         <div class="mb-4">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum" OnClick="@this.StartAsync" Disabled="@(!this.CanSend)">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CHAT" OnClick="@this.StartAsync" Disabled="@(!this.CanSend)">
                 @T("Start the conversation")
             </MudButton>
         </div>
@@ -53,7 +53,7 @@ else
                   Variant="Variant.Outlined"
                   Label="@TA("Your message")"
                   Adornment="Adornment.End"
-                  AdornmentIcon="@Icons.Material.Filled.Send"
+                  AdornmentIcon="@AppIcons.SEND"
                   AdornmentColor="@(this.CanSendMessage ? Color.Primary : Color.Default)"
                   AdornmentAriaLabel="@T("Send")"
                   OnAdornmentClick="@this.SendAsync"
@@ -68,11 +68,11 @@ else
         <MudStack Row="true" Spacing="1" Class="mt-2">
             @if (this.IsRunning)
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Stop" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@AppIcons.STOP" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
             }
             @if (this.conversation.HasVisibleMessages)
             {
-                <MudButton StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="@this.ResetAsync" Disabled="@this.IsRunning">@T("Start over")</MudButton>
+                <MudButton StartIcon="@AppIcons.RESET" OnClick="@this.ResetAsync" Disabled="@this.IsRunning">@T("Start over")</MudButton>
             }
         </MudStack>
     }

@@ -4,9 +4,9 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Chat;
 
-public static class IImageSourceExtensions
+public static class ImageSourceExtensions
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IImageSourceExtensions).Namespace, nameof(IImageSourceExtensions));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ImageSourceExtensions).Namespace, nameof(ImageSourceExtensions));
 
     /// <summary>
     /// The largest image, in bytes, we send anywhere: no image prepared for a model is larger, and
@@ -70,7 +70,7 @@ public static class IImageSourceExtensions
                         var lengthBytes = response.Content.Headers.ContentLength;
                         if(lengthBytes > MAX_IMAGE_SIZE_BYTES)
                         {
-                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The image at the URL is too large (>10 MB). Skipping the image.")));
+                            await MessageBus.INSTANCE.SendError(new(AppIcons.IMAGE_NOT_SUPPORTED, TB("The image at the URL is too large (>10 MB). Skipping the image.")));
                             return (success: false, string.Empty);
                         }
 
@@ -78,7 +78,7 @@ public static class IImageSourceExtensions
                         return (success: true, Convert.ToBase64String(bytes));
                     }
 
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("Failed to download the image from the URL. Skipping the image.")));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.IMAGE_NOT_SUPPORTED, TB("Failed to download the image from the URL. Skipping the image.")));
                     return (success: false, string.Empty);
                 }
 
@@ -89,7 +89,7 @@ public static class IImageSourceExtensions
                         var length = new FileInfo(image.Source).Length;
                         if(length > MAX_IMAGE_SIZE_BYTES)
                         {
-                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The local image file is too large (>10 MB). Skipping the image.")));
+                            await MessageBus.INSTANCE.SendError(new(AppIcons.IMAGE_NOT_SUPPORTED, TB("The local image file is too large (>10 MB). Skipping the image.")));
                             return (success: false, string.Empty);
                         }
 
@@ -97,7 +97,7 @@ public static class IImageSourceExtensions
                         return (success: true, Convert.ToBase64String(bytes));
                     }
 
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The local image file does not exist. Skipping the image.")));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.IMAGE_NOT_SUPPORTED, TB("The local image file does not exist. Skipping the image.")));
                     return (success: false, string.Empty);
             
                 default:

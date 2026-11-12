@@ -11,6 +11,7 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
   - [Continuing in a Chat](#continuing-in-a-chat)
     - [Supported types (matching the Blazor UI components):](#supported-types-matching-the-blazor-ui-components)
   - [Component References](#component-references)
+    - [Icons](#icons)
     - [`TEXT_AREA` reference](#text_area-reference)
     - [`DROPDOWN` reference](#dropdown-reference)
     - [`BUTTON` reference](#button-reference)
@@ -203,7 +204,7 @@ Launchers with an own icon or extra Lua code keep the plugin code editor and the
 #### Supported types (matching the Blazor UI components):
 
 - `TEXT_AREA`: user input field based on `MudTextField`; requires `Name`, `Label`, and may include `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style`.
-- `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
+- `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `UserPrompt`.
 - `BUTTON`: invokes a Lua callback; `Props` must include `Name`, `Text`, `Action`, and may include `IsIconButton`, `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`. Use this for stateless actions, including icon-only action buttons.
 - `BUTTON_GROUP`: groups multiple `BUTTON` children in a `MudButtonGroup`;`Props` must include `Name`, `Children` must contain only `BUTTON` components and `Props` may include `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`.
 - `LAYOUT_GRID`: renders a `MudGrid`; `Children` must contain only `LAYOUT_ITEM` components and `Props` may include `Justify`, `Spacing`, `Class`, `Style`.
@@ -230,7 +231,7 @@ Images referenced via the `plugin://` scheme must exist in the plugin directory 
 | Component                  | Required Props                      | Optional Props                                                                                                                                                                                                       | Renders                                                                                                                             |
 |----------------------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | `TEXT_AREA`                | `Name`, `Label`                     | `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style` | [MudTextField](https://www.mudblazor.com/components/textfield)                                                                      |
-| `DROPDOWN`                 | `Name`, `Label`, `Default`, `Items` | `IsMultiselect`, `HasSelectAll`, `SelectAllText`, `HelperText`, `OpenIcon`, `CloseIcon`, `IconColor`, `IconPositon`, `Variant`, `ValueType`, `UserPrompt`                                                            | [MudSelect](https://www.mudblazor.com/components/select)                                                                            |
+| `DROPDOWN`                 | `Name`, `Label`, `Default`, `Items` | `IsMultiselect`, `HasSelectAll`, `SelectAllText`, `HelperText`, `OpenIcon`, `CloseIcon`, `IconColor`, `IconPositon`, `Variant`, `UserPrompt`                                                                         | [MudSelect](https://www.mudblazor.com/components/select)                                                                            |
 | `BUTTON`                   | `Name`, `Text`, `Action`            | `IsIconButton`, `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`                                                                                         | [MudButton](https://www.mudblazor.com/components/button) / [MudIconButton](https://www.mudblazor.com/components/button#icon-button) |
 | `BUTTON_GROUP`             | `Name`, `Children`                  | `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`                                                                                                                             | [MudButton](https://www.mudblazor.com/components/button) / [MudIconButton](https://www.mudblazor.com/components/button#icon-button) |
 | `SWITCH`                   | `Name`, `Label`, `Value`            | `OnChanged`, `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`                                                              | [MudSwitch](https://www.mudblazor.com/components/switch)                                                                            |
@@ -259,6 +260,14 @@ More information on rendered components can be found [here](https://www.mudblazo
 
 ## Component References
 
+### Icons
+Every prop which takes an icon, such as `AdornmentIcon`, `StartIcon`, or the `Icon` of a `SWITCH`, accepts two kinds of names:
+
+- A Lucide icon as `"lucide:"` followed by its name on [lucide.dev](https://lucide.dev/icons/), such as `"lucide:house"` or `"lucide:wand-sparkles"`. AI Studio itself uses Lucide icons, so prefer them: they look like the rest of the app. Names are lowercase and exact; older names which Lucide still knows, such as `"lucide:home"`, keep working.
+- An icon of MudBlazor by its C# name, such as `"Icons.Material.Filled.Home"`. These names keep working as well; see the [MudBlazor icons](https://www.mudblazor.com/features/icons#icons).
+
+An unknown name shows no icon.
+
 ### `TEXT_AREA` reference
 - Use `Type = "TEXT_AREA"` to render a MudBlazor text input or textarea.
 - Required props:
@@ -268,7 +277,7 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `HelperText`: helper text rendered below the input.
   - `HelperTextOnFocus`: defaults to `false`; show helper text only while the field is focused.
   - `Adornment`: one of `Start`, `End`, `None`; invalid or omitted values fall back to `Start`.
-  - `AdornmentIcon`: MudBlazor icon identifier string for the adornment.
+  - `AdornmentIcon`: icon for the adornment, see [Icons](#icons).
   - `AdornmentText`: plain adornment text. Do not set this together with `AdornmentIcon`.
   - `AdornmentColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; invalid or omitted values fall back to `Default`.
   - `Counter`: nullable integer. Omit it to hide the counter entirely. Set `0` to show only the current character count. Set `1` or higher to show `current/max`.
@@ -289,7 +298,7 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["Label"] = "Budget",
     ["HelperText"] = "Enter the expected amount.",
     ["Adornment"] = "Start",
-    ["AdornmentIcon"] = "Icons.Material.Filled.AttachMoney",
+    ["AdornmentIcon"] = "lucide:circle-dollar-sign",
     ["AdornmentColor"] = "Success",
     ["Counter"] = 0,
     ["MaxLength"] = 100,
@@ -311,13 +320,13 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `Items`: array of dropdown item tables with the same shape as `Default`.
 - Optional props:
   - `UserPrompt`: prompt context text for this field.
-  - `ValueType`: one of `string`, `int`, `double`, `bool`; currently the dropdown values exposed to prompt building and button actions are handled as the configured item `Value`s, with typical usage being `string`.
+  - `ValueType`: has no effect and is accepted only so that older plugins keep loading; leave it out. The selected values always reach prompt building and button actions as text, i.e., as the `Value` of their items.
   - `IsMultiselect`: defaults to `false`; when `true`, the component allows selecting multiple items.
   - `HasSelectAll`: defaults to `false`; enables MudBlazor's select-all behavior for multiselect dropdowns.
   - `SelectAllText`: custom label for the select-all action in multiselect mode.
   - `HelperText`: helper text rendered below the dropdown.
-  - `OpenIcon`: MudBlazor icon identifier used while the dropdown is closed.
-  - `CloseIcon`: MudBlazor icon identifier used while the dropdown is open.
+  - `OpenIcon`: icon used while the dropdown is closed, see [Icons](#icons).
+  - `CloseIcon`: icon used while the dropdown is open, see [Icons](#icons).
   - `IconColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; invalid or omitted values fall back to `Default`.
   - `IconPositon`: one of `Start` or `End`; controls where the icon adornment is rendered.
   - `Variant`: one of the MudBlazor `Variant` enum names such as `Text`, `Filled`, `Outlined`; invalid or omitted values fall back to `Outlined`.
@@ -340,13 +349,12 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["Name"] = "targetCountries",
     ["Label"] = "Target countries",
     ["UserPrompt"] = "Use the selected countries in your answer.",
-    ["ValueType"] = "string",
     ["IsMultiselect"] = true,
     ["HasSelectAll"] = true,
     ["SelectAllText"] = "Select all countries",
     ["HelperText"] = "Pick one or more countries.",
-    ["OpenIcon"] = "Icons.Material.Filled.ArrowDropDown",
-    ["CloseIcon"] = "Icons.Material.Filled.ArrowDropUp",
+    ["OpenIcon"] = "lucide:chevron-down",
+    ["CloseIcon"] = "lucide:chevron-up",
     ["IconColor"] = "Secondary",
     ["IconPositon"] = "End",
     ["Variant"] = "Filled",
@@ -379,8 +387,8 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `Color`: one of the MudBlazor `Color` enum names such as `Default`, `Primary`, `Secondary`, `Info`; omitted values fall back to `Default`.
   - `IsFullWidth`: defaults to `false`; when `true`, the button expands to the available width.
   - `Size`: one of the MudBlazor `Size` enum names such as `Small`, `Medium`, `Large`; omitted values fall back to `Medium`.
-  - `StartIcon`: MudBlazor icon identifier string rendered before the button text, or used as the icon itself when `IsIconButton = true`.
-  - `EndIcon`: MudBlazor icon identifier string rendered after the button text.
+  - `StartIcon`: icon rendered before the button text, or used as the icon itself when `IsIconButton = true`, see [Icons](#icons).
+  - `EndIcon`: icon rendered after the button text, see [Icons](#icons).
   - `IconColor`: one of the MudBlazor `Color` enum names for text-button icons; omitted values fall back to `Inherit`.
   - `IconSize`: one of the MudBlazor `Size` enum names; omitted values fall back to `Medium`.
   - `Class`, `Style`: forwarded to the rendered component for layout/styling.
@@ -415,8 +423,8 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["Color"] = "Primary",
     ["IsFullWidth"] = false,
     ["Size"] = "Medium",
-    ["StartIcon"] = "Icons.Material.Filled.AutoFixHigh",
-    ["EndIcon"] = "Icons.Material.Filled.ArrowForward",
+    ["StartIcon"] = "lucide:wand-sparkles",
+    ["EndIcon"] = "lucide:arrow-right",
     ["IconColor"] = "Inherit",
     ["IconSize"] = "Medium",
     ["Action"] = function(input)
@@ -453,7 +461,7 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["Variant"] = "Outlined",
     ["Color"] = "Primary",
     ["Size"] = "Medium",
-    ["StartIcon"] = "Icons.Material.Filled.Refresh",
+    ["StartIcon"] = "lucide:refresh-cw",
     ["Action"] = function(input)
       return {
         state = {
@@ -510,7 +518,7 @@ More information on rendered components can be found [here](https://www.mudblazo
             }
           }
         end,
-        ["StartIcon"] = "Icons.Material.Filled.Build"
+        ["StartIcon"] = "lucide:wrench"
       }
     },
     {
@@ -523,7 +531,7 @@ More information on rendered components can be found [here](https://www.mudblazo
           LogError("ColorPicker value: " .. colorValue)
           return nil
         end,
-        ["EndIcon"] = "Icons.Material.Filled.BugReport"
+        ["EndIcon"] = "lucide:bug"
       }
     }
   }
@@ -544,7 +552,7 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `LabelOn`: text shown when the switch value is `true`.
   - `LabelOff`: text shown when the switch value is `false`.
   - `LabelPlacement`: one of `Bottom`, `End`, `Left`, `Right`, `Start`, `Top`; omitted values follow the renderer default.
-  - `Icon`: MudBlazor icon identifier string displayed inside the switch thumb.
+  - `Icon`: icon displayed inside the switch thumb, see [Icons](#icons).
   - `IconColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Inherit`.
   - `CheckedColor`: color used when the switch state is `true`; omitted values default to `Inherit`.
   - `UncheckedColor`: color used when the switch state is `false`; omitted values default to `Inherit`.
@@ -573,7 +581,7 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["LabelOn"] = "Summary enabled",
     ["LabelOff"] = "Summary disabled",
     ["LabelPlacement"] = "End",
-    ["Icon"] = "Icons.Material.Filled.Summarize",
+    ["Icon"] = "lucide:file-text",
     ["IconColor"] = "Primary",
     ["CheckedColor"] = "Success",
     ["UncheckedColor"] = "Default",
@@ -1113,12 +1121,12 @@ Use `LAYOUT_ACCORDION` as the outer wrapper and put the actual content into one 
   - `IsDense`: defaults to `false`; reduces section density.
   - `HasInnerPadding`: defaults to `true`; controls the inner content gutter/padding.
   - `HideIcon`: defaults to `false`; hides the expand/collapse icon.
-  - `HeaderIcon`: MudBlazor icon identifier rendered before the header text.
+  - `HeaderIcon`: icon rendered before the header text, see [Icons](#icons).
   - `HeaderColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values fall back to `Inherit`.
   - `HeaderTypo`: one of the MudBlazor `Typo` enum names such as `body1`, `subtitle1`, `h6`; omitted values follow the renderer default.
   - `HeaderAlign`: one of the MudBlazor `Align` enum names such as `Start`, `Center`, `End`; omitted values follow the renderer default.
   - `MaxHeight`: nullable integer max height in pixels for the expanded content area.
-  - `ExpandIcon`: MudBlazor icon identifier used for the expand/collapse control.
+  - `ExpandIcon`: icon used for the expand/collapse control, see [Icons](#icons).
   - `Class`, `Style`: forwarded to the rendered `MudExpansionPanel` for layout/styling.
 - `Children` may contain any other assistant components you want to reveal inside the section.
 
@@ -1134,12 +1142,12 @@ Use `LAYOUT_ACCORDION` as the outer wrapper and put the actual content into one 
     ["IsDense"] = false,
     ["HasInnerPadding"] = true,
     ["HideIcon"] = false,
-    ["HeaderIcon"] = "Icons.Material.Filled.Tune",
+    ["HeaderIcon"] = "lucide:sliders-horizontal",
     ["HeaderColor"] = "Primary",
     ["HeaderTypo"] = "subtitle1",
     ["HeaderAlign"] = "Start",
     ["MaxHeight"] = 320,
-    ["ExpandIcon"] = "Icons.Material.Filled.ExpandMore"
+    ["ExpandIcon"] = "lucide:chevron-down"
   },
   ["Children"] = {
     {
@@ -1186,6 +1194,7 @@ Use these when you need timestamps inside Lua.
 - `DateTime(format)` returns a table with date/time parts plus a formatted string.
   - `format` is optional; default is `yyyy-MM-dd HH:mm:ss` (ISO 8601-like).
   - `formatted` contains the date in your desired format (e.g. `dd.MM.yyyy HH:mm`) or the default.
+  - `formatted` looks the same on every computer, whatever its region settings: `:` and `/` stay as written, the calendar is the Gregorian one, and the names of months and days are English, e.g., `MMMM` gives `March`.
   - Members: `year`, `month`, `day`, `hour`, `minute`, `second`, `millisecond`, `formatted`.
 - `Timestamp()` returns a UTC timestamp in ISO-8601 format (`O` / round-trip), e.g. `2026-03-02T21:15:30.1234567Z`.
 
@@ -1208,7 +1217,8 @@ LogInfo(dt.day .. "." .. dt.month .. "." .. dt.year)
 ## Useful Resources
 - [translation example](./examples/translation/plugin.lua)
 - [plugin.lua - Lua Manifest](https://github.com/MindWorkAI/AI-Studio/tree/main/app/MindWork%20AI%20Studio/Plugins/assistants/plugin.lua)
-- [Supported Icons](https://www.mudblazor.com/features/icons#icons)
+- [Lucide Icons](https://lucide.dev/icons/), named as `"lucide:<name>"`
+- [MudBlazor Icons](https://www.mudblazor.com/features/icons#icons), the older way to name an icon
 - [AI Studio Repository](https://github.com/MindWorkAI/AI-Studio/)
 - [Lua 5.2 Reference Manual](https://www.lua.org/manual/5.2/manual.html)
 - [MudBlazor Documentation](https://www.mudblazor.com/docs/overview)

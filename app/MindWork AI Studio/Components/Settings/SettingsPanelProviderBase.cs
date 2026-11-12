@@ -47,7 +47,7 @@ public abstract class SettingsPanelProviderBase : SettingsPanelBase
                 else
                 {
                     // No encryption secret available - inform the user:
-                    await this.MessageBus.SendWarning(new(Icons.Material.Filled.Key, TB("Cannot export the encrypted API key: No enterprise encryption secret is configured.")));
+                    await this.MessageBus.SendWarning(new(AppIcons.KEY, TB("Cannot export the encrypted API key: No enterprise encryption secret is configured.")));
                 }
             }
         }

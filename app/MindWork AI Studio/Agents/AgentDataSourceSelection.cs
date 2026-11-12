@@ -190,7 +190,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
         logger.LogInformation("Preparing the list of allowed data sources for the agent to choose from.");
         
         var sb = new StringBuilder();
-        sb.AppendLine("The following data sources are available for selection:");
+        sb.AppendLineLF("The following data sources are available for selection:");
         foreach (var ds in dataSources.AllowedDataSources)
         {
             var description = await descriptionService.GetDescriptionAsync(ds, token);
@@ -198,15 +198,15 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
             switch (ds)
             {
                 case DataSourceLocalDirectory localDirectory:
-                    sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}'{descriptionPart}");
+                    sb.AppendLineLF($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}'{descriptionPart}");
                     break;
 
                 case DataSourceLocalFile localFile:
-                    sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}'{descriptionPart}");
+                    sb.AppendLineLF($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}'{descriptionPart}");
                     break;
 
                 case IERIDataSource eriDataSource:
-                    sb.AppendLine($"- Id={ds.Id}, name='{eriDataSource.Name}', type=external data source{descriptionPart}");
+                    sb.AppendLineLF($"- Id={ds.Id}, name='{eriDataSource.Name}', type=external data source{descriptionPart}");
                     break;
             }
         }

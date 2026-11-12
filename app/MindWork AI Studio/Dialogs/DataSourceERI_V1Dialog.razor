@@ -21,7 +21,7 @@
                 Immediate="@true"
                 Validation="@this.dataSourceValidation.ValidatingName"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                AdornmentIcon="@AppIcons.NAME"
                 AdornmentColor="Color.Info"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
@@ -36,7 +36,7 @@
                     Immediate="@true"
                     Validation="@this.dataSourceValidation.ValidatingHostname"
                     Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.NetworkCheck"
+                    AdornmentIcon="@AppIcons.HOSTNAME"
                     AdornmentColor="Color.Info"
                     Variant="Variant.Text"
                     UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
@@ -72,7 +72,7 @@
             
             @if(this.availableAuthMethods.Count > 0 || this.dataAuthMethod != default)
             {
-                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName" Label="Authentication Method" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
+                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName" Label="Authentication Method" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
                     @foreach (var authMethod in this.availableAuthMethods)
                     {
                         <MudSelectItem Value="@authMethod">
@@ -95,7 +95,7 @@
                         Immediate="@true"
                         Validation="@this.dataSourceValidation.ValidateUsername"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.Person2"
+                        AdornmentIcon="@AppIcons.USERNAME"
                         AdornmentColor="Color.Info"
                         Variant="Variant.Text"
                         UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
@@ -106,7 +106,7 @@
             
             @if (this.availableRetrievalProcesses.Count > 0)
             {
-                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" @bind-Value:after="@this.ClearImportRetrievalIssue" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
+                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" @bind-Value:after="@this.ClearImportRetrievalIssue" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
                     @foreach (var retrievalProcess in this.availableRetrievalProcesses)
                     {
                         <MudSelectItem Value="@retrievalProcess">
@@ -116,7 +116,7 @@
                 </MudSelect>
             }
 
-            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.SelectionText" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
+            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.SelectionText" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
                 @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
                 {
                     <MudSelectItem Value="@policy">

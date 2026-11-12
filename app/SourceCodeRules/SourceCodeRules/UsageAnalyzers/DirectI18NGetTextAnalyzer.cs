@@ -62,7 +62,7 @@ public sealed class DirectI18NGetTextAnalyzer : DiagnosticAnalyzer
     private static bool IsLangExtensions(INamedTypeSymbol? type)
     {
         var staticClass = type is { IsExtension: true } ? type.ContainingType : type;
-        return staticClass?.Name == "ILangExtensions" && staticClass.ContainingNamespace.ToDisplayString() == "AIStudio.Tools.PluginSystem";
+        return staticClass?.Name == "LangExtensions" &&staticClass.ContainingNamespace.ToDisplayString() == "AIStudio.Tools.PluginSystem";
     }
 
     private static bool IsCollectorCompatibleWrapper(IMethodSymbol? containingMethod, IInvocationOperation invocation)

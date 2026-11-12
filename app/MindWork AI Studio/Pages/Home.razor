@@ -19,7 +19,7 @@
 
                 @if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
                 {
-                    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="@T("Introduction")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_BUILT_IN_INTRODUCTION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_BUILT_IN_INTRODUCTION, isExpanded))">
+                    <ExpansionPanel HeaderIcon="@AppIcons.INTRODUCTION" HeaderText="@T("Introduction")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_BUILT_IN_INTRODUCTION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_BUILT_IN_INTRODUCTION, isExpanded))">
                         <MudText Typo="Typo.h5" Class="mb-3">
                             @T("Welcome to MindWork AI Studio!")
                         </MudText>
@@ -29,7 +29,7 @@
                         <MudText Typo="Typo.body1" Class="mb-3">
                             @T("Here's what makes MindWork AI Studio stand out:")
                         </MudText>
-                        <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@this.itemsAdvantages" Class="mb-3"/>
+                        <MudTextList Icon="@AppIcons.CHECKLIST_ITEM" Clickable="@true" Items="@this.itemsAdvantages" Class="mb-3"/>
                         <MudText Typo="Typo.body1" Class="mb-3">
                             @T("We hope you enjoy using MindWork AI Studio to bring your AI projects to life!")
                         </MudText>
@@ -38,7 +38,7 @@
 
                 @foreach (var introduction in this.introductions)
                 {
-                    <ExpansionPanel @key="@introduction.Id" HeaderIcon="@Icons.Material.Filled.Info" HeaderText="@introduction.Title" IsExpanded="@this.IsPanelExpanded(IntroductionPanelId(introduction))" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(IntroductionPanelId(introduction), isExpanded))">
+                    <ExpansionPanel @key="@introduction.Id" HeaderIcon="@AppIcons.INFO" HeaderText="@introduction.Title" IsExpanded="@this.IsPanelExpanded(IntroductionPanelId(introduction))" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(IntroductionPanelId(introduction), isExpanded))">
                         <MudText Typo="Typo.body2" Class="mb-3">
                             @T("Version"): @introduction.VersionText
                         </MudText>
@@ -48,21 +48,21 @@
 
                 @if (this.SettingsManager.ConfigurationData.App.ShowLastChangelog)
                 {
-                    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_LAST_CHANGELOG)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_LAST_CHANGELOG, isExpanded))">
+                    <ExpansionPanel HeaderIcon="@AppIcons.CHANGELOG" HeaderText="@T("Last Changelog")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_LAST_CHANGELOG)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_LAST_CHANGELOG, isExpanded))">
                         <MudMarkdown Value="@this.LastChangeContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                     </ExpansionPanel>
                 }
 
                 @if (this.SettingsManager.ConfigurationData.App.ShowVision)
                 {
-                    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="@T("Vision")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_VISION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_VISION, isExpanded))">
+                    <ExpansionPanel HeaderIcon="@AppIcons.IDEA" HeaderText="@T("Vision")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_VISION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_VISION, isExpanded))">
                         <Vision/>
                     </ExpansionPanel>
                 }
 
                 @if (this.SettingsManager.ConfigurationData.App.ShowQuickStartGuide)
                 {
-                    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="@T("Quick Start Guide")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_QUICK_START_GUIDE)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_QUICK_START_GUIDE, isExpanded))">
+                    <ExpansionPanel HeaderIcon="@AppIcons.QUICK_START" HeaderText="@T("Quick Start Guide")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_QUICK_START_GUIDE)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_QUICK_START_GUIDE, isExpanded))">
                         <MudMarkdown Props="Markdown.DefaultConfig" Value="@QUICK_START_GUIDE" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                     </ExpansionPanel>
                 }

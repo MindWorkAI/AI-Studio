@@ -27,16 +27,16 @@ else
         {
             @if (policy.IsEnterpriseConfiguration)
             {
-                <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Policy" Value="@policy">
+                <MudListItem T="DataDocumentAnalysisPolicy" Icon="@AppIcons.ANALYSIS_POLICY" Value="@policy">
                     @policy.PolicyName
                     <MudTooltip Text="@T("This policy is managed by your organization.")" Placement="Placement.Right">
-                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Class="ml-2" Style="vertical-align: middle;" />
+                        <MudIcon Icon="@AppIcons.ORGANIZATION" Size="Size.Small" Class="ml-2" Style="vertical-align: middle;" />
                     </MudTooltip>
                 </MudListItem>
             }
             else
             {
-                <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Policy" Value="@policy">
+                <MudListItem T="DataDocumentAnalysisPolicy" Icon="@AppIcons.ANALYSIS_POLICY" Value="@policy">
                     @policy.PolicyName
                 </MudListItem>
             }
@@ -48,7 +48,7 @@ else
     <MudButton OnClick="@this.AddPolicy" Disabled="@this.ArePolicyControlsDisabled" Variant="Variant.Filled" Color="Color.Primary">
         @T("Add policy")
     </MudButton>
-    <LockableButton Text="@T("Import policy")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY))" Disabled="@(() => this.ArePolicyControlsDisabled)" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportPolicy" ButtonVariant="Variant.Outlined" NoMargin="true" />
+    <LockableButton Text="@T("Import policy")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY))" Disabled="@(() => this.ArePolicyControlsDisabled)" Icon="@AppIcons.IMPORT" OnClickAsync="@this.ImportPolicy" ButtonVariant="Variant.Outlined" NoMargin="true" />
     <MudButton OnClick="@this.RemovePolicy" Disabled="@(this.ArePolicyControlsDisabled || (this.selectedPolicy?.IsProtected ?? true) || (this.selectedPolicy?.IsEnterpriseConfiguration ?? true))" Variant="Variant.Filled" Color="Color.Error">
         @T("Delete this policy")
     </MudButton>
@@ -83,7 +83,7 @@ else
 {
     @* Standard view with expansion panels *@
     <MudExpansionPanels Class="mb-3 mt-3" MultiExpansion="@false">
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Policy" HeaderText="@(T("Policy definition") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@this.policyDefinitionExpanded" ExpandedChanged="@this.PolicyDefinitionExpandedChanged">
+        <ExpansionPanel HeaderIcon="@AppIcons.ANALYSIS_POLICY" HeaderText="@(T("Policy definition") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@this.policyDefinitionExpanded" ExpandedChanged="@this.PolicyDefinitionExpandedChanged">
             @if (!this.policyDefinitionExpanded)
             {
                 <MudJustifiedText Typo="Typo.body1" Class="mb-1">
@@ -148,7 +148,7 @@ else
                         @T("Preparation for enterprise distribution")
                     </MudText>
 
-                    <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsEnterpriseConfiguration ?? false))" Variant="Variant.Filled" Color="Color.Default" OnClick="@this.ExportPolicyAsConfiguration">
+                    <MudButton StartIcon="@AppIcons.EXPORT_CONFIGURATION" Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsEnterpriseConfiguration ?? false))" Variant="Variant.Filled" Color="Color.Default" OnClick="@this.ExportPolicyAsConfiguration">
                         @T("Export policy as configuration section")
                     </MudButton>
                 }
@@ -157,7 +157,7 @@ else
 
         <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
 
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document selection - Policy") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@this.documentSelectionExpanded" ExpandedChanged="@this.DocumentSelectionExpandedChanged">
+        <ExpansionPanel HeaderIcon="@AppIcons.ASSISTANT_DOCUMENT_ANALYSIS" HeaderText="@(T("Document selection - Policy") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@this.documentSelectionExpanded" ExpandedChanged="@this.DocumentSelectionExpandedChanged">
             <MudText Typo="Typo.h5" Class="mb-1">
                 @T("Policy Description")
             </MudText>

@@ -113,7 +113,7 @@ public static class PlainFileExport
     /// Turns a formula into a file of LaTeX, between \[ and \] as a formula of its own, so that it can be
     /// pasted into a document as it is.
     /// </summary>
-    private static FoundFile ReadFormula(string formula) => new(string.Empty, FileExportFormat.LATEX, SourceCodeLanguage.NONE, $@"\[{Environment.NewLine}{formula}{Environment.NewLine}\]");
+    private static FoundFile ReadFormula(string formula) => new(string.Empty, FileExportFormat.LATEX, SourceCodeLanguage.NONE, $"\\[\n{formula}\n\\]");
 
     /// <summary>
     /// Turns a Markdown table into a file.
@@ -130,7 +130,7 @@ public static class PlainFileExport
 
         var text = new StringBuilder();
         foreach (var fields in rows)
-            text.AppendLine(CsvWriter.ToRow(separator, fields));
+            text.Append(CsvWriter.ToRow(separator, fields)).Append(CsvWriter.ROW_END);
 
         return new(rows[0].FirstOrDefault() ?? string.Empty, FileExportFormat.CSV, SourceCodeLanguage.NONE, text.ToString());
     }
@@ -256,7 +256,7 @@ public static class PlainFileExport
     /// <param name="dialogTitle">The title of the save dialog.</param>
     /// <param name="file">The file, as ExtractFiles read it out of the message. Its format must be a
     /// plain text format, see FileExportFormatExtensions.IsPlainText.</param>
-    /// <param name="fileContent">The finished file, see IContentExtensions.ToExportContent.</param>
+    /// <param name="fileContent">The finished file, see ContentExtensions.ToExportContent.</param>
     /// <param name="fileName">What the file is about, used to suggest a name in the save dialog.
     /// Null falls back to a generic name.</param>
     /// <returns>True, when the file was written.</returns>
@@ -284,14 +284,14 @@ public static class PlainFileExport
         try
         {
             await File.WriteAllTextAsync(response.SaveFilePath, fileContent, encoding);
-            await feedback.SucceededAsync(Icons.Material.Filled.CheckCircle, TB("The export succeeded."), response.SaveFilePath, true);
+            await feedback.SucceededAsync(AppIcons.SUCCESS, TB("The export succeeded."), response.SaveFilePath, true);
 
             return true;
         }
         catch (Exception ex)
         {
             LOGGER.LogError(ex, "Error during {ExportFormat} export.", format);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, TB("The export failed.")));
             return false;
         }
     }

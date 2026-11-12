@@ -259,7 +259,7 @@ public partial class AssistantSWOTAnalysis
         }
 
         await this.MessageBus.SendWarning(new(
-            Icons.Material.Filled.CloudOff,
+            AppIcons.PROVIDER_ERROR,
             T("The research with the selected tools failed. The SWOT analysis continues without it.")));
         return string.Empty;
     }
@@ -310,7 +310,7 @@ public partial class AssistantSWOTAnalysis
         var imageCandidates = this.contextMaterials.OfType<FileAttachmentImage>().ToList();
         if (imageCandidates.Count > 0 && !this.ProviderSettings.SupportsImageInput())
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.HideImage, T("The selected model cannot read images. The SWOT analysis continues without the attached images.")));
+            await this.MessageBus.SendWarning(new(AppIcons.IMAGE_NOT_SUPPORTED, T("The selected model cannot read images. The SWOT analysis continues without the attached images.")));
             return new(documentText, images);
         }
 
@@ -325,7 +325,7 @@ public partial class AssistantSWOTAnalysis
                     continue;
                 }
 
-                await this.MessageBus.SendError(new(Icons.Material.Filled.BrokenImage, prepared.ErrorCode.ToUserMessage(image.FileName)));
+                await this.MessageBus.SendError(new(AppIcons.IMAGE_BROKEN, prepared.ErrorCode.ToUserMessage(image.FileName)));
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -334,7 +334,7 @@ public partial class AssistantSWOTAnalysis
             catch (Exception exception)
             {
                 this.Logger.LogError(exception, "The image '{FilePath}' could not be prepared for the SWOT analysis.", image.FilePath);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.BrokenImage, string.Format(T("The image '{0}' could not be read and is left out of the SWOT analysis."), image.FileName)));
+                await this.MessageBus.SendError(new(AppIcons.IMAGE_BROKEN, string.Format(T("The image '{0}' could not be read and is left out of the SWOT analysis."), image.FileName)));
             }
         }
 

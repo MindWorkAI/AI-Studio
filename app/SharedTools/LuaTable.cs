@@ -1,5 +1,7 @@
 using System.Text;
 
+using SharedTools.Text;
+
 namespace SharedTools;
 
 public static class LuaTable
@@ -9,8 +11,13 @@ public static class LuaTable
         //
         // Add the UI_TEXT_CONTENT table:
         //
-        sb.AppendLine($$"""{{tableVariableName}} = {}""");
-        foreach (var kvp in keyValuePairs.OrderBy(x => x.Key))
+        sb.AppendLineLF($$"""{{tableVariableName}} = {}""");
+
+        //
+        // Ordinal, so that every computer writes the texts in the same order. A comparison by culture would
+        // depend on the region settings of the computer, e.g., where it sorts the underscore:
+        //
+        foreach (var kvp in keyValuePairs.OrderBy(x => x.Key, StringComparer.Ordinal))
         {
             if (cancellationToken.IsCancellationRequested)
                 return sb.ToString();
@@ -32,11 +39,11 @@ public static class LuaTable
             keyWithoutPrefix = keyWithoutPrefix.Replace(".", "::");
             
             // Add a comment with the original text content:
-            sb.AppendLine();
-            sb.AppendLine($"-- {commentValue}");
+            sb.AppendLineLF();
+            sb.AppendLineLF($"-- {commentValue}");
             
             // Add the assignment to the UI_TEXT_CONTENT table:
-            sb.AppendLine($"""
+            sb.AppendLineLF($"""
                            UI_TEXT_CONTENT["{keyWithoutPrefix}"] = "{LuaTools.EscapeLuaString(value)}"
                            """);
         }

@@ -95,7 +95,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         },
     };
 
-    public string Icon => Icons.Material.Filled.Article;
+    public string Icon => AppIcons.READ_WEB_PAGE;
 
     public bool ReturnsUntrustedExternalContent => true;
 
@@ -724,7 +724,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             providerConfidence);
 
         await MessageBus.INSTANCE.SendError(new DataErrorMessage(
-            Icons.Material.Filled.Security,
+            AppIcons.PROVIDER_CONFIDENCE,
             TB("The web page was not loaded because private or VPN web pages require a High-confidence provider.")));
     }
 

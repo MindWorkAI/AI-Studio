@@ -92,7 +92,7 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
     public ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
         ValueTask.FromResult(retrievalService.GetReadableMailboxes(context.ProviderConfidence).Count == 0 ? null : definition.Function);
 
-    public string Icon => Icons.Material.Filled.MarkEmailRead;
+    public string Icon => AppIcons.MAIL_READ;
 
     // Only while both previews are switched on, the one for local RAG and the one for mailboxes:
     public bool IsAvailable => retrievalService.AreMailboxesEnabled;

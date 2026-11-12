@@ -640,7 +640,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     {
         if (string.IsNullOrWhiteSpace(this.generatedLuaAssistant))
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Extension, T("No assistant plugin was generated yet.")));
+            await this.MessageBus.SendError(new(AppIcons.PLUGIN, T("No assistant plugin was generated yet.")));
             return;
         }
 
@@ -655,11 +655,11 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 LOGGER.LogError($"The assistant plugin '{result.PluginName}' ({result.PluginId}) is not installable, because '{result.Issue}'");
                 this.FailInstallStep(BuilderInstallStep.CHECK_PLUGIN, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The generated assistant could not be checked.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The generated assistant could not be checked.")));
                 return;
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.CheckCircle, T("The generated assistant can be installed.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.SUCCESS, T("The generated assistant can be installed.")));
             this.stepperIndex = (int)BuilderInstallStep.INSTALL_ASSISTANT;
         }
         finally
@@ -685,7 +685,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 LOGGER.LogError($"The assistant plugin {result.PluginName} ({result.PluginId}) could not be installed in the directory '{result.PluginDirectory}' with Issue: '{result.Issue}'.");
                 this.FailInstallStep(BuilderInstallStep.INSTALL_ASSISTANT, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The assistant could not be installed.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The assistant could not be installed.")));
                 return;
             }
 
@@ -693,11 +693,11 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             if (this.installedAssistantPlugin is null)
             {
                 this.FailInstallStep(BuilderInstallStep.INSTALL_ASSISTANT, T("The installed assistant could not be loaded."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The installed assistant could not be loaded.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The installed assistant could not be loaded.")));
                 return;
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Extension, result.ReplacedExisting ? T("Assistant updated.") : T("Assistant installed.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.PLUGIN, result.ReplacedExisting ? T("Assistant updated.") : T("Assistant installed.")));
             this.stepperIndex = this.AuditRequiredForActivation
                 ? (int)BuilderInstallStep.SECURITY_CHECK
                 : this.EnableCompleted
@@ -725,7 +725,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             if (this.pluginAudit.Level is AssistantAuditLevel.UNKNOWN)
             {
                 this.FailInstallStep(BuilderInstallStep.SECURITY_CHECK, T("The security check could not determine a result."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.GppMaybe, T("The security check could not be completed.")));
+                await this.MessageBus.SendError(new(AppIcons.SECURITY_WARNING, T("The security check could not be completed.")));
                 return;
             }
 
@@ -741,7 +741,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 this.stepperIndex = (int)BuilderInstallStep.ENABLE_ASSISTANT;
                 this.FailInstallStep(BuilderInstallStep.ENABLE_ASSISTANT, T("This assistant cannot be enabled because the security check is below your required level."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Block, T("The assistant cannot be enabled because it is below your required security level.")));
+                await this.MessageBus.SendError(new(AppIcons.BLOCKED, T("The assistant cannot be enabled because it is below your required security level.")));
                 return;
             }
 
@@ -774,7 +774,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.ToggleOn, T("Assistant enabled.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.ENABLE, T("Assistant enabled.")));
             this.stepperIndex = (int)BuilderInstallStep.OPEN_ASSISTANT;
         }
         finally
@@ -813,7 +813,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             var result = await this.DirectChatService.TryCreateAssistantChatAsync(launcherPlugin);
             if (result.Request is null)
             {
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, result.ErrorMessage));
                 return;
             }
 

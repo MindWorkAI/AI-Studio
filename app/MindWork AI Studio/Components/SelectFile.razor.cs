@@ -98,7 +98,7 @@ public partial class SelectFile : MSGComponentBase
         if (path is null)
         {
             this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a file.", paths.Count);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, DroppedFile.WarningFor(paths)));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, DroppedFile.WarningFor(paths)));
             return;
         }
 

@@ -75,7 +75,7 @@ public sealed class BflImageMaterialTests
             Assert.That(await File.ReadAllBytesAsync(copy), Is.EqualTo(Convert.FromBase64String(FakeImageRuntime.IMAGE_BASE64)));
             Assert.That(copy, Does.StartWith(Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME)), "The material must not depend on the file of the person.");
             Assert.That(this.runtime.RequestedPaths, Is.EqualTo(new[] { poster }));
-            Assert.That(this.runtime.RequestedBudgets, Is.EqualTo(new[] { IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES }), "The copy must be as large as any provider takes.");
+            Assert.That(this.runtime.RequestedBudgets, Is.EqualTo(new[] { ImageSourceExtensions.MAX_IMAGE_SIZE_BYTES }), "The copy must be as large as any provider takes.");
         }
     }
 

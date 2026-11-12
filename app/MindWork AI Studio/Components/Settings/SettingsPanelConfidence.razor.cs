@@ -16,9 +16,9 @@ public partial class SettingsPanelConfidence : SettingsPanelBase
     private string SetCurrentConfidenceLevelColorStyle(LLMProviders llmProvider)
     {
         if (this.TryGetShownConfidenceLevel(llmProvider, out var level))
-            return $"background-color: {level.GetColor(this.SettingsManager)};";
+            return $"background-color: {level.GetBackgroundColor(this.SettingsManager)};";
 
-        return $"background-color: {ConfidenceLevel.UNKNOWN.GetColor(this.SettingsManager)};";
+        return $"background-color: {ConfidenceLevel.UNKNOWN.GetBackgroundColor(this.SettingsManager)};";
     }
 
     /// <summary>

@@ -161,7 +161,7 @@ public sealed class FileExportFormatTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(found, Is.True);
-            Assert.That(comment.Split(Environment.NewLine), Is.EqualTo(new[] { "% # Sources", "%", "% - [1] A title with 100 % and a_b" }), "LaTeX has no end of a comment, only the end of a line.");
+            Assert.That(comment.Split('\n'), Is.EqualTo(new[] { "% # Sources", "%", "% - [1] A title with 100 % and a_b" }), "LaTeX has no end of a comment, only the end of a line.");
         }
     }
 
@@ -177,5 +177,5 @@ public sealed class FileExportFormatTests
         }
     }
 
-    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
+    private static string Lines(params string[] lines) => string.Join('\n', lines);
 }

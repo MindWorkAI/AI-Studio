@@ -103,6 +103,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <!-- The code points of the Lucide icon font, from which LucideIconGenerator writes LucideIcons. -->
+      <AdditionalFiles Include="..\SourceGeneratedMappings\Lucide\codepoints.json" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Folder Include="Plugins\assistants\assets\" />
     </ItemGroup>
 

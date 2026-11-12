@@ -178,7 +178,7 @@ public sealed class ContentText : IContent
         }
 
         if (Interlocked.Exchange(ref UNSTORED_CONTENT_REPORTED, 1) is 0)
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Storage, TB("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.PROVENANCE_STORE, TB("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
     }
 
     /// <summary>
@@ -387,7 +387,7 @@ public sealed class ContentText : IContent
                 // The answer is about to be created without the data the user expected it to use.
                 // Without this message, that answer is indistinguishable from one that did use it:
                 //
-                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
+                await MessageBus.INSTANCE.SendWarning(new(AppIcons.DATA_SOURCE, TB("Your data sources could not be used. This answer was created without them.")));
             }
         }
 
@@ -531,7 +531,7 @@ public sealed class ContentText : IContent
             {
                 var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.InstanceName);
                 if (!string.IsNullOrWhiteSpace(userMessage))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, userMessage));
 
                 LOGGER.LogWarning("Skipping selected model availability check for '{ProviderInstanceName}' (provider={ProviderType}) because loading the model list failed with reason {FailureReason}.", provider.InstanceName, provider.Provider, modelLoadResult.FailureReason);
                 return false;
@@ -556,7 +556,7 @@ public sealed class ContentText : IContent
                 TB("We could load models from '{0}', but the provider did not return any usable text models."),
                 provider.InstanceName);
 
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, emptyModelsMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, emptyModelsMessage));
             LOGGER.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
             return false;
         }
@@ -570,7 +570,7 @@ public sealed class ContentText : IContent
             provider.InstanceName,
             provider.Provider);
         
-        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, message));
+        await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, message));
         LOGGER.LogWarning("Skipping AI request because model '{ModelId}' is not available from '{ProviderInstanceName}' (provider={ProviderType}).", chatModel.Id, provider.InstanceName, provider.Provider);
         return false;
     }
@@ -725,14 +725,14 @@ public sealed class ContentText : IContent
         if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
         {
             LOGGER.LogWarning("Parts of the file attachment '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.DOCUMENT, extraction.ToPartialUserMessage(document.FileName)));
         }
 
         // The file was read correctly, but its extension lies about what it contains:
         if (extraction.HasExtensionMismatch)
         {
             LOGGER.LogWarning("The file attachment '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.FILE_TYPE_MISMATCH, extraction.ToExtensionMismatchUserMessage(document.FileName)));
         }
     }
 
@@ -816,7 +816,7 @@ public sealed class ContentText : IContent
     {
         var sb = new StringBuilder();
         var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);
-        sb.AppendLine(this.Text);
+        sb.AppendLineLF(this.Text);
 
         if(this.FileAttachments.Count > 0)
         {
@@ -838,7 +838,7 @@ public sealed class ContentText : IContent
             foreach (var missingDocument in missingDocuments)
             {
                 LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.FindInPage, string.Format(TB("The file '{0}' is currently not available and was not sent."), missingDocument.FileName)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.FILE_NOT_FOUND, string.Format(TB("The file '{0}' is currently not available and was not sent."), missingDocument.FileName)));
             }
 
             // Only proceed if there are existing, allowed documents:
@@ -881,7 +881,7 @@ public sealed class ContentText : IContent
                         if (!pandocIsUsable && FileTypes.RequiresPandoc(document.FilePath))
                         {
                             LOGGER.LogWarning("The file attachment '{FilePath}' needs Pandoc and will be skipped.", document.FilePath);
-                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
+                            await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
                             continue;
                         }
 
@@ -889,7 +889,7 @@ public sealed class ContentText : IContent
                         if (!extraction.HasUsableContent)
                         {
                             LOGGER.LogError("Reading the file attachment '{FilePath}' failed and it will not be sent: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
-                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                            await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, extraction.ToUserMessage(document.FileName)));
                             continue;
                         }
 
@@ -897,13 +897,13 @@ public sealed class ContentText : IContent
                         content = extraction.Content;
                     }
 
-                    documentBlocks.AppendLine();
-                    documentBlocks.AppendLine("---------------------------------------");
-                    documentBlocks.AppendLine($"File path: {document.FilePath}");
-                    documentBlocks.AppendLine("File content:");
-                    documentBlocks.AppendLine("````");
-                    documentBlocks.AppendLine(content);
-                    documentBlocks.AppendLine("````");
+                    documentBlocks.AppendLineLF();
+                    documentBlocks.AppendLineLF("---------------------------------------");
+                    documentBlocks.AppendLineLF($"File path: {document.FilePath}");
+                    documentBlocks.AppendLineLF("File content:");
+                    documentBlocks.AppendLineLF("````");
+                    documentBlocks.AppendLineLF(content);
+                    documentBlocks.AppendLineLF("````");
 
                     foreach (var address in WebAddresses.Find(content))
                         if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
@@ -912,17 +912,17 @@ public sealed class ContentText : IContent
 
                 if (documentBlocks.Length > 0)
                 {
-                    sb.AppendLine();
-                    sb.AppendLine("The following files are attached to this message:");
+                    sb.AppendLineLF();
+                    sb.AppendLineLF("The following files are attached to this message:");
                     sb.Append(documentBlocks);
                 }
 
                 var numImages = normalizedAttachments.Count(x => x is { IsImage: true, Exists: true });
                 if (numImages > 0)
                 {
-                    sb.AppendLine();
-                    sb.AppendLine($"Additionally, there are {numImages} image file(s) attached to this message. ");
-                    sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
+                    sb.AppendLineLF();
+                    sb.AppendLineLF($"Additionally, there are {numImages} image file(s) attached to this message. ");
+                    sb.AppendLineLF("Please consider them as part of the message content and use them to answer accordingly.");
                 }
             }
 

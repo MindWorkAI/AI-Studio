@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -208,7 +209,11 @@ internal sealed class SearXNGSearchClient
 
     private static string ReadNodeString(JsonNode? node) => node is null ? string.Empty : node.ToString().Trim();
 
-    private static bool TryGetScore(JsonObject result, out double score)
+    /// <remarks>
+    /// An instance may also send the score as text. It comes in the notation of JSON, so the region
+    /// settings of the computer must not read it: with a decimal comma, "0.75" would become 75.
+    /// </remarks>
+    internal static bool TryGetScore(JsonObject result, out double score)
     {
         score = double.MinValue;
         if (!result.TryGetPropertyValue("score", out var scoreNode) || scoreNode is null)
@@ -219,7 +224,7 @@ internal sealed class SearXNGSearchClient
             JsonValue value when value.TryGetValue<double>(out var doubleScore) => ReturnScore(doubleScore, out score),
             JsonValue value when value.TryGetValue<decimal>(out var decimalScore) => ReturnScore((double)decimalScore, out score),
             JsonValue value when value.TryGetValue<int>(out var intScore) => ReturnScore(intScore, out score),
-            _ => double.TryParse(scoreNode.ToString(), out var parsedScore) && ReturnScore(parsedScore, out score),
+            _ => double.TryParse(scoreNode.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedScore) && ReturnScore(parsedScore, out score),
         };
     }
 

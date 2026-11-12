@@ -4,7 +4,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.RecordVoiceOver" Class="mr-2"/>
+            <MudIcon Icon="@AppIcons.ASSISTANT_BEYOND_FACTS_LAB" Class="mr-2"/>
             @T("Assistant: BeyondFacts Lab Options")
         </MudText>
     </TitleContent>
@@ -19,7 +19,7 @@
         </MudPaper>
 
         @* Only whoever develops the prompts further needs these settings, so they stay folded away. *@
-        <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+        <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@AppIcons.ADVANCED_SETTINGS">
             @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
         </MudButton>
         <MudCollapse Expanded="@this.showExpertSettings">
@@ -29,10 +29,10 @@
                 </MudJustifiedText>
                 <ConfigurationOption OptionDescription="@T("Use prompts from the test folder?")" LabelOn="@T("Files in the test folder replace the prompts of the lab")" LabelOff="@T("The lab uses its own prompts")" State="@(() => this.SettingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides)" StateUpdate="@(value => this.SettingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides = value)" OptionHelp="@TA("A file in the test folder replaces the prompt of the same name, e.g., 'Prompts/core.md'. The lab takes every other prompt from AI Studio. While a file replaces a prompt, the lab shows a notice above every step.")" IsLocked="() => IsPromptOverridesLocked"/>
                 <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Class="mt-3">
-                    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" OnClick="@this.OpenTestFolderAsync" Disabled="@this.ArePromptOverridesLockedOff">
+                    <MudButton StartIcon="@AppIcons.FOLDER_OPEN" Variant="Variant.Outlined" OnClick="@this.OpenTestFolderAsync" Disabled="@this.ArePromptOverridesLockedOff">
                         @T("Open test folder")
                     </MudButton>
-                    <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined" OnClick="@this.CopyPromptsAsync" Disabled="@(this.ArePromptOverridesLockedOff || this.isCopyingPrompts)">
+                    <MudButton StartIcon="@AppIcons.COPY" Variant="Variant.Outlined" OnClick="@this.CopyPromptsAsync" Disabled="@(this.ArePromptOverridesLockedOff || this.isCopyingPrompts)">
                         @T("Copy the built-in prompts into the test folder")
                     </MudButton>
                 </MudStack>

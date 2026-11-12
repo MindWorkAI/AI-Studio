@@ -1,6 +1,6 @@
 namespace AIStudio.Tools;
 
-public static class IConfidenceExtensions
+public static class ConfidenceExtensions
 {
     private static readonly ILogger<IConfidence> LOGGER = Program.LOGGER_FACTORY.CreateLogger<IConfidence>();
 

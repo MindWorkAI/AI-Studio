@@ -69,6 +69,7 @@ public sealed class BflPromptLibraryTests
         var onboarding = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.ONBOARDING_PATH).Select(name => $"{{{{{name}}}}}"));
         var workState = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.WORK_STATE_PATH).Select(name => $"{{{{{name}}}}}"));
         var result = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.ResultPath(BflResultKind.POSITION_PAPER)).Select(name => $"{{{{{name}}}}}"));
+        var research = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.RESEARCH_PATH).Select(name => $"{{{{{name}}}}}"));
 
         using (Assert.EnterMultipleScope())
         {
@@ -76,6 +77,7 @@ public sealed class BflPromptLibraryTests
             Assert.That(BflPromptComposer.ComposeOnboarding(new(onboarding, "Anrede"), "Deutsch"), Does.Not.Contain("{{"));
             Assert.That(BflPromptComposer.ComposeWorkStateRequest(workState, BflStep.FRAMEWORK, new BflStepFormData()), Does.Not.Contain("{{"));
             Assert.That(BflPromptComposer.ComposeResultRequest(result, new Dictionary<BflStep, BflWorkState>()), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.ComposeResearch(new(research, "Auftrag"), [], "Deutsch"), Does.Not.Contain("{{"));
         }
     }
 

@@ -68,6 +68,31 @@ public static partial class BflPromptTemplate
     public const string MISSING_WORK_STATES = "MISSING_WORK_STATES";
 
     /// <summary>
+    /// What a chat can do on the web with the current setup, and what keeps it from more, see BflToolStatus.
+    /// </summary>
+    public const string TOOLS = "TOOLS";
+
+    /// <summary>
+    /// What the research agents found about the event, for the step "Strategy".
+    /// </summary>
+    public const string RESEARCH = "RESEARCH";
+
+    /// <summary>
+    /// What a research agent looks into, see BflResearchTopic.
+    /// </summary>
+    public const string TOPIC = "TOPIC";
+
+    /// <summary>
+    /// How many calls of tools a research agent has at most.
+    /// </summary>
+    public const string TOOL_CALLS = "TOOL_CALLS";
+
+    /// <summary>
+    /// The public details about the event, the only ones a research agent receives.
+    /// </summary>
+    public const string PUBLIC_DETAILS = "PUBLIC_DETAILS";
+
+    /// <summary>
     /// Fills every placeholder of a template.
     /// </summary>
     /// <param name="template">The template.</param>

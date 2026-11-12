@@ -135,11 +135,11 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
     internal static ToolFunctionDefinition DescribeMailboxes(ToolFunctionDefinition function, IReadOnlyList<DataSourceMailbox> mailboxes)
     {
         var description = new StringBuilder(DESCRIPTION);
-        description.AppendLine();
-        description.AppendLine();
-        description.AppendLine($"The mailboxes you may search, by the ID to pass in {MailToolArguments.MAILBOX_IDS_ARGUMENT}:");
+        description.AppendLineLF();
+        description.AppendLineLF();
+        description.AppendLineLF($"The mailboxes you may search, by the ID to pass in {MailToolArguments.MAILBOX_IDS_ARGUMENT}:");
         foreach (var mailbox in mailboxes)
-            description.AppendLine($"- id={mailbox.Id}, name='{mailbox.Name}'");
+            description.AppendLineLF($"- id={mailbox.Id}, name='{mailbox.Name}'");
 
         return function with
         {
@@ -167,7 +167,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         .Where(mailbox => mailbox.MaxMatches > 0)
         .ToList();
 
-    public string Icon => Icons.Material.Filled.Mail;
+    public string Icon => AppIcons.MAIL_SEARCH;
 
     // Only while both previews are switched on, the one for local RAG and the one for mailboxes:
     public bool IsAvailable => retrievalService.AreMailboxesEnabled;

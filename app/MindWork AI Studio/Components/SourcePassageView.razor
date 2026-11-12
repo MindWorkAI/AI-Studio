@@ -14,7 +14,7 @@ else
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
                 <MudText>@T("At the moment, AI Studio cannot read the text of this passage that the AI received, e.g., while AI Studio is still starting.")</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReadTextAgainAsync">
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@AppIcons.REFRESH" OnClick="@this.ReadTextAgainAsync">
                     @T("Try again")
                 </MudButton>
             </MudStack>

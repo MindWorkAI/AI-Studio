@@ -357,7 +357,7 @@ public partial class SlideAssistant
         if (this.SourceImagesOfRequest().Count > 0)
             rules.Add("    - Images attached as source material are for reading only. Never place them on a slide.");
 
-        return string.Join(Environment.NewLine, rules);
+        return string.Join('\n',rules);
     }
 
     /// <summary>
@@ -376,7 +376,7 @@ public partial class SlideAssistant
         if (pictures.Count == 0)
             return string.Empty;
 
-        var list = string.Join(Environment.NewLine, pictures.Select((picture, index) => $"- Picture {index + 1}: {picture.FileName}"));
+        var list = string.Join('\n',pictures.Select((picture, index) => $"- Picture {index + 1}: {picture.FileName}"));
         var seeing = modelSeesPictures
             ? "The images attached to this request start with these pictures, in this order."
             : "You cannot see these pictures. Place them by what their names say.";
@@ -516,7 +516,7 @@ public partial class SlideAssistant
 
     private static string RepairPromptOf(IReadOnlyList<string> issues)
     {
-        var listedIssues = string.Join(Environment.NewLine, issues.Take(MAX_REPORTED_ISSUES).Select(issue => $"- {issue}"));
+        var listedIssues = string.Join('\n',issues.Take(MAX_REPORTED_ISSUES).Select(issue => $"- {issue}"));
         return $"""
                 Your JSON does not fit the layouts yet:
                 {listedIssues}
@@ -574,7 +574,7 @@ public partial class SlideAssistant
             if (!result.IsWritten)
             {
                 this.Logger.LogWarning("The PowerPoint template '{TemplatePath}' changed since the slides were planned, and they no longer fit it.", this.slideDeckTemplatePath);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The template has changed since the slides were planned. Please create the slides again.")));
+                await this.MessageBus.SendError(new(AppIcons.SLIDES, T("The template has changed since the slides were planned. Please create the slides again.")));
                 return;
             }
 
@@ -583,15 +583,15 @@ public partial class SlideAssistant
             if (result.SkippedPictures.Count > 0)
             {
                 var names = result.SkippedPictures.Select(number => this.slideDeckPicturePaths.TryGetValue(number, out var picturePath) ? Path.GetFileName(picturePath) : number.ToString(CultureInfo.InvariantCulture));
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.HideImage, string.Format(T("These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"), string.Join(", ", names))));
+                await this.MessageBus.SendWarning(new(AppIcons.IMAGE_NOT_SUPPORTED, string.Format(T("These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"), string.Join(", ", names))));
             }
 
-            await feedback.SucceededAsync(Icons.Material.Filled.Slideshow, T("The PowerPoint file was created."), targetPath, true);
+            await feedback.SucceededAsync(AppIcons.SLIDES, T("The PowerPoint file was created."), targetPath, true);
         }
         catch (Exception e)
         {
             this.Logger.LogError(e, "Creating the PowerPoint file '{FilePath}' failed.", targetPath);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.")));
+            await this.MessageBus.SendError(new(AppIcons.SLIDES, T("The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.")));
         }
         finally
         {

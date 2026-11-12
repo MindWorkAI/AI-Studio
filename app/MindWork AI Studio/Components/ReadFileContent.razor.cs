@@ -143,23 +143,23 @@ public partial class ReadFileContent : MSGComponentBase
 
         if (outcome.Failures.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
         else if (outcome.Status is MediaImportStatus.FAILED)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, this.T("The media file could not be transcribed.")));
         }
 
         if (outcome.Warnings.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
 
         if (outcome.Status is MediaImportStatus.CANCELLED)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.T("The media transcription was canceled.")));
         }
     }
 
@@ -218,7 +218,7 @@ public partial class ReadFileContent : MSGComponentBase
         {
             this.Logger.LogWarning("Could not access {Count} dropped file(s): {Paths}", inaccessiblePaths.Count, string.Join(", ", inaccessiblePaths));
             await this.MessageBus.SendWarning(new(
-                Icons.Material.Filled.Warning,
+                AppIcons.WARNING,
                 this.T("Some dropped files could not be accessed. Please select them with the file chooser instead.")));
         }
 
@@ -240,7 +240,7 @@ public partial class ReadFileContent : MSGComponentBase
         if (this.Filter is { Length: > 0 } && !FileTypes.IsAllowedPath(filePath, this.Filter))
         {
             this.Logger.LogWarning("Selected file does not match the configured file type filter: '{FilePath}'", filePath);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Please select a file with a supported file type.")));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.T("Please select a file with a supported file type.")));
             return false;
         }
 
@@ -273,7 +273,7 @@ public partial class ReadFileContent : MSGComponentBase
         catch (Exception ex)
         {
             this.Logger.LogError(ex, "Failed to load file content: {FilePath}", filePath);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, T("Failed to load file content")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, T("Failed to load file content")));
             return false;
         }
     }
@@ -291,7 +291,7 @@ public partial class ReadFileContent : MSGComponentBase
         if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
         {
             await this.MessageBus.SendWarning(new(
-                Icons.Material.Filled.VoiceChat,
+                AppIcons.VOICE_TRANSCRIPTION,
                 this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
             return false;
         }

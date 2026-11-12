@@ -104,7 +104,7 @@ public sealed class BflResultGenerator(BeyondFactsLabStore store, BflConversatio
             if (text.Length is 0)
             {
                 logger.LogWarning("The model wrote no text for the result '{Location}' of the BeyondFacts Lab.", location.Key);
-                await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, TA("The model did not write this material. Please try again, or try another provider.")));
+                await messageBus.SendError(new(AppIcons.ERROR, TA("The model did not write this material. Please try again, or try another provider.")));
                 return;
             }
 
@@ -118,12 +118,12 @@ public sealed class BflResultGenerator(BeyondFactsLabStore store, BflConversatio
         catch (BflPromptOverrideException exception)
         {
             logger.LogWarning(exception, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
-            await messageBus.SendError(new(Icons.Material.Filled.ErrorOutline, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), exception.FileName, exception.Placeholder)));
+            await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), exception.FileName, exception.Placeholder)));
         }
         catch (ProviderRequestException exception)
         {
             logger.LogError(exception, "The provider request for a result of the BeyondFacts Lab failed. Status={StatusCode}, Reason='{ReasonPhrase}'.", exception.StatusCode, exception.ReasonPhrase);
-            await messageBus.SendError(new(Icons.Material.Filled.CloudOff, exception.UserMessage));
+            await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, exception.UserMessage));
         }
         catch (FileNotFoundException)
         {
@@ -132,7 +132,7 @@ public sealed class BflResultGenerator(BeyondFactsLabStore store, BflConversatio
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or FormatException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not write the result '{Location}'.", location.Key);
-            await messageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not create this material. Please try again.")));
+            await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not create this material. Please try again.")));
         }
         finally
         {
@@ -187,7 +187,7 @@ public sealed class BflResultGenerator(BeyondFactsLabStore store, BflConversatio
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not put the reflection folder of '{ProjectId}' together.", projectId);
-            await messageBus.SendError(new(Icons.Material.Filled.SaveAs, TA("AI Studio could not create this material. Please try again.")));
+            await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not create this material. Please try again.")));
         }
         finally
         {

@@ -40,7 +40,7 @@ public partial class WorkspaceNameField : MSGComponentBase
     public string HelperText { get; set; } = string.Empty;
 
     [Parameter]
-    public string AdornmentIcon { get; set; } = Icons.Material.Filled.CreateNewFolder;
+    public string AdornmentIcon { get; set; } = AppIcons.NEW_FOLDER;
 
     [Parameter]
     public Size AdornmentIconSize { get; set; } = Size.Medium;

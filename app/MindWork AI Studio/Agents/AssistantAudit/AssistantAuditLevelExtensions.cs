@@ -34,10 +34,10 @@ public static class AssistantAuditLevelExtensions
 
         public string Icon => level switch
         {
-            AssistantAuditLevel.DANGEROUS => Icons.Material.Filled.Dangerous,
-            AssistantAuditLevel.CAUTION => Icons.Material.Filled.Warning,
-            AssistantAuditLevel.SAFE => Icons.Material.Filled.Verified,
-            _ => Icons.Material.Filled.HelpOutline,
+            AssistantAuditLevel.DANGEROUS => AppIcons.SECURITY_DANGEROUS,
+            AssistantAuditLevel.CAUTION => AppIcons.WARNING,
+            AssistantAuditLevel.SAFE => AppIcons.AUDIT_SAFE,
+            _ => AppIcons.UNKNOWN,
         };
 
         /// <summary>

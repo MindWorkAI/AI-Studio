@@ -1,6 +1,6 @@
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="@T("Tool Settings")">
+<ExpansionPanel HeaderIcon="@AppIcons.TOOL" HeaderText="@T("Tool Settings")">
     <MudText Typo="Typo.body1" Class="mb-4">
         @T("Configure global settings for each tool.") @T("Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them.")
     </MudText>
@@ -31,7 +31,7 @@
                 <MudText Typo="Typo.body2">@context.Description</MudText>
             </MudTd>
             <MudTd>
-                <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsToolConfidenceManaged()">
+                <MudMenu StartIcon="@AppIcons.PROVIDER_CONFIDENCE" EndIcon="@AppIcons.DROPDOWN_MENU" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsToolConfidenceManaged()">
                     @foreach (var confidenceLevel in this.GetSelectableConfidenceLevels())
                     {
                         <MudMenuItem OnClick="@(async () => await this.ChangeMinimumProviderConfidence(context, confidenceLevel))">
@@ -45,30 +45,30 @@
                 {
                     @* Whether its settings are complete does not matter while nobody can use the tool: *@
                     <MudTooltip Text="@T("You switched off this tool. It appears in no tool selection, and the AI cannot use it.")">
-                        <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Default" />
+                        <MudIcon Icon="@AppIcons.HIDDEN" Color="Color.Default" />
                     </MudTooltip>
                 }
                 else if (!context.IsActive)
                 {
                     <MudTooltip Text="@T("This tool has been disabled by your organization.")">
-                        <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" />
+                        <MudIcon Icon="@AppIcons.LOCK" Color="Color.Error" />
                     </MudTooltip>
                 }
                 else if (context.ConfigurationState.IsConfigured)
                 {
-                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    <MudIcon Icon="@AppIcons.SUCCESS" Color="Color.Success" />
                 }
                 else
                 {
                     <MudTooltip Text="@this.GetConfigurationTooltip(context)">
-                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
+                        <MudIcon Icon="@AppIcons.WARNING" Color="Color.Warning" />
                     </MudTooltip>
                 }
             </MudTd>
             <MudTd>
                 <MudStack Row="true" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Spacing="0">
                     <MudTooltip Text="@T("Settings")">
-                        <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context))" aria-label="@T("Settings")" />
+                        <MudIconButton Icon="@AppIcons.SETTINGS" OnClick="@(async () => await this.OpenSettings(context))" aria-label="@T("Settings")" />
                     </MudTooltip>
                     <AdminExportButton OnClick="@(() => this.OpenExport(context))" />
                 </MudStack>

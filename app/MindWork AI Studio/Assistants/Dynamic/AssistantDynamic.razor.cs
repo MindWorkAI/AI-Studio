@@ -309,7 +309,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         if (updatedPlugin is not null && !updatedPlugin.StartsChatDirectly)
             this.ApplyUpdatedAssistantPlugin(updatedPlugin);
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.REVISE_ASSISTANT, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
 
@@ -327,7 +327,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         var result = await this.DirectChatService.TryCreateAssistantChatAsync(launcherPlugin);
         if (result.Request is null)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
+            await this.MessageBus.SendError(new(AppIcons.ERROR, result.ErrorMessage));
             this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
             return;
         }
@@ -345,24 +345,24 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             var componentSummary = this.assistantPlugin.CreateAuditComponentSummary();
             if (!string.IsNullOrWhiteSpace(componentSummary))
             {
-                builder.AppendLine("Current component overview:");
-                builder.AppendLine(componentSummary);
-                builder.AppendLine();
+                builder.AppendLineLF("Current component overview:");
+                builder.AppendLineLF(componentSummary);
+                builder.AppendLineLF();
             }
         }
 
         var promptPreview = await this.CollectUserPromptAsync();
         if (!string.IsNullOrWhiteSpace(promptPreview))
         {
-            builder.AppendLine("Current prompt preview from the assistant form:");
-            builder.AppendLine(promptPreview);
-            builder.AppendLine();
+            builder.AppendLineLF("Current prompt preview from the assistant form:");
+            builder.AppendLineLF(promptPreview);
+            builder.AppendLineLF();
         }
 
         if (this.ResultingContentBlock?.Content is ContentText text && !string.IsNullOrWhiteSpace(text.Text))
         {
-            builder.AppendLine("Last assistant response visible in this session:");
-            builder.AppendLine(text.Text);
+            builder.AppendLineLF("Last assistant response visible in this session:");
+            builder.AppendLineLF(text.Text);
         }
 
         return builder.ToString().Trim();
@@ -740,6 +740,6 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             }
         }
         
-        return prompt.Append(Environment.NewLine).ToString();
+        return prompt.AppendLineLF().ToString();
     }
 }

@@ -61,6 +61,22 @@
     src: url('fonts/JetBrainsMono-Regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
+/*
+   Lucide, the icon font of the app; see app/SourceGeneratedMappings/Lucide/README.md. An icon must never
+   show a fallback character while the font loads, hence "block". Every glyph fills the em box of the font,
+   from the baseline up. The overrides pin these metrics, so that no webview takes the larger Windows
+   ascent of the font, which would push the glyphs off the center of their box.
+*/
+@font-face {
+    font-display: block;
+    font-family: 'Lucide';
+    font-style: normal;
+    font-weight: 400;
+    ascent-override: 100%;
+    descent-override: 0%;
+    line-gap-override: 0%;
+    src: url('fonts/lucide.woff2') format('woff2');
+}
 
 .mud-text-list .mud-list-item-icon {
     margin-top: 4px;
@@ -118,7 +134,8 @@
     --custom-icon-color: #000000;
 }
 
-.custom-icon-color > a > svg {
+/* The icon of a link in the navigation bar: an SVG of MudBlazor or a span with a glyph of the Lucide font. */
+.custom-icon-color > a > .mud-icon-root {
     color: var(--custom-icon-color) !important;
 }
 
@@ -133,6 +150,25 @@
 .mud-icon-root:where(svg) {
     width: calc(1em * var(--svg-icon-zoom, 1));
     height: calc(1em * var(--svg-icon-zoom, 1));
+}
+
+/*
+   MudIcon renders an icon of the form "lucide/<glyph>" as a span with the class lucide and the glyph as
+   its only text. MudBlazor already sizes that span to 1em by 1em and colors it through color, just like
+   its SVG icons, so the font only has to fill that box: one line of exactly 1em, centered.
+*/
+.mud-icon-root.lucide {
+    font-family: 'Lucide';
+    font-style: normal;
+    font-weight: 400;
+    font-variant: normal;
+    letter-spacing: normal;
+    line-height: 1;
+    text-align: center;
+    text-transform: none;
+    white-space: nowrap;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /*

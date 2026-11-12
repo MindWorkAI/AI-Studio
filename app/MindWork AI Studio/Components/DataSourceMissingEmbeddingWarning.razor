@@ -13,12 +13,12 @@
         @if (this.MayAdd)
         {
             <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3">
-                <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.AddRoad" Disabled="@this.isAdding" OnClick="@this.AddEmbeddingProvider">
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@AppIcons.ADD" Disabled="@this.isAdding" OnClick="@this.AddEmbeddingProvider">
                     @T("Add Embedding")
                 </MudButton>
                 @if (this.MayImport)
                 {
-                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.FileDownload" Disabled="@this.isAdding" OnClick="@this.ImportEmbeddingProvider">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@AppIcons.IMPORT" Disabled="@this.isAdding" OnClick="@this.ImportEmbeddingProvider">
                         @T("Import Embedding")
                     </MudButton>
                 }

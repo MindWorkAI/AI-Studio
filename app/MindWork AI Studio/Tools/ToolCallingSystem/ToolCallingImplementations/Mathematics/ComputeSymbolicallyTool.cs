@@ -111,7 +111,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
         },
     };
 
-    public string Icon => Icons.Material.Filled.Functions;
+    public string Icon => AppIcons.TOOL_SYMBOLIC_MATH;
 
     public bool IsAvailable => PreviewFeatures.PRE_MATHEMATICS_2026.IsEnabled(settingsManager);
 

@@ -35,7 +35,7 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflFieldCatalog.FIELDS.Select(field => field.Id), Is.EqualTo(new[]
         {
-            "format", "event_topic", "audience", "contribution_topic", "event_date", "event_location", "event_duration", "contribution_duration", "other_participants", "event_link",
+            "format", "event_topic", "audience", "event_visibility", "contribution_topic", "event_date", "event_location", "event_duration", "contribution_duration", "other_participants", "event_link",
             "contribution_summary", "core_theses", "uncertainties", "material_notes",
             "goals", "goal_directions",
             "values_and_concerns", "personal_concern", "other_perspectives",
@@ -50,6 +50,7 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflFieldCatalog.FIELDS.SelectMany(field => field.Options).Select(option => option.Id), Is.EqualTo(new[]
         {
+            "event_public", "event_not_public",
             "goal_inform", "goal_moderate", "goal_take_position", "goal_raise_awareness", "goal_show_options", "goal_influence_policy",
             "questions_mixed", "questions_scientific_criticism", "questions_emotional_criticism", "questions_manipulative", "questions_political_instrumentalization",
             "difficulty_moderate", "difficulty_demanding", "difficulty_very_demanding",
@@ -164,7 +165,21 @@ public sealed class BflFieldCatalogTests
 
         Assert.That(keyDetails, Is.EquivalentTo(new[]
         {
-            BflFieldCatalog.FORMAT, BflFieldCatalog.EVENT_TOPIC, BflFieldCatalog.AUDIENCE, BflFieldCatalog.CONTRIBUTION_TOPIC, BflFieldCatalog.CONTRIBUTION_SUMMARY,
+            BflFieldCatalog.FORMAT, BflFieldCatalog.EVENT_TOPIC, BflFieldCatalog.AUDIENCE, BflFieldCatalog.EVENT_VISIBILITY, BflFieldCatalog.CONTRIBUTION_TOPIC, BflFieldCatalog.CONTRIBUTION_SUMMARY,
         }));
+    }
+
+    [Test]
+    public void WhetherTheEventIsPublicIsASingleChoiceWhichNeverReachesTheResearch()
+    {
+        var visibility = BflFieldCatalog.FIELDS.Single(field => field.Id == BflFieldCatalog.EVENT_VISIBILITY);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(visibility.Step, Is.EqualTo(BflStep.FRAMEWORK));
+            Assert.That(visibility.Kind, Is.EqualTo(BflFieldKind.CHOICE));
+            Assert.That(visibility.Options.Select(option => option.Id), Is.EqualTo(new[] { BflFieldCatalog.EVENT_PUBLIC, BflFieldCatalog.EVENT_NOT_PUBLIC }));
+            Assert.That(visibility.IsSharedWithResearch, Is.False, "The field decides about the research; it is no detail about the event.");
+        }
     }
 }

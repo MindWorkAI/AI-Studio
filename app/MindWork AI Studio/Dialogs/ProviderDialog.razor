@@ -27,7 +27,7 @@
                         </MudSelectItem>
                     }
                 </MudSelect>
-                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.CreationURL" Target="_blank">
+                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton || this.IsProviderProhibited)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@AppIcons.OPEN_EXTERNAL" Href="@this.DataLLMProvider.CreationURL" Target="_blank">
                     @T("Create account")
                 </MudButton>
             </MudStack>
@@ -53,7 +53,7 @@
                         Label="@T("Hostname")"
                         Class="mb-3"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.Dns"
+                        AdornmentIcon="@AppIcons.SERVER"
                         AdornmentColor="Color.Info"
                         Disabled="@this.IsEnterpriseConfiguration"
                         Validation="@this.providerValidation.ValidatingHostname"
@@ -62,7 +62,7 @@
 
                 @if (this.DataLLMProvider.IsHostNeeded)
                 {
-                    <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
+                    <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
                         @foreach (Host host in Enum.GetValues(typeof(Host)))
                         {
                             @if (host.IsChatSupported)
@@ -77,7 +77,7 @@
 
                 @if (this.DataLLMProvider.IsHFInstanceProviderNeeded)
                 {
-                    <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
+                    <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@AppIcons.SERVER" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
                         @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                         {
                             @if (inferenceProvider.SupportsChat)
@@ -99,7 +99,7 @@
                         <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
                             @if (this.DataLLMProvider.IsLLMModelProvidedManually)
                             {
-                                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
+                                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@AppIcons.OPEN_EXTERNAL" Href="@this.ModelsOverviewURL" Target="_blank">
                                     @T("Show available models")
                                 </MudButton>
                                 <MudTextField
@@ -107,7 +107,7 @@
                                     @bind-Text="@this.dataManuallyModel"
                                     Label="@T("Model")"
                                     Adornment="Adornment.Start"
-                                    AdornmentIcon="@Icons.Material.Filled.FaceRetouchingNatural"
+                                    AdornmentIcon="@AppIcons.MODEL"
                                     AdornmentColor="Color.Info"
                                     Disabled="@this.IsEnterpriseConfiguration"
                                     Validation="@this.ValidateManuallyModel"
@@ -119,11 +119,11 @@
                             {
                                 @if (!string.IsNullOrWhiteSpace(this.ModelsOverviewURL))
                                 {
-                                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
+                                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@AppIcons.OPEN_EXTERNAL" Href="@this.ModelsOverviewURL" Target="_blank">
                                         @T("Show available models")
                                     </MudButton>
                                 }
-                                <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
+                                <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@AppIcons.REFRESH" OnClick="@this.ReloadModels">
                                     @T("Load models")
                                 </MudButton>
                                 @if(this.availableModels.Count is 0)
@@ -137,7 +137,7 @@
                                     <MudSelect T="Provider.Model"
                                                Value="@this.DataModel"
                                                ValueChanged="@(async model => await this.OnModelChanged(model))"
-                                               OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info"
+                                               OpenIcon="@AppIcons.MODEL" AdornmentColor="Color.Info"
                                                Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingModel">
                                         @foreach (var model in this.availableModels)
                                         {
@@ -176,7 +176,7 @@
                     Counter="40"
                     Immediate="@true"
                     Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                    AdornmentIcon="@AppIcons.NAME"
                     AdornmentColor="Color.Info"
                     Disabled="@this.IsEnterpriseConfiguration"
                     Validation="@this.providerValidation.ValidatingInstanceName"
@@ -220,7 +220,7 @@
                                             <MudButton Variant="Variant.Outlined"
                                                        Color="Color.Default"
                                                        Size="Size.Small"
-                                                       StartIcon="@Icons.Material.Filled.RestartAlt"
+                                                       StartIcon="@AppIcons.RESTORE_DEFAULT"
                                                        Disabled="@(this.IsEnterpriseConfiguration || !this.HasCapabilityOverride(capability))"
                                                        OnClick="@(() => this.ResetCapabilityOverride(capability))">
                                                 @T("Reset")
@@ -237,7 +237,7 @@
                                            HelperText="@this.GetReasoningOverrideModeDescription(this.GetReasoningOverrideMode())"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense"
-                                           OpenIcon="@Icons.Material.Filled.Psychology"
+                                           OpenIcon="@AppIcons.REASONING"
                                            AdornmentColor="Color.Info"
                                            Adornment="Adornment.Start"
                                            Disabled="@this.IsEnterpriseConfiguration">
@@ -271,7 +271,7 @@
                                                  Clearable="@true"
                                                  Disabled="@this.IsEnterpriseConfiguration"
                                                  Adornment="Adornment.Start"
-                                                 AdornmentIcon="@Icons.Material.Filled.Straighten"
+                                                 AdornmentIcon="@AppIcons.CONTEXT_WINDOW"
                                                  AdornmentColor="Color.Info" />
                             </MudPaper>
                             <MudPaper Outlined="@true" Class="pa-3">
@@ -328,7 +328,7 @@
                                         Disabled="@this.IsEnterpriseConfiguration"
                                         Validation="@this.providerValidation.ValidatingCustomTokenizer"
                                         Adornment="Adornment.Start"
-                                        AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                                        AdornmentIcon="@AppIcons.FILE"
                                         UserAttributes="@SPELLCHECK_ATTRIBUTES"
                                         Variant="Variant.Outlined"
                                         Clearable="@true"
@@ -336,7 +336,7 @@
                                         ErrorText="@this.dataCustomTokenizerValidationIssue"
                                         OnClearButtonClick="@this.ClearPathTokenizer"
                                     />
-                                    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.IsEnterpriseConfiguration || this.isTokenizerFileDialogOpen)" OnClick="@this.OpenTokenizerFileDialog">
+                                    <MudButton StartIcon="@AppIcons.BROWSE" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.IsEnterpriseConfiguration || this.isTokenizerFileDialogOpen)" OnClick="@this.OpenTokenizerFileDialog">
                                         @T("Choose File")
                                     </MudButton>
                                 </MudStack>

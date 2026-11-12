@@ -109,7 +109,7 @@ public partial class AssistantBatchProcessing
             ? T("The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.")
             : string.Format(T("The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."), numImages);
 
-        await this.MessageBus.SendWarning(new(Icons.Material.Filled.ImageNotSupported, warning));
+        await this.MessageBus.SendWarning(new(AppIcons.IMAGE_NOT_SUPPORTED, warning));
     }
 
     /// <summary>
@@ -198,7 +198,7 @@ public partial class AssistantBatchProcessing
                 var failureMessage = failedFiles == 1
                     ? T("The batch run finished, but one file could not be processed. See the progress table and log for details.")
                     : string.Format(T("The batch run finished, but {0} files could not be processed. See the progress table and log for details."), failedFiles);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Error, failureMessage));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, failureMessage));
             }
         }
     }

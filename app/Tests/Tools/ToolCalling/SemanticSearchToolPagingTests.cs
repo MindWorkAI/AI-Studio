@@ -132,7 +132,7 @@ public sealed partial class SemanticSearchToolPagingTests
     {
         var result = await this.SearchAsync([HANDBOOK], 2, Found(Passages(1, 10, LONG)));
 
-        Assert.That(result.TextContent, Does.StartWith($"# Retrieval context 4{Environment.NewLine}"), "The model reads the fourth passage of the search, not the first one a second time.");
+        Assert.That(result.TextContent, Does.StartWith("# Retrieval context 4\n"), "The model reads the fourth passage of the search, not the first one a second time.");
     }
 
     [Test]
@@ -230,7 +230,7 @@ public sealed partial class SemanticSearchToolPagingTests
             Assert.That(shown.Text, Is.EqualTo(passage.MatchedText), "The matched text is what the search found, so it is the last to be shortened.");
             Assert.That(shown.SurroundingContent[0], Is.EqualTo(passage.SurroundingContent[0]));
             Assert.That(shown.SurroundingContent[^1], Does.StartWith("After ").And.Length.LessThan(LENGTH), "The surrounding content is shortened from its end.");
-            Assert.That(result.TextContent, Does.Contain($"Matched text content:{Environment.NewLine}").And.Contain("Surrounding text content, shortened to fit the size limit:"));
+            Assert.That(result.TextContent, Does.Contain("Matched text content:\n").And.Contain("Surrounding text content, shortened to fit the size limit:"));
             Assert.That(result.TextContent.Length, Is.LessThanOrEqualTo(SemanticSearchTool.MAX_RESULT_CHARACTERS));
         }
     }

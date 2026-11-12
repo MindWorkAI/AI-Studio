@@ -102,27 +102,27 @@ public static partial class ToolCallHistoryNote
             return null;
 
         var note = new StringBuilder();
-        note.AppendLine(START_TAG);
-        note.AppendLine(string.Create(CultureInfo.InvariantCulture, $"Note from AI Studio, not part of your answer. For the answer below, written {time.UtcDateTime:yyyy-MM-dd HH:mm} UTC, you used:"));
+        note.AppendLineLF(START_TAG);
+        note.AppendLineLF(string.Create(CultureInfo.InvariantCulture, $"Note from AI Studio, not part of your answer. For the answer below, written {time.UtcDateTime:yyyy-MM-dd HH:mm} UTC, you used:"));
 
         if (calls.Count > 0)
         {
-            note.AppendLine("Tool calls (their results are not kept; call the tool again if you need the content):");
+            note.AppendLineLF("Tool calls (their results are not kept; call the tool again if you need the content):");
             foreach (var call in calls)
-                note.AppendLine($"- {call}");
+                note.AppendLineLF($"- {call}");
 
             if (furtherCalls > 0)
-                note.AppendLine(string.Create(CultureInfo.InvariantCulture, $"- … ({furtherCalls} more)"));
+                note.AppendLineLF(string.Create(CultureInfo.InvariantCulture, $"- … ({furtherCalls} more)"));
         }
 
         if (sources.Count > 0)
         {
-            note.AppendLine("Sources:");
+            note.AppendLineLF("Sources:");
             foreach (var source in sources)
-                note.AppendLine($"- {source}");
+                note.AppendLineLF($"- {source}");
 
             if (furtherSources > 0)
-                note.AppendLine(string.Create(CultureInfo.InvariantCulture, $"- … ({furtherSources} more)"));
+                note.AppendLineLF(string.Create(CultureInfo.InvariantCulture, $"- … ({furtherSources} more)"));
         }
 
         note.Append(END_TAG);

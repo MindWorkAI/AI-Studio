@@ -689,7 +689,7 @@ public partial class ContentBlockComponent : MSGComponentBase
 
     private async Task ReportUnknownExportFormat(ArgumentOutOfRangeException exception, FileExportFormat format)
     {
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Error, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
+        await this.MessageBus.SendError(new(AppIcons.ERROR, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
         this.Logger.LogError(exception, "Failed to export the content, because no exporter writes the format {ExportFormat}.", format);
     }
     

@@ -618,7 +618,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     {
         var markdown = new StringBuilder();
         foreach (var item in items)
-            markdown.AppendLine($"- {item}");
+            markdown.AppendLineLF($"- {item}");
         
         return markdown.ToString();
     }

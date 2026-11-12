@@ -97,7 +97,7 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(thread, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.That(parts.Texts, Is.EqualTo(new[] { $"{ToolCallHistoryNote.Build(answer, time)}{Environment.NewLine}{Environment.NewLine}{answer.Text}" }), "The message builder sends the note in front of the answer.");
+        Assert.That(parts.Texts, Is.EqualTo(new[] { $"{ToolCallHistoryNote.Build(answer, time)}\n\n{answer.Text}" }), "The message builder sends the note in front of the answer.");
     }
 
     [Test]

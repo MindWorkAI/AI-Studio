@@ -107,7 +107,7 @@ ASSISTANT = {
                     ["Name"] = "<unique identifier of this component>", -- required
                     ["Label"] = "<heading of your component>", -- required
                     ["Adornment"] = "<Start|End|None>", --  location of the `AdornmentIcon` OR `AdornmentText`; CASE SENSITIVE
-                    ["AdornmentIcon"] = "Icons.Material.Filled.AppSettingsAlt", -- The Mudblazor icon displayed for the adornment
+                    ["AdornmentIcon"] = "lucide:settings", -- The icon displayed for the adornment: a Lucide icon as "lucide:<name>" with its name on lucide.dev, or a MudBlazor icon such as "Icons.Material.Filled.Home"
                     ["AdornmentText"] = "", -- The text displayed for the adornment
                     ["AdornmentColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- the color of AdornmentText or AdornmentIcon; CASE SENSITIVE
                     ["Counter"] = 0, -- shows a character counter. When 0, the current character count is displayed. When 1 or greater, the character count and this count are displayed. Defaults to `null` 
@@ -133,12 +133,11 @@ ASSISTANT = {
                     ["HasSelectAll"] = false,
                     ["SelectAllText"] = "<label for 'SelectAll'-Button",
                     ["HelperText"] = "<helping text rendered under the component>",
-                    ["OpenIcon"] = "Icons.Material.Filled.ArrowDropDown",
-                    ["OpenClose"] = "Icons.Material.Filled.ArrowDropUp",
+                    ["OpenIcon"] = "lucide:chevron-down",
+                    ["CloseIcon"] = "lucide:chevron-up",
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                     ["IconPositon"] = "<Start|End>",
                     ["Variant"] = "<Text|Filled|Outlined>",
-                    ["ValueType"] = "<string|int|bool>", -- required
                     ["Default"] = { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" }, -- required
                     ["Items"] = {
                         { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" },
@@ -160,7 +159,7 @@ ASSISTANT = {
                     ["LabelOn"] = "<text if state is true>",
                     ["LabelOff"] = "<text if state is false>",
                     ["LabelPlacement"] = "<Bottom|End|Left|Right|Start|Top>", -- Defaults to End (right of the switch)
-                    ["Icon"] = "Icons.Material.Filled.Bolt", -- places a thumb icon inside the switch
+                    ["Icon"] = "lucide:zap", -- places a thumb icon inside the switch
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the thumb icon. Defaults to `Inherit`
                     ["CheckedColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the switch if state is true. Defaults to `Inherit`
                     ["UncheckedColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the switch if state is false. Defaults to `Inherit`
@@ -178,8 +177,8 @@ ASSISTANT = {
                     ["Variant"] = "<Filled|Outlined|Text>", -- display variation to use. Defaults to Text
                     ["Color"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the button. Defaults to Default
                     ["IsFullWidth"] = false, -- ignores sizing and renders a long full width button. Defaults to false
-                    ["StartIcon"] = "Icons.Material.Filled.ArrowRight", -- icon displayed before the text, or the main icon for icon-only buttons. Defaults to null
-                    ["EndIcon"] = "Icons.Material.Filled.ArrowLeft", -- icon displayed after the text. Defaults to null
+                    ["StartIcon"] = "lucide:arrow-right", -- icon displayed before the text, or the main icon for icon-only buttons. Defaults to null
+                    ["EndIcon"] = "lucide:arrow-left", -- icon displayed after the text. Defaults to null
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of start and end icons on text buttons. Defaults to Inherit
                     ["IconSize"] = "<Small|Medium|Large>", -- size of icons. Defaults to null. When null, the value of ["Size"] is used
                     ["Action"] = function(input)
@@ -263,12 +262,12 @@ ASSISTANT = {
                     ["IsDense"] = false, -- denser panel layout
                     ["HasInnerPadding"] = true, -- controls padding around the section content
                     ["HideIcon"] = false, -- hides the expand/collapse icon
-                    ["HeaderIcon"] = "Icons.Material.Filled.ExpandMore", -- icon shown before the header text
+                    ["HeaderIcon"] = "lucide:chevron-down", -- icon shown before the header text
                     ["HeaderColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                     ["HeaderTypo"] = "<body1|subtitle1|h6|...>", -- MudBlazor typo value used for the header
                     ["HeaderAlign"] = "<Start|Center|End|Justify>", -- header text alignment
                     ["MaxHeight"] = 320, -- nullable integer pixel height for the expanded content area
-                    ["ExpandIcon"] = "Icons.Material.Filled.ExpandMore", -- override the expand/collapse icon
+                    ["ExpandIcon"] = "lucide:chevron-down", -- override the expand/collapse icon
                     ["Class"] = "<optional MudBlazor or css classes>",
                     ["Style"] = "<optional css styles>",
                 },
@@ -342,7 +341,7 @@ ASSISTANT = {
                         { 
                             ["Type"] = "TEXT", -- required 
                             ["Text"] = "<user readable text>",
-                            ["Icon"] = "Icons.Material.Filled.HorizontalRule",
+                            ["Icon"] = "lucide:minus",
                             ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                         }
                     },

@@ -18,10 +18,10 @@
             MaxLength="@ImapMailboxConnector.MAX_FOLDER_NAME_LENGTH"
             HelperText="@this.NewFolderHelperText"
             Adornment="Adornment.Start"
-            AdornmentIcon="@Icons.Material.Filled.CreateNewFolder"
+            AdornmentIcon="@AppIcons.NEW_FOLDER"
             AdornmentColor="Color.Info"
             Variant="Variant.Outlined"/>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CreateNewFolder" Disabled="@(!this.CanCreateFolder)" OnClick="@this.CreateNewFolder">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.NEW_FOLDER" Disabled="@(!this.CanCreateFolder)" OnClick="@this.CreateNewFolder">
             @T("Create")
         </MudButton>
     </MudStack>

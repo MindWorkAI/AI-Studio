@@ -139,7 +139,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(function.DescriptionForLLM, Does.Contain($"- id={WORK.Id}, name='Work'{Environment.NewLine}"));
+            Assert.That(function.DescriptionForLLM, Does.Contain($"- id={WORK.Id}, name='Work'\n"));
             Assert.That(function.DescriptionForLLM, Does.EndWith($"- id={PRIVATE.Id}, name='Private'"));
             Assert.That(function.DescriptionForLLM, Does.Not.Contain("per page").And.Not.Contain("last page"), "How many mails a page holds depends on how long they are, so each result tells whether a further page holds more.");
             Assert.That(properties[MailToolArguments.MAILBOX_IDS_ARGUMENT]!["items"]!["enum"]!.AsArray().Select(id => id!.GetValue<string>()), Is.EqualTo(new[] { WORK.Id, PRIVATE.Id }));

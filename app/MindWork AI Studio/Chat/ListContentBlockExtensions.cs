@@ -132,7 +132,7 @@ public static class ListContentBlockExtensions
                 if (prepared.IsPrepared)
                     return imageSubContentFactory(prepared);
 
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, prepared.ErrorCode.ToUserMessage(image.FileName)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.IMAGE_NOT_SUPPORTED, prepared.ErrorCode.ToUserMessage(image.FileName)));
                 return null;
             }
         }
@@ -191,7 +191,7 @@ public static class ListContentBlockExtensions
     {
         var text = ToolCallHistoryNote.RemoveNotesWrittenByModel(preparedText);
         var note = ToolCallHistoryNote.Build(answer, time);
-        return note is null ? text : $"{note}{Environment.NewLine}{Environment.NewLine}{text}";
+        return note is null ? text : $"{note}\n\n{text}";
     }
 
     private static ISubContent StandardTextSubContentFactory(string text) => new SubContentText

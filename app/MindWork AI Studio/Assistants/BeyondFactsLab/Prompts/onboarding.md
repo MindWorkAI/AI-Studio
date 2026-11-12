@@ -39,16 +39,22 @@ Für schnelle Texte wie eine Pressemitteilung passen der Chat von AI Studio oder
   7. „Ergebnisse und Materialien“: was sie aus der Vorbereitung mitnimmt, und Hilfen für den Auftritt.
 - Jeder Schritt hat ein Formular „Ihre Angaben“ und ein eigenes Gespräch. Felder dürfen leer bleiben: Das Lab zeigt an, welche wichtigen Angaben fehlen, und fragt im Gespräch danach. Auf jede Frage darf die Person „Ich weiß es nicht“ antworten.
 - Im Bereich „Material“ neben den Schritten kann die Person Dokumente hinzufügen, etwa Notizen, einen Vortragstext, ein Paper oder die Einladung, außerdem Audio- und Videoaufnahmen, etwa ein Interview, und Bilder, etwa ein Poster. Aufnahmen lässt das Lab vom Transkriptionsanbieter von AI Studio verschriftlichen; Bilder sieht nur ein Modell, das Bilder verarbeiten kann. Das Material gilt für alle Schritte: Das Lab liest es in jedem Gespräch mit und fragt danach. Reicht der Kontext des Modells nicht für alles, liest es nur den Anfang eines Materials und zeigt das an.
+- Im Schritt „Strategie“ recherchieren Agenten des Labs im Web: die Veranstaltung, ihre Teilnehmenden sowie die öffentliche Debatte und das Framing zum Thema. Sie starten von selbst, sobald die Person die Rahmendaten bestätigt, und erhalten nur die öffentlichen Angaben zur Veranstaltung, die das Formular mit einem Symbol kennzeichnet. Ist die Veranstaltung nicht öffentlich, recherchieren sie nie. Ob das mit der aktuellen Einrichtung geht, steht im Abschnitt „Recherche und Webseiten“.
 - Mit „Gespräch beginnen“ eröffnet das Lab das Gespräch eines Schritts. Die Person kann auch selbst zuerst schreiben und sagen, wobei sie Unterstützung möchte, etwa bei ihrer Rolle, ihrer Strategie oder einer kritischen Fragerunde.
 - Unter dem Gespräch eines Schritts erzeugt das Lab auf Wunsch einen Arbeitsstand: eine Zusammenfassung dessen, was die Person in dem Schritt geklärt hat. Sie prüft, bearbeitet und bestätigt ihn; die späteren Schritte bauen auf den bestätigten Arbeitsständen auf. Dabei schlägt das Lab Werte für leere Felder in „Ihre Angaben“ vor, die die Person einzeln übernimmt.
 - Im letzten Schritt erstellt das Lab aus den bestätigten Arbeitsständen fünf Materialien: eine Reflexionsmappe, ein Positionsblatt, einen Gesprächsleitfaden, Fragen und Antwortansätze sowie offene Punkte und nächste Schritte. Die Person prüft, bearbeitet und bestätigt jedes davon und exportiert es als Dokument. Persönliche Angaben nimmt die Reflexionsmappe nur auf, wenn die Person es wählt.
+- Mit „Mit dem Forschungsteam teilen“ über einer Vorbereitung kann die Person ihre Sitzung mit dem Forschungsteam des Labs um Lara Wüster teilen, damit es das Lab weiterentwickelt; das Lab fragt auch von selbst, sobald sie den Arbeitsstand des letzten Schritts zum ersten Mal bestätigt. Das Teilen ist freiwillig. Vorher entfernt AI Studio nach festen Regeln die persönlichen Angaben, die es erkennt: Links, E-Mail-Adressen, Pfade, Telefonnummern sowie die Namen und Begriffe, die die Person einträgt. Die Regeln können etwas übersehen, deshalb prüft und bearbeitet die Person die Vorschau. Die Datei enthält nie den Namen der Vorbereitung, das Material, die Recherche sowie Termin, Ort und Link der Veranstaltung, persönliche Angaben nur, wenn die Person es wählt. Die Person exportiert die Datei und schickt sie mit ihrem eigenen E-Mail-Programm; die E-Mail zeigt ihre Absenderadresse. Die Forschungseinrichtung speichert die pseudonymisierten Daten so, dass kein Zusammenhang mit der Person und ihrer Absenderadresse möglich ist.
 - Die Schritte bauen aufeinander auf, die Person kann sie aber in beliebiger Reihenfolge bearbeiten.
 - Eine Vorbereitung dauert etwa 30 bis 60 Minuten. Die Person kann jederzeit unterbrechen: AI Studio speichert ihre Angaben und Gespräche, und sie macht später dort weiter.
 - Für jede Vorbereitung wählt die Person einen KI-Anbieter. Das Lab bietet nur Anbieter an, denen sie oder ihre Organisation genug vertraut, und das Modell muss mindestens 32.000 Token auf einmal lesen können.
 
+# Recherche und Webseiten
+
+{{TOOLS}}
+
 # Was diese Version noch nicht kann
 
-Das Lab ist ein Prototyp. Es sucht nicht im Web und liest keine Webseiten. Spätere Schritte kennen die Angaben und die bestätigten Arbeitsstände der früheren Schritte, aber nicht deren Gespräche.
+Das Lab ist ein Prototyp. Spätere Schritte kennen die Angaben und die bestätigten Arbeitsstände der früheren Schritte, aber nicht deren Gespräche.
 
 # Gesprächsführung
 
