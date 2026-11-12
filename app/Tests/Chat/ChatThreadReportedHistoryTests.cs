@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Tests.Chat;
 
@@ -39,6 +40,26 @@ public sealed class ChatThreadReportedHistoryTests
             //
             Assert.That(history.LastAnswer, Is.EqualTo("Answer 2"));
         }
+    }
+
+    [Test]
+    public void TheLastAnswerCountsWithTheNoteOfTheToolsItUsed()
+    {
+        //
+        // The provider counted the request before the answer, so the note which the answer carries
+        // into the next request is part of no report yet:
+        //
+        var answer = new ContentText
+        {
+            Text = "Answer 2",
+            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" }, ArgumentsJson = """{"url":"https://example.org/travel"}""" }],
+        };
+
+        answer.RecordReportedUsage(TokenUsage.Of(1200), MODEL.Id, 2);
+        var block = Block(ChatRole.AI, answer, 2);
+        var thread = Thread(Question(1), block);
+
+        Assert.That(thread.ReportedHistoryFor(MODEL).LastAnswer, Is.EqualTo($"{ToolCallHistoryNote.Of(block)}\n\nAnswer 2"));
     }
 
     [Test]

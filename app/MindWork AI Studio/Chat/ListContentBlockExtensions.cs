@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Chat;
 
@@ -81,7 +82,7 @@ public static class ListContentBlockExtensions
                 return Task.Run(async () => new TextMessage
                 {
                     Role = roleTransformer(block.Role),
-                    Content = await text.PrepareTextContentForAI(reportingScope),
+                    Content = await PrepareTextAsync(block, text),
                 } as IMessageBase);
             }
         
@@ -100,12 +101,18 @@ public static class ListContentBlockExtensions
                         Role = roleTransformer(block.Role),
                         Content =
                         [
-                            textSubContentFactory(await text.PrepareTextContentForAI(reportingScope)),
+                            textSubContentFactory(await PrepareTextAsync(block, text)),
                             ..images.OfType<ISubContent>(),
                         ]
                     } as IMessageBase;
                 });
             }
+
+            //
+            // Local function to prepare the text of one message. An earlier answer of the model gets the
+            // note of the tools and sources it rested on in front, see ToolCallHistoryNote.TextForModel.
+            //
+            async Task<string> PrepareTextAsync(ContentBlock block, ContentText text) => ToolCallHistoryNote.TextForModel(block, await text.PrepareTextContentForAI(reportingScope));
 
             //
             // Local function to prepare one image for the model. An image which cannot be prepared

@@ -12750,8 +12750,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3448155331"] = "Schlie�
 -- System prompt of the assistant '{0}'
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3462500758"] = "System-Prompt des Assistenten „{0}“"
 
+-- Instructions for the notes on earlier answers
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3801552165"] = "Anweisungen für die Notizen zu früheren Antworten"
+
 -- Default prompt of AI Studio
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3895504389"] = "Standard-Prompt von AI Studio"
+
+-- When an earlier answer in this chat used tools or sources, AI Studio puts a note in front of it which names them. Only the AI receives this note; you do not see it in the chat. These instructions tell the AI what the note means.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4244132760"] = "Hat eine frühere Antwort in diesem Chat Werkzeuge oder Quellen genutzt, stellt AI Studio ihr eine Notiz voran, die diese nennt. Nur die KI erhält diese Notiz; im Chat sehen Sie sie nicht. Diese Anweisungen erklären der KI, was die Notiz bedeutet."
 
 -- The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4245380559"] = "Der Assistent „{0}“ hat diese Anweisungen für Ihre Rückfragen in diesem Chat geschrieben; sie unterscheiden sich von den Anweisungen, mit denen er sein Ergebnis erstellt hat."
