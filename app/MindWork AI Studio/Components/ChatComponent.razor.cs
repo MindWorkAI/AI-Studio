@@ -142,6 +142,15 @@ public partial class ChatComponent : MSGComponentBase
     private const double WINDOW_NEARLY_FULL = 0.8d;
 
     /// <summary>
+    /// How much of the window the message about to be sent must fill before the chat asks first, see ConfirmContextWindowAsync.
+    /// </summary>
+    /// <remarks>
+    /// Not only once the window overflows: most models count their answer into the window, so the
+    /// last few percent leave little room for it, and the next message would no longer fit.
+    /// </remarks>
+    private const double WINDOW_FULL_ENOUGH_TO_ASK = 0.95d;
+
+    /// <summary>
     /// How long the token count stays quiet after it ran, while nothing is being written.
     /// </summary>
     /// <remarks>
@@ -822,15 +831,33 @@ public partial class ChatComponent : MSGComponentBase
     /// Whether the open chat can be compressed into a new chat.
     /// </summary>
     /// <remarks>
-    /// Compressing copies the chat, so whatever stops a copy stops it as well. Beyond that, the
-    /// selected provider writes the summary, so it has to be one the chat allows, and the chat needs
-    /// a finished answer of the AI, which the new chat keeps word for word.
+    /// Compressing copies the chat, so whatever stops a copy stops it as well, and it stores both
+    /// chats, which needs workspaces. Beyond that, the selected provider writes the summary, so it
+    /// has to be one the chat allows, with a model large enough for it, and the chat needs a
+    /// finished answer of the AI, which the new chat keeps word for word.
     /// </remarks>
     private bool CanThreadBeCompressed => this.CanThreadBeCopied
+                                          && this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                                           && !this.isCompressing
                                           && this.IsProviderSelected
                                           && this.ChatThread.IsLLMProviderAllowed(this.Provider)
+                                          && !this.IsWindowTooSmallForCompression
                                           && ChatCompressionPlan.HasFinishedAnswer(this.ChatThread!);
+
+    /// <summary>
+    /// Whether the model of the selected provider is too small to compress the chat, see ChatCompressionService.MIN_CONTEXT_WINDOW.
+    /// </summary>
+    private bool IsWindowTooSmallForCompression => this.IsProviderSelected && !ChatCompressionService.CanSummarizeWith(this.Provider.GetModelProfile().Context);
+
+    /// <summary>
+    /// What the compress button says it does, or why it is switched off for the selected model.
+    /// </summary>
+    /// <remarks>
+    /// The minimum is a limit, so it is written out in full: the short form of the token count would round it.
+    /// </remarks>
+    private string CompressTooltip => this.IsWindowTooSmallForCompression
+        ? string.Format(T("Compressing a chat needs a model with a context window of at least {0} tokens."), ChatCompressionService.MIN_CONTEXT_WINDOW.ToString("N0", this.currentCulture))
+        : T("Compress this chat & switch to a new chat with its summary.");
 
     /// <summary>
     /// Whether a chat template can be made from the open chat. While an answer is being written, the template would copy it unfinished.
@@ -1674,6 +1701,17 @@ public partial class ChatComponent : MSGComponentBase
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
 
+        //
+        // Not when an answer is only generated again: no new message is sent then, and what the
+        // user is writing stays in the composer.
+        //
+        if (!reuseLastUserPrompt && !await this.ConfirmContextWindowAsync())
+            return;
+
+        // The notice may have waited for the user, while another message was sent or the chat was compressed:
+        if (this.IsCurrentChatStreaming || this.isCompressing)
+            return;
+
         this.RefreshCurrentProfileAndChatTemplate();
 
         // Blur the focus away from the input field to be able to clear it:
@@ -2327,6 +2365,66 @@ public partial class ChatComponent : MSGComponentBase
             this.isCompressing = false;
             this.StateHasChanged();
         }
+    }
+
+    /// <summary>
+    /// Asks the user what to do when the message about to be sent fills the context window of the
+    /// model, or no longer fits into it.
+    /// </summary>
+    /// <remarks>
+    /// Judged by the token count under the input field, the very number the user sees, so no request
+    /// is made for it. That count does not cover images, and it knows no window where nobody wrote
+    /// one down, e.g., for many self-hosted models; the notice then stays away, just as the number
+    /// keeps its colour. The notice comes from WINDOW_FULL_ENOUGH_TO_ASK on, before the window
+    /// overflows.<br/><br/>
+    ///
+    /// Compressing is offered only where it could succeed: the model has to be large enough for it,
+    /// and the chat needs something to summarize besides the last exchange, which the new chat keeps
+    /// word for word. The message being written goes along into the new chat unchanged, where the
+    /// user sends it, see CompressCurrentChat. Compressing therefore helps only when that message
+    /// leaves room for the summary; the last exchange is not counted, since that would take a count
+    /// of its own.
+    /// </remarks>
+    /// <returns>True when the message is to be sent.</returns>
+    private async Task<bool> ConfirmContextWindowAsync()
+    {
+        var fill = this.TokenBudgetFill;
+        if (fill < WINDOW_FULL_ENOUGH_TO_ASK)
+            return true;
+
+        var windowTokens = this.conversationTokens.Window.DefaultTokens;
+        var leavesRoomForTheSummary = this.conversationTokens.DraftTokens + ChatCompressionService.TokensForTheSummary(windowTokens) < windowTokens * WINDOW_FULL_ENOUGH_TO_ASK;
+        var canCompress = leavesRoomForTheSummary
+                          && this.CanThreadBeCompressed
+                          && ChatCompressionPlan.Of(this.ChatThread!, this.SettingsManager.GetChatTemplateById(this.ChatThread!.SelectedChatTemplate).ExampleConversation.Count, draftIsEmpty: false) is not null;
+
+        var isWindowExceeded = fill >= 1d;
+        var dialogParameters = new DialogParameters<ContextWindowFullDialog>
+        {
+            { x => x.ChatTokens, TokenAmount.Format(this.conversationTokens.Tokens, this.currentCulture) },
+            { x => x.WindowTokens, TokenAmount.Format(windowTokens, this.currentCulture) },
+            { x => x.IsWindowExceeded, isWindowExceeded },
+            { x => x.CanCompress, canCompress },
+        };
+
+        var title = isWindowExceeded ? T("This chat is too long for the model") : T("This chat nearly fills the context window of the model");
+        var dialogReference = await this.DialogService.ShowAsync<ContextWindowFullDialog>(title, dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not ContextWindowFullDecision decision)
+            return false;
+
+        if (decision is ContextWindowFullDecision.COMPRESS)
+        {
+            //
+            // The user meant to send what is in the composer, so it goes along into the new chat,
+            // even the untouched message of a chat template, which compressing leaves behind otherwise:
+            //
+            this.ComposerState.MarkUserDraft();
+            await this.CompressCurrentChat();
+            return false;
+        }
+
+        return true;
     }
 
     private async Task LoadedChatChanged(bool notifyParent = true)

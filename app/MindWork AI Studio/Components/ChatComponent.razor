@@ -111,7 +111,7 @@
                     <MudIconButton Icon="@AppIcons.DUPLICATE" Disabled="@(!this.CanThreadBeCopied)" OnClick="@this.CopyCurrentChat"/>
                 </MudTooltip>
 
-                <MudTooltip Text="@T("Compress this chat & switch to a new chat with its summary.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@this.CompressTooltip" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Compress" Disabled="@(!this.CanThreadBeCompressed)" OnClick="@this.CompressCurrentChat"/>
                 </MudTooltip>
             }

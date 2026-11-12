@@ -1,0 +1,45 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.body1">
+                @if (this.IsWindowExceeded)
+                {
+                    @(string.Format(T("Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation."), this.ChatTokens, this.WindowTokens))
+                }
+                else
+                {
+                    @(string.Format(T("Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit."), this.ChatTokens, this.WindowTokens))
+                }
+            </MudText>
+
+            @if (this.CanCompress)
+            {
+                <MudText Typo="Typo.body1">
+                    @T("When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.")
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body1">
+                    @T("You can shorten your message, remove some of its files, or select a model which takes longer texts.")
+                </MudText>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.SendAnyway" Variant="Variant.Filled" Color="Color.Error">
+            @T("Send anyway")
+        </MudButton>
+        @if (this.CanCompress)
+        {
+            <MudButton OnClick="@this.Compress" Variant="Variant.Filled" Color="Color.Primary">
+                @T("Compress chat")
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>

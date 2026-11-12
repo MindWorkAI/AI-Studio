@@ -5889,6 +5889,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Chat vers
 -- Bold
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1165397398"] = "Fett"
 
+-- Compressing a chat needs a model with a context window of at least {0} tokens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1284276020"] = "Das Komprimieren eines Chats erfordert ein Modell mit einem Kontextfenster von mindestens {0} Token."
+
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Generierung stoppen"
 
@@ -5973,6 +5976,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Wählen S
 -- Profile changes are locked while a response is running.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3662116565"] = "Profiländerungen sind gesperrt, solange eine Antwort generiert wird."
 
+-- This chat is too long for the model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3668031040"] = "Dieser Chat ist zu lang für das Modell"
+
 -- Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3682097866"] = "Änderungen an den Datenquellen sind gesperrt, solange eine Antwort generiert wird. Ihre aktuelle Auswahl wird unten angezeigt und gilt ab der nächsten Nachricht wieder, sobald der Vorgang abgeschlossen ist."
 
@@ -6002,6 +6008,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T544159998"] = "Vollständ
 
 -- Move the chat to a workspace, or to another if it is already in one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Verschieben Sie den Chat in einen Arbeitsbereich oder in einen anderen, falls er sich bereits in einem befindet."
+
+-- This chat nearly fills the context window of the model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T700383515"] = "Dieser Chat füllt das Kontextfenster des Modells fast aus"
 
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Arbeitsbereiche anzeigen"
@@ -9074,6 +9083,27 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "Nein"
 
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Ja"
+
+-- Compress chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1399817897"] = "Chat komprimieren"
+
+-- Send anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2511873300"] = "Trotzdem senden"
+
+-- Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T285302554"] = "Zusammen mit Ihrer Nachricht umfasst dieser Chat etwa {0} Token, das ausgewählte Modell liest aber höchstens {1} Token. Der Anbieter wird Ihre Nachricht wahrscheinlich ablehnen oder einen Teil der Unterhaltung weglassen."
+
+-- You can shorten your message, remove some of its files, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3003436474"] = "Sie können Ihre Nachricht kürzen, einige ihrer Dateien entfernen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3814366820"] = "Zusammen mit Ihrer Nachricht umfasst dieser Chat etwa {0} der {1} Token, die das ausgewählte Modell höchstens liest. Für die Antwort bleibt nur wenig Platz, sodass sie abbrechen kann, und Ihre nächste Nachricht passt wahrscheinlich nicht mehr hinein."
+
+-- When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4191569714"] = "Wenn Sie den Chat komprimieren, fasst die KI ihn zusammen, und die Unterhaltung geht in einem neuen Chat weiter. Ihre Nachricht kommt mit in das Eingabefeld des neuen Chats, sodass Sie sie dort senden können."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T900713019"] = "Abbrechen"
 
 -- Restart now
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREPENDINGDIALOG::T1409292924"] = "Jetzt neu starten"

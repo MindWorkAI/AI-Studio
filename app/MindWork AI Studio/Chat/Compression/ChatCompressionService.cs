@@ -1,3 +1,4 @@
+using AIStudio.Models;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -50,6 +51,39 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     private const int TOKENS_FOR_THE_REQUEST_FRAME = 512;
 
     /// <summary>
+    /// The smallest context window a model needs for compressing a chat.
+    /// </summary>
+    /// <remarks>
+    /// The system prompt, the room for the summary, and the summary so far take about 4,600 tokens
+    /// before a single message fits. Close to that, every part holds only a few messages, and the
+    /// summary is written anew for each of them. From 8,192 tokens on, a part holds a few
+    /// thousand tokens of the conversation.
+    /// </remarks>
+    public const int MIN_CONTEXT_WINDOW = 8_192;
+
+    /// <summary>
+    /// Whether a model with the given context window can compress a chat.
+    /// </summary>
+    /// <remarks>
+    /// An unknown window does not stop it: the whole conversation then goes into one request, and
+    /// the provider tells when it is too long, see SummarizeAsync.
+    /// </remarks>
+    /// <param name="window">The context window of the model which writes the summary.</param>
+    /// <returns>True when the window is unknown or at least MIN_CONTEXT_WINDOW.</returns>
+    public static bool CanSummarizeWith(ContextWindow window) => !window.IsKnown || window.DefaultTokens >= MIN_CONTEXT_WINDOW;
+
+    /// <summary>
+    /// How many tokens the summary may take in a model with the given context window.
+    /// </summary>
+    /// <remarks>
+    /// A quarter of the window, at least MIN_TOKENS_FOR_THE_SUMMARY and at most MAX_TOKENS_FOR_THE_SUMMARY.
+    /// The new chat starts with a summary of this length at most.
+    /// </remarks>
+    /// <param name="windowTokens">The context window of the model which writes the summary.</param>
+    /// <returns>The tokens kept free for the summary.</returns>
+    public static int TokensForTheSummary(int windowTokens) => Math.Clamp(windowTokens / 4, MIN_TOKENS_FOR_THE_SUMMARY, MAX_TOKENS_FOR_THE_SUMMARY);
+
+    /// <summary>
     /// Asks the AI for a summary of the messages the plan names.
     /// </summary>
     /// <remarks>
@@ -86,6 +120,10 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
         if (!sourceChat.IsLLMProviderAllowed(provider))
             return ChatCompressionResult.Failed(TB("The selected provider is not allowed in this chat due to data security or confidence-level requirements. Please select a different provider."));
 
+        var window = provider.GetModelProfile().Context;
+        if (!CanSummarizeWith(window))
+            return ChatCompressionResult.Failed(TB("The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts."));
+
         try
         {
             progress?.Report(new(ChatCompressionStep.READING_FILES, 0, 0));
@@ -94,26 +132,26 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
             //
             // The last exchange goes along at its place in the conversation, marked, so that the
             // summary knows what follows it. Messages after it, such as an unanswered question, keep
-            // coming after it, so the AI does not take the answer for a reply to them:
+            // coming after it, so the AI does not take the answer for a reply to them, see
+            // ChatCompressionPlan.ToRead:
             //
             var kept = new Dictionary<ContentBlock, KeptMessage>(ReferenceEqualityComparer.Instance) { [plan.LastAnswer] = KeptMessage.LAST_ANSWER };
             if (plan.LastQuestion is not null)
                 kept[plan.LastQuestion] = KeptMessage.LAST_QUESTION;
 
-            var messages = new List<CountedMessage>(plan.ToSummarize.Count + kept.Count);
+            var messages = new List<CountedMessage>(plan.ToRead.Count);
             var number = 0;
-            foreach (var block in plan.ToSummarize.Concat(kept.Keys).OrderBy(block => block.Time))
+            foreach (var block in plan.ToRead)
             {
                 var keptMessage = kept.GetValueOrDefault(block, KeptMessage.NONE);
                 var text = keptMessage is KeptMessage.NONE ? texts[block] : (block.Content as ContentText)?.Text ?? string.Empty;
                 messages.Add(await this.CountAsync(provider, ChatCompressionInput.Render(block, ++number, text, keptMessage), token));
             }
 
-            var window = provider.GetModelProfile().Context;
-            var tokensForTheSummary = window.IsKnown ? Math.Clamp(window.DefaultTokens / 4, MIN_TOKENS_FOR_THE_SUMMARY, MAX_TOKENS_FOR_THE_SUMMARY) : 0;
+            var tokensForTheSummary = window.IsKnown ? TokensForTheSummary(window.DefaultTokens) : 0;
             var tokensForMessagesAndSummary = window.IsKnown ? await this.TokensForMessagesAndSummaryAsync(provider, window.DefaultTokens, tokensForTheSummary, focus, token) : int.MaxValue;
 
-            // There has to be room for a part next to a summary so far which takes all the room kept for it:
+            // There has to be room for a part next to a summary so far which takes all the room kept for it, which a long focus may take away:
             if (window.IsKnown && tokensForMessagesAndSummary - tokensForTheSummary < MIN_TOKENS_PER_PART)
                 return ChatCompressionResult.Failed(TB("The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts."));
 

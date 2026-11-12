@@ -42,6 +42,23 @@ public sealed class ChatCompressionPlanTests
     }
 
     [Test]
+    public void AQuestionAndItsAnswerWithTheSameTimeAreReadInTheirOrder()
+    {
+        // Sending gives a message and its answer the same time stamp:
+        var chat = Chat(
+            Block(ChatRole.USER, "First question", 1),
+            Block(ChatRole.AI, "First answer", 1),
+            Block(ChatRole.USER, "Second question", 2),
+            Block(ChatRole.AI, "Second answer", 2),
+            Block(ChatRole.USER, "Unanswered question", 3));
+
+        var plan = ChatCompressionPlan.Of(chat, 0, draftIsEmpty: true);
+
+        Assert.That(plan, Is.Not.Null);
+        Assert.That(Texts(plan!.ToRead), Is.EqualTo(new[] { "First question", "First answer", "Second question", "Second answer" }), "Read the other way round, the AI takes the last question for one still waiting for an answer, and the unanswered one goes into the new chat's draft.");
+    }
+
+    [Test]
     public void TheExampleConversationOfTheChatTemplateStays()
     {
         var chat = Chat(

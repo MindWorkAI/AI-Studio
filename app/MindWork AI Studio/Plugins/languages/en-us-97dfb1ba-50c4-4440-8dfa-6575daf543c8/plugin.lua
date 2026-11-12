@@ -5889,6 +5889,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Move chat
 -- Bold
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1165397398"] = "Bold"
 
+-- Compressing a chat needs a model with a context window of at least {0} tokens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1284276020"] = "Compressing a chat needs a model with a context window of at least {0} tokens."
+
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Stop generation"
 
@@ -5973,6 +5976,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Select a 
 -- Profile changes are locked while a response is running.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3662116565"] = "Profile changes are locked while a response is running."
 
+-- This chat is too long for the model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3668031040"] = "This chat is too long for the model"
+
 -- Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3682097866"] = "Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished."
 
@@ -6002,6 +6008,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T544159998"] = "Complete s
 
 -- Move the chat to a workspace, or to another if it is already in one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Move the chat to a workspace, or to another if it is already in one."
+
+-- This chat nearly fills the context window of the model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T700383515"] = "This chat nearly fills the context window of the model"
 
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Show your workspaces"
@@ -9074,6 +9083,27 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "No"
 
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Yes"
+
+-- Compress chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1399817897"] = "Compress chat"
+
+-- Send anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2511873300"] = "Send anyway"
+
+-- Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T285302554"] = "Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation."
+
+-- You can shorten your message, remove some of its files, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3003436474"] = "You can shorten your message, remove some of its files, or select a model which takes longer texts."
+
+-- Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3814366820"] = "Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit."
+
+-- When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4191569714"] = "When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T900713019"] = "Cancel"
 
 -- Restart now
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREPENDINGDIALOG::T1409292924"] = "Restart now"

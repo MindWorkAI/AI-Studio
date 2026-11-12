@@ -29,6 +29,16 @@ namespace AIStudio.Chat.Compression;
 public sealed record ChatCompressionPlan(IReadOnlyList<ContentBlock> Preamble, IReadOnlyList<ContentBlock> ToSummarize, ContentBlock? LastQuestion, ContentBlock LastAnswer, ContentText? PendingQuestion)
 {
     /// <summary>
+    /// The messages the AI reads for the summary in the order of the conversation: those it summarizes, and the last exchange.
+    /// </summary>
+    /// <remarks>
+    /// Taken from the conversation itself rather than sorted anew: a message and its answer share
+    /// their time stamp, so sorting by time alone could put the answer first, and the AI would take
+    /// the question for one which is still waiting for an answer.
+    /// </remarks>
+    public IReadOnlyList<ContentBlock> ToRead { get; private init; } = [];
+
+    /// <summary>
     /// Plans how to compress the given chat.
     /// </summary>
     /// <remarks>
@@ -76,7 +86,15 @@ public sealed record ChatCompressionPlan(IReadOnlyList<ContentBlock> Preamble, I
         if (toSummarize.Count is 0)
             return null;
 
-        return new(blocks[..preambleLength], toSummarize, lastQuestion, blocks[lastAnswerIndex], pendingBlock?.Content as ContentText);
+        var toRead = blocks[preambleLength..]
+            .Where(block => !ReferenceEquals(block, pendingBlock))
+            .Where(IsSentText)
+            .ToList();
+
+        return new(blocks[..preambleLength], toSummarize, lastQuestion, blocks[lastAnswerIndex], pendingBlock?.Content as ContentText)
+        {
+            ToRead = toRead,
+        };
     }
 
     /// <summary>
