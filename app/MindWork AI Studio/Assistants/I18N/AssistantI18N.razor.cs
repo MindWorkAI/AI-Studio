@@ -408,7 +408,15 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
 
             if(this.CancellationTokenSource!.IsCancellationRequested)
                 return;
-            
+
+            //
+            // English addresses everybody alike, so its informal variants read like the
+            // formal texts of the plugin, also where the plugin words a text differently
+            // than the source code does:
+            //
+            if (this.selectedTargetLanguage is CommonLanguages.EN_US)
+                I18NAddressPrompt.AlignInformalVariants(this.localizedContent);
+
             //
             // Phase 2: Create the Lua code. Each comment names the English text, which
             // allTexts.lua holds for every key of the result. The English language plugin
