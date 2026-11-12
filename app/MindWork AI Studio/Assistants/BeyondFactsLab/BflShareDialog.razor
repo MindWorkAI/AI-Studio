@@ -13,12 +13,12 @@
             @TA("The file holds your details, your confirmed work states, your conversations, and the materials you confirmed. It never holds the name of your preparation, your material, the research on the web, or the date, the place, and the web page of the event.")
         </MudJustifiedText>
 
-        @* A placeholder until the TUM provides its notice on data protection, like the address in BflShareMail. *@
+        @* Placeholders until the TUM provides its notice on data protection, like the address in BflShareMail: this notice, and in the next one, the promise on how the research institution stores the data. *@
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@AppIcons.PRIVACY" Dense="true" Class="mb-2">
             @TA("For research purposes, your data will be evaluated and analyzed in pseudonymized form.")
         </MudAlert>
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@AppIcons.EMAIL" Dense="true" Class="mb-4">
-            @TA("Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file.")
+            @TA("Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file. The research institution stores your pseudonymized data so that nobody can link it to you or to your sender address.")
         </MudAlert>
 
         @if (this.isLoading)
