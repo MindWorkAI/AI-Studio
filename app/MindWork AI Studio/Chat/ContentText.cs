@@ -58,43 +58,43 @@ public sealed class ContentText : IContent
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
 
     /// <summary>
-    /// The most web addresses one answer keeps of what its tools returned.
-    /// </summary>
-    /// <remarks>
-    /// Every link of every page a tool read counts, which may be hundreds per page. The cap keeps a
-    /// stored chat from growing without bound; an address beyond it still counts until the chat is
-    /// closed, through ChatThread.RuntimeWebAddressesFromTools.
-    /// </remarks>
-    public const int MAX_WEB_ADDRESSES_FROM_TOOLS = 1_000;
-
-    /// <summary>
-    /// The web addresses the tools returned while this answer came about, as request keys, see
-    /// WebAddresses.CreateRequestKey.
+    /// The web addresses the tools returned while this answer came about and which a later message
+    /// still shows the model, as request keys, see WebAddresses.CreateRequestKey.
     /// </summary>
     /// <remarks>
     /// Stored with the answer, so that the model may read them again in a later message, also after
     /// a restart, while its free address choice is off, see ChatThread.IsWebAddressGivenToTheModel.
     /// A tool returned them, so the model neither made them up nor wrote anything of the chat into
-    /// them; addresses it wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.
-    /// Kept per answer rather than per chat: an answer which is deleted or generated anew takes its
-    /// addresses along.
+    /// them; addresses it wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.<br/><br/>
+    ///
+    /// Only those the model can still see later are kept: in the text of the answer, among its
+    /// sources, or in the arguments of a call which ran, see EndToolRun. A page a tool read returns
+    /// all of its links, often hundreds. Once the result is gone, the model has no way of knowing
+    /// them, short of reading the page again, which returns them once more. Storing them all would
+    /// only make the chat grow.<br/><br/>
+    ///
+    /// Kept per answer rather than per chat: an answer which is generated anew takes its addresses
+    /// along, and so does one which is deleted, once the chat is opened again, see
+    /// ChatThread.RuntimeWebAddressesFromTools.
     /// </remarks>
     public HashSet<string> WebAddressesFromTools { get; set; } = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Keeps the web addresses a tool returned for this answer, up to MAX_WEB_ADDRESSES_FROM_TOOLS.
+    /// The web addresses the tools of the running request returned so far, as request keys.
+    /// </summary>
+    /// <remarks>
+    /// Never stored: a chat is saved while its answer is still being written, and would hold every
+    /// link of every page read until then. EndToolRun keeps those which a later message shows, in
+    /// WebAddressesFromTools.
+    /// </remarks>
+    [JsonIgnore]
+    public HashSet<string> PendingWebAddressesFromTools { get; private set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Notes the web addresses a tool returned for this answer, see PendingWebAddressesFromTools.
     /// </summary>
     /// <param name="requestKeys">The addresses as request keys, see ToolCallOutcome.ReturnedWebAddresses.</param>
-    public void KeepWebAddressesFromTools(IEnumerable<string> requestKeys)
-    {
-        foreach (var requestKey in requestKeys)
-        {
-            if (this.WebAddressesFromTools.Count >= MAX_WEB_ADDRESSES_FROM_TOOLS)
-                return;
-
-            this.WebAddressesFromTools.Add(requestKey);
-        }
-    }
+    public void KeepWebAddressesFromTools(IEnumerable<string> requestKeys) => this.PendingWebAddressesFromTools.UnionWith(requestKeys);
 
     /// <summary>
     /// Optional structured data for a specialized visual presentation of this text.
@@ -277,7 +277,8 @@ public sealed class ContentText : IContent
     public void BeginToolRun()
     {
         this.ToolInvocations.Clear();
-        this.WebAddressesFromTools.Clear();
+        this.WebAddressesFromTools = new(StringComparer.Ordinal);
+        this.PendingWebAddressesFromTools = new(StringComparer.Ordinal);
         this.PendingToolConversation = [];
     }
 
@@ -286,9 +287,50 @@ public sealed class ContentText : IContent
     /// </summary>
     /// <remarks>
     /// The traces stay -- they are what the user reads afterwards to see how the answer came
-    /// about. What goes is the payload, which belonged to a request that is over.
+    /// about. What goes is the payload, which belonged to a request that is over.<br/><br/>
+    ///
+    /// Of the web addresses the tools returned, the answer keeps those which a later message still
+    /// shows the model, see WebAddressesFromTools. The set is replaced as a whole, since the chat
+    /// may be saved meanwhile. Whoever ends a request may call this once more, which keeps what the
+    /// first call kept.
     /// </remarks>
-    public void EndToolRun() => this.PendingToolConversation = [];
+    public void EndToolRun()
+    {
+        this.PendingToolConversation = [];
+
+        var shownLater = this.FindRequestKeysShownLater();
+        var kept = new HashSet<string>(StringComparer.Ordinal);
+        kept.UnionWith(this.WebAddressesFromTools.Where(shownLater.Contains));
+        kept.UnionWith(this.PendingWebAddressesFromTools.Where(shownLater.Contains));
+
+        this.WebAddressesFromTools = kept;
+        this.PendingWebAddressesFromTools = new(StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// The request keys of the web addresses a later message shows the model with this answer.
+    /// </summary>
+    /// <remarks>
+    /// Those in its text, those of its sources, and those in the arguments of its calls which ran,
+    /// as the note in front of the answer names them, see ToolCallHistoryNote. The values of
+    /// sensitive arguments do not count, since the note hides them.
+    /// </remarks>
+    private HashSet<string> FindRequestKeysShownLater()
+    {
+        var texts = new List<string> { this.Text };
+        texts.AddRange(this.Sources.Select(source => source.URL));
+        foreach (var trace in this.ToolInvocations.Where(trace => trace is { Status: ToolInvocationTraceStatus.SUCCESS, WasExecuted: true }))
+            texts.AddRange(trace.FindKeptTexts());
+
+        var requestKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in texts.SelectMany(WebAddresses.Find))
+        {
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                requestKeys.Add(requestKey);
+        }
+
+        return requestKeys;
+    }
 
     /// <summary>
     /// Keeps what the provider says the request behind this answer cost.

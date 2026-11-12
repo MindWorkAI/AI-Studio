@@ -291,7 +291,12 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         return requestKeys;
     }
 
-    private static void CollectStrings(JsonElement element, List<string> texts)
+    /// <summary>
+    /// Collects every text value of a JSON value, also those inside arrays and objects, but no property names.
+    /// </summary>
+    /// <param name="element">The JSON value.</param>
+    /// <param name="texts">Where the texts go.</param>
+    internal static void CollectStrings(JsonElement element, List<string> texts)
     {
         switch (element.ValueKind)
         {

@@ -221,6 +221,10 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         {
         }
 
+        // The answer names the link, so a later message shows it to the model:
+        answer.Text = "The newsletter links to the October issue at https://example.org/newsletter/2026-10 and nothing else.";
+        answer.EndToolRun();
+
         var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS)!;
 
         using (Assert.EnterMultipleScope())

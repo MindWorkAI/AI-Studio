@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
@@ -42,4 +43,46 @@ public sealed class ToolInvocationTrace
 
     [JsonIgnore]
     public JsonNode? JsonResult { get; set; }
+
+    /// <summary>
+    /// The arguments this trace kept with their values, see ArgumentsJson.
+    /// </summary>
+    /// <remarks>
+    /// AI Studio writes them itself, see ToolExecutor. Text which is no JSON object, as in a chat file
+    /// changed by hand, counts as nothing kept, so the values of all arguments stay unknown.
+    /// </remarks>
+    /// <returns>The arguments as one JSON object, which the caller disposes, or null when none were kept.</returns>
+    public JsonDocument? ReadKeptArguments()
+    {
+        if (string.IsNullOrWhiteSpace(this.ArgumentsJson))
+            return null;
+
+        try
+        {
+            var document = JsonDocument.Parse(this.ArgumentsJson);
+            if (document.RootElement.ValueKind is JsonValueKind.Object)
+                return document;
+
+            document.Dispose();
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// The texts among the kept arguments, also those inside an array or an object.
+    /// </summary>
+    /// <returns>The texts, which leave out the values of sensitive arguments.</returns>
+    public List<string> FindKeptTexts()
+    {
+        var texts = new List<string>();
+        using var keptArguments = this.ReadKeptArguments();
+        if (keptArguments is not null)
+            ToolExecutor.CollectStrings(keptArguments.RootElement, texts);
+
+        return texts;
+    }
 }

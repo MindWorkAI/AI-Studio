@@ -4,6 +4,7 @@ using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Web;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -81,8 +82,7 @@ public sealed class ChatThreadWebAddressTests
     [Test]
     public void AnAddressAToolReturnedForAnAnswerOutlastsARestart()
     {
-        var answer = new ContentText { Text = "The newsletter links to the program of the conference." };
-        answer.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))]);
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
         var thread = Thread(
             Block(ChatRole.USER, "What does the newsletter link to?", 1),
             new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
@@ -97,10 +97,54 @@ public sealed class ChatThreadWebAddressTests
     }
 
     [Test]
+    public void AnAnswerKeepsOnlyTheAddressesALaterMessageShows()
+    {
+        var answer = new ContentText
+        {
+            Text = "The newsletter links to the program at https://example.org/program and nothing else.",
+            Sources = [new Source("Speakers", "https://example.org/speakers", SourceOrigin.TOOL)],
+            ToolInvocations =
+            [
+                new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/newsletter" }, ArgumentsJson = """{"url":"https://example.org/newsletter"}""" },
+                new ToolInvocationTrace { Order = 2, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.BLOCKED, Arguments = new() { ["url"] = "https://example.org/blocked" }, ArgumentsJson = """{"url":"https://example.org/blocked"}""" },
+            ],
+        };
+
+        answer.KeepWebAddressesFromTools(new[] { "program", "speakers", "newsletter", "blocked", "imprint" }.Select(Key));
+        answer.EndToolRun();
+
+        Assert.That(answer.WebAddressesFromTools, Is.EquivalentTo(new[] { "program", "speakers", "newsletter" }.Select(Key)), "In the text, as a source, and as the argument of a call which ran. A link the model no longer sees would only make the chat grow.");
+    }
+
+    [Test]
+    public void TheAddressesOfARunningAnswerAreNotStored()
+    {
+        var answer = new ContentText { Text = "Let me read https://example.org/program first." };
+        answer.KeepWebAddressesFromTools([Key("program")]);
+
+        // A chat is saved while its answer is still being written, and would hold every link of every page read until then:
+        var stored = JsonSerializer.Serialize(Thread(new ContentBlock { Time = START, ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI }), WorkspaceBehaviour.JSON_OPTIONS);
+        var loaded = JsonSerializer.Deserialize<ChatThread>(stored, WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        Assert.That(((ContentText)loaded.Blocks.Single().Content!).WebAddressesFromTools, Is.Empty);
+    }
+
+    [Test]
+    public void EndingTheRunOnceMoreKeepsWhatTheFirstEndKept()
+    {
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
+
+        // Whoever ends a request ends the tool run as well, after the answer did:
+        answer.EndToolRun();
+
+        Assert.That(answer.WebAddressesFromTools, Has.Count.EqualTo(1));
+    }
+
+    [Test]
     public void AnAddressAToolReturnedForADeletedAnswerIsNoLongerGiven()
     {
-        var answer = new ContentText { Text = "The newsletter links to the program of the conference." };
-        answer.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))]);
+        // A chat opened anew, whose runtime set is empty, so only what the answers store counts:
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
         var thread = Thread(
             Block(ChatRole.USER, "What does the newsletter link to?", 1),
             new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
@@ -111,19 +155,9 @@ public sealed class ChatThreadWebAddressTests
     }
 
     [Test]
-    public void AnAnswerKeepsAtMostTheCapOfTheAddressesToolsReturned()
-    {
-        var answer = new ContentText();
-        answer.KeepWebAddressesFromTools(Enumerable.Range(0, ContentText.MAX_WEB_ADDRESSES_FROM_TOOLS + 5).Select(n => WebAddresses.CreateRequestKey(new Uri($"https://example.org/page-{n}"))));
-
-        Assert.That(answer.WebAddressesFromTools, Has.Count.EqualTo(ContentText.MAX_WEB_ADDRESSES_FROM_TOOLS));
-    }
-
-    [Test]
     public void AnAnswerGeneratedAnewForgetsTheAddressesOfItsEarlierToolRun()
     {
-        var answer = new ContentText { Text = "The newsletter links to the program of the conference." };
-        answer.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))]);
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
         var thread = Thread(
             Block(ChatRole.USER, "What does the newsletter link to?", 1),
             new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
@@ -140,11 +174,10 @@ public sealed class ChatThreadWebAddressTests
     [Test]
     public void ACopyOfAnAnswerKeepsItsAddressesApart()
     {
-        var answer = new ContentText { Text = "The newsletter links to the program of the conference." };
-        answer.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))]);
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
 
         var copy = (ContentText)answer.DeepClone();
-        copy.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/speakers"))]);
+        copy.WebAddressesFromTools.Add(WebAddresses.CreateRequestKey(new Uri("https://example.org/speakers")));
 
         using (Assert.EnterMultipleScope())
         {
@@ -157,8 +190,7 @@ public sealed class ChatThreadWebAddressTests
     public void AnAddressAToolReturnedForAMessageOfTheUserIsNotGiven()
     {
         // Only answers of the model are filled by the tool calling loop. A message of the user holding the set came from elsewhere:
-        var message = new ContentText { Text = "Hello." };
-        message.KeepWebAddressesFromTools([WebAddresses.CreateRequestKey(new Uri("https://example.org/chosen"))]);
+        var message = new ContentText { Text = "Hello.", WebAddressesFromTools = [WebAddresses.CreateRequestKey(new Uri("https://example.org/chosen"))] };
         var thread = Thread(new ContentBlock { Time = START, ContentType = ContentType.TEXT, Content = message, Role = ChatRole.USER });
 
         Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False);
@@ -280,4 +312,19 @@ public sealed class ChatThreadWebAddressTests
         Role = role,
         HideFromUser = hidden,
     };
+
+    /// <summary>
+    /// An answer whose tools returned some addresses, after its request ended.
+    /// </summary>
+    /// <param name="text">The text of the answer.</param>
+    /// <param name="returnedAddresses">What the tools returned.</param>
+    private static ContentText Answer(string text, params string[] returnedAddresses)
+    {
+        var answer = new ContentText { Text = text };
+        answer.KeepWebAddressesFromTools(returnedAddresses.Select(address => WebAddresses.CreateRequestKey(new Uri(address))));
+        answer.EndToolRun();
+        return answer;
+    }
+
+    private static string Key(string path) => WebAddresses.CreateRequestKey(new Uri($"https://example.org/{path}"));
 }

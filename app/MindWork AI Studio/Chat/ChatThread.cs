@@ -280,10 +280,11 @@ public sealed record ChatThread
     /// </summary>
     /// <remarks>
     /// Addresses the model wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.
-    /// Not stored: each answer stores the addresses its own tools returned, see
-    /// ContentText.WebAddressesFromTools, so they outlast a restart. This set covers the runs
-    /// without an answer in the chat, such as those of the assistants, and the addresses beyond the
-    /// cap of an answer.
+    /// Not stored: each answer stores those addresses its own tools returned which a later message
+    /// still shows the model, see ContentText.WebAddressesFromTools, so they outlast a restart. This
+    /// set covers the runs without an answer in the chat, such as those of the assistants, and the
+    /// addresses no later message shows, such as the links of a page read. It is never emptied, so
+    /// the addresses of an answer which was deleted or generated anew count until the chat is closed.
     /// </remarks>
     [JsonIgnore]
     public HashSet<string> RuntimeWebAddressesFromTools { get; } = new(StringComparer.Ordinal);

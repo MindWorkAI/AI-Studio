@@ -251,7 +251,7 @@ public static partial class ToolCallHistoryNote
     /// </remarks>
     private static string WriteArguments(ToolInvocationTrace trace)
     {
-        using var keptArguments = ReadKeptArguments(trace.ArgumentsJson);
+        using var keptArguments = trace.ReadKeptArguments();
         var keptValues = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
         if (keptArguments is not null)
         {
@@ -279,33 +279,6 @@ public static partial class ToolCallHistoryNote
         }
 
         return Encoding.UTF8.GetString(buffer.WrittenSpan);
-    }
-
-    /// <summary>
-    /// The arguments a trace kept with their values, or null when it kept none.
-    /// </summary>
-    /// <remarks>
-    /// AI Studio writes them itself, see ToolExecutor. Text which is no JSON object, as in a chat file
-    /// changed by hand, counts as nothing kept, so its arguments stay hidden.
-    /// </remarks>
-    private static JsonDocument? ReadKeptArguments(string argumentsJson)
-    {
-        if (string.IsNullOrWhiteSpace(argumentsJson))
-            return null;
-
-        try
-        {
-            var document = JsonDocument.Parse(argumentsJson);
-            if (document.RootElement.ValueKind is JsonValueKind.Object)
-                return document;
-
-            document.Dispose();
-            return null;
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
     }
 
     private static void WriteValue(Utf8JsonWriter writer, JsonElement value)
