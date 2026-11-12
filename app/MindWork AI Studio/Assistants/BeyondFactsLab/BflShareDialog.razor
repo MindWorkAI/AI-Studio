@@ -41,7 +41,11 @@
                 <MudTextField T="string" @bind-Value="@this.ownName" Label="@TA("Your name")" Variant="Variant.Outlined" Class="mb-3"/>
                 <MudTextField T="string" @bind-Value="@this.otherNames" Label="@T("Names of other people, one per line")" Variant="Variant.Outlined" Lines="4" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3"/>
                 <MudTextField T="string" @bind-Value="@this.terms" Label="@T("Further terms, one per line")" HelperText="@TA("E.g., your institution, the name of the event, or a place.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3"/>
-                <MudSwitch T="bool" @bind-Value="@this.includePersonalDisclosures" Color="Color.Primary" Class="mb-2">@TA("Include personal disclosures")</MudSwitch>
+                <MudTextSwitch @bind-Value="@this.includePersonalDisclosures"
+                               Color="Color.Primary"
+                               Label="@T("Include personal disclosures?")"
+                               LabelOn="@(string.Format(Culture, TA("Yes, the file holds your personal involvement and the conversation of '{0}'"), BflStep.VALUES_AND_PERSPECTIVES.Title))"
+                               LabelOff="@(string.Format(Culture, TA("No, the file leaves out your personal involvement and the conversation of '{0}'"), BflStep.VALUES_AND_PERSPECTIVES.Title))"/>
                 <MudButton Variant="@(this.preview is null ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" StartIcon="@AppIcons.PREVIEW" OnClick="@this.CreatePreviewAsync">
                     @(this.preview is null ? T("Create preview") : T("Create preview anew"))
                 </MudButton>
