@@ -97,7 +97,7 @@ public static class Pdfium
         }
 
         Console.WriteLine();
-        Console.WriteLine($"- Error: Could not download Pdfium {version} for {rid.UserFriendlyName} from {pdfiumUrl} in {MAX_DOWNLOAD_ATTEMPTS} attempts.");
+        Console.WriteLine($"- Error: Could not install Pdfium {version} for {rid.UserFriendlyName} from {pdfiumUrl} in {MAX_DOWNLOAD_ATTEMPTS} attempts.");
         if (File.Exists(pdfiumLibTargetPath))
             Console.WriteLine("  To build with the library which is already present, use --offline.");
 
@@ -172,12 +172,13 @@ public static class Pdfium
 
             //
             // Deploy the library. The marker goes first, so that it never describes a library
-            // which was only half replaced:
+            // which was only half replaced. Its directory may not exist yet: Cargo creates it
+            // with the first Rust build, and File.Delete throws when the directory is missing:
             //
             Console.Write(" deploying ...");
+            Directory.CreateDirectory(Path.GetDirectoryName(versionMarkerPath)!);
             File.Delete(versionMarkerPath);
             File.Move(pdfiumLibTmpTargetPath, pdfiumLibTargetPath, true);
-            Directory.CreateDirectory(Path.GetDirectoryName(versionMarkerPath)!);
             await File.WriteAllTextAsync(versionMarkerPath, versionMarker, Environment.UTF8_NO_BOM);
         }
         catch (OperationCanceledException) when (attemptTimeout.IsCancellationRequested)
