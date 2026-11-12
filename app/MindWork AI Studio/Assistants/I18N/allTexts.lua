@@ -14206,6 +14206,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T247591452"] = "Thank you, Peer, f
 -- Become one of our titans
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894"] = "Become one of our titans"
 
+-- Thank you, Carsten, for fixing the first build after a fresh clone of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2698568606"] = "Thank you, Carsten, for fixing the first build after a fresh clone of AI Studio."
+
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Supporters"
 
@@ -14217,9 +14220,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3061261435"] = "Financial Support
 
 -- Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3226413110"] = "Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider."
-
--- Thank you, Carsten Bauer, for fixing the first build after a fresh clone of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3227696909"] = "Thank you, Carsten Bauer, for fixing the first build after a fresh clone of AI Studio."
 
 -- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, and for the protection against prompt injection.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T32630309"] = "Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, and for the protection against prompt injection."

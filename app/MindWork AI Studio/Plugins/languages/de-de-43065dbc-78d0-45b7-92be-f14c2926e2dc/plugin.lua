@@ -14208,6 +14208,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T247591452"] = "Vielen Dank, Peer,
 -- Become one of our titans
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894"] = "Werden Sie einer unserer Titanen"
 
+-- Thank you, Carsten, for fixing the first build after a fresh clone of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2698568606"] = "Vielen Dank, Carsten, dass Sie den ersten Build nach dem frischen Klonen von AI Studio repariert haben."
+
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Unterstützer"
 
@@ -14219,9 +14222,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3061261435"] = "Finanzielle Unter
 
 -- Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3226413110"] = "Vielen Dank, Prodman, dass du LiteLLM als neuen Anbieter in AI Studio integriert hast."
-
--- Thank you, Carsten Bauer, for fixing the first build after a fresh clone of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3227696909"] = "Vielen Dank, Carsten Bauer, für die Fehlerbehebung beim ersten Build nach einem frischen Klon von AI Studio."
 
 -- Thank you, Sabrina, for bringing file attachments to the chat, for the Slide Assistant and the SWOT Analysis Assistant, and for the protection against prompt injection.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T32630309"] = "Vielen Dank, Sabrina, dass du den Chat um Dateianhänge erweitert, den Folien-Assistenten und den SWOT-Analyse-Assistenten entwickelt und den Schutz vor Prompt-Injection eingebaut hast."
