@@ -57,13 +57,13 @@ public partial class ProviderSelection : MSGComponentBase
 
     #endregion
     
-    private async Task SelectionChanged(AIStudio.Settings.Provider provider)
+    private async Task SelectionChanged(AIStudio.Settings.Provider? provider)
     {
         if (this.Disabled)
             return;
 
-        this.ProviderSettings = provider;
-        await this.ProviderSettingsChanged.InvokeAsync(provider);
+        this.ProviderSettings = provider ?? AIStudio.Settings.Provider.NONE;
+        await this.ProviderSettingsChanged.InvokeAsync(this.ProviderSettings);
     }
 
     private IEnumerable<ProviderSelectionItem> GetAvailableProviderSelectionItems()
@@ -104,21 +104,21 @@ public partial class ProviderSelection : MSGComponentBase
         List<CapabilityIcon> capabilityIcons = [];
 
         if (profile.Has(Capability.AUDIO_INPUT))
-            capabilityIcons.Add(new(Icons.Material.Filled.GraphicEq, this.T("Audio input possible")));
+            capabilityIcons.Add(new(AppIcons.AUDIO_INPUT, this.T("Audio input possible")));
 
         if (profile.HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT))
-            capabilityIcons.Add(new(Icons.Material.Filled.Image, this.T("Image input possible")));
+            capabilityIcons.Add(new(AppIcons.IMAGE, this.T("Image input possible")));
 
         if (profile.Has(Capability.SPEECH_INPUT))
-            capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
+            capabilityIcons.Add(new(AppIcons.MICROPHONE, this.T("Speech input possible")));
 
         // The same check which decides whether a request offers tools, Semantic Search among them:
         if (provider.GetToolCallingAvailability().IsAvailable)
-            capabilityIcons.Add(new(Icons.Material.Filled.Build, this.T("Tool calling possible")));
+            capabilityIcons.Add(new(AppIcons.TOOL, this.T("Tool calling possible")));
 
         var reasoningIndicatorState = provider.GetReasoningIndicatorState();
         if (reasoningIndicatorState is not ReasoningIndicatorState.NONE)
-            capabilityIcons.Add(new(Icons.Material.Filled.Psychology, this.GetReasoningTooltip(reasoningIndicatorState)));
+            capabilityIcons.Add(new(AppIcons.REASONING, this.GetReasoningTooltip(reasoningIndicatorState)));
 
         return capabilityIcons;
     }

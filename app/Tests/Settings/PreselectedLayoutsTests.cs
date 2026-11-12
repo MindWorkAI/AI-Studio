@@ -80,12 +80,12 @@ public sealed class PreselectedLayoutsTests
         await ProcessAsync("""{ ["CHAPTER"] = "Section Header" }""");
 
         var isManaged = ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isManaged, Is.True);
             Assert.That(configMeta.IsLocked, Is.True);
             Assert.That(configMeta.LockedByConfigPluginId, Is.EqualTo(PLUGIN_ID));
-        });
+        }
     }
 
     [Test]
@@ -94,13 +94,13 @@ public sealed class PreselectedLayoutsTests
         await ProcessAsync("""{ ["CHAPTER"] = "Section Header" }""", allowUserOverride: true);
 
         var isManaged = ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.PreselectedLayouts, out var configMeta);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(isManaged, Is.True);
             Assert.That(configMeta.IsLocked, Is.False, "With AllowUserOverride, users may change the layouts.");
             Assert.That(configMeta.EditableDefaultByConfigPluginId, Is.EqualTo(PLUGIN_ID));
             Assert.That(this.PreselectedLayouts, Is.EquivalentTo(new Dictionary<LayoutPurpose, string> { [LayoutPurpose.CHAPTER] = "Section Header" }), "The first time, the default of the organization applies.");
-        });
+        }
 
         this.PreselectedLayouts[LayoutPurpose.CHAPTER] = "Chapter";
         await ProcessAsync("""{ ["CHAPTER"] = "Section Header" }""", allowUserOverride: true);

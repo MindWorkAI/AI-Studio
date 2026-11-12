@@ -108,7 +108,7 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
         .OptionalEnum(GROUP_BY_ARGUMENT, $"Optional: break the number of each mailbox down by the folders the mails lie in, or by their senders. Shows the {MAX_GROUPS} largest groups. Leave it out for the totals only.", GROUP_BY_VALUES)
         .Build();
 
-    public string Icon => Icons.Material.Filled.Numbers;
+    public string Icon => AppIcons.MAIL_COUNT;
 
     // Only while both previews are switched on, the one for local RAG and the one for mailboxes:
     public bool IsAvailable => retrievalService.AreMailboxesEnabled;

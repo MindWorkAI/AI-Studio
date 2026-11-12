@@ -158,8 +158,9 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- or "ENC:v1:<base64-encoded encrypted data>", which every version of AI Studio reads. Both
 --     -- formats use the same secret. DataApp.EnterpriseEncryptionExportFormat below decides which
 --     -- one your exports write.
---     -- The encryption secret must be configured via:
+--     -- The encryption secret must be configured via one of:
 --     --   Windows Registry: HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret
+--     --   Policy file: config_encryption_secret.yaml, in the folder of the other policy files
 --     --   Environment variable: MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
 --     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
@@ -595,12 +596,14 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the preselected provider.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
--- Please note: using an empty string ("") will lock the preselected provider selection, even though no valid preselected provider is found.
+-- Please note: an empty string ("") locks the selection to no preselected provider. This needs
+-- AI Studio v26.11.1 or newer; older versions ignore the empty string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure the preselected profile.
 -- It must be one of the profile IDs defined in CONFIG["PROFILES"].
--- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
+-- Please note: an empty string ("") locks the selection to no preselected profile. This needs
+-- AI Studio v26.11.1 or newer; older versions ignore the empty string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure chat-specific preselected options.
@@ -904,7 +907,9 @@ CONFIG["SETTINGS"] = {}
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
 -- Without a selected transcription provider, dictation and transcription features will be disabled.
--- Please note: using an empty string ("") will lock the selection and disable dictation/transcription.
+-- Please note: an empty string ("") locks the selection to no transcription provider, which disables
+-- dictation/transcription. This needs AI Studio v26.11.1 or newer; older versions ignore the empty
+-- string and leave the choice to the user.
 -- CONFIG["SETTINGS"]["DataApp.UseTranscriptionProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure the Opus bitrate used when normalizing uploaded audio/video for transcription.
@@ -923,11 +928,12 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are:
 --   GRAMMAR_SPELLING_ASSISTANT, ICON_FINDER_ASSISTANT, REWRITE_ASSISTANT,
 --   PROMPT_OPTIMIZER_ASSISTANT, TRANSLATION_ASSISTANT, AGENDA_ASSISTANT,
---   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
+--   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, SWOT_ANALYSIS_ASSISTANT,
+--   EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
 --   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
---   VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
+--   VISUAL_BRIEFING_ASSISTANT, BEYOND_FACTS_LAB_ASSISTANT, I18N_ASSISTANT,
 --   LOG_VIEWER_ASSISTANT
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
@@ -995,6 +1001,34 @@ CONFIG["SETTINGS"] = {}
 -- documents. Providers below this level cannot be selected in the assistant.
 -- CONFIG["SETTINGS"]["DataVisualBriefing.MinimumProviderConfidence"] = "NONE"
 
+-- Configure organization defaults for the BeyondFacts Lab.
+-- The lab guides researchers step by step through the preparation of a challenging appearance,
+-- such as a panel discussion or an interview. It is a prototype: users see it only when they allow
+-- prototypes and enable the preview feature PRE_BEYOND_FACTS_LAB_2026.
+--
+-- Configure the provider which new preparations start with.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum provider confidence required by the lab.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Unpublished research is the usual material of the lab, so the lab never accepts less than MEDIUM.
+-- A lower value has no effect; HIGH allows only self-hosted models in the built-in confidence schemes.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.MinimumProviderConfidence"] = "MEDIUM"
+--
+-- Configure how the lab addresses users in languages with a formal and an informal address, such as German.
+-- In a language with one form of address only, such as English, the setting has no effect, and the options
+-- of the lab do not show it.
+-- Allowed values are: FORMAL, INFORMAL
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.AddressForm"] = "FORMAL"
+--
+-- Configure whether files in the folder for prompt overrides replace the prompts which come with the lab.
+-- The option serves the further development of the prompts, e.g., by the research team behind the lab.
+-- Preparing an appearance does not need it. Such files count as instructions of the users themselves,
+-- and the lab shows a banner while one of them replaces a prompt. Set it to false and lock it to keep
+-- users with the prompts which come with AI Studio.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.AllowPromptOverrides"] = false
+
 -- Configure defaults for the Assistant Builder.
 -- Preselection must be enabled for the remaining Assistant Builder settings to take effect.
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectOptions"] = true
@@ -1025,6 +1059,62 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOutputLanguage.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.MinimumProviderConfidence.AllowUserOverride"] = true
+
+-- Configure defaults for the Prompt Optimizer.
+-- These settings need AI Studio v26.11.1 or newer; older versions ignore them.
+-- Preselection must be enabled for the remaining Prompt Optimizer settings to take effect.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectOptions"] = true
+--
+-- Configure the language of the optimized prompt.
+-- Allowed values are: AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT,
+--   JA_JP, RU_RU, OTHER
+-- AS_IS keeps the language of the prompt the user enters.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedTargetLanguage"] = "AS_IS"
+--
+-- Configure a free-form language, used only when PreselectedTargetLanguage is "OTHER".
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedOtherLanguage"] = ""
+--
+-- Configure the aspects the optimized prompt should emphasize, such as the structure of the
+-- answer or constraints.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedImportantAspects"] = ""
+--
+-- Configure the prompt guide of your organization. The Prompt Optimizer then optimizes prompts
+-- along this guide instead of its default one, and it reads the current content of the file
+-- whenever it opens. Lock it so that users cannot choose another guide in the assistant; lock
+-- PreselectOptions as well, because the guide applies only while preselection is enabled.
+-- An empty path stands for the default guide: locked, it makes everybody use the default guide.
+--
+-- The simplest way is to ship the guide with this plugin: put the file, e.g., a Markdown, PDF,
+-- or Word document, next to this plugin.lua, or into a folder below it, and give its path
+-- relative to this plugin.lua. The path must stay inside the plugin directory, i.e., no '..'
+-- segments and no links pointing out of it. When the file is missing or the path is rejected,
+-- AI Studio logs a warning, and this plugin does not manage the guide: users keep the one they
+-- chose, or the default guide.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath"] = "Prompting-Guide.md"
+--
+-- An absolute path works as well. It must be readable on every machine, e.g., on a network
+-- share or in a folder your software distribution fills; for Flatpak installations, it must
+-- be readable inside the sandbox.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath"] = "C:\\Guides\\Prompting-Guide.md"
+--
+-- Configure the minimum provider confidence required to optimize prompts.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Providers below this level cannot be selected in the Prompt Optimizer. This minimum applies
+-- only while preselection is enabled; the app-wide minimum confidence applies in any case.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.MinimumProviderConfidence"] = "NONE"
+--
+-- Configure the preselected provider for optimizing prompts.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Allow users to change individual managed Prompt Optimizer defaults locally.
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedTargetLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedOtherLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedImportantAspects.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedCustomPromptGuidePath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.MinimumProviderConfidence.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataPromptOptimizer.PreselectedProvider.AllowUserOverride"] = true
 
 -- Configure enterprise approvals for assistant plugins.
 -- Each approval is matched only by the current SHA-256 hash over all Lua files
@@ -1104,6 +1194,7 @@ CONFIG["SETTINGS"] = {}
 -- whole collection or sets its confidence, and of several levels set for a collection and its
 -- tools, the highest applies.
 -- Collection IDs include: mailboxes (search_mails, read_mail, and count_mails; while the mailbox
+-- preview is enabled), mathematics (calculate and compute_symbolically; while the mathematics
 -- preview is enabled)
 
 -- Disable individual tools or tool collections by their stable ID. The default is an empty set.
@@ -1112,15 +1203,19 @@ CONFIG["SETTINGS"] = {}
 -- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
 -- search the data sources with every message instead, the way it does for models without
 -- tool usage.
+-- Users can switch off further tools themselves in the tool settings, e.g., one they never need.
+-- They can never switch on a tool you disable here.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools or tool
 -- collections.
 -- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
--- Collection IDs include: mailboxes
+-- Collection IDs include: mailboxes, mathematics
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
--- semantic_search = NONE, mailboxes = VERY_LOW
+-- semantic_search = NONE, mailboxes = VERY_LOW, mathematics = NONE
+-- mathematics computes locally and sees nothing but what the model writes into its arguments,
+-- so it needs no minimum of its own.
 -- search_confluence always searches with a HIGH-confidence provider only, whatever value is
 -- set here.
 -- semantic_search offers a provider only the data sources whose own confidence level it meets,
@@ -1131,7 +1226,8 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page"] = "VERY_LOW",
 --     ["search_confluence"] = "HIGH",
 --     ["semantic_search"] = "NONE",
---     ["mailboxes"] = "VERY_LOW"
+--     ["mailboxes"] = "VERY_LOW",
+--     ["mathematics"] = "NONE"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -1295,11 +1391,20 @@ CONFIG["SETTINGS"] = {}
 --
 -- IMPORTANT: A configuration plugin cannot fix the very first download of that same
 -- configuration plugin. For bootstrapping enterprise configuration downloads, deploy
--- the equivalent environment variables before AI Studio starts:
+-- the policy file external_http_custom_root_certificates.yaml, in the folder of the
+-- other policy files, before AI Studio starts. It takes precedence over everything else:
+--
+-- enabled: true
+-- bundle_path: "/path/in/sandbox/company-root-cas.pem"
+-- allowed_hosts: "*.intra.example.org;data.example.org"
+--
+-- Alternatively, deploy the equivalent environment variables before AI Studio starts:
 --
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED=true
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH=/path/in/sandbox/company-root-cas.pem
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS=*.intra.example.org;data.example.org
+--
+-- See https://github.com/MindWorkAI/AI-Studio/wiki/Configuration-Server#your-own-certificate-authorities
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the host
 -- list completely. Deploy this setting in one configuration only, or repeat every host
@@ -1348,7 +1453,7 @@ CONFIG["SETTINGS"] = {}
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
 -- table. Every configuration that sets this must therefore list all providers it wants
 -- to cover. A partial table is not completed from the configuration below it, and the
--- providers left out fall back to the app default.
+-- providers left out get the confidence level UNKNOWN.
 -- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme"] = {
 --     ["OPEN_AI"] = "MODERATE",
 --     ["ANTHROPIC"] = "MODERATE",
@@ -1429,6 +1534,22 @@ CONFIG["SETTINGS"] = {}
 -- so the mailbox comes back as it was, should you allow its server again. Without any mail server
 -- in CONFIG["MAILBOX_PROVIDERS"], this blocks every mailbox.
 -- CONFIG["SETTINGS"]["DataMailboxes.AllowOnlyOrganizationMailServers"] = true
+
+-- Configure a pause between two indexing steps of local data sources, i.e., files, folders, and
+-- mailboxes. AI Studio indexes large data sources in steps of a few minutes. Between two steps, it
+-- waits for a random number of seconds between the lower and the upper bound, both included. This
+-- spares an embedding server which many users share: a single user with large folders or
+-- mailboxes no longer keeps it busy for hours. The pause applies after every step which worked on
+-- documents, also when the same data source carries on. Time which passes anyway counts toward
+-- it. Both values must be between 0 and 300 seconds. The default is 0 for both, i.e., no pause.
+-- You may set one bound or both. A bound you set wins, and AI Studio adjusts the other one to it.
+-- Should the upper bound be below the lower bound, the lower bound wins.
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds"] = 30
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds"] = 90
+--
+-- Allow users to change the bounds, so that your values are only defaults:
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.
@@ -1550,7 +1671,7 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Collection IDs include: mailboxes
+--     -- Collection IDs include: mailboxes, mathematics
 --     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
 --     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
@@ -1720,7 +1841,7 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Collection IDs include: mailboxes
+--     -- Collection IDs include: mailboxes, mathematics
 --     -- Allowing search_confluence also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --
@@ -1732,7 +1853,9 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Optional: hide the policy definition section in the UI.
 --     -- When set to true, users will only see the document selection interface
 --     -- and cannot view or modify the policy settings.
---     -- This is useful for enterprise configurations where policy details should remain hidden.
+--     -- This is useful for enterprise configurations where users would find the policy details overwhelming.
+--     -- It keeps the assistant simple, but it does not keep the policy a secret: a chat which continues
+--     -- an analysis gets the whole policy as its system prompt, and users can read it there.
 --     -- Allowed values are: true, false (default: false)
 --     ["HidePolicyDefinition"] = false
 -- }

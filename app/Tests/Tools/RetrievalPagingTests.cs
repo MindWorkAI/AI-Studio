@@ -21,12 +21,41 @@ public sealed class RetrievalPagingTests
     private const int PAGE_SIZE = 2;
 
     [Test]
-    public void TheFirstPageShowsTheFirstChannelThenWhatOnlyTheSecondFound()
+    public void TheChannelsTakeTurnsStartingWithTheFirst()
     {
-        // The vector search found a, b, and c; the keyword search b, d, and e:
-        var (matches, _) = Merge(["a", "b", "c"], ["b", "d", "e"], page: 1);
+        // The vector search found a, b, and c; the keyword search x, y, and z:
+        var (matches, _) = Merge(["a", "b", "c"], ["x", "y", "z"], page: 1, pageSize: 4);
 
-        Assert.That(matches, Is.EqualTo(new[] { "a", "b", "d" }), "This is what the RAG process always sent: the vector matches first, then the keyword matches it did not have yet.");
+        Assert.That(matches, Is.EqualTo(new[] { "a", "x", "b", "y" }), "The best match of the vector search comes first, then the best of the keyword search, then the second best of each.");
+    }
+
+    [Test]
+    public void AChannelWhichRunsOutLeavesItsTurnsToTheOther()
+    {
+        string[] vectorMatches = ["v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11"];
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Merge(vectorMatches, ["k1"], page: 1, pageSize: 10).Matches, Is.EqualTo(new[] { "v1", "k1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9" }), "The keyword search found a single match, so the vector search fills the rest of the page.");
+            Assert.That(Merge(vectorMatches, [], page: 1, pageSize: 10).Matches, Is.EqualTo(vectorMatches.Take(10)), "Without any keyword match, the vector search fills the whole page.");
+        }
+    }
+
+    [Test]
+    public void APageHoldsNoMoreMatchesThanConfigured()
+    {
+        var vectorMatches = Enumerable.Range(1, 30).Select(number => $"v{number}").ToArray();
+        var keywordMatches = Enumerable.Range(1, 30).Select(number => $"k{number}").ToArray();
+
+        Assert.That(Merge(vectorMatches, keywordMatches, page: 1, pageSize: 10).Matches, Has.Count.EqualTo(10), "When each channel brought a page of its own, a page held up to twice as many matches as the user asked for.");
+    }
+
+    [Test]
+    public void AMatchBothChannelsFoundTakesTheFirstOfItsPlaces()
+    {
+        var (matches, _) = Merge(["a", "b", "c"], ["b", "a", "d"], page: 1, pageSize: 4);
+
+        Assert.That(matches, Is.EqualTo(new[] { "a", "b", "c", "d" }), "Both turns of the second rank are taken already, so the third rank follows right away.");
     }
 
     [Test]
@@ -39,11 +68,33 @@ public sealed class RetrievalPagingTests
         for (var page = 1; page <= 3; page++)
             shown.AddRange(Merge(first, second, page).Matches);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(shown, Is.Unique, "A chunk both channels found is shown on the earlier of its two pages only.");
-            Assert.That(shown, Is.EquivalentTo(first.Take(6).Union(second.Take(6))), "Leaving out the duplicates must not leave out anything else.");
-        });
+            Assert.That(shown, Is.Unique, "A chunk both channels found takes the first of its two places only.");
+            Assert.That(shown, Is.EqualTo(new[] { "a", "c", "b", "h", "d", "i" }), "Leaving out the duplicates must not leave out anything else.");
+        }
+    }
+
+    [TestCase(1)]
+    [TestCase(3)]
+    [TestCase(10)]
+    public void TheWindowOfAPageIsEnoughToCutIt(int pageSize)
+    {
+        // Channels which overlap, and one of which runs out early:
+        var first = Enumerable.Range(0, 60).Select(number => $"chunk-{number}").ToArray();
+        var second = Enumerable.Range(0, 25).Select(number => $"chunk-{3 * number}").ToArray();
+
+        using (Assert.EnterMultipleScope())
+        {
+            for (var page = 1; page <= RetrievalPaging.GetLastPage(pageSize); page++)
+            {
+                var fromTheWindow = Merge(first, second, page, pageSize);
+                var fromEverything = RetrievalPaging.Merge(first, second, match => match, page, pageSize);
+
+                Assert.That(fromTheWindow.Matches, Is.EqualTo(fromEverything.Matches), $"Page {page} must not depend on what lies beyond its window.");
+                Assert.That(fromTheWindow.HasMore, Is.EqualTo(fromEverything.HasMore), $"Page {page} must tell the same about the next one.");
+            }
+        }
     }
 
     [Test]
@@ -55,11 +106,26 @@ public sealed class RetrievalPagingTests
     }
 
     [Test]
-    public void ThereIsNothingMoreWhenEveryChannelEndsOnThisPage()
+    public void ThereIsNothingMoreWhenThePageHoldsEverything()
     {
-        var (_, hasMore) = Merge(["a", "b"], ["c", "d"], page: 1);
+        var (_, hasMore) = Merge(["a", "b"], ["b", "a"], page: 1);
 
-        Assert.That(hasMore, Is.False, "Neither channel found anything beyond this page, so the next one would be empty.");
+        Assert.That(hasMore, Is.False, "Both channels found the same two matches, and the page holds both, so the next one would be empty.");
+    }
+
+    [Test]
+    public void WhatTheChannelsFoundBeyondThePageMakesTheNextPage()
+    {
+        var firstPage = Merge(["a", "b"], ["c", "d"], page: 1);
+        var secondPage = Merge(["a", "b"], ["c", "d"], page: 2);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(firstPage.Matches, Is.EqualTo(new[] { "a", "c" }));
+            Assert.That(firstPage.HasMore, Is.True);
+            Assert.That(secondPage.Matches, Is.EqualTo(new[] { "b", "d" }));
+            Assert.That(secondPage.HasMore, Is.False);
+        }
     }
 
     [Test]
@@ -68,11 +134,11 @@ public sealed class RetrievalPagingTests
         var lastPage = RetrievalPaging.GetLastPage(PAGE_SIZE);
         var everything = Enumerable.Range(0, RetrievalPaging.MAX_RESULT_WINDOW).Select(number => $"chunk-{number}").ToArray();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(Merge(everything, [], lastPage - 1).HasMore, Is.True);
             Assert.That(Merge(everything, [], lastPage).HasMore, Is.False, "No page beyond this one can be retrieved, however much the search found.");
-        });
+        }
     }
 
     [TestCase(0)]
@@ -105,19 +171,19 @@ public sealed class RetrievalPagingTests
     [Test]
     public void TheFirstPageAlwaysHoldsTheConfiguredNumberOfMatches()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(RetrievalPaging.GetLastPage(500), Is.EqualTo(1));
             Assert.That(RetrievalPaging.GetWindowSize(1, 500), Is.EqualTo(501), "The limit is for paging deeper. It must not shorten what the user asked for per search.");
-        });
+        }
     }
 
     [Test]
     public void MatchesWithoutAKeyAreNeverTakenForOneAnother()
     {
-        var (matches, _) = Merge(["", "a"], ["", "b"], page: 1);
+        var (matches, _) = Merge(["", "a"], ["", "b"], page: 1, pageSize: 4);
 
-        Assert.That(matches, Is.EqualTo(new[] { "", "a", "", "b" }));
+        Assert.That(matches, Is.EqualTo(new[] { "", "", "a", "b" }));
     }
 
     [Test]
@@ -135,13 +201,13 @@ public sealed class RetrievalPagingTests
         var secondPage = RetrievalPaging.Cut(matches, 2, PAGE_SIZE);
         var thirdPage = RetrievalPaging.Cut(matches, 3, PAGE_SIZE);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(secondPage.Matches, Is.EqualTo(new[] { "c", "d" }));
             Assert.That(secondPage.HasMore, Is.True);
             Assert.That(thirdPage.Matches, Is.EqualTo(new[] { "e" }));
             Assert.That(thirdPage.HasMore, Is.False, "A channel which found fewer than asked for ends the paging.");
-        });
+        }
     }
 
     [TestCase((ushort)1)]
@@ -163,17 +229,17 @@ public sealed class RetrievalPagingTests
     }
 
     [Test]
-    public void AnERIDataSourceRefusesAFurtherPage()
+    public async Task AnERIDataSourceRefusesAFurtherPage()
     {
         var source = new DataSourceERI_V1 { Id = "33333333-3333-3333-3333-333333333333", Name = "Intranet", MaxMatches = 10 };
 
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await source.RetrieveDataAsync("query", 2, new AIStudio.Chat.ChatThread()));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await source.RetrieveDataAsync("query", 2, new AIStudio.Chat.ChatThread()));
     }
 
-    private static (IReadOnlyList<string> Matches, bool HasMore) Merge(string[] first, string[] second, int page)
+    private static (IReadOnlyList<string> Matches, bool HasMore) Merge(string[] first, string[] second, int page, int pageSize = PAGE_SIZE)
     {
         // A channel never returns more than it is asked for:
-        var window = RetrievalPaging.GetWindowSize(page, PAGE_SIZE);
-        return RetrievalPaging.Merge(first.Take(window).ToList(), second.Take(window).ToList(), match => match, page, PAGE_SIZE);
+        var window = RetrievalPaging.GetWindowSize(page, pageSize);
+        return RetrievalPaging.Merge(first.Take(window).ToList(), second.Take(window).ToList(), match => match, page, pageSize);
     }
 }

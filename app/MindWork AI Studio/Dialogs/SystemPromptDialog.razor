@@ -1,0 +1,32 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("These are the instructions the AI receives ahead of your conversation, the system prompt of this chat. AI Studio assembles it from the parts below, in the order in which the AI reads them.")
+        </MudJustifiedText>
+
+        @foreach (var section in this.sections)
+        {
+            <MudText Typo="Typo.h6" Class="mt-4 mb-2">@section.Heading</MudText>
+
+            @if (!string.IsNullOrWhiteSpace(section.Notice))
+            {
+                <MudAlert Severity="Severity.Info" Dense="@true" Class="mb-2">@section.Notice</MudAlert>
+            }
+
+            @if (!string.IsNullOrEmpty(section.Text))
+            {
+                <TextInfoLines Lines="1" MaxLines="12" Value="@section.Text" ClipboardTooltipSubject="@T("this part")"/>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.CopyCompletePrompt" Variant="Variant.Outlined" StartIcon="@AppIcons.COPY">
+            @T("Copy the complete prompt")
+        </MudButton>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

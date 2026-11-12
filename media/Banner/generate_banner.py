@@ -6,19 +6,19 @@ app/MindWork AI Studio/wwwroot/svg/banner.svg
 The app shows the banner through an <img> element, where neither the app's CSS nor its web fonts
 apply. Therefore, every text is converted into outlines, so the banner looks the same on Windows,
 macOS, Linux, and GitHub. The text uses Inter (SIL Open Font License 1.1); the icons are the
-Material Icons the app itself uses, read from the MudBlazor package (Apache License 2.0).
+Lucide icons the app itself uses, read from the Lucide font it ships (ISC License, with parts of
+Feather under the MIT License).
 
 See README.md in this folder for the setup.
 """
 
 import argparse
 import hashlib
-import os
-import re
+import json
+import logging
 import sys
 from pathlib import Path
 
-import dnfile
 import uharfbuzz as hb
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.transformPen import TransformPen
@@ -26,8 +26,12 @@ from fontTools.ttLib import TTFont
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
-APP_PROJECT = REPO_ROOT / "app" / "MindWork AI Studio" / "MindWork AI Studio.csproj"
 DEFAULT_OUTPUT = REPO_ROOT / "app" / "MindWork AI Studio" / "wwwroot" / "svg" / "banner.svg"
+
+# The Lucide font the app ships and the code points of its icons, so the banner always shows the
+# icons of the app in the version of the app. See app/SourceGeneratedMappings/Lucide/README.md.
+LUCIDE_FONT_PATH = REPO_ROOT / "app" / "MindWork AI Studio" / "wwwroot" / "fonts" / "lucide.woff2"
+LUCIDE_CODEPOINTS_PATH = REPO_ROOT / "app" / "SourceGeneratedMappings" / "Lucide" / "codepoints.json"
 
 # The variable font Inter[opsz,wght].ttf from google/fonts, pinned to one commit. Another version
 # of the font changes the outlines and therefore the generated file.
@@ -43,16 +47,16 @@ NAME = "AI Studio"
 TAGLINE = "Any model. Your data. Your rules."
 
 # Two rows of four chips; the chips of one column share their width, so pair labels of similar
-# length in a column. Each entry: (id, label, name of the icon in Icons.Material.Filled).
+# length in a column. Each entry: (id, label, name of the Lucide icon as lucide.dev shows it).
 CHIPS = [
-    ("chat", "Chat", "Chat"),
-    ("assistants", "Assistants", "Apps"),
-    ("builder", "No-code builder", "AutoMode"),
-    ("tools", "Agentic tools", "Build"),
-    ("research", "Research", "Language"),
-    ("transcribe", "Transcribe", "Mic"),
-    ("documents", "Your documents", "Description"),
-    ("emails", "Your e-mails", "Email"),
+    ("chat", "Chat", "message-square-text"),
+    ("assistants", "Assistants", "layout-grid"),
+    ("builder", "No-code builder", "wrench"),
+    ("tools", "Agentic tools", "bot"),
+    ("research", "Research", "globe"),
+    ("transcribe", "Transcribe", "audio-lines"),
+    ("documents", "Your documents", "file-text"),
+    ("emails", "Your e-mails", "mail"),
 ]
 
 #
@@ -252,65 +256,40 @@ class Font:
         return elements
 
 
-def read_project_value(pattern, what):
-    match = re.search(pattern, APP_PROJECT.read_text(encoding="utf-8-sig"))
-    if match is None:
-        sys.exit(f"Could not find {what} in {APP_PROJECT}.")
+class IconFont:
+    """Draws the Lucide icons of the app from the font it ships, by their names on lucide.dev."""
 
-    return match.group(1)
+    def __init__(self, font_path, codepoints_path):
+        for path in (font_path, codepoints_path):
+            if not path.exists():
+                sys.exit(f"Could not find {path}.")
 
+        # fontTools complains about a few spare bytes in the post table of the Lucide font, which
+        # changes neither the outlines nor the names:
+        logging.getLogger("fontTools").setLevel(logging.ERROR)
 
-def load_material_icons(names):
-    """
-    Reads the SVG paths of Icons.Material.Filled.<name> from the MudBlazor assembly in the NuGet
-    cache, in the version and for the framework the app project uses.
-    """
-    version = read_project_value(r'<PackageReference\s+Include="MudBlazor"\s+Version="([^"]+)"', "the MudBlazor version")
-    framework = read_project_value(r"<TargetFramework>([^<]+)</TargetFramework>", "the target framework")
-    packages = Path(os.environ.get("NUGET_PACKAGES", Path.home() / ".nuget" / "packages"))
-    assembly = packages / "mudblazor" / version / "lib" / framework / "MudBlazor.dll"
-    if not assembly.exists():
-        sys.exit(f"Could not find {assembly}. Build the app once, so NuGet restores MudBlazor {version}.")
+        self.tt = TTFont(font_path)
+        self.upem = self.tt["head"].unitsPerEm
+        self.ascent = self.tt["hhea"].ascent
+        self.glyph_set = self.tt.getGlyphSet()
+        self.cmap = self.tt.getBestCmap()
+        self.codepoints = json.loads(codepoints_path.read_text(encoding="utf-8"))
 
-    tables = dnfile.dnPE(str(assembly)).net.mdtables
-    types = tables.TypeDef.rows
+    def check(self, names):
+        """Stops the script when the font lacks one of the icons."""
+        missing = sorted(name for name in names if self.codepoints.get(name) not in self.cmap)
+        if missing:
+            sys.exit(f"The Lucide font of the app has no icon named {', '.join(missing)}. See lucide.dev for the names.")
 
-    # Which type declares which field, and which type encloses which nested type:
-    field_owner = {}
-    for index, type_def in enumerate(types, start=1):
-        for field in type_def.FieldList:
-            field_owner[field.row_index] = index
-
-    enclosing = {n.NestedClass.row_index: str(n.EnclosingClass.row.TypeName) for n in tables.NestedClass.rows}
-
-    # The icons are string constants of the nested class Icons.Material.Filled:
-    icons = {}
-    for constant in tables.Constant.rows:
-        parent = constant.Parent
-        if parent.table.name != "Field":
-            continue
-
-        owner = field_owner.get(parent.row_index)
-        if owner is None or str(types[owner - 1].TypeName) != "Filled" or enclosing.get(owner) != "Material":
-            continue
-
-        name = str(tables.Field.rows[parent.row_index - 1].Name)
-        if name not in names:
-            continue
-
-        value = constant.Value
-        raw = value.value if hasattr(value, "value") else value
-        svg = raw.decode("utf-16le") if isinstance(raw, (bytes, bytearray)) else str(raw)
-
-        # Skip the invisible 24 x 24 frames some icons carry:
-        tags = re.findall(r"<path\b[^>]*>", svg)
-        icons[name] = [re.search(r'\bd="([^"]+)"', tag).group(1) for tag in tags if 'fill="none"' not in tag]
-
-    missing = sorted(set(names) - icons.keys())
-    if missing:
-        sys.exit(f"Icons.Material.Filled has no icon named {', '.join(missing)} in MudBlazor {version}.")
-
-    return icons
+    def path(self, name, x, y, size):
+        """
+        Returns the path data of the icon with its top left corner at (x, y). Lucide draws every icon
+        into the full em of the font, which is its 24 x 24 grid.
+        """
+        scale = size / self.upem
+        pen = RecordingPen(self.glyph_set)
+        self.glyph_set[self.cmap[self.codepoints[name]]].draw(TransformPen(pen, (scale, 0, 0, -scale, x, y + self.ascent * scale)))
+        return compact_path(pen.ops)
 
 
 def load_font():
@@ -329,7 +308,7 @@ def build_banner(font, icons):
     out = []
     a = out.append
     a(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="MindWork AI Studio">')
-    a('<!-- Text outlined from Inter (SIL Open Font License 1.1), icons from Material Icons via MudBlazor (Apache License 2.0). -->')
+    a('<!-- Text outlined from Inter (SIL Open Font License 1.1), icons outlined from Lucide (ISC License; parts from Feather, MIT License). -->')
     a('<title>MindWork AI Studio</title>')
     a('<defs>')
     a(f'<linearGradient id="bg" x1="0" y1="0" x2="{WIDTH}" y2="{HEIGHT}" gradientUnits="userSpaceOnUse">'
@@ -371,8 +350,7 @@ def build_banner(font, icons):
 
             # Icon and label centred in the chip:
             content_x = x + (w - content_widths[r][c]) / 2
-            for d in icons[icon]:
-                a(f'<path transform="translate({num(content_x)} {num(y + (chip_h - icon_size) / 2)}) scale({icon_size / 24:g})" d="{d}"/>')
+            a(f'<path d="{icons.path(icon, content_x, y + (chip_h - icon_size) / 2, icon_size)}"/>')
 
             # Centre the cap height of Inter (0.727 em) vertically:
             baseline = y + chip_h / 2 + 0.727 * size / 2
@@ -394,7 +372,9 @@ def main():
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help=f"where to write the SVG file (default: {DEFAULT_OUTPUT})")
     args = parser.parse_args()
 
-    svg = build_banner(load_font(), load_material_icons({icon for (_, _, icon) in CHIPS}))
+    icons = IconFont(LUCIDE_FONT_PATH, LUCIDE_CODEPOINTS_PATH)
+    icons.check({icon for (_, _, icon) in CHIPS})
+    svg = build_banner(load_font(), icons)
     args.output.write_text(svg, encoding="utf-8")
     print(f"Wrote {args.output} ({len(svg.encode())} bytes).")
 

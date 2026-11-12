@@ -38,11 +38,11 @@ public sealed class SemanticSearchToolResultTests
     {
         var requirements = SemanticSearchTool.GetRequirements([HANDBOOK, MINUTES, INTRANET], [0, 2, 0], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That((requirements.Confidence, requirements.Security), Is.EqualTo((ConfidenceLevel.LOW, DataSourceSecurity.ALLOW_ANY)), "Neither the highly confidential handbook nor the self-hosted intranet brought anything into the chat.");
             Assert.That(requirements.OutboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.DATA_SOURCE, MINUTES.Id)), "Only the minutes restrict where the chat may still send data.");
-        });
+        }
     }
 
     [Test]
@@ -56,40 +56,40 @@ public sealed class SemanticSearchToolResultTests
     [Test]
     public void ADataSourceWhichCouldNotBeSearchedSaysSo()
     {
-        var result = SemanticSearchTool.DescribeResult(INTRANET, RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] }, 0, 0);
+        var result = SemanticSearchTool.DescribeResult(new(INTRANET, 0, false, [RetrievalGap.NOT_SEARCHED]));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result["result_count"]!.GetValue<int>(), Is.Zero);
             Assert.That(Issues(result), Has.Count.EqualTo(1), "A result count of zero alone reads as finding nothing.");
-        });
+        }
     }
 
     [Test]
-    public void PassagesLeftOutForTheBudgetAreCountedWithAWayOut()
+    public void PassagesWhichDidNotFitIntoASearchOfSeveralDataSourcesAreCountedWithAWayOut()
     {
-        var result = SemanticSearchTool.DescribeResult(HANDBOOK, RetrievalPage.EMPTY with { HasMore = true }, 4, 3);
+        var result = SemanticSearchTool.DescribeResult(new(HANDBOOK, 4, true, [], 3));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result["result_count"]!.GetValue<int>(), Is.EqualTo(4), "Only the passages which reached the model count as results.");
             Assert.That(result["has_more"]!.GetValue<bool>(), Is.True);
             Assert.That(Issues(result), Has.Count.EqualTo(1));
-            Assert.That(Issues(result).FirstOrDefault(), Does.StartWith("3 further passages").And.Contain("narrower query"), "The model has to learn how many are missing, and how to get to them.");
-        });
+            Assert.That(Issues(result).FirstOrDefault(), Does.StartWith("3 further passages").And.Contain("alone, starting at page 1"), "The model has to learn how many are missing, and that a further page of this search would not bring them up.");
+        }
     }
 
     [Test]
     public void ACompleteSearchReportsNoIssues()
     {
-        var result = SemanticSearchTool.DescribeResult(MINUTES, RetrievalPage.EMPTY, 0, 0);
+        var result = SemanticSearchTool.DescribeResult(new(MINUTES, 0, false, []));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ContainsKey("issues"), Is.False, "An empty list of issues would cost tokens in every result for nothing.");
             Assert.That(result["id"]!.GetValue<string>(), Is.EqualTo(MINUTES.Id));
             Assert.That(result["has_more"]!.GetValue<bool>(), Is.False);
-        });
+        }
     }
 
     private static IReadOnlyList<string> Issues(JsonObject result) => result["issues"] is JsonArray issues

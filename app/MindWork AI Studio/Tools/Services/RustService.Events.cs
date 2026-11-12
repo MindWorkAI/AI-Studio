@@ -27,18 +27,15 @@ public partial class RustService
                     // Read events line by line:
                     using var reader = new StreamReader(stream);
                     
-                    // Read until the end of the stream or cancellation:
-                    while(!reader.EndOfStream && !stopToken.IsCancellationRequested)
+                    // Read the next line of JSON until the end of the stream or cancellation:
+                    while(!stopToken.IsCancellationRequested && await reader.ReadLineAsync(stopToken) is { } line)
                     {
-                        // Read the next line of JSON from the stream:
-                        var line = await reader.ReadLineAsync(stopToken);
-                        
                         // Skip empty lines:
                         if (string.IsNullOrWhiteSpace(line))
                             continue;
                         
                         // Deserialize the Tauri event:
-                        var tauriEvent = JsonSerializer.Deserialize<TauriEvent>(line, this.jsonRustSerializerOptions);
+                        var tauriEvent = JsonSerializer.Deserialize<TauriEvent>(line, JSON_OPTIONS);
                         
                         // Forward relevant events to the message bus:
                         if (tauriEvent != default && tauriEvent.EventType

@@ -34,7 +34,7 @@ public sealed class MailFolderSelectionTests
     public void TheWholeMailboxLeavesOutWhatWasThrownAway()
     {
         var selection = MailFolderSelection.Select(SERVER_FOLDERS, string.Empty, true);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(selection.RootFolderFound, Is.True);
             Assert.That(selection.Folders.Select(folder => folder.FullName), Is.EqualTo(new[]
@@ -51,7 +51,7 @@ public sealed class MailFolderSelectionTests
                 "Sent/2024",
                 "[Gmail]/All Mail",
             }), "The inbox comes first, then the sent mails and the drafts; the trash, the junk folder, the virtual folders and the grouping folder stay out.");
-        });
+        }
     }
 
     [Test]
@@ -106,22 +106,22 @@ public sealed class MailFolderSelectionTests
     public void TheTrashNeverCountsNotEvenAsRootFolder()
     {
         var selection = MailFolderSelection.Select(SERVER_FOLDERS, "Trash", false);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(selection.Folders, Is.Empty);
             Assert.That(selection.RootFolderFound, Is.True);
-        });
+        }
     }
 
     [Test]
     public void ARootFolderTheServerNoLongerListsIsReported()
     {
         var selection = MailFolderSelection.Select(SERVER_FOLDERS, "Projects/Beta", true);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(selection.RootFolderFound, Is.False, "A renamed root folder would read as a mailbox which became empty, even when the sent mails and the drafts are still there.");
             Assert.That(selection.Folders.Select(folder => folder.FullName), Is.EqualTo(new[] { "Sent", "Drafts" }));
-        });
+        }
     }
 
     [Test]

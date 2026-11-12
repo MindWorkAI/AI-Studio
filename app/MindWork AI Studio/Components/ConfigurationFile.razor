@@ -13,11 +13,13 @@
             AdornmentColor="@(isDropTarget ? Color.Primary : this.IconColor)"
             UserAttributes="@SPELLCHECK_ATTRIBUTES"
             Immediate="@true"
+            Clearable="@this.Clearable"
+            OnClearButtonClick="@this.ClearFile"
             Underline="false"
             Class="flex-grow-1"
         />
 
-        <MudButton StartIcon="@Icons.Material.Filled.FolderOpen"
+        <MudButton StartIcon="@AppIcons.BROWSE"
                    Variant="Variant.Outlined"
                    Color="Color.Primary"
                    Size="Size.Small"

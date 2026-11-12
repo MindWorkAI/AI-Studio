@@ -10,16 +10,16 @@
 
     <InnerScrolling>
         <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="@T("Versions")" IsExpanded="@true">
+            <ExpansionPanel HeaderIcon="@AppIcons.VERSIONS" HeaderText="@T("Versions")" IsExpanded="@true">
                 <MudText>
                     @T("The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Chat" Text="@VersionApp"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Timer" Text="@this.BuildTime"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionDotnetSdk"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@this.VersionDotnetRuntime"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionRust"/>
+                    <MudListItem T="string" Icon="@AppIcons.APP" Text="@VersionApp"/>
+                    <MudListItem T="string" Icon="@AppIcons.TIME" Text="@this.BuildTime"/>
+                    <MudListItem T="string" Icon="@AppIcons.BUILD_TOOLCHAIN" Text="@this.VersionDotnetSdk"/>
+                    <MudListItem T="string" Icon="@AppIcons.RUNTIME" Text="@this.VersionDotnetRuntime"/>
+                    <MudListItem T="string" Icon="@AppIcons.BUILD_TOOLCHAIN" Text="@this.VersionRust"/>
                     @foreach (var database in this.databaseSections)
                     {
                         <MudListItem T="string" Icon="@database.Icon">
@@ -34,7 +34,7 @@
                                     }
                                 </MudText>
                             </MudCollapse>
-                            <MudButton StartIcon="@(database.ShowDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                            <MudButton StartIcon="@(database.ShowDetails ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)"
                                        Size="Size.Small"
                                        Variant="Variant.Text"
                                        OnClick="@(() => this.ToggleDatabaseDetails(database))">
@@ -42,13 +42,13 @@
                             </MudButton>
                         </MudListItem>
                     }
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.DocumentScanner" Text="@this.VersionPdfium"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Article" Text="@this.versionPandoc"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.AccountCircle" Text="@this.OSUserName"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                    <MudListItem T="string" Icon="@AppIcons.PDF_READER" Text="@this.VersionPdfium"/>
+                    <MudListItem T="string" Icon="@AppIcons.PANDOC" Text="@this.versionPandoc"/>
+                    <MudListItem T="string" Icon="@AppIcons.UI_FRAMEWORK" Text="@MudBlazorVersion"/>
+                    <MudListItem T="string" Icon="@AppIcons.RUNTIME" Text="@TauriVersion"/>
+                    <MudListItem T="string" Icon="@AppIcons.LANGUAGE" Text="@this.OSLanguage"/>
+                    <MudListItem T="string" Icon="@AppIcons.USER" Text="@this.OSUserName"/>
+                    <MudListItem T="string" Icon="@AppIcons.FOLDER">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <MudText Typo="Typo.body1">
                                 @this.WorkingDirectory
@@ -56,7 +56,7 @@
                             <MudCopyClipboardButton TooltipMessage="@(T("Copies the working directory to the clipboard"))" StringContent="@this.RuntimeInfo.WorkingDirectory"/>
                         </div>
                     </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.InsertDriveFile">
+                    <MudListItem T="string" Icon="@AppIcons.FILE">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <MudText Typo="Typo.body1">
                                 @this.ExecutablePath
@@ -66,10 +66,10 @@
                     </MudListItem>
                     @if (OperatingSystem.IsLinux())
                     {
-                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage" Text="@this.LinuxPackageType"/>
+                        <MudListItem T="string" Icon="@AppIcons.LINUX_PACKAGE" Text="@this.LinuxPackageType"/>
                     }
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.InstallDesktop" Text="@this.InstallationKind"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
+                    <MudListItem T="string" Icon="@AppIcons.INSTALLATION" Text="@this.InstallationKind"/>
+                    <MudListItem T="string" Icon="@AppIcons.ORGANIZATION">
                         @switch (HasAnyActiveEnvironment)
                         {
                             case false when this.configPlugins.Count == 0:
@@ -85,10 +85,10 @@
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
                                     @foreach (var plug in this.configPlugins)
                                     {
-                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
+                                        <ConfigPluginInfoCard HeaderIcon="@AppIcons.PLUGIN"
                                                               HeaderText="@plug.Name"
                                                               Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                         new ConfigInfoRowItem(AppIcons.INFO_ROW,
                                                                              $"{T("Configuration plugin ID:")} {plug.Id}",
                                                                              plug.Id.ToString(),
                                                                              T("Copies the configuration plugin ID to the clipboard"))
@@ -108,7 +108,7 @@
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
                                     @foreach (var env in this.enterpriseEnvironments.Where(e => e.IsActive))
                                     {
-                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
+                                        <ConfigPluginInfoCard HeaderIcon="@AppIcons.PENDING"
                                                               HeaderText="@T("Waiting for the configuration plugin...")"
                                                               Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                     }
@@ -138,13 +138,13 @@
                                         var matchingPlugin = this.FindManagedConfigurationPlugin(env.ConfigurationId);
                                         if (matchingPlugin is null)
                                         {
-                                            <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
+                                            <ConfigPluginInfoCard HeaderIcon="@AppIcons.PENDING"
                                                                   HeaderText="@T("Waiting for the configuration plugin...")"
                                                                   Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                             continue;
                                         }
                                         
-                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
+                                        <ConfigPluginInfoCard HeaderIcon="@AppIcons.PLUGIN"
                                                               HeaderText="@matchingPlugin.Name"
                                                               Items="@this.BuildEnterpriseConfigurationItems(env, matchingPlugin)"
                                                               ShowWarning="@this.IsManagedConfigurationIdMismatch(matchingPlugin, env.ConfigurationId)"
@@ -169,7 +169,7 @@
                             </MudText>
                             @foreach (var testConfigPlugin in this.testConfigPlugins)
                             {
-                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Science"
+                                <ConfigPluginInfoCard HeaderIcon="@AppIcons.TEST_CONFIGURATION"
                                                       HeaderText="@testConfigPlugin.Name"
                                                       Items="@this.BuildTestConfigurationItems(testConfigPlugin)"
                                                       ShowWarning="@true"
@@ -185,7 +185,7 @@
 
                         @if (this.HasEnterpriseConfigurationDetails)
                         {
-                            <MudButton StartIcon="@(this.showEnterpriseConfigDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                            <MudButton StartIcon="@(this.showEnterpriseConfigDetails ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)"
                                        Size="Size.Small"
                                        Variant="Variant.Text"
                                        OnClick="@this.ToggleEnterpriseConfigDetails">
@@ -195,20 +195,20 @@
                     </MudListItem>
                     @if (ExternalHttpClientTimeout.CustomRootCertificateState.IsEnabled)
                     {
-                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Security">
+                        <MudListItem T="string" Icon="@AppIcons.CERTIFICATE">
                             <MudText Typo="Typo.body1">
                                 @(ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable
                                     ? T("External HTTPS custom root certificates are active.")
                                     : T("External HTTPS custom root certificates are configured but not active."))
                             </MudText>
                             <MudCollapse Expanded="@this.showExternalHttpCustomRootCertificateDetails">
-                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Security"
+                                <ConfigPluginInfoCard HeaderIcon="@AppIcons.CERTIFICATE"
                                                       HeaderText="@T("External HTTPS custom root certificates")"
                                                       Items="@this.BuildExternalHttpCustomRootCertificateItems()"
                                                       ShowWarning="@(!ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable)"
                                                       WarningText="@this.ExternalHttpCustomRootCertificateWarningText"/>
                             </MudCollapse>
-                            <MudButton StartIcon="@(this.showExternalHttpCustomRootCertificateDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                            <MudButton StartIcon="@(this.showExternalHttpCustomRootCertificateDetails ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)"
                                        Size="Size.Small"
                                        Variant="Variant.Text"
                                        OnClick="@this.ToggleExternalHttpCustomRootCertificateDetails">
@@ -218,45 +218,45 @@
                     }
                 </MudList>
                 <MudStack Row="true">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@this.CheckForUpdate">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@AppIcons.APP_UPDATE" OnClick="@this.CheckForUpdate">
                         @(this.updatePolicyMode is UpdatePolicyMode.SELF_UPDATE ? T("Check for updates") : T("How to update"))
                     </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@AppIcons.DOWNLOAD" OnClick="@(async () => await this.ShowPandocDialog())">
                         @this.PandocButtonText
                     </MudButton>
                 </MudStack>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Custom.Brands.GitHub" HeaderText="@T("Community & Code")">
+            <ExpansionPanel HeaderIcon="@AppIcons.GITHUB" HeaderText="@T("Community & Code")">
                 <MudList T="string" Class="mb-1">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Home" Target="_blank" Href="https://mindworkai.org/">
+                    <MudListItem T="string" Icon="@AppIcons.WEBSITE" Target="_blank" Href="https://mindworkai.org/">
                         @T("Discover MindWork AI's mission and vision on our official homepage.")
                     </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Custom.Brands.GitHub" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio">
+                    <MudListItem T="string" Icon="@AppIcons.GITHUB" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio">
                         @T("Browse AI Studio's source code on GitHub — we welcome your contributions.")
                     </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.PrivateConnectivity" Target="_blank" Href="https://github.com/MindWorkAI/ERI">
+                    <MudListItem T="string" Icon="@AppIcons.ERI" Target="_blank" Href="https://github.com/MindWorkAI/ERI">
                         @T("Connect AI Studio to your organization's data with our External Retrieval Interface (ERI).")
                     </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Timeline" Target="_blank" Href="https://github.com/orgs/MindWorkAI/projects/2/views/3">
+                    <MudListItem T="string" Icon="@AppIcons.ROADMAP" Target="_blank" Href="https://github.com/orgs/MindWorkAI/projects/2/views/3">
                         @T("View our project roadmap and help shape AI Studio's future development.")
                     </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.BugReport" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio/issues">
+                    <MudListItem T="string" Icon="@AppIcons.BUG" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio/issues">
                         @T("Did you find a bug or are you experiencing issues? Report your concern here.")
                     </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Lightbulb" Target="_blank" Href="https://github.com/MindWorkAI/Planning/issues">
+                    <MudListItem T="string" Icon="@AppIcons.IDEA" Target="_blank" Href="https://github.com/MindWorkAI/Planning/issues">
                         @T("Have feature ideas? Submit suggestions for future AI Studio enhancements.")
                     </MudListItem>
                 </MudList>
             </ExpansionPanel>
             
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Changelog")">
+            <ExpansionPanel HeaderIcon="@AppIcons.CHANGELOG" HeaderText="@T("Changelog")">
                 <Changelog/>
             </ExpansionPanel>
 
             @foreach (var mandatoryInfoPanel in this.mandatoryInfoPanels)
             {
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Gavel" HeaderText="@mandatoryInfoPanel.HeaderText">
+                <ExpansionPanel HeaderIcon="@AppIcons.LEGAL" HeaderText="@mandatoryInfoPanel.HeaderText">
                     <MudText Typo="Typo.body2" Class="mb-3">
                         @string.Format(T("Provided by configuration plugin: {0}"), mandatoryInfoPanel.PluginName)
                     </MudText>
@@ -266,7 +266,7 @@
                 </ExpansionPanel>
             }
             
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Book" HeaderText="@T("Logbook")">
+            <ExpansionPanel HeaderIcon="@AppIcons.LOG_FILES" HeaderText="@T("Logbook")">
                 <MudText Typo="Typo.h4">
                     @T("Explanation")
                 </MudText>
@@ -279,7 +279,7 @@
                 </MudJustifiedText>
 
                 <MudButton Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.Article"
+                           StartIcon="@AppIcons.ASSISTANT_LOG_VIEWER"
                            Href="@Routes.ASSISTANT_LOG_VIEWER"
                            Class="mb-3">
                     @T("Open Log Viewer")
@@ -289,13 +289,13 @@
                     @T("Startup log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                    <MudListItem T="string" Icon="@AppIcons.FOLDER">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%; min-width: 0;">
                             <MudLink OnClick="@this.CopyStartupLogPath" Style="min-width: 0; overflow-wrap: anywhere;">
                                 @this.logPaths.LogStartupPath
                             </MudLink>
                             <MudTooltip Text="@T("Open in folder")">
-                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                <MudIconButton Icon="@AppIcons.FOLDER_OPEN"
                                                Size="Size.Medium"
                                                Disabled="@string.IsNullOrWhiteSpace(this.logPaths.LogStartupPath)"
                                                OnClick="@(() => this.OpenLogInFileManager(this.logPaths.LogStartupPath))"/>
@@ -308,13 +308,13 @@
                     @T("Usage log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                    <MudListItem T="string" Icon="@AppIcons.FOLDER">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%; min-width: 0;">
                             <MudLink OnClick="@this.CopyAppLogPath" Style="min-width: 0; overflow-wrap: anywhere;">
                                 @this.logPaths.LogAppPath
                             </MudLink>
                             <MudTooltip Text="@T("Open in folder")">
-                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                <MudIconButton Icon="@AppIcons.FOLDER_OPEN"
                                                Size="Size.Medium"
                                                Disabled="@string.IsNullOrWhiteSpace(this.logPaths.LogAppPath)"
                                                OnClick="@(() => this.OpenLogInFileManager(this.logPaths.LogAppPath))"/>
@@ -324,23 +324,23 @@
                 </MudList>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.SettingsBackupRestore" HeaderText="@T("Data Backup & Restore")">
+            <ExpansionPanel HeaderIcon="@AppIcons.DATA_BACKUP" HeaderText="@T("Data Backup & Restore")">
                 <DataBackupPanel/>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.FolderCopy" HeaderText="@T("Your Data Folders")">
+            <ExpansionPanel HeaderIcon="@AppIcons.FOLDERS" HeaderText="@T("Your Data Folders")">
                 <DataFolders/>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Engineering" HeaderText="@T("Motivation")">
+            <ExpansionPanel HeaderIcon="@AppIcons.MOTIVATION" HeaderText="@T("Motivation")">
                 <Motivation/>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="@T("Vision")">
+            <ExpansionPanel HeaderIcon="@AppIcons.IDEA" HeaderText="@T("Vision")">
                 <Vision/>
             </ExpansionPanel>
             
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AutoAwesomeMotion" HeaderText="@T("Used Open Source Projects")">
+            <ExpansionPanel HeaderIcon="@AppIcons.OPEN_SOURCE_PROJECTS" HeaderText="@T("Used Open Source Projects")">
                 <MudGrid Spacing="1">
                     <ThirdPartyComponent Name=".NET" Developer="Microsoft & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/dotnet/runtime/blob/main/LICENSE.TXT" RepositoryUrl="https://github.com/dotnet" UseCase="@T("The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.")"/>
                     <ThirdPartyComponent Name="MudBlazor" Developer="Jonny Larsson, Meinrad Recheis & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/MudBlazor/MudBlazor/blob/dev/LICENSE" RepositoryUrl="https://github.com/MudBlazor/MudBlazor/" UseCase="@T("Building on .NET, ASP.NET Core, and Blazor, MudBlazor is used as a library for designing and developing the user interface. It is a great project that significantly accelerates the development of advanced user interfaces with Blazor.")"/>
@@ -378,6 +378,7 @@
                     <ThirdPartyComponent Name="dirs" Developer="soc, Wang Xuerui & Open Source Community" LicenseName="MIT" LicenseUrl="https://codeberg.org/dirs/dirs-rs/src/branch/main/LICENSE-MIT" RepositoryUrl="https://codeberg.org/dirs/dirs-rs" UseCase="@T("dirs determines the platform-specific local application data directory. AI Studio uses it so the Flatpak startup log is written to the same application data directory that Tauri uses.")"/>
                     <ThirdPartyComponent Name="rand" Developer="Rust developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-random/rand/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-random/rand" UseCase="@T("We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose.")"/>
                     <ThirdPartyComponent Name="pptx-to-md" Developer="Nils Kruthoff & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/nilskruthoff/pptx-parser/blob/master/LICENCE-MIT" RepositoryUrl="https://github.com/nilskruthoff/pptx-parser" UseCase="@T("We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate.")"/>
+                    <ThirdPartyComponent Name="onenote_parser" Developer="Markus Siemens, Henry Heino, Mariusz Woloszyn, Laurent Cozic, pedr & Open Source Community" LicenseName="MPL-2.0" LicenseUrl="https://github.com/msiemens/onenote.rs/blob/master/LICENSE" RepositoryUrl="https://github.com/msiemens/onenote.rs" UseCase="@T("We use this library to read the sections of OneNote notebooks. This allows us to insert OneNote pages into prompts and take them into account in RAG processes. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio.")"/>
                     <ThirdPartyComponent Name="base64" Developer="Marshall Pierce, Alice Maz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/marshallpierce/rust-base64/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/marshallpierce/rust-base64" UseCase="@T("For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.")"/>
                     <ThirdPartyComponent Name="Rust Crypto" Developer="Artyom Pavlov, Tony Arcieri, Brian Warner, Arthur Gautier, Vlad Filippov, Friedel Ziegelmayer, Nicolas Stalder & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/RustCrypto/traits/blob/master/cipher/LICENSE-MIT" RepositoryUrl="https://github.com/RustCrypto" UseCase="@T("When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project.")"/>
                     <ThirdPartyComponent Name="rcgen" Developer="RustTLS developers, est31 & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rustls/rcgen/blob/main/LICENSE" RepositoryUrl="https://github.com/rustls/rcgen" UseCase="@T("For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.")"/>
@@ -403,12 +404,17 @@
                     <ThirdPartyComponent Name="Tokenizer" Developer="Anthony Moi, Nicolas Patry, Pierric Cistac, Arthur Zucker & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/huggingface/tokenizers/blob/main/LICENSE" RepositoryUrl="https://github.com/huggingface/tokenizers" UseCase="@T("The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer.")" />
                     <ThirdPartyComponent Name="HtmlAgilityPack" Developer="ZZZ Projects & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE" RepositoryUrl="https://github.com/zzzprojects/html-agility-pack" UseCase="@T("We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>
                     <ThirdPartyComponent Name="ReverseMarkdown" Developer="Babu Annamalai & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mysticmind/reversemarkdown-net/blob/master/LICENSE" RepositoryUrl="https://github.com/mysticmind/reversemarkdown-net" UseCase="@T("This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>
+                    <ThirdPartyComponent Name="AngouriMath" Developer='WhiteBlackGoose, Rafael Vuijk, Hadrian Tang, Alexander Potapov, darkfader, Aleksei Akhundov, KuhakuPixel, Goldey2, Joshua "Yoshi" Askharoun, Marmota & Open Source Community' LicenseName="MIT" LicenseUrl="https://github.com/ASC-Community/AngouriMath/blob/master/LICENSE.md" RepositoryUrl="https://github.com/asc-community/AngouriMath" UseCase="@T("The Mathematics tools use AngouriMath to calculate exactly and to work with formulas: it keeps fractions exact, simplifies, differentiates, and integrates expressions, and solves equations, all locally on your computer.")"/>
+                    <ThirdPartyComponent Name="MailKit" Developer="Jeffrey Stedfast, Jonathan Dick, Miguel de Icaza, rklec, Steffen Kieß & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/jstedfast/MailKit/blob/master/LICENSE" RepositoryUrl="https://github.com/jstedfast/MailKit" UseCase="@T("MailKit connects AI Studio to the mail servers of your mailboxes over IMAP. This is how AI Studio keeps a local index of your mails, which the AI can search, read, and count.")"/>
+                    <ThirdPartyComponent Name="MimeKit" Developer="Jeffrey Stedfast, Jason Nelson, Federico Di Gregorio, Joe Shook, Jonathan Dick, Miguel de Icaza, Peter Dettman & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/jstedfast/MimeKit/blob/master/LICENSE" RepositoryUrl="https://github.com/jstedfast/MimeKit" UseCase="@T("MimeKit reads the mails in your mailboxes, including their senders, recipients, and attachments, so that AI Studio can add them to the local index of your mailboxes.")"/>
+                    <ThirdPartyComponent Name="Open XML SDK" Developer="Microsoft, Taylor Southwick, Tom Jebo, Michael Bowen, Eric White, Thomas Barnekow, Alfred Hellstern, lindexi, Simon Cropp & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/dotnet/Open-XML-SDK/blob/main/LICENSE" RepositoryUrl="https://github.com/dotnet/Open-XML-SDK" UseCase="@T("The Slide Assistant uses the Open XML SDK to read your PowerPoint templates and to write the presentations it plans with you as PowerPoint files.")"/>
                     <ThirdPartyComponent Name="wikEd diff" Developer="Cacycle & Open Source Community" LicenseName="None (public domain)" LicenseUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff#License" RepositoryUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff" UseCase="@T("This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.")"/>
                     <ThirdPartyComponent Name="CodeJar" Developer="Anton Medvedev" LicenseName="MIT" LicenseUrl="https://github.com/antonmedv/codejar/blob/master/LICENSE" RepositoryUrl="https://github.com/antonmedv/codejar/" UseCase="@T("CodeJar is a lightweight embeddable code editor for the browser.")"/>
-                    <ThirdPartyComponent Name="Simple Icons" Developer="Simple Icons Contributors & Open Source Community" LicenseName="CC0-1.0" LicenseUrl="https://github.com/simple-icons/simple-icons/blob/16.21.0/LICENSE.md" RepositoryUrl="https://github.com/simple-icons/simple-icons" UseCase="@T("Several of the provider logos in AI Studio use the icon paths and brand colors published by the Simple Icons project, which releases them into the public domain under CC0. The trademarks themselves are not part of that release and remain the property of their respective owners.")"/>
+                    <ThirdPartyComponent Name="Simple Icons" Developer="Peter Noble, Álvaro Mondéjar Rubio, LitoMore, Eric Cornelissen, Florian Bernhart, Alexandre Paradis, Dan Leech & Open Source Community" LicenseName="CC0-1.0" LicenseUrl="https://github.com/simple-icons/simple-icons/blob/16.21.0/LICENSE.md" RepositoryUrl="https://github.com/simple-icons/simple-icons" UseCase="@T("Several of the provider logos in AI Studio use the icon paths and brand colors published by the Simple Icons project, which releases them into the public domain under CC0. The trademarks themselves are not part of that release and remain the property of their respective owners.")"/>
+                    <ThirdPartyComponent Name="Lucide" Developer="Eric Fennis, Karsa, Jakob Guddas, Daniel Bayley, Yashu Mittal, Jamie Law, SMAH1, Wojciech Maj & Open Source Community" LicenseName="ISC & MIT" LicenseUrl="https://github.com/lucide-icons/lucide/blob/1.71.0/LICENSE" RepositoryUrl="https://github.com/lucide-icons/lucide" UseCase="@T("The icons of AI Studio come from Lucide, an open-source icon set. AI Studio ships them as a font, so showing them never sends a request to the internet. Lucide is licensed under ISC; the icons it took over from Feather remain under MIT.")"/>
                 </MudGrid>
             </ExpansionPanel>
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Copyright" HeaderText="@T("Trademarks & Brand Assets")">
+            <ExpansionPanel HeaderIcon="@AppIcons.TRADEMARKS" HeaderText="@T("Trademarks & Brand Assets")">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
                     <img src="images/tool-icons/confluence.svg" alt="Confluence" width="24" height="24" />
                     <MudLink Href="https://www.atlassian.com/legal/trademark" Target="_blank">@T("The Confluence logo by Atlassian identifies the Search Confluence tool.")</MudLink>
@@ -423,7 +429,7 @@
                     @T("Organizations can replace these logos with their own icons through a configuration plugin. When your organization does so, it is responsible for holding the rights to the icons it provides.")
                 </MudJustifiedText>
             </ExpansionPanel>
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="License: FSL-1.1-MIT">
+            <ExpansionPanel HeaderIcon="@AppIcons.LICENSE" HeaderText="License: FSL-1.1-MIT">
                 <MudMarkdown Value="@LICENSE" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
             </ExpansionPanel>
         </MudExpansionPanels>

@@ -37,7 +37,7 @@ public partial class DataSourceLocalFileInfoDialog : MSGComponentBase
     /// <summary>
     /// The level which applies, including what the organization demands.
     /// </summary>
-    private string OutboundDataRestrictionName => this.DataSource.GetEffectiveOutboundDataRestriction(this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction).GetName();
+    private string OutboundDataRestrictionName => this.DataSource.GetEffectiveOutboundDataRestriction(this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction).Name;
     
     private void Close() => this.MudDialog.Close();
 }

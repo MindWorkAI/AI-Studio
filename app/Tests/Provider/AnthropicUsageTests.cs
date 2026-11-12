@@ -30,14 +30,14 @@ public sealed class AnthropicUsageTests
     {
         var line = Read(MESSAGE_START);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(line.GetUsage().IsKnown, Is.True);
             Assert.That(line.GetUsage().PromptTokens, Is.EqualTo(25));
 
             // It carries no answer, which is why it has to be read before the content check drops it:
             Assert.That(line.ContainsContent(), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -105,11 +105,11 @@ public sealed class AnthropicUsageTests
             {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hi"}}
             """);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(line.GetUsage().IsKnown, Is.False);
             Assert.That(line.ContainsContent(), Is.True);
-        });
+        }
     }
 
     private static ResponseStreamLine Read(string data) => JsonSerializer.Deserialize<ResponseStreamLine>(data, ProviderJsonOptions.OPTIONS);

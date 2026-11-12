@@ -42,12 +42,12 @@ public sealed class VectorReuseTests
         // Touched only: a new fingerprint, and so new chunk ids, but the same texts:
         await run.IndexAsync("fingerprint-2", "Chapter one.", "Chapter two.", "Chapter three.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(run.Provider.EmbeddedTexts, Is.Empty, "Every text has its vector stored already.");
             Assert.That(run.Vectors.Points.Values.OrderBy(point => point.ChunkIndex).Select(point => point.Vector), Is.EqualTo(firstVectors), "Each chunk keeps the vector of its text.");
             Assert.That(run.Vectors.Points.Values.Select(point => point.Fingerprint), Is.All.EqualTo("fingerprint-2"), "The old points are gone, only the new ones remain.");
-        });
+        }
     }
 
     [Test]
@@ -78,12 +78,12 @@ public sealed class VectorReuseTests
         await run.IndexAsync("mail-hash", "Attachment: offer.pdf", "The body of the mail.");
 
         var points = run.Vectors.Points.Values.OrderBy(point => point.ChunkIndex).ToList();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(run.Provider.EmbeddedTexts, Is.Empty);
             Assert.That(points.Select(point => point.Vector), Is.EqualTo(new[] { CountingProvider.VectorOf("Attachment: offer.pdf"), CountingProvider.VectorOf("The body of the mail.") }), "Each text keeps its own vector.");
             Assert.That(points.Select(point => point.PointId).Intersect(oldPointIds), Is.Empty, "The new chunks have ids of their own, and the old points are gone.");
-        });
+        }
     }
 
     [Test]
@@ -99,7 +99,7 @@ public sealed class VectorReuseTests
         var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
         var hiddenChunks = await run.Store.Client.GetHiddenChunksAsync(DATA_SOURCE_ID, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(firstGeneration.Select(chunk => chunk.Generation), Is.All.Zero, "A document stored for the first time gets the ids documents got before generations existed.");
             Assert.That(thirdGeneration.Select(chunk => chunk.Generation), Is.All.EqualTo(2), "Only the chunks of the last generation remain.");
@@ -108,7 +108,7 @@ public sealed class VectorReuseTests
             Assert.That(run.Vectors.Points.Values.Select(point => point.Generation), Is.All.EqualTo(2), "Every point knows its generation, by which the vector search hides the others.");
             Assert.That(manifest.Files[PATH].Generation, Is.EqualTo(2), "The row of the document names the generation it is searched by.");
             Assert.That(hiddenChunks, Is.Empty, "A complete document has nothing to hide.");
-        });
+        }
     }
 
     /// <remarks>
@@ -125,11 +125,11 @@ public sealed class VectorReuseTests
 
         await run.IndexAsync("fingerprint-2", "Chapter one, revised.", "Chapter two.", "Chapter three, revised.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(run.Vectors.RetrieveRequests.SelectMany(pointIds => pointIds), Is.EqualTo(new[] { IndexedDocumentIds.CreateChunkId(DATA_SOURCE_ID, "fingerprint-1", 1) }), "Only the vector of the second chapter, whose text stayed, is read.");
             Assert.That(run.Provider.EmbeddedTexts, Is.EqualTo(new[] { "Chapter one, revised.", "Chapter three, revised." }));
-        });
+        }
     }
 
     /// <remarks>
@@ -164,7 +164,7 @@ public sealed class VectorReuseTests
         var indexedAgain = await run.IndexAsync("fingerprint-3", "Chapter one.", "Chapter two, revised.", "Chapter three.", "Chapter four.", "Chapter five.");
         var chunksAtTheEnd = await run.StoredChunksAsync();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(indexed, Is.False);
             Assert.That(embeddedByTheAttempt, Is.EqualTo(new[] { "Chapter two, revised.", "Chapter three." }), "After the failure, the provider is not asked for the fifth chapter.");
@@ -181,7 +181,7 @@ public sealed class VectorReuseTests
             Assert.That(run.Provider.EmbeddedTexts, Is.EqualTo(new[] { "Chapter four.", "Chapter five." }), "The next attempt asks the provider only for what is missing.");
             Assert.That(chunksAtTheEnd.Select(chunk => chunk.Generation), Is.All.EqualTo(2));
             Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(chunksAtTheEnd.Select(chunk => chunk.ChunkId)));
-        });
+        }
     }
 
     /// <remarks>
@@ -202,14 +202,14 @@ public sealed class VectorReuseTests
         var indexed = await run.IndexAsync("fingerprint-3", "Chapter one.", "Chapter two, revised again.", IndexRun.UNREADABLE);
 
         var chunksAfterwards = await run.StoredChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(indexed, Is.False);
             Assert.That(chunksBefore.Select(chunk => chunk.Generation).Distinct(), Is.EquivalentTo(new[] { 0, 1 }), "The stored version, and the attempt which failed at the provider.");
             Assert.That(chunksAfterwards, Is.EquivalentTo(chunksBefore), "Only what the attempt which stopped early stored goes.");
             Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(chunksBefore.Select(chunk => chunk.ChunkId)));
             Assert.That(run.Manifest.Files[PATH].Fingerprint, Is.EqualTo("fingerprint-1"));
-        });
+        }
     }
 
     /// <remarks>
@@ -227,13 +227,13 @@ public sealed class VectorReuseTests
         var indexed = await run.IndexAsync("fingerprint-2");
 
         var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(indexed, Is.False);
             Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(storedPointIds));
             Assert.That(manifest.Files[PATH].Fingerprint, Is.EqualTo("fingerprint-1"), "The stored version can still be found.");
             Assert.That(manifest.PermanentFailures[PATH].Fingerprint, Is.EqualTo("fingerprint-2"), "The broken version is not read again until it changes.");
-        });
+        }
     }
 
     /// <remarks>
@@ -263,7 +263,7 @@ public sealed class VectorReuseTests
         var manifestAtTheEnd = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
         var foundAtTheEnd = await run.SearchAsync("one");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(indexed, Is.False);
             Assert.That(chunksRead, Is.EqualTo(2), "The third chapter is never read: nothing stored could spare the provider a chunk.");
@@ -277,7 +277,7 @@ public sealed class VectorReuseTests
             Assert.That(run.Provider.EmbeddedTexts, Is.EqualTo(new[] { "Chapter two.", "Chapter three." }), "The next attempt reuses the first chapter.");
             Assert.That(manifestAtTheEnd.UnfinishedFiles, Is.Empty);
             Assert.That(foundAtTheEnd, Is.EqualTo(new[] { "Chapter one." }));
-        });
+        }
     }
 
     /// <remarks>
@@ -302,7 +302,7 @@ public sealed class VectorReuseTests
         run.Provider.EmbeddedTexts.Clear();
         var indexedAtLast = await run.IndexAsync("fingerprint-1", "Chapter one.", "Chapter two.", "Chapter three.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(indexed, Is.False);
             Assert.That(chunksAfterwards, Is.EquivalentTo(keptChunks), "Only what the attempt which stopped early stored goes.");
@@ -310,7 +310,7 @@ public sealed class VectorReuseTests
             Assert.That(manifest.UnfinishedFiles, Is.EquivalentTo(new[] { PATH }), "The document still cannot be searched.");
             Assert.That(indexedAtLast, Is.True);
             Assert.That(run.Provider.EmbeddedTexts, Is.EqualTo(new[] { "Chapter two.", "Chapter three." }), "The first chapter was paid for once.");
-        });
+        }
     }
 
     /// <remarks>
@@ -326,14 +326,14 @@ public sealed class VectorReuseTests
 
         var manifest = await run.Store.Client.GetManifestAsync(DATA_SOURCE_ID, CancellationToken.None);
         var storedChunks = await run.Store.Client.GetStoredChunksAsync(DATA_SOURCE_ID, PATH, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(indexed, Is.False);
             Assert.That(run.Vectors.Points, Is.Empty, "There is no stored version to keep.");
             Assert.That(storedChunks, Is.Empty);
             Assert.That(manifest.Files, Is.Empty);
             Assert.That(manifest.UnfinishedFiles, Is.Empty);
-        });
+        }
     }
 
     /// <remarks>
@@ -352,12 +352,12 @@ public sealed class VectorReuseTests
         await run.IndexAsync("fingerprint-3", "Chapter one.", "Chapter two, revised.");
 
         var storedChunks = await run.Store.Client.GetStoredChunksAsync(DATA_SOURCE_ID, PATH, CancellationToken.None);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(run.Provider.EmbeddedTexts, Is.Empty, "The interrupted run had embedded the revised chapter already.");
             Assert.That(storedChunks.Select(chunk => chunk.Generation), Is.All.EqualTo(2));
             Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(storedChunks.Select(chunk => chunk.ChunkId)));
-        });
+        }
     }
 
     /// <remarks>
@@ -377,12 +377,12 @@ public sealed class VectorReuseTests
         await run.RecordContentUnchangedAsync("fingerprint-3");
 
         var chunksAtTheEnd = await run.StoredChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(generationsAfterTheAttempt, Is.EquivalentTo(new[] { 0, 1 }));
             Assert.That(chunksAtTheEnd.Select(chunk => chunk.TextHash), Is.EquivalentTo(new[] { "Chapter one.", "Chapter two." }.Select(ChunkTextHash.Of)), "Only the stored version stays.");
             Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(chunksAtTheEnd.Select(chunk => chunk.ChunkId)), "The vector store keeps exactly the chunks the index keeps.");
-        });
+        }
     }
 
     [Test]
@@ -397,12 +397,12 @@ public sealed class VectorReuseTests
         await run.RemoveLeftoverGenerationsAsync(isUnchanged: true);
 
         var chunksAtTheEnd = await run.StoredChunksAsync();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(generationsOfAChangedDocument, Is.EquivalentTo(new[] { 0, 1 }), "A document which changed is indexed again, and that attempt takes over the vectors.");
             Assert.That(chunksAtTheEnd.Select(chunk => chunk.Generation), Is.All.EqualTo(0), "Nothing else would ever remove what the interrupted run left of a document which did not change since.");
             Assert.That(run.Vectors.Points.Keys, Is.EquivalentTo(chunksAtTheEnd.Select(chunk => chunk.ChunkId)));
-        });
+        }
     }
 
     [Test]

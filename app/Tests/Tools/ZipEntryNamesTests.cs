@@ -32,12 +32,12 @@ public sealed class ZipEntryNamesTests
     [TestCase("plugin\0.lua")]
     public void ANameWhichCouldLeadElsewhereIsRejected(string entryName)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(() => ZipEntryNames.Normalize(entryName), Throws.InstanceOf<InvalidDataException>());
             Assert.That(ZipEntryNames.TryNormalize(entryName, out var normalizedEntryName), Is.False);
             Assert.That(normalizedEntryName, Is.Empty);
-        });
+        }
     }
 
     [Test]

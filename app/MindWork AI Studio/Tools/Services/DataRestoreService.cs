@@ -194,7 +194,8 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
     /// A setting the organization fixed comes from its configuration plugin, and one the tool does
     /// not show for the saved settings means nothing for them. Which of the remaining ones held a
     /// value nobody knows: a backup holds no secrets, so the dialog asks to enter them again if they
-    /// were used.
+    /// were used. A tool the user switched off is left out, since they never need it; should they
+    /// switch it on again, its settings say what is missing.
     /// </remarks>
     private List<DataRestoreToolSecret> FindToolSecrets()
     {
@@ -202,6 +203,9 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
         foreach (var definition in toolRegistry.GetAllDefinitions())
         {
             if (toolRegistry.GetImplementation(definition.ImplementationKey) is not { } implementation)
+                continue;
+
+            if (toolRegistry.IsSwitchedOffByUser(definition.Id))
                 continue;
 
             if (!settingsManager.ConfigurationData.Tools.Settings.TryGetValue(definition.Id, out var storedValues))

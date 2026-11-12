@@ -9,4 +9,5 @@ public enum PromptInjectionSourceKind
     RETRIEVAL_CONTEXT,
     DATA_SOURCE_DESCRIPTION,
     MAIL_CONTENT,
+    MODEL_ANSWER,
 }

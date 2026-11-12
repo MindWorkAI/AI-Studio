@@ -162,7 +162,7 @@ public partial class AssistantBatchProcessing
                 return;
 
             this.hasReportedWriteFailure = true;
-            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, string.Format(T("Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"), Path.GetFileName(targetFilePath), e.Message)));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, string.Format(T("Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"), Path.GetFileName(targetFilePath), e.Message)));
         }
     }
 
@@ -195,7 +195,7 @@ public partial class AssistantBatchProcessing
 
             // Without this message, continuing the run would silently process
             // every document again, because we recognize nothing as completed:
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Was not able to read the log of the previous run. Continuing the run would process all documents again.")));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, T("Was not able to read the log of the previous run. Continuing the run would process all documents again.")));
         }
 
         return entries;
@@ -227,7 +227,7 @@ public partial class AssistantBatchProcessing
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Was not able to read the results table of the previous batch run at '{ResultsFilePath}'.", resultsFilePath);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.")));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, T("Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.")));
         }
 
         return results;
@@ -244,7 +244,7 @@ public partial class AssistantBatchProcessing
     /// </remarks>
     private string CreateResultFileName(string sourceFileName)
     {
-        var extension = this.resultFileFormat.ToFileExtension();
+        var extension = this.resultFileFormat.FileExtension;
         var stem = Path.GetFileNameWithoutExtension(sourceFileName);
         var candidate = $"{stem}{RESULT_FILE_SUFFIX}{extension}";
 

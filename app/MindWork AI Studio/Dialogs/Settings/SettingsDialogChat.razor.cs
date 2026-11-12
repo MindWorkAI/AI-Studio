@@ -15,7 +15,7 @@ public partial class SettingsDialogChat : SettingsDialogBase
     private async Task ResetFeedbackWeek()
     {
         await this.FeedbackService.ResetWeekAsync();
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Feedback, "Debug: the weekly feedback asks again after your next answer."));
+        await this.MessageBus.SendSuccess(new(AppIcons.FEEDBACK, "Debug: the weekly feedback asks again after your next answer."));
     }
 
     /// <summary>

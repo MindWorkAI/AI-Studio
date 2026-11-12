@@ -20,11 +20,11 @@ public sealed class ContentStreamPageNumberTests
     {
         var processed = ContentStreamSseHandler.ProcessEvent(PdfEvent(7, "The mixing console is described here."));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed.Location.PageNumber, Is.EqualTo(7), "The page comes from the metadata of the event.");
             Assert.That(processed.Content, Does.Contain("# Page 7"), "The heading stays, because it is what tells the AI which page it reads.");
-        });
+        }
     }
 
     [Test]
@@ -49,11 +49,11 @@ public sealed class ContentStreamPageNumberTests
             Metadata = new ContentStreamTextMetadata(),
         });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed.Location.PageNumber, Is.Null, "Nothing is read out of the text, so a line which looks like a marker stays text.");
             Assert.That(processed.Content, Is.EqualTo("# Page 42\nStill nothing but the text of the document."), "The text itself is passed on untouched.");
-        });
+        }
     }
 
     /// <remarks>
@@ -71,16 +71,46 @@ public sealed class ContentStreamPageNumberTests
             var first = ContentStreamSseHandler.ProcessEvent(DocumentEvent(streamId, 1, "What the first page says."));
             var second = ContentStreamSseHandler.ProcessEvent(DocumentEvent(streamId, 2, "What the second page says."));
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(first.Content, Is.Null, "The first page is still being buffered, so nothing is released yet.");
                 Assert.That(second.Location.PageNumber, Is.EqualTo(1), "What is released here is the first page, so it carries page one.");
                 Assert.That(second.Content, Does.Contain("What the first page says."), "The content released belongs to the page whose number is stated.");
-            });
+            }
         }
         finally
         {
             ContentStreamSseHandler.Clear(streamId);
+        }
+    }
+
+    /// <remarks>
+    /// The runtime estimates the pages of a Word or OpenDocument file from its page breaks, while a
+    /// OneNote section knows its pages. The AI is told which of the two it reads.
+    /// </remarks>
+    [Test]
+    public void OnlyAnEstimatedDocumentPageIsMarkedAsEstimated()
+    {
+        var estimatedStreamId = NewStreamId();
+        var exactStreamId = NewStreamId();
+        try
+        {
+            ContentStreamSseHandler.ProcessEvent(DocumentEvent(estimatedStreamId, 1, "A page of a Word file."));
+            ContentStreamSseHandler.ProcessEvent(DocumentEvent(exactStreamId, 1, "A page of a OneNote section.", pageIsExact: true));
+
+            var estimated = ContentStreamSseHandler.Clear(estimatedStreamId);
+            var exact = ContentStreamSseHandler.Clear(exactStreamId);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(estimated?.Content, Does.StartWith("<!-- Estimated page 1 -->"));
+                Assert.That(exact?.Content, Does.StartWith("<!-- Page 1 -->"));
+            }
+        }
+        finally
+        {
+            ContentStreamSseHandler.Clear(estimatedStreamId);
+            ContentStreamSseHandler.Clear(exactStreamId);
         }
     }
 
@@ -94,11 +124,11 @@ public sealed class ContentStreamPageNumberTests
         var remainder = ContentStreamSseHandler.Clear(streamId);
 
         Assert.That(remainder, Is.Not.Null, "The reader always keeps its last page, so there is something left to release.");
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(remainder!.Value.PageNumber, Is.EqualTo(2), "The page kept back is the second one.");
             Assert.That(remainder.Value.Content, Does.Contain("What the second page says."), "The content released belongs to the page whose number is stated.");
-        });
+        }
     }
 
     /// <remarks>
@@ -115,11 +145,11 @@ public sealed class ContentStreamPageNumberTests
             Metadata = new ContentStreamPresentationMetadata { Presentation = new() { SlideNumber = 3 } },
         }, extractImages: false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed.Location, Is.EqualTo(default(SourceLocation)), "A slide number is not a page number, and slides are left out while their order may be wrong.");
             Assert.That(processed.Content, Does.Contain("# Slide 3"), "The heading stays, so the AI still knows which slide it reads.");
-        });
+        }
     }
 
     [Test]
@@ -149,11 +179,11 @@ public sealed class ContentStreamPageNumberTests
             Metadata = new ContentStreamSpreadsheetMetadata { Spreadsheet = new() { SheetName = "Inventory", RowNumber = 0 } },
         });
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(processed.Location, Is.EqualTo(new SourceLocation(SheetName: "Inventory")));
             Assert.That(processed.Content, Does.Contain("# Inventory"), "The heading still tells the AI which sheet it reads.");
-        });
+        }
     }
 
     [Test]
@@ -176,11 +206,11 @@ public sealed class ContentStreamPageNumberTests
         Metadata = new ContentStreamPdfMetadata { Pdf = new() { PageNumber = pageNumber } },
     };
 
-    private static ContentStreamSseEvent DocumentEvent(string streamId, int pageNumber, string content) => new()
+    private static ContentStreamSseEvent DocumentEvent(string streamId, int pageNumber, string content, bool pageIsExact = false) => new()
     {
         Content = content,
         StreamId = streamId,
-        Metadata = new ContentStreamDocumentMetadata { Document = new() { PageNumber = pageNumber } },
+        Metadata = new ContentStreamDocumentMetadata { Document = new() { PageNumber = pageNumber, PageIsExact = pageIsExact } },
     };
 
     //

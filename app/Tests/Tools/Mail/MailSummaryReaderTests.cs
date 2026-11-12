@@ -30,7 +30,7 @@ public sealed class MailSummaryReaderTests
         summary.Size = 2048;
 
         var identity = MailSummaryReader.ReadIdentity(summary);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(identity.EmailId, Is.EqualTo("M6d99ac3275bb4e"));
             Assert.That(identity.GmailMessageId, Is.Null);
@@ -39,20 +39,20 @@ public sealed class MailSummaryReaderTests
             Assert.That(identity.FromAddresses, Is.EqualTo(new[] { "mueller@example.org" }));
             Assert.That(identity.Subject, Does.StartWith("Hello"));
             Assert.That(identity.Size, Is.EqualTo(2048));
-        });
+        }
     }
 
     [Test]
     public void EveryAddressKeepsItsHeader()
     {
         var addresses = MailSummaryReader.ReadAddresses(MailFixtures.Load("header-injection.eml").Headers);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(addresses.Count(address => address.Role is MailAddressRole.TO), Is.EqualTo(12), "An address of the second To line is lost.");
             Assert.That(addresses[0], Is.EqualTo(new MailAddressRecord(MailAddressRole.FROM, "mueller@example.org", "Müller, Jürgen")));
             Assert.That(addresses[^1], Is.EqualTo(new MailAddressRecord(MailAddressRole.CC, "mueller@example.org", "mueller@example.org")));
             Assert.That(addresses.Any(address => address.Role is MailAddressRole.SENDER or MailAddressRole.REPLY_TO), Is.False, "A header the mail does not have was made up.");
-        });
+        }
     }
 
     [Test]
@@ -87,7 +87,7 @@ public sealed class MailSummaryReaderTests
 
         var readableSource = MailSummaryReader.ReadTextSource(readable, new MailTextParts(null, "Please review the attached report."));
         var encryptedSource = MailSummaryReader.ReadTextSource(encrypted, null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(readableSource.AttachmentNames, Is.EqualTo(new[] { "board-report.pdf" }));
             Assert.That(readableSource.StructureEncryption, Is.EqualTo(MailEncryptionKind.NONE));
@@ -95,7 +95,7 @@ public sealed class MailSummaryReaderTests
             Assert.That(readableSource.HtmlBody, Is.Null);
             Assert.That(encryptedSource.StructureEncryption, Is.EqualTo(MailEncryptionKind.SMIME));
             Assert.That(MailTextBuilder.Build(encryptedSource).Body, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -109,22 +109,22 @@ public sealed class MailSummaryReaderTests
         var signed = Summary("smime-clear-signed.eml");
         signed.Body = Multipart("signed", new BodyPartText(new ContentType("text", "plain"), PART_SPECIFIER), signature);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailSummaryReader.ReadAttachments(signed), Is.Empty);
             Assert.That(MailSummaryReader.ReadTextSource(signed, new MailTextParts(null, "Signed, but readable for everybody.")).AttachmentNames, Is.Empty);
-        });
+        }
     }
 
     [Test]
     public void TheFlagsAreRead()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailSummaryReader.ReadFlags(MessageFlags.Seen | MessageFlags.Flagged | MessageFlags.Recent), Is.EqualTo(new MailFlags(IsSeen: true, IsFlagged: true, IsAnswered: false)));
             Assert.That(MailSummaryReader.ReadFlags(MessageFlags.Answered), Is.EqualTo(new MailFlags(IsSeen: false, IsFlagged: false, IsAnswered: true)));
             Assert.That(MailSummaryReader.ReadFlags(null), Is.EqualTo(new MailFlags(IsSeen: false, IsFlagged: false, IsAnswered: false)));
-        });
+        }
     }
 
     [Test]
@@ -144,13 +144,13 @@ public sealed class MailSummaryReaderTests
         var otherSize = Summary("priority-with-attachment.eml");
         otherSize.Size = 2049;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(hash, Does.Match("^[0-9a-f]{64}$"));
             Assert.That(MailSummaryReader.ComputeMailHash(sameMail), Is.EqualTo(hash));
             Assert.That(MailSummaryReader.ComputeMailHash(otherSize), Is.Not.EqualTo(hash));
             Assert.That(MailSummaryReader.ComputeMailHash(Summary("smime-enveloped.eml")), Is.Not.EqualTo(hash));
-        });
+        }
     }
 
     [Test]
@@ -160,12 +160,12 @@ public sealed class MailSummaryReaderTests
         headers.Add("In-Reply-To", "<second@example.org>");
         headers.Add("References", "<first@example.org>\r\n <second@example.org>");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(MailHeaders.ReadMessageIds(headers, HeaderId.References), Is.EqualTo(new[] { "first@example.org", "second@example.org" }));
             Assert.That(MailHeaders.ReadMessageIds(headers, HeaderId.InReplyTo), Is.EqualTo(new[] { "second@example.org" }));
             Assert.That(MailHeaders.ReadMessageIds(headers, HeaderId.MessageId), Is.Empty);
-        });
+        }
     }
 
     [Test]

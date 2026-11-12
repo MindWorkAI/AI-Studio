@@ -43,8 +43,15 @@ public sealed partial class RustService
     /// recording, names the file the user knows instead.
     /// </param>
     /// <param name="reportingScope">The action the file is read for, or null when it is read for none.</param>
-    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, PromptInjectionSource? reportAs = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    /// <param name="maxCharacters">
+    /// How many characters of the content to keep at most. The content beyond is left out, and the result says so
+    /// with IsShortened. The runtime still reads the whole file, because it tells what its filter removed only at the
+    /// end; the content left out never reaches memory, though.
+    /// </param>
+    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, PromptInjectionSource? reportAs = null, PromptInjectionReportingScope? reportingScope = null, int maxCharacters = int.MaxValue, CancellationToken token = default)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCharacters);
+
         //
         // The runtime filters prompt injections while it streams the file. Doing it there rather
         // than here means the whole document never has to exist in memory at once, which is what
@@ -68,6 +75,7 @@ public sealed partial class RustService
         var promptInjectionFindings = new List<PromptInjectionFinding>();
         var promptInjectionRedactedCount = 0;
         var hasPartialFailure = false;
+        var isShortened = false;
         var failureCode = FileExtractionErrorCode.NONE;
         string? failureMessage = null;
         string? detectedFormat = null;
@@ -112,7 +120,7 @@ public sealed partial class RustService
 
                 try
                 {
-                    var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
+                    var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent, CONTENT_STREAM_JSON_OPTIONS);
                     if (sseEvent is null)
                         continue;
 
@@ -178,7 +186,7 @@ public sealed partial class RustService
                             promptInjectionFindings.AddRange(findings);
                     }
                     else if (processedEvent.Content is not null)
-                        resultBuilder.AppendLine(processedEvent.Content);
+                        isShortened |= !AppendWithinLimit(resultBuilder, processedEvent.Content, maxCharacters);
 
                     chunkCount++;
                 }
@@ -222,7 +230,18 @@ public sealed partial class RustService
         {
             // Reading the whole file at once needs no token counts, so only the content is used here:
             if (ContentStreamSseHandler.Clear(streamId) is { } finalContentChunk && !string.IsNullOrWhiteSpace(finalContentChunk.Content))
-                resultBuilder.AppendLine(finalContentChunk.Content);
+                isShortened |= !AppendWithinLimit(resultBuilder, finalContentChunk.Content, maxCharacters);
+        }
+
+        // The last piece taken in may reach beyond the limit:
+        if (resultBuilder.Length > maxCharacters)
+        {
+            var end = maxCharacters;
+            if (char.IsHighSurrogate(resultBuilder[end - 1]))
+                end--;
+
+            resultBuilder.Length = end;
+            isShortened = true;
         }
 
         if (failureCode is not FileExtractionErrorCode.NONE)
@@ -241,9 +260,9 @@ public sealed partial class RustService
             return FileExtractionResult.Failed(FileExtractionErrorCode.NO_CONTENT, "Reading the file produced no content.");
         }
 
-        var result = hasPartialFailure
+        var result = (hasPartialFailure
             ? FileExtractionResult.Partial(content, failedPages, detectedFormat)
-            : FileExtractionResult.Success(content, detectedFormat);
+            : FileExtractionResult.Success(content, detectedFormat)) with { IsShortened = isShortened };
 
         if (promptInjectionRedactedCount is 0)
             return result;
@@ -267,6 +286,26 @@ public sealed partial class RustService
             PromptInjectionFindings = promptInjectionFindings,
             PromptInjectionRedactedCount = promptInjectionRedactedCount,
         };
+    }
+
+    /// <summary>
+    /// Appends a piece of content as a line, unless the content reached its limit already.
+    /// </summary>
+    /// <remarks>
+    /// The piece which crosses the limit is taken in whole and cut back once the stream is read, so the content in
+    /// memory exceeds the limit by one piece at most.
+    /// </remarks>
+    /// <param name="content">The content read so far.</param>
+    /// <param name="piece">The piece to append.</param>
+    /// <param name="maxCharacters">How many characters of the content to keep at most.</param>
+    /// <returns>False when the piece was left out although it carries text.</returns>
+    private static bool AppendWithinLimit(StringBuilder content, string piece, int maxCharacters)
+    {
+        if (content.Length >= maxCharacters)
+            return string.IsNullOrWhiteSpace(piece);
+
+        content.AppendLine(piece);
+        return true;
     }
 
     /// <summary>
@@ -352,9 +391,8 @@ public sealed partial class RustService
             await using var stream = await response.Content.ReadAsStreamAsync(token);
             using var reader = new StreamReader(stream);
 
-            while (!reader.EndOfStream && !token.IsCancellationRequested)
+            while (!token.IsCancellationRequested && await reader.ReadLineAsync(token) is { } line)
             {
-                var line = await reader.ReadLineAsync(token);
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
@@ -365,7 +403,7 @@ public sealed partial class RustService
                 ContentStreamSseEvent? sseEvent = null;
                 try
                 {
-                    sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
+                    sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent, CONTENT_STREAM_JSON_OPTIONS);
                 }
                 catch (JsonException)
                 {
@@ -461,7 +499,7 @@ public sealed partial class RustService
     {
         try
         {
-            var errorMessage = JsonSerializer.Deserialize<string>(jsonContent);
+            var errorMessage = JsonSerializer.Deserialize<string>(jsonContent, CONTENT_STREAM_JSON_OPTIONS);
             if (string.IsNullOrWhiteSpace(errorMessage))
                 return false;
 

@@ -81,7 +81,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 
 **Key Architecture Points:**
 - **Runtime:** Rust-based Tauri v2 application providing the native window, system integration, and IPC layer
-- **App:** .NET 9 Blazor Server application providing the UI and core functionality
+- **App:** .NET 10 Blazor Server application providing the UI and core functionality
 - **Communication:** The Rust runtime and .NET app communicate via HTTPS with TLS certificates generated at startup
 - **Providers:** Multi-provider architecture supporting OpenAI, Anthropic, Google, Mistral, Perplexity, self-hosted models, and others
 - **Plugin System:** Lua-based plugin system for language packs, configuration, assistants, and model knowledge
@@ -89,7 +89,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 ## Building
 
 ### Prerequisites
-- .NET 9 SDK
+- .NET 10 SDK
 - Rust toolchain (stable)
 - Tauri v2 CLI
 - Tauri prerequisites (platform-specific dependencies)
@@ -114,7 +114,7 @@ failures (for reference: https://github.com/openai/codex/issues/4915). This appl
 Instead, use the JetBrains IDE MCP servers. They execute in the IDE process, which runs outside the
 agent sandbox:
 
-- `rider` for the .NET solution at `app/MindWork AI Studio.sln`
+- `rider` for the .NET solution at `app/MindWork AI Studio.slnx`
 - `rustrover` for the Rust runtime at `runtime/`
 
 Pass the `rootFolder` parameter on every call, e.g. the absolute path of the `app` directory for Rider
@@ -169,7 +169,7 @@ again yourself when `metadata.txt` changes during the session, e.g., after a mer
 **Building and testing** happen in the shell:
 
 - The quality gate, the same as in the pipeline: `cd app/Build && dotnet run verify`. It compiles both
-  the .NET app and the Rust runtime on its way. Narrower checks: `dotnet build "app/MindWork AI Studio.sln"`,
+  the .NET app and the Rust runtime on its way. Narrower checks: `dotnet build "app/MindWork AI Studio.slnx"`,
   `dotnet test` in `app/Tests`, and `cargo test` or `cargo clippy --all-targets -- -D warnings` in `runtime/`.
 - A cold build of the Rust runtime takes several minutes: run the gate and cargo in the background, or
   give them the longest timeout available.
@@ -198,6 +198,23 @@ again yourself when `metadata.txt` changes during the session, e.g., after a mer
 - **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
 - **Compatibility shims** - Temporary fallback or read-repair code must be documented in `documentation/compatibility-shims/` with an introduced date, remove-after date, code references, and removal checklist. Add a short code comment near the shim that references the document and remove-after date. Check this folder before adding similar fallback logic, and do not extend expired shims without explicit maintainer direction. Do not use this process for permanent settings schema migrations; those belong in `app/MindWork AI Studio/Settings/SettingsMigrations.cs`.
+
+## Wiki
+
+The documentation for users and IT departments lives in the wiki, https://github.com/MindWorkAI/AI-Studio/wiki:
+the user guide in US English and German, the Enterprise IT guides, and pages for developers. The files in
+`documentation/` are meant for contributors.
+
+The maintainers write the wiki, and they update it when a release is published, not before: a page which
+describes a version nobody can install yet misleads users and IT departments. Contributors need neither
+access to the wiki nor a copy of it.
+
+- A change which users or IT departments notice, such as a new assistant, a changed default, or a new
+  capability of configuration plugins, gets the section "Wiki" in the description of its pull request:
+  what changes for users or IT departments, which settings or configuration keys are new or changed, and
+  which pages of the wiki it concerns, if you know them. Write "none" when nobody notices the change.
+- Leave the wiki itself to the maintainers. They carry these sections into it for the release, see
+  "Release Process" in `app/Build/AGENTS.md`.
 
 ## Changelogs
 Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users

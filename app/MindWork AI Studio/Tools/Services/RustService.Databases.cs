@@ -24,7 +24,7 @@ public sealed partial class RustService
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(45));
 
-            var databaseInfo = await this.http.GetFromJsonAsync<TDatabaseInfo>(infoPath, this.jsonRustSerializerOptions, cts.Token);
+            var databaseInfo = await this.http.GetFromJsonAsync<TDatabaseInfo>(infoPath, JSON_OPTIONS, cts.Token);
             return databaseInfo ?? unavailableFactory("The database information response was empty.");
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -52,10 +52,10 @@ public sealed partial class RustService
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(TimeSpan.FromMinutes(5));
 
-        using var response = await this.http.PostAsJsonAsync(path, request, this.jsonRustSerializerOptions, cts.Token);
+        using var response = await this.http.PostAsJsonAsync(path, request, JSON_OPTIONS, cts.Token);
         response.EnsureSuccessStatusCode();
 
-        var operation = await response.Content.ReadFromJsonAsync<DatabaseOperationResponse>(this.jsonRustSerializerOptions, cts.Token);
+        var operation = await response.Content.ReadFromJsonAsync<DatabaseOperationResponse>(JSON_OPTIONS, cts.Token);
         if (operation is not { Success: true })
             throw CreateDatabaseException(operation?.Issue, operation?.IssueCode, $"The {databaseName} operation failed.");
     }
@@ -65,10 +65,10 @@ public sealed partial class RustService
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(TimeSpan.FromMinutes(5));
 
-        using var response = await this.http.PostAsJsonAsync(path, request, this.jsonRustSerializerOptions, cts.Token);
+        using var response = await this.http.PostAsJsonAsync(path, request, JSON_OPTIONS, cts.Token);
         response.EnsureSuccessStatusCode();
 
-        var operation = await response.Content.ReadFromJsonAsync<DatabaseQueryResponse<TResult>>(this.jsonRustSerializerOptions, cts.Token);
+        var operation = await response.Content.ReadFromJsonAsync<DatabaseQueryResponse<TResult>>(JSON_OPTIONS, cts.Token);
         if (operation is not { Success: true })
             throw CreateDatabaseException(operation?.Issue, operation?.IssueCode, $"The {databaseName} query failed.");
 
@@ -94,7 +94,10 @@ public sealed partial class RustService
         };
     }
 
-    private sealed record DatabaseOperationResponse(bool Success, string Issue, string IssueCode);
+    //
+    // Internal rather than private, so that the JSON context of the runtime can name them:
+    //
+    internal sealed record DatabaseOperationResponse(bool Success, string Issue, string IssueCode);
 
-    private sealed record DatabaseQueryResponse<TResult>(bool Success, string Issue, string IssueCode, TResult? Data);
+    internal sealed record DatabaseQueryResponse<TResult>(bool Success, string Issue, string IssueCode, TResult? Data);
 }

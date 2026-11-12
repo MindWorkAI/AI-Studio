@@ -15,9 +15,14 @@ public static class LuaTable
             if (cancellationToken.IsCancellationRequested)
                 return sb.ToString();
             
+            //
+            // A text with several lines, such as a notice in Markdown, keeps its line breaks, which the
+            // assignment below escapes. Lua ends a comment at the end of its line, though, so the comment
+            // gets the text on one line:
+            //
             var key = kvp.Key;
-            var value = kvp.Value.Replace("\n", " ").Trim();
-            var commentValue = commentContent is null ? value : commentContent.GetValueOrDefault(key, value);
+            var value = I18NKeyHash.NormalizeLineEndings(kvp.Value).Trim();
+            var commentValue = I18NKeyHash.NormalizeLineEndings(commentContent is null ? value : commentContent.GetValueOrDefault(key, value)).Replace("\n", " ");
 
             // Remove the "UI_TEXT_CONTENT." prefix from the key:
             const string UI_TEXT_CONTENT = "UI_TEXT_CONTENT.";

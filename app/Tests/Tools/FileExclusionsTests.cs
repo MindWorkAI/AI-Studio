@@ -4,7 +4,6 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tests.Tools;
 
@@ -22,7 +21,7 @@ public sealed class FileExclusionsTests
     [TestCase(FileExclusions.DEFAULT_PATTERNS)]
     public void ValidExclusionListsAreAccepted(string patterns)
     {
-        Assert.That(new DataSourceValidation().ValidateExcludePatterns(patterns), Is.Null);
+        Assert.That(FileExclusions.Validate(patterns), Is.Null);
     }
 
     [TestCase("a/b/")]
@@ -33,7 +32,72 @@ public sealed class FileExclusionsTests
     [TestCase("**/bin/")]
     public void InvalidExclusionListsAreRejected(string patterns)
     {
-        Assert.That(new DataSourceValidation().ValidateExcludePatterns(patterns), Is.Not.Null);
+        Assert.That(FileExclusions.Validate(patterns), Is.Not.Null);
+    }
+
+    [TestCase(null, true)]
+    [TestCase("", true)]
+    [TestCase(" ; \r\n", true)]
+    [TestCase("build/;cmake-build-*/", true)]
+    [TestCase(".env/;archive.v1/;*.vmwarevm/", true)]
+    [TestCase("*.pdf", false)]
+    [TestCase("Dockerfile", false)]
+    [TestCase("node_modules", false)]
+    [TestCase("build/;*.txt", false)]
+    public void FolderFieldRequiresExplicitFolderRules(string? patterns, bool valid)
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(FileExclusions.IsValidFolders(patterns), Is.EqualTo(valid));
+            Assert.That(FileExclusions.ValidateFolders(patterns) is null, Is.EqualTo(valid));
+        }
+    }
+
+    [TestCase(null, true)]
+    [TestCase("", true)]
+    [TestCase(" ; \r\n", true)]
+    [TestCase("*.pdf;draft-*;report-?.md", true)]
+    [TestCase("Dockerfile;Caddyfile;.gitignore", true)]
+    [TestCase("build", true)]
+    [TestCase("build/", false)]
+    [TestCase("*.tmp;obj/", false)]
+    public void FileFieldRejectsFolderRulesButAcceptsExtensionlessFiles(string? patterns, bool valid)
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(FileExclusions.IsValidFiles(patterns), Is.EqualTo(valid));
+            Assert.That(FileExclusions.ValidateFiles(patterns) is null, Is.EqualTo(valid));
+        }
+    }
+
+    [TestCase(":text:")]
+    [TestCase(":documents:")]
+    [TestCase("src/build/")]
+    [TestCase("**/*.tmp")]
+    [TestCase("/")]
+    [TestCase("./")]
+    public void BothFieldValidatorsReuseTheExistingSyntaxErrors(string patterns)
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(FileExclusions.IsValidFolders(patterns), Is.False);
+            Assert.That(FileExclusions.IsValidFiles(patterns), Is.False);
+            Assert.That(FileExclusions.ValidateFolders(patterns), Is.EqualTo(FileExclusions.Validate(patterns)));
+            Assert.That(FileExclusions.ValidateFiles(patterns), Is.EqualTo(FileExclusions.Validate(patterns)));
+        }
+    }
+
+    [Test]
+    public void StoredListsStillAcceptBothKindsOfRulesTogether()
+    {
+        const string PATTERNS = "bin/;*.pdf;Dockerfile;.git/";
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(FileExclusions.IsValid(PATTERNS), Is.True);
+            Assert.That(FileExclusions.Validate(PATTERNS), Is.Null);
+            Assert.That(FileExclusions.ExcludesFolder("bin", FileExclusions.Parse(PATTERNS)), Is.True);
+            Assert.That(FileExclusions.ExcludesFile("report.pdf", FileExclusions.Parse(PATTERNS)), Is.True);
+        }
     }
 
     [Test]
@@ -43,16 +107,28 @@ public sealed class FileExclusionsTests
     }
 
     [Test]
+    public void GroupingSplitsFoldersFromFilesAndDropsDuplicates()
+    {
+        var groups = FileExclusions.Group(" bin/ ;*.min.js\r\nobj/;BIN/;;\n*.MIN.js");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(groups.Folders, Is.EqualTo("bin/; obj/"));
+            Assert.That(groups.Files, Is.EqualTo("*.min.js"));
+        }
+    }
+
+    [Test]
     public void SettingsFromBeforeTheListGetTheDefault()
     {
         var dataSource = JsonSerializer.Deserialize<DataSourceLocalDirectory>("{}", SettingsManager.JSON_OPTIONS);
         var batchSettings = JsonSerializer.Deserialize<DataBatchProcessing>("{}", SettingsManager.JSON_OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(dataSource.ExcludePatterns, Is.EqualTo(FileExclusions.DEFAULT_PATTERNS));
             Assert.That(batchSettings!.ExcludePatterns, Is.EqualTo(FileExclusions.DEFAULT_PATTERNS));
-        });
+        }
     }
 
     [Test]
@@ -69,6 +145,7 @@ public sealed class FileExclusionsTests
     [TestCase("Windows 11.pvm")]
     [TestCase("__MACOSX")]
     [TestCase("$RECYCLE.BIN")]
+    [TestCase("OneNote_RecycleBin")]
     public void TheDefaultListExcludesTheseFolders(string folderName)
     {
         var folderPath = Path.Combine(Path.GetTempPath(), "test-data", folderName);
@@ -150,12 +227,12 @@ public sealed class FileExclusionsTests
             var excludedFolders = new List<string>();
             var candidates = selection.EnumerateCandidates(directoryPath, reportExcludedFolder: excludedFolders.Add).ToList();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(candidates, Is.EquivalentTo(new[] { manifestPath, lockFilePath, sourcePath }), "Nothing below node_modules or bin is even looked at.");
                 Assert.That(excludedFolders.Select(Path.GetFileName), Is.EquivalentTo(new[] { "node_modules", "bin" }));
                 Assert.That(candidates.Where(selection.Selects), Is.EquivalentTo(new[] { manifestPath, sourcePath }), "*.json selects the lock file, but the list excludes it.");
-            });
+            }
         }
         finally
         {
@@ -249,7 +326,7 @@ public sealed class FileExclusionsTests
         result.AddExcludedFolder(Path.Combine(directoryPath, "src", "Bin"));
         result.AddExcludedFolder(Path.Combine(directoryPath, "node_modules"));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ExcludedFolderCount, Is.EqualTo(3));
             Assert.That(result.ExcludedFolders, Is.EquivalentTo(new[]
@@ -257,6 +334,6 @@ public sealed class FileExclusionsTests
                 new DataSourceEmbeddingExcludedFolderGroup("bin", 2),
                 new DataSourceEmbeddingExcludedFolderGroup("node_modules", 1),
             }));
-        });
+        }
     }
 }

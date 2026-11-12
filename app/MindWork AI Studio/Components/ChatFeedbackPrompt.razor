@@ -27,7 +27,7 @@
                 }
 
                 <MudTooltip Text="@this.CloseTooltip" Placement="Placement.Bottom">
-                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="mud-text-secondary" Disabled="@this.isSending" OnClick="@this.Close"/>
+                    <MudIconButton Icon="@AppIcons.CLOSE" Size="Size.Small" Class="mud-text-secondary" Disabled="@this.isSending" OnClick="@this.Close"/>
                 </MudTooltip>
             </MudStack>
 
@@ -62,12 +62,12 @@
                         </MudText>
                         @foreach (var (value, label) in this.TopicOptions)
                         {
-                            <MudButton Variant="@(this.topic == value ? Variant.Filled : Variant.Outlined)" Size="Size.Small" Color="Color.Default" DropShadow="@false" OnClick="@(() => this.ToggleTopic(value))">@label</MudButton>
+                            <MudButton Variant="@(this.topic == value ? Variant.Filled : Variant.Outlined)" Size="Size.Small" Color="Color.Default" OnClick="@(() => this.ToggleTopic(value))">@label</MudButton>
                         }
                     </MudStack>
 
                     <MudStack Row="true" AlignItems="AlignItems.End" Spacing="1" Class="mt-1">
-                        <MudTextField T="string" @bind-Value="@this.comment" Placeholder="@T("Optional")" AutoGrow="@true" Lines="1" MaxLines="4" MaxLength="@FeedbackService.MAX_COMMENT_LENGTH" Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1"/>
+                        <MudTextField T="string" @bind-Value="@this.comment" Placeholder="@T("Optional")" Sizing="InputSizing.Auto" Lines="1" MaxLines="4" MaxLength="@FeedbackService.MAX_COMMENT_LENGTH" Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1"/>
                         <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" Disabled="@this.isSending" OnClick="@this.Send">@T("Send")</MudButton>
                     </MudStack>
 

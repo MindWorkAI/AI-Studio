@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Build/Build Script.csproj" />
+  <Project Path="MindWork AI Studio/MindWork AI Studio.csproj" />
+  <Project Path="SharedTools/SharedTools.csproj" />
+  <Project Path="SourceCodeRules/SourceCodeRules/SourceCodeRules.csproj" />
+  <Project Path="SourceGeneratedMappings/SourceGeneratedMappings.csproj" />
+  <Project Path="Tests/Tests.csproj" />
+  <Project Path="TrimSmokeTest/TrimSmokeTest.csproj" />
+</Solution>

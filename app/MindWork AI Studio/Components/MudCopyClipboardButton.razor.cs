@@ -90,7 +90,7 @@ public partial class MudCopyClipboardButton : ComponentBase
             default:
                 // This component is no MSGComponentBase, so it uses the shared bus instance the same
                 // way FileExtensionValidation does:
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ContentCopy, TB("Cannot copy this content type to clipboard.")));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.COPY, TB("Cannot copy this content type to clipboard.")));
                 break;
         }
     }

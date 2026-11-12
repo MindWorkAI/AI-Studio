@@ -5,7 +5,7 @@ namespace AIStudio.Components;
 public partial class Changelog : MSGComponentBase
 {
     [Inject]
-    private HttpClient HttpClient { get; set; } = null!;
+    private WebRootFiles WebRootFiles { get; set; } = null!;
 
     #region Overrides of ComponentBase
 
@@ -23,7 +23,6 @@ public partial class Changelog : MSGComponentBase
 
     private async Task ReadLogAsync()
     {
-        using var response = await this.HttpClient.GetAsync($"changelog/{this.SelectedLog.Filename}");
-        this.LogContent = await response.Content.ReadAsStringAsync();
+        this.LogContent = await this.WebRootFiles.ReadTextAsync($"changelog/{this.SelectedLog.Filename}");
     }
 }

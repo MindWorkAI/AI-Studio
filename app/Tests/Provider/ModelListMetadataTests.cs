@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using AIStudio.Provider;
 using AIStudio.Provider.Groq;
 using AIStudio.Provider.OpenRouter;
 using AIStudio.Provider.Requesty;
@@ -19,17 +20,12 @@ namespace AIStudio.Tests.Provider;
 /// below are shortened answers of the real routes, so that a rename is caught here rather than by
 /// somebody wondering why their window never shows up.
 ///
-/// The options mirror what the providers deserialize with: names in snake case, which is what makes
-/// the renaming attributes necessary in the first place.
+/// The answers are read with the options of the providers themselves: names in snake case, which is
+/// what makes the renaming attributes necessary in the first place.
 /// </remarks>
 [TestFixture]
 public sealed class ModelListMetadataTests
 {
-    private static readonly JsonSerializerOptions AS_THE_PROVIDERS_READ_IT = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
-
     [Test]
     // ReSharper disable once InconsistentNaming
     public void VLLMStatesTheWindowItWasStartedWith()
@@ -41,14 +37,14 @@ public sealed class ModelListMetadataTests
                                                                                    { "id": "Qwen/Qwen3-32B", "object": "model", "owned_by": "vllm", "max_model_len": 32768 }
                                                                                ]
                                                                            }
-                                                                           """, AS_THE_PROVIDERS_READ_IT);
+                                                                           """, ProviderJsonOptions.OPTIONS);
 
         Assert.That(response.Data, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response.Data![0].ContextWindowTokens, Is.EqualTo(32_768));
             Assert.That(response.Data[0].OwnedBy, Is.EqualTo("vllm"), "Read with the shared options, this one arrives too -- it did not before.");
-        });
+        }
     }
 
     [Test]
@@ -63,7 +59,7 @@ public sealed class ModelListMetadataTests
                                                                                "object": "list",
                                                                                "data": [ { "id": "gemma3:1b", "object": "model" } ]
                                                                            }
-                                                                           """, AS_THE_PROVIDERS_READ_IT);
+                                                                           """, ProviderJsonOptions.OPTIONS);
 
         Assert.That(response.Data, Is.Not.Null);
         Assert.That(response.Data![0].ContextWindowTokens, Is.Null);
@@ -84,13 +80,13 @@ public sealed class ModelListMetadataTests
                                                                                    }
                                                                                ]
                                                                            }
-                                                                           """, AS_THE_PROVIDERS_READ_IT);
+                                                                           """, ProviderJsonOptions.OPTIONS);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response.Data[0].ContextWindowTokens, Is.EqualTo(1_000_000));
             Assert.That(response.Data[0].Name, Is.EqualTo("Anthropic: Claude Sonnet 4.5"), "The fields we do read keep working next to the fields we deliberately do not.");
-        });
+        }
     }
 
     [Test]
@@ -101,7 +97,7 @@ public sealed class ModelListMetadataTests
                                                                          "object": "list",
                                                                          "data": [ { "id": "llama-3.3-70b-versatile", "object": "model", "context_window": 131072 } ]
                                                                      }
-                                                                     """, AS_THE_PROVIDERS_READ_IT);
+                                                                     """, ProviderJsonOptions.OPTIONS);
 
         Assert.That(response.Data[0].ContextWindowTokens, Is.EqualTo(131_072));
     }
@@ -114,7 +110,7 @@ public sealed class ModelListMetadataTests
                                                                              "object": "list",
                                                                              "data": [ { "id": "openai/gpt-4o-mini", "object": "model", "api": "chat", "context_window": 128000, "max_output_tokens": 16384 } ]
                                                                          }
-                                                                         """, AS_THE_PROVIDERS_READ_IT);
+                                                                         """, ProviderJsonOptions.OPTIONS);
 
         Assert.That(response.Data[0].ContextWindowTokens, Is.EqualTo(128_000));
     }
@@ -127,7 +123,7 @@ public sealed class ModelListMetadataTests
                                                                             "object": "list",
                                                                             "data": [ { "id": "mistral-large-latest", "object": "model", "created": 1700000000, "owned_by": "mistralai", "max_context_length": 131072 } ]
                                                                         }
-                                                                        """, AS_THE_PROVIDERS_READ_IT);
+                                                                        """, ProviderJsonOptions.OPTIONS);
 
         Assert.That(response.Data[0].ContextWindowTokens, Is.EqualTo(131_072));
     }
@@ -147,7 +143,7 @@ public sealed class ModelListMetadataTests
                                                                                                        }
                                                                                                    ]
                                                                                                }
-                                                                                               """, AS_THE_PROVIDERS_READ_IT);
+                                                                                               """, ProviderJsonOptions.OPTIONS);
 
         Assert.That(response.Data[0].Providers, Is.Not.Null);
         Assert.That(response.Data[0].Providers![0].ContextWindowTokens, Is.EqualTo(64_000));

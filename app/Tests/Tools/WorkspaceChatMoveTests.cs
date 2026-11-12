@@ -76,21 +76,21 @@ public sealed class WorkspaceChatMoveTests
         };
         chat.Draft.AddAttachments([draft]);
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId, storeUnsavedChanges: true);
 
         var targetDirectory = Path.Combine(this.testDirectory, "workspaces", workspaceId.ToString(), chatId.ToString());
         var movedDraft = chat.Draft.MediaTranscripts.Single();
         var movedSent = ((ContentText)chat.Blocks.Single().Content!).FileAttachments.Single();
         var stored = JsonSerializer.Deserialize<ChatThread>(await File.ReadAllTextAsync(Path.Combine(targetDirectory, "thread.json")), WorkspaceBehaviour.JSON_OPTIONS)!;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(File.Exists(draft.FilePath), Is.False, "The move takes the whole chat directory along, so nothing stays at the old path.");
             Assert.That(movedDraft.FilePath, Does.StartWith(targetDirectory), "The draft has to point into the directory the chat lives in now.");
             Assert.That(File.Exists(movedDraft.FilePath), Is.True, "Otherwise the transcript drops out of the message which is still being written.");
             Assert.That(File.Exists(movedSent.FilePath), Is.True, "The transcripts of the sent messages move along, as they always did.");
             Assert.That(stored.Draft.MediaTranscripts.Single().FilePath, Is.EqualTo(movedDraft.FilePath), "Opening the chat again brings the draft back from the stored chat, so that has to know the new path as well.");
-        });
+        }
     }
 
     [Test]
@@ -103,7 +103,7 @@ public sealed class WorkspaceChatMoveTests
         var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes" };
         chat.Draft.AddAttachments([document]);
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, Guid.NewGuid());
+        await WorkspaceBehaviour.MoveChatAsync(chat, Guid.NewGuid(), storeUnsavedChanges: true);
 
         Assert.That(chat.Draft.FileAttachments.Single(), Is.SameAs(document), "The move takes only the chat directory along, so a path elsewhere is still right.");
     }
@@ -118,20 +118,60 @@ public sealed class WorkspaceChatMoveTests
         var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes" };
         chat.Draft.AddAttachments([transcript]);
 
-        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId, storeUnsavedChanges: true);
 
         // What the composer of the open chat holds: the transcript of the draft, and a document from elsewhere:
         var relocatedTranscript = WorkspaceBehaviour.RelocateAttachmentAfterMove(transcript, chatId, Guid.Empty, workspaceId);
         var relocatedDocument = WorkspaceBehaviour.RelocateAttachmentAfterMove(document, chatId, Guid.Empty, workspaceId);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(relocatedTranscript, Is.EqualTo(chat.Draft.MediaTranscripts.Single()), "The composer and the draft have to agree, or the composer shows the transcript twice.");
             Assert.That(relocatedTranscript.Exists, Is.True, "The message being written has to go out with the transcript.");
             Assert.That(relocatedTranscript, Is.InstanceOf<ManagedTranscriptAttachment>(), "The chat still manages the transcript, so removing it from the composer still deletes the file.");
             Assert.That(relocatedDocument, Is.SameAs(document), "The move did not touch the document, so it keeps its path.");
-        });
+        }
     }
+
+    [Test]
+    public async Task AChatStoredByHandMovesAsItWasSavedLast()
+    {
+        var chatId = Guid.NewGuid();
+        var workspaceId = Guid.NewGuid();
+        var sent = this.CreateTranscript(chatId, "kickoff", 1);
+
+        // What the user saved last:
+        var saved = new ChatThread { ChatId = chatId, Name = "Meeting notes", Blocks = [UserMessage("Summarize the kickoff", sent)] };
+        await File.WriteAllTextAsync(Path.Combine(this.testDirectory, "tempChats", chatId.ToString(), "thread.json"), JsonSerializer.Serialize(saved, WorkspaceBehaviour.JSON_OPTIONS));
+
+        // The open chat, with a message the user sent since, but did not save:
+        var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes", Blocks = [UserMessage("Summarize the kickoff", sent), UserMessage("And list the open questions")] };
+
+        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId, storeUnsavedChanges: false);
+
+        var targetDirectory = Path.Combine(this.testDirectory, "workspaces", workspaceId.ToString(), chatId.ToString());
+        var stored = JsonSerializer.Deserialize<ChatThread>(await File.ReadAllTextAsync(Path.Combine(targetDirectory, "thread.json")), WorkspaceBehaviour.JSON_OPTIONS)!;
+        var storedTranscript = ((ContentText)stored.Blocks.Single().Content!).FileAttachments.Single();
+        var openTranscript = ((ContentText)chat.Blocks.First().Content!).FileAttachments.Single();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(stored.Blocks, Has.Count.EqualTo(1), "Whoever stores chats manually decides with the save button what reaches the disk, and moving a chat is no saving.");
+            Assert.That(stored.WorkspaceId, Is.EqualTo(workspaceId), "Opening the chat again has to find it in the workspace it was moved to.");
+            Assert.That(storedTranscript.FilePath, Does.StartWith(targetDirectory), "The stored chat has to point at its transcripts in the new place.");
+            Assert.That(chat.Blocks, Has.Count.EqualTo(2), "Nothing the user did not save may get lost by moving the chat; it stays unsaved in the open chat.");
+            Assert.That(chat.WorkspaceId, Is.EqualTo(workspaceId), "The open chat follows the move, so saving it later stores it in the new place.");
+            Assert.That(File.Exists(openTranscript.FilePath), Is.True, "The open chat has to point at its transcripts in the new place as well.");
+        }
+    }
+
+    private static ContentBlock UserMessage(string text, params FileAttachment[] attachments) => new()
+    {
+        Time = START,
+        ContentType = ContentType.TEXT,
+        Content = new ContentText { Text = text, FileAttachments = [..attachments] },
+        Role = ChatRole.USER,
+    };
 
     /// <summary>
     /// Writes a transcript where a temporary chat keeps its transcripts.

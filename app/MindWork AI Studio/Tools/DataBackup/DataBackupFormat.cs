@@ -51,12 +51,13 @@ public static class DataBackupFormat
     /// How the manifest and the plan of a restore are written: readable for anybody who opens them,
     /// and for the runtime, which applies the plan.
     /// </summary>
-    public static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    public static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Converters = { new JsonStringEnumConverter() },
-    };
+        TypeInfoResolver = DataBackupJsonContext.Default,
+    }.AsReadOnly();
 
     /// <summary>
     /// File types which are compressed already. Compressing them once more costs time and makes the

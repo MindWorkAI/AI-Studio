@@ -79,12 +79,12 @@ public sealed class AnthropicMessageStreamAccumulatorTests
             """{"type":"message_stop"}""");
 
         var block = response!.Content.Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ReadString(block, "type"), Is.EqualTo("thinking"), "The block goes back as the kind it was.");
             Assert.That(ReadString(block, "thinking"), Is.EqualTo("Weighing the options."), "With the thinking it carried.");
             Assert.That(ReadString(block, "signature"), Is.EqualTo("EqQBCgIYAhIM+abc/DEF=="), "And with the signature that was made for exactly that text.");
-        });
+        }
     }
     
     [Test]
@@ -112,12 +112,12 @@ public sealed class AnthropicMessageStreamAccumulatorTests
             """{"type":"message_stop"}""");
 
         var toolUse = response!.GetToolUses().Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(toolUse.Id, Is.EqualTo("toolu_1"), "The ID comes from the block as it opened.");
             Assert.That(toolUse.Name, Is.EqualTo("web_search"), "So does the name.");
             Assert.That(toolUse.Arguments, Is.EqualTo("""{"query":"weather"}"""), "And the arguments are the fragments joined back together.");
-        });
+        }
     }
     
     [Test]
@@ -149,11 +149,11 @@ public sealed class AnthropicMessageStreamAccumulatorTests
             """{"type":"message_stop"}""");
 
         var toolUse = response!.GetToolUses().Single();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(toolUse.Arguments, Is.EqualTo("""{"query":"wea"""), "The call carries what actually arrived, which no tool executor will accept.");
             Assert.That(ReadRawText(response.Content.Single(), "input"), Is.EqualTo("{}"), "While the block going back to Anthropic carries an object, because anything else would be refused.");
-        });
+        }
     }
     
     [Test]
@@ -198,11 +198,11 @@ public sealed class AnthropicMessageStreamAccumulatorTests
             """{"type":"content_block_stop","index":0}""",
             """{"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":5}}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(response, Is.Not.Null, "A message with a stop reason is a message which ended.");
             Assert.That(response!.StopReason, Is.EqualTo("end_turn"), "And the reason it ended travels with it.");
-        });
+        }
     }
     
     [Test]
@@ -232,12 +232,12 @@ public sealed class AnthropicMessageStreamAccumulatorTests
             """{"type":"content_block_stop","index":0}""",
             """{"type":"message_stop"}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(part.Usage.PromptTokens, Is.EqualTo(2679), "The start of the message states what the request carried.");
             Assert.That(part.HasContent, Is.False, "And it has nothing to show.");
             Assert.That(response!.Content, Has.Count.EqualTo(1), "Nor does it become a block of the message.");
-        });
+        }
     }
 
     [Test]

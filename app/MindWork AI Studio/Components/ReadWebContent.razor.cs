@@ -168,7 +168,7 @@ public partial class ReadWebContent : MSGComponentBase
                 // and without a word they would take the raw markdown -- navigation, cookie banner
                 // and advertising included -- for the cleaned result.
                 //
-                await this.MessageBus.SendError(new(Icons.Material.Filled.SettingsSuggest, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
+                await this.MessageBus.SendError(new(AppIcons.AGENT, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
             }
 
             if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
@@ -219,7 +219,7 @@ public partial class ReadWebContent : MSGComponentBase
             // PDF rather than a page, a host that does not answer, a server refusing the request.
             //
             this.Logger.LogWarning(exception, "Could not load the web content from '{ProvidedUrl}'.", this.URL);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.CloudOff, string.Format(this.T("The content of '{0}' could not be loaded: {1}"), this.URL, exception.Message)));
+            await this.MessageBus.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(this.T("The content of '{0}' could not be loaded: {1}"), this.URL, exception.Message)));
         }
 
         this.Content = markdown;
@@ -247,9 +247,9 @@ public partial class ReadWebContent : MSGComponentBase
     /// </remarks>
     private bool UrlIsValid => this.ValidateURL(this.URL) is null;
 
-    private async Task URLValueChanged(string url)
+    private async Task URLValueChanged(string? url)
     {
-        await this.URLChanged.InvokeAsync(url);
+        await this.URLChanged.InvokeAsync(url ?? string.Empty);
     }
 
     private async Task ShowWebContentReaderChanged(bool state)

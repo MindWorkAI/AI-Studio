@@ -17,6 +17,11 @@ changelog entries.
 6. After PR merge, maintainer creates git tag: `vX.Y.Z`
 7. GitHub Actions builds release binaries for all platforms
 8. Binaries uploaded to GitHub Releases
+9. Once the release is published, update the wiki (`MindWorkAI/AI-Studio.wiki`): carry the "Wiki" sections
+   of the pull requests merged since the last release into it, mark what needs the new version with
+   "Requires AI Studio vX.Y.Z or newer", and raise the version in `_Footer.md` and `de/_Footer.md`. The
+   pull requests are listed by the command of step 2 with `--json number,title,body` and without `--jq`.
+   The release command reminds you of this step when it is done.
 
 ## Crediting contributors
 
@@ -37,6 +42,14 @@ name, and says what they built. It never compares contributors or counts their c
 order of the list is chronological only. Bug reports
 alone and commissioned work outside this repository get no entry on the supporters page; the changelog may
 still thank them.
+
+**Ideas, expertise, and concepts.** A person whose idea, expertise, or concept shapes a part of AI Studio,
+such as the researcher who designed an assistant and wrote its content, gets an entry in the list "Ideas,
+Expertise, and Concepts" on the supporters page, also without any contribution to this repository. The maintainer decides who counts, and the person agrees
+to be named. Their entry gives their full name, since they may have no GitHub account, and links to a page
+of their own if they have one:
+`<Supporter Name="<first name> <last name>" Type="SupporterType.INDIVIDUAL" URL="<their page>" Acknowledgment="@T("…")"/>`,
+or without `URL`. The list is sorted by when the idea, expertise, or concept came to AI Studio.
 
 The credit choice in the pull request template is binding:
 

@@ -245,7 +245,7 @@ public partial class SlideAssistant
         this.LoadTemplate();
         this.ApplyPreselectedTemplateSlideUses();
         if (this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
     }
 
     /// <summary>
@@ -299,9 +299,9 @@ public partial class SlideAssistant
     /// <returns>The name, or empty when the LLM decides, which it also does when the template has no layout of this name.</returns>
     private string LayoutNameOf(LayoutPurpose purpose) => this.template is not null && this.layoutNames.TryGetValue(purpose, out var name) && this.template.FindFamilyByName(name) is not null ? name : string.Empty;
 
-    private void SetLayoutName(LayoutPurpose purpose, string name)
+    private void SetLayoutName(LayoutPurpose purpose, string? name)
     {
-        if (name.Length == 0)
+        if (string.IsNullOrEmpty(name))
             this.layoutNames.Remove(purpose);
         else
             this.layoutNames[purpose] = name;
@@ -574,7 +574,7 @@ public partial class SlideAssistant
             if (!result.IsWritten)
             {
                 this.Logger.LogWarning("The PowerPoint template '{TemplatePath}' changed since the slides were planned, and they no longer fit it.", this.slideDeckTemplatePath);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The template has changed since the slides were planned. Please create the slides again.")));
+                await this.MessageBus.SendError(new(AppIcons.SLIDES, T("The template has changed since the slides were planned. Please create the slides again.")));
                 return;
             }
 
@@ -583,15 +583,15 @@ public partial class SlideAssistant
             if (result.SkippedPictures.Count > 0)
             {
                 var names = result.SkippedPictures.Select(number => this.slideDeckPicturePaths.TryGetValue(number, out var picturePath) ? Path.GetFileName(picturePath) : number.ToString(CultureInfo.InvariantCulture));
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.HideImage, string.Format(T("These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"), string.Join(", ", names))));
+                await this.MessageBus.SendWarning(new(AppIcons.IMAGE_NOT_SUPPORTED, string.Format(T("These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"), string.Join(", ", names))));
             }
 
-            await feedback.SucceededAsync(Icons.Material.Filled.Slideshow, T("The PowerPoint file was created."), targetPath, true);
+            await feedback.SucceededAsync(AppIcons.SLIDES, T("The PowerPoint file was created."), targetPath, true);
         }
         catch (Exception e)
         {
             this.Logger.LogError(e, "Creating the PowerPoint file '{FilePath}' failed.", targetPath);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.")));
+            await this.MessageBus.SendError(new(AppIcons.SLIDES, T("The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.")));
         }
         finally
         {

@@ -50,7 +50,7 @@
                             
                             @if (this.PluginToolIds.Count > 0)
                             {
-                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Handyman">
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@AppIcons.TOOL">
                                     @this.GetToolCountLabel()
                                 </MudChip>
                             }
@@ -61,7 +61,7 @@
                     </CardHeaderContent>
                     <CardHeaderActions>
                         <MudTooltip Text="@T("Show or hide the detailed security information.")">
-                            <MudIconButton Icon="@Icons.Material.Filled.ExpandMore" OnClick="@this.ToggleDetails" />
+                            <MudIconButton Icon="@AppIcons.EXPAND_MORE" OnClick="@this.ToggleDetails" />
                         </MudTooltip>
                     </CardHeaderActions>
                 </MudCardHeader>
@@ -71,7 +71,7 @@
                         @if (state.IsEnterpriseApproved)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Color="@state.SourceColor" />
+                                <MudIcon Icon="@AppIcons.ORGANIZATION" Size="Size.Small" Color="@state.SourceColor" />
                                 <MudText Typo="Typo.body2">@T("Enterprise approval is active")</MudText>
                             </MudStack>
 
@@ -79,7 +79,7 @@
                             {
                                 <MudDivider Vertical="@true" FlexItem="@true" />
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Color="Color.Success" />
+                                    <MudIcon Icon="@AppIcons.LOCK" Size="Size.Small" Color="Color.Success" />
                                     <MudText Typo="Typo.body2">@T("Your organization requires this assistant to stay enabled")</MudText>
                                 </MudStack>
                             }
@@ -87,7 +87,7 @@
                         else
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                                <MudIcon Icon="@AppIcons.AUDIT_CONFIDENCE" Size="Size.Small" />
                                 <MudText Typo="Typo.body2">@T("Confidence"):</MudText>
                                 <MudProgressLinear Color="@state.AuditColor"
                                                    Value="@this.GetConfidencePercentage()"
@@ -101,12 +101,12 @@
                         }
                         <MudDivider Vertical="@true" FlexItem="@true" />
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <MudIcon Icon="@Icons.Material.Filled.BugReport" Size="Size.Small" Color="@state.AuditColor" />
+                            <MudIcon Icon="@AppIcons.SECURITY_FINDINGS" Size="Size.Small" Color="@state.AuditColor" />
                             <MudText Typo="Typo.body2">@this.GetFindingSummary()</MudText>
                         </MudStack>
                         <MudDivider Vertical="@true" FlexItem="@true" />
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                            <MudIcon Icon="@AppIcons.TIME" Size="Size.Small" />
                             <MudText Typo="Typo.body2" Class="mud-text-secondary">
                                 @this.GetAuditTimestampLabel()
                             </MudText>
@@ -125,7 +125,7 @@
                             <MudPaper Outlined="true" Class="pa-2">
                                 <div class="d-flex align-center justify-space-between gap-2">
                                     <MudText Typo="Typo.subtitle2">@T("Technical Details")</MudText>
-                                    <MudIconButton Icon="@(this.showMetadata ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                    <MudIconButton Icon="@(this.showMetadata ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)"
                                                    Size="Size.Small"
                                                    OnClick="@this.ToggleMetadata" />
                                 </div>
@@ -256,7 +256,7 @@
                                                 <td>
                                                     <MudText Typo="Typo.body2"><b>@T("Required minimum")</b></MudText>
                                                 </td>
-                                                <td><MudText Typo="Typo.body2">@state.Settings.MinimumLevel.GetName()</MudText></td>
+                                                <td><MudText Typo="Typo.body2">@state.Settings.MinimumLevel.Name</MudText></td>
                                             </tr>
                                         </tbody>
                                     </MudSimpleTable>
@@ -290,7 +290,7 @@
                                     <MudStack Spacing="2">
                                         @foreach (var finding in state.Audit.Findings)
                                         {
-                                            <MudAlert Severity="@finding.Severity.GetSeverity()" Variant="Variant.Text" Dense="@true">
+                                            <MudAlert Severity="@finding.Severity.Severity" Variant="Variant.Text" Dense="@true">
                                                 <strong>@finding.Category</strong><span>: @finding.Description</span>
                                                 @if (!string.IsNullOrWhiteSpace(finding.Location))
                                                 {

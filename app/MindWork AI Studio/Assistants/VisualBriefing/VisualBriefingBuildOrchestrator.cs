@@ -114,6 +114,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
         try
         {
             ValidateProvider(provider);
+            ValidateProviderMaySeeContent(manifest, provider);
             ValidateSourceMaterial(manifest, mode);
             var parentContext = await this.LoadParentContextAsync(manifest, mode, parentRevisionId, token);
             VisualBriefingEvidenceArtifact? reusableEvidence = null;

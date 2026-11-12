@@ -38,12 +38,12 @@ public sealed class StreamedSlideCounterTests
     public void AKeyCountsOnlyOnceItIsComplete()
     {
         var counter = new StreamedSlideCounter();
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(counter.Count("""{"slides": [{"lay"""), Is.Zero);
             Assert.That(counter.Count("""{"slides": [{"layout"""), Is.Zero, "The closing quotation mark is still missing.");
             Assert.That(counter.Count("""{"slides": [{"layout": "L1"}"""), Is.EqualTo(1));
-        });
+        }
     }
 
     [Test]

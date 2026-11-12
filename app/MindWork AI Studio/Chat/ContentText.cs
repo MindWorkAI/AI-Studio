@@ -58,6 +58,16 @@ public sealed class ContentText : IContent
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
 
     /// <summary>
+    /// Optional structured data for a specialized visual presentation of this text.
+    /// </summary>
+    /// <remarks>
+    /// The text remains the canonical content sent to providers, copied, and exported. A renderer
+    /// which understands the presentation may use its data instead, while every other consumer
+    /// safely continues to use the text.
+    /// </remarks>
+    public ContentPresentation? Presentation { get; set; }
+
+    /// <summary>
     /// The passages the data sources handed to the AI for this answer, as the AI received them.
     /// </summary>
     /// <remarks>
@@ -117,7 +127,7 @@ public sealed class ContentText : IContent
         try
         {
             // Most answers, those of the agents among them, received nothing to store, and need no database:
-            if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore()))
+            if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore))
                 return;
 
             if (await ChatProvenance.GetStoreAsync() is { } store && await this.StoreReceivedContentAsync(store, chatId))
@@ -129,7 +139,7 @@ public sealed class ContentText : IContent
         }
 
         if (Interlocked.Exchange(ref UNSTORED_CONTENT_REPORTED, 1) is 0)
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Storage, TB("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.PROVENANCE_STORE, TB("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
     }
 
     /// <summary>
@@ -148,7 +158,7 @@ public sealed class ContentText : IContent
         var passages = new List<SourcePassage>(this.SourcePassages.Count);
         foreach (var passage in this.SourcePassages)
         {
-            if (!passage.HoldsTextsToStore())
+            if (!passage.HoldsTextsToStore)
             {
                 passages.Add(passage);
                 continue;
@@ -158,7 +168,7 @@ public sealed class ContentText : IContent
             try
             {
                 // Not cancellable: the answer is complete, also when the user stopped it.
-                provenanceId = await store.StoreAsync(chatId, passage.GetProvenanceKind(), passage.Text, passage.SurroundingContent, CancellationToken.None);
+                provenanceId = await store.StoreAsync(chatId, passage.ProvenanceKind, passage.Text, passage.SurroundingContent, CancellationToken.None);
             }
             catch (Exception exception)
             {
@@ -337,7 +347,7 @@ public sealed class ContentText : IContent
                 // The answer is about to be created without the data the user expected it to use.
                 // Without this message, that answer is indistinguishable from one that did use it:
                 //
-                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
+                await MessageBus.INSTANCE.SendWarning(new(AppIcons.DATA_SOURCE, TB("Your data sources could not be used. This answer was created without them.")));
             }
         }
 
@@ -481,7 +491,7 @@ public sealed class ContentText : IContent
             {
                 var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.InstanceName);
                 if (!string.IsNullOrWhiteSpace(userMessage))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, userMessage));
 
                 LOGGER.LogWarning("Skipping selected model availability check for '{ProviderInstanceName}' (provider={ProviderType}) because loading the model list failed with reason {FailureReason}.", provider.InstanceName, provider.Provider, modelLoadResult.FailureReason);
                 return false;
@@ -506,7 +516,7 @@ public sealed class ContentText : IContent
                 TB("We could load models from '{0}', but the provider did not return any usable text models."),
                 provider.InstanceName);
 
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, emptyModelsMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, emptyModelsMessage));
             LOGGER.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
             return false;
         }
@@ -520,7 +530,7 @@ public sealed class ContentText : IContent
             provider.InstanceName,
             provider.Provider);
         
-        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, message));
+        await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, message));
         LOGGER.LogWarning("Skipping AI request because model '{ModelId}' is not available from '{ProviderInstanceName}' (provider={ProviderType}).", chatModel.Id, provider.InstanceName, provider.Provider);
         return false;
     }
@@ -540,6 +550,7 @@ public sealed class ContentText : IContent
         Sources = [..this.Sources],
         SourcePassages = [..this.SourcePassages],
         FileAttachments = [..this.FileAttachments],
+        Presentation = this.Presentation?.DeepClone(),
         ToolInvocations = [..this.ToolInvocations.Select(x => new ToolInvocationTrace
         {
             Order = x.Order,
@@ -673,14 +684,14 @@ public sealed class ContentText : IContent
         if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
         {
             LOGGER.LogWarning("Parts of the file attachment '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.DOCUMENT, extraction.ToPartialUserMessage(document.FileName)));
         }
 
         // The file was read correctly, but its extension lies about what it contains:
         if (extraction.HasExtensionMismatch)
         {
             LOGGER.LogWarning("The file attachment '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.FILE_TYPE_MISMATCH, extraction.ToExtensionMismatchUserMessage(document.FileName)));
         }
     }
 
@@ -786,7 +797,7 @@ public sealed class ContentText : IContent
             foreach (var missingDocument in missingDocuments)
             {
                 LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.FindInPage, string.Format(TB("The file '{0}' is currently not available and was not sent."), missingDocument.FileName)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.FILE_NOT_FOUND, string.Format(TB("The file '{0}' is currently not available and was not sent."), missingDocument.FileName)));
             }
 
             // Only proceed if there are existing, allowed documents:
@@ -829,7 +840,7 @@ public sealed class ContentText : IContent
                         if (!pandocIsUsable && FileTypes.RequiresPandoc(document.FilePath))
                         {
                             LOGGER.LogWarning("The file attachment '{FilePath}' needs Pandoc and will be skipped.", document.FilePath);
-                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
+                            await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
                             continue;
                         }
 
@@ -837,7 +848,7 @@ public sealed class ContentText : IContent
                         if (!extraction.HasUsableContent)
                         {
                             LOGGER.LogError("Reading the file attachment '{FilePath}' failed and it will not be sent: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
-                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                            await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, extraction.ToUserMessage(document.FileName)));
                             continue;
                         }
 

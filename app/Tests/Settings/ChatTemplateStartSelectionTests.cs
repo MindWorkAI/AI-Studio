@@ -28,11 +28,11 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         this.AddProfile();
         this.SettingsManager.ConfigurationData.Providers.Add(ToolCapableProvider());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.SettingsManager.GetChatTemplateProfile(NewTemplate()), Is.Null);
             Assert.That(this.SettingsManager.GetChatTemplateProvider(NewTemplate()), Is.EqualTo(AIStudio.Settings.Provider.NONE));
-        });
+        }
     }
 
     [Test]
@@ -43,11 +43,11 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.Providers.Add(provider);
         var template = NewTemplate() with { ProfileId = PROFILE_ID, ProviderId = provider.Id };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.SettingsManager.GetChatTemplateProfile(template), Is.EqualTo(profile));
             Assert.That(this.SettingsManager.GetChatTemplateProvider(template), Is.EqualTo(provider));
-        });
+        }
     }
 
     [Test]
@@ -63,11 +63,11 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
     {
         var template = NewTemplate() with { ProfileId = PROFILE_ID, ProviderId = "66666666-6666-6666-6666-666666666666" };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.SettingsManager.GetChatTemplateProfile(template), Is.Null);
             Assert.That(this.SettingsManager.GetChatTemplateProvider(template), Is.EqualTo(AIStudio.Settings.Provider.NONE));
-        });
+        }
     }
 
     [Test]
@@ -83,11 +83,11 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.Chat.PreselectedProfile = defaultProfile.Id;
         var withDefault = this.SettingsManager.GetChatTemplateStartProfile(template);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(withoutDefault, Is.EqualTo(Profile.NO_PROFILE), "Keeping the profile the chat had would hand out one the previous chat happened to use, a choice nobody made for this one.");
             Assert.That(withDefault, Is.EqualTo(defaultProfile));
-        });
+        }
     }
 
     [Test]
@@ -95,12 +95,12 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
     {
         this.AddProfile();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.SettingsManager.GetChatTemplateStartProfile(NewTemplate()), Is.Null);
             Assert.That(this.SettingsManager.GetChatTemplateStartProfile(NewTemplate() with { AllowProfileUsage = false, ProfileId = PROFILE_ID }), Is.Null);
             Assert.That(this.SettingsManager.GetChatTemplateStartProfile(NewTemplate() with { ProfileId = PROFILE_ID })!.Id, Is.EqualTo(PROFILE_ID));
-        });
+        }
     }
 
     [Test]
@@ -135,13 +135,13 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.Confidence.EnforceGlobalMinimumConfidence = true;
         this.SettingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence = ConfidenceLevel.HIGH;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.SettingsManager.GetChatTemplateProvider(trustedProvider.Id), Is.EqualTo(trustedProvider));
             Assert.That(this.SettingsManager.GetChatTemplateProvider(lessTrustedProvider.Id), Is.EqualTo(AIStudio.Settings.Provider.NONE), "The chat template dialog and the import warn about exactly the providers a chat leaves out.");
             Assert.That(this.SettingsManager.GetChatTemplateProvider("66666666-6666-6666-6666-666666666666"), Is.EqualTo(AIStudio.Settings.Provider.NONE));
             Assert.That(this.SettingsManager.GetChatTemplateProvider((string?)null), Is.EqualTo(AIStudio.Settings.Provider.NONE));
-        });
+        }
     }
 
     [Test]
@@ -155,12 +155,12 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = WorkspaceStorageBehavior.DISABLE_WORKSPACES;
         var whileSwitchedOff = this.SettingsManager.GetChatTemplateWorkspaceName(template);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(whileUsed, Is.EqualTo("Mails"));
             Assert.That(whileSwitchedOff, Is.Null, "Without workspaces, a template must not bring one back for its chats.");
             Assert.That(this.SettingsManager.GetChatTemplateWorkspaceName(NewTemplate()), Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -177,11 +177,11 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         var previousTemplate = NewTemplate() with { ProfileId = PROFILE_ID, ProviderId = templateProvider.Id };
         var nextTemplate = NewTemplate() with { Id = OTHER_TEMPLATE_ID };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.SettingsManager.ChooseChatTemplateProfile(nextTemplate, previousTemplate, templateProfile), Is.EqualTo(defaultProfile), "The profile was the choice of another template, not one made for this chat.");
             Assert.That(this.SettingsManager.ChooseChatTemplateProvider(nextTemplate, previousTemplate, templateProvider), Is.EqualTo(defaultProvider), "The provider was the choice of another template, not one made for this chat.");
-        });
+        }
     }
 
     [Test]
@@ -197,12 +197,12 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         var previousTemplate = NewTemplate() with { ProfileId = defaultProfile.Id, ProviderId = templateProvider.Id };
         var nextTemplate = NewTemplate() with { Id = OTHER_TEMPLATE_ID };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.SettingsManager.ChooseChatTemplateProfile(nextTemplate, previousTemplate, handPickedProfile), Is.EqualTo(handPickedProfile));
             Assert.That(this.SettingsManager.ChooseChatTemplateProvider(nextTemplate, previousTemplate, handPickedProvider), Is.EqualTo(handPickedProvider));
             Assert.That(this.SettingsManager.ChooseChatTemplateProfile(NewTemplate(), NewTemplate(), handPickedProfile), Is.EqualTo(handPickedProfile), "Without any preselection, nothing changes.");
-        });
+        }
     }
 
     [Test]
@@ -218,11 +218,11 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         var previousTemplate = NewTemplate() with { Id = OTHER_TEMPLATE_ID, ProfileId = otherProfile.Id, ProviderId = otherProvider.Id };
         var nextTemplate = NewTemplate() with { ProfileId = PROFILE_ID, ProviderId = templateProvider.Id };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(this.SettingsManager.ChooseChatTemplateProfile(nextTemplate, previousTemplate, otherProfile), Is.EqualTo(templateProfile));
             Assert.That(this.SettingsManager.ChooseChatTemplateProvider(nextTemplate, previousTemplate, otherProvider), Is.EqualTo(templateProvider));
-        });
+        }
     }
 
     [Test]

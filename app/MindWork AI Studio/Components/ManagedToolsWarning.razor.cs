@@ -36,6 +36,7 @@ public partial class ManagedToolsWarning : MSGComponentBase
     private ToolRegistry ToolRegistry { get; init; } = null!;
 
     private IReadOnlyList<ToolCatalogItem> availableTools = [];
+    private IReadOnlyList<ToolCatalogItem> toolsSwitchedOffByUser = [];
 
     /// <summary>
     /// Whether this run expects tools while the selected provider cannot call any.
@@ -92,12 +93,51 @@ public partial class ManagedToolsWarning : MSGComponentBase
         }
     }
 
+    /// <summary>
+    /// The tools of this run which the user switched off in the tool settings.
+    /// </summary>
+    /// <remarks>
+    /// Whoever named these tools did not know that the user never needs them. The run goes on
+    /// without them, as the user asked for, but saying nothing would leave them wondering why a
+    /// policy does not search the web, say, long after they switched the web search off. Tools an
+    /// organization switched off stay unnamed, as above.
+    /// </remarks>
+    private IReadOnlyList<string> ToolsSwitchedOffByUser
+    {
+        get
+        {
+            if (this.ToolIds.Count is 0 || !this.SettingsManager.AreToolsEnabled())
+                return [];
+
+            var collectionIds = this.ToolRegistry.NormalizeSelection(this.ToolIds);
+            return this.toolsSwitchedOffByUser
+                .Where(x => collectionIds.Contains(x.Id))
+                .Select(x => x.DisplayName)
+                .ToList();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
-        this.availableTools = await this.ToolRegistry.GetCatalogAsync(this.Component);
+        await this.LoadToolsAsync();
 
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         await base.OnInitializedAsync();
+    }
+
+    /// <summary>
+    /// Loads the tools of this component: those the user may use, and those they switched off.
+    /// </summary>
+    /// <remarks>
+    /// The catalog of the component leaves out the tools the user switched off, so they come from
+    /// all the tools this component knows.
+    /// </remarks>
+    private async Task LoadToolsAsync()
+    {
+        this.availableTools = await this.ToolRegistry.GetCatalogAsync(this.Component);
+        this.toolsSwitchedOffByUser = (await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetDefinitionsForComponent(this.Component)))
+            .Where(x => x.SwitchOffReason is ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER)
+            .ToList();
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
@@ -105,7 +145,7 @@ public partial class ManagedToolsWarning : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.CONFIGURATION_CHANGED:
-                this.availableTools = await this.ToolRegistry.GetCatalogAsync(this.Component);
+                await this.LoadToolsAsync();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }

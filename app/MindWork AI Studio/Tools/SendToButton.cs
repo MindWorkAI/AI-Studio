@@ -9,7 +9,4 @@ public readonly record struct SendToButton() : IButtonData
     public bool UseResultingContentBlockData { get; init; } = true;
 
     public bool SendToChatAsInput { get; init; }
-    
-    public Components Self { get; init; } = Components.NONE;
-
 }

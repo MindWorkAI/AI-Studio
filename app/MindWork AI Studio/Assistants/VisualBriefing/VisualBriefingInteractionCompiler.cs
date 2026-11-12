@@ -27,12 +27,7 @@ internal static class VisualBriefingInteractionCompiler
             formula => formula.Formula,
             StringComparer.Ordinal);
 
-        return JsonSerializer.SerializeToElement(new
-        {
-            controls,
-            state,
-            formulas = formulaMap,
-        }, VisualBriefingJson.Canonical);
+        return JsonSerializer.SerializeToElement(new VisualBriefingInteractionData(controls, state, formulaMap), VisualBriefingJson.Canonical);
     }
 
     /// <summary>

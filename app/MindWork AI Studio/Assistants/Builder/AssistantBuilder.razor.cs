@@ -36,6 +36,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     
     protected override string Description => T("Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.");
     
+    // This assistant generates a plugin and has no conversation for a chat to continue:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt =>
         $"""
          You are the Assistant Builder inside MindWork AI Studio.
@@ -72,7 +75,10 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override bool ShowResult => false;
     
     protected override bool ShowEntireChatThread => false;
-    
+
+    // Nothing to send: the plugin is installed by this assistant, and there is no conversation for a chat to continue:
+    protected override bool ShowSendTo => false;
+
     protected override bool AllowProfiles => false;
     
     protected override bool ShowProfileSelection => false;
@@ -102,9 +108,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string launcherProviderId = string.Empty;
     private string launcherProfileId = string.Empty;
     private string launcherChatTemplateId = string.Empty;
-    private IEnumerable<string> launcherDataSourceIds = [];
+    private IReadOnlyCollection<string> launcherDataSourceIds = [];
     private HashSet<string> launcherToolIds = [];
-    private IEnumerable<AssistantComponentType> selectedAssistantComponents = [];
+    private IReadOnlyCollection<AssistantComponentType> selectedAssistantComponents = [];
     private CommonLanguages selectedOutputLanguage = CommonLanguages.AS_IS;
     private string customOutputLanguage = string.Empty;
     private bool allowGeneratedAssistantProfiles = true;
@@ -391,7 +397,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private async Task GenerateAssistantSpec()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 
@@ -435,7 +441,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private async Task GenerateLuaAssistant()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 
@@ -520,17 +526,17 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     {
         AssistantCategory.AS_IS => string.Empty,
         AssistantCategory.OTHER => this.customCategory,
-        _ => this.selectedCategory.Name(),
+        _ => this.selectedCategory.Name,
     };
 
     private string GetSelectedOutputLanguageName() => this.selectedOutputLanguage switch
     {
         CommonLanguages.AS_IS => string.Empty,
         CommonLanguages.OTHER => this.customOutputLanguage,
-        _ => this.selectedOutputLanguage.Name(),
+        _ => this.selectedOutputLanguage.Name,
     };
 
-    private string GetSelectedAssistantComponentText(List<string?>? selectedValues)
+    private string GetSelectedAssistantComponentText(IReadOnlyList<string?>? selectedValues)
     {
         if (selectedValues is null || selectedValues.Count == 0)
             return T("Model decides");
@@ -625,7 +631,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string GetAssistantComponentDisplayName(string? typeName)
     {
         if (Enum.TryParse<AssistantComponentType>(typeName, out var type))
-            return type.GetDisplayName();
+            return type.DisplayName;
 
         return typeName ?? string.Empty;
     }
@@ -634,7 +640,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     {
         if (string.IsNullOrWhiteSpace(this.generatedLuaAssistant))
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Extension, T("No assistant plugin was generated yet.")));
+            await this.MessageBus.SendError(new(AppIcons.PLUGIN, T("No assistant plugin was generated yet.")));
             return;
         }
 
@@ -649,11 +655,11 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 LOGGER.LogError($"The assistant plugin '{result.PluginName}' ({result.PluginId}) is not installable, because '{result.Issue}'");
                 this.FailInstallStep(BuilderInstallStep.CHECK_PLUGIN, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The generated assistant could not be checked.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The generated assistant could not be checked.")));
                 return;
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.CheckCircle, T("The generated assistant can be installed.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.SUCCESS, T("The generated assistant can be installed.")));
             this.stepperIndex = (int)BuilderInstallStep.INSTALL_ASSISTANT;
         }
         finally
@@ -679,7 +685,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 LOGGER.LogError($"The assistant plugin {result.PluginName} ({result.PluginId}) could not be installed in the directory '{result.PluginDirectory}' with Issue: '{result.Issue}'.");
                 this.FailInstallStep(BuilderInstallStep.INSTALL_ASSISTANT, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The assistant could not be installed.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The assistant could not be installed.")));
                 return;
             }
 
@@ -687,11 +693,11 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             if (this.installedAssistantPlugin is null)
             {
                 this.FailInstallStep(BuilderInstallStep.INSTALL_ASSISTANT, T("The installed assistant could not be loaded."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The installed assistant could not be loaded.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The installed assistant could not be loaded.")));
                 return;
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Extension, result.ReplacedExisting ? T("Assistant updated.") : T("Assistant installed.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.PLUGIN, result.ReplacedExisting ? T("Assistant updated.") : T("Assistant installed.")));
             this.stepperIndex = this.AuditRequiredForActivation
                 ? (int)BuilderInstallStep.SECURITY_CHECK
                 : this.EnableCompleted
@@ -719,14 +725,14 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             if (this.pluginAudit.Level is AssistantAuditLevel.UNKNOWN)
             {
                 this.FailInstallStep(BuilderInstallStep.SECURITY_CHECK, T("The security check could not determine a result."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.GppMaybe, T("The security check could not be completed.")));
+                await this.MessageBus.SendError(new(AppIcons.SECURITY_WARNING, T("The security check could not be completed.")));
                 return;
             }
 
             this.UpsertAudit(this.pluginAudit);
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendSuccess(new(
-                this.pluginAudit.Level.GetIcon(),
+                this.pluginAudit.Level.Icon,
                 this.pluginAudit.Findings.Count == 0
                     ? T("Security check completed. No security issues were found.")
                     : T("Security check completed with findings.")));
@@ -735,7 +741,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 this.stepperIndex = (int)BuilderInstallStep.ENABLE_ASSISTANT;
                 this.FailInstallStep(BuilderInstallStep.ENABLE_ASSISTANT, T("This assistant cannot be enabled because the security check is below your required level."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Block, T("The assistant cannot be enabled because it is below your required security level.")));
+                await this.MessageBus.SendError(new(AppIcons.BLOCKED, T("The assistant cannot be enabled because it is below your required security level.")));
                 return;
             }
 
@@ -768,7 +774,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.ToggleOn, T("Assistant enabled.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.ENABLE, T("Assistant enabled.")));
             this.stepperIndex = (int)BuilderInstallStep.OPEN_ASSISTANT;
         }
         finally
@@ -787,8 +793,8 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
                 string.Format(
                     T("The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
                     this.pluginInstallResult?.PluginName ?? T("Unknown assistant"),
-                    this.pluginAudit?.Level.GetName() ?? T("Unknown"),
-                    this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.GetName())
+                    this.pluginAudit?.Level.Name ?? T("Unknown"),
+                    this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.Name)
             },
         };
 
@@ -807,7 +813,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             var result = await this.DirectChatService.TryCreateAssistantChatAsync(launcherPlugin);
             if (result.Request is null)
             {
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, result.ErrorMessage));
                 return;
             }
 

@@ -37,6 +37,17 @@ public partial class MudStepperWithoutActions : ComponentBase
     public bool ReadOnly { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the user may jump to any step, not only to the next one.
+    /// </summary>
+    /// <remarks>
+    /// Off by default, which keeps the order of a process that runs step by step, such as a build.
+    /// Switch it on where people work through the steps themselves and may return to an earlier one
+    /// or look ahead, as in the BeyondFacts Lab.
+    /// </remarks>
+    [Parameter]
+    public bool NonLinear { get; set; }
+
+    /// <summary>
     /// Gets or sets additional CSS classes for the stepper.
     /// </summary>
     [Parameter]

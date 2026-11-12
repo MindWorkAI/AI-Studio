@@ -188,8 +188,9 @@ public static class ConfigurationSnippetImport
         if (toolIds.Count == 0)
             return [];
 
+        // A tool the user switched off exists here all the same, and switching it on again makes the import use it:
         var availableToolIds = (await toolRegistry.GetCatalogAsync(component)).Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
-        return toolIds.Where(id => !availableToolIds.Contains(id)).Order(StringComparer.Ordinal).ToList();
+        return toolIds.Where(id => !availableToolIds.Contains(id) && !toolRegistry.IsSwitchedOffByUser(id)).Order(StringComparer.Ordinal).ToList();
     }
 
     private static T MakeLocal<T>(T configObject) where T : ConfigurationBaseObject => (T)((ConfigurationBaseObject)configObject with
@@ -305,6 +306,6 @@ public static class ConfigurationSnippetImport
                 return TB("The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.");
         }
 
-        return string.Format(TB("The pasted configuration is not a valid configuration of the type '{0}'."), type.GetName());
+        return string.Format(TB("The pasted configuration is not a valid configuration of the type '{0}'."), type.Name);
     }
 }

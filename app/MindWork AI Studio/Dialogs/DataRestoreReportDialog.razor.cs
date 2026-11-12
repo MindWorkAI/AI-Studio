@@ -44,9 +44,9 @@ public partial class DataRestoreReportDialog : MSGComponentBase
 
     private string Icon => this.Report.Outcome switch
     {
-        DataRestoreOutcome.APPLIED => Icons.Material.Filled.CheckCircle,
-        DataRestoreOutcome.ROLLBACK_FAILED => Icons.Material.Filled.Error,
-        _ => Icons.Material.Filled.WarningAmber,
+        DataRestoreOutcome.APPLIED => AppIcons.SUCCESS,
+        DataRestoreOutcome.ROLLBACK_FAILED => AppIcons.ERROR,
+        _ => AppIcons.WARNING,
     };
 
     private Color IconColor => this.Report.Outcome switch
@@ -93,6 +93,7 @@ public partial class DataRestoreReportDialog : MSGComponentBase
         DataRestoreOpenPointKind.TOOL_WITHOUT_SECRET => string.Format(T("Enter the setting '{1}' of the tool '{0}' again, if you used it."), openPoint.Name, openPoint.Setting),
         DataRestoreOpenPointKind.DATA_SOURCE_NOT_FOUND => string.Format(T("The data source '{0}' names a file or folder which does not exist on this computer. Choose it anew."), openPoint.Name),
         DataRestoreOpenPointKind.BATCH_PROCESSING_PATH_NOT_FOUND => string.Format(T("The batch processing uses '{0}', which does not exist on this computer."), openPoint.Name),
+        DataRestoreOpenPointKind.PROMPT_OPTIMIZER_GUIDE_NOT_FOUND => string.Format(T("The Prompt Optimizer uses the prompt guide '{0}', which does not exist on this computer."), openPoint.Name),
         DataRestoreOpenPointKind.CERTIFICATE_BUNDLE_NOT_FOUND => string.Format(T("The file with your own root certificates, '{0}', does not exist on this computer."), openPoint.Name),
         DataRestoreOpenPointKind.ERI_SERVER_DIRECTORY_NOT_FOUND => string.Format(T("The ERI server '{0}' writes into a folder which does not exist on this computer."), openPoint.Name),
         _ => openPoint.Name,

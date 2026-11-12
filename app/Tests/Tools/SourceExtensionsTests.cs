@@ -59,11 +59,11 @@ public sealed class SourceExtensionsTests
     {
         IList<Source> sources = [];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sources.ToMarkdown(), Is.Empty);
             Assert.That(sources.ToExportMarkdown(), Is.Empty, "An answer nobody had to look up gets no heading over an empty list.");
-        });
+        }
     }
 
     [Test]
@@ -78,11 +78,11 @@ public sealed class SourceExtensionsTests
         var exported = sources.ToExportMarkdown();
         var document = Markdig.Markdown.Parse(exported, Markdown.SAFE_MARKDOWN_PIPELINE);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(document.OfType<HeadingBlock>().Select(heading => heading.Level), Is.EqualTo(new[] { 1, 2, 2 }), "One heading of its own stands above the two groups the chat already shows.");
             Assert.That(exported, Does.EndWith(sources.ToMarkdown()), "Below that heading, the export is what the chat shows, unchanged.");
-        });
+        }
     }
 
     [Test]
@@ -100,12 +100,12 @@ public sealed class SourceExtensionsTests
 
         var listed = sources.GroupSources().SelectMany(group => group.Sources).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sources.GroupSources(), Has.Count.EqualTo(3), "Each of the three origins has a source, so each of them is a group.");
             Assert.That(listed.Select(numbered => numbered.Source.Title), Is.EqualTo(new[] { "Cited by the model", "Search result", "Handbook", "Second handbook" }), "What the AI cited comes first, then what the tools read, then what the data providers gave.");
             Assert.That(listed.Select(numbered => numbered.Number), Is.EqualTo(new[] { 1, 2, 3, 4 }), "The number runs through the whole list instead of starting over per group.");
-        });
+        }
     }
 
     [Test]
@@ -113,11 +113,11 @@ public sealed class SourceExtensionsTests
     {
         IList<Source> sources = [new("Search result", "https://example.org/search", SourceOrigin.TOOL)];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sources.GroupSources().Select(group => group.Sources.Count), Is.EqualTo(new[] { 1 }), "An answer which only used a tool gets one group, not three with two of them empty.");
             Assert.That(new List<Source>().GroupSources(), Is.Empty, "An answer nobody had to look up gets no group at all.");
-        });
+        }
     }
 
     [Test]
@@ -160,11 +160,11 @@ public sealed class SourceExtensionsTests
     {
         IList<Source> sources = [new("Handbook (Page 266)", "file:///Users/someone/handbook.pdf#page=266", SourceOrigin.RAG)];
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EntriesOf(sources.ToMarkdown()).Single(), Does.EndWith("handbook.pdf#page=266>)"), "A browser and a PDF reader open the document where the passage is, so they are told the page.");
             Assert.That(EntriesOf(sources.ToExportMarkdown()).Single(), Does.EndWith("handbook.pdf#page=266>)"), "The clipboard and every text format keep it as well; only the two office formats ask for it to be dropped.");
-        });
+        }
     }
 
     [Test]
@@ -172,11 +172,11 @@ public sealed class SourceExtensionsTests
     {
         var location = LocationOf("file:///Users/someone/My%20Documents/Gr%C3%B6%C3%9Fere%20%C3%9Cbersicht.pdf#page=12");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(location.Path, Does.EndWith("Größere Übersicht.pdf").And.Contains("My Documents"), "The percent-encoding of the link is undone, so the program is handed the name the file really has.");
             Assert.That(location.PageNumber, Is.EqualTo(12), "This is the page the passage was found on, and the page the document is opened at.");
-        });
+        }
     }
 
     [Test]
@@ -184,11 +184,11 @@ public sealed class SourceExtensionsTests
     {
         var location = LocationOf("file:///C:/Users/someone/Documents/handbook.pdf#page=3");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(location.Path, Is.EqualTo(@"C:\Users\someone\Documents\handbook.pdf"), "A drive letter and backslashes are what a program on Windows is handed -- and what the link was made from there.");
             Assert.That(location.PageNumber, Is.EqualTo(3));
-        });
+        }
     }
 
     [Test]
@@ -196,11 +196,11 @@ public sealed class SourceExtensionsTests
     {
         var location = LocationOf("file:///Users/someone/handbook.pdf#chunk=3");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(location.Path, Does.EndWith("handbook.pdf"), "Such a source still names its document, so the click still opens it.");
             Assert.That(location.PageNumber, Is.Null, "A chunk is not a page: no program can be sent to one, so the document opens on its first page.");
-        });
+        }
     }
 
     [Test]
@@ -212,13 +212,13 @@ public sealed class SourceExtensionsTests
     [Test]
     public void APageWhichIsNoPageIsReadAsNone()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(LocationOf("file:///Users/someone/handbook.pdf#page=0").PageNumber, Is.Null, "Pages are counted from one, so a zero is not a page.");
             Assert.That(LocationOf("file:///Users/someone/handbook.pdf#page=-2").PageNumber, Is.Null);
             Assert.That(LocationOf("file:///Users/someone/handbook.pdf#page=twelve").PageNumber, Is.Null);
             Assert.That(LocationOf("file:///Users/someone/handbook.pdf#chunk=3&page=12").PageNumber, Is.EqualTo(12), "A link which already carried a fragment gets the page appended with an ampersand, and it is found there too.");
-        });
+        }
     }
 
     [Test]
@@ -236,12 +236,12 @@ public sealed class SourceExtensionsTests
         ISource mail = new Source("Mail: Budget — Alice, 2026-09-10", SourceExtensions.CreateMailSourceUrl("9e4b2c7a-1d3f-4a8e-b6c5-2f0d7e1b3a64", "5e2a9c1f-7b3d-4f8e-a6c4-1d9b0e7f3a52"), SourceOrigin.TOOL);
         ISource webPage = new Source("Article", "https://example.org/mailbox/article", SourceOrigin.TOOL);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(mail.IsMailSource(), Is.True);
             Assert.That(mail.TryGetDocumentLocation(out _), Is.False, "A mail is no file a program could open.");
             Assert.That(webPage.IsMailSource(), Is.False, "What decides is the scheme, not a word somewhere in the address.");
-        });
+        }
     }
 
     [Test]
@@ -251,12 +251,12 @@ public sealed class SourceExtensionsTests
 
         var entries = EntriesOf(sources.ToMarkdown());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sources[0].HasNoLink(), Is.True);
             Assert.That(sources[0].IsMailSource(), Is.False);
             Assert.That(entries[0], Is.EqualTo("- [1] handbook.pdf"), "Exported or copied, an address only AI Studio understands would be a link nobody can follow.");
-        });
+        }
     }
 
     [Test]
@@ -270,11 +270,11 @@ public sealed class SourceExtensionsTests
 
         var entries = EntriesOf(sources.ToMarkdown());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries[0], Is.EqualTo(@"- [1] Mail: Budget \[draft\] — Alice, 2026-09-10"), "Exported or copied, a mailbox address would be a link nobody can follow.");
             Assert.That(entries[1], Is.EqualTo("- [2] [Search result](<https://example.org/search>)"), "Every other source keeps its link.");
-        });
+        }
     }
 
     /// <summary>

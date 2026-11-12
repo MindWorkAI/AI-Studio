@@ -23,11 +23,11 @@ public sealed class DirectoryFileTraversalTests
             var visibleOnly = DirectoryFileTraversal.EnumerateFiles(directoryPath, true, false).ToList();
             var includingHidden = DirectoryFileTraversal.EnumerateFiles(directoryPath, true, true).ToList();
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(visibleOnly, Is.EqualTo(new[] { visibleFilePath }), "Like * in a shell, nothing hidden is found unless asked for.");
                 Assert.That(includingHidden, Is.EquivalentTo(new[] { visibleFilePath, hiddenFilePath, fileInHiddenDirectoryPath }));
-            });
+            }
         }
         finally
         {
@@ -83,12 +83,12 @@ public sealed class DirectoryFileTraversalTests
             if (!File.GetAttributes(hiddenFilePath).HasFlag(FileAttributes.Hidden))
                 Assert.Ignore("The file system of the temporary folder cannot hide files.");
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(DirectoryFileTraversal.EnumerateFiles(directoryPath, false, false), Is.Empty);
                 Assert.That(DirectoryFileTraversal.EnumerateFiles(directoryPath, false, true), Is.EqualTo(new[] { hiddenFilePath }));
                 Assert.That(DirectoryFileTraversal.IsHiddenPath(hiddenFilePath), Is.True);
-            });
+            }
         }
         finally
         {
@@ -136,13 +136,13 @@ public sealed class DirectoryFileTraversalTests
             await File.WriteAllTextAsync(filePath, "FROM alpine:latest\nRUN echo 'Grüße'");
 
             var discoveredFiles = DirectoryFileTraversal.EnumerateFiles(rootPath, true, false).ToList();
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(filePath.Length, Is.GreaterThan(300));
                 Assert.That(discoveredFiles, Does.Contain(filePath));
                 Assert.That(FileNamePatterns.Matches(filePath, FileNamePatterns.Parse("Dockerfile*")), Is.True);
                 Assert.That(FileNamePatterns.Matches(filePath, FileNamePatterns.Parse(":text:")), Is.True);
-            });
+            }
         }
         finally
         {

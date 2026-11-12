@@ -1,12 +1,14 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tests.Tools.Databases;
 using AIStudio.Tools;
 using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.Databases.ProvenanceStore;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -72,15 +74,15 @@ public sealed class ProvenanceCleanupServiceTests
         var unchangedChat = await this.StoreUnchangedChatAsync();
         var unreferenced = await this.store.Client.StoreAsync(unchangedChat.ChatId, ProvenanceKind.ATTACHMENT, "of a message removed long ago", null, TOKEN);
 
-        await RunAsync(this.store, RestoreStateWith(report: null));
+        await this.RunAsync(RestoreStateWith(report: null));
 
         var entries = await this.store.Client.GetEntriesAsync([unreferenced!.Value], TOKEN);
         var lastCleanup = await this.store.Client.GetLastCleanupAsync(TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { unreferenced.Value }), "Nothing changed in the chat since the last cleanup, so it was not read.");
             Assert.That(lastCleanup, Is.GreaterThan(DateTimeOffset.UtcNow.AddMinutes(-1)), "The next start reads only what changes from now on.");
-        });
+        }
     }
 
     [Test]
@@ -89,7 +91,7 @@ public sealed class ProvenanceCleanupServiceTests
         var unchangedChat = await this.StoreUnchangedChatAsync();
         var unreferenced = await this.store.Client.StoreAsync(unchangedChat.ChatId, ProvenanceKind.ATTACHMENT, "of a message the restored chat does not have", null, TOKEN);
 
-        await RunAsync(this.store, RestoreStateWith(new(DataRestoreOutcome.APPLIED, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty)));
+        await this.RunAsync(RestoreStateWith(new(DataRestoreOutcome.APPLIED, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty)));
 
         var entries = await this.store.Client.GetEntriesAsync([unreferenced!.Value], TOKEN);
         Assert.That(entries, Is.Empty, "The restored chat came from another moment than the store, so the time of the last cleanup tells nothing about it.");
@@ -104,16 +106,80 @@ public sealed class ProvenanceCleanupServiceTests
         await File.WriteAllTextAsync(Path.Join(pendingDirectory, DataRestoreFormat.READY_FILE_NAME), string.Empty, TOKEN);
         await File.WriteAllTextAsync(Path.Join(pendingDirectory, DataRestoreFormat.JOURNAL_FILE_NAME), "{}", TOKEN);
 
-        await RunAsync(this.store, RestoreStateWith(report: null));
+        await this.RunAsync(RestoreStateWith(report: null));
 
         var entries = await this.store.Client.GetEntriesAsync([entry!.Value], TOKEN);
         var lastCleanup = await this.store.Client.GetLastCleanupAsync(TOKEN);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries.Keys, Is.EquivalentTo(new[] { entry.Value }), "The chat may wait elsewhere to be moved back.");
             Assert.That(lastCleanup, Is.Null);
-        });
+        }
     }
+
+    [Test]
+    public async Task WhatAChatOfTheLabReceivedSurvivesTheCleanup()
+    {
+        // The cleanup reads the chats of the lab without asking whether the lab is switched on; nothing in this test
+        // switches it on:
+        var labStore = this.CreateLabStore();
+        var project = await labStore.CreateAsync("Panel");
+        var location = new BflStepThreadLocation(project.ProjectId, BflStep.KNOWLEDGE);
+        var referenced = await this.store.Client.StoreAsync(location.ChatId, ProvenanceKind.WEB_PAGE, "of a page the chat of the lab read", null, TOKEN);
+        var unreferenced = await this.store.Client.StoreAsync(location.ChatId, ProvenanceKind.WEB_PAGE, "of an answer the person removed", null, TOKEN);
+        var thread = BflThreadFactory.Create(location);
+        thread.Blocks.Add(new ContentBlock
+        {
+            ContentType = ContentType.TEXT,
+            Role = ChatRole.AI,
+            Content = new ContentText { Text = "Laut der Seite …", SourcePassages = [new SourcePassage { SourceUrl = "https://example.org/", ProvenanceId = referenced }] }
+        });
+        await labStore.SaveThreadAsync(location, thread);
+
+        await this.RunAsync(RestoreStateWith(report: null));
+
+        var entries = await this.store.Client.GetEntriesAsync([referenced!.Value, unreferenced!.Value], TOKEN);
+        Assert.That(entries.Keys, Is.EquivalentTo(new[] { referenced.Value }), "The chat of the lab is read like any other chat.");
+    }
+
+    [Test]
+    public async Task WhatTheOnboardingOfTheLabReceivedSurvivesTheCleanup()
+    {
+        var labStore = this.CreateLabStore();
+        var location = BflOnboardingThreadLocation.INSTANCE;
+        var referenced = await this.store.Client.StoreAsync(location.ChatId, ProvenanceKind.WEB_PAGE, "of a page the onboarding read", null, TOKEN);
+        var thread = BflThreadFactory.Create(location);
+        thread.Blocks.Add(new ContentBlock
+        {
+            ContentType = ContentType.TEXT,
+            Role = ChatRole.AI,
+            Content = new ContentText { Text = "Laut der Seite …", SourcePassages = [new SourcePassage { SourceUrl = "https://example.org/", ProvenanceId = referenced }] }
+        });
+        await labStore.SaveThreadAsync(location, thread);
+
+        await this.RunAsync(RestoreStateWith(report: null));
+
+        var entries = await this.store.Client.GetEntriesAsync([referenced!.Value], TOKEN);
+        Assert.That(entries.Keys, Is.EquivalentTo(new[] { referenced.Value }), "The onboarding belongs to no preparation, but it is a chat of the lab all the same.");
+    }
+
+    [Test]
+    public async Task WhatAChatOfADeletedPreparationReceivedIsRemoved()
+    {
+        var labStore = this.CreateLabStore();
+        var project = await labStore.CreateAsync("Panel");
+        var location = new BflStepThreadLocation(project.ProjectId, BflStep.KNOWLEDGE);
+        await labStore.SaveThreadAsync(location, BflThreadFactory.Create(location));
+        var entry = await this.store.Client.StoreAsync(location.ChatId, ProvenanceKind.WEB_PAGE, "of a page the chat of the lab read", null, TOKEN);
+        await labStore.DeleteAsync(project.ProjectId);
+
+        await this.RunAsync(RestoreStateWith(report: null));
+
+        var entries = await this.store.Client.GetEntriesAsync([entry!.Value], TOKEN);
+        Assert.That(entries, Is.Empty);
+    }
+
+    private BeyondFactsLabStore CreateLabStore() => new(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.testDirectory });
 
     /// <summary>
     /// Stores a chat whose file was written long before the last cleanup, which is noted as if it ran a minute ago.
@@ -130,12 +196,12 @@ public sealed class ProvenanceCleanupServiceTests
         return chat;
     }
 
-    private static async Task RunAsync(TemporaryProvenanceStore store, DataRestoreService dataRestoreService)
+    private async Task RunAsync(DataRestoreService dataRestoreService)
     {
         // Only entries stored before the start of the service may be removed, and the test stored them just now:
         await Task.Delay(TimeSpan.FromMilliseconds(10), TOKEN);
 
-        using var service = new ProvenanceCleanupService(store.CreateClientProvider(), dataRestoreService, NullLogger<ProvenanceCleanupService>.Instance);
+        using var service = new ProvenanceCleanupService(this.store.CreateClientProvider(), dataRestoreService, this.CreateLabStore(), NullLogger<ProvenanceCleanupService>.Instance);
         await service.StartAsync(TOKEN);
         await service.ExecuteTask!;
     }

@@ -28,7 +28,7 @@
                 MaxLength="40"
                 Counter="40"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Badge"
+                AdornmentIcon="@AppIcons.NAME"
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidateName"
                 Variant="Variant.Outlined"
@@ -43,14 +43,14 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataSystemPrompt"
-                AdornmentIcon="@Icons.Material.Filled.ListAlt"
+                AdornmentIcon="@AppIcons.PROMPT"
                 Adornment="Adornment.Start"
                 Immediate="@true"
                 Label="@T("What system prompt do you want to use?")"
                 Variant="Variant.Outlined"
                 Lines="6"
                 MaxLines="12"
-                AutoGrow="@true"
+                Sizing="InputSizing.Auto"
                 Class="mb-3"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI your system prompt.")"
@@ -60,7 +60,7 @@
             <MudJustifiedText Class="mb-3" Typo="Typo.body1">
                 @T("Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats.")
             </MudJustifiedText>
-            <MudButton Class="mb-3" Color="Color.Default" OnClick="@this.UseDefaultSystemPrompt" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled" Disabled="@this.IsReadOnly">
+            <MudButton Class="mb-3" Color="Color.Default" OnClick="@this.UseDefaultSystemPrompt" StartIcon="@AppIcons.PROMPT" Variant="Variant.Filled" Disabled="@this.IsReadOnly">
                 @T("Use the default system prompt")
             </MudButton>
             <ReadFileContent Text="@T("Load system prompt from file")" @bind-FileContent="@this.DataSystemPrompt" EnableDragDrop="true" Disabled="@this.IsReadOnly"/>
@@ -74,14 +74,14 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.PredefinedUserPrompt"
-                AdornmentIcon="@Icons.Material.Filled.ListAlt"
+                AdornmentIcon="@AppIcons.PROMPT"
                 Adornment="Adornment.Start"
                 Immediate="@true"
                 Label="@T("What predefined user input do you want to use?")"
                 Variant="Variant.Outlined"
                 Lines="4"
                 MaxLines="12"
-                AutoGrow="@true"
+                Sizing="InputSizing.Auto"
                 Class="mb-3"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI your predefined user input.")"
@@ -99,7 +99,7 @@
             {
                 @if (this.HasUnresolvedAttachments)
                 {
-                    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.WarningAmber" Class="mb-3">
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Icon="@AppIcons.WARNING" Class="mb-3">
                         @T("Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template.")
                     </MudAlert>
                 }
@@ -117,7 +117,7 @@
                                       Label="@string.Format(T("Relink attachment: {0}"), attachment.OriginalPath)"
                                       HelperText="@T("Enter the full path of a file on this computer, or remove the attachment.")" Variant="Variant.Outlined" Immediate="@true" />
                         <MudTooltip Text="@T("Remove this attachment")">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => this.RemoveAttachmentToRelink(currentIndex))" />
+                            <MudIconButton Icon="@AppIcons.DELETE" Color="Color.Error" OnClick="@(() => this.RemoveAttachmentToRelink(currentIndex))" />
                         </MudTooltip>
                     </MudStack>
                 }
@@ -145,7 +145,7 @@
                 <MudTextSwitch @bind-Value="@this.preselectProfile" Color="Color.Primary" Label="@T("Does this chat template preselect a profile?")" LabelOn="@T("Yes, this template decides which profile a chat starts with")" LabelOff="@T("No, chats keep their usual profile")" Disabled="@this.IsReadOnly"/>
                 @if (this.preselectProfile)
                 {
-                    <MudSelect T="string" @bind-Value="@this.selectedProfileId" Label="@T("Preselected profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" Disabled="@this.IsReadOnly">
+                    <MudSelect T="string" @bind-Value="@this.selectedProfileId" Label="@T("Preselected profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.PROFILE" Disabled="@this.IsReadOnly">
                         <MudSelectItem T="string" Value="@Profile.NO_PROFILE.Id">@T("Use no profile")</MudSelectItem>
                         @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
                         {
@@ -170,7 +170,7 @@
             <MudTextSwitch @bind-Value="@this.preselectProvider" Color="Color.Primary" Label="@T("Does this chat template preselect a provider?")" LabelOn="@T("Yes, this template decides which provider a chat starts with")" LabelOff="@T("No, chats keep their usual provider")" Disabled="@this.IsReadOnly"/>
             @if (this.preselectProvider)
             {
-                <MudSelect T="string" @bind-Value="@this.selectedProviderId" Label="@T("Preselected provider")" Validation="@this.ValidatePreselectedProvider" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.SmartToy" Disabled="@this.IsReadOnly">
+                <MudSelect T="string" @bind-Value="@this.selectedProviderId" Label="@T("Preselected provider")" Validation="@this.ValidatePreselectedProvider" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.LLM_PROVIDER" Disabled="@this.IsReadOnly">
                     @foreach (var provider in this.SettingsManager.GetConfidentProviders(Components.CHAT))
                     {
                         <MudSelectItem T="string" Value="@provider.Id">
@@ -253,13 +253,13 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>
-                        @context.Role.ToChatTemplateName()
+                        @context.Role.ChatTemplateName
                     </MudTd>
                     <MudTd>
                         @switch(context.Content)
                         {
                             case ContentText textContent:
-                                <MudTextField AutoGrow="true" Value="@textContent.Text" Placeholder="@T("Enter a message")" ReadOnly="true" Variant="Variant.Text" Validation="@this.ValidateExampleTextMessage"/>
+                                <MudTextField Sizing="InputSizing.Auto" Value="@textContent.Text" Placeholder="@T("Enter a message")" ReadOnly="true" Variant="Variant.Text" Validation="@this.ValidateExampleTextMessage"/>
                                 break;
 
                             case ContentImage { SourceType: ContentImageSource.URL or ContentImageSource.LOCAL_PATH } imageContent:
@@ -276,9 +276,9 @@
                         {
                             <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                                 <MudTooltip Text="@T("Add a new message below")">
-                                    <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Add" OnClick="@(() => this.AddMessageBelow(context))"/>
+                                    <MudIconButton Color="Color.Primary" Icon="@AppIcons.ADD" OnClick="@(() => this.AddMessageBelow(context))"/>
                                 </MudTooltip>
-                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.RemoveMessage(context))"/>
+                                <MudIconButton Color="Color.Error" Icon="@AppIcons.DELETE" OnClick="@(() => this.RemoveMessage(context))"/>
                             </MudStack>
                         }
                     </MudTd>
@@ -287,7 +287,7 @@
                     <MudTd>
                         @if (this.IsReadOnly)
                         {
-                            @context.Role.ToChatTemplateName()
+                            @context.Role.ChatTemplateName
                         }
                         else
                         {
@@ -295,7 +295,7 @@
                                 @foreach (var role in ChatRoles.ChatTemplateRoles())
                                 {
                                     <MudSelectItem Value="@role">
-                                        @role.ToChatTemplateName()
+                                        @role.ChatTemplateName
                                     </MudSelectItem>
                                 }
                             </MudSelect>
@@ -305,7 +305,7 @@
                         @switch(context.Content)
                         {
                             case ContentText textContent:
-                                <MudTextField AutoGrow="true" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Immediate="true" Placeholder="@T("Enter a message")" ReadOnly="@this.IsReadOnly"/>
+                                <MudTextField Sizing="InputSizing.Auto" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Immediate="true" Placeholder="@T("Enter a message")" ReadOnly="@this.IsReadOnly"/>
                                 break;
 
                             default:
@@ -324,7 +324,7 @@
 
         @if (!this.isInlineEditOnGoing && !this.IsReadOnly)
         {
-            <MudButton Class="mb-6" Color="Color.Primary" OnClick="@this.AddMessageToEnd" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled">
+            <MudButton Class="mb-6" Color="Color.Primary" OnClick="@this.AddMessageToEnd" StartIcon="@AppIcons.ADD" Variant="Variant.Filled">
                 @T("Add a message")
             </MudButton>
         }

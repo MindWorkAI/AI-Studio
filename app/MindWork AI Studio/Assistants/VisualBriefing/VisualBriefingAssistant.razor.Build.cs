@@ -105,7 +105,7 @@ public partial class VisualBriefingAssistant
                 // derived from the stable enums in the current language instead:
                 terminalIssue = VisualBriefingFailureExtensions.ToUserMessage(result.FailureCode, result.Diagnostics.ValidationRule);
                 if (terminalStatus is not AssistantSessionStatus.CANCELED)
-                    await this.MessageBus.SendError(new(Icons.Material.Filled.AutoAwesome, terminalIssue));
+                    await this.MessageBus.SendError(new(AppIcons.GENERATE, terminalIssue));
 
                 return;
             }
@@ -123,7 +123,7 @@ public partial class VisualBriefingAssistant
                     this.UpdateProject(latest);
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoAwesome, successMessage));
+            await this.MessageBus.SendSuccess(new(AppIcons.GENERATE, successMessage));
             terminalStatus = AssistantSessionStatus.COMPLETED;
         }
         catch (OperationCanceledException)
@@ -135,7 +135,7 @@ public partial class VisualBriefingAssistant
         {
             terminalIssue = unexpectedFailureMessage;
             this.Logger.LogError("Unexpected visual briefing UI failure. BriefingId={BriefingId} Mode={Mode} ExceptionType={ExceptionType}", briefingId, mode, exception.GetType().Name);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.AutoAwesome, terminalIssue));
+            await this.MessageBus.SendError(new(AppIcons.GENERATE, terminalIssue));
         }
         finally
         {

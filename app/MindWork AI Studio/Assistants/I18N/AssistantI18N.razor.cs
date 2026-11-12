@@ -5,13 +5,7 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 
-using Microsoft.Extensions.FileProviders;
-
 using SharedTools;
-
-#if RELEASE
-using System.Reflection;
-#endif
 
 namespace AIStudio.Assistants.I18N;
 
@@ -23,6 +17,9 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     protected override string Description => T("Translate MindWork AI Studio text content into another language.");
     
+    // This assistant writes language plugins, so no chat continues its conversation:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
     protected override string SystemPrompt => 
         $"""
         # Assignment
@@ -39,7 +36,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         daily lives with it. The app offers the regular chat mode for which LLMs have become
         known. However, AI Studio also offers so-called assistants, where users no longer
         have to prompt.
-        
+
+        Some texts are longer notes in Markdown, with headings, paragraphs, or lists. Keep their
+        Markdown and their line breaks exactly as they are, and translate only the words.
+
+        {I18NAddressPrompt.Section(this.SystemPromptLanguage(), this.translatesInformalVariant, this.formalTranslationOfText)}
+
         # Target Audience
         The app is intended for everyone, not just IT specialists or scientists. When translating,
         make sure the texts are easy for everyone to understand.
@@ -62,7 +64,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             #else
             Text = T("Copy Lua code to clipboard"),
             #endif
-            Icon = Icons.Material.Filled.Extension,
+            Icon = AppIcons.PLUGIN,
             Color = Color.Default,
             #if DEBUG
             AsyncAction = async () => await this.WriteToPluginFile(),
@@ -124,6 +126,16 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private Dictionary<string, string> localizedContent = [];
     private StringBuilder finalLuaCode = new();
     private string? activeSystemPromptLanguage;
+
+    /// <summary>
+    /// Whether the text translated now is the informal variant of a text; see I18NAddressPrompt.
+    /// </summary>
+    private bool translatesInformalVariant;
+
+    /// <summary>
+    /// The formal translation of the text translated now, when it is an informal variant and has one.
+    /// </summary>
+    private string? formalTranslationOfText;
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
     private static readonly AssistantSessionStateKey<bool> IS_LOADING_STATE_KEY = new(nameof(isLoading));
@@ -190,7 +202,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string SystemPromptLanguage() => this.activeSystemPromptLanguage ?? (this.selectedTargetLanguage switch
     {
         CommonLanguages.OTHER => this.customTargetLanguage,
-        _ => $"{this.selectedTargetLanguage.Name()}",
+        _ => $"{this.selectedTargetLanguage.Name}",
     });
 
     private async Task OnLanguagePluginChanged(Guid pluginId)
@@ -215,9 +227,9 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             this.loadingIssue = string.Format(T("Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin."), this.selectedLanguagePluginId);
             this.selectedLanguagePlugin = null;
         }
-        else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.ToIETFTag())
+        else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.IETFTag)
         {
-            this.loadingIssue = string.Format(T("The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.ToIETFTag());
+            this.loadingIssue = string.Format(T("The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.IETFTag);
             this.selectedLanguagePlugin = null;
         }
         else
@@ -247,17 +259,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         //
         // Read the file `Assistants\I18N\allTexts.lua`:
         //
-        #if DEBUG
-        var filePath = Path.Join(Environment.CurrentDirectory, "Assistants", "I18N");
-        var resourceFileProvider = new PhysicalFileProvider(filePath);
-        #else
-        var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Assistants/I18N");
-        #endif
-
-        var file = resourceFileProvider.GetFileInfo("allTexts.lua");
-        await using var fileStream = file.CreateReadStream();
-        using var reader = new StreamReader(fileStream);
-        var newI18NDataLuaCode = await reader.ReadToEndAsync();
+        var newI18NDataLuaCode = await AppResources.ReadTextAsync("Assistants/I18N/allTexts.lua");
         
         //
         // Next, we try to load the text as a language plugin -- without
@@ -349,14 +351,14 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     private async Task LocalizeTextContent()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         
         if(this.selectedLanguagePlugin is null)
             return;
         
-        if (this.selectedLanguagePlugin.IETFTag != this.selectedTargetLanguage.ToIETFTag())
+        if (this.selectedLanguagePlugin.IETFTag != this.selectedTargetLanguage.IETFTag)
             return;
         
         var addedContentSnapshot = this.addedContent.ToArray();
@@ -372,7 +374,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             if (this.selectedTargetLanguage is not CommonLanguages.EN_US)
             {
                 // Phase 1: Translate added content
-                await this.Phase1TranslateAddedContent(addedContentSnapshot);
+                var translatedBefore = selectedLanguageContentSnapshot.ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value, StringComparer.Ordinal);
+                await this.Phase1TranslateAddedContent(addedContentSnapshot, translatedBefore);
             }
             else
             {
@@ -417,6 +420,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         finally
         {
             this.activeSystemPromptLanguage = null;
+            this.translatesInformalVariant = false;
+            this.formalTranslationOfText = null;
         }
     }
 
@@ -424,12 +429,15 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     /// Translates the added text content from a stable snapshot.
     /// </summary>
     /// <param name="addedContentSnapshot">The added text entries captured when the job started.</param>
+    /// <param name="translatedBefore">The texts of the language plugin, whose formal translations the informal variants start from.</param>
     /// <returns>A task that completes when all added text entries were translated or cancellation was requested.</returns>
-    private async Task Phase1TranslateAddedContent(KeyValuePair<string, string>[] addedContentSnapshot)
+    private async Task Phase1TranslateAddedContent(KeyValuePair<string, string>[] addedContentSnapshot, IReadOnlyDictionary<string, string> translatedBefore)
     {
         var stopwatch = new Stopwatch();
         var minimumTime = TimeSpan.FromMilliseconds(500);
-        foreach (var keyValuePair in addedContentSnapshot)
+
+        // The informal variants start from the formal translations, so those come first:
+        foreach (var keyValuePair in I18NAddressPrompt.FormalFirst(addedContentSnapshot))
         {
             if(this.CancellationTokenSource!.IsCancellationRequested)
                 break;
@@ -443,8 +451,11 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             stopwatch.Start();
             
             //
-            // Translate one text at a time:
+            // Translate one text at a time. Its own chat thread gets the system prompt
+            // with the form of address of this text:
             //
+            this.translatesInformalVariant = I18NAddressVariant.TryGetFormalKey(keyValuePair.Key, out _);
+            this.formalTranslationOfText = this.translatesInformalVariant ? I18NAddressPrompt.FindFormalTranslation(keyValuePair.Key, this.localizedContent, translatedBefore) : null;
             this.CreateChatThread();
             var time = this.AddUserRequest(keyValuePair.Value);
             this.localizedContent.Add(keyValuePair.Key, await this.AddAIResponseAsync(time));
@@ -477,13 +488,13 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     {
         if (this.selectedLanguagePlugin is null)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Translate, T("No language plugin selected.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_LOCALIZATION, T("No language plugin selected.")));
             return;
         }
 
         if (this.finalLuaCode.Length == 0)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Code, T("No Lua code generated yet.")));
+            await this.MessageBus.SendError(new(AppIcons.CODE, T("No Lua code generated yet.")));
             return;
         }
 
@@ -499,7 +510,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             if (!File.Exists(pluginFilePath))
             {
                 this.Logger.LogError("Plugin file not found: {PluginFilePath}.", pluginFilePath);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.FindInPage, T("Plugin file not found.")));
+                await this.MessageBus.SendError(new(AppIcons.FILE_NOT_FOUND, T("Plugin file not found.")));
                 return;
             }
 
@@ -513,7 +524,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             if (markerIndex == -1)
             {
                 this.Logger.LogError("Could not find 'UI_TEXT_CONTENT = {{}}' marker in plugin file: {PluginFilePath}", pluginFilePath);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.FindInPage, T("Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file.")));
+                await this.MessageBus.SendError(new(AppIcons.FILE_NOT_FOUND, T("Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file.")));
                 return;
             }
 
@@ -523,12 +534,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
 
             // Write the updated content back to the file:
             await File.WriteAllTextAsync(pluginFilePath, newContent);
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Translate, T("Successfully updated plugin file.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.ASSISTANT_LOCALIZATION, T("Successfully updated plugin file.")));
         }
         catch (Exception ex)
         {
             this.Logger.LogError(ex, "Error writing to plugin file.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Translate, T("Error writing to plugin file.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_LOCALIZATION, T("Error writing to plugin file.")));
         }
     }
     #endif

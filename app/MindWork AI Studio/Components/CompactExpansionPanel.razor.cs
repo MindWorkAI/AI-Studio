@@ -17,7 +17,7 @@ public partial class CompactExpansionPanel : ComponentBase
     public string HeaderText { get; set; } = string.Empty;
 
     [Parameter]
-    public string HeaderIcon { get; set; } = Icons.Material.Filled.Tune;
+    public string HeaderIcon { get; set; } = AppIcons.ADVANCED_SETTINGS;
 
     [Parameter]
     public Color IconColor { get; set; } = Color.Inherit;

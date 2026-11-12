@@ -14,12 +14,14 @@ use pdfium_render::prelude::Pdfium;
 use serde::{Deserialize, Serialize};
 use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent};
 use tauri::path::PathResolver;
-use tauri::WebviewWindow;
+use tauri::webview::{NewWindowResponse, PageLoadEvent};
+use tauri::{WebviewWindow, WebviewWindowBuilder};
 use tauri::PhysicalPosition;
 use tauri_plugin_updater::{UpdaterExt, Update};
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
+use crate::app_access::hand_over_session_cookie;
 use crate::clipboard::shutdown_clipboard;
 use crate::data_restore::apply_pending_restore;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
@@ -119,35 +121,81 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_opener::init())
+        //
+        // The link script of the opener plugin opens every link clicked while holding Shift or
+        // Ctrl in the system browser, links of the app included. Our own script replaces it,
+        // see link_guard.js:
+        //
+        .plugin(tauri_plugin_opener::Builder::new().open_js_links_on_click(false).build())
         .plugin(
             tauri::plugin::Builder::<tauri::Wry, ()>::new("external-link-handler")
+                .js_init_script(include_str!("link_guard.js"))
                 .on_navigation(|webview, url| {
-                    if !should_open_in_system_browser(webview, url) {
+                    let current_url = webview.url().ok();
+                    if !should_open_in_system_browser(url, approved_app_url().as_ref(), current_url.as_ref()) {
                         return true;
                     }
 
-                    match webview.app_handle().opener().open_url(url.as_str(), None::<&str>) {
-                        Ok(_) => {
-                            info!(Source = "Tauri"; "Opening external URL in system browser: {url}");
-                        },
-                        Err(error) => {
-                            error!(Source = "Tauri"; "Failed to open external URL '{url}' in system browser: {error}");
-                        },
-                    }
+                    open_in_system_browser(webview.app_handle(), url);
                     false
                 })
                 .build(),
         )
+        .plugin(context_menu_guard())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .on_page_load(|webview, payload| {
+            //
+            // A webview may forget its zoom when it loads a page from another origin, as the page
+            // of the app is, see interface_zoom.rs. Measuring the screen needs the main thread,
+            // which this handler is not guaranteed to run on:
+            //
+            if matches!(payload.event(), PageLoadEvent::Finished)
+                && let Some(window) = webview.app_handle().get_webview_window(webview.label())
+            {
+                let ui_window = window.clone();
+                if let Err(error) = window.run_on_main_thread(move || crate::interface_zoom::zoom_window(&ui_window)) {
+                    warn!(Source = "Interface size"; "Failed to schedule the zoom after a page load: {error}");
+                }
+            }
+        })
         .setup(move |app| {
 
-            // Get the main window:
-            let window = app.get_webview_window("main").expect("Failed to get main window.");
+            //
+            // We create the main window ourselves rather than letting Tauri create it from the
+            // configuration, where "create" is false therefore. Only a window built here can get a
+            // handler for new windows; neither the configuration nor a plugin can set one.
+            //
+            // AI Studio shows a single window. Whatever asks for another one opens nothing in the
+            // app: a link with a target, a click with Shift or the middle mouse button, or
+            // window.open. An address outside the app goes to the system browser instead, after the
+            // same check as a navigation. The window shows the app as soon as a link can be clicked,
+            // so the approved address of the app decides, and the current address is not needed:
+            //
+            let window_config = app.config().app.windows.iter()
+                .find(|config| config.label == "main")
+                .expect("The configuration lacks the main window.");
+
+            let new_window_app_handle = app.handle().clone();
+            let window = WebviewWindowBuilder::from_config(app.handle(), window_config)
+                .expect("Failed to read the configuration of the main window.")
+                .on_new_window(move |url, _| {
+                    if should_open_in_system_browser(&url, approved_app_url().as_ref(), None) {
+                        open_in_system_browser(&new_window_app_handle, &url);
+                    } else {
+                        info!(Source = "Tauri"; "Denied a new window for '{url}'.");
+                    }
+
+                    NewWindowResponse::Deny
+                })
+                .build()
+                .expect("Failed to create the main window.");
 
             #[cfg(target_os = "linux")]
             register_linux_permission_request_handler(&window);
+
+            #[cfg(target_os = "macos")]
+            disable_link_previews(&window);
 
             // Register a callback for window events, such as file drops. We have to use
             // this handler in addition to the app event handler, because file drop events
@@ -162,17 +210,25 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             window.on_window_event(move |event| {
 
                 //
-                // Only a drag and drop event carries a position, and only that position needs the
-                // scale factor. Asking the window on every window event would be needless work.
-                // Asking it anew for every drag is what keeps a display change covered: we hold no
-                // factor of our own which a moved window could leave behind.
+                // A window which moved may rest on another screen now, whose size calls for
+                // another zoom of the webview:
                 //
-                let scale_factor = match event {
-                    WindowEvent::DragDrop(_) => event_window.scale_factor().unwrap_or(1.0),
-                    _ => 1.0,
+                if matches!(event, WindowEvent::Moved(_) | WindowEvent::ScaleFactorChanged { .. }) {
+                    crate::interface_zoom::follow_window(&event_window);
+                }
+
+                //
+                // Only a drag and drop event carries a position, and only that position needs the
+                // scale factor and the zoom. Asking the window on every window event would be
+                // needless work. Asking it anew for every drag is what keeps a display change
+                // covered: we hold no factor of our own which a moved window could leave behind.
+                //
+                let (scale_factor, zoom) = match event {
+                    WindowEvent::DragDrop(_) => (event_window.scale_factor().unwrap_or(1.0), crate::interface_zoom::current_zoom()),
+                    _ => (1.0, 1.0),
                 };
 
-                let Some(event_to_send) = Event::from_window_event(event, scale_factor) else {
+                let Some(event_to_send) = Event::from_window_event(event, scale_factor, zoom) else {
                     return;
                 };
 
@@ -185,6 +241,9 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
                     }
                 });
             });
+
+            // The screen shows in its default size from the start, long before the app sends the sizes the user chose:
+            crate::interface_zoom::zoom_window(&window);
 
             // Save the main window for later access:
             *MAIN_WINDOW.lock().unwrap() = Some(window);
@@ -285,7 +344,7 @@ fn is_tauri_asset_url(url: &tauri::Url) -> bool {
     matches!(url.scheme(), "http" | "https") && is_tauri_asset_host(url.host_str())
 }
 
-fn is_local_http_url(url: &tauri::Url) -> bool {
+pub(crate) fn is_local_http_url(url: &tauri::Url) -> bool {
     matches!(url.scheme(), "http" | "https") && is_local_host(url.host_str())
 }
 
@@ -308,6 +367,28 @@ fn should_allow_audio_capture(
         && approved_app_url
             .zip(current_webview_url)
             .is_some_and(|(approved, current)| same_origin(approved, current))
+}
+
+/// Switches off the preview which macOS shows when somebody force-clicks a link or looks it up.
+/// wry switches it on, and Tauri offers no setting for it. The preview would show a page of the app
+/// outside the window, and a click on it may open the page in the system browser, which cannot
+/// show it; see link_guard.js.
+#[cfg(target_os = "macos")]
+fn disable_link_previews(window: &WebviewWindow) {
+    use objc2::msg_send;
+    use objc2::runtime::{AnyObject, Bool};
+
+    if let Err(error) = window.with_webview(|platform_webview| {
+        let webview = platform_webview.inner().cast::<AnyObject>();
+
+        // Safety: on macOS, the handle is the WKWebView of the window, and Tauri calls this closure
+        // on the main thread, as AppKit requires:
+        unsafe {
+            let _: () = msg_send![webview, setAllowsLinkPreview: Bool::NO];
+        }
+    }) {
+        error!(Source = "Tauri"; "Failed to switch off the link previews: {error}");
+    }
 }
 
 #[cfg(target_os = "linux")]
@@ -358,7 +439,30 @@ fn register_linux_permission_request_handler(window: &WebviewWindow) {
     }
 }
 
-fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>, url: &tauri::Url) -> bool {
+/// Limits the right-click menu to text fields and selected text in every frame, see
+/// context_menu_guard.js. Development builds keep the menu, since it opens the developer tools,
+/// which Tauri offers in these builds only.
+fn context_menu_guard() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    let plugin = tauri::plugin::Builder::<tauri::Wry, ()>::new("context-menu-guard");
+    if cfg!(debug_assertions) {
+        return plugin.build();
+    }
+
+    plugin.js_init_script_on_all_frames(include_str!("context_menu_guard.js")).build()
+}
+
+/// The address of the app, once the window shows it.
+fn approved_app_url() -> Option<tauri::Url> {
+    APPROVED_APP_URL.lock().unwrap().clone()
+}
+
+/// Decides whether an address leaves the window for the system: a website for the browser, or a
+/// `mailto:` or `tel:` link for the mail or phone app. Navigations and requests for new windows
+/// both ask here, so that one rule decides what leaves the window.
+///
+/// An address of the app never leaves: a browser outside the window has no session cookie, see
+/// app_access.rs. Another local server, such as a local LLM, leaves once the window shows the app.
+fn should_open_in_system_browser(url: &tauri::Url, approved_app_url: Option<&tauri::Url>, current_url: Option<&tauri::Url>) -> bool {
     match url.scheme() {
         "mailto" | "tel" => return true,
         "http" | "https" => {},
@@ -369,7 +473,7 @@ fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>,
         return false;
     }
 
-    if let Some(approved_app_url) = APPROVED_APP_URL.lock().unwrap().as_ref() {
+    if let Some(approved_app_url) = approved_app_url {
         if same_origin(approved_app_url, url) {
             return false;
         }
@@ -379,11 +483,74 @@ fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>,
         }
     }
 
-    if let Ok(current_url) = webview.url() && same_origin(&current_url, url) {
+    if current_url.is_some_and(|current_url| same_origin(current_url, url)) {
         return false;
     }
 
     !is_local_host(url.host_str())
+}
+
+/// Hands an address outside the app to the system, see `should_open_in_system_browser`.
+///
+/// On Linux, the desktop portal opens it, as it does for the Flatpak anyway. The opener plugin
+/// starts the xdg-open of the system with the environment of AI Studio, which an AppImage points
+/// at its own GTK and GIO modules: the browser then stays closed, and no error tells why. The
+/// opener plugin remains for systems without a portal.
+fn open_in_system_browser<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>, url: &tauri::Url) {
+    #[cfg(target_os = "linux")]
+    {
+        use crate::file_actions::LinuxPortalError;
+
+        let app_handle = app_handle.clone();
+        let url = url.clone();
+        tauri::async_runtime::spawn(async move {
+            match open_url_with_linux_portal(&url).await {
+                Ok(()) => {
+                    info!(Source = "Tauri"; "Opening external URL through the desktop portal: {url}");
+                },
+                Err(LinuxPortalError::RequestFailed(error)) => {
+                    error!(Source = "Tauri"; "Failed to open external URL '{url}' through the desktop portal: {error}");
+                },
+                Err(LinuxPortalError::Unavailable(error)) => {
+                    warn!(Source = "Tauri"; "The desktop portal cannot open external URL '{url}', so the opener plugin opens it: {error}");
+                    open_with_opener(&app_handle, &url);
+                },
+            }
+        });
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    open_with_opener(app_handle, url);
+}
+
+/// Opens an address outside the app through the desktop portal, see `open_in_system_browser`.
+#[cfg(target_os = "linux")]
+async fn open_url_with_linux_portal(url: &tauri::Url) -> Result<(), crate::file_actions::LinuxPortalError> {
+    use ashpd::desktop::open_uri::OpenFileRequest;
+    use crate::file_actions::LinuxPortalError;
+
+    let uri = ashpd::Uri::parse(url.as_str())
+        .map_err(|error| LinuxPortalError::RequestFailed(format!("The desktop portal cannot take the address: {error}")))?;
+
+    let request = OpenFileRequest::default()
+        .send_uri(&uri)
+        .await
+        .map_err(|error| LinuxPortalError::Unavailable(format!("Desktop portal invocation failed: {error}")))?;
+
+    request.response()
+        .map_err(|error| LinuxPortalError::RequestFailed(format!("Desktop portal request failed: {error}")))
+}
+
+/// Opens an address outside the app with the opener plugin, see `open_in_system_browser`.
+fn open_with_opener<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>, url: &tauri::Url) {
+    match app_handle.opener().open_url(url.as_str(), None::<&str>) {
+        Ok(_) => {
+            info!(Source = "Tauri"; "Opening external URL in system browser: {url}");
+        },
+        Err(error) => {
+            error!(Source = "Tauri"; "Failed to open external URL '{url}' in system browser: {error}");
+        },
+    }
 }
 
 /// Our event API endpoint for Tauri events. We try to send an endless stream of events to the client.
@@ -472,15 +639,17 @@ pub struct CursorPosition {
 /// in the first place: a point stays a point when the window moves to a display with a different
 /// pixel density, and only the number of device pixels behind it changes.
 ///
-/// What the equality of a logical point and a CSS pixel does depend on is that nobody zooms the
-/// webview: neither through WebviewWindow::set_zoom nor through zoomHotkeysEnabled, which our
-/// tauri.conf.json leaves off. Should AI Studio ever offer a zoom, say for accessibility, the
-/// position has to be divided by it as well -- on every platform, this time.
+/// A logical point equals a CSS pixel only as long as the webview is not zoomed. AI Studio zooms it
+/// to show in the same size on every laptop, see interface_zoom.rs, and a zoomed CSS pixel covers
+/// that many logical points. The position is therefore divided by the zoom as well, on every
+/// platform. Keyboard zooming stays off: tauri.conf.json leaves zoomHotkeysEnabled unset, and a
+/// zoom we did not set ourselves would put the position off.
 ///
 /// The decision is written with cfg! rather than #[cfg], so that both branches are compiled and
 /// type-checked on every platform instead of only on the one they apply to.
-fn cursor_position_in_css_pixels(position: PhysicalPosition<f64>, scale_factor: f64) -> CursorPosition {
-    scale_cursor_position(position, if cfg!(target_os = "windows") { scale_factor } else { 1.0 })
+fn cursor_position_in_css_pixels(position: PhysicalPosition<f64>, scale_factor: f64, zoom: f64) -> CursorPosition {
+    let platform_scale_factor = if cfg!(target_os = "windows") { scale_factor } else { 1.0 };
+    scale_cursor_position(position, platform_scale_factor * zoom)
 }
 
 /// Divides a cursor position by a scale factor.
@@ -538,7 +707,10 @@ impl Event {
     }
 
     /// Creates an Event instance from a Tauri WindowEvent, unless the event is none of our business.
-    pub fn from_window_event(window_event: &WindowEvent, scale_factor: f64) -> Option<Self> {
+    ///
+    /// The scale factor and the zoom only matter for the position of a drag and drop event, see
+    /// `cursor_position_in_css_pixels`.
+    pub fn from_window_event(window_event: &WindowEvent, scale_factor: f64, zoom: f64) -> Option<Self> {
         match window_event {
             WindowEvent::DragDrop(drop_event) => {
                 match drop_event {
@@ -547,7 +719,7 @@ impl Event {
                         Some(Event::with_position(
                             TauriEventType::FileDropHovered,
                             paths.iter().map(|p| p.display().to_string()).collect(),
-                            cursor_position_in_css_pixels(*position, scale_factor),
+                            cursor_position_in_css_pixels(*position, scale_factor, zoom),
                         ))
                     },
 
@@ -564,7 +736,7 @@ impl Event {
                         Some(Event::with_position(
                             TauriEventType::FileDropOver,
                             Vec::new(),
-                            cursor_position_in_css_pixels(*position, scale_factor),
+                            cursor_position_in_css_pixels(*position, scale_factor, zoom),
                         ))
                     },
 
@@ -573,7 +745,7 @@ impl Event {
                         Some(Event::with_position(
                             TauriEventType::FileDropDropped,
                             paths.iter().map(|p| p.display().to_string()).collect(),
-                            cursor_position_in_css_pixels(*position, scale_factor),
+                            cursor_position_in_css_pixels(*position, scale_factor, zoom),
                         ))
                     },
 
@@ -625,10 +797,29 @@ pub enum TauriEventType {
 
     GlobalShortcutPressed,
     GlobalShortcutChanged,
+
+    /// The interface size on the screen the window shows on changed, see interface_zoom.rs.
+    InterfaceSizeChanged,
 }
 
-/// Changes the location of the main window to the given URL.
-pub async fn change_location_to(url: &str) {
+/// Sends an event to the app.
+///
+/// Locks only the broadcast sender, never the main window, so it may run on the main thread.
+pub fn send_event(event: Event) {
+    let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
+    let Some(event_sender) = event_sender else {
+        warn!(Source = "Tauri"; "Cannot send the event {:?} before the event channel exists.", event.event_type);
+        return;
+    };
+
+    if let Err(error) = event_sender.send(event) {
+        error!(Source = "Tauri"; "Failed to send an event: {error}");
+    }
+}
+
+/// Changes the location of the main window to the given URL. The window gets its session cookie
+/// first, so that the .NET server lets it in.
+pub async fn change_location_to(url: tauri::Url) {
     // Try to get the main window. If it is not available yet, wait for it:
     let mut main_window_ready = false;
     let mut main_window_status_reported = false;
@@ -650,16 +841,30 @@ pub async fn change_location_to(url: &str) {
         }
     }
 
-    if let Ok(parsed_url) = tauri::Url::parse(url) && is_local_http_url(&parsed_url) {
-        *APPROVED_APP_URL.lock().unwrap() = Some(parsed_url);
+    if is_local_http_url(&url) {
+        *APPROVED_APP_URL.lock().unwrap() = Some(url.clone());
     }
 
-    let js_location_change = format!("window.location = '{url}';");
-    let main_window = main_window_spawn_clone.lock().unwrap();
-    let location_change_result = main_window.as_ref().unwrap().eval(js_location_change.as_str());
-    match location_change_result {
-        Ok(_) => info!("The app location was changed to {url}."),
-        Err(e) => error!("Failed to change the app location to {url}: {e}."),
+    //
+    // The window navigates by itself instead of through a script of the page it shows. That page
+    // comes from Tauri, which is another site than the app; app_access::session_cookie explains
+    // why the session cookie goes along all the same. We take the window out of the lock first:
+    // the cookie and the navigation need the main thread, which may wait for this lock meanwhile.
+    //
+    // Handing over the cookie waits for the main thread. This function serves a request of the
+    // runtime API, so the waiting happens outside the async runtime, see runtime/AGENTS.md.
+    //
+    let main_window = main_window_spawn_clone.lock().unwrap().clone().unwrap();
+    let navigation = tokio::task::spawn_blocking(move || {
+        hand_over_session_cookie(&main_window, &url);
+        match main_window.navigate(url.clone()) {
+            Ok(_) => info!("The app location was changed to {url}."),
+            Err(e) => error!("Failed to change the app location to {url}: {e}."),
+        }
+    });
+
+    if let Err(error) = navigation.await {
+        error!("Failed to open the app in the main window: {error}");
     }
 }
 
@@ -765,6 +970,11 @@ pub async fn install_update() {
     match cloned_response_option {
         Some(update_response) => {
             info!(Source = "Tauri"; "Updater: update is pending!");
+
+            // Once the download is complete, the .NET server and Qdrant Edge stop so that the installer
+            // can replace their files. When the update fails after that, e.g., because the installer
+            // cannot start, the app would remain without both. Restarting it brings them back.
+            let mut servers_stopped = false;
             let result = update_response.download_and_install(
                 |chunk_length, _content_length| {
                     trace!(Source = "Tauri"; "Updater: downloading chunk of {chunk_length} bytes");
@@ -776,6 +986,7 @@ pub async fn install_update() {
                     if is_prod() {
                         stop_dotnet_server();
                         stop_qdrant_edge_database();
+                        servers_stopped = true;
                     } else {
                         warn!(Source = "Tauri"; "Development environment detected; do not stop the .NET server.");
                     }
@@ -799,6 +1010,14 @@ pub async fn install_update() {
                 }
                 Err(e) => {
                     warn!(Source = "Tauri"; "Updater: failed to update: {e}");
+                    if servers_stopped {
+                        warn!(Source = "Tauri"; "The .NET server and Qdrant Edge are already stopped; try to restart the app now...");
+                        if let Some(handle) = app_handle {
+                            handle.restart();
+                        } else {
+                            warn!(Source = "Tauri"; "Cannot restart after the failed update: main window not available.");
+                        }
+                    }
                 }
             }
         },
@@ -1167,20 +1386,26 @@ mod tests {
 
     #[test]
     fn the_cursor_position_is_scaled_on_windows_only() {
-        let position = cursor_position_in_css_pixels(PhysicalPosition::new(200.0, 100.0), 2.0);
+        let position = cursor_position_in_css_pixels(PhysicalPosition::new(200.0, 100.0), 2.0, 1.0);
         let expected = if cfg!(target_os = "windows") { (100.0, 50.0) } else { (200.0, 100.0) };
 
         assert_eq!((position.x, position.y), expected);
     }
 
     #[test]
+    fn the_zoom_divides_the_cursor_position_on_every_platform() {
+        let position = cursor_position_in_css_pixels(PhysicalPosition::new(200.0, 100.0), 1.0, 2.0);
+        assert_eq!((position.x, position.y), (100.0, 50.0));
+    }
+
+    #[test]
     fn a_window_event_we_do_not_care_about_is_not_channeled() {
-        assert!(Event::from_window_event(&WindowEvent::Destroyed, 1.0).is_none());
+        assert!(Event::from_window_event(&WindowEvent::Destroyed, 1.0, 1.0).is_none());
     }
 
     #[test]
     fn losing_the_window_focus_is_channeled_without_a_position() {
-        let event = Event::from_window_event(&WindowEvent::Focused(false), 1.0).unwrap();
+        let event = Event::from_window_event(&WindowEvent::Focused(false), 1.0, 1.0).unwrap();
 
         assert!(matches!(event.event_type, TauriEventType::WindowNotFocused));
         assert!(event.position.is_none());
@@ -1277,6 +1502,75 @@ mod tests {
 
         assert!(!is_tauri_asset_url(&url));
         assert!(!is_local_http_url(&url));
+    }
+
+    #[test]
+    fn app_url_never_opens_in_system_browser() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        for address in [
+            "http://127.0.0.1:12345/",
+            "http://127.0.0.1:12345/chat",
+            "http://127.0.0.1:12345/settings?section=providers",
+            "http://127.0.0.1:12345/about#licenses",
+        ] {
+            let url = tauri::Url::parse(address).unwrap();
+
+            assert!(!should_open_in_system_browser(&url, Some(&approved), None), "{address}");
+            assert!(!should_open_in_system_browser(&url, Some(&approved), Some(&approved)), "{address}");
+        }
+    }
+
+    #[test]
+    fn app_url_stays_in_window_before_it_is_approved() {
+        let current = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        let url = tauri::Url::parse("http://127.0.0.1:12345/chat").unwrap();
+
+        assert!(!should_open_in_system_browser(&url, None, None));
+        assert!(!should_open_in_system_browser(&url, None, Some(&current)));
+    }
+
+    #[test]
+    fn external_website_opens_in_system_browser() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        let url = tauri::Url::parse("https://example.com/docs").unwrap();
+
+        assert!(should_open_in_system_browser(&url, Some(&approved), None));
+        assert!(should_open_in_system_browser(&url, None, None));
+    }
+
+    #[test]
+    fn mail_and_phone_links_open_in_system() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        for address in ["mailto:someone@example.com", "tel:+490000000"] {
+            let url = tauri::Url::parse(address).unwrap();
+
+            assert!(should_open_in_system_browser(&url, Some(&approved), None), "{address}");
+        }
+    }
+
+    #[test]
+    fn other_local_server_opens_in_system_browser_once_app_is_approved() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        let url = tauri::Url::parse("http://localhost:11434/").unwrap();
+
+        assert!(should_open_in_system_browser(&url, Some(&approved), None));
+        assert!(!should_open_in_system_browser(&url, None, None));
+    }
+
+    #[test]
+    fn other_schemes_never_open_in_system_browser() {
+        let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
+        for address in [
+            "file:///etc/passwd",
+            "javascript:alert(1)",
+            "data:text/html,hello",
+            "tauri://localhost/index.html",
+            "https://tauri.localhost/index.html",
+        ] {
+            let url = tauri::Url::parse(address).unwrap();
+
+            assert!(!should_open_in_system_browser(&url, Some(&approved), None), "{address}");
+        }
     }
 
     #[test]

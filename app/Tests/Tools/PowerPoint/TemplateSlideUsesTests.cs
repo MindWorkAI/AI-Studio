@@ -23,11 +23,11 @@ public sealed class TemplateSlideUsesTests
         var template = TemplateWithAContentSlideAndAClosingSlide();
         var uses = new Dictionary<int, TemplateSlideUse> { [1] = TemplateSlideUse.EDIT, [2] = TemplateSlideUse.EDIT }.ToTemplateSlideUses(template);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.Slides.Select(slide => slide.IsEditable), Is.EqualTo(new[] { true, false }), "The test needs one slide which the model can edit and one which it cannot.");
             Assert.That(uses, Is.EqualTo(new[] { TemplateSlideUse.EDIT, TemplateSlideUse.KEEP }), "An organization may lock the choice, so it must not block the form.");
-        });
+        }
     }
 
     [Test]

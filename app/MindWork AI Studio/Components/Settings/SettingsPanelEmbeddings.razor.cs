@@ -210,20 +210,20 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             // sentence below, which used to be the same one for a missing API key, an unreachable
             // provider and a provider which cannot embed anything at all:
             //
-            await this.DialogService.ShowMessageBox(T("Embedding Result"), exception.UserMessage, T("Close"));
+            await this.DialogService.ShowMessageBoxAsync(T("Embedding Result"), exception.UserMessage, T("Close"));
             return;
         }
 
         if (embeddings.Count == 0)
         {
-            await this.DialogService.ShowMessageBox(T("Embedding Result"), T("No embedding was returned."), T("Close"));
+            await this.DialogService.ShowMessageBoxAsync(T("Embedding Result"), T("No embedding was returned."), T("Close"));
             return;
         }
 
         var vector = embeddings.FirstOrDefault();
         if (vector is null || vector.Count == 0)
         {
-            await this.DialogService.ShowMessageBox(T("Embedding Result"), T("No embedding was returned."), T("Close"));
+            await this.DialogService.ShowMessageBoxAsync(T("Embedding Result"), T("No embedding was returned."), T("Close"));
             return;
         }
 

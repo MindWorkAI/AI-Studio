@@ -1,8 +1,8 @@
 @using AIStudio.Tools.ChatArchive
 @inherits MSGComponentBase
 
-<MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" PanelClass="pa-4">
-    <MudTabPanel Text="@T("Back up")" Icon="@Icons.Material.Filled.Archive" Disabled="@(this.isBusy || this.DataRestoreService.IsPreparing)">
+<MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" TabPanelsClass="pa-4">
+    <MudTabPanel Text="@T("Back up")" Icon="@AppIcons.BACKUP" Disabled="@(this.isBusy || this.DataRestoreService.IsPreparing)">
 
         <MudText Typo="Typo.body1" Class="mb-3">
             @T("Back up all your data into one file: your settings, chats, plugins, and the indexes of your data sources. Your API keys and passwords stay out of it. AI Studio keeps them in the secure storage of your OS.")
@@ -15,7 +15,7 @@
                 <MudText Typo="Typo.body2">
                     @this.BackupProgressText
                 </MudText>
-                <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@this.DataBackupService.Cancel">
+                <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.CANCEL" OnClick="@this.DataBackupService.Cancel">
                     @T("Cancel")
                 </MudButton>
             </MudStack>
@@ -25,7 +25,7 @@
         }
         else
         {
-            <LockableButton Text="@T("Back up data")" Icon="@Icons.Material.Filled.Save" OnClickAsync="@this.StartBackupAsync" Disabled="@(() => this.isBusy)" IsLocked="@(() => !this.AllowBackup)" NoMargin="@true"/>
+            <LockableButton Text="@T("Back up data")" Icon="@AppIcons.BACKUP" OnClickAsync="@this.StartBackupAsync" Disabled="@(() => this.isBusy)" IsLocked="@(() => !this.AllowBackup)" NoMargin="@true"/>
 
             @if (this.DataBackupService.LastResult is { } backupResult)
             {
@@ -63,7 +63,7 @@
         }
 
     </MudTabPanel>
-    <MudTabPanel Text="@T("Restore")" Icon="@Icons.Material.Filled.SettingsBackupRestore" Disabled="@(this.isBusy || this.DataBackupService.IsRunning)">
+    <MudTabPanel Text="@T("Restore")" Icon="@AppIcons.RESTORE_BACKUP" Disabled="@(this.isBusy || this.DataBackupService.IsRunning)">
 
         <MudText Typo="Typo.body1" Class="mb-3">
             @T("Restore a backup: replace all your data with those of the backup, e.g., on a new computer, or add only its chats to the chats you have.")
@@ -77,7 +77,7 @@
         }
 
         <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-3">
-            <LockableButton Text="@T("Choose backup")" Icon="@Icons.Material.Filled.FolderOpen" OnClickAsync="@this.ChooseArchiveAsync" Disabled="@(() => this.isBusy || this.DataRestoreService.IsPreparing)" IsLocked="@(() => !this.AllowRestore)" NoMargin="@true"/>
+            <LockableButton Text="@T("Choose backup")" Icon="@AppIcons.BROWSE" OnClickAsync="@this.ChooseArchiveAsync" Disabled="@(() => this.isBusy || this.DataRestoreService.IsPreparing)" IsLocked="@(() => !this.AllowRestore)" NoMargin="@true"/>
             @if (!string.IsNullOrWhiteSpace(this.selectedArchivePath))
             {
                 <MudText Typo="Typo.body2">
@@ -130,14 +130,14 @@
                         <MudText Typo="Typo.body2">
                             @this.RestoreProgressText
                         </MudText>
-                        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@this.DataRestoreService.Cancel">
+                        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.CANCEL" OnClick="@this.DataRestoreService.Cancel">
                             @T("Cancel")
                         </MudButton>
                     </MudStack>
                 }
                 else
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.RestorePage" OnClick="@this.StartRestoreAsync" Disabled="@(this.isBusy || !this.CanRestore)">
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@AppIcons.RESTORE_BACKUP" OnClick="@this.StartRestoreAsync" Disabled="@(this.isBusy || !this.CanRestore)">
                         @T("Replace all data")
                     </MudButton>
                 }
@@ -172,7 +172,7 @@
                         <MudText Typo="Typo.body2">
                             @string.Format(T("Chat {0} of {1}"), this.importProgress.ProcessedChats + 1, this.importProgress.TotalChats)
                         </MudText>
-                        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@this.CancelImport">
+                        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.CANCEL" OnClick="@this.CancelImport">
                             @T("Cancel")
                         </MudButton>
                     </MudStack>
@@ -182,7 +182,7 @@
                 }
                 else
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="@this.StartImportAsync" Disabled="@(this.isBusy || !this.CanImport)">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.IMPORT" OnClick="@this.StartImportAsync" Disabled="@(this.isBusy || !this.CanImport)">
                         @this.AddChatsText(backupPreview.Manifest.TotalChatCount)
                     </MudButton>
                 }

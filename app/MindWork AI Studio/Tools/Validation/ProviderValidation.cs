@@ -131,7 +131,7 @@ public sealed class ProviderValidation
         if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
             return null;
 
-        if (!inferenceProvider.SupportsChat())
+        if (!inferenceProvider.SupportsChat)
             return TB("Please select an Hugging Face inference provider.");
 
         return null;
@@ -165,7 +165,7 @@ public sealed class ProviderValidation
         if (inferenceProvider is HFInferenceProvider.NONE)
             return TB("Please select an Hugging Face inference provider.");
 
-        if (!inferenceProvider.SupportsEmbeddings())
+        if (!inferenceProvider.SupportsEmbeddings)
             return TB("This Hugging Face inference provider does not create embeddings. Please select another one.");
 
         return null;
@@ -188,7 +188,7 @@ public sealed class ProviderValidation
         if (inferenceProvider is HFInferenceProvider.NONE)
             return TB("Please select an Hugging Face inference provider.");
 
-        if (!inferenceProvider.SupportsTranscription())
+        if (!inferenceProvider.SupportsTranscription)
             return TB("This Hugging Face inference provider does not transcribe audio. Please select another one.");
 
         return null;

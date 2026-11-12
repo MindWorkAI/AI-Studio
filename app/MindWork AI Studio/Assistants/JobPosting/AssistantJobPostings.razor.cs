@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.JobPosting;
@@ -11,6 +12,9 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     
     protected override string Description => T("Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.");
     
+    // The prompt of this assistant forbids questions, so the chat gets a prompt of its own, which keeps the role and the language:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
+
     protected override string SystemPrompt => 
         $"""
         You are an experienced specialist in personnel matters. You write job postings.
@@ -39,6 +43,23 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
         ---
         
         You write the job posting in the following language: {this.SystemPromptLanguage()}.
+        """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues a job posting, for follow-up questions about it.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You are an experienced specialist in personnel matters. You write job postings and follow the usual guidelines
+        in the country of the posting. You ensure that no individuals are discriminated against or excluded by a job
+        posting. The user had a job posting written: the conversation so far holds the details the user gave and the
+        job posting. Now you answer the user's follow-up questions about the job posting, e.g., why it asks for a
+        qualification or how inclusive a wording is, and you revise the job posting when the user asks for it. A revised
+        version is always the complete job posting, in Markdown, with the structure of the job posting in this
+        conversation.
+
+        You write the job posting in the following language: {this.SystemPromptLanguage()}.
+        Answer questions in the language the user writes in.
         """;
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
@@ -173,16 +194,9 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
         state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_JOB_POSTING_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputJobDescription = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputJobDescription = payload.Text;
 
     #endregion
     
@@ -218,7 +232,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
     
     private string UserPromptMandatoryInformation()
@@ -331,7 +345,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     
     private async Task CreateJobPosting()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

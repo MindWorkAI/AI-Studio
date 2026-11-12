@@ -31,6 +31,6 @@ public static class ToolCallingMessages
     /// </remarks>
     /// <param name="statusCode">The status code the provider answered with.</param>
     public static async Task SendToolCallingRequestFailedAsync(int statusCode) => await MessageBus.INSTANCE.SendError(new(
-        Icons.Material.Filled.Build,
+        AppIcons.TOOL,
         string.Format(TB("The tool calling request failed with status code {0}. See the logs for details."), statusCode)));
 }

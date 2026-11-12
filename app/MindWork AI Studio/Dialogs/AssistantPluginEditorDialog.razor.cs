@@ -45,7 +45,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
     private bool isFullscreen;
 
     private bool CanSave => this.plugin is not null && !this.isLoading && !this.isSaving;
-    private string FullscreenIcon => this.isFullscreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen;
+    private string FullscreenIcon => this.isFullscreen ? AppIcons.EXIT_FULLSCREEN : AppIcons.FULLSCREEN;
     private string FullscreenLabel => this.isFullscreen ? T("Exit fullscreen") : T("Fullscreen");
 
     private Func<string> Result2Copy => () => string.IsNullOrEmpty(this.pluginFile) ? string.Empty : this.pluginFile;

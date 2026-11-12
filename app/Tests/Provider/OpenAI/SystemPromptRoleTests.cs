@@ -33,7 +33,7 @@ public sealed class SystemPromptRoleTests
     {
         var profile = LLMProviders.OPEN_AI.GetModelProfile(new Model(modelId, null));
 
-        Assert.That(profile.SystemPromptRole.ToOpenAIRole(), Is.EqualTo(role));
+        Assert.That(profile.SystemPromptRole.OpenAIRole, Is.EqualTo(role));
     }
 
     [Test]
@@ -43,6 +43,6 @@ public sealed class SystemPromptRoleTests
         // A model the rules do not know is almost always a new one, and the older generations which
         // still want "system" say so in their families.
         //
-        Assert.That(SystemPromptRole.UNKNOWN.ToOpenAIRole(), Is.EqualTo("developer"));
+        Assert.That(SystemPromptRole.UNKNOWN.OpenAIRole, Is.EqualTo("developer"));
     }
 }

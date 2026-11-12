@@ -3,13 +3,13 @@
 
 <MudDialog>
     <DialogContent>
-        <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
+        <TextInfoLine Icon="@AppIcons.NAME" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
         @if (!string.IsNullOrWhiteSpace(this.DataSource.Description))
         {
             <TextInfoLines Label="@T("Description")" Value="@this.DataSource.Description" MaxLines="5" ClipboardTooltipSubject="@T("the description")"/>
         }
 
-        <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("File path")" Value="@this.DataSource.FilePath" ClipboardTooltipSubject="@T("this path")"/>
+        <TextInfoLine Icon="@AppIcons.FILE" Label="@T("File path")" Value="@this.DataSource.FilePath" ClipboardTooltipSubject="@T("this path")"/>
         @if (!this.IsFileAvailable)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
@@ -23,7 +23,7 @@
             </MudJustifiedText>
         }
 
-        <TextInfoLine Icon="@Icons.Material.Filled.Layers" Label="@T("Embedding name")" Value="@this.embeddingProvider.Name" ClipboardTooltipSubject="@T("the embedding name")"/>
+        <TextInfoLine Icon="@AppIcons.EMBEDDING_PROVIDER" Label="@T("Embedding name")" Value="@this.embeddingProvider.Name" ClipboardTooltipSubject="@T("the embedding name")"/>
         @if (this.IsCloudEmbedding)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
@@ -37,10 +37,10 @@
             </MudJustifiedText>
         }
 
-        <TextInfoLine Label="@T("Required provider confidence level")" Value="@this.DataSource.ConfidenceLevel.GetName()" ClipboardTooltipSubject="@T("the required provider confidence level")"/>
-        <TextInfoLine Icon="@Icons.Material.Filled.Shield" Label="@T("Where a chat may send data after reading this data source")" Value="@this.OutboundDataRestrictionName" ClipboardTooltipSubject="@T("where a chat may send data after reading this data source")"/>
+        <TextInfoLine Label="@T("Required provider confidence level")" Value="@this.DataSource.ConfidenceLevel.Name" ClipboardTooltipSubject="@T("the required provider confidence level")"/>
+        <TextInfoLine Icon="@AppIcons.OUTBOUND_DATA_RESTRICTION" Label="@T("Where a chat may send data after reading this data source")" Value="@this.OutboundDataRestrictionName" ClipboardTooltipSubject="@T("where a chat may send data after reading this data source")"/>
         <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
-        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("File size")" Value="@this.FileSize" ClipboardTooltipSubject="@T("the file size")"/>
+        <TextInfoLine Icon="@AppIcons.FILE_SIZE" Label="@T("File size")" Value="@this.FileSize" ClipboardTooltipSubject="@T("the file size")"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

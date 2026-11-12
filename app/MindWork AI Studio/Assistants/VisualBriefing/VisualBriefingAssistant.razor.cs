@@ -1,6 +1,7 @@
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Services;
 
@@ -146,26 +147,24 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         if (!this.SettingsManager.IsAssistantVisible(
                 ComponentKind.VISUAL_BRIEFING_ASSISTANT,
                 assistantName: T("Visual Briefing Assistant"),
-                requiredPreviewFeature: ComponentKind.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature()))
+                requiredPreviewFeature: ComponentKind.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature))
         {
             this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
             return;
         }
 
-        this.ApplyFilters([], [Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT, Event.CONFIGURATION_CHANGED]);
+        this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
         this.MediaTranscriptionService.StateChanged += this.MediaStateChanged;
         this.BuildProgressService.Changed += this.BuildProgressChanged;
         await this.ReloadListAsync();
         await this.ConsumePendingMediaOutcomesAsync();
         this.MonitorSourceStatusAsync(this.sourceMonitorCancellation.Token).Observe($"{nameof(VisualBriefingAssistant)}: monitoring the source status");
-        var deferredInstruction = this.MessageBus.TakeDeferredMessages<string>(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT).LastOrDefault();
-
-        if (!string.IsNullOrWhiteSpace(deferredInstruction))
+        if (AssistantLaunchService.TakeTextPayload(ComponentKind.VISUAL_BRIEFING_ASSISTANT) is { } textLaunchPayload && !string.IsNullOrWhiteSpace(textLaunchPayload.Text))
         {
-            if (this.selectedBriefing is null)
-                await this.CreateBriefingAsync();
-
-            this.editor.Instruction = deferredInstruction;
+            // A text sent here starts a briefing of its own, which holds what the text demands. The briefing
+            // open last belongs to other work, and its instruction would be gone:
+            await this.CreateBriefingAsync(textLaunchPayload.Restrictions);
+            this.editor.Instruction = textLaunchPayload.Text;
             await this.SaveCurrentAsync();
         }
 
@@ -204,7 +203,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         if (this.formValidationPending && this.visualBriefingForm is not null)
         {
             this.formValidationPending = false;
-            await this.visualBriefingForm.Validate();
+            await this.visualBriefingForm.ValidateAsync();
         }
 
         if (this.selectedBriefing is null || this.IsCurrentBusy)
@@ -226,7 +225,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
                 "Could not auto-save visual briefing. BriefingId={BriefingId} ExceptionType={ExceptionType}",
                 this.selectedBriefing.BriefingId,
                 exception.GetType().Name);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, T("The visual briefing settings could not be saved.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, T("The visual briefing settings could not be saved.")));
         }
     }
 
@@ -235,17 +234,6 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// </summary>
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        if (triggeredEvent is Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT && data is string text)
-        {
-            if (this.selectedBriefing is null)
-                await this.CreateBriefingAsync();
-
-            this.editor.Instruction = text;
-            await this.SaveCurrentAsync();
-            this.StateHasChanged();
-            return;
-        }
-
         if (triggeredEvent is Event.CONFIGURATION_CHANGED)
         {
             // The spellchecking setting might have changed. Since this page is not re-parameterized

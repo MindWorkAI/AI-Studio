@@ -24,10 +24,10 @@ public partial class ProfileFormSelection : MSGComponentBase
     [Inject]
     public IDialogService DialogService { get; init; } = null!;
     
-    private async Task SelectionChanged(Profile profile)
+    private async Task SelectionChanged(Profile? profile)
     {
-        this.Profile = profile;
-        await this.ProfileChanged.InvokeAsync(profile);
+        this.Profile = profile ?? Profile.NO_PROFILE;
+        await this.ProfileChanged.InvokeAsync(this.Profile);
     }
     
     private async Task OpenSettingsDialog()

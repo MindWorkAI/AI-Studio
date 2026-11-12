@@ -29,11 +29,11 @@ public sealed class ModelFamilyIndexTests
         var distill = Selector("deepseek-r1", MatchKind.SEGMENT, new() { Adds = Capability.TEXT_INPUT | Capability.FUNCTION_CALLING, Reasoning = ReasoningSupport.ALWAYS });
         var name = new ModelId("deepseek-r1-distill-llama-70b");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ModelFamilyIndex.Build([llama, distill]).Explain(name, ANY_PROVIDER, ModelVendor.UNKNOWN).Selector, Is.SameAs(distill));
             Assert.That(ModelFamilyIndex.Build([distill, llama]).Explain(name, ANY_PROVIDER, ModelVendor.UNKNOWN).Selector, Is.SameAs(distill), "The order the rules arrive in must not change the answer.");
-        });
+        }
     }
 
     [Test]
@@ -47,11 +47,11 @@ public sealed class ModelFamilyIndexTests
         var chat = Selector("gpt-5-chat", MatchKind.PREFIX, new() { Adds = Capability.TEXT_INPUT, Reasoning = ReasoningSupport.NONE });
         var index = ModelFamilyIndex.Build([reasoning, chat]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(index.Resolve(new ModelId("gpt-5-chat-latest"), ANY_PROVIDER, ModelVendor.UNKNOWN).Reasoning, Is.EqualTo(ReasoningSupport.NONE));
             Assert.That(index.Resolve(new ModelId("gpt-5-pro"), ANY_PROVIDER, ModelVendor.UNKNOWN).Reasoning, Is.EqualTo(ReasoningSupport.ALWAYS));
-        });
+        }
     }
 
     [Test]
@@ -79,11 +79,11 @@ public sealed class ModelFamilyIndexTests
         var index = ModelFamilyIndex.Build([openWeights, commercial]);
         var name = new ModelId("qwq-32b");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(index.Explain(name, LLMProviders.ALIBABA_CLOUD, ModelVendor.UNKNOWN).Selector, Is.SameAs(commercial));
             Assert.That(index.Explain(name, LLMProviders.SELF_HOSTED, ModelVendor.UNKNOWN).Selector, Is.SameAs(openWeights));
-        });
+        }
     }
 
     [Test]
@@ -98,11 +98,11 @@ public sealed class ModelFamilyIndexTests
         var baseCheckpoint = Modifier("base", MatchKind.SEGMENT, new() { Removes = Capability.FUNCTION_CALLING });
         var index = ModelFamilyIndex.Build([family, baseCheckpoint]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(index.Resolve(new ModelId("llama-3.3-70b"), ANY_PROVIDER, ModelVendor.UNKNOWN).Has(Capability.FUNCTION_CALLING), Is.True);
             Assert.That(index.Resolve(new ModelId("llama-3.3-70b-base"), ANY_PROVIDER, ModelVendor.UNKNOWN).Has(Capability.FUNCTION_CALLING), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -113,11 +113,11 @@ public sealed class ModelFamilyIndexTests
         var narrow = Modifier("instruct-nano", MatchKind.SEGMENT, new() { Removes = Capability.FUNCTION_CALLING });
         var resolution = ModelFamilyIndex.Build([narrow, broad, family]).Explain(new ModelId("llama-3.3-instruct-nano"), ANY_PROVIDER, ModelVendor.UNKNOWN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(resolution.Modifiers.Select(modifier => modifier.Pattern.Text), Is.EqualTo(new[] { "instruct", "instruct-nano" }));
             Assert.That(resolution.Profile.Has(Capability.FUNCTION_CALLING), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -154,12 +154,12 @@ public sealed class ModelFamilyIndexTests
         var oneWay = ModelFamilyIndex.Build([one, other]).Explain(name, ANY_PROVIDER, ModelVendor.UNKNOWN);
         var otherWay = ModelFamilyIndex.Build([other, one]).Explain(name, ANY_PROVIDER, ModelVendor.UNKNOWN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(oneWay.IsAmbiguous, Is.True);
             Assert.That(otherWay.IsAmbiguous, Is.True);
             Assert.That(oneWay.Selector, Is.SameAs(otherWay.Selector), "Which of the two answers must not depend on the order they arrived in.");
-        });
+        }
     }
 
     [Test]
@@ -190,11 +190,11 @@ public sealed class ModelFamilyIndexTests
         var index = ModelFamilyIndex.Build([Selector("llama", MatchKind.SEGMENT, new() { Adds = Capability.TEXT_INPUT })]);
         var resolution = index.Explain(new ModelId("something-nobody-wrote-a-rule-for"), ANY_PROVIDER, ModelVendor.UNKNOWN);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(resolution.IsKnown, Is.False);
             Assert.That(resolution.Profile, Is.EqualTo(ModelProfile.UNKNOWN));
-        });
+        }
     }
 
     [Test]
@@ -227,11 +227,11 @@ public sealed class ModelFamilyIndexTests
         //
         var index = ModelFamilyIndex.Build([Selector("GPT-5", MatchKind.PREFIX, new() { Adds = Capability.TEXT_INPUT })]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(index.Rules.Where(rule => !rule.Pattern.IsWellFormed), Is.Not.Empty);
             Assert.That(index.Explain(new ModelId("gpt-5.1"), ANY_PROVIDER, ModelVendor.UNKNOWN).IsKnown, Is.False);
-        });
+        }
     }
 
     private static ModelRule Selector(string text, MatchKind kind, ModelProfileChange change, string origin = "test") => new(new() { Kind = kind, Text = text }, ModelRuleKind.SELECTOR, change, origin);

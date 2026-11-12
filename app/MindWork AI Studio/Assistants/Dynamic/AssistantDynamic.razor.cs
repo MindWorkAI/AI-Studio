@@ -29,6 +29,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     
     protected override string Title => this.title;
     protected override string Description => this.description;
+    protected override ChatSystemPromptChoice ChatSystemPrompt => this.assistantPlugin?.ChatSystemPrompt ?? ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
     protected override string SystemPrompt => this.systemPrompt;
     protected override bool AllowProfiles => this.allowProfiles;
     protected override bool ShowProfileSelection => this.showFooterProfileSelection;
@@ -308,7 +309,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         if (updatedPlugin is not null && !updatedPlugin.StartsChatDirectly)
             this.ApplyUpdatedAssistantPlugin(updatedPlugin);
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.REVISE_ASSISTANT, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
 
@@ -326,7 +327,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         var result = await this.DirectChatService.TryCreateAssistantChatAsync(launcherPlugin);
         if (result.Request is null)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
+            await this.MessageBus.SendError(new(AppIcons.ERROR, result.ErrorMessage));
             this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
             return;
         }

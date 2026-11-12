@@ -18,7 +18,7 @@ public interface IDataSource : IDataSourceBase
     /// <summary>
     /// The maximum number of matches one retrieval returns. Searched page by page, it is the size of a page.
     /// </summary>
-    public ushort MaxMatches { get; init; }
+    public ushort MaxMatches { get; set; }
 
     /// <summary>
     /// Where a chat may still send data, once content of this data source reached it.
@@ -29,7 +29,7 @@ public interface IDataSource : IDataSourceBase
     /// DataSourceSecuritySettings.MinimumOutboundDataRestriction, and so does a data source which only
     /// self-hosted providers may see.
     /// </remarks>
-    public OutboundDataRestriction OutboundDataRestriction { get; init; }
+    public OutboundDataRestriction OutboundDataRestriction { get; set; }
 
     /// <summary>
     /// The last page which can be retrieved from this data source.
@@ -37,7 +37,9 @@ public interface IDataSource : IDataSourceBase
     /// <remarks>
     /// By default, as many pages as RetrievalPaging.GetLastPage allows for the page size. A data
     /// source which cannot page that far says so itself. It is a method rather than a property, so
-    /// that it never ends up in the settings.
+    /// that it never ends up in the settings.<br/><br/>
+    /// These pages hold a number of matches each. Semantic Search cuts them into pages of its own,
+    /// by the length of the passages, see SemanticSearchTool.SearchAsync.
     /// </remarks>
     /// <returns>The number of the last page, which is at least 1.</returns>
     public int GetLastPage() => RetrievalPaging.GetLastPage(this.MaxMatches);

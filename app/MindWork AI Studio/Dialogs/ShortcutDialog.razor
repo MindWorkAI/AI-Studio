@@ -15,9 +15,8 @@
                 Label="@T("Define a shortcut")"
                 Placeholder="@T("Press a key combination...")"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Keyboard"
+                AdornmentIcon="@AppIcons.KEYBOARD_SHORTCUT"
                 Immediate="@true"
-                TextUpdateSuppression="false"
                 OnKeyDown="@this.HandleKeyDown"
                 OnBlur="@this.HandleBlur"
                 UserAttributes="@USER_INPUT_ATTRIBUTES"
@@ -36,7 +35,7 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.ClearShortcut" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Clear">
+        <MudButton OnClick="@this.ClearShortcut" Variant="Variant.Filled" Color="Color.Info" StartIcon="@AppIcons.CLEAR">
             @T("Clear Shortcut")
         </MudButton>
         <MudSpacer/>

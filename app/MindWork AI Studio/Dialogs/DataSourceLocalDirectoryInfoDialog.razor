@@ -3,18 +3,19 @@
 
 <MudDialog>
     <DialogContent>
-        <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
+        <TextInfoLine Icon="@AppIcons.NAME" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
         @if (!string.IsNullOrWhiteSpace(this.DataSource.Description))
         {
             <TextInfoLines Label="@T("Description")" Value="@this.DataSource.Description" MaxLines="5" ClipboardTooltipSubject="@T("the description")"/>
         }
 
-        <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("Path")" Value="@this.DataSource.Path" ClipboardTooltipSubject="@T("this path")"/>
-        <TextInfoLine Icon="@Icons.Material.Filled.AccountTree" Label="@T("Include subfolders")" Value="@(this.DataSource.IncludeSubdirectories ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether subfolders are included")"/>
-        <TextInfoLine Icon="@Icons.Material.Filled.VisibilityOff" Label="@T("Include hidden files and folders")" Value="@(this.DataSource.IncludeHiddenFilesAndFolders ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether hidden files and folders are included")"/>
-        <TextInfoLine Icon="@Icons.Material.Filled.FilterAlt" Label="@T("File patterns")" Value="@this.DataSource.EffectiveFilePatterns" ClipboardTooltipSubject="@T("the file patterns")"/>
-        <TextInfoLines Label="@T("Excluded files and folders")" Value="@this.DataSource.EffectiveExcludePatterns" ClipboardTooltipSubject="@T("the excluded files and folders")"/>
-        <TextInfoLine Icon="@Icons.Material.Filled.Straighten" Label="@T("Ignore files larger than")" Value="@FolderFileSelection.MegabytesToBytes(this.DataSource.EffectiveMaxFileSizeMegabytes).FileSize()" ClipboardTooltipSubject="@T("the size limit for files")"/>
+        <TextInfoLine Icon="@AppIcons.FOLDER" Label="@T("Path")" Value="@this.DataSource.Path" ClipboardTooltipSubject="@T("this path")"/>
+        <TextInfoLine Icon="@AppIcons.INCLUDE_SUBFOLDERS" Label="@T("Include subfolders")" Value="@(this.DataSource.IncludeSubdirectories ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether subfolders are included")"/>
+        <TextInfoLine Icon="@AppIcons.HIDDEN" Label="@T("Include hidden files and folders")" Value="@(this.DataSource.IncludeHiddenFilesAndFolders ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether hidden files and folders are included")"/>
+        <TextInfoLines Icon="@AppIcons.FILE_FILTER" Label="@T("Files to include")" Value="@this.DataSource.EffectiveFilePatterns" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the file patterns")"/>
+        <TextInfoLines Icon="@AppIcons.EXCLUDED_FOLDERS" Label="@T("Excluded folders")" Value="@this.Exclusions.Folders" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the excluded folders")"/>
+        <TextInfoLines Icon="@AppIcons.EXCLUDED_FILES" Label="@T("Excluded files")" Value="@this.Exclusions.Files" Lines="1" MaxLines="@FilePatternSelection.MAX_FIELD_LINES" ClipboardTooltipSubject="@T("the excluded files")"/>
+        <TextInfoLine Icon="@AppIcons.FILE_SIZE" Label="@T("Ignore files larger than")" Value="@FolderFileSelection.MegabytesToBytes(this.DataSource.EffectiveMaxFileSizeMegabytes).FileSize()" ClipboardTooltipSubject="@T("the size limit for files")"/>
         @if (!this.IsDirectoryAvailable)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
@@ -28,7 +29,7 @@
             </MudJustifiedText>
         }
 
-        <TextInfoLine Icon="@Icons.Material.Filled.Layers" Label="@T("Embedding name")" Value="@this.embeddingProvider.Name" ClipboardTooltipSubject="@T("the embedding name")"/>
+        <TextInfoLine Icon="@AppIcons.EMBEDDING_PROVIDER" Label="@T("Embedding name")" Value="@this.embeddingProvider.Name" ClipboardTooltipSubject="@T("the embedding name")"/>
         @if (this.IsCloudEmbedding)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
@@ -42,11 +43,11 @@
             </MudJustifiedText>
         }
 
-        <TextInfoLine Label="@T("Required provider confidence level")" Value="@this.DataSource.ConfidenceLevel.GetName()" ClipboardTooltipSubject="@T("the required provider confidence level")"/>
-        <TextInfoLine Icon="@Icons.Material.Filled.Shield" Label="@T("Where a chat may send data after reading this data source")" Value="@this.OutboundDataRestrictionName" ClipboardTooltipSubject="@T("where a chat may send data after reading this data source")"/>
+        <TextInfoLine Label="@T("Required provider confidence level")" Value="@this.DataSource.ConfidenceLevel.Name" ClipboardTooltipSubject="@T("the required provider confidence level")"/>
+        <TextInfoLine Icon="@AppIcons.OUTBOUND_DATA_RESTRICTION" Label="@T("Where a chat may send data after reading this data source")" Value="@this.OutboundDataRestrictionName" ClipboardTooltipSubject="@T("where a chat may send data after reading this data source")"/>
         <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
 
-        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Number of matching files")" Value="@this.NumberFilesInDirectory" ClipboardTooltipSubject="@T("the number of matching files in the directory")"/>
+        <TextInfoLine Icon="@AppIcons.FILE_COUNT" Label="@T("Number of matching files")" Value="@this.NumberFilesInDirectory" ClipboardTooltipSubject="@T("the number of matching files in the directory")"/>
         <TextInfoLines Label="@T("Matching files")" MaxLines="14" Value="@this.directoryFilesText" ClipboardTooltipSubject="@T("the matching files list")"/>
         @if (this.directorySizeNumFiles > 100)
         {
@@ -55,7 +56,7 @@
             </MudJustifiedText>
         }
         
-        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Total size of matching files")" Value="@this.directorySizeBytes.FileSize()" ClipboardTooltipSubject="@T("the total size of matching files")"/>
+        <TextInfoLine Icon="@AppIcons.FILE_SIZE" Label="@T("Total size of matching files")" Value="@this.directorySizeBytes.FileSize()" ClipboardTooltipSubject="@T("the total size of matching files")"/>
     </DialogContent>
     <DialogActions>
         @if (this.IsOperationInProgress)

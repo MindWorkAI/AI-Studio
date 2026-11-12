@@ -69,7 +69,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
-    private FileExportNotifications FileExportNotifications => this.fileExportNotifications ??= new(this.Snackbar);
+    private FileExportNotifications FileExportNotifications => field ??= new(this.Snackbar);
 
     private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
     
@@ -81,11 +81,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool navBarOpen;
     private bool performingUpdate;
     private UpdateResponse? currentUpdateResponse;
-    private MudThemeProvider themeProvider = null!;
+    private MudMarkdownThemeProvider themeProvider = null!;
     private bool useDarkMode;
     private bool startupCompleted;
     private bool settingsWriteProtectionWarningShown;
-    private FileExportNotifications? fileExportNotifications;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim dataRestorePendingDialogSemaphore = new(1, 1);
@@ -211,12 +210,15 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
         this.Snackbar.Add(message, Severity.Warning, config =>
         {
-            config.Icon = Icons.Material.Filled.WarningAmber;
+            config.Icon = AppIcons.WARNING;
             config.IconSize = Size.Large;
             config.VisibleStateDuration = 32_000;
             config.HideTransitionDuration = 600;
             config.Action = T("Check for updates");
             config.ActionVariant = Variant.Filled;
+
+            // MudBlazor keeps a snackbar with an action until the user closes it; this one disappears after its time:
+            config.RequireInteraction = false;
             config.OnClick = async _ =>
             {
                 await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
@@ -258,7 +260,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                         var message = string.Format(T("An update to version {0} is available."), updateResponse.NewVersion);
                         this.Snackbar.Add(message, Severity.Info, config =>
                         {
-                            config.Icon = Icons.Material.Filled.Update;
+                            config.Icon = AppIcons.APP_UPDATE;
                             config.IconSize = Size.Large;
                             config.HideTransitionDuration = 600;
                             config.VisibleStateDuration = 32_000;
@@ -268,6 +270,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             };
                             config.Action = T("Show details");
                             config.ActionVariant = Variant.Filled;
+
+                            // MudBlazor keeps a snackbar with an action until the user closes it; this one disappears after its time:
+                            config.RequireInteraction = false;
                         });
                     }
 
@@ -481,8 +486,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private IEnumerable<NavBarItem> GetNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
-        var activityIndicatorLightColor = this.ColorTheme.GetActivityIndicatorLightColor();
-        var activityIndicatorDarkColor = this.ColorTheme.GetActivityIndicatorDarkColor();
+        var activityIndicatorLightColor = this.ColorTheme.ActivityIndicatorLightColor;
+        var activityIndicatorDarkColor = this.ColorTheme.ActivityIndicatorDarkColor;
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
         var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
@@ -495,17 +500,17 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var assistantsLightColor = hasActiveAssistantWork ? activityIndicatorLightColor : defaultLightColor;
         var assistantsDarkColor = hasActiveAssistantWork ? activityIndicatorDarkColor : defaultDarkColor;
         
-        yield return new(T("Home"), Icons.Material.Filled.Home, defaultLightColor, defaultDarkColor, Routes.HOME, true);
-        yield return new(T("Chat"), Icons.Material.Filled.Chat, chatLightColor, chatDarkColor, Routes.CHAT, false);
-        yield return new(T("Assistants"), Icons.Material.Filled.Apps, assistantsLightColor, assistantsDarkColor, Routes.ASSISTANTS, false);
+        yield return new(T("Home"), AppIcons.HOME, defaultLightColor, defaultDarkColor, Routes.HOME, true);
+        yield return new(T("Chat"), AppIcons.CHAT, chatLightColor, chatDarkColor, Routes.CHAT, false);
+        yield return new(T("Assistants"), AppIcons.ASSISTANTS, assistantsLightColor, assistantsDarkColor, Routes.ASSISTANTS, false);
 
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
-            yield return new(T("Writer"), Icons.Material.Filled.Create, defaultLightColor, defaultDarkColor, Routes.WRITER, false);
+            yield return new(T("Writer"), AppIcons.WRITER, defaultLightColor, defaultDarkColor, Routes.WRITER, false);
 
-        yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, defaultLightColor, defaultDarkColor, Routes.PLUGINS, false);
-        yield return new(T("Supporters"), Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
-        yield return new(T("Information"), Icons.Material.Filled.Info, defaultLightColor, defaultDarkColor, Routes.ABOUT, false);
-        yield return new(T("Settings"), Icons.Material.Filled.Settings, defaultLightColor, defaultDarkColor, Routes.SETTINGS, false);
+        yield return new(T("Plugins"), AppIcons.PLUGIN, defaultLightColor, defaultDarkColor, Routes.PLUGINS, false);
+        yield return new(T("Supporters"), AppIcons.SUPPORTERS, this.ColorTheme.PaletteLight.Error.Value, this.ColorTheme.PaletteDark.ErrorLighten, Routes.SUPPORTERS, false);
+        yield return new(T("Information"), AppIcons.INFO, defaultLightColor, defaultDarkColor, Routes.ABOUT, false);
+        yield return new(T("Settings"), AppIcons.SETTINGS, defaultLightColor, defaultDarkColor, Routes.SETTINGS, false);
     }
 
     private void LoadEmbeddingItem()
@@ -527,14 +532,14 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         (string icon, string lightcolor, string darkcolor) embeddingIcon = this.embeddingOverview.State switch
         {
-            DataSourceEmbeddingState.QUEUED => (Icons.Material.Filled.Sync, palette.Info.Value, "#1976d2"),
-            DataSourceEmbeddingState.RUNNING => (Icons.Material.Filled.Sync, palette.Warning.Value, "#d29f00"),
-            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => (Icons.Material.Filled.Error, palette.Error.Value, "#d32f2f"),
-            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING => (Icons.Material.Filled.Warning, palette.Warning.Value, "#d29f00"),
+            DataSourceEmbeddingState.QUEUED => (AppIcons.EMBEDDING_IN_PROGRESS, palette.Info.Value, "#1976d2"),
+            DataSourceEmbeddingState.RUNNING => (AppIcons.EMBEDDING_IN_PROGRESS, palette.Warning.Value, "#d29f00"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => (AppIcons.ERROR, palette.Error.Value, "#d32f2f"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING => (AppIcons.WARNING, palette.Warning.Value, "#d29f00"),
 
             // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible
             // icon does not draw attention while there is nothing to attend to:
-            _ => (Icons.Material.Filled.LibraryAddCheck, palette.DarkLighten, palette.GrayLight),
+            _ => (AppIcons.DATA_SOURCES_UP_TO_DATE, palette.DarkLighten, palette.GrayLight),
         };
         this.embeddingItem = new NavBarItem(T("Data sources"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
     }

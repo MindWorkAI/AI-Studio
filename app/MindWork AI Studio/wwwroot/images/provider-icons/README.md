@@ -14,7 +14,7 @@ The icons serve the LLM providers as well as the mail providers of the mailbox d
 - `groq.svg` is adapted from the [Groq site icon](https://groq.com/favicon.svg).
 - `requesty.svg` is adapted from the [Requesty site icon](https://www.requesty.ai/apple-icon.png).
 - `litellm.svg` is the bullet train emoji from [Twemoji 17.0.3](https://github.com/jdecked/twemoji/tree/v17.0.3), licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). LiteLLM has no mark of its own and identifies itself with that emoji. Retrieved on 2026-08-30.
-- `provider*.svg` and `self-hosted*.svg` are neutral project-owned fallback graphics.
+- `provider*.svg` and `self-hosted*.svg` are the neutral fallback graphics: the icons `cpu-ai` and `server` from [Lucide 1.71.0](https://github.com/lucide-icons/lucide/tree/1.71.0), licensed under [ISC](https://github.com/lucide-icons/lucide/blob/1.71.0/LICENSE), with the stroke colors `#5F6368` for light and `#E8EAED` for dark surfaces. They match the icons AI Studio shows for LLM providers and servers; when Lucide is updated, take them from the same release, see `app/SourceGeneratedMappings/Lucide/README.md`.
 - `gwdg.svg`, `openrouter.svg`, `google.svg` and `helmholtz.svg` were created by taking the official logo from their respective websites as images and creating a svg from them.
 
 The `-dark` files are contrast variants for dark surfaces. All product names, logos, and trademarks remain the property of their respective owners. Their inclusion identifies compatible services and does not imply endorsement. Sources were retrieved on 2026-08-24.

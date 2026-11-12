@@ -30,366 +30,586 @@ public static class LLMProvidersExtensions
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(LLMProvidersExtensions).Namespace, nameof(LLMProvidersExtensions));
     
-    /// <summary>
-    /// Returns the human-readable name of the provider.
-    /// </summary>
-    /// <remarks>
-    /// This value is UI text and may be localized. Do not use it for persisted IDs, secret namespaces,
-    /// or other stable identifiers.
-    /// </remarks>
-    /// <param name="llmProvider">The provider.</param>
-    /// <returns>The human-readable name of the provider.</returns>
-    public static string ToName(this LLMProviders llmProvider) => llmProvider.ToName(translate: true);
-
-    /// <summary>
-    /// Returns the human-readable name of the provider.
-    /// </summary>
-    /// <param name="llmProvider">The provider.</param>
-    /// <param name="translate">Whether generic provider names should be translated.</param>
-    /// <returns>The human-readable name of the provider.</returns>
-    public static string ToName(this LLMProviders llmProvider, bool translate) => llmProvider switch
+    /// <param name="provider">The provider.</param>
+    extension(LLMProviders provider)
     {
-        LLMProviders.NONE => translate ? TB("No provider selected") : "No provider selected",
-        
-        LLMProviders.OPEN_AI => "OpenAI",
-        LLMProviders.ANTHROPIC => "Anthropic",
-        LLMProviders.MISTRAL => "Mistral",
-        LLMProviders.GOOGLE => "Google",
-        LLMProviders.X => "xAI",
-        LLMProviders.DEEP_SEEK => "DeepSeek",
-        LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
-        LLMProviders.PERPLEXITY => "Perplexity",
-        LLMProviders.OPEN_ROUTER => "OpenRouter",
-        LLMProviders.HETZNER => "Hetzner (Experimental)",
-        LLMProviders.IONOS => "IONOS",
-        LLMProviders.LITE_LLM => "LiteLLM",
-        LLMProviders.REQUESTY => "Requesty",
+        /// <summary>
+        /// Returns the human-readable name of the provider.
+        /// </summary>
+        /// <remarks>
+        /// This value is UI text and may be localized. Do not use it for persisted IDs, secret namespaces,
+        /// or other stable identifiers.
+        /// </remarks>
+        /// <value>The human-readable name of the provider.</value>
+        public string Name => provider.ToName(translate: true);
 
-        LLMProviders.GROQ => "Groq",
-        LLMProviders.FIREWORKS => "Fireworks.ai",
-        LLMProviders.HUGGINGFACE => "Hugging Face",
+        /// <summary>
+        /// Returns the human-readable name of the provider.
+        /// </summary>
+        /// <param name="translate">Whether generic provider names should be translated.</param>
+        /// <returns>The human-readable name of the provider.</returns>
+        public string ToName(bool translate) => provider switch
+        {
+            LLMProviders.NONE => translate ? TB("No provider selected") : "No provider selected",
+        
+            LLMProviders.OPEN_AI => "OpenAI",
+            LLMProviders.ANTHROPIC => "Anthropic",
+            LLMProviders.MISTRAL => "Mistral",
+            LLMProviders.GOOGLE => "Google",
+            LLMProviders.X => "xAI",
+            LLMProviders.DEEP_SEEK => "DeepSeek",
+            LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
+            LLMProviders.PERPLEXITY => "Perplexity",
+            LLMProviders.OPEN_ROUTER => "OpenRouter",
+            LLMProviders.HETZNER => "Hetzner (Experimental)",
+            LLMProviders.IONOS => "IONOS",
+            LLMProviders.LITE_LLM => "LiteLLM",
+            LLMProviders.REQUESTY => "Requesty",
 
-        LLMProviders.SELF_HOSTED => translate ? TB("Self-hosted") : "Self-hosted",
-        
-        LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
-        LLMProviders.GWDG => "GWDG SAIA",
-        
-        _ => translate ? TB("Unknown") : "Unknown",
-    };
+            LLMProviders.GROQ => "Groq",
+            LLMProviders.FIREWORKS => "Fireworks.ai",
+            LLMProviders.HUGGINGFACE => "Hugging Face",
 
-    /// <summary>
-    /// Returns the stable secret namespace for the provider.
-    /// </summary>
-    /// <remarks>
-    /// These values are used for OS keyring namespaces. They must never be localized or changed without
-    /// an explicit migration for existing API keys.
-    /// </remarks>
-    /// <param name="llmProvider">The provider.</param>
-    /// <returns>The stable secret namespace for the provider.</returns>
-    public static string ToSecretId(this LLMProviders llmProvider) => llmProvider switch
-    {
-        LLMProviders.NONE => "No provider selected",
+            LLMProviders.SELF_HOSTED => translate ? TB("Self-hosted") : "Self-hosted",
+        
+            LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
+            LLMProviders.GWDG => "GWDG SAIA",
+        
+            _ => translate ? TB("Unknown") : "Unknown",
+        };
 
-        LLMProviders.OPEN_AI => "OpenAI",
-        LLMProviders.ANTHROPIC => "Anthropic",
-        LLMProviders.MISTRAL => "Mistral",
-        LLMProviders.GOOGLE => "Google",
-        LLMProviders.X => "xAI",
-        LLMProviders.DEEP_SEEK => "DeepSeek",
-        LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
-        LLMProviders.PERPLEXITY => "Perplexity",
-        LLMProviders.OPEN_ROUTER => "OpenRouter",
-        LLMProviders.HETZNER => "Hetzner",
-        LLMProviders.IONOS => "IONOS",
-        LLMProviders.LITE_LLM => "LiteLLM",
-        LLMProviders.REQUESTY => "Requesty",
+        /// <summary>
+        /// Returns the stable secret namespace for the provider.
+        /// </summary>
+        /// <remarks>
+        /// These values are used for OS keyring namespaces. They must never be localized or changed without
+        /// an explicit migration for existing API keys.
+        /// </remarks>
+        /// <value>The stable secret namespace for the provider.</value>
+        public string SecretId => provider switch
+        {
+            LLMProviders.NONE => "No provider selected",
 
-        LLMProviders.GROQ => "Groq",
-        LLMProviders.FIREWORKS => "Fireworks.ai",
-        LLMProviders.HUGGINGFACE => "Hugging Face",
+            LLMProviders.OPEN_AI => "OpenAI",
+            LLMProviders.ANTHROPIC => "Anthropic",
+            LLMProviders.MISTRAL => "Mistral",
+            LLMProviders.GOOGLE => "Google",
+            LLMProviders.X => "xAI",
+            LLMProviders.DEEP_SEEK => "DeepSeek",
+            LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
+            LLMProviders.PERPLEXITY => "Perplexity",
+            LLMProviders.OPEN_ROUTER => "OpenRouter",
+            LLMProviders.HETZNER => "Hetzner",
+            LLMProviders.IONOS => "IONOS",
+            LLMProviders.LITE_LLM => "LiteLLM",
+            LLMProviders.REQUESTY => "Requesty",
 
-        LLMProviders.SELF_HOSTED => "Self-hosted",
+            LLMProviders.GROQ => "Groq",
+            LLMProviders.FIREWORKS => "Fireworks.ai",
+            LLMProviders.HUGGINGFACE => "Hugging Face",
 
-        LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
-        LLMProviders.GWDG => "GWDG SAIA",
+            LLMProviders.SELF_HOSTED => "Self-hosted",
 
-        _ => "Unknown",
-    };
-    
-    /// <summary>
-    /// Get a provider's confidence.
-    /// </summary>
-    /// <param name="llmProvider">The provider.</param>
-    /// <param name="settingsManager">The settings manager.</param>
-    /// <returns>The confidence of the provider.</returns>
-    public static Confidence GetConfidence(this LLMProviders llmProvider, SettingsManager settingsManager) => llmProvider switch
-    {
-        LLMProviders.NONE => Confidence.NONE,
+            LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
+            LLMProviders.GWDG => "GWDG SAIA",
+
+            _ => "Unknown",
+        };
+
+        /// <summary>
+        /// Get a provider's confidence.
+        /// </summary>
+        /// <param name="settingsManager">The settings manager.</param>
+        /// <returns>The confidence of the provider.</returns>
+        public Confidence GetConfidence(SettingsManager settingsManager) => provider switch
+        {
+            LLMProviders.NONE => Confidence.NONE,
         
-        LLMProviders.FIREWORKS => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.FIREWORKS => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        // Not trusted, because huggingface only routes you to a third-party-provider and we can't make sure they do not use your data 
-        LLMProviders.HUGGINGFACE => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://huggingface.co/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)), 
+            // Not trusted, because huggingface only routes you to a third-party-provider and we can't make sure they do not use your data 
+            LLMProviders.HUGGINGFACE => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://huggingface.co/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)), 
         
-        LLMProviders.OPEN_AI => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources(
-            "https://platform.openai.com/docs/models/default-usage-policies-by-endpoint",
-            "https://openai.com/policies/terms-of-use/",
-            "https://help.openai.com/en/articles/5722486-how-your-data-is-used-to-improve-model-performance",
-            "https://openai.com/enterprise-privacy/"
-        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.OPEN_AI => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources(
+                "https://platform.openai.com/docs/models/default-usage-policies-by-endpoint",
+                "https://openai.com/policies/terms-of-use/",
+                "https://help.openai.com/en/articles/5722486-how-your-data-is-used-to-improve-model-performance",
+                "https://openai.com/enterprise-privacy/"
+            ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        LLMProviders.GOOGLE => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://ai.google.dev/gemini-api/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.GOOGLE => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://ai.google.dev/gemini-api/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        LLMProviders.GROQ => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://wow.groq.com/terms-of-use/").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.GROQ => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://wow.groq.com/terms-of-use/").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        LLMProviders.ANTHROPIC => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.anthropic.com/legal/commercial-terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.ANTHROPIC => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.anthropic.com/legal/commercial-terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        LLMProviders.MISTRAL => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, France").WithSources("https://mistral.ai/terms/#terms-of-service-la-plateforme").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.MISTRAL => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, France").WithSources("https://mistral.ai/terms/#terms-of-service-la-plateforme").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        LLMProviders.X => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://x.ai/legal/terms-of-service-enterprise").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.X => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://x.ai/legal/terms-of-service-enterprise").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        LLMProviders.DEEP_SEEK => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.DEEP_SEEK => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        LLMProviders.ALIBABA_CLOUD => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://www.alibabacloud.com/help/en/model-studio/support/faq-about-alibaba-cloud-model-studio").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.ALIBABA_CLOUD => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://www.alibabacloud.com/help/en/model-studio/support/faq-about-alibaba-cloud-model-studio").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
             
-        LLMProviders.PERPLEXITY => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.perplexity.ai/hub/legal/perplexity-api-terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.PERPLEXITY => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.perplexity.ai/hub/legal/perplexity-api-terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
 
-        LLMProviders.OPEN_ROUTER => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://openrouter.ai/privacy", "https://openrouter.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.OPEN_ROUTER => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://openrouter.ai/privacy", "https://openrouter.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
 
-        LLMProviders.HETZNER => Confidence.GDPR_EXPERIMENTAL_OPEN_SOURCE.WithRegion("Europe, Germany").WithSources(
-            "https://experiments.hetzner.com/docs/inference",
-            "https://www.hetzner.com/legal/privacy-policy/",
-            "https://www.hetzner.com/legal/terms-and-conditions/"
-        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.HETZNER => Confidence.GDPR_EXPERIMENTAL_OPEN_SOURCE.WithRegion("Europe, Germany").WithSources(
+                "https://experiments.hetzner.com/docs/inference",
+                "https://www.hetzner.com/legal/privacy-policy/",
+                "https://www.hetzner.com/legal/terms-and-conditions/"
+            ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
 
-        LLMProviders.IONOS => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources(
-            "https://docs.ionos.com/cloud/ai/ai-model-hub/governance-and-compliance/data-handling",
-            "https://www.ionos.com/terms-gtc/privacy-policy/"
-        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.IONOS => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources(
+                "https://docs.ionos.com/cloud/ai/ai-model-hub/governance-and-compliance/data-handling",
+                "https://www.ionos.com/terms-gtc/privacy-policy/"
+            ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
 
-        // LiteLLM is a gateway the user runs, but it is not a self-hosted LLM: the proxy owner decides
-        // which downstream providers it routes to, and those are usually cloud services. Self-hosting
-        // the proxy therefore says nothing about where the data ends up, so we do not claim the trust
-        // of a self-hosted model here and let the user assign the level themselves.
-        LLMProviders.LITE_LLM => Confidence.USER_OPERATED_GATEWAY.WithSources("https://docs.litellm.ai/docs/data_security").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            // LiteLLM is a gateway the user runs, but it is not a self-hosted LLM: the proxy owner decides
+            // which downstream providers it routes to, and those are usually cloud services. Self-hosting
+            // the proxy therefore says nothing about where the data ends up, so we do not claim the trust
+            // of a self-hosted model here and let the user assign the level themselves.
+            LLMProviders.LITE_LLM => Confidence.USER_OPERATED_GATEWAY.WithSources("https://docs.litellm.ai/docs/data_security").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
 
-        // Requesty Ltd is based in London and works under the UK GDPR and the EU GDPR. Unless logging
-        // is switched off, it keeps requests for up to 30 days, and it may use the content of free
-        // accounts for training. Where a model runs depends on the model rather than on Requesty:
-        // names ending in "@eu" or in another European region stay in Europe, the others may not.
-        // That is why we state the region but leave the trust level unknown.
-        LLMProviders.REQUESTY => Confidence.UNKNOWN.WithRegion("Europe, United Kingdom").WithSources(
-            "https://www.requesty.ai/privacy",
-            "https://www.requesty.ai/privacy/subprocessors",
-            "https://www.requesty.ai/dpa",
-            "https://www.requesty.ai/terms"
-        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            // Requesty Ltd is based in London and works under the UK GDPR and the EU GDPR. Unless logging
+            // is switched off, it keeps requests for up to 30 days, and it may use the content of free
+            // accounts for training. Where a model runs depends on the model rather than on Requesty:
+            // names ending in "@eu" or in another European region stay in Europe, the others may not.
+            // That is why we state the region but leave the trust level unknown.
+            LLMProviders.REQUESTY => Confidence.UNKNOWN.WithRegion("Europe, United Kingdom").WithSources(
+                "https://www.requesty.ai/privacy",
+                "https://www.requesty.ai/privacy/subprocessors",
+                "https://www.requesty.ai/dpa",
+                "https://www.requesty.ai/terms"
+            ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
 
-        LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
-        LLMProviders.GWDG => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://docs.hpc.gwdg.de/services/chat-ai/data-privacy/index.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
+            LLMProviders.GWDG => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://docs.hpc.gwdg.de/services/ai-services/chat-ai/data-privacy/index.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
-        _ => Confidence.UNKNOWN.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
-    };
+            _ => Confidence.UNKNOWN.WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
+        };
 
-    /// <summary>
-    /// Determines if the specified provider supports embeddings.
-    /// </summary>
-    /// <param name="llmProvider">The provider to check.</param>
-    /// <returns>True if the provider supports embeddings; otherwise, false.</returns>
-    public static bool ProvideEmbeddingAPI(this LLMProviders llmProvider) => llmProvider switch
-    {
-        //
-        // Providers that support embeddings:
-        //
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.GOOGLE => true,
-        LLMProviders.HELMHOLTZ => true,
-        LLMProviders.ALIBABA_CLOUD => true,
-        LLMProviders.IONOS => true,
-        LLMProviders.GWDG => true,
-        LLMProviders.OPEN_ROUTER => true,
-        LLMProviders.LITE_LLM => true,
-        LLMProviders.REQUESTY => true,
-
-        //
-        // Providers that do not support embeddings:
-        //
-        LLMProviders.GROQ => false,
-        LLMProviders.ANTHROPIC => false,
-        LLMProviders.FIREWORKS => false,
-        LLMProviders.X => false,
-        LLMProviders.DEEP_SEEK => false,
-        LLMProviders.PERPLEXITY => false,
-        LLMProviders.HETZNER => false,
-
-        //
-        // Hugging Face serves embeddings, but not through the router endpoint we chat with: that
-        // one answers "/v1/embeddings" with a plain "Not Found". They have to be asked of one
-        // inference provider directly, and only some of them answer the OpenAI-compatible form.
-        // Which ones is decided by HFInferenceProviderExtensions.SupportsEmbeddings.
-        //
-        LLMProviders.HUGGINGFACE => true,
-
-        //
-        // Self-hosted providers are treated as a special case anyway.
-        //
-        LLMProviders.SELF_HOSTED => true,
-
-        _ => false,
-    };
-
-    public static bool ProvideTranscriptionAPI(this LLMProviders llmProvider) => llmProvider switch
-    {
-        //
-        // Providers that support transcription:
-        //
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.FIREWORKS => true,
-        LLMProviders.GWDG => true,
-        LLMProviders.HELMHOLTZ => true,
-        LLMProviders.GROQ => true,
-        LLMProviders.LITE_LLM => true,
-        LLMProviders.REQUESTY => true,
-
-        //
-        // Providers that support transcription but provide no OpenAI-compatible API yet:
-        //
-        LLMProviders.ALIBABA_CLOUD => false,
-        LLMProviders.GOOGLE => false,
-        
-        //
-        // Providers that do not support transcription:
-        //
-        LLMProviders.OPEN_ROUTER => false,
-        LLMProviders.HETZNER => false,
-        LLMProviders.IONOS => false,
-        LLMProviders.ANTHROPIC => false,
-        LLMProviders.X => false,
-        LLMProviders.DEEP_SEEK => false,
-        LLMProviders.PERPLEXITY => false,
-
-        //
-        // Hugging Face transcribes audio, but like embeddings, not through the router endpoint we
-        // chat with: that one answers "/v1/audio/transcriptions" with a plain "Not Found". Only
-        // some of the inference providers answer the OpenAI-compatible form, which
-        // HFInferenceProviderExtensions.SupportsTranscription decides.
-        //
-        LLMProviders.HUGGINGFACE => true,
-
-        //
-        // Self-hosted providers are treated as a special case anyway.
-        //
-        LLMProviders.SELF_HOSTED => true,
-
-        _ => false,
-    };
-
-    /// <summary>
-    /// The largest image file, in bytes, which the provider accepts in a request, where it states one.
-    /// </summary>
-    /// <remarks>
-    /// The limit belongs to the API of the provider, not to the model: the same model may accept
-    /// larger images through another provider. What we actually send is asked through
-    /// IImageSourceExtensions.MaxImageSizeBytesFor, which also applies our own limit.
-    /// </remarks>
-    /// <param name="llmProvider">The provider to check.</param>
-    /// <returns>The size limit of one image file, or null when the provider states none we know of.</returns>
-    public static long? GetMaxImageSizeBytes(this LLMProviders llmProvider) => llmProvider switch
-    {
-        //
-        // Anthropic accepts at most 5 MiB (5,242,880 bytes) of base64 per image. Base64 needs four
-        // characters for every three bytes, which leaves 3,932,160 bytes for the image file itself:
-        //
-        LLMProviders.ANTHROPIC => 3_932_160,
-
-        _ => null,
-    };
-
-    /// <summary>
-    /// Creates a new provider instance based on the provider value.
-    /// </summary>
-    /// <param name="providerSettings">The provider settings.</param>
-    /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings)
-    {
-        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.HFInferenceProvider, providerSettings.Id, providerSettings.AdditionalJsonApiParameters, providerSettings.IsEnterpriseConfiguration, capabilityOverrides: providerSettings.CapabilityOverrides, tokenizerPath: providerSettings.TokenizerPath);
-    }
-    
-    /// <summary>
-    /// Creates a new provider instance based on the embedding provider value.
-    /// </summary>
-    /// <param name="embeddingProviderSettings">The embedding provider settings.</param>
-    /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings)
-    {
-        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.HFInferenceProvider, configuredProviderId: embeddingProviderSettings.Id, isEnterpriseConfiguration: embeddingProviderSettings.IsEnterpriseConfiguration, hfEndpointKind: HFEndpointKind.EMBEDDING, tokenizerPath: embeddingProviderSettings.TokenizerPath);
-    }
-    
-    /// <summary>
-    /// Creates a new provider instance based on the speech provider value.
-    /// </summary>
-    /// <param name="transcriptionProviderSettings">The speech provider settings.</param>
-    /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this TranscriptionProvider transcriptionProviderSettings)
-    {
-        return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.HFInferenceProvider, configuredProviderId: transcriptionProviderSettings.Id, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration, hfEndpointKind: HFEndpointKind.TRANSCRIPTION);
-    }
-
-    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false, HFEndpointKind hfEndpointKind = HFEndpointKind.CHAT, ProviderCapabilityOverrides? capabilityOverrides = null, string tokenizerPath = "")
-    {
-        //
-        // Every provider instance comes from here, for LLMs, embeddings, and transcriptions alike.
-        // Whatever a caller forgot to check, no request reaches a provider the organization prohibited:
-        //
-        if (IsProhibitedByOrganization(provider))
+        /// <summary>
+        /// Determines if the specified provider supports embeddings.
+        /// </summary>
+        /// <value>True if the provider supports embeddings; otherwise, false.</value>
+        public bool ProvideEmbeddingAPI => provider switch
         {
-            LOGGER.LogWarning($"Refused to create the provider '{instanceName}' of '{provider}': the organization prohibited this provider.");
-            return new NoProvider();
-        }
+            //
+            // Providers that support embeddings:
+            //
+            LLMProviders.OPEN_AI => true,
+            LLMProviders.MISTRAL => true,
+            LLMProviders.GOOGLE => true,
+            LLMProviders.HELMHOLTZ => true,
+            LLMProviders.ALIBABA_CLOUD => true,
+            LLMProviders.IONOS => true,
+            LLMProviders.GWDG => true,
+            LLMProviders.OPEN_ROUTER => true,
+            LLMProviders.LITE_LLM => true,
+            LLMProviders.REQUESTY => true,
 
-        try
+            //
+            // Providers that do not support embeddings:
+            //
+            LLMProviders.GROQ => false,
+            LLMProviders.ANTHROPIC => false,
+            LLMProviders.FIREWORKS => false,
+            LLMProviders.X => false,
+            LLMProviders.DEEP_SEEK => false,
+            LLMProviders.PERPLEXITY => false,
+            LLMProviders.HETZNER => false,
+
+            //
+            // Hugging Face serves embeddings, but not through the router endpoint we chat with: that
+            // one answers "/v1/embeddings" with a plain "Not Found". They have to be asked of one
+            // inference provider directly, and only some of them answer the OpenAI-compatible form.
+            // Which ones is decided by HFInferenceProviderExtensions.SupportsEmbeddings.
+            //
+            LLMProviders.HUGGINGFACE => true,
+
+            //
+            // Self-hosted providers are treated as a special case anyway.
+            //
+            LLMProviders.SELF_HOSTED => true,
+
+            _ => false,
+        };
+
+        public bool ProvideTranscriptionAPI => provider switch
         {
-            IProvider providerInstance = provider switch
+            //
+            // Providers that support transcription:
+            //
+            LLMProviders.OPEN_AI => true,
+            LLMProviders.MISTRAL => true,
+            LLMProviders.FIREWORKS => true,
+            LLMProviders.GWDG => true,
+            LLMProviders.HELMHOLTZ => true,
+            LLMProviders.GROQ => true,
+            LLMProviders.LITE_LLM => true,
+            LLMProviders.REQUESTY => true,
+
+            //
+            // Providers that support transcription but provide no OpenAI-compatible API yet:
+            //
+            LLMProviders.ALIBABA_CLOUD => false,
+            LLMProviders.GOOGLE => false,
+        
+            //
+            // Providers that do not support transcription:
+            //
+            LLMProviders.OPEN_ROUTER => false,
+            LLMProviders.HETZNER => false,
+            LLMProviders.IONOS => false,
+            LLMProviders.ANTHROPIC => false,
+            LLMProviders.X => false,
+            LLMProviders.DEEP_SEEK => false,
+            LLMProviders.PERPLEXITY => false,
+
+            //
+            // Hugging Face transcribes audio, but like embeddings, not through the router endpoint we
+            // chat with: that one answers "/v1/audio/transcriptions" with a plain "Not Found". Only
+            // some of the inference providers answer the OpenAI-compatible form, which
+            // HFInferenceProviderExtensions.SupportsTranscription decides.
+            //
+            LLMProviders.HUGGINGFACE => true,
+
+            //
+            // Self-hosted providers are treated as a special case anyway.
+            //
+            LLMProviders.SELF_HOSTED => true,
+
+            _ => false,
+        };
+
+        /// <summary>
+        /// The largest image file, in bytes, which the provider accepts in a request, where it states one.
+        /// </summary>
+        /// <remarks>
+        /// The limit belongs to the API of the provider, not to the model: the same model may accept
+        /// larger images through another provider. What we actually send is asked through
+        /// ImageSourceExtensions.MaxImageSizeBytesFor, which also applies our own limit.
+        /// </remarks>
+        /// <value>The size limit of one image file, or null when the provider states none we know of.</value>
+        public long? MaxImageSizeBytes => provider switch
+        {
+            //
+            // Anthropic accepts at most 5 MiB (5,242,880 bytes) of base64 per image. Base64 needs four
+            // characters for every three bytes, which leaves 3,932,160 bytes for the image file itself:
+            //
+            LLMProviders.ANTHROPIC => 3_932_160,
+
+            _ => null,
+        };
+
+        private IProvider CreateProvider(string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false, HFEndpointKind hfEndpointKind = HFEndpointKind.CHAT, ProviderCapabilityOverrides? capabilityOverrides = null, string tokenizerPath = "")
+        {
+            //
+            // Every provider instance comes from here, for LLMs, embeddings, and transcriptions alike.
+            // Whatever a caller forgot to check, no request reaches a provider the organization prohibited:
+            //
+            if (IsProhibitedByOrganization(provider))
             {
-                LLMProviders.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.ANTHROPIC => new ProviderAnthropic { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.MISTRAL => new ProviderMistral { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.GOOGLE => new ProviderGoogle { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.X => new ProviderX { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.DEEP_SEEK => new ProviderDeepSeek { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.HETZNER => new ProviderHetzner { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.IONOS => new ProviderIONOS { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.LITE_LLM => new ProviderLiteLLM(hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.REQUESTY => new ProviderRequesty { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LOGGER.LogWarning($"Refused to create the provider '{instanceName}' of '{provider}': the organization prohibited this provider.");
+                return new NoProvider();
+            }
 
-                LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider, hfEndpointKind) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+            try
+            {
+                IProvider providerInstance = provider switch
+                {
+                    LLMProviders.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.ANTHROPIC => new ProviderAnthropic { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.MISTRAL => new ProviderMistral { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.GOOGLE => new ProviderGoogle { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.X => new ProviderX { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.DEEP_SEEK => new ProviderDeepSeek { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.HETZNER => new ProviderHetzner { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.IONOS => new ProviderIONOS { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.LITE_LLM => new ProviderLiteLLM(hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.REQUESTY => new ProviderRequesty { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
-                LLMProviders.SELF_HOSTED => new ProviderSelfHosted(host, hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider, hfEndpointKind) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
-                LLMProviders.HELMHOLTZ => new ProviderHelmholtz { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.GWDG => new ProviderGWDG { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.SELF_HOSTED => new ProviderSelfHosted(host, hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
-                _ => new NoProvider(),
-            };
+                    LLMProviders.HELMHOLTZ => new ProviderHelmholtz { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                    LLMProviders.GWDG => new ProviderGWDG { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
-            if (providerInstance is BaseProvider baseProvider)
-                baseProvider.CapabilityOverrides = capabilityOverrides;
+                    _ => new NoProvider(),
+                };
 
-            return providerInstance;
+                if (providerInstance is BaseProvider baseProvider)
+                    baseProvider.CapabilityOverrides = capabilityOverrides;
+
+                return providerInstance;
+            }
+            catch (Exception e)
+            {
+                LOGGER.LogError($"Failed to create provider: {e.Message}");
+                return new NoProvider();
+            }
         }
-        catch (Exception e)
+
+        public string CreationURL => provider switch
         {
-            LOGGER.LogError($"Failed to create provider: {e.Message}");
-            return new NoProvider();
+            LLMProviders.OPEN_AI => "https://platform.openai.com/signup",
+            LLMProviders.MISTRAL => "https://console.mistral.ai/",
+            LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
+            LLMProviders.GOOGLE => "https://console.cloud.google.com/",
+            LLMProviders.X => "https://accounts.x.ai/sign-up",
+            LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/sign_up",
+            LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
+            LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api",
+            LLMProviders.OPEN_ROUTER => "https://openrouter.ai/keys",
+            LLMProviders.HETZNER => "https://experiments.hetzner.com",
+            LLMProviders.IONOS => "https://cloud.ionos.com/compute/sign-up",
+            LLMProviders.REQUESTY => "https://app.requesty.ai/api-keys",
+
+            LLMProviders.GROQ => "https://console.groq.com/",
+            LLMProviders.FIREWORKS => "https://fireworks.ai/login",
+            LLMProviders.HUGGINGFACE => "https://huggingface.co/login",
+        
+            LLMProviders.HELMHOLTZ => "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/#step-1-register-on-gitlab",
+            LLMProviders.GWDG => "https://saia.gwdg.de",
+        
+            _ => string.Empty,
+        };
+
+        public string DashboardURL => provider switch
+        {
+            LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
+            LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
+            LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
+            LLMProviders.X => "https://console.x.ai/",
+            LLMProviders.GROQ => "https://console.groq.com/settings/usage",
+            LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
+            LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
+            LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/usage",
+            LLMProviders.ALIBABA_CLOUD => "https://usercenter2-intl.aliyun.com/billing",
+            LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api/",
+            LLMProviders.OPEN_ROUTER => "https://openrouter.ai/activity",
+            LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
+            LLMProviders.HETZNER => "https://experiments.hetzner.com",
+            LLMProviders.IONOS => "https://dcd.ionos.com/latest/?page=dcd-ai-model-hub",
+            LLMProviders.REQUESTY => "https://app.requesty.ai/",
+
+            LLMProviders.GWDG => "https://saia.gwdg.de/keys",
+
+            _ => string.Empty,
+        };
+
+        public bool HasDashboard => provider switch
+        {
+            LLMProviders.OPEN_AI => true,
+            LLMProviders.MISTRAL => true,
+            LLMProviders.ANTHROPIC => true,
+            LLMProviders.X => true,
+            LLMProviders.GROQ => true,
+            LLMProviders.FIREWORKS => true,
+            LLMProviders.GOOGLE => true,
+            LLMProviders.DEEP_SEEK => true,
+            LLMProviders.ALIBABA_CLOUD => true,
+            LLMProviders.PERPLEXITY => true,
+            LLMProviders.OPEN_ROUTER => true,
+            LLMProviders.HUGGINGFACE => true,
+            LLMProviders.HETZNER => true,
+            LLMProviders.IONOS => true,
+            LLMProviders.REQUESTY => true,
+
+            LLMProviders.GWDG => true,
+
+            _ => false,
+        };
+
+        public string GetModelsOverviewURL(HFInferenceProvider inferenceProvider) => provider switch
+        {
+            LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
+            LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={inferenceProvider.CatalogFilter}",
+            _ => string.Empty,
+        };
+
+        public bool IsLLMModelProvidedManually => provider switch
+        {
+            LLMProviders.FIREWORKS => true,
+            _ => false,
+        };
+
+        /// <summary>
+        /// Determines if the model selection should be completely hidden for LLM providers.
+        /// This is the case when the host does not support model selection.
+        /// </summary>
+        /// <param name="host">The host for self-hosted providers.</param>
+        /// <returns>True if model selection should be hidden; otherwise, false.</returns>
+        public bool IsLLMModelSelectionHidden(Host host) => provider switch
+        {
+            _ => false,
+        };
+
+        /// <summary>
+        /// Determines if the model selection should be completely hidden for transcription providers.
+        /// This is the case when the host does not support model selection (e.g., whisper.cpp).
+        /// </summary>
+        /// <param name="host">The host for self-hosted providers.</param>
+        /// <returns>True if model selection should be hidden; otherwise, false.</returns>
+        public bool IsTranscriptionModelSelectionHidden(Host host) => provider switch
+        {
+            LLMProviders.SELF_HOSTED => host is Host.WHISPER_CPP,
+            _ => false,
+        };
+
+        public bool IsHostNeeded => provider switch
+        {
+            LLMProviders.SELF_HOSTED => true,
+            _ => false,
+        };
+
+        public bool IsHostnameNeeded => provider switch
+        {
+            LLMProviders.SELF_HOSTED => true,
+            LLMProviders.LITE_LLM => true,
+            _ => false,
+        };
+
+        /// <summary>
+        /// Whether the provider runs on a server that the user or their organization operates.
+        /// </summary>
+        /// <remarks>
+        /// The address of such a server comes from the user: a self-hosted model, or a LiteLLM gateway.
+        /// Only their operators may learn which feature of AI Studio sent a request, see AppUserAgent.
+        /// This is deliberately not derived from IsHostnameNeeded, even though both name the same providers
+        /// today: whether a dialog asks for a hostname is a question of the user interface, and it must
+        /// never silently decide what a server learns about the user.
+        /// </remarks>
+        /// <value>True when the provider runs on a self-hosted server; otherwise, false.</value>
+        public bool RunsOnSelfHostedServer => provider switch
+        {
+            LLMProviders.SELF_HOSTED => true,
+            LLMProviders.LITE_LLM => true,
+            _ => false,
+        };
+
+        public bool IsAPIKeyNeeded(Host host) => provider switch
+        {
+            LLMProviders.OPEN_AI => true,
+            LLMProviders.MISTRAL => true,
+            LLMProviders.ANTHROPIC => true,
+            LLMProviders.GOOGLE => true,
+            LLMProviders.X => true,
+            LLMProviders.DEEP_SEEK => true,
+            LLMProviders.ALIBABA_CLOUD => true,
+            LLMProviders.PERPLEXITY => true,
+            LLMProviders.OPEN_ROUTER => true,
+            LLMProviders.HETZNER => true,
+            LLMProviders.IONOS => true,
+            LLMProviders.LITE_LLM => true,
+            LLMProviders.REQUESTY => true,
+
+            LLMProviders.GROQ => true,
+            LLMProviders.FIREWORKS => true,
+            LLMProviders.HELMHOLTZ => true,
+            LLMProviders.GWDG => true,
+            LLMProviders.HUGGINGFACE => true,
+
+            // Every self-hosted engine can ask for a key: LM Studio brings its own tokens, and any of
+            // them can sit behind a proxy which authenticates. The field is labeled as optional for
+            // them, so offering it costs nothing where no key is needed, while leaving it out means
+            // the user cannot enter the one their server expects:
+            LLMProviders.SELF_HOSTED => host is not Host.NONE,
+
+            _ => false,
+        };
+
+        public bool ShowRegisterButton => provider switch
+        {
+            LLMProviders.OPEN_AI => true,
+            LLMProviders.MISTRAL => true,
+            LLMProviders.ANTHROPIC => true,
+            LLMProviders.GOOGLE => true,
+            LLMProviders.X => true,
+            LLMProviders.DEEP_SEEK => true,
+            LLMProviders.ALIBABA_CLOUD => true,
+            LLMProviders.PERPLEXITY => true,
+            LLMProviders.OPEN_ROUTER => true,
+            LLMProviders.HETZNER => true,
+            LLMProviders.IONOS => true,
+            LLMProviders.REQUESTY => true,
+
+            LLMProviders.GROQ => true,
+            LLMProviders.FIREWORKS => true,
+            LLMProviders.HELMHOLTZ => true,
+            LLMProviders.GWDG => true,
+            LLMProviders.HUGGINGFACE => true,
+        
+            _ => false,
+        };
+
+        public bool CanLoadModels(Host host, string? apiKey)
+        {
+            if (provider is LLMProviders.SELF_HOSTED)
+                return host.IsModelListSupported;
+
+            if(provider is LLMProviders.NONE)
+                return false;
+        
+            if(string.IsNullOrWhiteSpace(apiKey))
+                return false;
+        
+            return true;
+        }
+
+        public bool IsHFInstanceProviderNeeded => provider switch
+        {
+            LLMProviders.HUGGINGFACE => true,
+            _ => false,
+        };
+    }
+
+    /// <param name="providerSettings">The provider settings.</param>
+    extension(AIStudio.Settings.Provider providerSettings)
+    {
+        /// <summary>
+        /// Creates a new provider instance based on the provider value.
+        /// </summary>
+        /// <returns>The provider instance.</returns>
+        public IProvider CreateProvider()
+        {
+            return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.HFInferenceProvider, providerSettings.Id, providerSettings.AdditionalJsonApiParameters, providerSettings.IsEnterpriseConfiguration, capabilityOverrides: providerSettings.CapabilityOverrides, tokenizerPath: providerSettings.TokenizerPath);
+        }
+    }
+    
+    /// <param name="embeddingProviderSettings">The embedding provider settings.</param>
+    extension(EmbeddingProvider embeddingProviderSettings)
+    {
+        /// <summary>
+        /// Creates a new provider instance based on the embedding provider value.
+        /// </summary>
+        /// <returns>The provider instance.</returns>
+        public IProvider CreateProvider()
+        {
+            return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.HFInferenceProvider, configuredProviderId: embeddingProviderSettings.Id, isEnterpriseConfiguration: embeddingProviderSettings.IsEnterpriseConfiguration, hfEndpointKind: HFEndpointKind.EMBEDDING, tokenizerPath: embeddingProviderSettings.TokenizerPath);
+        }
+    }
+    
+    /// <param name="transcriptionProviderSettings">The speech provider settings.</param>
+    extension(TranscriptionProvider transcriptionProviderSettings)
+    {
+        /// <summary>
+        /// Creates a new provider instance based on the speech provider value.
+        /// </summary>
+        /// <returns>The provider instance.</returns>
+        public IProvider CreateProvider()
+        {
+            return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.HFInferenceProvider, configuredProviderId: transcriptionProviderSettings.Id, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration, hfEndpointKind: HFEndpointKind.TRANSCRIPTION);
         }
     }
 
@@ -407,216 +627,4 @@ public static class LLMProvidersExtensions
         // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
         return Program.SERVICE_PROVIDER?.GetService<SettingsManager>() is { } settingsManager && settingsManager.IsProviderProhibited(provider);
     }
-
-    public static string GetCreationURL(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.OPEN_AI => "https://platform.openai.com/signup",
-        LLMProviders.MISTRAL => "https://console.mistral.ai/",
-        LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
-        LLMProviders.GOOGLE => "https://console.cloud.google.com/",
-        LLMProviders.X => "https://accounts.x.ai/sign-up",
-        LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/sign_up",
-        LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
-        LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api",
-        LLMProviders.OPEN_ROUTER => "https://openrouter.ai/keys",
-        LLMProviders.HETZNER => "https://experiments.hetzner.com",
-        LLMProviders.IONOS => "https://cloud.ionos.com/compute/sign-up",
-        LLMProviders.REQUESTY => "https://app.requesty.ai/api-keys",
-
-        LLMProviders.GROQ => "https://console.groq.com/",
-        LLMProviders.FIREWORKS => "https://fireworks.ai/login",
-        LLMProviders.HUGGINGFACE => "https://huggingface.co/login",
-        
-        LLMProviders.HELMHOLTZ => "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/#step-1-register-on-gitlab",
-        LLMProviders.GWDG => "https://docs.hpc.gwdg.de/services/saia/index.html#api-request",
-        
-        _ => string.Empty,
-    };
-
-    public static string GetDashboardURL(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
-        LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
-        LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
-        LLMProviders.X => "https://console.x.ai/",
-        LLMProviders.GROQ => "https://console.groq.com/settings/usage",
-        LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
-        LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
-        LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/usage",
-        LLMProviders.ALIBABA_CLOUD => "https://usercenter2-intl.aliyun.com/billing",
-        LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api/",
-        LLMProviders.OPEN_ROUTER => "https://openrouter.ai/activity",
-        LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
-        LLMProviders.HETZNER => "https://experiments.hetzner.com",
-        LLMProviders.IONOS => "https://dcd.ionos.com/latest/?page=dcd-ai-model-hub",
-        LLMProviders.REQUESTY => "https://app.requesty.ai/",
-
-        _ => string.Empty,
-    };
-
-    public static bool HasDashboard(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.ANTHROPIC => true,
-        LLMProviders.X => true,
-        LLMProviders.GROQ => true,
-        LLMProviders.FIREWORKS => true,
-        LLMProviders.GOOGLE => true,
-        LLMProviders.DEEP_SEEK => true,
-        LLMProviders.ALIBABA_CLOUD => true,
-        LLMProviders.PERPLEXITY => true,
-        LLMProviders.OPEN_ROUTER => true,
-        LLMProviders.HUGGINGFACE => true,
-        LLMProviders.HETZNER => true,
-        LLMProviders.IONOS => true,
-        LLMProviders.REQUESTY => true,
-
-        _ => false,
-    };
-
-    public static string GetModelsOverviewURL(this LLMProviders provider, HFInferenceProvider inferenceProvider) => provider switch
-    {
-        LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
-        LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={inferenceProvider.CatalogFilter()}",
-        _ => string.Empty,
-    };
-
-    public static bool IsLLMModelProvidedManually(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.FIREWORKS => true,
-        _ => false,
-    };
-    
-    /// <summary>
-    /// Determines if the model selection should be completely hidden for LLM providers.
-    /// This is the case when the host does not support model selection.
-    /// </summary>
-    /// <param name="provider">The provider.</param>
-    /// <param name="host">The host for self-hosted providers.</param>
-    /// <returns>True if model selection should be hidden; otherwise, false.</returns>
-    public static bool IsLLMModelSelectionHidden(this LLMProviders provider, Host host) => provider switch
-    {
-        _ => false,
-    };
-
-    /// <summary>
-    /// Determines if the model selection should be completely hidden for transcription providers.
-    /// This is the case when the host does not support model selection (e.g., whisper.cpp).
-    /// </summary>
-    /// <param name="provider">The provider.</param>
-    /// <param name="host">The host for self-hosted providers.</param>
-    /// <returns>True if model selection should be hidden; otherwise, false.</returns>
-    public static bool IsTranscriptionModelSelectionHidden(this LLMProviders provider, Host host) => provider switch
-    {
-        LLMProviders.SELF_HOSTED => host is Host.WHISPER_CPP,
-        _ => false,
-    };
-
-    public static bool IsHostNeeded(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.SELF_HOSTED => true,
-        _ => false,
-    };
-
-    public static bool IsHostnameNeeded(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.SELF_HOSTED => true,
-        LLMProviders.LITE_LLM => true,
-        _ => false,
-    };
-
-    /// <summary>
-    /// Whether the provider runs on a server that the user or their organization operates.
-    /// </summary>
-    /// <remarks>
-    /// The address of such a server comes from the user: a self-hosted model, or a LiteLLM gateway.
-    /// Only their operators may learn which feature of AI Studio sent a request, see AppUserAgent.
-    /// This is deliberately not derived from IsHostnameNeeded, even though both name the same providers
-    /// today: whether a dialog asks for a hostname is a question of the user interface, and it must
-    /// never silently decide what a server learns about the user.
-    /// </remarks>
-    /// <param name="provider">The provider.</param>
-    /// <returns>True when the provider runs on a self-hosted server; otherwise, false.</returns>
-    public static bool RunsOnSelfHostedServer(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.SELF_HOSTED => true,
-        LLMProviders.LITE_LLM => true,
-        _ => false,
-    };
-
-    public static bool IsAPIKeyNeeded(this LLMProviders provider, Host host) => provider switch
-    {
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.ANTHROPIC => true,
-        LLMProviders.GOOGLE => true,
-        LLMProviders.X => true,
-        LLMProviders.DEEP_SEEK => true,
-        LLMProviders.ALIBABA_CLOUD => true,
-        LLMProviders.PERPLEXITY => true,
-        LLMProviders.OPEN_ROUTER => true,
-        LLMProviders.HETZNER => true,
-        LLMProviders.IONOS => true,
-        LLMProviders.LITE_LLM => true,
-        LLMProviders.REQUESTY => true,
-
-        LLMProviders.GROQ => true,
-        LLMProviders.FIREWORKS => true,
-        LLMProviders.HELMHOLTZ => true,
-        LLMProviders.GWDG => true,
-        LLMProviders.HUGGINGFACE => true,
-
-        // Every self-hosted engine can ask for a key: LM Studio brings its own tokens, and any of
-        // them can sit behind a proxy which authenticates. The field is labeled as optional for
-        // them, so offering it costs nothing where no key is needed, while leaving it out means
-        // the user cannot enter the one their server expects:
-        LLMProviders.SELF_HOSTED => host is not Host.NONE,
-
-        _ => false,
-    };
-
-    public static bool ShowRegisterButton(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.ANTHROPIC => true,
-        LLMProviders.GOOGLE => true,
-        LLMProviders.X => true,
-        LLMProviders.DEEP_SEEK => true,
-        LLMProviders.ALIBABA_CLOUD => true,
-        LLMProviders.PERPLEXITY => true,
-        LLMProviders.OPEN_ROUTER => true,
-        LLMProviders.HETZNER => true,
-        LLMProviders.IONOS => true,
-        LLMProviders.REQUESTY => true,
-
-        LLMProviders.GROQ => true,
-        LLMProviders.FIREWORKS => true,
-        LLMProviders.HELMHOLTZ => true,
-        LLMProviders.GWDG => true,
-        LLMProviders.HUGGINGFACE => true,
-        
-        _ => false,
-    };
-
-    public static bool CanLoadModels(this LLMProviders provider, Host host, string? apiKey)
-    {
-        if (provider is LLMProviders.SELF_HOSTED)
-            return host.IsModelListSupported();
-
-        if(provider is LLMProviders.NONE)
-            return false;
-        
-        if(string.IsNullOrWhiteSpace(apiKey))
-            return false;
-        
-        return true;
-    }
-    
-    public static bool IsHFInstanceProviderNeeded(this LLMProviders provider) => provider switch
-    {
-        LLMProviders.HUGGINGFACE => true,
-        _ => false,
-    };
 }

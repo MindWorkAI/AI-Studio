@@ -6,7 +6,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Chat" Class="mr-2" />
+            <MudIcon Icon="@AppIcons.CHAT" Class="mr-2" />
             @T("Chat Options")
         </MudText>
     </TitleContent>
@@ -22,11 +22,11 @@
         @if (FeedbackService.HAS_DEVELOPER_TOOLS)
         {
             @* Debug builds only, so the texts stay out of the localization: *@
-            <ConfigurationText OptionDescription="Debug: feedback server address" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)" Icon="@Icons.Material.Filled.Feedback" Text="@(() => this.SettingsManager.ConfigurationData.Chat.FeedbackEndpoint)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Chat.FeedbackEndpoint = updatedText)" IsLocked="() => ManagedConfiguration.TryGet(x => x.Chat, x => x.FeedbackEndpoint, out var meta) && meta.IsLocked"/>
+            <ConfigurationText OptionDescription="Debug: feedback server address" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)" Icon="@AppIcons.FEEDBACK" Text="@(() => this.SettingsManager.ConfigurationData.Chat.FeedbackEndpoint)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Chat.FeedbackEndpoint = updatedText)" IsLocked="() => ManagedConfiguration.TryGet(x => x.Chat, x => x.FeedbackEndpoint, out var meta) && meta.IsLocked"/>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap" Class="mb-6">
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">Debug:</MudText>
                 <MudSwitch T="bool" Value="@this.FeedbackService.UsesDebugInterval" ValueChanged="@this.SetFeedbackDebugInterval" Size="Size.Small" Color="Color.Warning" Label="ask every 20 minutes" Class="mud-typography-caption" Disabled="@(!this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)"/>
-                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Warning" StartIcon="@Icons.Material.Filled.RestartAlt" Disabled="@(!this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)" OnClick="@this.ResetFeedbackWeek">
+                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Warning" StartIcon="@AppIcons.RESET" Disabled="@(!this.SettingsManager.ConfigurationData.Chat.FeedbackEnabled)" OnClick="@this.ResetFeedbackWeek">
                     ask again now
                 </MudButton>
             </MudStack>

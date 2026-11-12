@@ -1,6 +1,9 @@
 using System.Runtime.CompilerServices;
 
+using AIStudio.Chat;
 using AIStudio.Tools;
+
+using Markdig.Syntax;
 
 namespace AIStudio.Tests.Tools;
 
@@ -21,15 +24,15 @@ public sealed class PlainFileExportTests
     [Test]
     public void AnAnswerMadeOfOneWebPageOffersThatPage()
     {
-        var files = PlainFileExport.ExtractFiles(Lines("```html", PAGE, "```"), ',');
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines("```html", PAGE, "```")), ',');
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(files, Has.Count.EqualTo(1));
             Assert.That(files[0].Format, Is.EqualTo(FileExportFormat.HTML));
             Assert.That(files[0].Content, Is.EqualTo(PAGE), "The page leaves the answer exactly as the model wrote it, without the fence around it.");
             Assert.That(files[0].Caption, Is.Empty, "Without a heading above it, a code block has nothing to be named after.");
-        });
+        }
     }
 
     [Test]
@@ -37,13 +40,13 @@ public sealed class PlainFileExportTests
     {
         var answer = Lines("Here is your page:", string.Empty, "```html", PAGE, "```", string.Empty, "Save it and open it in your browser.");
 
-        var files = PlainFileExport.ExtractFiles(answer, ',');
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(files, Has.Count.EqualTo(1), "Models rarely answer with the block alone, so the text around it must not hide it.");
             Assert.That(files[0].Content, Is.EqualTo(PAGE));
-        });
+        }
     }
 
     [TestCase("HTML", FileExportFormat.HTML)]
@@ -52,38 +55,114 @@ public sealed class PlainFileExportTests
     [TestCase("html title=\"index.html\"", FileExportFormat.HTML, Description = "Whatever follows the language is an argument, not part of it.")]
     public void ACodeBlockIsOfferedInTheFormatItsLanguageNames(string infoString, FileExportFormat expectedFormat)
     {
-        var files = PlainFileExport.ExtractFiles(Lines($"```{infoString}", "The content.", "```"), ',');
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines($"```{infoString}", "The content.", "```")), ',');
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(files, Has.Count.EqualTo(1));
             Assert.That(files[0].Format, Is.EqualTo(expectedFormat));
             Assert.That(files[0].Content, Is.EqualTo("The content."));
-        });
+        }
     }
 
     [Test]
     public void ATildeFenceIsOfferedAsWell()
     {
-        var files = PlainFileExport.ExtractFiles(Lines("~~~latex", @"\section{Results}", "~~~"), ',');
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines("~~~latex", @"\section{Results}", "~~~")), ',');
 
         Assert.That(files.Select(file => file.Format), Is.EqualTo(new[] { FileExportFormat.LATEX }));
     }
 
-    [TestCase("```css", TestName = "A language AI Studio writes no file for")]
-    [TestCase("```", TestName = "A fence without a language")]
-    public void AnyOtherCodeBlockIsNotOffered(string openingFence)
+    [TestCase("```python", "Python (.py)")]
+    [TestCase("```rust", "Rust (.rs)")]
+    [TestCase("```css", "CSS (.css)")]
+    [TestCase("~~~bash", "Shell (.sh)")]
+    [TestCase("```foo", "foo (.txt)", Description = "A language AI Studio does not know still names the block.")]
+    public void ACodeBlockInAnyOtherLanguageIsOfferedAsCode(string openingFence, string expectedName)
     {
-        var files = PlainFileExport.ExtractFiles(Lines(openingFence, "body { margin: 0; }", "```"), ',');
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines(openingFence, "print(42)", openingFence[..3])), ',');
 
-        Assert.That(files, Is.Empty);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(files, Has.Count.EqualTo(1));
+            Assert.That(files[0].Format, Is.EqualTo(FileExportFormat.SOURCE_CODE));
+            Assert.That(files[0].ToName(), Is.EqualTo(expectedName));
+            Assert.That(files[0].Content, Is.EqualTo("print(42)"), "The code leaves the answer exactly as the model wrote it, without the fence around it.");
+        }
+    }
+
+    [TestCase("using System;\n\nConsole.WriteLine(\"Hello\");", "C# (.cs)")]
+    [TestCase("def greet(name):\n    print(f\"Hello {name}\")\n\nif __name__ == \"__main__\":\n    greet(\"Ada\")", "Python (.py)")]
+    [TestCase("{\"name\": \"Ada\", \"age\": 36}", "JSON (.json)")]
+    [TestCase("Just a few words the model put into a block.", "Text (.txt)", Description = "A block whose language is not clear stays text.")]
+    public void ACodeBlockWithoutALanguageIsOfferedInTheLanguageOfItsCode(string code, string expectedName)
+    {
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines("```", code, "```")), ',');
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(files, Has.Count.EqualTo(1));
+            Assert.That(files[0].Format, Is.EqualTo(FileExportFormat.SOURCE_CODE));
+            Assert.That(files[0].ToName(), Is.EqualTo(expectedName));
+            Assert.That(files[0].Content, Is.EqualTo(code));
+        }
+    }
+
+    [Test]
+    public void ACodeBlockMarkedAsTextStaysText()
+    {
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines("```text", "using System;", string.Empty, "Console.WriteLine(\"Hello\");", "```")), ',');
+
+        Assert.That(files.Select(file => file.ToName()), Is.EqualTo(new[] { "Text (.txt)" }), "Whoever marks a block as text gets a text file, whatever its code looks like.");
+    }
+
+    [Test]
+    public void AWebPageWithoutALanguageIsOfferedAsAWebPage()
+    {
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines("```", "<div class=\"card\">", "  <p>Hello</p>", "</div>", "```")), ',');
+
+        Assert.That(files.Select(file => file.Format), Is.EqualTo(new[] { FileExportFormat.HTML }));
+    }
+
+    [TestCase("$$", "$$")]
+    [TestCase(@"\[", @"\]")]
+    [TestCase("```latex", "```", Description = "A code block of LaTeX which holds nothing but a formula is a formula, too.")]
+    public void AFormulaIsOfferedAsLatex(string openingMarker, string closingMarker)
+    {
+        var answer = Lines("The energy follows from", string.Empty, openingMarker, "E = mc^2", closingMarker, string.Empty, "for every body at rest.");
+
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(files, Has.Count.EqualTo(1));
+            Assert.That(files[0].ToName(), Is.EqualTo("LaTeX (.tex)"));
+            Assert.That(files[0].Content, Is.EqualTo(Lines(@"\[", "E = mc^2", @"\]")), "Between these markers, the formula can be pasted into a document as it is.");
+            Assert.That(files[0].Position, Is.EqualTo(answer.IndexOf(openingMarker, StringComparison.Ordinal)), "A formula finds its file where its markers start.");
+        }
+    }
+
+    [Test]
+    public void AFormulaIsCountedAmongTheCodeBlocks()
+    {
+        var answer = Lines("# Energy", string.Empty, "$$", "E = mc^2", "$$", string.Empty, "```python", "print(1)", "```");
+
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
+
+        Assert.That(files.Select(file => (file.Ordinal, file.Caption, file.Format)), Is.EqualTo(new[]
+        {
+            (1, "Energy", FileExportFormat.LATEX),
+            (2, "Energy", FileExportFormat.SOURCE_CODE),
+        }));
     }
 
     [TestCase("```html", "<html><body><p>The answer broke off here", TestName = "Half a web page")]
     [TestCase("```csv", "Quarter,Revenue", TestName = "Half a table")]
+    [TestCase("```python", "def main():", TestName = "Half a program")]
+    [TestCase("```", "The answer broke off here", TestName = "Half a text")]
     public void ACodeBlockTheModelNeverClosedIsNotOffered(string openingFence, string content)
     {
-        var files = PlainFileExport.ExtractFiles(Lines("The answer starts normally.", string.Empty, openingFence, content), ',');
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines("The answer starts normally.", string.Empty, openingFence, content)), ',');
 
         Assert.That(files, Is.Empty, "The file would end wherever the answer broke off.");
     }
@@ -106,16 +185,99 @@ public sealed class PlainFileExportTests
             string.Empty,
             "```latex",
             @"\section{Second block}",
+            "```",
+            string.Empty,
+            "# Script",
+            string.Empty,
+            "```python",
+            "print('Third block')",
             "```");
 
-        var files = PlainFileExport.ExtractFiles(answer, ',');
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
 
         Assert.That(files.Select(file => (file.Ordinal, file.Caption, file.Format)), Is.EqualTo(new[]
         {
             (1, "Revenue", FileExportFormat.CSV),
             (1, "Landing page", FileExportFormat.HTML),
             (2, "Landing page", FileExportFormat.LATEX),
-        }), "The first code block is code block 1, even though a table stands before it.");
+            (3, "Script", FileExportFormat.SOURCE_CODE),
+        }), "The first code block is code block 1, even though a table stands before it, and code counts along with the other blocks.");
+    }
+
+    [Test]
+    public void EachFileKnowsWhereItStartsInTheAnswer()
+    {
+        var answer = Lines(
+            "Here is the revenue:",
+            string.Empty,
+            "| Quarter | Revenue |",
+            "|---|---|",
+            "| Q1 | 100 |",
+            string.Empty,
+            "And the script which made it:",
+            string.Empty,
+            "```python",
+            "print(100)",
+            "```");
+
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
+
+        Assert.That(files.Select(file => file.Position), Is.EqualTo(new[] { answer.IndexOf("| Quarter", StringComparison.Ordinal), answer.IndexOf("```python", StringComparison.Ordinal) }));
+    }
+
+    [Test]
+    public void ACodeBlockInAListKnowsWhereItStarts()
+    {
+        var answer = Lines(
+            "1. Install the package:",
+            string.Empty,
+            "   ```bash",
+            "   pip install requests",
+            "   ```",
+            "2. Run your script.");
+
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
+
+        Assert.That(files.Select(file => file.Position), Is.EqualTo(new[] { answer.IndexOf("```bash", StringComparison.Ordinal) }));
+    }
+
+    /// <summary>
+    /// Checks what a code block the chat renders relies on to find its file.
+    /// </summary>
+    /// <remarks>
+    /// The chat renders an answer in parts, cut around each formula, and Markdig reads every part on
+    /// its own. A block of such a part therefore knows where it starts within its part only. Added to
+    /// where the part starts in the answer, that has to be the position the file was read with.
+    /// </remarks>
+    [Test]
+    public void ACodeBlockAfterAFormulaFindsItsFile()
+    {
+        var answer = Lines(
+            "# Script",
+            string.Empty,
+            "```python",
+            "print(1)",
+            "```",
+            string.Empty,
+            "$$",
+            "E = mc^2",
+            "$$",
+            string.Empty,
+            "```rust",
+            "fn main() {}",
+            "```");
+
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
+        var partStart = answer.LastIndexOf("$$", StringComparison.Ordinal) + "$$".Length + Environment.NewLine.Length;
+        var part = Markdig.Markdown.Parse(answer[partStart..], Markdown.CHAT_MARKDOWN_PIPELINE);
+        var blockOfThePart = part.Descendants<FencedCodeBlock>().Single();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(files, Has.Count.EqualTo(3), "The formula between the two code blocks is a file, too.");
+            Assert.That(partStart + blockOfThePart.Span.Start, Is.EqualTo(files[2].Position));
+            Assert.That(files[2].ToName(), Is.EqualTo("Rust (.rs)"));
+        }
     }
 
     private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);

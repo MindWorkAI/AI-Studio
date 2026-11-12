@@ -36,7 +36,7 @@
                 <MudList T="string" Dense="true">
                     @foreach (var openPoint in this.OpenPoints)
                     {
-                        <MudListItem T="string" Icon="@Icons.Material.Filled.ChecklistRtl" IconColor="Color.Warning">@this.Describe(openPoint)</MudListItem>
+                        <MudListItem T="string" Icon="@AppIcons.OPEN_POINT" IconColor="Color.Warning">@this.Describe(openPoint)</MudListItem>
                     }
                 </MudList>
             }

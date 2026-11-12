@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Reflection;
+using System.Text.Json;
 
 using AIStudio.Settings;
 using AIStudio.Tools.Feedback;
@@ -20,6 +21,14 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
 {
     private static readonly string APP_VERSION = Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? string.Empty;
     private static readonly TimeSpan SEND_TIMEOUT = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// How the feedback is written for the feedback server. The payload names its fields itself.
+    /// </summary>
+    public static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
+    {
+        TypeInfoResolver = FeedbackJsonContext.Default,
+    }.AsReadOnly();
 
     public const int MAX_COMMENT_LENGTH = 2_000;
 
@@ -193,7 +202,7 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
             timeout.CancelAfter(SEND_TIMEOUT);
 
-            using var response = await httpClient.PostAsJsonAsync(endpoint, payload, timeout.Token);
+            using var response = await httpClient.PostAsJsonAsync(endpoint, payload, JSON_OPTIONS, timeout.Token);
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogWarning("The feedback server '{Endpoint}' answered with status {StatusCode}.", endpoint, (int)response.StatusCode);

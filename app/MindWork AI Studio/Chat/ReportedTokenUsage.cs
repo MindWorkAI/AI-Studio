@@ -20,7 +20,7 @@ public sealed record ReportedTokenUsage
     /// <summary>
     /// What everything sent to the model cost.
     /// </summary>
-    public int PromptTokens { get; init; }
+    public int PromptTokens { get; set; }
 
     /// <summary>
     /// Which model the number was charged for.
@@ -31,7 +31,7 @@ public sealed record ReportedTokenUsage
     /// being an answer about the request which is about to be sent, and the estimate, wrong as it
     /// is, is at least wrong about the right model.
     /// </remarks>
-    public string ModelId { get; init; } = string.Empty;
+    public string ModelId { get; set; } = string.Empty;
 
     /// <summary>
     /// How many blocks the conversation had when the request went out, this answer included.
@@ -45,7 +45,7 @@ public sealed record ReportedTokenUsage
     /// Taken when the request is sent rather than when the report arrives: whatever is deleted
     /// while the answer streams in was still part of what the provider counted.
     /// </remarks>
-    public int BlockCount { get; init; }
+    public int BlockCount { get; set; }
 
     /// <summary>
     /// States the stored number as a usage again.

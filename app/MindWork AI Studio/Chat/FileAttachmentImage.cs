@@ -10,7 +10,7 @@ public record FileAttachmentImage(string FileName, string FilePath, long FileSiz
     /// <remarks>
     /// Is the image source a URL, a local file path, a base64 string, etc.?
     /// </remarks>
-    public ContentImageSource SourceType { get; init; } = ContentImageSource.LOCAL_PATH;
+    public ContentImageSource SourceType { get; set; } = ContentImageSource.LOCAL_PATH;
 
     /// <summary>
     /// The image source.

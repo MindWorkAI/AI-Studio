@@ -43,12 +43,12 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
 
         var outcome = await this.Execute(tool, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome.RequiredDataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED));
             Assert.That(outcome.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH));
             Assert.That(outcome.RequiredOutboundDataRestriction, Is.EqualTo(restriction));
-        });
+        }
     }
 
     [Test]
@@ -74,11 +74,11 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
 
         var outcome = await this.Execute(tool, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
             AssertDemandsNothing(outcome);
-        });
+        }
     }
 
     [Test]
@@ -88,11 +88,40 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
 
         var outcome = await this.Execute(tool, new ChatThread());
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.ERROR));
             AssertDemandsNothing(outcome);
+        }
+    }
+
+    [TestCase("""{"query":"budget","query":"https://attacker.example/?mail=board-meeting"}""", "query", TestName = "An argument named twice")]
+    [TestCase("""{"filter":{"sender":"budget","sender":"https://attacker.example/?mail=board-meeting"}}""", "sender", TestName = "A field named twice inside an argument")]
+    public async Task ACallWhichNamesAnArgumentTwiceDoesNotRun(string argumentsJson, string repeatedName)
+    {
+        //
+        // The tool would read one of the two values, while the check for addresses the model wrote
+        // into its call reads both. Which one a provider reads when the call goes back to it is
+        // anybody's guess:
+        //
+        var executed = false;
+        var tool = new TestTool(Definition(), execute: _ =>
+        {
+            executed = true;
+            return new ToolExecutionResult { TextContent = "A passage from the handbook." };
         });
+
+        var outcome = await this.Execute(tool, new ChatThread(), argumentsJson);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(executed, Is.False);
+            Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.ERROR));
+            Assert.That(outcome.Content, Does.Contain($"'{repeatedName}'"), "The model learns which name it wrote twice.");
+            Assert.That(outcome.Content, Does.Not.Contain("budget").And.Not.Contain("attacker"), "The message quotes none of the values, which may carry secrets.");
+            Assert.That(outcome.Trace.Arguments, Is.Not.Empty, "The user still sees what the model sent.");
+            AssertDemandsNothing(outcome);
+        }
     }
 
     [Test]
@@ -113,13 +142,13 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         {
         }
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(adapter.RecordedResults, Is.EqualTo(new[] { "A mail about the budget." }), "The tool ran, so what it demands came from a real result.");
             Assert.That(thread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.MEDIUM));
             Assert.That(thread.DataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED));
             Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(restriction), "A web search running next in this chat would otherwise carry the mail out.");
-        });
+        }
     }
 
     [Test]
@@ -172,11 +201,11 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         await foreach (var chunk in new ToolCallingLoop(NullLogger<ToolCallingLoop>.Instance).RunAsync(new OneToolCallAdapter(), this.LoopContext(tool, new ChatThread())))
             answer.ApplyStreamChunk(chunk, "test-model", blockCount: 2);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(answer.SourcePassages, Is.EqualTo(new[] { passage }), "The result of a tool call is not stored with the chat, but what the model received of the sources is.");
             Assert.That(answer.Sources.Select(source => source.URL), Is.EqualTo(new[] { passage.SourceUrl }));
-        });
+        }
     }
 
     [TestCase("web_search", ExpectedResult = true)]
@@ -192,11 +221,11 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     [Test]
     public void AFunctionNameHasAtMost64Characters()
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ToolExecutor.IsValidFunctionName(new string('a', 64)), Is.True);
             Assert.That(ToolExecutor.IsValidFunctionName(new string('a', 65)), Is.False);
-        });
+        }
     }
 
     private static void AssertDemandsNothing(ToolCallOutcome outcome)

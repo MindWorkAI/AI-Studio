@@ -49,11 +49,11 @@ public sealed class ManagedTranscriptAttachmentTests
         var chatDirectory = Path.Combine(this.testDirectory, "workspaces", Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
         var transcript = WriteTranscript(ManagedTranscriptAttachment.GetTranscriptDirectory(chatDirectory));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ManagedTranscriptAttachment.TryDeleteOwnedFile(transcript), Is.True);
             Assert.That(File.Exists(transcript.FilePath), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -62,11 +62,11 @@ public sealed class ManagedTranscriptAttachmentTests
         var chatDirectory = Path.Combine(this.testDirectory, "workspaces", Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
         var file = WriteTranscript(Path.Combine(chatDirectory, "attachments", "images"));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ManagedTranscriptAttachment.TryDeleteOwnedFile(file), Is.False, "Only the transcript folder belongs to the transcripts.");
             Assert.That(File.Exists(file.FilePath), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -77,11 +77,11 @@ public sealed class ManagedTranscriptAttachmentTests
         {
             var file = WriteTranscript(ManagedTranscriptAttachment.GetTranscriptDirectory(Path.Combine(outsideDirectory, "tempChats", Guid.NewGuid().ToString())));
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(ManagedTranscriptAttachment.TryDeleteOwnedFile(file), Is.False, "The same folders elsewhere belong to somebody else.");
                 Assert.That(File.Exists(file.FilePath), Is.True);
-            });
+            }
         }
         finally
         {

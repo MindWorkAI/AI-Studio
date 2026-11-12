@@ -24,7 +24,7 @@ public partial class ConfigurationDirectory : ConfigurationBaseCore
     /// The icon to display next to the textfield.
     /// </summary>
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.Folder;
+    public string Icon { get; set; } = AppIcons.FOLDER;
 
     /// <summary>
     /// The color of the icon to use.
@@ -79,10 +79,10 @@ public partial class ConfigurationDirectory : ConfigurationBaseCore
 
     #endregion
 
-    private void InternalUpdate(string text)
+    private void InternalUpdate(string? text)
     {
         this.timer.Stop();
-        this.internalText = text;
+        this.internalText = text ?? string.Empty;
         this.timer.Start();
     }
 
@@ -118,7 +118,7 @@ public partial class ConfigurationDirectory : ConfigurationBaseCore
         if (path is null)
         {
             this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a directory.", paths.Count);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, DroppedFolder.WarningFor(paths)));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, DroppedFolder.WarningFor(paths)));
             return;
         }
 

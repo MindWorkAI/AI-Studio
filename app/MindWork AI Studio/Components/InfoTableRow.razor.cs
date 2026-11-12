@@ -16,7 +16,7 @@ public partial class InfoTableRow : ComponentBase
     /// The icon in front of the label.
     /// </summary>
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.Info;
+    public string Icon { get; set; } = AppIcons.INFO;
 
     /// <summary>
     /// The label, which names what the row shows.

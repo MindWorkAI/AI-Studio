@@ -21,7 +21,7 @@
             </div>
 
             <MudExpansionPanels Class="mb-3" MultiExpansion="@false" Outlined="false" Elevation="0">
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="@T("View the GNU General Public License v2 (GPL)")" MaxHeight="300" ExpandedChanged="this.WhenExpandingLicence">
+                <ExpansionPanel HeaderIcon="@AppIcons.LICENSE" HeaderText="@T("View the GNU General Public License v2 (GPL)")" MaxHeight="300" ExpandedChanged="this.WhenExpandingLicence">
                     @if (this.isLoadingLicence)
                     {
                         <MudSkeleton/>
@@ -34,22 +34,22 @@
                     }
                 </ExpansionPanel>
 
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AutoFixHigh" HeaderText="@T("Automatic installation")" IsExpanded="true">
+                <ExpansionPanel HeaderIcon="@AppIcons.INSTALL_AUTOMATIC" HeaderText="@T("Automatic installation")" IsExpanded="true">
                     <MudJustifiedText Typo="Typo.body1">
                         @T("""Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and Install," you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use.""")
                     </MudJustifiedText>
-                    <MudButton OnClick="this.InstallPandocAsync" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@Icons.Material.Filled.InstallDesktop">
+                    <MudButton OnClick="this.InstallPandocAsync" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@AppIcons.INSTALLATION">
                         @T("Accept the GPL and start the installation")
                     </MudButton>
                 </ExpansionPanel>
 
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="@T("Manual installation")" ExpandedChanged="this.WhenExpandingManualInstallation">
+                <ExpansionPanel HeaderIcon="@AppIcons.INSTALL_MANUAL" HeaderText="@T("Manual installation")" ExpandedChanged="this.WhenExpandingManualInstallation">
                     <MudJustifiedText Typo="Typo.body1" Class="mb-2">
                         @T("If you want to install Pandoc yourself, follow one of these two guides. The first guide uses an installer and is available for Windows and macOS.  Alternatively, you might use a package manager of your operating system to install Pandoc.")
                     </MudJustifiedText>
 
                     <MudExpansionPanels Outlined="false" Elevation="0">
-                        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AppRegistration" HeaderText="@T("Download installer")" IsExpanded="true">
+                        <ExpansionPanel HeaderIcon="@AppIcons.DOWNLOAD_INSTALLER" HeaderText="@T("Download installer")" IsExpanded="true">
                             <MudList T="string">
                                 <MudListItem T="string" Class="mb-2">
                                     <MudJustifiedText Typo="Typo.body1">
@@ -72,12 +72,12 @@
                                 @T("""Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and download installer," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.""")
                             </MudJustifiedText>
 
-                            <MudButton Href="@this.downloadUrlInstaller" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Downloading">
+                            <MudButton Href="@this.downloadUrlInstaller" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@AppIcons.DOWNLOAD">
                                 @T("Accept the GPL and download the installer")
                             </MudButton>
                         </ExpansionPanel>
 
-                        <ExpansionPanel HeaderIcon="@Icons.Material.Outlined.Archive" HeaderText="Download archive">
+                        <ExpansionPanel HeaderIcon="@AppIcons.DOWNLOAD_ARCHIVE" HeaderText="Download archive">
                             <MudList T="string">
                                 <MudListItem T="string" Class="mb-2">
                                     <MudJustifiedText Typo="Typo.body1">
@@ -125,7 +125,7 @@
                                 </MudJustifiedText>
                             </MudText>
 
-                            <MudButton Href="@this.downloadUrlArchive" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Downloading">
+                            <MudButton Href="@this.downloadUrlArchive" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@AppIcons.DOWNLOAD">
                                 @T("Accept the GPL and download the archive")
                             </MudButton>
                         </ExpansionPanel>
@@ -154,7 +154,7 @@
                     {
                         case { CheckWasSuccessful: true, IsAvailable: true }:
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudIcon Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
+                                <MudIcon Style="font-size: 3.75rem;" Icon="@AppIcons.SUCCESS" Color="Color.Success"/>
                                 <MudJustifiedText Typo="Typo.body1">
                                     @T("Pandoc is installed and the version meets the requirements of MindWork AI Studio.")
                                 </MudJustifiedText>
@@ -163,7 +163,7 @@
 
                         case { CheckWasSuccessful: true, IsAvailable: false }:
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudIcon Style="width: 3.5em; height: 3.5em;" Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                                <MudIcon Style="font-size: 5.25rem;" Icon="@AppIcons.PANDOC_UNAVAILABLE" Color="Color.Error"/>
                                 <MudJustifiedText Typo="Typo.body1">
                                     @T("Pandoc is installed, but the version is too old and does not meet the requirements of MindWork AI Studio. AI Studio can help you install a newer version.")
                                 </MudJustifiedText>
@@ -172,7 +172,7 @@
 
                         case { CheckWasSuccessful: false }:
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudIcon Style="width: 3.5em; height: 3.5em;" Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                                <MudIcon Style="font-size: 5.25rem;" Icon="@AppIcons.PANDOC_UNAVAILABLE" Color="Color.Error"/>
                                 <MudJustifiedText Typo="Typo.body1">
                                     @T("Pandoc doesn't seem to be installed on this system. AI Studio can help you install the correct version.")
                                 </MudJustifiedText>

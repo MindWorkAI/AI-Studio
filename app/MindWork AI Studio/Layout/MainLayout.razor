@@ -102,4 +102,16 @@
     </MudLayout>
 </MudPaper>
 
-<MudThemeProvider @ref="@this.themeProvider" Theme="@this.ColorTheme" IsDarkMode="@this.useDarkMode" ObserveSystemThemeChange="@this.FollowSystemTheme" />
+<MudMarkdownThemeProvider @ref="@this.themeProvider" Theme="@this.ColorTheme" IsDarkMode="@this.useDarkMode" ObserveSystemDarkModeChange="@this.FollowSystemTheme" />
+
+@if (this.useDarkMode)
+{
+    @*
+        Lucide draws its icons with thin strokes, and on a dark background they almost vanish in the red of errors,
+        such as the trash icons. In dark mode, these icons take the lighter red of the palette, as the heart of the
+        supporters does:
+    *@
+    <style>
+        .mud-error-text .lucide, .lucide.mud-error-text { color: var(--mud-palette-error-lighten) !important; }
+    </style>
+}

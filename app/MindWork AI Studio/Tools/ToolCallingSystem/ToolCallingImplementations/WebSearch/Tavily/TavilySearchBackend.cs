@@ -133,7 +133,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
             // would rather have more hits than one language can choose any language instead.
             //
             FilterByLanguage = language is null ? null : true,
-            SafeSearch = query.SafeSearch?.ToTavilyValue(),
+            SafeSearch = query.SafeSearch?.TavilyValue,
         };
 
         var response = await this.searchClient.SearchAsync(apiKey.Trim(), searchRequest, query.TimeoutSeconds, token);

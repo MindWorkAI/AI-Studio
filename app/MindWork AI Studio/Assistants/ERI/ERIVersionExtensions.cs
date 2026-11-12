@@ -2,26 +2,20 @@ namespace AIStudio.Assistants.ERI;
 
 public static class ERIVersionExtensions
 {
-    public static async Task<string> ReadSpecification(this ERIVersion version, HttpClient httpClient)
+    extension(ERIVersion version)
     {
-        try
+        public Task<string> ReadSpecification(WebRootFiles webRootFiles) => webRootFiles.ReadTextAsync(version.SpecificationURL);
+
+        public string SpecificationURL
         {
-            var url = version.SpecificationURL();
-            using var response = await httpClient.GetAsync(url);
-            return await response.Content.ReadAsStringAsync();
+            get
+            {
+                var nameLower = version.ToString().ToLowerInvariant();
+                var filename = $"{nameLower}.json";
+                return $"specs/eri/{filename}";
+            }
         }
-        catch
-        {
-            return string.Empty;
-        }
+
+        public bool WasSpecificationSelected => version != ERIVersion.NONE;
     }
-    
-    public static string SpecificationURL(this ERIVersion version)
-    {
-        var nameLower = version.ToString().ToLowerInvariant();
-        var filename = $"{nameLower}.json";
-        return $"specs/eri/{filename}";
-    }
-    
-    public static bool WasSpecificationSelected(this ERIVersion version) => version != ERIVersion.NONE;
 }

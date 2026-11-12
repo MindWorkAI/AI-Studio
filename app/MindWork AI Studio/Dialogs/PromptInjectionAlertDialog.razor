@@ -6,7 +6,7 @@
         <MudPaper Class="pa-6 mb-4" Elevation="0" Outlined="true">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
                 <MudAvatar Size="Size.Large" Color="Color.Warning" Variant="Variant.Filled">
-                    <MudIcon Icon="@Icons.Material.Filled.GppMaybe"/>
+                    <MudIcon Icon="@AppIcons.SECURITY_WARNING"/>
                 </MudAvatar>
 
                 <MudStack Spacing="0">
@@ -30,7 +30,7 @@
         <MudDivider />
         <MudStack Row="true" Justify="Justify.Center" Class="my-2">
             <MudButton Variant="Variant.Text"
-                       EndIcon="@(this.showPromptInjectionInformation ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                       EndIcon="@(this.showPromptInjectionInformation ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)"
                        OnClick="@this.TogglePromptInjectionInformation">
 
                 @(this.showPromptInjectionInformation ? T("Hide more information") : T("More information"))
@@ -45,20 +45,20 @@
                     <MudGrid Class="mb-2">
                         <MudItem xs="12" md="3">
                             <MudStack>
-                                <MudIcon Icon="@Icons.Material.Filled.Source" />
+                                <MudIcon Icon="@AppIcons.CONTENT_SOURCE" />
                                 <MudJustifiedText Typo="Typo.subtitle2">
                                     @T("Source type")
                                 </MudJustifiedText>
 
                                 <MudJustifiedText Typo="Typo.body2">
-                                    @result.Source.Kind.GetDisplayName()
+                                    @result.Source.Kind.DisplayName
                                 </MudJustifiedText>
                             </MudStack>
                         </MudItem>
 
                         <MudItem xs="12" md="4">
                             <MudStack>
-                                <MudIcon Icon="@Icons.Material.Outlined.Description"/>
+                                <MudIcon Icon="@AppIcons.DOCUMENT"/>
                                 <MudJustifiedText Typo="Typo.subtitle2">
                                     @T("Content source")
                                 </MudJustifiedText>
@@ -71,7 +71,7 @@
 
                         <MudItem xs="12" md="5">
                             <MudStack>
-                                <MudIcon Icon="@Icons.Material.Outlined.WarningAmber"/>
+                                <MudIcon Icon="@AppIcons.WARNING"/>
                                 <MudJustifiedText Typo="Typo.subtitle2">
                                     @T("Removed content")
                                 </MudJustifiedText>
@@ -81,7 +81,7 @@
                                     <MudStack Spacing="0">
                                         <MudJustifiedText Typo="Typo.body2">
                                             <b>
-                                                @finding.Category.GetDisplayName()
+                                                @finding.Category.DisplayName
                                             </b>
                                         </MudJustifiedText>
 

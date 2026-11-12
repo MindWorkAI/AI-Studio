@@ -82,6 +82,7 @@ public partial class DataFolders : MSGComponentBase
         DataBackupEntryKind.PLUGINS => T("Your plugins, such as the assistants you built, apart from the folders listed below."),
         DataBackupEntryKind.TOKENIZERS => T("The tokenizers you chose for your providers."),
         DataBackupEntryKind.VISUAL_BRIEFINGS => T("Your projects in the Visual Briefing Assistant."),
+        DataBackupEntryKind.BEYOND_FACTS_LAB => T("Your preparations in the BeyondFacts Lab, with their material and conversations."),
         DataBackupEntryKind.DATA_SOURCE_INDEX => T("The index of your local data sources: which files AI Studio embedded, and their text."),
         DataBackupEntryKind.VECTOR_STORES => T("The embeddings of your local data sources."),
         DataBackupEntryKind.MEDIA_TRANSCRIPTS => T("The transcripts of the audio and video files in your local data sources."),
@@ -103,7 +104,7 @@ public partial class DataFolders : MSGComponentBase
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The folder is not known yet.")));
+            await this.MessageBus.SendWarning(new(AppIcons.FOLDER_OPEN, T("The folder is not known yet.")));
             return;
         }
 
@@ -115,7 +116,7 @@ public partial class DataFolders : MSGComponentBase
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Could not open the folder '{Path}' in the file manager.", path);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the folder.")));
+            await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, T("Could not open the folder.")));
             return;
         }
 
@@ -123,6 +124,6 @@ public partial class DataFolders : MSGComponentBase
             return;
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the folder: {0}"), issue)));
+        await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, string.Format(T("Could not open the folder: {0}"), issue)));
     }
 }

@@ -34,6 +34,18 @@ public partial class AttachDocuments : MSGComponentBase
     public Func<HashSet<FileAttachment>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
 
     /// <summary>
+    /// Takes the audio and video files the user dropped or chose, for an owner which transcribes them itself.
+    /// </summary>
+    /// <remarks>
+    /// Without it, this control transcribes them, after asking the user, and attaches their transcripts. With it, the
+    /// files go to the owner as they arrived, once their format passed AllowedFileTypes: the owner checks the
+    /// transcription provider against rules of its own, asks the user, and keeps the transcripts where it wants them,
+    /// as the BeyondFacts Lab does.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<IReadOnlyList<string>> OnMediaFiles { get; set; }
+
+    /// <summary>
     /// Makes this component the default target of its area, meaning of its page, assistant, or
     /// dialog: it then also takes the drops which land anywhere in that area without hitting a zone
     /// of their own.
@@ -160,22 +172,22 @@ public partial class AttachDocuments : MSGComponentBase
         if (outcome.Failures.Count > 0)
         {
             var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
         else if (outcome.Status is MediaImportStatus.FAILED)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, this.T("The media file could not be transcribed.")));
         }
 
         if (outcome.Warnings.Count > 0)
         {
             var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
 
         if (outcome.Status is MediaImportStatus.CANCELLED)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.T("The media transcription was canceled.")));
         }
     }
 
@@ -185,7 +197,7 @@ public partial class AttachDocuments : MSGComponentBase
         var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
         // Owners that persist their own sources have already taken the media over when the batch
         // started, so re-adding the delivered transcripts here would duplicate them.
-        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources()
+        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources
             ? Array.Empty<FileAttachment>()
             : delivery?.Attachments ?? [];
         var pending = this.OwnerChat?.Draft.MediaTranscripts ?? [];
@@ -335,7 +347,7 @@ public partial class AttachDocuments : MSGComponentBase
     /// <returns>
     /// The files this call attached, in the order they arrived. Media files are never among them:
     /// they go to the transcription service and become attachments only once their transcript is
-    /// ready, which is long after this call has returned.
+    /// ready, which is long after this call has returned, or they go to OnMediaFiles.
     /// </returns>
     private async Task<IReadOnlyList<FileAttachment>> AddFileBatchAsync(IEnumerable<string> paths)
     {
@@ -346,7 +358,7 @@ public partial class AttachDocuments : MSGComponentBase
             var rejectedPaths = pathList.Where(path => !FileTypes.IsAllowedPath(path, this.AllowedFileTypes)).ToArray();
             pathList.RemoveAll(path => rejectedPaths.Contains(path, StringComparer.Ordinal));
             if (rejectedPaths.Length > 0)
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Some files do not use an allowed format and were not attached.")));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.T("Some files do not use an allowed format and were not attached.")));
         }
 
         var inaccessiblePaths = pathList.Where(path => !File.Exists(path)).ToList();
@@ -354,7 +366,7 @@ public partial class AttachDocuments : MSGComponentBase
         {
             this.Logger.LogWarning("Could not access {Count} dropped or selected file(s): {Paths}", inaccessiblePaths.Count, string.Join(", ", inaccessiblePaths));
             await this.MessageBus.SendWarning(new(
-                Icons.Material.Filled.Warning,
+                AppIcons.WARNING,
                 this.T("Some files could not be accessed. Please select them with the file chooser instead.")));
         }
 
@@ -400,10 +412,16 @@ public partial class AttachDocuments : MSGComponentBase
         if (mediaPaths.Count is 0)
             return attached;
 
+        if (this.OnMediaFiles.HasDelegate)
+        {
+            await this.OnMediaFiles.InvokeAsync(mediaPaths);
+            return attached;
+        }
+
         if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
         {
             await this.MessageBus.SendWarning(new(
-                Icons.Material.Filled.VoiceChat,
+                AppIcons.VOICE_TRANSCRIPTION,
                 this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
             return attached;
         }
@@ -436,7 +454,7 @@ public partial class AttachDocuments : MSGComponentBase
 
         // Owners that persist their own sources show the file right away and keep it next to the
         // stored document, instead of waiting for the transcription to be delivered back.
-        if (this.EffectiveImportOwner.Kind.PersistsOwnSources())
+        if (this.EffectiveImportOwner.Kind.PersistsOwnSources)
         {
             foreach (var mediaPath in mediaPaths)
                 this.DocumentPaths.Add(FileAttachment.FromPath(mediaPath));

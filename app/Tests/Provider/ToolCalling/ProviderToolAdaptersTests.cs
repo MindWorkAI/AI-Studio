@@ -24,11 +24,11 @@ public sealed class ProviderToolAdaptersTests
         var definition = WebSearchLike();
         var function = Sent(definition, hostEnforcesStrict: false);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(function["strict"]!.GetValue<bool>(), Is.False);
             Assert.That(JsonNode.DeepEquals(function["parameters"], JsonNode.Parse(definition.Function.Parameters.GetRawText())), Is.True);
-        });
+        }
     }
 
     [Test]
@@ -36,11 +36,11 @@ public sealed class ProviderToolAdaptersTests
     {
         var function = Sent(WebSearchLike(), hostEnforcesStrict: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(function["strict"]!.GetValue<bool>(), Is.True);
             Assert.That(function["parameters"]!["required"]!.AsArray().Select(name => name!.GetValue<string>()), Is.EqualTo(new[] { "query", "page" }));
-        });
+        }
     }
 
     [Test]
@@ -49,11 +49,11 @@ public sealed class ProviderToolAdaptersTests
         var definition = WebSearchLike(isStrict: false);
         var function = Sent(definition, hostEnforcesStrict: true);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(function["strict"]!.GetValue<bool>(), Is.False);
             Assert.That(JsonNode.DeepEquals(function["parameters"], JsonNode.Parse(definition.Function.Parameters.GetRawText())), Is.True);
-        });
+        }
     }
 
     /// <summary>

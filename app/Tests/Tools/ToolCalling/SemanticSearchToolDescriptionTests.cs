@@ -27,13 +27,14 @@ public sealed class SemanticSearchToolDescriptionTests
     {
         var function = Describe((HANDBOOK, "Our processes."), (INTRANET, string.Empty));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(function.DescriptionForLLM, Does.Contain($"id={HANDBOOK.Id}, name='Handbook', type=local folder, results per page=10, last page=9, description='Our processes.'"));
-            Assert.That(function.DescriptionForLLM, Does.Contain($"id={INTRANET.Id}, name='Intranet', type=external data source, results per page=10, last page=1"), "ERI v1 knows no offset, so an ERI data source has a single page.");
+            Assert.That(function.DescriptionForLLM, Does.Contain($"id={HANDBOOK.Id}, name='Handbook', type=local folder, description='Our processes.'"));
+            Assert.That(function.DescriptionForLLM, Does.EndWith($"id={INTRANET.Id}, name='Intranet', type=external data source"));
+            Assert.That(function.DescriptionForLLM, Does.Not.Contain("per page").And.Not.Contain("last page"), "How many passages fit on a page depends on how long they are, so the result of each search tells whether there is more.");
             Assert.That(function.DescriptionForLLM, Does.Not.Contain(MINUTES.Id).And.Not.Contain("Minutes"), "A data source which is not offered must not even be named.");
             Assert.That(OfferedIds(function), Is.EqualTo(new[] { HANDBOOK.Id, INTRANET.Id }), "The schema lets the model name exactly the data sources the description lists.");
-        });
+        }
     }
 
     [Test]
@@ -53,12 +54,12 @@ public sealed class SemanticSearchToolDescriptionTests
         var first = DescribeInOfferOrder(INTRANET, MINUTES, HANDBOOK);
         var second = DescribeInOfferOrder(MINUTES, HANDBOOK, INTRANET);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(OfferedIds(first), Is.EqualTo(new[] { HANDBOOK.Id, MINUTES.Id, INTRANET.Id }), "By number first, then by ID.");
             Assert.That(second.DescriptionForLLM, Is.EqualTo(first.DescriptionForLLM));
             Assert.That(second.Parameters.GetRawText(), Is.EqualTo(first.Parameters.GetRawText()));
-        });
+        }
     }
 
     [Test]
@@ -66,11 +67,11 @@ public sealed class SemanticSearchToolDescriptionTests
     {
         var function = Describe((INTRANET, new string('x', 2000)));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(function.DescriptionForLLM, Does.Contain($"description='{new string('x', 500)}...'"));
             Assert.That(function.DescriptionForLLM, Does.Not.Contain(new string('x', 501)), "The server of an ERI data source writes this, and the model reads it with every request.");
-        });
+        }
     }
 
     [Test]
@@ -91,13 +92,13 @@ public sealed class SemanticSearchToolDescriptionTests
     {
         var function = DescribeWithUnreachable([(HANDBOOK, "Our processes.")], [INTRANET]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(function.DescriptionForLLM, Does.Contain("could not be reached or signed in to right now"), "A wrong password keeps the data source away just as well as a server which is down.");
             Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet'"), "The model has to know what is missing, so that it can tell the user.");
             Assert.That(function.DescriptionForLLM, Does.Not.Contain(INTRANET.Id), "A data source which cannot be searched gets no ID to pass.");
             Assert.That(OfferedIds(function), Is.EqualTo(new[] { HANDBOOK.Id }), "The schema still lets the model name only what it may search.");
-        });
+        }
     }
 
     [Test]

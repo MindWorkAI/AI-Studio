@@ -57,18 +57,18 @@ public sealed class FileExportFeedbackTests
             await sent.RunningShown;
         }
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(sent.Events, Is.EqualTo(new[] { Event.SHOW_FILE_EXPORT_RUNNING, Event.HIDE_FILE_EXPORT_RUNNING }));
             Assert.That(((DataFileExportRunningMessage)sent.Data[1]).Key, Is.EqualTo(((DataFileExportRunningMessage)sent.Data[0]).Key));
-        });
+        }
     }
 
     [Test]
-    public void AnExceptionRemovesTheRunningNotification()
+    public async Task AnExceptionRemovesTheRunningNotification()
     {
         var sent = new SentNotifications();
-        Assert.ThrowsAsync<IOException>(async () =>
+        await Assert.ThrowsAsync<IOException>(async () =>
         {
             await using var feedback = new FileExportFeedback(sent.Send, _ => Task.CompletedTask);
             feedback.ShowRunning(FILE_PATH);

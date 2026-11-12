@@ -7,7 +7,7 @@
         <MudList T="Guid" @bind-SelectedValue="@this.selectedWorkspace">
             @foreach (var workspace in this.workspaces)
             {
-                <MudListItem Text="@workspace.Name" Icon="@Icons.Material.Filled.Description" Value="@workspace.WorkspaceId" />
+                <MudListItem Text="@workspace.Name" Icon="@AppIcons.WORKSPACE" Value="@workspace.WorkspaceId" />
             }
         </MudList>
     </DialogContent>
@@ -22,7 +22,7 @@
                                   @ref="@this.newWorkspaceNameField"
                                   @bind-Text="@this.newWorkspaceName"
                                   Variant="Variant.Outlined"
-                                  AutoGrow="@false"
+                                  Sizing="InputSizing.Fixed"
                                   Lines="1"
                                   Label="@T("Workspace name")"
                                   AutoFocus="@true"
@@ -34,13 +34,13 @@
             }
             else
             {
-                <MudButton StartIcon="@Icons.Material.Filled.LibraryAdd" Variant="Variant.Filled" OnClick="@this.ShowCreateWorkspaceForm">
+                <MudButton StartIcon="@AppIcons.ADD_WORKSPACE" Variant="Variant.Filled" OnClick="@this.ShowCreateWorkspaceForm">
                     @T("Create new workspace")
                 </MudButton>
             }
 
             <MudStack Row="@true" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="2">
-                <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                <MudButton OnClick="@this.CancelAsync" Variant="Variant.Filled">
                     @T("Cancel")
                 </MudButton>
                 @if (this.showCreateWorkspaceForm)

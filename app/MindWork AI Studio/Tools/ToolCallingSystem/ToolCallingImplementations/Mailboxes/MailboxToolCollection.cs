@@ -25,7 +25,7 @@ public sealed class MailboxToolCollection : IToolCollection
         DescriptionForLLM = "Search, read, and count the mails in the mailboxes of the user, including their attachments. AI Studio keeps the mailboxes in a local index; nothing in a mailbox changes.",
     };
 
-    public string Icon => Icons.Material.Filled.Mail;
+    public string Icon => AppIcons.MAILBOX;
 
     public string GetDisplayName() => TB("Mailboxes");
 

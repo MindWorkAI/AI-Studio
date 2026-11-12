@@ -382,6 +382,21 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: mailboxes only on the mail servers of the organization?
         ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.AllowOnlyOrganizationMailServers, this.Id, settingsTable, dryRun);
 
+        // Config: the random pause between two indexing steps of local data sources
+        var minimumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MinimumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: value => value is >= 0 and <= DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+        if (!minimumPauseIsValid && settingsTable.TryGetValue("DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds", out _))
+            LOG.LogWarning("The lower bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between 0 and {MaximumPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+
+        var maximumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MaximumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: value => value is >= 0 and <= DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+        if (!maximumPauseIsValid && settingsTable.TryGetValue("DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds", out _))
+            LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between 0 and {MaximumPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+
+        if (minimumPauseIsValid && maximumPauseIsValid
+            && settingsTable.TryGetValue("DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds", out var minimumPauseValue) && minimumPauseValue.TryRead<int>(out var minimumPauseSeconds)
+            && settingsTable.TryGetValue("DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds", out var maximumPauseValue) && maximumPauseValue.TryRead<int>(out var maximumPauseSeconds)
+            && maximumPauseSeconds < minimumPauseSeconds)
+            LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} is below its lower bound. The lower bound of {MinimumPauseSeconds} seconds wins.", this.Id, minimumPauseSeconds);
+
         // Config: data source selection agent settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
@@ -475,7 +490,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptFilePath, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedPolicyId, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.OutputMode, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultFileFormat, this.Id, settingsTable, dryRun);
+
+        var resultFileFormatIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultFileFormat, this.Id, settingsTable, dryRun, validator: DataBatchProcessing.IsValidResultFileFormat);
+        if (!resultFileFormatIsValid && settingsTable.TryGetValue("DataBatchProcessing.ResultFileFormat", out _))
+            LOG.LogWarning("The Batch Processing result file format configured by plugin {ConfigPluginId} must be one of {ResultFileFormats}.", this.Id, string.Join(", ", FileExportFormat.AnswerFormats));
+
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvFileName, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultColumnHeader, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvSeparator, this.Id, settingsTable, dryRun);
@@ -501,12 +520,27 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.OptimizeImages, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
+        // Config: BeyondFacts Lab defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.AddressForm, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.AllowPromptOverrides, this.Id, settingsTable, dryRun);
+
         // Config: Assistant Builder defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedOutputLanguage, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedOtherOutputLanguage, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+
+        // Config: Prompt Optimizer defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedTargetLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedOtherLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedImportantAspects, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedCustomPromptGuidePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.PromptOptimizer, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);

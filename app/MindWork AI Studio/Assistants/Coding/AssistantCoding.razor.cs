@@ -2,6 +2,7 @@
 
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.Coding;
@@ -14,7 +15,10 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     
     protected override string Description => T("This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.");
     
-    protected override string SystemPrompt => 
+    // This prompt describes a developer for any coding question, which suits the follow-up questions of the chat:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
+
+    protected override string SystemPrompt =>
         """
         You are a friendly, helpful senior software developer with extensive experience in various programming languages
         and concepts. You are familiar with principles like DRY, KISS, YAGNI, and SOLID and can apply and explain them.
@@ -47,12 +51,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         {
             var originalChatThread = this.ChatThread ?? new ChatThread();
             if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
-            {
-                return originalChatThread with
-                {
-                    SystemPrompt = SystemPrompts.DEFAULT,
-                };
-            }
+                return originalChatThread;
 
             var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
             var visiblePromptTime = earliestBlock is null
@@ -84,7 +83,6 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
             {
                 ChatId = Guid.NewGuid(),
                 Name = T("Coding Assistant Session"),
-                SystemPrompt = SystemPrompts.DEFAULT,
                 Blocks = transferredBlocks,
             };
         }
@@ -139,16 +137,9 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         state.Restore(QUESTIONS_STATE_KEY, value => this.questions = value);
     }
 
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_CODING_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.questions = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.questions = payload.Text;
 
     #endregion
 
@@ -199,7 +190,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     private async Task GetSupport()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

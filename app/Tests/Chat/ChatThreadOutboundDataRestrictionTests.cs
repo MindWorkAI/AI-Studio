@@ -100,12 +100,12 @@ public sealed class ChatThreadOutboundDataRestrictionTests
     [TestCase(OutboundDataRestriction.UNRESTRICTED)]
     public void ARestrictionThisVersionDoesNotKnowCountsAsTheStrictest(OutboundDataRestriction known)
     {
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(UNKNOWN_RESTRICTION.StricterOf(known), Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
             Assert.That(known.StricterOf(UNKNOWN_RESTRICTION), Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
             Assert.That(UNKNOWN_RESTRICTION.StricterOf(UNKNOWN_RESTRICTION), Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
-        });
+        }
     }
 
     [Test]

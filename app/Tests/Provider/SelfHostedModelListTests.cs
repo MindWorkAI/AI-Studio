@@ -25,11 +25,6 @@ namespace AIStudio.Tests.Provider;
 [TestFixture]
 public sealed class SelfHostedModelListTests
 {
-    private static readonly JsonSerializerOptions AS_THE_PROVIDERS_READ_IT = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
-
     /// <summary>
     /// What "GET /v1/models" answers on a local Ollama, shortened to the fields it sends.
     /// </summary>
@@ -51,7 +46,7 @@ public sealed class SelfHostedModelListTests
 
     private static IReadOnlyList<Model> TheModelsTheEngineListed()
     {
-        var response = JsonSerializer.Deserialize<SelfHostedModelsResponse>(WHAT_A_LOCAL_OLLAMA_ANSWERS, AS_THE_PROVIDERS_READ_IT);
+        var response = JsonSerializer.Deserialize<SelfHostedModelsResponse>(WHAT_A_LOCAL_OLLAMA_ANSWERS, ProviderJsonOptions.OPTIONS);
         Assert.That(response.Data, Is.Not.Null, "The answer has to be readable before anything can be sorted out of it.");
 
         return response.Data!
@@ -79,12 +74,12 @@ public sealed class SelfHostedModelListTests
             .Select(model => model.Id)
             .ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(embeddingModels, Does.Contain("bge-m3:latest"), "Named after the family which built it, with no word about what it does.");
             Assert.That(embeddingModels, Does.Contain("all-minilm:latest"), "The same, and without the organization which used to be the only marker.");
             Assert.That(embeddingModels, Has.Count.EqualTo(5), "The three Qwen embedding tags belong here as well, and nothing else does.");
-        });
+        }
     }
 
     [Test]

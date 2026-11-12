@@ -28,13 +28,21 @@ Key structure:
 ## Important Development Notes
 
 - **Naming conventions** - Constants, enum members, and `static readonly` fields use `UPPER_SNAKE_CASE` such as `MY_CONSTANT`.
+- **Extension members** - Declare extension methods in an `extension` block of their static class, one block per receiver, never with a `this` parameter: MWAIS0016 refuses the classic form. The `<param>` of the receiver, and of a generic block its `<typeparam>`, belongs on the block, not on its members. A member which only looks something up about its receiver, such as a name, an icon, a flag, a prompt, or an address, is an extension property, named without `Get` or `To`: `format.FileExtension`, `host.IsChatSupported`. It stays a method when it takes parameters, builds something new such as a list or a model profile, parses, scans a collection, or converts into another type, as `GetModelProfile`, `CompactCount`, and `ToSources` do. Check first that the receiver has no instance member of the same name, which would hide the extension. A helper which belongs to the type rather than to one of its values is a static member of the block and is reached through the type: `RID.Current`, `FileExportFormat.TryFromCodeFenceLanguage`. Never name one `Parse` or `TryParse`: C# finds those of `Enum` first.
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
 - **Prompt injection reports** - The user hears once per action about what the filter removed, as soon as that action ends. Content which belongs to an action carries its scope from `PromptInjectionGuardService.BeginAction` down to where it is read or filtered; whatever is filtered without a scope is reported right away. Pass the scope as a parameter, never through a field or an `AsyncLocal`: the service serves the whole app, and the message bus delivers to other receivers in the execution context of whoever sends.
 - **Paths in stored data** - A stored path to a file which AI Studio keeps below the data directory, such as a transcript or a tokenizer copy, is relative to that directory, so that a backup or a copy of the data directory works on another computer, under another user name, or on another OS. Mark such a property with `[JsonConverter(typeof(DataDirectoryRelativePathConverter))]`, for a positional record parameter with `[property: ...]`; in memory, the path stays absolute. Better still, derive the path from IDs and store none, as `VisualBriefingStore` does. Paths to files of the user stay absolute. Chats stored before v26.10.1 are migrated by a compatibility shim, see `documentation/compatibility-shims/2026-10-relative-data-paths.md`.
 - **New files and folders in the data or configuration directory** - Whoever adds a file or folder directly to the data or configuration directory, or below `plugins/` or `databases/` one which needs a decision of its own, lists it in `DataBackupContents.ENTRIES`: as part of a backup, or with the reason a backup leaves it out. A backup takes along only what is listed as included, and a restore replaces only that. An entry included in a backup also goes into `REPLACEABLE_ELEMENTS` in `runtime/src/data_restore.rs`; otherwise the runtime refuses to restore it. The folder panel on the information page shows the list to users who back up these folders with a tool of their own.
+- **Sending content on** - Content which leaves one place for another, such as the result of an assistant sent to another assistant or a text sent into the chat, travels as a `TextLaunchPayload` through `AssistantLaunchService`, together with the restrictions of where it was written (`ChatRestrictions`, see `ChatThread.CaptureRestrictions`). Never hand over a bare string: the destination would let any provider or tool see content which its source kept from them. Build the payload with `AssistantLaunchService.CreateTextPayloadAsync`, which filters what an AI wrote for prompt injections before it reaches the next model as a message of the user. An assistant which allows sending to it overrides `AssistantBase.ApplyTextLaunchPayload`, and `SendToReceiverTests` checks that every one does; the restrictions themselves are applied centrally in `AssistantBase`.
 - **JSON in model answers** - Read the JSON part of a model answer with `ModelAnswerJson`, never with a scanner of your own. It skips the prose and code fences around the JSON but checks nothing, so broken JSON reaches the deserializer unchanged and its message can go back to the model.
+- **JSON contracts** - The contracts of all JSON which AI Studio reads or writes are generated while compiling. Each kind of options names the `JsonSerializerContext` which knows its types, with `GenerationMode = Metadata`, as its `TypeInfoResolver` and ends with `.AsReadOnly()`; only `VisualBriefingJson.Canonical` leaves that out, see MWAIS0010. A new JSON type goes into the context of the options it is read or written with, and into `JsonTestRoots` in `app/Tests/Serialization/`, whose contract, defaults, and coverage tests then check it. Give JSON types `set` instead of `init`, because the source generator of .NET 10 drops the initializer of an `init` property which the JSON leaves out, and write a record or a `JsonObject` instead of an anonymous type. Never call System.Text.Json without options, nor with `JsonSerializerOptions.Default`, `.Web`, or a `DefaultJsonTypeInfoResolver`: each of them builds the contracts by reflection, whose code a published build may lack. MWAIS0015 refuses them while compiling, `JsonOptionsResolverTests` checks the resolvers of all options of the app, and the trim smoke test of `dotnet run verify` builds the contract of every type of their contexts in a trimmed build. Reflection itself stays switched on, because Blazor Server needs it for JSON of its own, see `Trimming.props`.
+- **Long menus** - MudBlazor keeps a `MudSelect` inside the window by itself, but never a `MudMenu`: a menu taller than the window runs past its edge, and its lower entries cannot be reached. Give every `MudMenu` whose entries come from data, such as the assistants or the profiles, `MaxHeight="@MenuDefaults.MAX_HEIGHT"`, so that it scrolls.
+- **Growing popovers** - Since version 9, MudBlazor places an open popover again whenever its content changes size. Content which unfolds later, such as a `MudCollapse` or an `ExpansionPanel` inside a `MudPopover`, therefore stays inside the window and needs no code of its own.
 - **Encryption** - Initialized before Rust service is marked ready
+- **Access to the app server** - Only the app window gets into the Blazor server. `AppAccessMiddleware` runs first in `Program.cs`, right after the host filter, and refuses every request without the session cookie of the window or with an origin other than the app's own. Add no exception for any path, not even for static files: `AppAccessPipelineTests` checks the order in `Program.cs`. Since nothing but the window holds the cookie, the app never sends a request to its own server: read files below `wwwroot/` through `WebRootFiles`. The system browser gets no cookie either, so never open a URL of the app server there; offer a save dialog through `RustService` instead, as the ERI Server assistant does for its specification. `runtime/AGENTS.md` describes the runtime side.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
+- **Boot link** - Once the .NET server is ready, a development build writes `dev-boot-link.txt` into the repository root. Opening that link hands another browser the session cookie. Open it only when the developer asks for it: the development build shows the data of the installed app.
+- **Static files and the browser cache** - When the developer starts the app from Rider, the embedded browser of Tauri keeps the static files under `wwwroot/`, such as `app.css` or a script, in its cache. The app then still shows the old file, and a change seems not to work. Whenever you changed such a file, tell the developer to clear that cache through the developer tools of the embedded browser before testing, and only the cache: the website data hold the session cookie, and without it the window shows "This window cannot access AI Studio. Please restart AI Studio." until the .NET server starts again. Users of a release are not affected.
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 
 ## Tests
@@ -64,6 +72,23 @@ The app's texts are localized in two steps, and the developer always does the fi
 **Moving a `TB()` text into another class gives it a new I18N key**, so its translation is made anew during
 the next localization run.
 
+**A text with several lines**, such as a notice in Markdown, is one raw string literal right after the
+parenthesis: `TB("""`, the indented lines of the text, and `""")` on a line of its own. The collector reads
+every literal as the compiler does, with its escape sequences and without the indentation of a raw literal,
+and the translations keep the line breaks. A text which is not one literal, such as an interpolated string
+or a concatenation, gets no translation; the collector warns about it.
+
+**A text which addresses the reader**, with "you" or by asking them to do something in a sentence, uses `TA()`
+instead of `T()` or `TB()`; labels, buttons, titles, and examples stay with those. A static class gets a `TA()` of
+its own next to its `TB()`: `private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(X).Namespace, nameof(X));`.
+The collector files such a text under two keys: the usual one, translated with the formal address, such as "Sie"
+in German, and the same key ending in `::INFORMAL`, translated with the informal address, such as "du". The
+localization assistant writes the informal variant from the formal translation and changes only the form of
+address; whoever corrects a formal translation in the review corrects its informal variant alike. Which one
+the app shows follows `I18N.I.AddressForm`; when the language in use lacks the informal variant, it shows the
+formal one. So far, only the BeyondFacts Lab uses `TA()`, and its option "Form of address" decides, see
+`Program.cs`. The rest of the app addresses the reader formally until it gets a setting of its own for this.
+
 ## Plugin System
 
 **Location:** `app/MindWork AI Studio/Plugins/`
@@ -83,12 +108,16 @@ configuration plugin provides and how to add each of them.
 
 **Documentation:** `documentation/Tools.md`
 
-Selections, `DataTools.DisabledToolIds`, and the minimum provider confidence name tool collections; a tool outside a declared collection forms one under its own ID, and the ID of a tool inside one stands for its whole collection. Normalize a selection with `ToolRegistry.NormalizeSelection`, and expand it into tools with `ToolRegistry.ExpandSelection` only where the view of the model counts.
+Selections, `DataTools.DisabledToolIds`, `DataTools.UserDisabledToolIds`, and the minimum provider confidence name tool collections; a tool outside a declared collection forms one under its own ID, and the ID of a tool inside one stands for its whole collection. Normalize a selection with `ToolRegistry.NormalizeSelection`, and expand it into tools with `ToolRegistry.ExpandSelection` only where the view of the model counts.
+
+Build a list of tools for a component with `ToolRegistry.GetCatalogAsync(Components)`, never from the definitions: it leaves out the tools the user switched off. Whether a tool may be used at all is answered by `ToolRegistry.IsToolActive`, which checks what the organization and what the user switched off. A field which lets somebody change a stored selection shows it through `ToolRegistry.LeaveOutSwitchedOffByUser` and stores the change through `ToolRegistry.KeepSwitchedOffByUser`, so a tool switched off only hides and comes back when switched on again. See "Switched-Off Tools" in `documentation/Tools.md`.
 
 Code which decides something on behalf of a request — whether the classic RAG process steps back, say — asks `ToolRegistry.GetOfferBlockReasonAsync` or `ToolRegistry.GetEffectiveRetrievalModeAsync` with the provider settings of the request (`IProvider.CreateSettingsProvider`), never a check of its own: two answers which drift apart leave a chat searching nothing or twice.
 
 **Area guide:** `app/MindWork AI Studio/Tools/ToolCallingSystem/AGENTS.md`, with how to add, change, or
 remove a tool and the rules every tool implementation follows.
+
+**Mathematics.** Code which computes with AngouriMath runs inside `MathComputationService.ComputeAsync` and reads expressions with `MathExpressionReader`, never by calling `MathS` or `Entity` on a thread of its own: the service gives it the stack deep expressions need, the time budget, and the settings the tools rely on, such as explicit parsing. Check exact values and expansions with `MathGuards` first, since AngouriMath ignores the cancellation there. Evaluate a value numerically with `NumericEvaluator.EvaluateAt`, not with `EvalNumerical`: by default, AngouriMath takes tiny values, such as those of physical constants, for 0. Never name AngouriMath in a text the model reads, such as a refusal or an issue; write "the tool" instead. See "Mathematics" in `documentation/Tools.md`.
 
 ## Model Capabilities
 
@@ -148,12 +177,13 @@ and the rules which are easy to break.
 ## Enterprise IT Support
 
 AI Studio supports centralized configuration for enterprise environments:
-- **Registry (Windows)** or **environment variables** (all platforms) specify configuration server URL and ID
+- **Registry (Windows)**, **policy files**, or **environment variables** (all platforms) specify configuration server URL and ID
 - Configuration downloaded as ZIP containing Lua plugin
 - Checks for updates every ~16 minutes via ETag
 - Allows IT departments to pre-configure providers, settings, and chat templates
 
-**Documentation:** `documentation/Enterprise IT.md`
+**Documentation:** the Enterprise IT section of the wiki, https://github.com/MindWorkAI/AI-Studio/wiki/Enterprise-IT;
+see "Wiki" in the root `AGENTS.md`.
 
 ## Provider Confidence System
 

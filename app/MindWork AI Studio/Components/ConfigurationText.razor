@@ -4,7 +4,7 @@
 {
     <MudTextField
         T="string"
-        Text="@this.Text()"
+        Text="@(this.ExpandToContent ? this.EditingText : this.Text())"
         TextChanged="@this.InternalUpdate"
         Disabled="@this.IsDisabled"
         Adornment="@this.IconAdornment"
@@ -12,8 +12,9 @@
         AdornmentColor="@this.IconColor"
         UserAttributes="@SPELLCHECK_ATTRIBUTES"
         Lines="@this.NumLines"
-        AutoGrow="@this.AutoGrow"
+        Sizing="@this.Sizing"
         MaxLines="@this.GetMaxLines"
+        Class="@this.InputClass"
         Immediate="@true"
         Validation="@this.Validation"
         Underline="false"
@@ -25,20 +26,26 @@ else
     <div>
         <MudTextField
             T="string"
-            Text="@this.Text()"
+            Text="@(this.ExpandToContent ? this.EditingText : this.Text())"
             TextChanged="@this.InternalUpdate"
             Disabled="@this.IsDisabled"
-            Adornment="@this.IconAdornment"
-            AdornmentIcon="@this.Icon"
+            Adornment="@(this.ResetButtonIconOnly ? Adornment.End : this.IconAdornment)"
+            AdornmentIcon="@(this.ResetButtonIconOnly ? AppIcons.RESTORE_DEFAULT : this.Icon)"
+            OnAdornmentClick="@this.ResetAdornmentClick"
+            AdornmentAriaLabel="@(this.ResetButtonIconOnly ? this.ResetButtonText : null)"
             AdornmentColor="@this.IconColor"
             UserAttributes="@SPELLCHECK_ATTRIBUTES"
             Lines="@this.NumLines"
-            AutoGrow="@this.AutoGrow"
+            Sizing="@this.Sizing"
             MaxLines="@this.GetMaxLines"
+            Class="@this.InputClass"
             Immediate="@true"
             Validation="@this.Validation"
             Underline="false"
         />
-        <RestoreDefaultButton Text="@this.ResetButtonText" Disabled="@this.IsDisabled" OnClick="@this.ResetTextAsync"/>
+        @if (!this.ResetButtonIconOnly)
+        {
+            <RestoreDefaultButton Text="@this.ResetButtonText" Disabled="@this.IsDisabled" OnClick="@this.ResetTextAsync"/>
+        }
     </div>
 }

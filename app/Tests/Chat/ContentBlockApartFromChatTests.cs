@@ -21,13 +21,13 @@ public sealed class ContentBlockApartFromChatTests
 
         var template = new ChatThread { ChatId = Guid.NewGuid(), Blocks = chat.Blocks.Select(block => block.CloneApartFromChat()).ToList() };
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(template.CollectProvenanceIds(), Is.Empty, "The entries belong to the chat and are deleted with it.");
             Assert.That(template.Blocks.Select(block => ((ContentText)block.Content!).Text), Is.EqualTo(new[] { "Summarize the minutes.", "The board met on Monday." }));
             Assert.That(template.Blocks[0].Content!.FileAttachments.Select(attachment => attachment.FilePath), Is.EqualTo(new[] { "/tmp/minutes.txt" }), "The file is read anew by every chat it reaches.");
             Assert.That(chat.CollectProvenanceIds(), Has.Count.EqualTo(2), "The chat itself keeps what it received.");
-        });
+        }
     }
 
     [Test]

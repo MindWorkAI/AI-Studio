@@ -7,16 +7,18 @@
         Text="@this.Value"
         Variant="Variant.Outlined"
         Margin="Margin.Dense"
-        Lines="3"
+        Lines="@this.Lines"
         MaxLines="@this.MaxLines"
-        AutoGrow="@true"
+        Sizing="InputSizing.Auto"
+        Adornment="@(string.IsNullOrEmpty(this.Icon) ? Adornment.None : Adornment.Start)"
+        AdornmentIcon="@this.Icon"
         Style="@this.GetColor()"
         UserAttributes="@USER_INPUT_ATTRIBUTES" />
 
     @if (this.ShowingCopyButton)
     {
         <MudTooltip Text="@this.ClipboardTooltip">
-            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Medium" OnClick="@(() => this.CopyToClipboard(this.Value))"/>
+            <MudIconButton Icon="@AppIcons.COPY" Size="Size.Medium" OnClick="@(() => this.CopyToClipboard(this.Value))"/>
         </MudTooltip>
     }
 </MudStack>

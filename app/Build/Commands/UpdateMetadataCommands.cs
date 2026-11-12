@@ -9,17 +9,38 @@ using SharedTools;
 namespace Build.Commands;
 
 // ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
 
 public sealed partial class UpdateMetadataCommands
 {
-    [Command("release", Description = "Prepare & build the next release")]
-    public async Task Release(
-        [Option("action", ['a'], Description = "The release action: patch, minor, or major")] PrepareAction action = PrepareAction.NONE,
-        [Option("version", ['v'], Description = "Set a specific version directly, e.g., 26.1.2")] string? version = null,
-        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
+    /// <summary>
+    /// Creates the option "--action" of the commands which prepare a release.
+    /// </summary>
+    private static Option<PrepareAction> CreateActionOption() => new("--action", "-a") { Description = "The release action: build, month, or year, which raise the release, the month, or the year of the version, e.g., 26.11.1 becomes 26.11.2, 26.12.1, or 27.1.1", DefaultValueFactory = _ => PrepareAction.NONE };
+
+    /// <summary>
+    /// Creates the option "--version" of the commands which prepare a release.
+    /// </summary>
+    private static Option<string> CreateVersionOption() => new("--version", "-v") { Description = "Set a specific version directly, e.g., 26.1.2" };
+
+    /// <summary>
+    /// Creates the option "--offline" of the commands which build the app.
+    /// </summary>
+    private static Option<bool> CreateOfflineOption() => new("--offline") { Description = "Skip downloads and use locally available build dependencies" };
+
+    /// <summary>
+    /// Defines the command "release".
+    /// </summary>
+    public static Command CreateReleaseCommand()
+    {
+        var action = CreateActionOption();
+        var version = CreateVersionOption();
+        var offline = CreateOfflineOption();
+        var command = new Command("release", "Prepare & build the next release") { action, version, offline };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().Release(parseResult.GetValue(action), parseResult.GetValue(version), parseResult.GetValue(offline)));
+        return command;
+    }
+
+    public async Task Release(PrepareAction action = PrepareAction.NONE, string? version = null, bool offline = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             throw new CommandExitedException(1);
@@ -46,11 +67,29 @@ public sealed partial class UpdateMetadataCommands
         await this.PerformPrepare(action, true, version);
 
         await this.BuildPreparedRelease(offline);
+
+        // The wiki is a repository of its own, and nothing in this build touches it.
+        // It describes what users can install, so it changes once the release is published:
+        Console.WriteLine();
+        Console.WriteLine("==============================");
+        Console.WriteLine("- Warning: Remember the wiki, https://github.com/MindWorkAI/AI-Studio/wiki");
+        Console.WriteLine("  Once the release is published, carry the \"Wiki\" sections of the pull requests merged since the");
+        Console.WriteLine("  last release into the wiki, and raise the version in _Footer.md and de/_Footer.md. See step 9 of");
+        Console.WriteLine("  \"Release Process\" in app/Build/AGENTS.md.");
     }
 
-    [Command("rebuild-release", Description = "Prepare & build a new build of the current release")]
-    public async Task RebuildRelease(
-        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
+    /// <summary>
+    /// Defines the command "rebuild-release".
+    /// </summary>
+    public static Command CreateRebuildReleaseCommand()
+    {
+        var offline = CreateOfflineOption();
+        var command = new Command("rebuild-release", "Prepare & build a new build of the current release") { offline };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().RebuildRelease(parseResult.GetValue(offline)));
+        return command;
+    }
+
+    public async Task RebuildRelease(bool offline = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             throw new CommandExitedException(1);
@@ -97,10 +136,19 @@ public sealed partial class UpdateMetadataCommands
         await this.Build(offline, skipVerify: true);
     }
 
-    [Command("update-metainfo", Description = "Update the AppStream metainfo entry of one release from its changelog")]
-    public async Task UpdateMetainfo(
-        [Option("version", ['v'], Description = "The release version, e.g., 26.1.2. Defaults to the version from the metadata")] string? version = null,
-        [Option("date", ['d'], Description = "The release date as yyyy-MM-dd. Defaults to the build time from the metadata")] string? date = null)
+    /// <summary>
+    /// Defines the command "update-metainfo".
+    /// </summary>
+    public static Command CreateUpdateMetainfoCommand()
+    {
+        var version = new Option<string>("--version", "-v") { Description = "The release version, e.g., 26.1.2. Defaults to the version from the metadata" };
+        var date = new Option<string>("--date", "-d") { Description = "The release date as yyyy-MM-dd. Defaults to the build time from the metadata" };
+        var command = new Command("update-metainfo", "Update the AppStream metainfo entry of one release from its changelog") { version, date };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().UpdateMetainfo(parseResult.GetValue(version), parseResult.GetValue(date)));
+        return command;
+    }
+
+    public async Task UpdateMetainfo(string? version = null, string? date = null)
     {
         const int APP_VERSION_INDEX = 0;
         const int BUILD_TIME_INDEX = 1;
@@ -131,7 +179,16 @@ public sealed partial class UpdateMetadataCommands
         }
     }
 
-    [Command("update-versions", Description = "The command will update the package versions in the metadata file")]
+    /// <summary>
+    /// Defines the command "update-versions".
+    /// </summary>
+    public static Command CreateUpdateVersionsCommand()
+    {
+        var command = new Command("update-versions", "The command will update the package versions in the metadata file");
+        command.SetAction((_, _) => new UpdateMetadataCommands().UpdateVersions());
+        return command;
+    }
+
     public async Task UpdateVersions()
     {
         if(!Environment.IsWorkingDirectoryValid())
@@ -147,10 +204,19 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateVectorStoreVersion();
     }
     
-    [Command("prepare", Description = "Prepare the metadata for the next release")]
-    public async Task Prepare(
-        [Option("action", ['a'], Description = "The release action: patch, minor, or major")] PrepareAction action = PrepareAction.NONE,
-        [Option("version", ['v'], Description = "Set a specific version directly, e.g., 26.1.2")] string? version = null)
+    /// <summary>
+    /// Defines the command "prepare".
+    /// </summary>
+    public static Command CreatePrepareCommand()
+    {
+        var action = CreateActionOption();
+        var version = CreateVersionOption();
+        var command = new Command("prepare", "Prepare the metadata for the next release") { action, version };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().Prepare(parseResult.GetValue(action), parseResult.GetValue(version)));
+        return command;
+    }
+
+    public async Task Prepare(PrepareAction action = PrepareAction.NONE, string? version = null)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
@@ -204,12 +270,35 @@ public sealed partial class UpdateMetadataCommands
                 throw new CommandExitedException(1);
             }
 
+            // The previous release created the changelog with a placeholder in its first line, which
+            // reserved the build number of this release. We fill in the build time below, so check now,
+            // before anything is written, that the placeholder is still there:
+            var changelogPlaceholderHeader = GetFirstLine(await File.ReadAllTextAsync(changelogPath, Encoding.UTF8));
+            var expectedBuildNumber = await ReadBuildNumber() + 1;
+            if (!IsChangelogPlaceholderHeader(changelogPlaceholderHeader, appVersion.VersionText, expectedBuildNumber))
+            {
+                Console.WriteLine($"- Error: The first line of '{Path.GetFileName(changelogPath)}' must be the placeholder '# v{appVersion.VersionText}, build {expectedBuildNumber} (YYYY-MM-xx xx:xx UTC)', but it is '{changelogPlaceholderHeader}'.");
+                throw new CommandExitedException(1);
+            }
+
+            try
+            {
+                await EnsureMetainfoReleaseCanBeWritten(appVersion.VersionText);
+            }
+            catch (InvalidOperationException exception)
+            {
+                Console.WriteLine($"- Error: {exception.Message}");
+                throw new CommandExitedException(1);
+            }
+
             await this.UpdateAppVersion(appVersion);
             var buildNumber = await this.IncreaseBuildNumber();
-            var buildTime = await this.UpdateBuildTime();
-            await this.UpdateChangelog(buildNumber, appVersion.VersionText, buildTime);
+            var buildTimeText = await this.UpdateBuildTime();
+            var buildTime = ParseMetadataBuildTime(buildTimeText);
+            await UpdateChangelogHeader(changelogPath, changelogPlaceholderHeader, appVersion.VersionText, buildNumber, buildTime);
+            await this.UpdateChangelog(buildNumber, appVersion.VersionText, buildTimeText);
             await this.CreateNextChangelog(buildNumber, appVersion);
-            await WriteMetainfoRelease(appVersion.VersionText, ParseMetadataBuildTime(buildTime));
+            await WriteMetainfoRelease(appVersion.VersionText, buildTime);
             await this.UpdateProjectCommitHash();
             await this.UpdateReleaseDependenciesAndLicence();
             Console.WriteLine();
@@ -227,10 +316,19 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "Information.razor.cs")));
     }
     
-    [Command("build", Description = "Build MindWork AI Studio")]
-    public async Task Build(
-        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false,
-        [Option("skip-verify", Description = "Skip the quality gate which otherwise runs before anything is built")] bool skipVerify = false)
+    /// <summary>
+    /// Defines the command "build".
+    /// </summary>
+    public static Command CreateBuildCommand()
+    {
+        var offline = CreateOfflineOption();
+        var skipVerify = new Option<bool>("--skip-verify") { Description = "Skip the quality gate which otherwise runs before anything is built" };
+        var command = new Command("build", "Build MindWork AI Studio") { offline, skipVerify };
+        command.SetAction((parseResult, _) => new UpdateMetadataCommands().Build(parseResult.GetValue(offline), parseResult.GetValue(skipVerify)));
+        return command;
+    }
+
+    public async Task Build(bool offline = false, bool skipVerify = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             throw new CommandExitedException(1);
@@ -257,9 +355,9 @@ public sealed partial class UpdateMetadataCommands
         var pdfiumVersion = await this.ReadPdfiumVersion();
         await Pdfium.InstallAsync(rid, pdfiumVersion, Environment.IsOfflineBuildRequested(offline));
         
-        Console.Write($"- Start .NET build for {rid.ToUserFriendlyName()} ...");
-        await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
-        var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --disable-build-servers --force");
+        Console.Write($"- Start .NET build for {rid.UserFriendlyName} ...");
+        await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.MicrosoftRid}");
+        var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.MicrosoftRid} --disable-build-servers --force");
         var dotnetBuildOutputLines = dotnetBuildOutput.Text.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         var foundIssue = false;
         foreach (var buildOutputLine in dotnetBuildOutputLines)
@@ -318,7 +416,7 @@ public sealed partial class UpdateMetadataCommands
 
         if (string.IsNullOrWhiteSpace(tauriSidecarArtifactName))
         {
-            Console.WriteLine($"- Error: Unsupported rid '{rid.AsMicrosoftRid()}'.");
+            Console.WriteLine($"- Error: Unsupported rid '{rid.MicrosoftRid}'.");
             throw new CommandExitedException(1);
         }
     
@@ -332,7 +430,7 @@ public sealed partial class UpdateMetadataCommands
             _ => "mindworkAIStudio",
         };
         
-        var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", dotnetArtifactFilename);
+        var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.MicrosoftRid, "publish", dotnetArtifactFilename);
         var finalDestination = Path.Combine(dotnetArtifactPath, tauriSidecarArtifactName);
         
         if(File.Exists(dotnetPublishedPath))
@@ -572,13 +670,8 @@ public sealed partial class UpdateMetadataCommands
         var nextChangelog = nextChangelogCandidates[0];
 
         // The release entry itself is written by ApplyRebuildReleaseState, which adds it when it is
-        // missing and moves it to the top otherwise. Here, we only ensure that there is a file to write to:
-        var metainfoPath = GetMetainfoPath();
-        if (!File.Exists(metainfoPath))
-            throw new InvalidOperationException("The AppStream metainfo file does not exist.");
-
-        if (!ReleasesStartRegex().IsMatch(await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8)))
-            throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
+        // missing and moves it to the top otherwise. Here, we only ensure that it can be written:
+        await EnsureMetainfoReleaseCanBeWritten(appVersion);
 
         var headCommitHash = (await this.ReadCommandOutput(Environment.GetAIStudioDirectory(), "git", "rev-parse HEAD")).Text.Trim();
         if (!GitCommitHashRegex().IsMatch(headCommitHash))
@@ -656,13 +749,7 @@ public sealed partial class UpdateMetadataCommands
         const string RELEASE_INDENT = "    ";
 
         var metainfoPath = GetMetainfoPath();
-        if (!File.Exists(metainfoPath))
-            throw new InvalidOperationException("The AppStream metainfo file does not exist.");
-
-        var metainfo = await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8);
-        if (!ReleasesStartRegex().IsMatch(metainfo))
-            throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
-
+        var metainfo = await ReadMetainfo();
         var changelogEntries = await ReadChangelogEntries(appVersion);
 
         // Drop any earlier entry of this version, so that the version stays unique and moves to the top.
@@ -694,6 +781,34 @@ public sealed partial class UpdateMetadataCommands
         metainfo = metainfo.Insert(insertionPoint, releaseBlock.ToString());
         await File.WriteAllTextAsync(metainfoPath, metainfo, Environment.UTF8_NO_BOM);
         Console.WriteLine($"- Updated the AppStream metainfo for v{appVersion}, released on {releaseDate}, with {changelogEntries.Count} changelog entries.");
+    }
+
+    /// <summary>
+    /// Checks everything WriteMetainfoRelease needs for the given version, without writing anything.
+    /// </summary>
+    /// <remarks>
+    /// Preparing a release writes the AppStream entry last, after the metadata and the changelogs were changed. When
+    /// it failed only there, e.g., because the changelog has no entry yet, it would leave a half-prepared release
+    /// behind. Hence, the commands call this before they write anything.
+    /// </remarks>
+    /// <param name="appVersion">The version whose release entry will be written.</param>
+    private static async Task EnsureMetainfoReleaseCanBeWritten(string appVersion)
+    {
+        await ReadMetainfo();
+        await ReadChangelogEntries(appVersion);
+    }
+
+    private static async Task<string> ReadMetainfo()
+    {
+        var metainfoPath = GetMetainfoPath();
+        if (!File.Exists(metainfoPath))
+            throw new InvalidOperationException("The AppStream metainfo file does not exist.");
+
+        var metainfo = await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8);
+        if (!ReleasesStartRegex().IsMatch(metainfo))
+            throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
+
+        return metainfo;
     }
 
     private static async Task<IReadOnlyList<string>> ReadChangelogEntries(string appVersion)
@@ -778,6 +893,37 @@ public sealed partial class UpdateMetadataCommands
         return $"# v{appVersion}, build {buildNumber} ({buildTime.ToUniversalTime():yyyy-MM-dd HH:mm} UTC)";
     }
 
+    /// <summary>
+    /// Whether a changelog header is the placeholder which the previous release created for this version and build.
+    /// </summary>
+    /// <remarks>
+    /// The month of the placeholder is only a guess of when the release would happen, so any month matches.
+    /// </remarks>
+    /// <param name="changelogHeader">The first line of the changelog.</param>
+    /// <param name="appVersion">The version of the release.</param>
+    /// <param name="buildNumber">The build number of the release.</param>
+    /// <returns>True, when the header is the placeholder.</returns>
+    private static bool IsChangelogPlaceholderHeader(string changelogHeader, string appVersion, int buildNumber)
+    {
+        return Regex.IsMatch(changelogHeader, $"^# v{Regex.Escape(appVersion)}, build {buildNumber} \\(20[0-9]{{2}}-[0-9]{{2}}-xx xx:xx UTC\\)$");
+    }
+
+    /// <summary>
+    /// Replaces the placeholder in the first line of a changelog with the header of the release.
+    /// </summary>
+    /// <param name="changelogPath">The path of the changelog.</param>
+    /// <param name="placeholderHeader">The placeholder, as checked before anything was written.</param>
+    /// <param name="appVersion">The version of the release.</param>
+    /// <param name="buildNumber">The build number of the release.</param>
+    /// <param name="buildTime">The build time of the release.</param>
+    private static async Task UpdateChangelogHeader(string changelogPath, string placeholderHeader, string appVersion, int buildNumber, DateTime buildTime)
+    {
+        var changelogContent = await File.ReadAllTextAsync(changelogPath, Encoding.UTF8);
+        var updatedChangelog = ReplaceExactlyOnce(changelogContent, placeholderHeader, FormatChangelogHeader(appVersion, buildNumber, buildTime));
+        await File.WriteAllTextAsync(changelogPath, updatedChangelog, Environment.UTF8_NO_BOM);
+        Console.WriteLine($"- Updated the header of '{Path.GetFileName(changelogPath)}'.");
+    }
+
     private static string FormatChangelogLogEntry(string appVersion, int buildNumber, DateTime buildTime, string changelogFilename)
     {
         return $"new ({buildNumber}, \"v{appVersion}, build {buildNumber} ({buildTime.ToUniversalTime():yyyy-MM-dd HH:mm} UTC)\", \"{changelogFilename}\"),";
@@ -854,7 +1000,16 @@ public sealed partial class UpdateMetadataCommands
         return shortVersion;
     }
 
-    [Command("update-project-hash", Description = "Update the project commit hash")]
+    /// <summary>
+    /// Defines the command "update-project-hash".
+    /// </summary>
+    public static Command CreateUpdateProjectHashCommand()
+    {
+        var command = new Command("update-project-hash", "Update the project commit hash");
+        command.SetAction((_, _) => new UpdateMetadataCommands().UpdateProjectCommitHash());
+        return command;
+    }
+
     public async Task UpdateProjectCommitHash()
     {
         const int COMMIT_HASH_INDEX = 8;
@@ -1179,6 +1334,13 @@ public sealed partial class UpdateMetadataCommands
         return new(sb.ToString(), process.ExitCode);
     }
     
+    private static async Task<int> ReadBuildNumber()
+    {
+        const int BUILD_NUMBER_INDEX = 2;
+        var lines = await File.ReadAllLinesAsync(Environment.GetMetadataPath(), Encoding.UTF8);
+        return int.Parse(lines[BUILD_NUMBER_INDEX]);
+    }
+
     private async Task<int> IncreaseBuildNumber()
     {
         const int BUILD_NUMBER_INDEX = 2;

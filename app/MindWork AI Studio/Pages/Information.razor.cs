@@ -49,7 +49,7 @@ public partial class Information : MSGComponentBase
     private string osUserName = string.Empty;
     private UpdatePolicyMode updatePolicyMode;
     
-    private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
+    private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().UserFriendlyName})";
     
     private static string MudBlazorVersion => $"MudBlazor: v{META_DATA.MudBlazorVersion}";
     
@@ -87,9 +87,11 @@ public partial class Information : MSGComponentBase
         }
     };
 
-    private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
+    private string VersionRust => string.IsNullOrWhiteSpace(this.RuntimeInfo.RustVersion)
+        ? $"{T("Used Rust compiler")}: {T("unknown")}"
+        : $"{T("Used Rust compiler")}: v{this.RuntimeInfo.RustVersion}";
     
-    private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
+    private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{DotnetRuntimeVersion.Current}";
     
     private string VersionDotnetSdk => $"{T("Used .NET SDK")}: v{META_DATA.DotnetSdkVersion}";
     
@@ -188,9 +190,9 @@ public partial class Information : MSGComponentBase
     /// </summary>
     private readonly IReadOnlyList<DatabaseSection> databaseSections =
     [
-        new(DatabaseRole.VECTOR_STORE, Icons.Material.Outlined.Storage),
-        new(DatabaseRole.INDEX_STORE, Icons.Material.Outlined.ManageSearch),
-        new(DatabaseRole.PROVENANCE_STORE, Icons.Material.Outlined.Source),
+        new(DatabaseRole.VECTOR_STORE, AppIcons.VECTOR_STORE),
+        new(DatabaseRole.INDEX_STORE, AppIcons.SEARCH_INDEX),
+        new(DatabaseRole.PROVENANCE_STORE, AppIcons.PROVENANCE_STORE),
     ];
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
@@ -203,26 +205,20 @@ public partial class Information : MSGComponentBase
     /// Determines whether the enterprise configuration has details that can be shown/hidden.
     /// Returns true if there are details available, false otherwise.
     /// </summary>
-    private bool HasEnterpriseConfigurationDetails
+    private bool HasEnterpriseConfigurationDetails => this.HasAnyActiveEnvironment switch
     {
-        get
-        {
-            return this.HasAnyActiveEnvironment switch
-            {
-                // Case 1: No enterprise config and no plugin - no details available
-                false when this.configPlugins.Count == 0 => false,
+        // Case 1: No enterprise config and no plugin - no details available
+        false when this.configPlugins.Count == 0 => false,
 
-                // Case 2: Enterprise config with plugin but no central management - has details
-                false => true,
+        // Case 2: Enterprise config with plugin but no central management - has details
+        false => true,
 
-                // Case 3: Enterprise config active but no plugin - has details
-                true when this.configPlugins.Count == 0 => true,
+        // Case 3: Enterprise config active but no plugin - has details
+        true when this.configPlugins.Count == 0 => true,
 
-                // Case 4: Enterprise config active with plugin - has details
-                true => true
-            };
-        }
-    }
+        // Case 4: Enterprise config active with plugin - has details
+        true => true
+    };
     
     #region Overrides of ComponentBase
     
@@ -321,19 +317,13 @@ public partial class Information : MSGComponentBase
         await this.InvokeAsync(this.StateHasChanged);
     }
     
-    private string PandocButtonText
+    private string PandocButtonText => this.pandocInstallation switch
     {
-        get
-        {
-            return this.pandocInstallation switch
-            {
-                { IsAvailable: true, CheckWasSuccessful: true } => this.T("Check Pandoc Installation"),
-                { IsAvailable: false, CheckWasSuccessful: true } => this.T("Update Pandoc"),
-                
-                _ => this.T("Install Pandoc")
-            };
-        }
-    }
+        { IsAvailable: true, CheckWasSuccessful: true } => this.T("Check Pandoc Installation"),
+        { IsAvailable: false, CheckWasSuccessful: true } => this.T("Update Pandoc"),
+        
+        _ => this.T("Install Pandoc")
+    };
 
     private async Task ShowPandocDialog()
     {
@@ -359,7 +349,7 @@ public partial class Information : MSGComponentBase
 
     private IReadOnlyList<ConfigInfoRowItem> BuildDatabaseInfoItems(DatabaseSection section) => section.DisplayInfo
         .Select((item, index) => new ConfigInfoRowItem(
-            Icons.Material.Filled.ArrowRightAlt,
+            AppIcons.INFO_ROW,
             $"{item.Label}: {item.Value}",
             item.Value,
             $"{T("Copies the following to the clipboard")}: {item.Value}",
@@ -451,18 +441,18 @@ public partial class Information : MSGComponentBase
     {
         var items = new List<ConfigInfoRowItem>
         {
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Enterprise configuration ID:")} {environment.ConfigurationId}",
                 environment.ConfigurationId.ToString(),
                 T("Copies the config ID to the clipboard")),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Configuration server:")} {environment.ConfigurationServerUrl}",
                 environment.ConfigurationServerUrl,
                 T("Copies the server URL to the clipboard"),
                 "margin-top: 4px;"),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Configuration source:")} {environment.Source}",
                 environment.Source,
                 T("Copies the configuration source to the clipboard"),
@@ -471,14 +461,14 @@ public partial class Information : MSGComponentBase
 
         if (!string.IsNullOrWhiteSpace(environment.SourceDetail))
         {
-            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            items.Add(new ConfigInfoRowItem(AppIcons.INFO_ROW,
                 $"{T("Configuration origin:")} {environment.SourceDetail}",
                 environment.SourceDetail,
                 T("Copies the configuration origin to the clipboard"),
                 "margin-top: 4px;"));
         }
 
-        items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+        items.Add(new ConfigInfoRowItem(AppIcons.INFO_ROW,
             $"{T("Configuration slot:")} {environment.Slot}",
             environment.Slot,
             T("Copies the configuration slot to the clipboard"),
@@ -486,7 +476,7 @@ public partial class Information : MSGComponentBase
 
         if (plugin is not null)
         {
-            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            items.Add(new ConfigInfoRowItem(AppIcons.INFO_ROW,
                 $"{T("Configuration plugin ID:")} {plugin.Id}",
                 plugin.Id.ToString(),
                 T("Copies the configuration plugin ID to the clipboard"),
@@ -510,12 +500,12 @@ public partial class Information : MSGComponentBase
     /// </remarks>
     private IReadOnlyList<ConfigInfoRowItem> BuildTestConfigurationItems(IAvailablePlugin plugin) =>
     [
-        new(Icons.Material.Filled.ArrowRightAlt,
+        new(AppIcons.INFO_ROW,
             $"{T("Configuration plugin ID:")} {plugin.Id}",
             plugin.Id.ToString(),
             T("Copies the configuration plugin ID to the clipboard")),
 
-        new(Icons.Material.Filled.ArrowRightAlt,
+        new(AppIcons.INFO_ROW,
             $"{T("Plugin directory:")} {plugin.LocalPath}",
             plugin.LocalPath,
             T("Copies the plugin directory to the clipboard"),
@@ -538,24 +528,24 @@ public partial class Information : MSGComponentBase
         var state = ExternalHttpClientTimeout.CustomRootCertificateState;
         var items = new List<ConfigInfoRowItem>
         {
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Status:")} {(state.IsUsable ? T("active") : T("not active"))}",
                 state.IsUsable ? T("active") : T("not active"),
                 T("Copies the status to the clipboard")),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Configuration source:")} {state.Source}",
                 state.Source,
                 T("Copies the configuration source to the clipboard"),
                 "margin-top: 4px;"),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Certificate bundle:")} {state.BundlePath}",
                 state.BundlePath,
                 T("Copies the certificate bundle path to the clipboard"),
                 "margin-top: 4px;"),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Loaded root certificates:")} {state.CertificateCount}",
                 state.CertificateCount.ToString(),
                 T("Copies the number of loaded root certificates to the clipboard"),
@@ -564,7 +554,7 @@ public partial class Information : MSGComponentBase
 
         if (state.AllowedHostPatterns.Count == 0)
         {
-            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            items.Add(new ConfigInfoRowItem(AppIcons.INFO_ROW,
                 T("Allowed hosts: none configured"),
                 string.Empty,
                 T("Copies the allowed host configuration to the clipboard"),
@@ -574,7 +564,7 @@ public partial class Information : MSGComponentBase
         {
             foreach (var allowedHostPattern in state.AllowedHostPatterns)
             {
-                items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Dns,
+                items.Add(new ConfigInfoRowItem(AppIcons.SERVER,
                     $"{T("Allowed host:")} {allowedHostPattern}",
                     allowedHostPattern,
                     T("Copies the allowed host pattern to the clipboard"),
@@ -584,7 +574,7 @@ public partial class Information : MSGComponentBase
 
         foreach (var fingerprint in state.CertificateFingerprints)
         {
-            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Fingerprint,
+            items.Add(new ConfigInfoRowItem(AppIcons.IDENTIFIER,
                 $"{T("Root certificate fingerprint:")} {fingerprint}",
                 fingerprint,
                 T("Copies the root certificate fingerprint to the clipboard"),
@@ -615,7 +605,7 @@ public partial class Information : MSGComponentBase
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The log file path is not available yet.")));
+            await this.MessageBus.SendWarning(new(AppIcons.FOLDER_OPEN, T("The log file path is not available yet.")));
             return;
         }
 
@@ -627,18 +617,18 @@ public partial class Information : MSGComponentBase
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Could not open the log file location in the file manager.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the log file location.")));
+            await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, T("Could not open the log file location.")));
             return;
         }
 
         if (response.Success)
         {
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FolderOpen, T("Opened the log file location.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.FOLDER_OPEN, T("Opened the log file location.")));
             return;
         }
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the log file location: {0}"), issue)));
+        await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, string.Format(T("Could not open the log file location: {0}"), issue)));
     }
     
     private const string LICENSE = """

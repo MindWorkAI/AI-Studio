@@ -14,7 +14,7 @@ public static partial class Pandoc
     private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(Pandoc).Namespace, nameof(Pandoc));
 
     // Pandoc is a program of its own, so it has to fit the machine, not the build of AI Studio:
-    private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
+    private static readonly RID CPU_ARCHITECTURE = RID.Current;
 
     private const string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download";
     private const string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
@@ -71,7 +71,7 @@ public static partial class Pandoc
             if (process == null)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Help, TB("Was not able to check the Pandoc installation.")));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.UNKNOWN, TB("Was not able to check the Pandoc installation.")));
 
                 LOG.LogError("The Pandoc process was not started, it was null. Executable path: '{Executable}'.", preparedProcess.StartInfo.FileName);
 
@@ -90,7 +90,7 @@ public static partial class Pandoc
             if (process.ExitCode != 0)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("Pandoc is not available on the system or the process had issues.")));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PANDOC_UNAVAILABLE, TB("Pandoc is not available on the system or the process had issues.")));
 
                 LOG.LogError("The Pandoc process exited with code {ProcessExitCode}. Error output: '{ErrorText}'", process.ExitCode, error);
 
@@ -101,7 +101,7 @@ public static partial class Pandoc
             if (!versionMatch.Success)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Terminal, TB("Was not able to validate the Pandoc installation.")));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PANDOC, TB("Was not able to validate the Pandoc installation.")));
 
                 LOG.LogError("Pandoc --version returned an invalid format: '{Output}'.", output);
 
@@ -115,7 +115,7 @@ public static partial class Pandoc
             if (installedVersion >= MINIMUM_REQUIRED_VERSION)
             {
                 if (showMessages && showSuccessMessage)
-                    await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, string.Format(TB("Pandoc v{0} is installed."), installedVersionString)));
+                    await MessageBus.INSTANCE.SendSuccess(new(AppIcons.SUCCESS, string.Format(TB("Pandoc v{0} is installed."), installedVersionString)));
 
                 if (!HAS_LOGGED_SUCCESSFUL_CHECK_ONCE)
                 {
@@ -127,7 +127,7 @@ public static partial class Pandoc
             }
 
             if (showMessages)
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Build, string.Format(TB("Pandoc v{0} is installed, but it doesn't match the required version (v{1})."), installedVersionString, MINIMUM_REQUIRED_VERSION.ToString())));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PANDOC_UNAVAILABLE, string.Format(TB("Pandoc v{0} is installed, but it doesn't match the required version (v{1})."), installedVersionString, MINIMUM_REQUIRED_VERSION.ToString())));
 
             LOG.LogWarning("Pandoc v{0} is installed, but it does not match the required version (v{1}).", installedVersionString, MINIMUM_REQUIRED_VERSION.ToString());
 
@@ -136,7 +136,7 @@ public static partial class Pandoc
         catch (Exception e)
         {
             if (showMessages)
-                await MessageBus.INSTANCE.SendError(new(@Icons.Material.Filled.AppsOutage, TB("Pandoc doesn't seem to be installed.")));
+                await MessageBus.INSTANCE.SendError(new(@AppIcons.PANDOC_UNAVAILABLE, TB("Pandoc doesn't seem to be installed.")));
 
             LOG.LogError(e, "Pandoc availability check failed. This usually means Pandoc is not installed or not in the system PATH.");
 
@@ -172,15 +172,15 @@ public static partial class Pandoc
             var uri = GenerateArchiveUri(latestVersion);
             if (string.IsNullOrWhiteSpace(uri))
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("AI Studio couldn't install Pandoc because the archive type is unknown.")));
-                LOG.LogError("Pandoc was not installed, no archive is available for architecture '{Architecture}'.", CPU_ARCHITECTURE.ToUserFriendlyName());
+                await MessageBus.INSTANCE.SendError(new (AppIcons.ERROR, TB("AI Studio couldn't install Pandoc because the archive type is unknown.")));
+                LOG.LogError("Pandoc was not installed, no archive is available for architecture '{Architecture}'.", CPU_ARCHITECTURE.UserFriendlyName);
                 return;
             }
 
             using var response = await WEB_CLIENT.GetAsync(uri);
             if (!response.IsSuccessStatusCode)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("AI Studio couldn't install Pandoc because the archive was not found.")));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, TB("AI Studio couldn't install Pandoc because the archive was not found.")));
                 LOG.LogError("Pandoc was not installed successfully, because the archive was not found (status code {0}): url='{1}', message='{2}'", response.StatusCode, uri, response.RequestMessage);
                 return;
             }
@@ -196,11 +196,7 @@ public static partial class Pandoc
             if (uri.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
             {
                 await RunWithRetriesAsync(
-                    () =>
-                    {
-                        ZipFile.ExtractToDirectory(pandocTempDownloadFile, stagingDir, true);
-                        return Task.CompletedTask;
-                    },
+                    () => ZipFile.ExtractToDirectoryAsync(pandocTempDownloadFile, stagingDir, true),
                     "extracting the Pandoc ZIP archive");
             }
             else if (uri.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
@@ -216,7 +212,7 @@ public static partial class Pandoc
             }
             else
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("AI Studio couldn't install Pandoc because the archive type is unknown.")));
+                await MessageBus.INSTANCE.SendError(new (AppIcons.ERROR, TB("AI Studio couldn't install Pandoc because the archive type is unknown.")));
                 LOG.LogError("Pandoc was not installed, the archive is unknown: url='{0}'", uri);
                 return;
             }
@@ -224,7 +220,7 @@ public static partial class Pandoc
             var stagedPandocExecutable = FindExecutableInDirectory(stagingDir, PandocProcessBuilder.PandocExecutableName);
             if (string.IsNullOrWhiteSpace(stagedPandocExecutable))
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("AI Studio couldn't install Pandoc because the executable was not found in the archive.")));
+                await MessageBus.INSTANCE.SendError(new (AppIcons.ERROR, TB("AI Studio couldn't install Pandoc because the executable was not found in the archive.")));
                 LOG.LogError("Pandoc was not installed, the executable was not found in the extracted archive: '{StagingDir}'.", stagingDir);
                 return;
             }
@@ -232,12 +228,12 @@ public static partial class Pandoc
             LOG.LogInformation("Found Pandoc executable in downloaded archive: '{Executable}'.", stagedPandocExecutable);
 
             await ReplaceInstallationDirectoryAsync(stagingDir, installDir);
-            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, string.Format(TB("Pandoc v{0} was installed successfully."), latestVersion)));
+            await MessageBus.INSTANCE.SendSuccess(new(AppIcons.SUCCESS, string.Format(TB("Pandoc v{0} was installed successfully."), latestVersion)));
             LOG.LogInformation("Pandoc v{0} was installed successfully.", latestVersion);
         }
         catch (Exception ex)
         {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("AI Studio couldn't install Pandoc.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, TB("AI Studio couldn't install Pandoc.")));
             LOG.LogError(ex, "An error occurred while installing Pandoc.");
         }
         finally
@@ -388,7 +384,7 @@ public static partial class Pandoc
         if (!response.IsSuccessStatusCode)
         {
             LOG.LogError("Code {StatusCode}: Could not fetch Pandoc's latest page: {Response}", response.StatusCode, response.RequestMessage);
-            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, string.Format(TB("AI Studio couldn't find the latest Pandoc version and will install version {0} instead."), FALLBACK_VERSION.ToString())));
+            await MessageBus.INSTANCE.SendWarning(new (AppIcons.WARNING, string.Format(TB("AI Studio couldn't find the latest Pandoc version and will install version {0} instead."), FALLBACK_VERSION.ToString())));
             return FALLBACK_VERSION.ToString();
         }
 
@@ -397,7 +393,7 @@ public static partial class Pandoc
         if (!versionMatch.Success)
         {
             LOG.LogError("The latest version regex returned nothing: {0}", versionMatch.Groups.ToString());
-            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, string.Format(TB("AI Studio couldn't find the latest Pandoc version and will install version {0} instead."), FALLBACK_VERSION.ToString())));
+            await MessageBus.INSTANCE.SendWarning(new (AppIcons.WARNING, string.Format(TB("AI Studio couldn't find the latest Pandoc version and will install version {0} instead."), FALLBACK_VERSION.ToString())));
             return FALLBACK_VERSION.ToString();
         }
         
@@ -477,7 +473,7 @@ public static partial class Pandoc
                 return $"{baseUri}arm64-macOS.pkg";
             
             default:
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, string.Format(TB("Installers are not available on {0} systems."), CPU_ARCHITECTURE.ToUserFriendlyName())));
+                await MessageBus.INSTANCE.SendError(new (AppIcons.PANDOC, string.Format(TB("Installers are not available on {0} systems."), CPU_ARCHITECTURE.UserFriendlyName)));
                 return string.Empty;
         }
     }

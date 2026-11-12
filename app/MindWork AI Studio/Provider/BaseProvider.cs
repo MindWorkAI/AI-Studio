@@ -152,7 +152,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     }
 
     protected Task SendTimeoutError(string action) => MessageBus.INSTANCE.SendError(new(
-        Icons.Material.Filled.HourglassTop,
+        AppIcons.TIMEOUT,
         string.Format(
             TB("The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding."),
             this.InstanceName,
@@ -693,11 +693,14 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <remarks>
     /// Two answers mean this: one provider says so in the body of a bad request, another turns the
     /// request down with 413 instead. For the user they are the same thing, and saying it in one
-    /// place is also what keeps both on one I18N key.
+    /// place is also what keeps both on one I18N key.<br/><br/>
+    /// The message names the passages of the data sources along with the attachments: the classic
+    /// RAG process sends them with every message, and while their budget leaves the rest of the
+    /// window to everything else, a long chat may still fill it, see PassageBudget.
     /// </remarks>
     /// <param name="providerMessage">What the provider itself said about the failure.</param>
     /// <returns>The message to show.</returns>
-    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
+    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
 
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
@@ -771,7 +774,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.BLOCKED, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -796,7 +799,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 if (string.IsNullOrWhiteSpace(tooLargeMessage))
                     tooLargeMessage = nextResponse.ReasonPhrase;
 
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(tooLargeMessage)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, this.GetContextTooLargeUserMessage(tooLargeMessage)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -821,7 +824,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 var classifiedMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
                 if(!string.IsNullOrWhiteSpace(classifiedMessage))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, classifiedMessage));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, classifiedMessage));
                 }
 
                 // Check if the error body contains "context" and "token" (case-insensitive),
@@ -829,11 +832,11 @@ public abstract class BaseProvider : IProvider, ISecretId
                 else if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
                    errorBody.Contains("token", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(badRequestMessage)));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, this.GetContextTooLargeUserMessage(badRequestMessage)));
                 }
                 else
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
                 }
 
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
@@ -844,7 +847,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.NotFound)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -853,7 +856,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.Unauthorized)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The API key might be invalid. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.KEY, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The API key might be invalid. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -862,7 +865,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.InternalServerError)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -871,7 +874,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.ServiceUnavailable)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider is overloaded. The message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider is overloaded. The message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -896,7 +899,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 if (string.IsNullOrWhiteSpace(refusalMessage))
                     refusalMessage = nextResponse.ReasonPhrase;
 
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider turned the request down with the status code {2} and would turn it down again, so we stopped trying. The provider message is: '{3}'"), this.InstanceName, this.Provider, (int)nextResponse.StatusCode, refusalMessage)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider turned the request down with the status code {2} and would turn it down again, so we stopped trying. The provider message is: '{3}'"), this.InstanceName, this.Provider, (int)nextResponse.StatusCode, refusalMessage)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -937,7 +940,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             // which explains nothing is the one arriving last.
             //
             if(!failureAlreadyExplained)
-                await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
+                await MessageBus.INSTANCE.SendError(new DataErrorMessage(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
 
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         }
@@ -996,7 +999,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             }
             else
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.ANSWER_STREAM, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
                 this.logger.LogError(e, "Failed to stream the {OperationName} from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", operationName, providerName, this.InstanceName, e.Message);
             }
         }
@@ -1007,22 +1010,12 @@ public abstract class BaseProvider : IProvider, ISecretId
         try
         {
             //
-            // Read the stream, line by line:
+            // Read the stream, line by line, until it ends. We never ask the reader whether the
+            // stream ended: that would wait for the next data without any timeout, and it would
+            // hold a thread meanwhile. Reading the next line tells the same, see below.
             //
             while (true)
             {
-                try
-                {
-                    if(streamReader.EndOfStream)
-                        break;
-                }
-                catch (Exception e)
-                {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                    this.logger.LogWarning(e, "Failed to read the end-of-stream state from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
-                    break;
-                }
-
                 // Check if the token is canceled:
                 if (token.IsCancellationRequested)
                 {
@@ -1051,20 +1044,21 @@ public abstract class BaseProvider : IProvider, ISecretId
                     }
                     else
                     {
-                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                        await MessageBus.INSTANCE.SendError(new(AppIcons.ANSWER_STREAM, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
                         this.logger.LogError(e, "Failed to read the stream from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
                     }
 
                     break;
                 }
 
+                // The stream ended:
                 if (line is null)
                     break;
 
                 // Skip empty lines:
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
-                
+
                 if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
                     throw providerRequestException;
 
@@ -1386,7 +1380,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (runnableTools.Count > 0)
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
-                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
+                    runnableTools.Select(x => (object)ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
                     (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
@@ -1454,7 +1448,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// With the ID, the settings also know what the provider's own model list reported, e.g., the
     /// context window of a self-hosted model, see ProviderExtensions.GetAutomaticModelProfile. So
     /// the tools of a request and the way images are passed on see the model as the configured
-    /// provider does.
+    /// provider does.<br/><br/>
+    /// The tokenizer comes along as well, so that the classic RAG process counts its passages for
+    /// the model as the chat counts the conversation, see PassageBudget.
     /// </remarks>
     public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
@@ -1464,6 +1460,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         Model = chatModel,
         InstanceName = this.InstanceName,
         CapabilityOverrides = this.CapabilityOverrides,
+        TokenizerPath = this.TokenizerPath,
     };
 
     /// <summary>
@@ -1582,7 +1579,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             form.Add(new StringContent("json"), "response_format");
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL);
             request.Content = form;
 
             // Handle the authorization header based on the provider:
@@ -1671,15 +1668,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                 modelName = "placeholder";
             
             // Prepare the HTTP embedding request:
-            var payload = new
-            {
-                model = modelName,
-                input = texts,
-                encoding_format = "float"
-            };
-            
+            var payload = new EmbeddingRequest(modelName, texts);
             var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
-            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL());
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL);
 
             // Handle the authorization header based on the provider:
             switch (this.Provider)

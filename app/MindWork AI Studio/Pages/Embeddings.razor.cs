@@ -6,6 +6,7 @@ using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Services.Indexing;
 
 using Microsoft.AspNetCore.Components;
 
@@ -57,6 +58,23 @@ public partial class Embeddings : MSGComponentBase
     private int TotalPermanentlySkippedDocuments => this.Statuses.Sum(status => status.PermanentlySkippedDocuments);
 
     private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
+
+    /// <remarks>
+    /// Says nothing while there is no pause between the steps, which is the default.
+    /// </remarks>
+    private string PauseBetweenStepsText
+    {
+        get
+        {
+            var pause = PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing);
+            if (pause.IsNone)
+                return string.Empty;
+
+            return pause.MinimumSeconds == pause.MaximumSeconds
+                ? string.Format(T("Between two steps, AI Studio pauses for {0} seconds, to spare an embedding server which many people share."), pause.MaximumSeconds)
+                : string.Format(T("Between two steps, AI Studio pauses for {0} to {1} seconds, to spare an embedding server which many people share."), pause.MinimumSeconds, pause.MaximumSeconds);
+        }
+    }
 
     /// <remarks>
     /// The chips above count documents, which says nothing about how far the list of data sources
@@ -303,22 +321,22 @@ public partial class Embeddings : MSGComponentBase
         //
         if (failure.FailureReason is not ProviderRequestFailureReason.NONE)
         {
-            var isFixedInSettings = failure.FailureReason.IsFixedInProviderSettings();
-            return new FailureCause(isFixedInSettings ? 0 : 1, failure.FailureReason.GetName(), isFixedInSettings ? Icons.Material.Filled.Key : Icons.Material.Filled.CloudOff, Color.Error, false, isFixedInSettings, true);
+            var isFixedInSettings = failure.FailureReason.IsFixedInProviderSettings;
+            return new FailureCause(isFixedInSettings ? 0 : 1, failure.FailureReason.Name, isFixedInSettings ? AppIcons.KEY : AppIcons.PROVIDER_ERROR, Color.Error, false, isFixedInSettings, true);
         }
 
         //
         // Codes without a name of their own carry everything they know in the message of the
         // single file, which is why those groups show that message per file:
         //
-        var causeName = failure.ExtractionCode.GetIndexingCauseName();
+        var causeName = failure.ExtractionCode.IndexingCauseName;
         var hasCauseName = !string.IsNullOrWhiteSpace(causeName);
         var title = hasCauseName ? causeName : T("Other cause");
 
         var showsMessagePerFile = !hasCauseName || failure.ExtractionCode is FileExtractionErrorCode.MEDIA_PROCESSING_FAILED;
         return failure.IsPermanent
-            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, showsMessagePerFile)
-            : new FailureCause(2, title, Icons.Material.Filled.ReportProblem, Color.Warning, false, false, !hasCauseName);
+            ? new FailureCause(3, title, AppIcons.SKIPPED, Color.Default, true, false, showsMessagePerFile)
+            : new FailureCause(2, title, AppIcons.WARNING, Color.Warning, false, false, !hasCauseName);
     }
 
     private static string GetEmbeddingProviderName(IEnumerable<DataSourceEmbeddingFailure> failures) => failures
@@ -341,7 +359,7 @@ public partial class Embeddings : MSGComponentBase
             0,
             T("Too large"),
             string.Format(T("These files match the data source patterns, but they are larger than its limit of {0}. You can raise the limit in the expert settings of the data source."), this.GetMaxFileSizeText(status)),
-            Icons.Material.Filled.Straighten,
+            AppIcons.FILE_SIZE,
             Color.Warning,
             true,
             false),
@@ -349,7 +367,7 @@ public partial class Embeddings : MSGComponentBase
             0,
             T("No transcription provider"),
             T("These audio or video files match the data source patterns, but no transcription provider is configured that AI Studio may use. Once you choose one in the settings, AI Studio transcribes the files and adds their text to the index."),
-            Icons.Material.Filled.MicOff,
+            AppIcons.MICROPHONE_OFF,
             Color.Warning,
             false,
             true),
@@ -357,7 +375,7 @@ public partial class Embeddings : MSGComponentBase
             0,
             T("Transcription provider not allowed"),
             T("These audio or video files match the data source patterns, but your transcription provider does not meet the confidence level this data source requires. Choose another transcription provider, or change the confidence level of the data source."),
-            Icons.Material.Filled.GppBad,
+            AppIcons.SECURITY_BLOCKED,
             Color.Warning,
             true,
             true),
@@ -365,7 +383,7 @@ public partial class Embeddings : MSGComponentBase
             1,
             FileTypes.IMAGE.FilterName,
             T("These image files match the data source patterns, but images cannot currently be added to the index."),
-            Icons.Material.Filled.ImageNotSupported,
+            AppIcons.IMAGE_NOT_SUPPORTED,
             Color.Default,
             false,
             false),
@@ -445,7 +463,7 @@ public partial class Embeddings : MSGComponentBase
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Could not show a file of the embedding failure list in the file manager.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the file location.")));
+            await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, T("Could not open the file location.")));
             return;
         }
 
@@ -453,7 +471,7 @@ public partial class Embeddings : MSGComponentBase
             return;
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the file location: {0}"), issue)));
+        await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, string.Format(T("Could not open the file location: {0}"), issue)));
     }
 
     /// <remarks>
@@ -537,7 +555,7 @@ public partial class Embeddings : MSGComponentBase
             return;
 
         if (!await this.DataSourceEmbeddingService.ApprovePendingMailRemovalAsync(status.DataSourceId, removalCount))
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.PlaylistRemove, T("Your agreement could not be recorded: either the number of mails to remove changed in the meantime, or the index cannot be reached. AI Studio asks you again after the next sync.")));
+            await this.MessageBus.SendWarning(new(AppIcons.REMOVE_FROM_INDEX, T("Your agreement could not be recorded: either the number of mails to remove changed in the meantime, or the index cannot be reached. AI Studio asks you again after the next sync.")));
 
         this.ReloadStatuses();
         await this.InvokeAsync(this.StateHasChanged);

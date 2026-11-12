@@ -80,7 +80,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
         if (usesChosenBackend && chosenBackend is null && configuredBackends.Count > 1)
         {
             if (primaryBackend is not null)
-                notes.Add($"The chosen search service {primaryBackend.Value.ToName()} is not configured, so the configured services were asked one after another instead.");
+                notes.Add($"The chosen search service {primaryBackend.Value.Name} is not configured, so the configured services were asked one after another instead.");
             else if (strategy is WebSearchBackendStrategy.SPECIFIC)
                 notes.Add("No search service is chosen, so the configured services were asked one after another instead.");
         }
@@ -118,7 +118,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
             throw new InvalidOperationException(TB("None of the search services this search would use can filter explicit results, which the configured safe search policy requires. Please configure a search service that can filter, or turn the policy off."));
 
         foreach (var backend in backendsToAsk.Where(backend => !backend.Capabilities.SupportsSafeSearch))
-            notes.Add($"{backend.Backend.ToName()} was not asked, because it cannot filter explicit results and the configured safe search policy requires that.");
+            notes.Add($"{backend.Backend.Name} was not asked, because it cannot filter explicit results and the configured safe search policy requires that.");
 
         return remainingBackends;
     }
@@ -141,7 +141,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
             throw new ArgumentException($"Argument 'page' must be less than or equal to {backendsToAsk.Max(backend => backend.Capabilities.MaxPage)}.");
 
         foreach (var backend in backendsToAsk.Where(backend => query.Page > backend.Capabilities.MaxPage))
-            notes.Add($"{backend.Backend.ToName()} was not asked, because it does not serve result page {query.Page}.");
+            notes.Add($"{backend.Backend.Name} was not asked, because it does not serve result page {query.Page}.");
 
         return remainingBackends;
     }
@@ -205,7 +205,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
         var attributesNotes = outcomes.Count > 1;
         foreach (var outcome in outcomes)
         {
-            var backendName = outcome.Backend.Backend.ToName();
+            var backendName = outcome.Backend.Backend.Name;
             var result = outcome.Result;
             if (result is null)
             {
@@ -236,7 +236,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
     /// </remarks>
     private static void AppendUnsupportedFilterNotes(List<string> notes, IWebSearchBackend backend, WebSearchQuery query)
     {
-        var backendName = backend.Backend.ToName();
+        var backendName = backend.Backend.Name;
         var capabilities = backend.Capabilities;
         if (!capabilities.SupportsTimeRange && !string.IsNullOrWhiteSpace(query.TimeRange))
             notes.Add($"{backendName} cannot restrict a search to a period of time, so its hits are not limited to the requested time range '{query.TimeRange}'.");

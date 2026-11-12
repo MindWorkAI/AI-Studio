@@ -6,11 +6,11 @@ namespace Build.Tools;
 
 public static class Environment
 {
-    public const string DOTNET_VERSION = "net9.0";
+    public const string DOTNET_VERSION = "net10.0";
     public const string BUILD_OFFLINE_ENVIRONMENT_VARIABLE = "AI_STUDIO_BUILD_OFFLINE";
     public static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
     
-    private static readonly Dictionary<RID, string> ALL_RIDS = Enum.GetValues<RID>().Select(rid => new KeyValuePair<RID, string>(rid, rid.AsMicrosoftRid())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    private static readonly Dictionary<RID, string> ALL_RIDS = Enum.GetValues<RID>().Select(rid => new KeyValuePair<RID, string>(rid, rid.MicrosoftRid)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     
     public static bool IsWorkingDirectoryValid()
     {
@@ -38,6 +38,13 @@ public static class Environment
     {
         var currentDirectory = Directory.GetCurrentDirectory();
         var directory = Path.Combine(currentDirectory, "..", "Tests");
+        return Path.GetFullPath(directory);
+    }
+
+    public static string GetTrimSmokeTestDirectory()
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var directory = Path.Combine(currentDirectory, "..", "TrimSmokeTest");
         return Path.GetFullPath(directory);
     }
 

@@ -64,13 +64,13 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private string ProviderLabel => this.EffectiveProvider == AIStudio.Settings.Provider.NONE
         ? T("No model configured")
-        : $"{this.EffectiveProvider.InstanceName} ({this.EffectiveProvider.UsedLLMProvider.ToName()})";
+        : $"{this.EffectiveProvider.InstanceName} ({this.EffectiveProvider.UsedLLMProvider.Name})";
 
     private DataAssistantPluginAudit AuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
 
     private AssistantAuditLevel MinimumLevel => this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel;
 
-    private string MinimumLevelLabel => this.MinimumLevel.GetName();
+    private string MinimumLevelLabel => this.MinimumLevel.Name;
 
     private bool CanRunAudit => this.plugin is not null && this.EffectiveProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing && !this.securityState.IsEnterpriseApproved;
 
@@ -200,7 +200,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
                 string.Format(
                     T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required safety level '{2}'. Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"),
                     this.plugin?.Name ?? T("Unknown plugin"),
-                    this.audit?.Level.GetName() ?? T("Unknown"),
+                    this.audit?.Level.Name ?? T("Unknown"),
                     this.MinimumLevelLabel)
             },
         };
@@ -254,7 +254,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             {
                 Text = this.GetComponentTreeItemText(component),
                 Caption = this.GetComponentTreeItemCaption(component, index),
-                Icon = component.Type.GetIcon(),
+                Icon = component.Type.Icon,
                 Expandable = children.Count > 0,
             },
             Children = children,
@@ -279,7 +279,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             {
                 Text = TB("Properties"),
                 Caption = string.Format(TB("Count: {0}"), props.Count),
-                Icon = Icons.Material.Filled.Code,
+                Icon = AppIcons.COMPONENT_PROPERTIES,
                 Expandable = children.Count > 0,
                 IsComponent = false,
             },
@@ -380,7 +380,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             {
                 Text = string.IsNullOrWhiteSpace(displayName) ? directoryPath : displayName,
                 Caption = depth == 0 ? TB("Plugin root") : string.Format(TB("Items: {0}"), children.Count),
-                Icon = children.Count > 0 ? Icons.Material.Filled.FolderCopy : Icons.Material.Filled.Folder,
+                Icon = children.Count > 0 ? AppIcons.FOLDERS : AppIcons.FOLDER,
                 Expandable = children.Count > 0,
                 IsComponent = false,
             },
@@ -407,11 +407,11 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         var extension = Path.GetExtension(filePath);
         return extension.ToLowerInvariant() switch
         {
-            ".lua" => Icons.Material.Filled.Code,
-            ".md" => Icons.Material.Filled.Article,
-            ".json" => Icons.Material.Filled.DataObject,
-            ".png" or ".jpg" or ".jpeg" or ".svg" or ".webp" => Icons.Material.Filled.Image,
-            _ => Icons.Material.Filled.InsertDriveFile,
+            ".lua" => AppIcons.CODE,
+            ".md" => AppIcons.DOCUMENT,
+            ".json" => AppIcons.DATA_OBJECT,
+            ".png" or ".jpg" or ".jpeg" or ".svg" or ".webp" => AppIcons.IMAGE,
+            _ => AppIcons.FILE,
         };
     }
 
@@ -460,7 +460,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private string GetComponentTreeItemText(IAssistantComponent component)
     {
-        var type = component.Type.GetDisplayName();
+        var type = component.Type.DisplayName;
         if (component is INamedAssistantComponent named && !string.IsNullOrWhiteSpace(named.Name))
             return $"{type}: {named.Name}";
 
@@ -508,14 +508,14 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private string GetValueIcon(object? value) => value switch
     {
-        null => Icons.Material.Filled.Block,
-        bool => Icons.Material.Outlined.ToggleOn,
-        string => Icons.Material.Outlined.Abc,
-        int => Icons.Material.Filled.Numbers,
-        Enum => Icons.Material.Filled.Label,
-        IDictionary => Icons.Material.Filled.DataObject,
-        IEnumerable when value is not string => Icons.Material.Filled.FormatListBulleted,
-        _ => Icons.Material.Filled.DataArray,
+        null => AppIcons.VALUE_NULL,
+        bool => AppIcons.SWITCH,
+        string => AppIcons.VALUE_TEXT,
+        int => AppIcons.NUMBER,
+        Enum => AppIcons.ENUM_VALUE,
+        IDictionary => AppIcons.DATA_OBJECT,
+        IEnumerable when value is not string => AppIcons.VALUE_LIST,
+        _ => AppIcons.DATA_VALUE,
     };
 
     private string FormatFileTimestamp(DateTime timestamp) => CommonTools.FormatTimestampToGeneral(timestamp, this.currentCultureInfo);

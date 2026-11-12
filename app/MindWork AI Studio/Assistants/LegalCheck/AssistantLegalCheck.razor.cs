@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.LegalCheck;
@@ -11,6 +12,9 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override string Description => T("Provide a legal document and ask a question about it. This assistant does not replace legal advice. Consult a lawyer to get professional advice. Remember that LLMs can invent answers and facts. Please do not rely on this answers.");
     
+    // This prompt answers questions about the legal document, which is what the chat continues:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
+
     protected override string SystemPrompt => 
         """
         You are an expert in legal matters. You have studied international law and are familiar with the law in
@@ -91,16 +95,9 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
         state.Restore(INPUT_QUESTIONS_STATE_KEY, value => this.inputQuestions = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_LEGAL_CHECK_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputQuestions = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputQuestions = payload.Text;
 
     #endregion
     
@@ -122,7 +119,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     private async Task AskQuestions()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

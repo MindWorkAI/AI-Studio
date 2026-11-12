@@ -12,9 +12,9 @@ public sealed class VisualBriefingSlotValue
 {
     /// <summary>Gets or sets the planned slot identifier.</summary>
     [JsonRequired]
-    public string SlotId { get; init; } = string.Empty;
+    public string SlotId { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the validated slot value.</summary>
     [JsonRequired]
-    public JsonElement Value { get; init; }
+    public JsonElement Value { get; set; }
 }

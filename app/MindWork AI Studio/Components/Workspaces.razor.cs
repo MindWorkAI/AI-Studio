@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
@@ -115,6 +116,8 @@ public partial class Workspaces : MSGComponentBase
 
     private bool HasSearchQuery => this.SearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
 
+    private string SearchPlaceholder => this.includeThreadContents ? T("Search chat names and contents") : T("Search chat names");
+
     private string GetAddChatToWorkspaceTooltip(string workspaceName) => string.Format(T("Start a new chat in workspace '{0}'"), workspaceName);
 
     private async Task<Func<string?, string?>> CreateWorkspaceNameValidationAsync(Guid excludedWorkspaceId = default, string? originalWorkspaceName = null)
@@ -149,7 +152,7 @@ public partial class Workspaces : MSGComponentBase
         workspaceChildren.Add(new TreeItemData<ITreeItem>
         {
             Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, T("Add workspace"), Icons.Material.Filled.LibraryAdd, this.AddWorkspaceAsync),
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, T("Add workspace"), AppIcons.ADD_WORKSPACE, this.AddWorkspaceAsync),
         });
 
         this.treeItems.Add(new TreeItemData<ITreeItem>
@@ -161,7 +164,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 0,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = T("Workspaces"),
-                Icon = Icons.Material.Filled.Folder,
+                Icon = AppIcons.FOLDER,
                 Expandable = true,
                 Path = "root",
                 Children = workspaceChildren,
@@ -176,7 +179,7 @@ public partial class Workspaces : MSGComponentBase
         
         var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
         foreach (var temporaryChat in snapshot.TemporaryChats.OrderByDescending(x => x.LastEditTime))
-            temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
+            temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: AppIcons.TEMPORARY_CHAT));
 
         this.treeItems.Add(new TreeItemData<ITreeItem>
         {
@@ -187,7 +190,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 0,
                 Branch = WorkspaceBranch.TEMPORARY_CHATS,
                 Text = T("Disappearing Chats"),
-                Icon = Icons.Material.Filled.Timer,
+                Icon = AppIcons.TEMPORARY_CHAT,
                 Expandable = true,
                 Path = "temp",
                 Children = temporaryChatsChildren,
@@ -201,7 +204,7 @@ public partial class Workspaces : MSGComponentBase
         if (workspace.ChatsLoaded)
         {
             foreach (var workspaceChat in workspace.Chats.OrderByDescending(x => x.LastEditTime))
-                children.Add(this.CreateChatTreeItem(workspaceChat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
+                children.Add(this.CreateChatTreeItem(workspaceChat, WorkspaceBranch.WORKSPACES, depth: 2, icon: AppIcons.CHAT));
         }
         else if (this.loadingWorkspaceChatLists.Contains(workspace.WorkspaceId))
             children.AddRange(this.CreateLoadingRows(workspace.WorkspacePath));
@@ -209,7 +212,7 @@ public partial class Workspaces : MSGComponentBase
         children.Add(new TreeItemData<ITreeItem>
         {
             Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, T("Add chat"), Icons.Material.Filled.AddComment, () => this.AddChatAsync(workspace.WorkspacePath)),
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, T("Add chat"), AppIcons.NEW_CHAT, () => this.AddChatAsync(workspace.WorkspacePath)),
         });
 
         return new TreeItemData<ITreeItem>
@@ -221,7 +224,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 1,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = workspace.Name,
-                Icon = Icons.Material.Filled.Description,
+                Icon = AppIcons.WORKSPACE,
                 Expandable = true,
                 Path = workspace.WorkspacePath,
                 Children = children,
@@ -250,7 +253,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 2,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = T("Loading chats..."),
-                Icon = Icons.Material.Filled.HourglassTop,
+                Icon = AppIcons.PENDING,
                 Expandable = false,
                 Path = Path.Join(workspacePath, suffix),
             },
@@ -293,7 +296,7 @@ public partial class Workspaces : MSGComponentBase
                     Depth = 0,
                     Branch = WorkspaceBranch.NONE,
                     Text = T("No chats found"),
-                    Icon = Icons.Material.Filled.Search,
+                    Icon = AppIcons.SEARCH_NO_RESULTS,
                     Expandable = false,
                     Path = "search_empty",
                 },
@@ -317,7 +320,7 @@ public partial class Workspaces : MSGComponentBase
                     Depth = 0,
                     Branch = WorkspaceBranch.WORKSPACES,
                     Text = T("Workspaces"),
-                    Icon = Icons.Material.Filled.Folder,
+                    Icon = AppIcons.FOLDER,
                     Expandable = true,
                     Path = "search_workspaces",
                     Children = workspaceChildren,
@@ -338,7 +341,7 @@ public partial class Workspaces : MSGComponentBase
         {
             var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
             foreach (var temporaryChat in snapshot.TemporaryChats)
-                temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat.Chat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
+                temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat.Chat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: AppIcons.TEMPORARY_CHAT));
 
             this.treeItems.Add(new TreeItemData<ITreeItem>
             {
@@ -349,7 +352,7 @@ public partial class Workspaces : MSGComponentBase
                     Depth = 0,
                     Branch = WorkspaceBranch.TEMPORARY_CHATS,
                     Text = T("Disappearing Chats"),
-                    Icon = Icons.Material.Filled.Timer,
+                    Icon = AppIcons.TEMPORARY_CHAT,
                     Expandable = true,
                     Path = "search_temp",
                     Children = temporaryChatsChildren,
@@ -362,7 +365,7 @@ public partial class Workspaces : MSGComponentBase
     {
         var children = new List<TreeItemData<ITreeItem>>();
         foreach (var chat in workspace.Chats)
-            children.Add(this.CreateChatTreeItem(chat.Chat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
+            children.Add(this.CreateChatTreeItem(chat.Chat, WorkspaceBranch.WORKSPACES, depth: 2, icon: AppIcons.CHAT));
 
         return new TreeItemData<ITreeItem>
         {
@@ -374,7 +377,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 1,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = workspace.Name,
-                Icon = Icons.Material.Filled.Description,
+                Icon = AppIcons.WORKSPACE,
                 Expandable = true,
                 Path = workspace.WorkspacePath,
                 Children = children,
@@ -434,12 +437,12 @@ public partial class Workspaces : MSGComponentBase
         {
             return mediaStatus switch
             {
-                MediaImportStatus.QUEUED => Icons.Material.Filled.HourglassTop,
-                MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => Icons.Material.Filled.ChangeCircle,
-                MediaImportStatus.SUCCEEDED => Icons.Material.Filled.TaskAlt,
-                MediaImportStatus.WARNING => Icons.Material.Filled.WarningAmber,
-                MediaImportStatus.FAILED => Icons.Material.Filled.Error,
-                MediaImportStatus.CANCELLED => Icons.Material.Filled.Cancel,
+                MediaImportStatus.QUEUED => AppIcons.PENDING,
+                MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => AppIcons.RUNNING,
+                MediaImportStatus.SUCCEEDED => AppIcons.SUCCESS,
+                MediaImportStatus.WARNING => AppIcons.WARNING,
+                MediaImportStatus.FAILED => AppIcons.ERROR,
+                MediaImportStatus.CANCELLED => AppIcons.CANCELED,
                 
                 _ => defaultIcon,
             };
@@ -451,11 +454,19 @@ public partial class Workspaces : MSGComponentBase
 
         return snapshot.Status switch
         {
-            AIJobStatus.WAITING_FOR_REMOTE => Icons.Material.Filled.HourglassTop,
-            AIJobStatus.RUNNING => Icons.Material.Filled.ChangeCircle,
+            AIJobStatus.WAITING_FOR_REMOTE => AppIcons.PENDING,
+            AIJobStatus.RUNNING => AppIcons.RUNNING,
             _ => defaultIcon,
         };
     }
+
+    /// <summary>
+    /// Colors the icon of a chat red when its media transcription failed, like every other error icon.
+    /// </summary>
+    /// <param name="treeItem">The chat in the tree.</param>
+    private Color GetChatTreeIconColor(TreeItemData treeItem) => this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(treeItem.ChatId))?.Status is MediaImportStatus.FAILED
+        ? Color.Error
+        : Color.Default;
 
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
@@ -534,9 +545,9 @@ public partial class Workspaces : MSGComponentBase
         }
     }
 
-    private async Task OnSearchTextChanged(string value)
+    private async Task OnSearchTextChanged(string? value)
     {
-        this.searchText = value;
+        this.searchText = value ?? string.Empty;
         if (string.IsNullOrWhiteSpace(this.searchText))
         {
             await this.CancelSearchAsync();
@@ -996,7 +1007,7 @@ public partial class Workspaces : MSGComponentBase
         return chatIds;
     }
 
-    private Task WarnAboutBusyWorkspaceAsync(string workspaceName) => MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FolderDelete, string.Format(T("The workspace '{0}' cannot be deleted while one of its chats is being answered or transcribed. Please try again once that is finished."), workspaceName)));
+    private Task WarnAboutBusyWorkspaceAsync(string workspaceName) => MessageBus.INSTANCE.SendWarning(new(AppIcons.DELETE, string.Format(T("The workspace '{0}' cannot be deleted while one of its chats is being answered or transcribed. Please try again once that is finished."), workspaceName)));
     
     /// <summary>
     /// Moves the given chat into another workspace and shows it there in the tree.
@@ -1007,11 +1018,14 @@ public partial class Workspaces : MSGComponentBase
     /// Neither asks for the target workspace nor follows the chat in the chat view: both depend on
     /// where the move was asked for. Whoever moves a chat while this component exists goes through
     /// here, though, since the tree draws what it has built before and would otherwise keep showing
-    /// the chat in its old place.
+    /// the chat in its old place.<br/><br/>
+    ///
+    /// What the user did not save reaches the new place only while chats are stored automatically,
+    /// see WorkspaceBehaviour.MoveChatAsync.
     /// </remarks>
     public async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
     {
-        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId);
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId, this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
@@ -1022,9 +1036,10 @@ public partial class Workspaces : MSGComponentBase
             return;
 
         //
-        // The open chat moves as it stands on the screen, just like with the button in the chat
-        // itself. The copy from the disk lacks whatever is not stored yet, such as a message being
-        // edited, and the chat would continue with that copy afterward:
+        // The open chat is the one which moves, just like with the button in the chat itself. The
+        // copy from the disk lacks whatever is not stored yet, such as a message being edited, and
+        // the chat would continue with that copy afterward. Whether that reaches the disk in the new
+        // place depends on how chats are stored, see MoveChatAsync:
         //
         var chat = this.CurrentChatThread is { } openChat && openChat.ChatId == storedChat.ChatId ? openChat : storedChat;
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId))

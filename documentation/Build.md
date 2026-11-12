@@ -1,5 +1,5 @@
 # Building
-You just want to use the app? Then simply [download the appropriate setup for your operating system](Setup.md). This chapter is intended for developers who want to modify and customize the code.
+You just want to use the app? Then simply [download the appropriate setup for your operating system](https://github.com/MindWorkAI/AI-Studio/wiki/Installing-AI-Studio). This chapter is intended for developers who want to modify and customize the code.
 
 ## Prefaces regarding Linux development systems
 Unfortunately, we have to provide a note regarding development on Linux systems. MindWork AI Studio consists of a Rust and a .NET part. Compiling the .NET code works smoothly on all operating systems. However, this is not the case for our Rust part. More specifically, it is not the Rust code itself that is problematic, but rather the Tauri framework on which we base our work. Tauri has certain dependencies that depend on the operating system. The specific dependencies vary between different Linux distributions and between versions of distributions.
@@ -7,7 +7,7 @@ Unfortunately, we have to provide a note regarding development on Linux systems.
 Therefore, we cannot provide a static list here that is valid for all Linux systems. Unfortunately, the situation is even more complex: Tauri requires dependencies that are not available in current Linux distributions because they already include newer versions. **For these reasons, we currently advise against developing AI Studio on Linux.** In case you still want to try, you will need a lot of patience and willingness to experiment. We ask for your understanding. Thank you very much.
 
 ## Prerequisites
-1. Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
+1. Install the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest stable version.
 3. Meet the prerequisites for building [Tauri](https://v2.tauri.app/start/prerequisites/). Node.js is **not** required, though.
 4. The core team uses [JetBrains](https://www.jetbrains.com/) [Rider](https://www.jetbrains.com/rider/) and [RustRover](https://www.jetbrains.com/rust/) for development. Both IDEs are free to use for open-source projects for non-commercial use. They are available for macOS, Linux, and Windows systems. Profiles are provided for these IDEs, so you can get started right away. However, you can also use a different IDE.
@@ -17,11 +17,13 @@ Therefore, we cannot provide a static list here that is valid for all Linux syst
 Regardless of whether you want to build the app locally for yourself (not trusting the pre-built binaries) or test your changes before creating a PR, you have to run the following commands at least once:
 
 1. Open a terminal.
-2. Install the Tauri CLI by running `cargo install tauri-cli --version 2.11.0 --locked`.
+2. Install the Tauri CLI by running `cargo install tauri-cli --version 2.12.4 --locked`.
 3. Navigate to the `/app/Build` directory within the repository.
 4. Run `dotnet run build` to build the entire app.
 
 This is necessary because the build script and the Tauri framework assume that the .NET app is available as a so-called "sidecar." Although the sidecar is only necessary for the final release and shipping, Tauri requires it to be present during development as well.
+
+The build also downloads the PDF library Pdfium in the version which `metadata.txt` names, and downloads it again only when that version changes. `dotnet run build --offline` skips the download and uses the library which is already present.
 
 ## The quality gate
 One command checks that what you are about to build is sound:
@@ -30,11 +32,12 @@ One command checks that what you are about to build is sound:
 2. Navigate to the `/app/Build` directory within the repository.
 3. Run `dotnet run verify`.
 
-It runs the .NET tests, the Rust tests, Clippy (`cargo clippy --all-targets -- -D warnings`), and a report on the pages the model rules were written from. Every check runs, even after one of them has failed, so that a single run tells you everything that is wrong instead of the first thing.
+It runs the .NET tests, the trim smoke test, the Rust tests, Clippy (`cargo clippy --all-targets -- -D warnings`), and a report on the pages the model rules were written from. Every check runs, even after one of them has failed, so that a single run tells you everything that is wrong instead of the first thing.
 
 `dotnet run build` runs the gate first and stops when it does not pass. For the quick loop while you are working on something, use `dotnet run build --skip-verify`, and let the gate run before you open a pull request. The same command runs in our GitHub workflow as the `verify` job, on every pull request which changes more than the documentation — including those without the `run-pipeline` label, because a gate which is closed exactly while nobody is looking is not a gate.
 
-Two notes:
+Three notes:
+- The trim smoke test publishes `app/TrimSmokeTest` trimmed, exactly like the app, and reads and writes the JSON of chats, settings, Visual Briefing projects, backups, model answers, and every other type AI Studio reads or writes. Debug builds and the tests are not trimmed, so only a published build shows when the trimmer removed code which System.Text.Json needs; AI Studio can then neither load nor save that data. A new kind of file or model answer needs nothing there: `JsonRoots` in `app/TrimSmokeTest` finds every type through the context of the options it is read or written with. The smoke test also lets the Mathematics tools compute a few expressions, since AngouriMath is trimmed, too; see `MathematicsChecks` there.
 - The Rust half of the gate needs the .NET sidecar (see "One-time mandatory steps" above). While that file is missing, the gate skips the Rust tests and Clippy and says so rather than failing, because the command which produces the sidecar is `dotnet run build` itself.
 - `dotnet run verify-models` reports how long ago somebody last read the pages behind the model rules, and names everything older than six months. It is a report and never a failure: a page nobody has looked at for a while is not a page which changed. Everything else about the model rules — whether two rules claim the same names, whether every family names a page and a day, whether every pattern is written the way model names arrive — is checked by the test project, and therefore by `dotnet test`.
 
@@ -78,10 +81,10 @@ Changes which touch only the documentation, such as the README or the files in `
 ## Create a release
 In order to create a release:
 1. To create a new release, you need to be a maintainer of the repository—see step 8.
-2. Make sure there's a changelog file for the version you want to create in the `/app/MindWork AI Studio/wwwroot/changelog` directory. Name the file `vX.Y.Z.md` and include all release changes—your updates and any others included in this version.
+2. Make sure there's a changelog file for the version you want to create in the `/app/MindWork AI Studio/wwwroot/changelog` directory. Name the file `vX.Y.Z.md` and include all release changes—your updates and any others included in this version. Keep its first line, the placeholder which the previous release created, such as `# v26.11.2, build 261 (2026-11-xx xx:xx UTC)`; when you rename the file for another version, change the version in that line as well. The release fills in the build time and refuses to start when the line names another version or build.
 3. After you have created the changelog file, you must commit the changes to the repository.
-4. To prepare a new release, open a terminal, go to `/app/Build` and run `dotnet run release --action <ACTION>`, where `<ACTION>` is either `patch` (creating a patch version), `minor` (creating a minor version), or `major` (creating a major version).
-5. Now wait until all process steps have been completed. Among other things, the version number will be incremented, the new changelog registered, and the version numbers of central dependencies updated, etc.
+4. To prepare a new release, open a terminal, go to `/app/Build` and run `dotnet run release --action <ACTION>`, where `<ACTION>` raises one part of the version, which reads year.month.release: `build` raises the release (26.11.1 becomes 26.11.2), `month` the month (26.12.1), and `year` the year (27.1.1). When a month passed without a release, set the version directly instead, e.g., `dotnet run release --version 27.2.1`.
+5. Now wait until all process steps have been completed. Among other things, the version number will be incremented, the build time written into the header of the new changelog, the changelog registered, and the version numbers of central dependencies updated, etc.
 6. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
 7. Your proposed changes will be reviewed and merged.
 8. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.

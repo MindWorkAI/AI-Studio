@@ -24,11 +24,11 @@ public sealed class ContentViewerTests
 
         var shown = ContentViewer.CutAtLineBreak(TEXT, 100, out var cutOffCharacters);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(shown, Is.SameAs(TEXT));
             Assert.That(cutOffCharacters, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -38,11 +38,11 @@ public sealed class ContentViewerTests
 
         var shown = ContentViewer.CutAtLineBreak(text, 50, out var cutOffCharacters);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(shown, Is.EqualTo(text));
             Assert.That(cutOffCharacters, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -52,11 +52,11 @@ public sealed class ContentViewerTests
 
         var shown = ContentViewer.CutAtLineBreak(TEXT, 25, out var cutOffCharacters);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(shown, Is.EqualTo("| a | b |\n| 1 | 2 |\n"), "The last table row would be torn apart, so it goes as a whole.");
             Assert.That(cutOffCharacters, Is.EqualTo(TEXT.Length - shown.Length));
-        });
+        }
     }
 
     [Test]
@@ -69,11 +69,11 @@ public sealed class ContentViewerTests
         const string TEXT = "The budget $\\rho$ is spent on the hardest tokens.";
         static bool HasMath(Markdig.MarkdownPipeline pipeline) => Markdig.Markdown.Parse(TEXT, pipeline).Descendants<MathInline>().Any();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(HasMath(Markdown.SAFE_MARKDOWN_PIPELINE), Is.True, "The safe pipeline reads this as math.");
             Assert.That(HasMath(Markdown.CONTENT_MARKDOWN_PIPELINE), Is.False, "What AI Studio read from a document stays text.");
-        });
+        }
     }
 
     [Test]
@@ -83,10 +83,10 @@ public sealed class ContentViewerTests
 
         var shown = ContentViewer.CutAtLineBreak(text, 20, out var cutOffCharacters);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(shown, Has.Length.EqualTo(20));
             Assert.That(cutOffCharacters, Is.EqualTo(10));
-        });
+        }
     }
 }

@@ -14,7 +14,7 @@
     @if (this.ShowingCopyButton)
     {
         <MudTooltip Text="@this.ClipboardTooltip">
-            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Medium" OnClick="@(() => this.CopyToClipboard(this.Value))"/>
+            <MudIconButton Icon="@AppIcons.COPY" Size="Size.Medium" OnClick="@(() => this.CopyToClipboard(this.Value))"/>
         </MudTooltip>
     }
 </MudStack>

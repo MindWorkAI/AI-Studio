@@ -21,6 +21,13 @@ and whoever runs it: loading, starting, checking an import, and the assistant bu
 - `PluginModuleLoadingTests` checks both sides: what plugins must load, and what they must not reach. Run
   it after every change to the runtime, the module loader, or the opened libraries.
 
+## Assistant plugins
+
+Every prompt text an assistant plugin brings, its `SystemPrompt` as well as its `CustomChatSystemPrompt`, goes
+through `PluginAssistants.BuildSecureSystemPrompt` and into the security audit of `AssistantAuditAgent`. A new
+field which reaches a model as a prompt needs both, and its documentation in `Plugins/assistants/README.md` and in
+the template `Plugins/assistants/plugin.lua`: the Assistant Builder reads both files as its source of truth.
+
 ## Configuration plugins
 
 Plugins can configure:
@@ -40,7 +47,7 @@ When adding configuration plugin capabilities:
 - For managed settings, update the corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)` and process the setting in `PluginConfiguration.TryProcessConfiguration`. Cleaning up the setting when its configuration plugin was removed needs no extra step: `ManagedConfiguration.CleanupLeftOverManagedConfigurations(...)` iterates all registered settings. Do not add per-setting cleanup calls to `PluginFactory.Loading.LoadAll`. `ManagedSettingsCoverageTests` fails for a registered setting which no configuration plugin can manage; a setting which must stay out of their reach goes into its list `EXEMPT_SETTINGS`, together with the reason.
 - For managed configuration objects, add the type to `PluginConfigurationObjectType.cs`, persist the objects in the appropriate `ConfigurationData` collection, and add a descriptor to `PluginConfigurationObjectDescriptors` and its list `ALL`: its Lua table, its parser, the collection, the next number, and where secrets are kept. Parsing and cleanup need no extra call; `PluginConfigurationObjectDescriptorsTests` fails for a type without a descriptor.
 - For live plugin content, add a data type implementing `ILivePluginContent`, parse it in `PluginConfiguration`, expose it through `PluginFactory`, and add any required cleanup only for persistent side data.
-- Always document the new capability in `app/MindWork AI Studio/Plugins/configuration/plugin.lua`.
+- Always document the new capability in `app/MindWork AI Studio/Plugins/configuration/plugin.lua`, the reference of every setting, and describe it for IT departments in the section "Wiki" of the pull request; see "Wiki" in the root `AGENTS.md`.
 
 ## Importing exported configuration objects
 

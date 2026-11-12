@@ -55,12 +55,12 @@ public sealed class EnterpriseEncryptionTests
     {
         var encryption = new EnterpriseEncryption(NullLogger<EnterpriseEncryption>.Instance, LEGACY_SECRET);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EnterpriseEncryption.IsEncrypted(encryptedValue), Is.True);
             Assert.That(encryption.TryDecrypt(encryptedValue, out var decryptedValue), Is.True);
             Assert.That(decryptedValue, Is.EqualTo(expectedValue));
-        });
+        }
     }
 
     [Test]
@@ -80,14 +80,14 @@ public sealed class EnterpriseEncryptionTests
         Assert.That(encryption.TryEncrypt(plaintext, format, out var encryptedValue), Is.True);
         Assert.That(encryption.TryEncrypt(plaintext, format, out var encryptedAgain), Is.True);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(encryptedValue, Does.StartWith(PrefixOf(format)));
             Assert.That(EnterpriseEncryption.IsEncrypted(encryptedValue), Is.True);
             Assert.That(encryptedAgain, Is.Not.EqualTo(encryptedValue), "Every value gets a salt of its own, so equal secrets do not show as equal values.");
             Assert.That(encryption.TryDecrypt(encryptedValue, out var decryptedValue), Is.True);
             Assert.That(decryptedValue, Is.EqualTo(plaintext));
-        });
+        }
     }
 
     [Test]
@@ -101,13 +101,13 @@ public sealed class EnterpriseEncryptionTests
         var wrongSecrets = Enumerable.Range(0, 2_000).Select(_ => NextSecret(random)).Concat(BitFlipsOf(rightSecret)).ToList();
         var acceptingSecrets = wrongSecrets.Where(wrongSecret => Create(wrongSecret).TryDecrypt(encryptedValue, out _)).ToList();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(wrongSecrets, Has.Count.EqualTo(2_256));
             Assert.That(Create(rightSecret).TryDecrypt(encryptedValue, out var decryptedValue), Is.True, "Otherwise, this test would pass for nothing.");
             Assert.That(decryptedValue, Is.EqualTo(API_KEY));
             Assert.That(acceptingSecrets, Is.Empty, "In the legacy format, about nine of these secrets would pass the padding check.");
-        });
+        }
     }
 
     [Test]
@@ -138,12 +138,12 @@ public sealed class EnterpriseEncryptionTests
     {
         var encryption = new EnterpriseEncryption(NullLogger<EnterpriseEncryption>.Instance, LEGACY_SECRET);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(EnterpriseEncryption.IsEncrypted(encryptedValue), Is.True, "Whatever starts like an encrypted value must not count as plaintext.");
             Assert.That(encryption.TryDecrypt(encryptedValue, out var decryptedValue), Is.False);
             Assert.That(decryptedValue, Is.Empty);
-        });
+        }
     }
 
     private static EnterpriseEncryption Create(string secret) => new(NullLogger<EnterpriseEncryption>.Instance, secret);

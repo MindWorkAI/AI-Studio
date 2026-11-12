@@ -18,9 +18,14 @@
 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3" Wrap="Wrap.Wrap">
     <MudTextSwitch Label="@T("Automatic local data source refresh")" Value="@this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh" LabelOn="@(this.AreMailboxesEnabled ? T("Local data sources refresh when files change, mailboxes every 16 minutes.") : T("Local data sources refresh when files change."))" LabelOff="@T("Local data sources refresh only when triggered manually.")" ValueChanged="@this.AutomaticRefreshChanged"/>
     <MudTooltip Text="@T("Refresh all")">
-        <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Sync" Disabled="@(!this.HasRefreshableDataSources())" OnClick="@this.RefreshAllDataSources"/>
+        <MudIconButton Color="Color.Primary" Icon="@AppIcons.REFRESH" Disabled="@(!this.HasRefreshableDataSources())" OnClick="@this.RefreshAllDataSources"/>
     </MudTooltip>
 </MudStack>
+
+<MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+    <ConfigurationSlider T="int" OptionDescription="@T("Shortest pause between indexing steps")" Min="0" Max="@this.MinimumPauseSliderMax" Step="1" Unit="@T("seconds")" Value="@(() => this.SettingsManager.ConfigurationData.App.DataSourceIndexing.MinimumPauseBetweenStepsSeconds)" ValueUpdate="@(value => this.SettingsManager.ConfigurationData.App.DataSourceIndexing.MinimumPauseBetweenStepsSeconds = value)" OptionHelp="@T("AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time between the shortest and the longest pause. This spares an embedding server which many people share, for example in your organization. Leave both at 0 seconds for no pause.")" IsLocked="@(() => IsMinimumPauseLocked)"/>
+    <ConfigurationSlider T="int" OptionDescription="@T("Longest pause between indexing steps")" Min="@this.MaximumPauseSliderMin" Max="@DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS" Step="1" Unit="@T("seconds")" Value="@(() => this.SettingsManager.ConfigurationData.App.DataSourceIndexing.MaximumPauseBetweenStepsSeconds)" ValueUpdate="@(value => this.SettingsManager.ConfigurationData.App.DataSourceIndexing.MaximumPauseBetweenStepsSeconds = value)" OptionHelp="@T("The upper end of the random pause between two indexing steps. AI Studio allows up to 300 seconds (5 minutes).")" IsLocked="@(() => IsMaximumPauseLocked)"/>
+</MudPaper>
 
 @{ var embeddingStatuses = this.DataSourceEmbeddingService.GetStatuses().ToDictionary(status => status.DataSourceId, StringComparer.OrdinalIgnoreCase); }
 <MudTable T="IDataSourceBase" Items="@this.ConfiguredDataSources" Hover="@true" Class="border-dashed border rounded-lg">
@@ -53,14 +58,14 @@
         <MudTd Style="white-space: normal; overflow-wrap: anywhere;">
             <div style="min-width: 10em;">@context.Name</div>
         </MudTd>
-        <MudTd>@context.Type.GetDisplayName()</MudTd>
+        <MudTd>@context.Type.DisplayName</MudTd>
         <MudTd>@this.GetEmbeddingName(context)</MudTd>
         <MudTd>
             @if (context is IIndexedDataSource)
             {
                 <MudTooltip Text="@this.GetIndexingStatusTooltip(embeddingStatus)">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudIcon Icon="@Icons.Material.Filled.Circle" Color="@GetIndexingStatusColor(embeddingStatus)" Size="Size.Small" Style="width: 0.75rem; height: 0.75rem; flex-shrink: 0;"/>
+                        <MudIcon Icon="@AppIcons.STATUS_INDICATOR" Color="@GetIndexingStatusColor(embeddingStatus)" Size="Size.Small" Style="font-size: 0.75rem; flex-shrink: 0;"/>
                         <MudText Typo="Typo.body2">@(embeddingStatus is null ? T("Not available") : string.Format(T("{0} of {1}"), embeddingStatus.IndexedDocuments.CompactCount(), embeddingStatus.TotalDocuments.CompactCount()))</MudText>
                     </MudStack>
                 </MudTooltip>
@@ -77,7 +82,7 @@
                 @if (context is IDataSource dataSource)
                 {
                     <MudTooltip Text="@T("Information")">
-                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Outlined.Info" OnClick="@(() => this.ShowInformation(dataSource))"/>
+                        <MudIconButton Color="Color.Info" Icon="@AppIcons.INFO" OnClick="@(() => this.ShowInformation(dataSource))"/>
                     </MudTooltip>
                 }
                 @*
@@ -89,29 +94,29 @@
                 @if (this.CanRepairDataSource(context))
                 {
                     <MudTooltip Text="@T("Repair this data source by indexing it anew")">
-                        <MudIconButton Color="Color.Warning" Icon="@Icons.Material.Filled.Build" OnClick="@(() => this.RepairDataSource(context))"/>
+                        <MudIconButton Color="Color.Warning" Icon="@AppIcons.REPAIR" OnClick="@(() => this.RepairDataSource(context))"/>
                     </MudTooltip>
                 }
                 @if (context.IsEnterpriseConfiguration)
                 {
                     <MudTooltip Text="@T("This data source is managed by your organization.")">
-                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                        <MudIconButton Color="Color.Info" Icon="@AppIcons.ORGANIZATION" Disabled="true"/>
                     </MudTooltip>
                 }
                 else
                 {
                     <MudTooltip Text="@T("Edit")">
-                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditEntry(context))"/>
+                        <MudIconButton Color="Color.Info" Icon="@AppIcons.EDIT" OnClick="@(() => this.EditEntry(context))"/>
                     </MudTooltip>
                     <MudTooltip Text="@T("Refresh")">
-                        <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Sync" Disabled="@(!this.CanRefreshDataSource(context))" OnClick="@(() => this.RefreshDataSource(context))"/>
+                        <MudIconButton Color="Color.Primary" Icon="@AppIcons.REFRESH" Disabled="@(!this.CanRefreshDataSource(context))" OnClick="@(() => this.RefreshDataSource(context))"/>
                     </MudTooltip>
                     @if (context is DataSourceERI_V1)
                     {
                         <AdminExportButton OnClick="@(() => this.ExportDataSource(context))" />
                     }
                     <MudTooltip Text="@T("Delete")">
-                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteEntry(context))"/>
+                        <MudIconButton Color="Color.Error" Icon="@AppIcons.DELETE" OnClick="@(() => this.DeleteEntry(context))"/>
                     </MudTooltip>
                 }
             </MudStack>

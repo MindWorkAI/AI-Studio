@@ -5,6 +5,7 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Services.Indexing;
 
 using Microsoft.AspNetCore.Components;
 
@@ -38,6 +39,27 @@ public partial class DataSourceManagement : MSGComponentBase
         .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Cast<IDataSourceBase>());
 
     private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
+
+    private static bool IsMinimumPauseLocked => ManagedConfiguration.TryGet(x => x.App.DataSourceIndexing, x => x.MinimumPauseBetweenStepsSeconds, out var meta) && meta.IsLocked;
+
+    private static bool IsMaximumPauseLocked => ManagedConfiguration.TryGet(x => x.App.DataSourceIndexing, x => x.MaximumPauseBetweenStepsSeconds, out var meta) && meta.IsLocked;
+
+    /// <remarks>
+    /// A slider moves a value which falls out of its range into it. A locked slider therefore keeps
+    /// the whole range, since its value belongs to the organization. A free one ends at the locked
+    /// upper bound, and the free value adjusts to it, cf. PauseRange.GetEffective.
+    /// </remarks>
+    private int MinimumPauseSliderMax => IsMaximumPauseLocked && !IsMinimumPauseLocked
+        ? PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing).MaximumSeconds
+        : DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS;
+
+    /// <remarks>
+    /// The upper bound starts where the lower bound is, so raising the lower one above it raises the
+    /// upper one along with it. A locked slider keeps the whole range, cf. MinimumPauseSliderMax.
+    /// </remarks>
+    private int MaximumPauseSliderMin => IsMaximumPauseLocked
+        ? 0
+        : PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing).MinimumSeconds;
 
     #region Overrides of ComponentBase
 
@@ -184,7 +206,7 @@ public partial class DataSourceManagement : MSGComponentBase
 
         if (eriDataSource.AuthMethod is AuthMethod.KERBEROS)
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
                 T("Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."),
                 T("Close"));
@@ -204,7 +226,7 @@ public partial class DataSourceManagement : MSGComponentBase
         var secretResponse = await this.RustService.GetSecret(eriDataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
         if (!secretResponse.Success)
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
                 string.Format(T("Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"), secretResponse.Issue),
                 T("Close"));
@@ -214,7 +236,7 @@ public partial class DataSourceManagement : MSGComponentBase
         var encryption = PluginFactory.EnterpriseEncryption;
         if (encryption?.IsAvailable != true)
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
                 T("Cannot export this ERI data source because no enterprise encryption secret is configured."),
                 T("Close"));
@@ -252,7 +274,7 @@ public partial class DataSourceManagement : MSGComponentBase
         var decryptedSecret = await secretResponse.Secret.Decrypt(Program.ENCRYPTION);
         if (!encryption.TryEncrypt(decryptedSecret, this.SettingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, out var encryptedSecret))
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
                 T("Cannot export this ERI data source because the authentication secret could not be encrypted."),
                 T("Close"));
@@ -284,7 +306,7 @@ public partial class DataSourceManagement : MSGComponentBase
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type '{1}'?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type '{1}'?"), dataSource.Name, dataSource.Type.DisplayName) },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Data Source"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -331,7 +353,7 @@ public partial class DataSourceManagement : MSGComponentBase
         if (!this.DataSourceEmbeddingService.IsIndexingPaused)
             return false;
 
-        await this.DialogService.ShowMessageBox(title, T("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), T("Close"));
+        await this.DialogService.ShowMessageBoxAsync(title, T("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), T("Close"));
         return true;
     }
 
@@ -391,7 +413,7 @@ public partial class DataSourceManagement : MSGComponentBase
         var deleteSecretResponse = await this.RustService.DeleteSecret(mailbox, SecretStoreType.DATA_SOURCE);
         if (!deleteSecretResponse.Success)
         {
-            await this.DialogService.ShowMessageBox(
+            await this.DialogService.ShowMessageBoxAsync(
                 T("Delete Mailbox"),
                 string.Format(T("The password of this mailbox could not be deleted from the operating system, so the mailbox was kept. The issue was: {0}"), deleteSecretResponse.Issue),
                 T("Close"));
