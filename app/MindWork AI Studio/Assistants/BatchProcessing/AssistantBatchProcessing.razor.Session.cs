@@ -24,6 +24,7 @@ public partial class AssistantBatchProcessing
     private static readonly AssistantSessionStateKey<BatchProcessingOutputMode> OUTPUT_MODE_STATE_KEY = new(nameof(outputMode));
     private static readonly AssistantSessionStateKey<FileExportFormat> RESULT_FILE_FORMAT_STATE_KEY = new(nameof(resultFileFormat));
     private static readonly AssistantSessionStateKey<string> RESULT_COLUMN_HEADER_STATE_KEY = new(nameof(resultColumnHeader));
+    private static readonly AssistantSessionStateKey<BatchProcessingTableFormat> TABLE_FORMAT_STATE_KEY = new(nameof(tableFormat));
     private static readonly AssistantSessionStateKey<string> CSV_FILE_NAME_STATE_KEY = new(nameof(csvFileName));
     private static readonly AssistantSessionStateKey<BatchProcessingCsvSeparator> CSV_SEPARATOR_STATE_KEY = new(nameof(csvSeparator));
     private static readonly AssistantSessionStateKey<string> CUSTOM_CSV_SEPARATOR_STATE_KEY = new(nameof(customCsvSeparator));
@@ -58,6 +59,7 @@ public partial class AssistantBatchProcessing
         state.Set(OUTPUT_MODE_STATE_KEY, this.outputMode);
         state.Set(RESULT_FILE_FORMAT_STATE_KEY, this.resultFileFormat);
         state.Set(RESULT_COLUMN_HEADER_STATE_KEY, this.resultColumnHeader);
+        state.Set(TABLE_FORMAT_STATE_KEY, this.tableFormat);
         state.Set(CSV_FILE_NAME_STATE_KEY, this.csvFileName);
         state.Set(CSV_SEPARATOR_STATE_KEY, this.csvSeparator);
         state.Set(CUSTOM_CSV_SEPARATOR_STATE_KEY, this.customCsvSeparator);
@@ -93,6 +95,7 @@ public partial class AssistantBatchProcessing
         state.Restore(OUTPUT_MODE_STATE_KEY, value => this.outputMode = value);
         state.Restore(RESULT_FILE_FORMAT_STATE_KEY, value => this.resultFileFormat = value);
         state.Restore(RESULT_COLUMN_HEADER_STATE_KEY, value => this.resultColumnHeader = value);
+        state.Restore(TABLE_FORMAT_STATE_KEY, value => this.tableFormat = value);
         state.Restore(CSV_FILE_NAME_STATE_KEY, value => this.csvFileName = value);
         state.Restore(CSV_SEPARATOR_STATE_KEY, value => this.csvSeparator = value);
         state.Restore(CUSTOM_CSV_SEPARATOR_STATE_KEY, value => this.customCsvSeparator = value);

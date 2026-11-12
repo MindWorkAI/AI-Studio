@@ -181,22 +181,34 @@ else
 }
 else
 {
-    <MudTextField T="string" @bind-Text="@this.csvFileName" Validation="@this.ValidateCsvFileName" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Name of the results table (optional)")" HelperText="@T("The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.")" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-
-    <MudTextField T="string" @bind-Text="@this.resultColumnHeader" Disabled="@this.isProcessingBatch" Label="@T("Header of the result column (optional)")" HelperText="@T("The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.")" AdornmentIcon="@AppIcons.RESULT_COLUMN" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-
-    <MudSelect T="BatchProcessingCsvSeparator" @bind-Value="@this.csvSeparator" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Label="@T("Column separator")" HelperText="@T("Choose which character separates the columns of the results table.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
-        @foreach (var separator in Enum.GetValues<BatchProcessingCsvSeparator>())
+    <MudSelect T="BatchProcessingTableFormat" @bind-Value="@this.tableFormat" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Label="@T("Format of the results table")" HelperText="@T("Choose whether the results table is written as a CSV file or as a Microsoft Excel workbook.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+        @foreach (var format in Enum.GetValues<BatchProcessingTableFormat>())
         {
-            <MudSelectItem Value="@separator">
-                @separator.Name
+            <MudSelectItem Value="@format">
+                @format.Name
             </MudSelectItem>
         }
     </MudSelect>
 
-    @if (this.csvSeparator is BatchProcessingCsvSeparator.CUSTOM)
+    <MudTextField T="string" @bind-Text="@this.csvFileName" Validation="@this.ValidateCsvFileName" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Name of the results table (optional)")" HelperText="@(string.Format(T("The file name of the results table. We add the ending {0} when it is missing. When left empty, we use 'batch-results{0}'."), this.tableFormat.FileExtension))" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudTextField T="string" @bind-Text="@this.resultColumnHeader" Disabled="@this.isProcessingBatch" Label="@T("Header of the result column (optional)")" HelperText="@T("The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.")" AdornmentIcon="@AppIcons.RESULT_COLUMN" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    @if (this.tableFormat is BatchProcessingTableFormat.CSV)
     {
-        <MudTextField T="string" @bind-Text="@this.customCsvSeparator" Validation="@this.ValidateCustomCsvSeparator" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Custom column separator")" HelperText="@T("Enter one punctuation or symbol character.")" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudSelect T="BatchProcessingCsvSeparator" @bind-Value="@this.csvSeparator" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Label="@T("Column separator")" HelperText="@T("Choose which character separates the columns of the results table.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+            @foreach (var separator in Enum.GetValues<BatchProcessingCsvSeparator>())
+            {
+                <MudSelectItem Value="@separator">
+                    @separator.Name
+                </MudSelectItem>
+            }
+        </MudSelect>
+
+        @if (this.csvSeparator is BatchProcessingCsvSeparator.CUSTOM)
+        {
+            <MudTextField T="string" @bind-Text="@this.customCsvSeparator" Validation="@this.ValidateCustomCsvSeparator" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Custom column separator")" HelperText="@T("Enter one punctuation or symbol character.")" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        }
     }
 }
 

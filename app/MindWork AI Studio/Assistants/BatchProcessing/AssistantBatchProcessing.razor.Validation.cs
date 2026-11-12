@@ -32,6 +32,7 @@ public partial class AssistantBatchProcessing
     private string? ValidateCustomCsvSeparator(string separator)
     {
         if (this.outputMode is not BatchProcessingOutputMode.TABLE_ONLY
+            || this.tableFormat is not BatchProcessingTableFormat.CSV
             || this.csvSeparator is not BatchProcessingCsvSeparator.CUSTOM)
             return null;
 

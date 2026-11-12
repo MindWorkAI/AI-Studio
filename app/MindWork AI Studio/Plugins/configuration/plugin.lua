@@ -845,6 +845,13 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: MICROSOFT_WORD, OPEN_DOCUMENT_TEXT, LATEX, MARKDOWN, HTML
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultFileFormat"] = "MARKDOWN"
 --
+-- Configure the file format of the results table. Used only when the output mode is
+-- TABLE_ONLY. The column separator applies to CSV only.
+-- Allowed values are: CSV, EXCEL
+-- CONFIG["SETTINGS"]["DataBatchProcessing.TableFormat"] = "CSV"
+--
+-- The file name of the results table, for CSV and Excel alike. When it has no
+-- extension, AI Studio adds the one of the table format.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName"] = "batch-results.csv"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader"] = "Result"
 -- Allowed CSV separator values are: COMMA, SEMICOLON, PIPE, TAB, CUSTOM
@@ -878,6 +885,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultFileFormat.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.TableFormat.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator.AllowUserOverride"] = true

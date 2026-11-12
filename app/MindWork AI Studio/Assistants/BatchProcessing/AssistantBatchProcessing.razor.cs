@@ -21,8 +21,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private ModelImageService ModelImageService { get; init; } = null!;
 
     private const string DEFAULT_OUTPUT_DIRECTORY_NAME = "ai-results";
-    private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
-    private const string CSV_EXTENSION = ".csv";
+    private const string DEFAULT_RESULTS_FILENAME = "batch-results";
     internal const string RESULT_FILE_SUFFIX = "_result";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private const char LOG_SEPARATOR = ';';
@@ -132,6 +131,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
     private FileExportFormat resultFileFormat = FileExportFormat.MARKDOWN;
     private string resultColumnHeader = string.Empty;
+    private BatchProcessingTableFormat tableFormat = BatchProcessingTableFormat.CSV;
     private string csvFileName = string.Empty;
     private BatchProcessingCsvSeparator csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
     private string customCsvSeparator = string.Empty;
@@ -220,6 +220,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
             this.resultFileFormat = FileExportFormat.MARKDOWN;
             this.resultColumnHeader = string.Empty;
+            this.tableFormat = BatchProcessingTableFormat.CSV;
             this.csvFileName = string.Empty;
             this.csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
             this.customCsvSeparator = string.Empty;
@@ -243,6 +244,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.outputMode = settings.OutputMode;
         this.resultFileFormat = settings.ResultFileFormat;
         this.resultColumnHeader = settings.ResultColumnHeader;
+        this.tableFormat = settings.TableFormat;
         this.csvFileName = settings.CsvFileName;
         this.csvSeparator = settings.CsvSeparator;
         this.customCsvSeparator = settings.CustomCsvSeparator;

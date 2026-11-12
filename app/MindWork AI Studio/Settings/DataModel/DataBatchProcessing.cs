@@ -72,6 +72,14 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
     /// </remarks>
     public static bool IsValidResultFileFormat(FileExportFormat format) => FileExportFormat.AnswerFormats.Contains(format);
 
+    /// <summary>
+    /// The file format of the results table, which the output mode TABLE_ONLY writes.
+    /// </summary>
+    public BatchProcessingTableFormat TableFormat { get; set; } = ManagedConfiguration.Register(configSelection, value => value.TableFormat, BatchProcessingTableFormat.CSV);
+
+    /// <summary>
+    /// The file name of the results table. Despite its name, it serves the Excel format as well.
+    /// </summary>
     public string CsvFileName { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvFileName, string.Empty);
 
     public string ResultColumnHeader { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultColumnHeader, string.Empty);
