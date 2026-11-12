@@ -12,7 +12,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     
     protected override string Title => T("E-Mail");
     
-    protected override string Description => T("Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.");
+    protected override string Description => TA("Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.");
     
     // The prompt of this assistant describes an automated system which only writes the email, so the chat gets a prompt of its own, which keeps the settings of the email:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
@@ -150,12 +150,12 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateBulletPoints(string content)
     {
         if(string.IsNullOrWhiteSpace(content))
-            return T("Please provide some content for the e-mail.");
+            return TA("Please provide some content for the e-mail.");
 
         var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
             if(!line.TrimStart().StartsWith('-'))
-                return T("Please start each line of your content list with a dash (-) to create a bullet point list.");
+                return TA("Please start each line of your content list with a dash (-) to create a bullet point list.");
         
         return null;
     }
@@ -163,7 +163,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateTargetLanguage(CommonLanguages language)
     {
         if(language is CommonLanguages.AS_IS)
-            return T("Please select a target language for the e-mail.");
+            return TA("Please select a target language for the e-mail.");
         
         return null;
     }
@@ -171,7 +171,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }
@@ -179,7 +179,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateWritingStyle(WritingStyles style)
     {
         if(style == WritingStyles.NONE)
-            return T("Please select a writing style for the e-mail.");
+            return TA("Please select a writing style for the e-mail.");
         
         return null;
     }
@@ -187,7 +187,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateHistory(string history)
     {
         if(this.provideHistory && string.IsNullOrWhiteSpace(history))
-            return T("Please provide some history for the e-mail.");
+            return TA("Please provide some history for the e-mail.");
         
         return null;
     }

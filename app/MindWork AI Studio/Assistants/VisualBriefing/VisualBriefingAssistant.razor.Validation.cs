@@ -42,7 +42,7 @@ public partial class VisualBriefingAssistant
             List<string> issues = [.. this.formIssues, .. this.FieldIssues, .. this.SourceIssues];
 
             if (this.selectedBriefing is { Versions.Count: > 0 } && !this.SelectedVersionSupportsEdits)
-                issues.Add(T("This version has no compatible semantic artifacts. Rebuild the briefing instead."));
+                issues.Add(TA("This version has no compatible semantic artifacts. Rebuild the briefing instead."));
 
             return [.. issues.Where(issue => !string.IsNullOrWhiteSpace(issue)).Distinct(StringComparer.Ordinal)];
         }
@@ -80,12 +80,12 @@ public partial class VisualBriefingAssistant
 
             List<string> issues = [];
             if (!this.HasSourceMaterial)
-                issues.Add(T("Please add at least one source material file."));
+                issues.Add(TA("Please add at least one source material file."));
 
             // A model can be selected long after the images were attached, so the capability that was
             // checked while attaching them has to be checked again here:
             if (this.HasImageSources && this.editor.Provider != ProviderSettings.NONE && !this.editor.Provider.SupportsImageInput())
-                issues.Add(T("Images are not supported by the selected provider and model. Select a model with image support, or remove the image sources."));
+                issues.Add(TA("Images are not supported by the selected provider and model. Select a model with image support, or remove the image sources."));
 
             foreach (var source in this.selectedBriefing.Sources)
             {
@@ -93,11 +93,11 @@ public partial class VisualBriefingAssistant
                 switch (source.Status)
                 {
                     case VisualBriefingSourceStatus.UNREACHABLE:
-                        issues.Add(string.Format(T("The source '{0}' is no longer reachable. Restore or relink it."), fileName));
+                        issues.Add(string.Format(TA("The source '{0}' is no longer reachable. Restore or relink it."), fileName));
                         break;
 
                     case VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED:
-                        issues.Add(string.Format(T("The transcript for '{0}' is missing or outdated. Transcribe the media source again."), fileName));
+                        issues.Add(string.Format(TA("The transcript for '{0}' is missing or outdated. Transcribe the media source again."), fileName));
                         break;
                 }
             }
@@ -107,7 +107,7 @@ public partial class VisualBriefingAssistant
     }
 
     /// <summary>Validates the briefing name.</summary>
-    private string? ValidateProjectName(string name) => string.IsNullOrWhiteSpace(name) ? T("Please provide a briefing name.") : null;
+    private string? ValidateProjectName(string name) => string.IsNullOrWhiteSpace(name) ? TA("Please provide a briefing name.") : null;
 
     /// <summary>Validates the selected generation provider.</summary>
     /// <remarks>
@@ -117,11 +117,11 @@ public partial class VisualBriefingAssistant
     private string? ValidateProvider(ProviderSettings value)
     {
         if (value == ProviderSettings.NONE || value.UsedLLMProvider is LLMProviders.NONE)
-            return T("Please select a provider.");
+            return TA("Please select a provider.");
 
         var restrictions = this.selectedBriefing?.Restrictions ?? ChatRestrictions.NONE;
         if (!restrictions.IsLLMProviderAllowed(value) && ChatRestrictions.NONE.IsLLMProviderAllowed(value))
-            return T("This provider may not see the text sent to this briefing, because of where the text came from. Please select another provider.");
+            return TA("This provider may not see the text sent to this briefing, because of where the text came from. Please select another provider.");
 
         return null;
     }
@@ -129,13 +129,13 @@ public partial class VisualBriefingAssistant
     /// <summary>Validates the free-form target language when Other is selected.</summary>
     private string? ValidateCustomTargetLanguage(string language) =>
         this.editor.TargetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language)
-            ? T("Please provide a custom target language.")
+            ? TA("Please provide a custom target language.")
             : null;
 
     /// <summary>Validates the free-form protection level when Other is selected.</summary>
     private string? ValidateCustomProtectionLevel(string level) =>
         this.editor.ProtectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(level)
-            ? T("Please provide a custom protection level.")
+            ? TA("Please provide a custom protection level.")
             : null;
 
     /// <summary>Revalidates after a conditional Other field has been added or removed.</summary>

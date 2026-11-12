@@ -58,7 +58,7 @@ public partial class AssistantBatchProcessing
     {
         if (!this.ProviderSettings.SupportsImageInput())
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The selected model cannot read images. Select a model with image support to process this image."));
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, TA("The selected model cannot read images. Select a model with image support to process this image."));
             return null;
         }
 

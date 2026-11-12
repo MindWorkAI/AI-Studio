@@ -15,7 +15,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     protected override string Title => T("Localization");
     
-    protected override string Description => T("Translate MindWork AI Studio text content into another language.");
+    protected override string Description => TA("Translate MindWork AI Studio text content into another language.");
     
     // This assistant writes language plugins, so no chat continues its conversation:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
@@ -224,12 +224,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         this.localizationPossible = false;
         if (PluginFactory.RunningPlugins.FirstOrDefault(n => n is PluginLanguage && n.Id == this.selectedLanguagePluginId) is not PluginLanguage comparisonPlugin)
         {
-            this.loadingIssue = string.Format(T("Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin."), this.selectedLanguagePluginId);
+            this.loadingIssue = string.Format(TA("Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin."), this.selectedLanguagePluginId);
             this.selectedLanguagePlugin = null;
         }
         else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.IETFTag)
         {
-            this.loadingIssue = string.Format(T("The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.IETFTag);
+            this.loadingIssue = string.Format(TA("The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.IETFTag);
             this.selectedLanguagePlugin = null;
         }
         else
@@ -246,7 +246,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     {
         if (this.selectedLanguagePlugin is null)
         {
-            this.loadingIssue = T("Please select a language plugin for comparison.");
+            this.loadingIssue = TA("Please select a language plugin for comparison.");
             this.localizationPossible = false;
             this.isLoading = false;
             this.StateHasChanged();
@@ -273,7 +273,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
                 break;
             
             case NoPlugin:
-                this.loadingIssue = T("Was not able to load the I18N plugin. Please check the plugin code.");
+                this.loadingIssue = TA("Was not able to load the I18N plugin. Please check the plugin code.");
                 break;
             
             case { IsValid: false } plugin when plugin.Issues.Any():
@@ -313,7 +313,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string? ValidatingTargetLanguage(CommonLanguages language)
     {
         if(language == CommonLanguages.AS_IS)
-            return T("Please select a target language.");
+            return TA("Please select a target language.");
         
         return null;
     }
@@ -321,7 +321,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }

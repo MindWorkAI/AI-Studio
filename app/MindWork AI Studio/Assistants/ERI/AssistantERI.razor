@@ -5,7 +5,7 @@
 @using MudExtensions
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-    @T("You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions.")
+    @TA("You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions.")
 </MudJustifiedText>
 
 <MudText Typo="Typo.body1">
@@ -30,13 +30,13 @@
 </MudText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-    @T("Here you have the option to save different configurations for various ERI servers and switch between them. This is useful if you are responsible for multiple ERI servers.")
+    @TA("Here you have the option to save different configurations for various ERI servers and switch between them. This is useful if you are responsible for multiple ERI servers.")
 </MudJustifiedText>
 
 @if(this.SettingsManager.ConfigurationData.ERI.ERIServers.Count is 0)
 {
     <MudText Typo="Typo.body1" Class="mb-3">
-        @T("You have not yet added any ERI server presets.")
+        @TA("You have not yet added any ERI server presets.")
     </MudText>
 }
 else
@@ -63,7 +63,7 @@ else
 @if(this.AreServerPresetsBlocked)
 {
     <MudJustifiedText Typo="Typo.body1" Class="mb-3 mt-3">
-        @T("Hint: to allow this assistant to manage multiple presets, you must enable the preselection of values in the settings.")
+        @TA("Hint: to allow this assistant to manage multiple presets, you must enable the preselection of values in the settings.")
     </MudJustifiedText>
 }
 
@@ -72,13 +72,13 @@ else
 </MudText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-    @T("The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be automatically saved. Would you like this?")
+    @TA("The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be automatically saved. Would you like this?")
 </MudJustifiedText>
 
 @if(this.AreServerPresetsBlocked)
 {
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-        @T("Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings.")
+        @TA("Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings.")
     </MudJustifiedText>
 }
 
@@ -89,8 +89,8 @@ else
 <MudText Typo="Typo.h4" Class="mt-6 mb-1">
     @T("Common ERI server settings")
 </MudText>
-<MudTextField T="string" Disabled="@this.IsERIInputDisabled" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="@T("ERI server name")" HelperText="@T("Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio.")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3" OnKeyUp="() => this.ServerNameWasChanged()"/>
-<MudTextField T="string" Disabled="@this.IsERIInputDisabled" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="@T("ERI server description")" HelperText="@T("Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio.")" Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudTextField T="string" Disabled="@this.IsERIInputDisabled" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="@T("ERI server name")" HelperText="@TA("Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio.")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3" OnKeyUp="() => this.ServerNameWasChanged()"/>
+<MudTextField T="string" Disabled="@this.IsERIInputDisabled" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="@T("ERI server description")" HelperText="@TA("Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio.")" Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
 <MudStack Row="@true" Class="mb-3">
     <MudSelect Disabled="@this.IsERIInputDisabled" T="ProgrammingLanguages" @bind-Value="@this.selectedProgrammingLanguage" AdornmentIcon="@AppIcons.CODE" Adornment="Adornment.Start" Label="@T("Programming language")" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateProgrammingLanguage">
@@ -136,7 +136,7 @@ else
     </MudSelect>
     @if (this.selectedDataSource is DataSources.CUSTOM)
     {
-        <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" Label="@T("Describe your data source")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" Label="@TA("Describe your data source")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 </MudStack>
 
@@ -155,7 +155,7 @@ else
         @if (this.dataSourcePort < 1024)
         {
             <MudText Typo="Typo.body2">
-                <b>@T("Warning:")</b> @T("Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).")
+                <b>@T("Warning:")</b> @TA("Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).")
             </MudText>
         }
     </div>
@@ -190,7 +190,7 @@ else
 
 @if (this.selectedAuthenticationMethods.Contains(Auth.KERBEROS))
 {
-    <MudSelect Disabled="@this.IsERIInputDisabled" T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="@T("Operating system on which your ERI will run")" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
+    <MudSelect Disabled="@this.IsERIInputDisabled" T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="@TA("Operating system on which your ERI will run")" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
         @foreach (var os in Enum.GetValues<OperatingSystem>())
         {
             <MudSelectItem Value="@os">
@@ -218,11 +218,11 @@ else
 </MudText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @T("You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings.")
+    @TA("You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings.")
 </MudJustifiedText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-    @T("You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries or data types. For example, one embedding for texts, another for images, and a third for videos, etc.")
+    @TA("You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries or data types. For example, one embedding for texts, another for images, and a third for videos, etc.")
 </MudJustifiedText>
 
 @if (!this.IsNoneERIServerSelected)
@@ -271,7 +271,7 @@ else
 </MudText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @T("For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process. You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows you to test with beta users which process works better. Or you might generally want to give users the choice so they can select the process that best suits their circumstances.")
+    @TA("For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process. You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows you to test with beta users which process works better. Or you might generally want to give users the choice so they can select the process that best suits their circumstances.")
 </MudJustifiedText>
 
 @if (!this.IsNoneERIServerSelected)
@@ -313,17 +313,17 @@ else
 </MudButton>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-1">
-    @T("You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.")
+    @TA("You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.")
 </MudJustifiedText>
 
-<MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.additionalLibraries" Label="@T("(Optional) Additional libraries")" HelperText="@T("Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.additionalLibraries" Label="@T("(Optional) Additional libraries")" HelperText="@TA("Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
 <MudText Typo="Typo.h4" Class="mt-9 mb-1">
     @T("Provider selection for generation")
 </MudText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @T("The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task. Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.")
+    @TA("The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task. Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.")
 </MudJustifiedText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
@@ -337,12 +337,12 @@ else
 </MudText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @T("AI Studio can save the generated code to the file system. You can select a base folder for this. AI Studio ensures that no files are created outside of this base folder. Furthermore, we recommend that you create a Git repository in this folder. This way, you can see what changes the AI has made in which files.")
+    @TA("AI Studio can save the generated code to the file system. You can select a base folder for this. AI Studio ensures that no files are created outside of this base folder. Furthermore, we recommend that you create a Git repository in this folder. This way, you can see what changes the AI has made in which files.")
 </MudJustifiedText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @T("When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files.") <b>@T("But beware:")</b> @T("It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.")
+    @TA("When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files.") <b>@T("But beware:")</b> @TA("It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.")
 </MudJustifiedText>
 
 <MudTextSwitch Label="@T("Should we write the generated code to the file system?")" Disabled="@this.IsERIInputDisabled" @bind-Value="@this.writeToFilesystem" LabelOn="@T("Yes, please write or update all generated code to the file system")" LabelOff="@T("No, just show me the code")" />
-<SelectDirectory Label="@T("Base directory where to write the code")" @bind-Directory="@this.baseDirectory" Disabled="@this.IsBaseDirectorySelectionDisabled" DirectoryDialogTitle="@T("Select the target directory for the ERI server")" Validation="@this.ValidateDirectory" EnableDragDrop="true" CatchAllDocuments="true" />
+<SelectDirectory Label="@T("Base directory where to write the code")" @bind-Directory="@this.baseDirectory" Disabled="@this.IsBaseDirectorySelectionDisabled" DirectoryDialogTitle="@TA("Select the target directory for the ERI server")" Validation="@this.ValidateDirectory" EnableDragDrop="true" CatchAllDocuments="true" />
