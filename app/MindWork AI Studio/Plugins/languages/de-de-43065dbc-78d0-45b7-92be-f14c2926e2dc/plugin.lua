@@ -1995,12 +1995,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T11610781
 -- Create preview
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1209353201"] = "Vorschau erstellen"
 
--- First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1240353585"] = "Exportieren Sie zuerst die Sitzung als Datei. Bereiten Sie dann die E-Mail an {0} vor, fügen Sie die Datei in Ihrem E-Mail-Programm als Anhang hinzu und senden Sie die E-Mail ab."
-
--- First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1240353585::INFORMAL"] = "Exportiere zuerst die Sitzung als Datei. Bereite dann die E-Mail an {0} vor, füge die Datei in deinem E-Mail-Programm als Anhang hinzu und sende die E-Mail ab."
-
 -- Nothing was replaced.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1254778913"] = "Es wurde nichts ersetzt."
 
@@ -2043,9 +2037,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T28394879
 -- Create the preview anew? Your changes in the preview will be lost.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2839487925::INFORMAL"] = "Vorschau neu erstellen? Deine Änderungen an der Vorschau gehen verloren."
 
--- Prepare the mail to {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2971389249"] = "E-Mail an {0} vorbereiten"
-
 -- AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3058916397"] = "AI Studio kann diese Vorbereitung nicht öffnen. Die Dateien sind möglicherweise beschädigt oder wurden mit einer neueren Version von AI Studio gespeichert. AI Studio lässt die Dateien unverändert."
 
@@ -2057,6 +2048,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T30821219
 
 -- Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3082121907::INFORMAL"] = "Dein E-Mail-Programm sendet die E-Mail von deiner eigenen Adresse, sodass das Forschungsteam sieht, wer sie sendet. AI Studio anonymisiert nur den Inhalt der Datei."
+
+-- Prepare the mail to the research team
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3134014858"] = "Bereiten Sie die E-Mail an das Forschungsteam vor."
 
 -- For research purposes, your data will be evaluated and analyzed in pseudonymized form.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T343267095"] = "Ihre Daten werden zu Forschungszwecken pseudonymisiert ausgewertet und analysiert."
@@ -2114,6 +2108,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T52741402
 
 -- Thank you for preparing with the lab!
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T527414024::INFORMAL"] = "Vielen Dank, dass du dich mit dem Lab vorbereitet hast!"
+
+-- First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T667916114"] = "Exportieren Sie zunächst die Sitzung in eine Datei. Verfassen Sie anschließend eine E-Mail an das Forschungsteam, hängen Sie die Datei in Ihrem E-Mail-Programm an und senden Sie die E-Mail ab."
+
+-- First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T667916114::INFORMAL"] = "Exportiere zunächst die Sitzung in eine Datei. Verfasse anschließend eine E-Mail an das Forschungsteam, hänge die Datei in deinem E-Mail-Programm an und sende die E-Mail ab."
 
 -- Not now
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T742223822"] = "Nicht jetzt"

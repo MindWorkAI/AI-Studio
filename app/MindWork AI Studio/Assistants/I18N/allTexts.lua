@@ -1993,12 +1993,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T11610781
 -- Create preview
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1209353201"] = "Create preview"
 
--- First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1240353585"] = "First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it."
-
--- First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1240353585::INFORMAL"] = "First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it."
-
 -- Nothing was replaced.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1254778913"] = "Nothing was replaced."
 
@@ -2041,9 +2035,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T28394879
 -- Create the preview anew? Your changes in the preview will be lost.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2839487925::INFORMAL"] = "Create the preview anew? Your changes in the preview will be lost."
 
--- Prepare the mail to {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2971389249"] = "Prepare the mail to {0}"
-
 -- AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3058916397"] = "AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged."
 
@@ -2055,6 +2046,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T30821219
 
 -- Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3082121907::INFORMAL"] = "Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file."
+
+-- Prepare the mail to the research team
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3134014858"] = "Prepare the mail to the research team"
 
 -- For research purposes, your data will be evaluated and analyzed in pseudonymized form.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T343267095"] = "For research purposes, your data will be evaluated and analyzed in pseudonymized form."
@@ -2112,6 +2106,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T52741402
 
 -- Thank you for preparing with the lab!
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T527414024::INFORMAL"] = "Thank you for preparing with the lab!"
+
+-- First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T667916114"] = "First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it."
+
+-- First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T667916114::INFORMAL"] = "First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it."
 
 -- Not now
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T742223822"] = "Not now"
