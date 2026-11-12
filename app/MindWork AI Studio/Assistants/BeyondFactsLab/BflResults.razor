@@ -139,10 +139,18 @@
 
                     @if (kind is BflResultKind.REFLECTION_FOLDER)
                     {
-                        <MudStack Row="true" Spacing="3" Wrap="Wrap.Wrap" Class="mb-1">
-                            <MudSwitch T="bool" @bind-Value="@this.includePersonalDisclosures" Color="Color.Primary" Disabled="@this.IsBusy(kind)">@TA("Include personal disclosures")</MudSwitch>
-                            <MudSwitch T="bool" @bind-Value="@this.includeConversations" Color="Color.Primary" Disabled="@this.IsBusy(kind)">@TA("Add the conversations as an appendix")</MudSwitch>
-                        </MudStack>
+                        <MudTextSwitch @bind-Value="@this.includePersonalDisclosures"
+                                       Color="Color.Primary"
+                                       Disabled="@this.IsBusy(kind)"
+                                       Label="@T("Include personal disclosures?")"
+                                       LabelOn="@(string.Format(Culture, TA("Yes, the folder holds your personal involvement and, in the appendix, the conversation of '{0}'"), BflStep.VALUES_AND_PERSPECTIVES.Title))"
+                                       LabelOff="@(string.Format(Culture, TA("No, the folder leaves out your personal involvement and, in the appendix, the conversation of '{0}'"), BflStep.VALUES_AND_PERSPECTIVES.Title))"/>
+                        <MudTextSwitch @bind-Value="@this.includeConversations"
+                                       Color="Color.Primary"
+                                       Disabled="@this.IsBusy(kind)"
+                                       Label="@T("Add the conversations as an appendix?")"
+                                       LabelOn="@T("Yes, the folder ends with the conversations of all steps")"
+                                       LabelOff="@T("No, the folder holds no conversations")"/>
                     }
 
                     <MudButton Variant="@(result.Draft is null && result.Confirmed is null ? Variant.Filled : Variant.Outlined)"
