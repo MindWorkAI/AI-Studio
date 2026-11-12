@@ -1890,6 +1890,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T1597401023"]
 -- A work state changed since the lab wrote this draft. You can create it anew.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T1597401023::INFORMAL"] = "A work state changed since the lab wrote this draft. You can create it anew."
 
+-- No, the folder holds no conversations
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T1599137736"] = "No, the folder holds no conversations"
+
 -- The lab writes these materials from your confirmed work states. Check and edit each of them, and confirm it. Then you can export it as a document.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T182456751"] = "The lab writes these materials from your confirmed work states. Check and edit each of them, and confirm it. Then you can export it as a document."
 
@@ -1910,6 +1913,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2174778813"]
 
 -- These steps have no confirmed work state yet: {0}. The materials use only what you confirmed and name what is still open.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2174778813::INFORMAL"] = "These steps have no confirmed work state yet: {0}. The materials use only what you confirmed and name what is still open."
+
+-- No, the folder leaves out your personal involvement and, in the appendix, the conversation of '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T219251710"] = "No, the folder leaves out your personal involvement and, in the appendix, the conversation of '{0}'"
+
+-- No, the folder leaves out your personal involvement and, in the appendix, the conversation of '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T219251710::INFORMAL"] = "No, the folder leaves out your personal involvement and, in the appendix, the conversation of '{0}'"
 
 -- Discard draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2273967454"] = "Discard draft"
@@ -1935,23 +1944,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2679230892"]
 -- Confirm
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2709768687"] = "Confirm"
 
+-- Yes, the folder holds your personal involvement and, in the appendix, the conversation of '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2791825400"] = "Yes, the folder holds your personal involvement and, in the appendix, the conversation of '{0}'"
+
+-- Yes, the folder holds your personal involvement and, in the appendix, the conversation of '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2791825400::INFORMAL"] = "Yes, the folder holds your personal involvement and, in the appendix, the conversation of '{0}'"
+
 -- A work state changed since you confirmed this material. Please create it anew, or check whether it still fits.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2881263992"] = "A work state changed since you confirmed this material. Please create it anew, or check whether it still fits."
 
 -- A work state changed since you confirmed this material. Please create it anew, or check whether it still fits.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2881263992::INFORMAL"] = "A work state changed since you confirmed this material. Please create it anew, or check whether it still fits."
 
--- Add the conversations as an appendix
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3185544181"] = "Add the conversations as an appendix"
-
--- Add the conversations as an appendix
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3185544181::INFORMAL"] = "Add the conversations as an appendix"
+-- Add the conversations as an appendix?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T2968063742"] = "Add the conversations as an appendix?"
 
 -- Being written
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3204128327"] = "Being written"
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3267849393"] = "Edit"
+
+-- Yes, the folder ends with the conversations of all steps
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3386507601"] = "Yes, the folder ends with the conversations of all steps"
 
 -- AI Studio could not save this material. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3460571754"] = "AI Studio could not save this material. Please try again."
@@ -1968,11 +1983,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3898821075"]
 -- Create all materials in parallel
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3926195314"] = "Create all materials in parallel"
 
--- Include personal disclosures
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T4086721095"] = "Include personal disclosures"
-
--- Include personal disclosures
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T4086721095::INFORMAL"] = "Include personal disclosures"
+-- Include personal disclosures?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3989412584"] = "Include personal disclosures?"
 
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T724820205"] = "Outdated"
@@ -2007,17 +2019,23 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T14465551
 -- Shared session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1494358904"] = "Shared session"
 
--- AI Studio could not export the session. Please try another format.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1707427089"] = "AI Studio could not export the session. Please try another format."
+-- No, the file leaves out your personal involvement and the conversation of '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1859480999"] = "No, the file leaves out your personal involvement and the conversation of '{0}'"
 
--- AI Studio could not export the session. Please try another format.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1707427089::INFORMAL"] = "AI Studio could not export the session. Please try another format."
+-- No, the file leaves out your personal involvement and the conversation of '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1859480999::INFORMAL"] = "No, the file leaves out your personal involvement and the conversation of '{0}'"
 
 -- What AI Studio replaced ({0})
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2050374220"] = "What AI Studio replaced ({0})"
 
 -- Share with the research team
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2202378897"] = "Share with the research team"
+
+-- Yes, the file holds your personal involvement and the conversation of '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2300527633"] = "Yes, the file holds your personal involvement and the conversation of '{0}'"
+
+-- Yes, the file holds your personal involvement and the conversation of '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2300527633::INFORMAL"] = "Yes, the file holds your personal involvement and the conversation of '{0}'"
 
 -- Placeholder
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2307342650"] = "Placeholder"
@@ -2043,12 +2061,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T30589163
 -- AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3058916397::INFORMAL"] = "AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged."
 
--- Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3082121907"] = "Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file."
-
--- Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3082121907::INFORMAL"] = "Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file."
-
 -- Prepare the mail to the research team
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3134014858"] = "Prepare the mail to the research team"
 
@@ -2063,9 +2075,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T34481553
 
 -- Names of other people, one per line
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3883857514"] = "Names of other people, one per line"
-
--- Export
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3898821075"] = "Export"
 
 -- Session to share
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T390620119"] = "Session to share"
@@ -2082,11 +2091,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T39605457
 -- E.g., your institution, the name of the event, or a place.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3960545771::INFORMAL"] = "E.g., your institution, the name of the event, or a place."
 
--- Include personal disclosures
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T4086721095"] = "Include personal disclosures"
-
--- Include personal disclosures
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T4086721095::INFORMAL"] = "Include personal disclosures"
+-- Include personal disclosures?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3989412584"] = "Include personal disclosures?"
 
 -- Preview
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T4258942199"] = "Preview"
@@ -2118,6 +2124,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T66791611
 -- Not now
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T742223822"] = "Not now"
 
+-- Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file. The research institution stores your pseudonymized data so that nobody can link it to you or to your sender address.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T892175069"] = "Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file. The research institution stores your pseudonymized data so that nobody can link it to you or to your sender address."
+
+-- Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file. The research institution stores your pseudonymized data so that nobody can link it to you or to your sender address.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T892175069::INFORMAL"] = "Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file. The research institution stores your pseudonymized data so that nobody can link it to you or to your sender address."
+
 -- Create preview anew
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T953794800"] = "Create preview anew"
 
@@ -2126,6 +2138,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T97349727
 
 -- Your name
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T973497277::INFORMAL"] = "Your name"
+
+-- Export as ODT
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T97688572"] = "Export as ODT"
 
 -- A shared session of the BeyondFacts Lab
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMAIL::T3284671944"] = "A shared session of the BeyondFacts Lab"
