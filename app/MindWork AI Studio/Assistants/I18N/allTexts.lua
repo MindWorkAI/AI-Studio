@@ -769,6 +769,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- Cannot be opened
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T1981873292"] = "Cannot be opened"
 
+-- Share with the research team
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2202378897"] = "Share with the research team"
+
 -- Copy preparation ID
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T2344012850"] = "Copy preparation ID"
 
@@ -903,6 +906,24 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- Permanently delete the preparation '{0}' with all of its steps, chats, material, and work states?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T98434423::INFORMAL"] = "Permanently delete the preparation '{0}' with all of its steps, chats, material, and work states?"
+
+-- Link
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T2382947721"] = "Link"
+
+-- E-mail address
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T2411920080"] = "E-mail address"
+
+-- Person
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T3278826400"] = "Person"
+
+-- Path
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T3949388886"] = "Path"
+
+-- Term
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T586836727"] = "Term"
+
+-- Phone number
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T987655160"] = "Phone number"
 
 -- Stop
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T1266644741"] = "Stop"
@@ -1314,6 +1335,15 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2001857
 
 -- Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2001857602::INFORMAL"] = "Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own."
+
+-- With 'Share with the research team' above your preparation, you can share your session with the research team of the lab, so that it can develop the lab further; the lab also asks once you confirm the work state of the last step for the first time. Sharing is voluntary. Before you share, AI Studio removes the personal details it recognizes, and you check the preview, since its rules may miss something. You export the file and send it with your own mail program, which shows your address.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2242659102"] = "With 'Share with the research team' above your preparation, you can share your session with the research team of the lab, so that it can develop the lab further; the lab also asks once you confirm the work state of the last step for the first time. Sharing is voluntary. Before you share, AI Studio removes the personal details it recognizes, and you check the preview, since its rules may miss something. You export the file and send it with your own mail program, which shows your address."
+
+-- With 'Share with the research team' above your preparation, you can share your session with the research team of the lab, so that it can develop the lab further; the lab also asks once you confirm the work state of the last step for the first time. Sharing is voluntary. Before you share, AI Studio removes the personal details it recognizes, and you check the preview, since its rules may miss something. You export the file and send it with your own mail program, which shows your address.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2242659102::INFORMAL"] = "With 'Share with the research team' above your preparation, you can share your session with the research team of the lab, so that it can develop the lab further; the lab also asks once you confirm the work state of the last step for the first time. Sharing is voluntary. Before you share, AI Studio removes the personal details it recognizes, and you check the preview, since its rules may miss something. You export the file and send it with your own mail program, which shows your address."
+
+-- Sharing with the research team
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2278322216"] = "Sharing with the research team"
 
 -- How to recognize good results
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2310692629"] = "How to recognize good results"
@@ -1950,6 +1980,222 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T934952176"] 
 
 -- Confirmed
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T942512558"] = "Confirmed"
+
+-- Replaced
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1120626693"] = "Replaced"
+
+-- Names count only when they stand here. The lab suggests the names of other participants it knows; check them, and add your own name and everything else which points to you or to the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1161078151"] = "Names count only when they stand here. The lab suggests the names of other participants it knows; check them, and add your own name and everything else which points to you or to the event."
+
+-- Names count only when they stand here. The lab suggests the names of other participants it knows; check them, and add your own name and everything else which points to you or to the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1161078151::INFORMAL"] = "Names count only when they stand here. The lab suggests the names of other participants it knows; check them, and add your own name and everything else which points to you or to the event."
+
+-- Create preview
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1209353201"] = "Create preview"
+
+-- First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1240353585"] = "First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it."
+
+-- First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1240353585::INFORMAL"] = "First, export the session as a file. Then prepare the mail to {0}, attach the file in your mail program, and send it."
+
+-- Nothing was replaced.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1254778913"] = "Nothing was replaced."
+
+-- Check the preview and change it where needed. AI Studio anonymizes your changes once more when you leave the field.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1446555152"] = "Check the preview and change it where needed. AI Studio anonymizes your changes once more when you leave the field."
+
+-- Check the preview and change it where needed. AI Studio anonymizes your changes once more when you leave the field.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1446555152::INFORMAL"] = "Check the preview and change it where needed. AI Studio anonymizes your changes once more when you leave the field."
+
+-- Shared session
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1494358904"] = "Shared session"
+
+-- AI Studio could not export the session. Please try another format.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1707427089"] = "AI Studio could not export the session. Please try another format."
+
+-- AI Studio could not export the session. Please try another format.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1707427089::INFORMAL"] = "AI Studio could not export the session. Please try another format."
+
+-- What AI Studio replaced ({0})
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2050374220"] = "What AI Studio replaced ({0})"
+
+-- Share with the research team
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2202378897"] = "Share with the research team"
+
+-- Placeholder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2307342650"] = "Placeholder"
+
+-- Send it
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2402701656"] = "Send it"
+
+-- Further terms, one per line
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T275020693"] = "Further terms, one per line"
+
+-- What AI Studio removes
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2839457006"] = "What AI Studio removes"
+
+-- Create the preview anew? Your changes in the preview will be lost.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2839487925"] = "Create the preview anew? Your changes in the preview will be lost."
+
+-- Create the preview anew? Your changes in the preview will be lost.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2839487925::INFORMAL"] = "Create the preview anew? Your changes in the preview will be lost."
+
+-- Prepare the mail to {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T2971389249"] = "Prepare the mail to {0}"
+
+-- AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3058916397"] = "AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged."
+
+-- AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3058916397::INFORMAL"] = "AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged."
+
+-- Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3082121907"] = "Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file."
+
+-- Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3082121907::INFORMAL"] = "Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file."
+
+-- For research purposes, your data will be evaluated and analyzed in pseudonymized form.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T343267095"] = "For research purposes, your data will be evaluated and analyzed in pseudonymized form."
+
+-- For research purposes, your data will be evaluated and analyzed in pseudonymized form.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T343267095::INFORMAL"] = "For research purposes, your data will be evaluated and analyzed in pseudonymized form."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3448155331"] = "Close"
+
+-- Names of other people, one per line
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3883857514"] = "Names of other people, one per line"
+
+-- Export
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3898821075"] = "Export"
+
+-- Session to share
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T390620119"] = "Session to share"
+
+-- {0} ({1}×)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3914405868"] = "{0} ({1}×)"
+
+-- BeyondFacts Lab
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3956097526"] = "BeyondFacts Lab"
+
+-- E.g., your institution, the name of the event, or a place.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3960545771"] = "E.g., your institution, the name of the event, or a place."
+
+-- E.g., your institution, the name of the event, or a place.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3960545771::INFORMAL"] = "E.g., your institution, the name of the event, or a place."
+
+-- Include personal disclosures
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T4086721095"] = "Include personal disclosures"
+
+-- Include personal disclosures
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T4086721095::INFORMAL"] = "Include personal disclosures"
+
+-- Preview
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T4258942199"] = "Preview"
+
+-- The file holds your details, your confirmed work states, your conversations, and the materials you confirmed. It never holds the name of your preparation, your material, the research on the web, or the date, the place, and the web page of the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T47760612"] = "The file holds your details, your confirmed work states, your conversations, and the materials you confirmed. It never holds the name of your preparation, your material, the research on the web, or the date, the place, and the web page of the event."
+
+-- The file holds your details, your confirmed work states, your conversations, and the materials you confirmed. It never holds the name of your preparation, your material, the research on the web, or the date, the place, and the web page of the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T47760612::INFORMAL"] = "The file holds your details, your confirmed work states, your conversations, and the materials you confirmed. It never holds the name of your preparation, your material, the research on the web, or the date, the place, and the web page of the event."
+
+-- Would you like to share your session with the research team of the BeyondFacts Lab, so that it can develop the lab further? Before you share it, AI Studio removes the personal details it recognizes: links, e-mail addresses, paths, phone numbers, and the names and terms below. It follows fixed rules and may miss something, so please check the preview before you send it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T483133022"] = "Would you like to share your session with the research team of the BeyondFacts Lab, so that it can develop the lab further? Before you share it, AI Studio removes the personal details it recognizes: links, e-mail addresses, paths, phone numbers, and the names and terms below. It follows fixed rules and may miss something, so please check the preview before you send it."
+
+-- Would you like to share your session with the research team of the BeyondFacts Lab, so that it can develop the lab further? Before you share it, AI Studio removes the personal details it recognizes: links, e-mail addresses, paths, phone numbers, and the names and terms below. It follows fixed rules and may miss something, so please check the preview before you send it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T483133022::INFORMAL"] = "Would you like to share your session with the research team of the BeyondFacts Lab, so that it can develop the lab further? Before you share it, AI Studio removes the personal details it recognizes: links, e-mail addresses, paths, phone numbers, and the names and terms below. It follows fixed rules and may miss something, so please check the preview before you send it."
+
+-- Thank you for preparing with the lab!
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T527414024"] = "Thank you for preparing with the lab!"
+
+-- Thank you for preparing with the lab!
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T527414024::INFORMAL"] = "Thank you for preparing with the lab!"
+
+-- Not now
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T742223822"] = "Not now"
+
+-- Create preview anew
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T953794800"] = "Create preview anew"
+
+-- Your name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T973497277"] = "Your name"
+
+-- Your name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T973497277::INFORMAL"] = "Your name"
+
+-- A shared session of the BeyondFacts Lab
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMAIL::T3284671944"] = "A shared session of the BeyondFacts Lab"
+
+-- Hello,  attached is a session of the BeyondFacts Lab, which I share for the research on the lab. Before I exported it, AI Studio removed the personal details it recognized.  Kind regards
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMAIL::T3622173728"] = "Hello,\n\nattached is a session of the BeyondFacts Lab, which I share for the research on the lab. Before I exported it, AI Studio removed the personal details it recognized.\n\nKind regards"
+
+-- No confirmed work state.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1085223273"] = "No confirmed work state."
+
+-- No conversation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1296316689"] = "No conversation."
+
+-- Research on the web
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1322369504"] = "Research on the web"
+
+-- Shared on
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1703957189"] = "Shared on"
+
+-- Personal disclosures
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1899851975"] = "Personal disclosures"
+
+-- left out
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1940843988"] = "left out"
+
+-- Details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T247611973"] = "Details"
+
+-- Conversation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T2640583206"] = "Conversation"
+
+-- Not confirmed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T2652477427"] = "Not confirmed."
+
+-- {0} documents, {1} recordings, {2} images
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T2667668036"] = "{0} documents, {1} recordings, {2} images"
+
+-- none
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T2913447899"] = "none"
+
+-- No details.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T2977469358"] = "No details."
+
+-- The confirmed work state holds nothing to share.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3153189308"] = "The confirmed work state holds nothing to share."
+
+-- included
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3202028217"] = "included"
+
+-- Person
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3278826400"] = "Person"
+
+-- Lab
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3303746196"] = "Lab"
+
+-- Material
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3419754368"] = "Material"
+
+-- Confirmed work state
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3444987166"] = "Confirmed work state"
+
+-- About this session
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3460157970"] = "About this session"
+
+-- BeyondFacts Lab: a shared session
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3731741448"] = "BeyondFacts Lab: a shared session"
+
+-- Left out, as it may contain personal disclosures.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3986361996"] = "Left out, as it may contain personal disclosures."
+
+-- Version of AI Studio
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T728223168"] = "Version of AI Studio"
 
 -- Test situation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Test situation"
