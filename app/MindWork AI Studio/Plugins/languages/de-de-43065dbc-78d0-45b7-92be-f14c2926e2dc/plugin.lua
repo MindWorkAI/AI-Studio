@@ -2050,7 +2050,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T30821219
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3082121907::INFORMAL"] = "Dein E-Mail-Programm sendet die E-Mail von deiner eigenen Adresse, sodass das Forschungsteam sieht, wer sie sendet. AI Studio anonymisiert nur den Inhalt der Datei."
 
 -- Prepare the mail to the research team
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3134014858"] = "Bereiten Sie die E-Mail an das Forschungsteam vor."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T3134014858"] = "E-Mail an das Forschungsteam vorbereiten"
 
 -- For research purposes, your data will be evaluated and analyzed in pseudonymized form.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T343267095"] = "Ihre Daten werden zu Forschungszwecken pseudonymisiert ausgewertet und analysiert."
@@ -2110,10 +2110,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T52741402
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T527414024::INFORMAL"] = "Vielen Dank, dass du dich mit dem Lab vorbereitet hast!"
 
 -- First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T667916114"] = "Exportieren Sie zunächst die Sitzung in eine Datei. Verfassen Sie anschließend eine E-Mail an das Forschungsteam, hängen Sie die Datei in Ihrem E-Mail-Programm an und senden Sie die E-Mail ab."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T667916114"] = "Exportieren Sie zuerst die Sitzung als Datei. Bereiten Sie dann die E-Mail an das Forschungsteam vor, hängen Sie die Datei in Ihrem E-Mail-Programm an und senden Sie die E-Mail ab."
 
 -- First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T667916114::INFORMAL"] = "Exportiere zunächst die Sitzung in eine Datei. Verfasse anschließend eine E-Mail an das Forschungsteam, hänge die Datei in deinem E-Mail-Programm an und sende die E-Mail ab."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T667916114::INFORMAL"] = "Exportiere zuerst die Sitzung als Datei. Bereite dann die E-Mail an das Forschungsteam vor, hänge die Datei in deinem E-Mail-Programm an und sende die E-Mail ab."
 
 -- Not now
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T742223822"] = "Nicht jetzt"
