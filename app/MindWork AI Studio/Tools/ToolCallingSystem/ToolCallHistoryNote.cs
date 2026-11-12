@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using AIStudio.Chat;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -41,6 +42,15 @@ public static partial class ToolCallHistoryNote
     /// The most sources one note names.
     /// </summary>
     public const int MAX_SOURCES = 20;
+
+    /// <summary>
+    /// The longest web address of a source a note names, see DescribeSources.
+    /// </summary>
+    /// <remarks>
+    /// About what browsers and servers accept. A source with a longer address is left out rather than
+    /// cut, since a cut address leads nowhere.
+    /// </remarks>
+    public const int MAX_SOURCE_URL_CHARACTERS = 2_000;
 
     /// <summary>
     /// The most characters of one argument value a note shows.
@@ -144,8 +154,8 @@ public static partial class ToolCallHistoryNote
     /// <returns>The note, or null when the answer used neither a tool nor a source.</returns>
     public static string? Build(ContentText answer, DateTimeOffset time)
     {
-        var calls = DescribeCalls(answer.ToolInvocations, out var callArgumentTexts, out var furtherCalls);
-        var sources = DescribeSources(answer.Sources, callArgumentTexts, out var furtherSources);
+        var calls = DescribeCalls(answer.ToolInvocations, out var argumentRequestKeys, out var furtherCalls);
+        var sources = DescribeSources(answer.Sources, argumentRequestKeys, out var furtherSources);
         if (calls.Count is 0 && sources.Count is 0)
             return null;
 
@@ -200,11 +210,15 @@ public static partial class ToolCallHistoryNote
     /// A call which failed or was blocked is named, so the model does not repeat it blindly, but without
     /// its arguments and its message: the message may quote what went wrong, content included.
     /// </remarks>
-    private static List<string> DescribeCalls(IEnumerable<ToolInvocationTrace> traces, out List<string> argumentTexts, out int furtherCalls)
+    /// <param name="traces">The calls of the answer.</param>
+    /// <param name="argumentRequestKeys">The request keys of the web addresses in the arguments of the calls named with them.</param>
+    /// <param name="furtherCalls">How many calls the cap left out.</param>
+    /// <returns>The lines.</returns>
+    private static List<string> DescribeCalls(IEnumerable<ToolInvocationTrace> traces, out HashSet<string> argumentRequestKeys, out int furtherCalls)
     {
         var lines = new List<string>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        argumentTexts = [];
+        argumentRequestKeys = new(StringComparer.Ordinal);
         furtherCalls = 0;
 
         foreach (var trace in traces.OrderBy(trace => trace.Order))
@@ -231,8 +245,14 @@ public static partial class ToolCallHistoryNote
             }
 
             lines.Add(line);
-            if (trace.Status is ToolInvocationTraceStatus.SUCCESS)
-                argumentTexts.AddRange(trace.Arguments.Values);
+            if (trace.Status is not ToolInvocationTraceStatus.SUCCESS)
+                continue;
+
+            foreach (var address in trace.FindKeptTexts().SelectMany(WebAddresses.Find))
+            {
+                if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                    argumentRequestKeys.Add(requestKey);
+            }
         }
 
         return lines;
@@ -316,14 +336,28 @@ public static partial class ToolCallHistoryNote
     }
 
     /// <summary>
-    /// One line per source: where it came from and its address.
+    /// One line per source: where it came from and its web address.
     /// </summary>
     /// <remarks>
     /// Without the title: a title is text of a foreign page, which reached the model through the
-    /// prompt injection filter once, and would reach it unfiltered with every later message. A source
-    /// whose address the model passed to a tool already stands with that call.
+    /// prompt injection filter once, and would reach it unfiltered with every later message.<br/><br/>
+    ///
+    /// Only sources with a web address, since the note is there for the model to call a tool again,
+    /// and no tool takes the other ones. A data source names a local file as a file address, with a
+    /// path of the user, and builds an address of its own from the title and the path of a passage,
+    /// both unfiltered; a mail goes by its mailbox and its ID. A web address goes only up to
+    /// MAX_SOURCE_URL_CHARACTERS and without any white space, so that no address can fill the note
+    /// or write lines of its own into it.<br/><br/>
+    ///
+    /// A source whose address the model passed to a tool already stands with that call. Both are
+    /// compared by what they ask the server for, see WebAddresses.CreateRequestKey, since a source
+    /// holds the address in the form the page was read under, e.g., with a slash added.
     /// </remarks>
-    private static List<string> DescribeSources(IEnumerable<Source> sources, List<string> callArgumentTexts, out int furtherSources)
+    /// <param name="sources">The sources of the answer.</param>
+    /// <param name="argumentRequestKeys">The request keys of the web addresses the calls named in the note hold.</param>
+    /// <param name="furtherSources">How many sources the cap left out.</param>
+    /// <returns>The lines.</returns>
+    private static List<string> DescribeSources(IEnumerable<Source> sources, HashSet<string> argumentRequestKeys, out int furtherSources)
     {
         var lines = new List<string>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
@@ -331,10 +365,13 @@ public static partial class ToolCallHistoryNote
 
         foreach (var source in sources)
         {
-            if (string.IsNullOrWhiteSpace(source.URL) || !seen.Add(source.URL))
+            if (source.URL.Length > MAX_SOURCE_URL_CHARACTERS || source.URL.Any(char.IsWhiteSpace))
                 continue;
 
-            if (callArgumentTexts.Any(argument => argument.Equals(source.URL, StringComparison.Ordinal)))
+            if (!WebAddresses.TryCreateRequestKey(source.URL, out var requestKey) || !seen.Add(requestKey))
+                continue;
+
+            if (argumentRequestKeys.Contains(requestKey))
                 continue;
 
             if (lines.Count >= MAX_SOURCES)
