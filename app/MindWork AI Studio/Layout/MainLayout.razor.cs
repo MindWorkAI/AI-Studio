@@ -133,7 +133,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.MessageBus.RegisterComponent(this, this.CircuitState);
         this.MessageBus.ApplyFilters(this, [],
         [
-            Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
+            Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.ADDRESS_FORM_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.SHOW_FILE_EXPORT_RUNNING, Event.SHOW_FILE_EXPORT_SUCCESS, Event.HIDE_FILE_EXPORT_RUNNING,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
@@ -236,6 +236,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     #endregion
 
+    /// <summary>
+    /// Gets a text which addresses the reader, in the form of address the person chose; see I18N.AddressForm.
+    /// </summary>
+    /// <param name="fallbackEN">The text in English (US).</param>
+    /// <returns>The text from the language plugin or the English text.</returns>
+    public string TA(string fallbackEN) => this.GetText(this.Lang, fallbackEN, addressForm: I18N.I.AddressForm);
+
     #region Implementation of IMessageBusReceiver
 
     public string ComponentName => nameof(MainLayout);
@@ -293,6 +300,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     break;
 
                 case Event.COLOR_THEME_CHANGED:
+                case Event.ADDRESS_FORM_CHANGED:
                     this.StateHasChanged();
                     break;
 
