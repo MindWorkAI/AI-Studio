@@ -1,4 +1,7 @@
+using System.Text;
+
 using AIStudio.Chat;
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
@@ -8,26 +11,98 @@ namespace AIStudio.Assistants.BatchProcessing;
 public partial class AssistantBatchProcessing
 {
     /// <summary>
-    /// What one file of the batch gives to the model: either text or an image.
+    /// What one unit of the batch gives to the model: the text of a file, an image, or the merged
+    /// texts and images of a subfolder.
     /// </summary>
-    private readonly record struct BatchInput(string Text, FileAttachmentImage? Image);
+    private readonly record struct BatchInput(string Text, IReadOnlyList<FileAttachmentImage> Images);
 
     /// <summary>
     /// Loads a document through the Rust content stream, resolves a persistent
-    /// transcript for an audio or video file, or prepares an image for the model.
+    /// transcript for an audio or video file, prepares an image for the model,
+    /// or merges all files of a subfolder.
     /// </summary>
     /// <returns>The input for the model, or <c>null</c> when the file already got its final status.</returns>
     private async Task<BatchInput?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
+        if (fileResult.IsFolder)
+            return await this.LoadFolderContentAsync(fileResult, token);
+
         if (IsImage(fileResult.FilePath))
-            return await this.LoadImageAsync(fileResult, token) is { } image ? new BatchInput(string.Empty, image) : null;
+            return await this.LoadImageAsync(fileResult, token) is { } image ? new BatchInput(string.Empty, [image]) : null;
 
         var text = IsTranscribableMedia(fileResult.FilePath)
             ? await this.LoadMediaTranscriptAsync(fileResult, token)
             : await this.LoadDocumentContentAsync(fileResult, token);
 
-        return text is null ? null : new BatchInput(text, null);
+        return text is null ? null : new BatchInput(text, []);
     }
+
+    /// <summary>
+    /// Loads every file of a subfolder like a file of its own and merges them into one input.
+    /// </summary>
+    /// <remarks>
+    /// One file which cannot be read lets the whole subfolder fail, naming that file: an answer
+    /// about a part of the folder would look complete, and continuing the run would skip it. The
+    /// images of the folder go along with the request, so they have to fit the number of images
+    /// the model takes at once.
+    /// </remarks>
+    /// <returns>The merged input, or <c>null</c> when the subfolder already got its final status.</returns>
+    private async Task<BatchInput?> LoadFolderContentAsync(BatchProcessingFileResult folderResult, CancellationToken token)
+    {
+        var numImages = folderResult.MemberFiles.Count(IsImage);
+        if (numImages > 1 && this.ProviderSettings.SupportsImageInput() && numImages > this.ImagesTheModelTakesAtOnce())
+        {
+            this.FinishFileResult(folderResult, BatchProcessingFileStatus.FAILED, string.Format(T("This folder contains {0} images, but the selected model accepts at most {1} images at once."), numImages, this.ImagesTheModelTakesAtOnce()));
+            return null;
+        }
+
+        var mergedText = new StringBuilder();
+        var images = new List<FileAttachmentImage>();
+        foreach (var memberFile in folderResult.MemberFiles)
+        {
+            var pathInFolder = Path.GetRelativePath(folderResult.FilePath, memberFile);
+            var member = new BatchProcessingFileResult
+            {
+                FilePath = memberFile,
+                FileName = Path.GetFileName(memberFile),
+                RelativePath = Path.Join(folderResult.RelativePath, pathInFolder),
+            };
+
+            var memberInput = await this.LoadInputContentAsync(member, token);
+            if (memberInput is null)
+            {
+                var message = member.Status is BatchProcessingFileStatus.CANCELED ? member.Message : $"{pathInFolder}: {member.Message}";
+                this.FinishFileResult(folderResult, member.Status, message);
+                return null;
+            }
+
+            mergedText.AppendLineLF(memberInput.Value.Images.Count > 0
+                ? BuildFolderImagePart(pathInFolder)
+                : BuildFolderTextPart(pathInFolder, memberInput.Value.Text));
+
+            images.AddRange(memberInput.Value.Images);
+        }
+
+        return new BatchInput(mergedText.ToString(), images);
+    }
+
+    /// <summary>
+    /// How many images the selected model takes in one message.
+    /// </summary>
+    /// <returns>1 for a model which takes a single image, and int.MaxValue when nobody knows a limit.</returns>
+    private int ImagesTheModelTakesAtOnce()
+    {
+        var profile = this.ProviderSettings.GetModelProfile();
+        if (!profile.HasAny(Capability.MULTIPLE_IMAGE_INPUT))
+            return 1;
+
+        return profile.Images.MaxInOneMessage ?? int.MaxValue;
+    }
+
+    /// <summary>
+    /// All files a unit of the batch consists of: the file itself, or the files of the subfolder.
+    /// </summary>
+    private static IReadOnlyList<string> FilesOf(BatchProcessingFileResult fileResult) => fileResult.IsFolder ? fileResult.MemberFiles : [fileResult.FilePath];
 
     /// <summary>
     /// Prepares an image for the model before the request is built.
@@ -43,9 +118,9 @@ public partial class AssistantBatchProcessing
     /// How large an image may be needs no check of its own either: the preparation scales it down
     /// until it fits the limit of the provider, and fails only when even that is not enough.
     ///
-    /// How many images a model accepts needs no check of its own: every file gets a thread of its own,
-    /// see CallAIAsync, so each request carries exactly one image, in every round with the model. A
-    /// limit of one image is therefore always met, and SupportsImageInput already refuses a limit of zero.
+    /// How many images a model accepts needs no check here: every file gets a thread of its own, see
+    /// CallAIAsync, so the request of a single image carries exactly that one, and SupportsImageInput
+    /// already refuses a limit of zero. Only a subfolder sends several, which LoadFolderContentAsync checks.
     ///
     /// Unlike the text of documents and transcripts, an image does not pass the prompt injection
     /// filter of the runtime, which reads text only. Images in a chat do not either. Instructions

@@ -58,6 +58,9 @@ public partial class AssistantBatchProcessing
                 Your task is to process this DOCUMENT strictly according to the instructions below.
                 A DOCUMENT may also be an image attached to the request. Then, the content of the
                 DOCUMENT is what the image shows, including any text within it.
+                A DOCUMENT may also be a folder of several files, which are given to you one after
+                another, and images among them are attached to the request. Then, process all files
+                of the folder together as one DOCUMENT and give one answer for the whole folder.
 
                 # Scope and precedence
                 Use only information explicitly contained in the DOCUMENT and the instructions.
@@ -99,11 +102,44 @@ public partial class AssistantBatchProcessing
                 """;
     }
 
-    /// <param name="fileName">The name of the document being processed.</param>
-    /// <param name="input">The text or the image handed to the model.</param>
+    private static string BuildFolderUserPrompt(string folderName, string mergedContent)
+    {
+        return $"""
+                # DOCUMENT
+                Folder name: {folderName}
+                The DOCUMENT is this folder. Its files follow one after another, each under its path within
+                the folder. Together, they form one DOCUMENT.
+
+                {mergedContent}
+                """;
+    }
+
+    private static string BuildFolderTextPart(string pathInFolder, string fileContent)
+    {
+        return $"""
+                ## FILE: {pathInFolder}
+                Content:
+                ```
+                {fileContent}
+                ```
+
+                """;
+    }
+
+    private static string BuildFolderImagePart(string pathInFolder)
+    {
+        return $"""
+                ## FILE: {pathInFolder}
+                Content: This file is an image attached to this request.
+
+                """;
+    }
+
+    /// <param name="fileResult">The file or the subfolder being processed.</param>
+    /// <param name="input">The text or the images handed to the model.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The answer of the model, and which tools it used to get there.</returns>
-    private async Task<(string Answer, string UsedTools)> CallAIAsync(string fileName, BatchInput input, CancellationToken token)
+    private async Task<(string Answer, string UsedTools)> CallAIAsync(BatchProcessingFileResult fileResult, BatchInput input, CancellationToken token)
     {
         //
         // Every file of the batch gets the tools the user picked for the job. The batch builds its
@@ -131,9 +167,11 @@ public partial class AssistantBatchProcessing
         };
 
         this.AssignRuntimeIdentity(chatThread);
-        var userPrompt = input.Image is null
-            ? new ContentText { Text = BuildUserPrompt(fileName, input.Text) }
-            : new ContentText { Text = BuildImageUserPrompt(fileName), FileAttachments = [input.Image] };
+        var userPrompt = fileResult.IsFolder
+            ? new ContentText { Text = BuildFolderUserPrompt(fileResult.FileName, input.Text), FileAttachments = [..input.Images] }
+            : input.Images.Count is 0
+                ? new ContentText { Text = BuildUserPrompt(fileResult.FileName, input.Text) }
+                : new ContentText { Text = BuildImageUserPrompt(fileResult.FileName), FileAttachments = [..input.Images] };
 
         chatThread.Blocks.Add(new ContentBlock
         {

@@ -126,8 +126,8 @@ public partial class AssistantBatchProcessing
     /// <summary>
     /// Validates the form, finds the documents, and creates the output folder.
     /// </summary>
-    /// <returns>The output folder and the documents, or <c>null</c> when the run must not start.</returns>
-    private async Task<(string ResolvedOutputDirectory, IReadOnlyList<string> Files)?> PrepareRunAsync()
+    /// <returns>The output folder and the units of the run, or <c>null</c> when the run must not start.</returns>
+    private async Task<(string ResolvedOutputDirectory, IReadOnlyList<BatchProcessingUnit> Units)?> PrepareRunAsync()
     {
         await this.Form!.ValidateAsync();
 
@@ -199,6 +199,9 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
-        return (resolvedOutputDirectory, files);
+        //
+        // Without subfolders, every file lies directly in the input folder and is a unit of its own:
+        //
+        return (resolvedOutputDirectory, BatchProcessingUnit.Group(this.inputDirectory, files));
     }
 }

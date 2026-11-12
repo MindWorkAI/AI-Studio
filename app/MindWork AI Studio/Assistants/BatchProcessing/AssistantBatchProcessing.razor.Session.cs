@@ -111,6 +111,7 @@ public partial class AssistantBatchProcessing
             FilePath = source.FilePath,
             FileName = source.FileName,
             RelativePath = source.RelativePath,
+            MemberFiles = source.MemberFiles,
             Status = source.Status,
             Message = source.Message,
             ResultText = source.ResultText,

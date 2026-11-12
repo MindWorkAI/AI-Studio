@@ -14,6 +14,10 @@
 @if (this.includeSubdirectories)
 {
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+        @T("Each subfolder of the selected folder counts as one document: all of its matching files, including those in deeper subfolders, are merged and sent to the AI together, which then gives one answer per subfolder.")
+    </MudJustifiedText>
+
+    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
         @T("A separate output folder is excluded from document discovery. This includes the default 'ai-results' folder, so results from an earlier run are not processed again. If the input folder itself is used for output, known batch result files are excluded instead.")
     </MudJustifiedText>
 }

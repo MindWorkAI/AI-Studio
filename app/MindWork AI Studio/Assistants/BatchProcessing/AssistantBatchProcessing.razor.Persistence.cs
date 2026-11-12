@@ -34,7 +34,7 @@ public partial class AssistantBatchProcessing
     /// Reads the log of the previous run and asks the user how to proceed.
     /// </summary>
     /// <returns>The previous log and results, or <c>null</c> when the user canceled.</returns>
-    private async Task<(Dictionary<string, BatchProcessingLogEntry> PreviousLog, Dictionary<string, string> PreviousResults)?> LoadPreviousRunAsync(string resolvedOutputDirectory, IReadOnlyList<string> files)
+    private async Task<(Dictionary<string, BatchProcessingLogEntry> PreviousLog, Dictionary<string, string> PreviousResults)?> LoadPreviousRunAsync(string resolvedOutputDirectory, IReadOnlyList<BatchProcessingUnit> units)
     {
         var previousLog = await this.ReadLogAsync(Path.Join(resolvedOutputDirectory, LOG_FILENAME));
 
@@ -48,9 +48,9 @@ public partial class AssistantBatchProcessing
 
         var numCompletedInLog = 0;
         var numRestorable = 0;
-        foreach (var file in files)
+        foreach (var unit in units)
         {
-            var relativePath = Path.GetRelativePath(this.inputDirectory, file);
+            var relativePath = unit.RelativePath;
             if (previousLog.TryGetValue(relativePath, out var entry) && entry.WasSuccessful)
                 numCompletedInLog++;
 
@@ -58,7 +58,7 @@ public partial class AssistantBatchProcessing
                 numRestorable++;
         }
 
-        var decision = await this.AskResumeDecisionAsync(numRestorable, files.Count - numRestorable, numCompletedInLog - numRestorable);
+        var decision = await this.AskResumeDecisionAsync(numRestorable, units.Count - numRestorable, numCompletedInLog - numRestorable);
         if (decision is null)
             return null;
 
@@ -239,13 +239,14 @@ public partial class AssistantBatchProcessing
     /// <remarks>
     /// Two documents of the same run may share their name and differ only in
     /// their extension, e.g., report.docx and report.pdf. Both would map to
-    /// report_result.md, so we add a counter for the second one. Otherwise, one
-    /// result would silently overwrite the other.
+    /// report_result.md, so we add a counter for the second one. The same holds
+    /// for a subfolder named report next to them. Otherwise, one result would
+    /// silently overwrite the other.
     /// </remarks>
-    private string CreateResultFileName(string sourceFileName)
+    /// <param name="stem">The name of the document without its extension, or the name of the subfolder.</param>
+    private string CreateResultFileName(string stem)
     {
         var extension = this.resultFileFormat.FileExtension;
-        var stem = Path.GetFileNameWithoutExtension(sourceFileName);
         var candidate = $"{stem}{RESULT_FILE_SUFFIX}{extension}";
 
         var counter = 2;
