@@ -27,6 +27,8 @@ public sealed class CalculateTool(SettingsManager settingsManager, MathComputati
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(CalculateTool).Namespace, nameof(CalculateTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(CalculateTool).Namespace, nameof(CalculateTool));
+
     private const string EXPRESSION_ARGUMENT = "expression";
     private const string DIGITS_ARGUMENT = "digits";
 
@@ -76,7 +78,7 @@ public sealed class CalculateTool(SettingsManager settingsManager, MathComputati
 
     public string GetDisplayName() => TB("Calculate");
 
-    public string GetDescription() => TB("Lets the AI calculate exactly instead of guessing digits, e.g., fractions, roots, or integrals, and check an equation. Everything is computed on your computer.");
+    public string GetDescription() => TA("Lets the AI calculate exactly instead of guessing digits, e.g., fractions, roots, or integrals, and check an equation. Everything is computed on your computer.");
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {

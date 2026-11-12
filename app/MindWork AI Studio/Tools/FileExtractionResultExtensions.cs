@@ -14,6 +14,8 @@ internal static class FileExtractionResultExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExtractionResultExtensions).Namespace, nameof(FileExtractionResultExtensions));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(FileExtractionResultExtensions).Namespace, nameof(FileExtractionResultExtensions));
+
     /// <param name="result">The extraction result.</param>
     extension(FileExtractionResult result)
     {
@@ -41,7 +43,7 @@ internal static class FileExtractionResultExtensions
         /// <param name="fileName">The name of the file, as shown to the user.</param>
         /// <returns>The localized message.</returns>
         internal string ToExtensionMismatchUserMessage(string fileName) => string.Format(
-            TB("The file '{0}' is actually a {1} and was read as such. Please correct its file extension."),
+            TA("The file '{0}' is actually a {1} and was read as such. Please correct its file extension."),
             fileName,
             result.DetectedFormat);
 
@@ -78,7 +80,7 @@ internal static class FileExtractionResultExtensions
     {
         FileExtractionErrorCode.FILE_NOT_FOUND => TB("The file '{0}' does not exist anymore and was not sent."),
         FileExtractionErrorCode.FILE_NOT_READABLE => TB("The file '{0}' could not be read and was not sent. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file."),
-        FileExtractionErrorCode.FILE_LOCKED => TB("The file '{0}' is currently open in another program, which is why it was not sent. Please close the file and try again. When the file is stored on a shared network drive, a colleague might have it open."),
+        FileExtractionErrorCode.FILE_LOCKED => TA("The file '{0}' is currently open in another program, which is why it was not sent. Please close the file and try again. When the file is stored on a shared network drive, a colleague might have it open."),
         FileExtractionErrorCode.TIMEOUT => TB("Reading the file '{0}' took too long and was stopped, so the file was not sent. When the file is stored on a network drive, the connection might be slow or interrupted."),
         FileExtractionErrorCode.NOT_A_VALID_PDF => TB("The file '{0}' is not a readable PDF and was not sent. It might be damaged or transferred incompletely."),
         FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET => TB("The file '{0}' is not a readable spreadsheet and was not sent. It might be damaged or transferred incompletely."),

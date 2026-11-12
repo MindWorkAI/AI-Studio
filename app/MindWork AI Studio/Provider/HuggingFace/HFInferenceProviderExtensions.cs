@@ -6,6 +6,8 @@ public static class HFInferenceProviderExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(HFInferenceProviderExtensions).Namespace, nameof(HFInferenceProviderExtensions));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(HFInferenceProviderExtensions).Namespace, nameof(HFInferenceProviderExtensions));
+
     /// <param name="provider">The inference provider.</param>
     extension(HFInferenceProvider provider)
     {
@@ -117,7 +119,7 @@ public static class HFInferenceProviderExtensions
         {
             HFInferenceProvider.AUTOMATIC => TB("Automatic: the fastest provider"),
             HFInferenceProvider.CHEAPEST => TB("Automatic: the cheapest provider"),
-            HFInferenceProvider.PREFERRED => TB("Automatic: your preferred order"),
+            HFInferenceProvider.PREFERRED => TA("Automatic: your preferred order"),
 
             HFInferenceProvider.BASETEN => "Baseten",
             HFInferenceProvider.CEREBRAS => "Cerebras",

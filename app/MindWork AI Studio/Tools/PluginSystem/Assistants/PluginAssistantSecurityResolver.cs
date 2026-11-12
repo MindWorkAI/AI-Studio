@@ -8,6 +8,8 @@ public static class PluginAssistantSecurityResolver
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginAssistantSecurityResolver).Namespace, nameof(PluginAssistantSecurityResolver));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(PluginAssistantSecurityResolver).Namespace, nameof(PluginAssistantSecurityResolver));
+
     private static string NormalizeHash(string hash) => string.IsNullOrWhiteSpace(hash) ? string.Empty : hash.Trim().ToUpperInvariant();
 
     private static string GetAvailabilityLabel(bool requiresAudit, bool hasAudit, bool hasHashMismatch, bool isBlocked, bool canOverride)
@@ -88,8 +90,8 @@ public static class PluginAssistantSecurityResolver
         if (enterpriseApproval is not null)
         {
             var enterpriseHeadline = string.IsNullOrWhiteSpace(enterpriseApproval.DisplayName)
-                ? TB("This assistant was approved by your organization.")
-                : string.Format(TB("This assistant was approved by your organization as '{0}'."), enterpriseApproval.DisplayName);
+                ? TA("This assistant was approved by your organization.")
+                : string.Format(TA("This assistant was approved by your organization as '{0}'."), enterpriseApproval.DisplayName);
 
             return new PluginAssistantSecurityState
             {
@@ -115,7 +117,7 @@ public static class PluginAssistantSecurityResolver
                 AvailabilityColor = GetAvailabilityColor(requiresAudit: false, hasAudit: true, hasHashMismatch: false, isBlocked: false, canOverride: false),
                 AvailabilityIcon = GetAvailabilityIcon(requiresAudit: false, hasAudit: true, hasHashMismatch: false, isBlocked: false, canOverride: false),
                 StatusLabel = TB("Unlocked"),
-                SourceLabel = TB("Approved by your organization"),
+                SourceLabel = TA("Approved by your organization"),
                 SourceColor = Color.Success,
                 SourceIcon = AppIcons.ORGANIZATION,
                 BadgeIcon = AppIcons.ORGANIZATION,
@@ -169,8 +171,8 @@ public static class PluginAssistantSecurityResolver
                 BadgeIcon = GetSecurityBadgeIcon(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 Headline = requiresAudit ? TB("This assistant is currently locked.") : TB("This assistant currently has no stored audit."),
                 Description = requiresAudit
-                    ? TB("No security audit exists yet, and your current security settings require one before this assistant plugin may be enabled or used.")
-                    : TB("No security audit exists yet. Your current security settings do not require an audit before this assistant plugin may be used."),
+                    ? TA("No security audit exists yet, and your current security settings require one before this assistant plugin may be enabled or used.")
+                    : TA("No security audit exists yet. Your current security settings do not require an audit before this assistant plugin may be used."),
                 StatusColor = GetAvailabilityColor(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 StatusIcon = GetAvailabilityIcon(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 ActionLabel = TB("Start Security Check"),
@@ -252,12 +254,12 @@ public static class PluginAssistantSecurityResolver
                     ? TB("This assistant is currently locked.")
                     : isEnforcementDisabled
                         ? TB("This assistant can still be used because audit enforcement is disabled.")
-                        : TB("This assistant can still be used because your settings allow it."),
+                        : TA("This assistant can still be used because your settings allow it."),
                 Description = isBlockedByMinimum
-                    ? string.Format(TB("The current audit result '{0}' is below your required minimum level '{1}'. Your security settings therefore block this assistant plugin."), auditLevel.Name, auditSettings.MinimumLevel.Name)
+                    ? string.Format(TA("The current audit result '{0}' is below your required minimum level '{1}'. Your security settings therefore block this assistant plugin."), auditLevel.Name, auditSettings.MinimumLevel.Name)
                     : isEnforcementDisabled
-                        ? string.Format(TB("The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used."), auditLevel.Name, auditSettings.MinimumLevel.Name)
-                        : string.Format(TB("The current audit result is '{0}', which is below your required minimum level '{1}'. Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully."), auditLevel.Name, auditSettings.MinimumLevel.Name),
+                        ? string.Format(TA("The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used."), auditLevel.Name, auditSettings.MinimumLevel.Name)
+                        : string.Format(TA("The current audit result is '{0}', which is below your required minimum level '{1}'. Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully."), auditLevel.Name, auditSettings.MinimumLevel.Name),
                 StatusColor = GetAvailabilityColor(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlockedByMinimum, canOverride),
                 StatusIcon = GetAvailabilityIcon(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlockedByMinimum, canOverride),
                 ActionLabel = TB("Open Security Check"),
@@ -294,7 +296,7 @@ public static class PluginAssistantSecurityResolver
             SourceIcon = AppIcons.SECURITY_AUDIT_PASSED,
             BadgeIcon = GetSecurityBadgeIcon(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlocked: false, canOverride: false),
             Headline = TB("This assistant is currently unlocked."),
-            Description = string.Format(TB("The stored audit matches the current plugin code and meets your required minimum level '{0}'."), auditSettings.MinimumLevel.Name),
+            Description = string.Format(TA("The stored audit matches the current plugin code and meets your required minimum level '{0}'."), auditSettings.MinimumLevel.Name),
             StatusColor = GetAvailabilityColor(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlocked: false, canOverride: false),
             StatusIcon = GetAvailabilityIcon(requiresAudit: false, hasAudit, hasHashMismatch: false, isBlocked: false, canOverride: false),
             ActionLabel = TB("Open Security Check"),

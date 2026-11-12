@@ -43,6 +43,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileSourceIndexer).Namespace, nameof(FileSourceIndexer));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(FileSourceIndexer).Namespace, nameof(FileSourceIndexer));
+
     private enum RagFileIndexingDecision
     {
         INDEXABLE,
@@ -94,7 +96,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             && inputFiles.Files.Count == 0 && inputFiles.IgnoredFiles.Count == 0
             && inputFiles.FilePatternExclusionCount == 0 && inputFiles.ExcludedFolderCount == 0
             && inputFiles.FailedFiles == 0 && inputFiles.UnreadableDirectories.Count == 0)
-            return this.StopWithoutRoot(context, dataSource, string.Format(TB("The folder '{0}' currently appears empty. AI Studio kept the index of this data source, because the folder of a drive that is not connected can look empty. Connect the drive and refresh this data source. If you emptied the folder on purpose, remove this data source."), directory.Path));
+            return this.StopWithoutRoot(context, dataSource, string.Format(TA("The folder '{0}' currently appears empty. AI Studio kept the index of this data source, because the folder of a drive that is not connected can look empty. Connect the drive and refresh this data source. If you emptied the folder on purpose, remove this data source."), directory.Path));
 
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;
@@ -762,7 +764,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 this.EnumerateAccessibleFiles(localDirectory, manifest, mediaTranscriptionAvailability, result);
                 if (result.UnreadableDirectories.Any(directory => string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)),
                         Path.TrimEndingDirectorySeparator(Path.GetFullPath(localDirectory.Path)), PathTools.COMPARISON)))
-                    result.UnreachableRootReason = string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."), localDirectory.Path);
+                    result.UnreachableRootReason = string.Format(TA("The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."), localDirectory.Path);
 
                 return result;
         }
@@ -773,11 +775,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
-                result.UnreachableRootReason = string.Format(TB("The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. If the file was moved or renamed, edit this data source to select its new location. Once the file is back, refresh this data source. When it is gone for good, remove this data source."), localFile.FilePath);
+                result.UnreachableRootReason = string.Format(TA("The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. If the file was moved or renamed, edit this data source to select its new location. Once the file is back, refresh this data source. When it is gone for good, remove this data source."), localFile.FilePath);
                 break;
 
             case DataSourceLocalDirectory localDirectory:
-                result.UnreachableRootReason = string.Format(TB("The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. If the folder was moved or renamed, edit this data source to select its new location. Once the folder is back, refresh this data source."), localDirectory.Path);
+                result.UnreachableRootReason = string.Format(TA("The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. If the folder was moved or renamed, edit this data source to select its new location. Once the folder is back, refresh this data source."), localDirectory.Path);
                 break;
         }
 
@@ -802,7 +804,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                      reportInaccessibleDirectory: (directoryPath, exception) =>
                      {
                          logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", directoryPath);
-                         result.AddUnreadableDirectory(directoryPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), directoryPath));
+                         result.AddUnreadableDirectory(directoryPath, string.Format(TA("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), directoryPath));
                      }))
         {
             if (!selection.Selects(filePath))
@@ -824,7 +826,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             catch (Exception exception)
             {
                 logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
-                result.AddFailure(filePath, string.Format(TB("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
+                result.AddFailure(filePath, string.Format(TA("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
                 continue;
             }
 

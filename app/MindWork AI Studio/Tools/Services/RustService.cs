@@ -15,6 +15,8 @@ namespace AIStudio.Tools.Services;
 public sealed partial class RustService : BackgroundService
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(RustService).Namespace, nameof(RustService));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(RustService).Namespace, nameof(RustService));
     
     private readonly HttpClient http;
 

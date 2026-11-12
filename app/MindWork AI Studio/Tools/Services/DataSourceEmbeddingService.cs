@@ -68,6 +68,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
+
     /// <summary>
     /// The pauses of the indexing, cf. PauseIndexingAsync.
     /// </summary>
@@ -637,7 +639,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             else
             {
                 logger.LogError(exception, "Background embedding failed for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
-                this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
+                this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TA("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
             }
         }
         finally
@@ -866,15 +868,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         {
             token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, DataSourceEmbeddingProviders.IsProhibited(settingsManager, dataSource)
-                ? TB("The use of the embedding provider of this data source has been prohibited by your organization. Please select a different embedding provider in the settings of the data source.")
-                : TB("The selected embedding provider is not available. Please check it in the settings.")));
+                ? TA("The use of the embedding provider of this data source has been prohibited by your organization. Please select a different embedding provider in the settings of the data source.")
+                : TA("The selected embedding provider is not available. Please check it in the settings.")));
             return null;
         }
 
         if (!AllowsEmbedding(dataSource, embeddingProvider.GetConfidenceLevel(settingsManager)))
         {
             var errorMessage = dataSource is DataSourceMailbox && !dataSource.ConfidenceLevel.IsAllowedMailboxConfidence
-                ? TB("The mailbox has no valid confidence level, so no provider may read it. Please choose one in the settings of the mailbox.")
+                ? TA("The mailbox has no valid confidence level, so no provider may read it. Please choose one in the settings of the mailbox.")
                 : string.Format(TB("The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."), dataSource.ConfidenceLevel.Name, embeddingProvider.GetConfidenceLevel(settingsManager).Name);
             logger.LogWarning(
                 "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because embedding provider '{EmbeddingProviderName}' ({EmbeddingProviderId}) does not meet the required confidence. RequiredConfidence={RequiredConfidence}, EmbeddingProviderConfidence={EmbeddingProviderConfidence}.",
@@ -1387,13 +1389,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// the user needs to read is what this means for their chats and where the way out is.
     /// </remarks>
     private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSourceBase dataSource) =>
-        this.GetRepairStatus(dataSource, string.Format(TB("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name));
+        this.GetRepairStatus(dataSource, string.Format(TA("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name));
 
     /// <remarks>
     /// The same way out as for a store which cannot be read, cf. GetUnreadableVectorStoreStatus.
     /// </remarks>
     private DataSourceEmbeddingStatus GetMissingVectorStoreStatus(IDataSourceBase dataSource) =>
-        this.GetRepairStatus(dataSource, string.Format(TB("The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name));
+        this.GetRepairStatus(dataSource, string.Format(TA("The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name));
 
     /// <summary>
     /// Shows a data source as waiting for the user to have its index built anew, cf. NeedsIndexRepair.

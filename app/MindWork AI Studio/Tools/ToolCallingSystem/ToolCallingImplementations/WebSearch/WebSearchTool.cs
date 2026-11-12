@@ -24,6 +24,8 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WebSearchTool).Namespace, nameof(WebSearchTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(WebSearchTool).Namespace, nameof(WebSearchTool));
+
     //
     // The dispatcher holds the backends: which of them answers a search, and in which order,
     // is what it decides, so the order they are offered and tried in belongs to it rather than
@@ -185,7 +187,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
     public string GetDisplayName() => TB("Web Search");
 
-    public string GetDescription() => TB("Search the web with one of the configured search services and retrieve the readable content of the best matching pages.");
+    public string GetDescription() => TA("Search the web with one of the configured search services and retrieve the readable content of the best matching pages.");
 
     public string GetSettingsGroupLabel(string groupKey) => this.FindBackend(groupKey)?.GetSettingsGroupLabel() ?? groupKey;
 
@@ -221,9 +223,9 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
         return fieldName switch
         {
-            BACKEND_STRATEGY_SETTING => TB("What to do with the search services you configured. Asking them one after another moves on to the next one whenever the one before it found nothing, which is the sensible choice for almost everyone. Asking all of them at once combines their results and uses one request of every service for each search, which finds more but spends your free requests several times as fast. When this is not set, the services are asked one after another."),
-            PRIMARY_BACKEND_SETTING => TB("Which search service to ask first, and the only one asked when you chose to use just the preferred one. When this is not set, the services are asked in a fixed order."),
-            DEFAULT_LANGUAGE_SETTING => TB("The language to search in when the AI model does not ask for a specific one. This is required: without a language, many search engines return no results at all, and the search would come back empty without telling you why. Choose 'Any language' if you do not want to restrict the results."),
+            BACKEND_STRATEGY_SETTING => TA("What to do with the search services you configured. Asking them one after another moves on to the next one whenever the one before it found nothing, which is the sensible choice for almost everyone. Asking all of them at once combines their results and uses one request of every service for each search, which finds more but spends your free requests several times as fast. When this is not set, the services are asked one after another."),
+            PRIMARY_BACKEND_SETTING => TA("Which search service to ask first, and the only one asked when you chose to use just the preferred one. When this is not set, the services are asked in a fixed order."),
+            DEFAULT_LANGUAGE_SETTING => TA("The language to search in when the AI model does not ask for a specific one. This is required: without a language, many search engines return no results at all, and the search would come back empty without telling you why. Choose 'Any language' if you do not want to restrict the results."),
             DEFAULT_SAFE_SEARCH_SETTING => TB("Optional safe search policy sent to the search service when configured."),
             MAX_RESULTS_SETTING => TB("Optional default maximum number of results returned to the model when the model does not provide a limit."),
             SEARCH_TIMEOUT_SECONDS_SETTING => TB("Optional HTTP timeout for the search request in seconds."),
@@ -302,7 +304,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     {
         var positiveIntegerErrorFormat = TB("The setting '{0}' must be a positive integer.");
         var maximumErrorFormat = TB("The setting '{0}' must be less than or equal to {1}.");
-        var invalidOptionErrorFormat = TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values.");
+        var invalidOptionErrorFormat = TA("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values.");
 
         //
         // No backend field is required in the schema, because requiring one would mean every
@@ -315,7 +317,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
                 IsConfigured = false,
-                Message = TB("Please configure at least one search service for the web search."),
+                Message = TA("Please configure at least one search service for the web search."),
             });
         }
 
@@ -362,7 +364,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
                 return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
                 {
                     IsConfigured = false,
-                    Message = string.Format(TB("The preferred search service {0} is not configured. Please configure it, or choose one of the services you did configure."), primaryBackend.Value.Name),
+                    Message = string.Format(TA("The preferred search service {0} is not configured. Please configure it, or choose one of the services you did configure."), primaryBackend.Value.Name),
                 });
             }
 
@@ -371,7 +373,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
                 return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
                 {
                     IsConfigured = false,
-                    Message = TB("Please choose the preferred search service, or let the services be used one after another."),
+                    Message = TA("Please choose the preferred search service, or let the services be used one after another."),
                 });
             }
         }
@@ -412,7 +414,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
                 return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
                 {
                     IsConfigured = false,
-                    Message = TB("None of the configured search services can filter explicit results, but a safe search policy is configured. Please configure a search service that can filter, or set the safe search policy to off."),
+                    Message = TA("None of the configured search services can filter explicit results, but a safe search policy is configured. Please configure a search service that can filter, or set the safe search policy to off."),
                 });
             }
 
@@ -429,7 +431,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
                 return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
                 {
                     IsConfigured = false,
-                    Message = string.Format(TB("The preferred search service {0} cannot filter explicit results, but a safe search policy is configured and it is the only service that would be used. Please choose another service, let the services be used one after another, or set the safe search policy to off."), chosenBackend.Value.Name),
+                    Message = string.Format(TA("The preferred search service {0} cannot filter explicit results, but a safe search policy is configured and it is the only service that would be used. Please choose another service, let the services be used one after another, or set the safe search policy to off."), chosenBackend.Value.Name),
                 });
             }
         }

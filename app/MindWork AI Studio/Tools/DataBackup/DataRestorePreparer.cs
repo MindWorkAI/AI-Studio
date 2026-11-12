@@ -23,6 +23,8 @@ public static class DataRestorePreparer
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataRestorePreparer).Namespace, nameof(DataRestorePreparer));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(DataRestorePreparer).Namespace, nameof(DataRestorePreparer));
+
     /// <summary>
     /// A file of the backup to unpack, and where it goes.
     /// </summary>
@@ -137,7 +139,7 @@ public static class DataRestorePreparer
         var settingsAreNewer = !Enum.TryParse<SettingsVersion>(manifest.SettingsVersion, out var settingsVersion) || settingsVersion > target.SettingsVersion;
         var appIsNewer = Version.TryParse(manifest.AppVersion, out var backupAppVersion) && Version.TryParse(target.AppVersion, out var appVersion) && backupAppVersion > appVersion;
         return settingsAreNewer || appIsNewer
-            ? TB("This backup was made by a newer version of AI Studio. Please update AI Studio first.")
+            ? TA("This backup was made by a newer version of AI Studio. Please update AI Studio first.")
             : string.Empty;
     }
 

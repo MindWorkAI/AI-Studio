@@ -15,6 +15,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
+
     private const int DEFAULT_TIMEOUT_SECONDS = 60;
     private const int DEFAULT_MAX_CONTENT_CHARACTERS = 30000;
     private const int MAX_TIMEOUT_SECONDS = 240;
@@ -111,7 +113,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
     public string GetDisplayName() => TB("Read Web Page");
 
-    public string GetDescription() => TB("Load a web page and extract its readable content, links, and page details.");
+    public string GetDescription() => TA("Load a web page and extract its readable content, links, and page details.");
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
@@ -127,9 +129,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     {
         TIMEOUT_SECONDS_SETTING => TB("(Optional) HTTP timeout for loading a web page in seconds."),
         MAX_CONTENT_CHARACTERS_SETTING => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
-        ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
-        FREE_ADDRESS_CHOICE_SETTING => TB("(Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. AI Studio refuses every other address. With it on, the AI may also choose addresses itself. Off is the default."),
-        INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING => string.Format(TB("(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.Name, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.Name),
+        ALLOWED_PRIVATE_HOSTS_SETTING => TA("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
+        FREE_ADDRESS_CHOICE_SETTING => TA("(Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. AI Studio refuses every other address. With it on, the AI may also choose addresses itself. Off is the default."),
+        INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING => string.Format(TA("(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.Name, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.Name),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -175,7 +177,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         // may be misspelled. Guessing what it meant would decide on the organization's behalf
         // whether the AI may choose addresses, so it is reported instead:
         //
-        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, FREE_ADDRESS_CHOICE_SETTING, ToolSettingsOptionSources.FREE_ADDRESS_CHOICE, TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var freeAddressChoiceError))
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, FREE_ADDRESS_CHOICE_SETTING, ToolSettingsOptionSources.FREE_ADDRESS_CHOICE, TA("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var freeAddressChoiceError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
@@ -185,7 +187,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         }
 
         // Reported for the same reason: a guess would decide where intranet content may go.
-        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING, ToolSettingsOptionSources.OUTBOUND_DATA_RESTRICTION, TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var restrictionError))
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING, ToolSettingsOptionSources.OUTBOUND_DATA_RESTRICTION, TA("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var restrictionError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {

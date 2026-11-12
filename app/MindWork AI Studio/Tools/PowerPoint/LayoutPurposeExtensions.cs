@@ -11,6 +11,8 @@ internal static partial class LayoutPurposeExtensions
 {
     private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(LayoutPurposeExtensions).Namespace, nameof(LayoutPurposeExtensions));
 
+    private static string TA(string fallbackEN) => PluginSystem.I18N.I.TA(fallbackEN, typeof(LayoutPurposeExtensions).Namespace, nameof(LayoutPurposeExtensions));
+
     /// <summary>
     /// What the forms offer for a kind of slide the user leaves to the LLM.
     /// </summary>
@@ -70,7 +72,7 @@ internal static partial class LayoutPurposeExtensions
         /// The help below the choice: its question, and whether a choice adds such a slide.
         /// </summary>
         public string Help => purpose.ChoiceAddsSlide
-            ? $"{purpose.Question} {TB("Choosing a layout also adds such a slide to the presentation.")}"
+            ? $"{purpose.Question} {TA("Choosing a layout also adds such a slide to the presentation.")}"
             : purpose.Question;
     }
 

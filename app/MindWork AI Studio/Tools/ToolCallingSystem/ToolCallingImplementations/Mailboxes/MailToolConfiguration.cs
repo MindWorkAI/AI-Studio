@@ -8,7 +8,7 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
 /// </summary>
 internal static class MailToolConfiguration
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MailToolConfiguration).Namespace, nameof(MailToolConfiguration));
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(MailToolConfiguration).Namespace, nameof(MailToolConfiguration));
 
     /// <summary>
     /// The state the selection shows for a mail tool: not set up while there is no mailbox at all.
@@ -24,6 +24,6 @@ internal static class MailToolConfiguration
         : new ToolConfigurationState
         {
             IsConfigured = false,
-            Message = TB("To use this tool, add a mailbox to your data sources first."),
+            Message = TA("To use this tool, add a mailbox to your data sources first."),
         };
 }

@@ -30,6 +30,8 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataRestoreService).Namespace, nameof(DataRestoreService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(DataRestoreService).Namespace, nameof(DataRestoreService));
+
     private readonly Lock stateLock = new();
 
     private readonly TaskCompletionSource startupStateLoaded = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -245,16 +247,16 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
     public async Task<DataRestoreResult> PrepareRestoreAsync(string archivePath)
     {
         if (!settingsManager.ConfigurationData.App.AllowUserToRestoreData)
-            return this.Refuse(TB("Your organization does not allow restoring backups."));
+            return this.Refuse(TA("Your organization does not allow restoring backups."));
 
         if (dataBackupService.IsRunning)
-            return this.Refuse(TB("A backup is running. Please restore once it is done."));
+            return this.Refuse(TA("A backup is running. Please restore once it is done."));
 
         if (this.IsRestoreUnfinished)
-            return this.Refuse(TB("AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first."));
+            return this.Refuse(TA("AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first."));
 
         if (aiJobService.HasActiveJobs || mediaTranscriptionService.GetSnapshots().Any(snapshot => snapshot.Status is MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING))
-            return this.Refuse(TB("AI Studio is still writing an answer or a transcript. Please restore once it is done."));
+            return this.Refuse(TA("AI Studio is still writing an answer or a transcript. Please restore once it is done."));
 
         CancellationTokenSource cancellation;
         lock (this.stateLock)
