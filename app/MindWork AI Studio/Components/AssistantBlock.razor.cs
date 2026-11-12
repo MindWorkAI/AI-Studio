@@ -141,9 +141,9 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     {
         MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => new(AppIcons.RUNNING, Color.Info, this.T("Media is still being prepared.")),
         MediaImportStatus.SUCCEEDED => new(AppIcons.SUCCESS, Color.Success, this.T("The media transcript is ready.")),
-        MediaImportStatus.WARNING => new(AppIcons.WARNING, Color.Warning, this.T("Media transcription completed with a warning. Open the assistant to review it.")),
-        MediaImportStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.T("Media transcription failed. Open the assistant to review it.")),
-        MediaImportStatus.CANCELLED => new(AppIcons.CANCELED, Color.Warning, this.T("Media transcription was canceled. Open the assistant to review it.")),
+        MediaImportStatus.WARNING => new(AppIcons.WARNING, Color.Warning, this.TA("Media transcription completed with a warning. Open the assistant to review it.")),
+        MediaImportStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.TA("Media transcription failed. Open the assistant to review it.")),
+        MediaImportStatus.CANCELLED => new(AppIcons.CANCELED, Color.Warning, this.TA("Media transcription was canceled. Open the assistant to review it.")),
         
         _ => this.AssistantSessionIndicatorWithoutMedia,
     };
@@ -152,8 +152,8 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     {
         AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(AppIcons.RUNNING, Color.Info, this.T("Assistant is still running.")),
         AssistantSessionStatus.COMPLETED => new(AppIcons.SUCCESS, Color.Success, this.T("The result is ready.")),
-        AssistantSessionStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.T("Assistant failed. Open it to review the result.")),
-        AssistantSessionStatus.CANCELED => new(AppIcons.CANCELED, Color.Warning, this.T("Assistant was canceled. Open it to review the result.")),
+        AssistantSessionStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.TA("Assistant failed. Open it to review the result.")),
+        AssistantSessionStatus.CANCELED => new(AppIcons.CANCELED, Color.Warning, this.TA("Assistant was canceled. Open it to review the result.")),
         _ => null,
     };
 

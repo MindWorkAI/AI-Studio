@@ -11,7 +11,7 @@
             </MudText>
         }
         <MudStack Row="@true" AlignItems="@AlignItems.Baseline" Class="mb-3">
-            <MudTextField T="string" Label="@T("URL from which to load the content")" Value="@this.URL" ValueChanged="@this.URLValueChanged" Validation="@this.ValidateURL" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.LINK" Placeholder="https://..." HelperText="@T("Loads the content from your URL. Does not work when the content is hidden behind a paywall.")" Variant="Variant.Outlined" Immediate="@true" Disabled="@this.AgentIsRunning"/>
+            <MudTextField T="string" Label="@T("URL from which to load the content")" Value="@this.URL" ValueChanged="@this.URLValueChanged" Validation="@this.ValidateURL" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.LINK" Placeholder="https://..." HelperText="@TA("Loads the content from your URL. Does not work when the content is hidden behind a paywall.")" Variant="Variant.Outlined" Immediate="@true" Disabled="@this.AgentIsRunning"/>
             <MudButton Disabled="@(!this.IsReady || this.AgentIsRunning)" Variant="Variant.Filled" Size="Size.Large" Color="Color.Primary" StartIcon="@AppIcons.DOWNLOAD" OnClick="@this.LoadFromWeb">
                 @T("Fetch")
             </MudButton>

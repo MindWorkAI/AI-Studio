@@ -21,8 +21,8 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
     private string OptionTitle => this.Component is AIStudio.Tools.Components.CHAT ? this.T("Default tools for chat") : this.T("Default tools for this assistant");
 
     private string OptionHelp => this.Component is AIStudio.Tools.Components.CHAT
-        ? this.T("Choose which tools should be preselected for new chats.")
-        : this.T("Choose which tools should be preselected for new runs of this assistant.");
+        ? this.TA("Choose which tools should be preselected for new chats.")
+        : this.TA("Choose which tools should be preselected for new runs of this assistant.");
 
     /// <summary>
     /// Whether preselecting tools is pointless right now.

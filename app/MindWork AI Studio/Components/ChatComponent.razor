@@ -68,7 +68,7 @@
                 this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                 && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
             {
-                <MudTooltip Text="@T("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@TA("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@AppIcons.WORKSPACES" OnClick="@(() => this.ToggleWorkspaceOverlay())"/>
                 </MudTooltip>
             }
@@ -103,7 +103,7 @@
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
             {
-                <MudTooltip Text="@T("Move the chat to a workspace, or to another if it is already in one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@TA("Move the chat to a workspace, or to another if it is already in one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@AppIcons.MOVE_TO_WORKSPACE" Disabled="@(!this.CanThreadBeMoved)" OnClick="@this.MoveChatToWorkspace"/>
                 </MudTooltip>
 
@@ -151,7 +151,7 @@
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAgentSelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@T("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAgentSelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@TA("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
             }
             
             @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
@@ -168,7 +168,7 @@
 
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
-                <MudTooltip Text="@(this.SettingsManager.IsProviderProhibited(this.Provider.UsedLLMProvider) ? T("The use of this provider has been prohibited by your organization. Please select a different provider.") : T("The selected provider is not allowed in this chat due to data security or confidence-level requirements."))" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@(this.SettingsManager.IsProviderProhibited(this.Provider.UsedLLMProvider) ? TA("The use of this provider has been prohibited by your organization. Please select a different provider.") : T("The selected provider is not allowed in this chat due to data security or confidence-level requirements."))" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@AppIcons.WARNING" Color="Color.Error"/>
                 </MudTooltip>
             }

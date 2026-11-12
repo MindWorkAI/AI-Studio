@@ -80,7 +80,7 @@
                                 <MudDivider Vertical="@true" FlexItem="@true" />
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                                     <MudIcon Icon="@AppIcons.LOCK" Size="Size.Small" Color="Color.Success" />
-                                    <MudText Typo="Typo.body2">@T("Your organization requires this assistant to stay enabled")</MudText>
+                                    <MudText Typo="Typo.body2">@TA("Your organization requires this assistant to stay enabled")</MudText>
                                 </MudStack>
                             }
                         }
@@ -212,8 +212,8 @@
                                                         <td>
                                                             <MudText Typo="Typo.body2">
                                                                 @(state.IsActivationEnforcedByOrganization
-                                                                    ? T("Required by your organization")
-                                                                    : T("Enabled by your organization, you may switch it off"))
+                                                                    ? TA("Required by your organization")
+                                                                    : TA("Enabled by your organization, you may switch it off"))
                                                             </MudText>
                                                         </td>
                                                     </tr>
@@ -268,7 +268,7 @@
                                 @if (state.IsEnterpriseApproved)
                                 {
                                     <MudAlert Severity="Severity.Success" Variant="Variant.Text" Dense="@true">
-                                        @T("This plugin is approved by your organization. A manual security audit is not required.")
+                                        @TA("This plugin is approved by your organization. A manual security audit is not required.")
                                     </MudAlert>
                                 }
                                 else

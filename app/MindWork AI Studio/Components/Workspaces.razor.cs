@@ -137,7 +137,7 @@ public partial class Workspaces : MSGComponentBase
                 workspace.WorkspaceId != excludedWorkspaceId &&
                 string.Equals(WorkspaceBehaviour.NormalizeWorkspaceName(workspace.Name), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
 
-            return nameExists ? T("There is already a workspace with this name. Please choose a different name.") : null;
+            return nameExists ? TA("There is already a workspace with this name. Please choose a different name.") : null;
         };
     }
 
@@ -716,7 +716,7 @@ public partial class Workspaces : MSGComponentBase
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
+                { x => x.Message, TA("Are you sure you want to load another chat? All unsaved changes will be lost.") },
             };
             
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Load Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -800,13 +800,13 @@ public partial class Workspaces : MSGComponentBase
         
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { x => x.Message, string.Format(T("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
+            { x => x.Message, string.Format(TA("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
             { x => x.InputHeaderText, T("Chat Name") },
             { x => x.UserInput, chat.Name },
             { x => x.ConfirmText, T("Rename") },
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, T("Please enter a chat name.") },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a chat name.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -860,8 +860,8 @@ public partial class Workspaces : MSGComponentBase
                 {
                     x => x.Message, isCopyOfOpenChat switch
                     {
-                        true => T("Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."),
-                        false => T("Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost."),
+                        true => TA("Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."),
+                        false => TA("Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost."),
                     }
                 },
             };
@@ -890,13 +890,13 @@ public partial class Workspaces : MSGComponentBase
         var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { x => x.Message, string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
+            { x => x.Message, string.Format(TA("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
             { x => x.InputHeaderText, T("Workspace Name") },
             { x => x.UserInput, workspaceName },
             { x => x.ConfirmText, T("Rename") },
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a workspace name.") },
             { x => x.AdditionalValidation, await this.CreateWorkspaceNameValidationAsync(workspaceId, workspaceName) },
         };
         
@@ -917,13 +917,13 @@ public partial class Workspaces : MSGComponentBase
     {
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { x => x.Message, T("Please name your workspace:") },
+            { x => x.Message, TA("Please name your workspace:") },
             { x => x.InputHeaderText, T("Workspace Name") },
             { x => x.UserInput, string.Empty },
             { x => x.ConfirmText, T("Add workspace") },
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a workspace name.") },
             { x => x.AdditionalValidation, await this.CreateWorkspaceNameValidationAsync() },
         };
         
@@ -963,7 +963,7 @@ public partial class Workspaces : MSGComponentBase
         var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -1007,7 +1007,7 @@ public partial class Workspaces : MSGComponentBase
         return chatIds;
     }
 
-    private Task WarnAboutBusyWorkspaceAsync(string workspaceName) => MessageBus.INSTANCE.SendWarning(new(AppIcons.DELETE, string.Format(T("The workspace '{0}' cannot be deleted while one of its chats is being answered or transcribed. Please try again once that is finished."), workspaceName)));
+    private Task WarnAboutBusyWorkspaceAsync(string workspaceName) => MessageBus.INSTANCE.SendWarning(new(AppIcons.DELETE, string.Format(TA("The workspace '{0}' cannot be deleted while one of its chats is being answered or transcribed. Please try again once that is finished."), workspaceName)));
     
     /// <summary>
     /// Moves the given chat into another workspace and shows it there in the tree.
@@ -1047,7 +1047,7 @@ public partial class Workspaces : MSGComponentBase
         
         var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
-            { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
+            { x => x.Message, TA("Please select the workspace where you want to move the chat to.") },
             { x => x.SelectedWorkspace, chat.WorkspaceId },
             { x => x.ConfirmText, T("Move chat") },
         };

@@ -108,7 +108,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task DeleteEmbeddingProvider(EmbeddingProvider provider)
     {
-        var question = string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name);
+        var question = string.Format(TA("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name);
         var affectedDataSources = DataSourceReindexWarning.DescribeDataSourcesLosingTheirProvider(this.SettingsManager, provider);
 
         //
@@ -142,7 +142,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         {
             var issueDialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, string.Format(T("Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"), provider.Name, deleteSecretResponse.Issue) },
+                { x => x.Message, string.Format(TA("Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"), provider.Name, deleteSecretResponse.Issue) },
             };
 
             var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);

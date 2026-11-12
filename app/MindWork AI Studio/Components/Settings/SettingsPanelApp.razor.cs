@@ -33,9 +33,9 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private string UpdateIntervalHelp => this.updatePolicyMode switch
     {
-        UpdatePolicyMode.ENTERPRISE_DISABLED => T("Your organization has disabled update checks and installations."),
+        UpdatePolicyMode.ENTERPRISE_DISABLED => TA("Your organization has disabled update checks and installations."),
         UpdatePolicyMode.FLATPAK => T("AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app."),
-        UpdatePolicyMode.MANAGED_INSTALLATION => T("This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information."),
+        UpdatePolicyMode.MANAGED_INSTALLATION => TA("This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information."),
         UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => T("AI Studio cannot update itself from its current location, so it does not check for updates."),
         UpdatePolicyMode.DEVELOPMENT => T("Development builds do not check for updates."),
         _ => T("How often should we check for app updates?")
@@ -43,10 +43,10 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private string UpdateInstallationHelp => this.updatePolicyMode switch
     {
-        UpdatePolicyMode.ENTERPRISE_DISABLED => T("This setting has no effect while updates are disabled by your organization."),
-        UpdatePolicyMode.FLATPAK => T("AI Studio cannot install updates when running as a Flatpak. Update it using the Flatpak source or bundle from which you installed it."),
-        UpdatePolicyMode.MANAGED_INSTALLATION => T("AI Studio cannot install updates into this installation. Contact the person or organization that installed it for new versions."),
-        UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => T("AI Studio cannot install updates into its current installation location. Install new versions yourself."),
+        UpdatePolicyMode.ENTERPRISE_DISABLED => TA("This setting has no effect while updates are disabled by your organization."),
+        UpdatePolicyMode.FLATPAK => TA("AI Studio cannot install updates when running as a Flatpak. Update it using the Flatpak source or bundle from which you installed it."),
+        UpdatePolicyMode.MANAGED_INSTALLATION => TA("AI Studio cannot install updates into this installation. Contact the person or organization that installed it for new versions."),
+        UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => TA("AI Studio cannot install updates into its current installation location. Install new versions yourself."),
         UpdatePolicyMode.DEVELOPMENT => T("Development builds do not install updates."),
         _ => T("Should updates be installed automatically or manually?")
     };
@@ -105,11 +105,11 @@ public partial class SettingsPanelApp : SettingsPanelBase
     
     private string GetStartPageHelpText()
     {
-        var helpText = T("Choose which page AI Studio should open first when you start the app. Changes take effect the next time you launch AI Studio.");
+        var helpText = TA("Choose which page AI Studio should open first when you start the app. Changes take effect the next time you launch AI Studio.");
         if (!ManagedConfiguration.TryGet(x => x.App, x => x.StartPage, out var meta) || meta.ManagedMode is not ManagedConfigurationMode.EDITABLE_DEFAULT)
             return helpText;
 
-        return $"{helpText} {T("Your organization provided a default start page, but you can still change it.")}";
+        return $"{helpText} {TA("Your organization provided a default start page, but you can still change it.")}";
     }
 
     private IEnumerable<ConfigurationSelectData<string>> GetFilteredTranscriptionProviders()
