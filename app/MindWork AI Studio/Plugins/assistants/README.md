@@ -204,7 +204,7 @@ Launchers with an own icon or extra Lua code keep the plugin code editor and the
 #### Supported types (matching the Blazor UI components):
 
 - `TEXT_AREA`: user input field based on `MudTextField`; requires `Name`, `Label`, and may include `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style`.
-- `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
+- `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `UserPrompt`.
 - `BUTTON`: invokes a Lua callback; `Props` must include `Name`, `Text`, `Action`, and may include `IsIconButton`, `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`. Use this for stateless actions, including icon-only action buttons.
 - `BUTTON_GROUP`: groups multiple `BUTTON` children in a `MudButtonGroup`;`Props` must include `Name`, `Children` must contain only `BUTTON` components and `Props` may include `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`.
 - `LAYOUT_GRID`: renders a `MudGrid`; `Children` must contain only `LAYOUT_ITEM` components and `Props` may include `Justify`, `Spacing`, `Class`, `Style`.
@@ -231,7 +231,7 @@ Images referenced via the `plugin://` scheme must exist in the plugin directory 
 | Component                  | Required Props                      | Optional Props                                                                                                                                                                                                       | Renders                                                                                                                             |
 |----------------------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | `TEXT_AREA`                | `Name`, `Label`                     | `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style` | [MudTextField](https://www.mudblazor.com/components/textfield)                                                                      |
-| `DROPDOWN`                 | `Name`, `Label`, `Default`, `Items` | `IsMultiselect`, `HasSelectAll`, `SelectAllText`, `HelperText`, `OpenIcon`, `CloseIcon`, `IconColor`, `IconPositon`, `Variant`, `ValueType`, `UserPrompt`                                                            | [MudSelect](https://www.mudblazor.com/components/select)                                                                            |
+| `DROPDOWN`                 | `Name`, `Label`, `Default`, `Items` | `IsMultiselect`, `HasSelectAll`, `SelectAllText`, `HelperText`, `OpenIcon`, `CloseIcon`, `IconColor`, `IconPositon`, `Variant`, `UserPrompt`                                                                         | [MudSelect](https://www.mudblazor.com/components/select)                                                                            |
 | `BUTTON`                   | `Name`, `Text`, `Action`            | `IsIconButton`, `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`                                                                                         | [MudButton](https://www.mudblazor.com/components/button) / [MudIconButton](https://www.mudblazor.com/components/button#icon-button) |
 | `BUTTON_GROUP`             | `Name`, `Children`                  | `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`                                                                                                                             | [MudButton](https://www.mudblazor.com/components/button) / [MudIconButton](https://www.mudblazor.com/components/button#icon-button) |
 | `SWITCH`                   | `Name`, `Label`, `Value`            | `OnChanged`, `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`                                                              | [MudSwitch](https://www.mudblazor.com/components/switch)                                                                            |
@@ -320,7 +320,7 @@ An unknown name shows no icon.
   - `Items`: array of dropdown item tables with the same shape as `Default`.
 - Optional props:
   - `UserPrompt`: prompt context text for this field.
-  - `ValueType`: one of `string`, `int`, `double`, `bool`; currently the dropdown values exposed to prompt building and button actions are handled as the configured item `Value`s, with typical usage being `string`.
+  - `ValueType`: has no effect and is accepted only so that older plugins keep loading; leave it out. The selected values always reach prompt building and button actions as text, i.e., as the `Value` of their items.
   - `IsMultiselect`: defaults to `false`; when `true`, the component allows selecting multiple items.
   - `HasSelectAll`: defaults to `false`; enables MudBlazor's select-all behavior for multiselect dropdowns.
   - `SelectAllText`: custom label for the select-all action in multiselect mode.
@@ -349,7 +349,6 @@ An unknown name shows no icon.
     ["Name"] = "targetCountries",
     ["Label"] = "Target countries",
     ["UserPrompt"] = "Use the selected countries in your answer.",
-    ["ValueType"] = "string",
     ["IsMultiselect"] = true,
     ["HasSelectAll"] = true,
     ["SelectAllText"] = "Select all countries",
@@ -1195,6 +1194,7 @@ Use these when you need timestamps inside Lua.
 - `DateTime(format)` returns a table with date/time parts plus a formatted string.
   - `format` is optional; default is `yyyy-MM-dd HH:mm:ss` (ISO 8601-like).
   - `formatted` contains the date in your desired format (e.g. `dd.MM.yyyy HH:mm`) or the default.
+  - `formatted` looks the same on every computer, whatever its region settings: `:` and `/` stay as written, the calendar is the Gregorian one, and the names of months and days are English, e.g., `MMMM` gives `March`.
   - Members: `year`, `month`, `day`, `hour`, `minute`, `second`, `millisecond`, `formatted`.
 - `Timestamp()` returns a UTC timestamp in ISO-8601 format (`O` / round-trip), e.g. `2026-03-02T21:15:30.1234567Z`.
 

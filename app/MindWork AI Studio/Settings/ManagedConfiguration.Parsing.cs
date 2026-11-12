@@ -1264,15 +1264,29 @@ public static partial class ManagedConfiguration
 
         System.Collections.IDictionary dictionary => string.Join(";", dictionary.Keys
             .Cast<object>()
-            .OrderBy(key => key.ToString(), StringComparer.Ordinal)
-            .Select(key => $"{key}:{dictionary[key]}")),
+            .OrderBy(SerializeManagedItem, StringComparer.Ordinal)
+            .Select(key => $"{SerializeManagedItem(key)}:{SerializeManagedItem(dictionary[key])}")),
         System.Collections.IEnumerable enumerable => string.Join(";", enumerable
             .Cast<object>()
-            .Select(item => item.ToString() ?? string.Empty)
+            .Select(SerializeManagedItem)
             .Order(StringComparer.Ordinal)),
         IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
 
         _ => value.ToString() ?? string.Empty,
+    };
+
+    /// <summary>
+    /// Writes a key, a value, or an item of a collection the same way on every computer, as the scalars above.
+    /// </summary>
+    /// <remarks>
+    /// For the types of today's settings, i.e., whole numbers, enums, and texts, this is the form they were stored in
+    /// before; a number with a fraction or a date would otherwise follow the region settings of the computer.
+    /// </remarks>
+    private static string SerializeManagedItem(object? item) => item switch
+    {
+        null => string.Empty,
+        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
+        _ => item.ToString() ?? string.Empty,
     };
 
     private static Dictionary<string, string> CloneStringDictionary(IDictionary<string, string> values) => new(values, StringComparer.Ordinal);
