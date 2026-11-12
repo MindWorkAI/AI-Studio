@@ -2010,6 +2010,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T12093532
 -- Nothing was replaced.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1254778913"] = "Es wurde nichts ersetzt."
 
+-- Create export
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1293027637"] = "Export erstellen"
+
 -- Check the preview and change it where needed. AI Studio anonymizes your changes once more when you leave the field.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T1446555152"] = "Überprüfen Sie die Vorschau und passen Sie sie bei Bedarf an. AI Studio anonymisiert Ihre Änderungen erneut, sobald Sie das Feld verlassen."
 
@@ -2138,9 +2141,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T97349727
 
 -- Your name
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T973497277::INFORMAL"] = "Dein Name"
-
--- Export as ODT
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T97688572"] = "Als ODT exportieren"
 
 -- A shared session of the BeyondFacts Lab
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMAIL::T3284671944"] = "Eine geteilte Sitzung des BeyondFacts Lab"
