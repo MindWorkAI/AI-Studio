@@ -112,7 +112,7 @@ public partial class SystemPromptDialog : MSGComponentBase
         SystemPromptPartKind.RETRIEVED_DATA => new(T("Data from your data sources"), part.Text, this.NoticeWithRetrievedData),
         SystemPromptPartKind.PROFILE => new(string.Format(T("Profile '{0}'"), part.SourceName), part.Text, string.Empty),
         SystemPromptPartKind.TOOL_INSTRUCTIONS => new(string.Format(T("Instructions for your tools: {0}"), string.Join(", ", this.ToolNames)), part.Text, T("When the AI reaches the limit of tool calls for one answer, AI Studio adds one more instruction at the end: to answer with what the tools have returned so far.")),
-        SystemPromptPartKind.HISTORY_NOTES => new(T("Notes on earlier answers"), part.Text, T("AI Studio adds a note to earlier answers in this chat which names the tools and sources the AI used for them. The note is sent to the AI only; you do not see it in the chat. These instructions tell the AI what the note means.")),
+        SystemPromptPartKind.HISTORY_NOTES => new(T("Instructions for the notes on earlier answers"), part.Text, T("When an earlier answer in this chat used tools or sources, AI Studio puts a note in front of it which names them. Only the AI receives this note; you do not see it in the chat. These instructions tell the AI what the note means.")),
         _ => new(string.Empty, part.Text, string.Empty),
     };
 
