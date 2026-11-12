@@ -2283,7 +2283,7 @@ public partial class ChatComponent : MSGComponentBase
         var plan = ChatCompressionPlan.Of(sourceChat, exampleConversationLength, sourceChat.Draft.IsEmpty);
         if (plan is null)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Compress, T("There is nothing to summarize yet before your last message and the last answer of the AI.")));
+            await this.MessageBus.SendWarning(new(AppIcons.COMPRESS_CHAT,T("There is nothing to summarize yet before your last message and the last answer of the AI.")));
             return;
         }
 
@@ -2317,7 +2317,7 @@ public partial class ChatComponent : MSGComponentBase
                 await this.SaveThread();
                 if (!WorkspaceBehaviour.IsChatExisting(new(sourceChat.WorkspaceId, sourceChat.ChatId)))
                 {
-                    await this.MessageBus.SendError(new(Icons.Material.Filled.Compress, T("This chat could not be saved, so AI Studio did not compress it. Please try again.")));
+                    await this.MessageBus.SendError(new(AppIcons.COMPRESS_CHAT,T("This chat could not be saved, so AI Studio did not compress it. Please try again.")));
                     return;
                 }
             }
@@ -2339,7 +2339,7 @@ public partial class ChatComponent : MSGComponentBase
             catch (Exception e)
             {
                 this.Logger.LogError(e, $"The compressed chat '{sourceChat.ChatId}' could not be continued in a new chat.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Compress, T("The new chat could not be created. This chat stays as it is.")));
+                await this.MessageBus.SendError(new(AppIcons.COMPRESS_CHAT,T("The new chat could not be created. This chat stays as it is.")));
                 return;
             }
 

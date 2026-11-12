@@ -84,7 +84,7 @@
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("Cancel")
         </MudButton>
-        <MudButton OnClick="@(async () => await this.CompressAsync())" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Compress" Disabled="@this.isSummarizing">
+        <MudButton OnClick="@(async () => await this.CompressAsync())" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.COMPRESS_CHAT" Disabled="@this.isSummarizing">
             @T("Compress & switch")
         </MudButton>
     </DialogActions>
