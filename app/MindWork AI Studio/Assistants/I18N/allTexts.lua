@@ -5695,6 +5695,93 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Show your 
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T857715435"] = "approx. {0} tokens"
 
+-- Thanks for your feedback.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1040689113"] = "Thanks for your feedback."
+
+-- Don't know
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1438507756"] = "Don't know"
+
+-- Yes, a lot
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1444576616"] = "Yes, a lot"
+
+-- No, I lost time
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T159081286"] = "No, I lost time"
+
+-- Missing functions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T160699918"] = "Missing functions"
+
+-- No
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1642511898"] = "No"
+
+-- Send the answers so far and close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1664533887"] = "Send the answers so far and close"
+
+-- No answer
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1789279160"] = "No answer"
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T1849229205"] = "Other"
+
+-- Good
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2056027640"] = "Good"
+
+-- Bad answer quality
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2121619971"] = "Bad answer quality"
+
+-- Topic:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2484802810"] = "Topic:"
+
+-- Slow answer
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2514702658"] = "Slow answer"
+
+-- Confusing interface
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T270553770"] = "Confusing interface"
+
+-- Did you save time this week by using AI Studio?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2712599937"] = "Did you save time this week by using AI Studio?"
+
+-- Is there anything else you would like to tell us?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T2877068992"] = "Is there anything else you would like to tell us?"
+
+-- Skip this week's feedback
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3034680039"] = "Skip this week's feedback"
+
+-- What went wrong?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3188934223"] = "What went wrong?"
+
+-- Skip
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3247949794"] = "Skip"
+
+-- Bad
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3317455640"] = "Bad"
+
+-- We, the AI Studio team, would like to improve AI Studio. Answering these questions helps us with that.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3495225249"] = "We, the AI Studio team, would like to improve AI Studio. Answering these questions helps us with that."
+
+-- New feature
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T357397543"] = "New feature"
+
+-- Yes, a little
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3682584545"] = "Yes, a little"
+
+-- How did AI Studio perform for you this week?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3868462774"] = "How did AI Studio perform for you this week?"
+
+-- Neutral
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3912435576"] = "Neutral"
+
+-- Technical problems
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T3961331188"] = "Technical problems"
+
+-- Send
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T4069397711"] = "Send"
+
+-- Your feedback could not be sent. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T4237541491"] = "Your feedback could not be sent. Please try again later."
+
+-- Optional
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFEEDBACKPROMPT::T4258353177"] = "Optional"
+
 -- Create template from current chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1112722156"] = "Create template from current chat"
 
@@ -11212,6 +11299,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T400
 -- Open test folder
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBEYONDFACTSLAB::T567935877"] = "Open test folder"
 
+-- Ask for feedback in chats?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1306631809"] = "Ask for feedback in chats?"
+
 -- Files are sent as they were first read
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1320692831"] = "Files are sent as they were first read"
 
@@ -11245,6 +11335,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] =
 -- Changed files are read again for the next message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T264953820"] = "Changed files are read again for the next message"
 
+-- The chat does not ask for feedback
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2650654559"] = "The chat does not ask for feedback"
+
 -- Provider selection when loading a chat and sending assistant results to chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
 
@@ -11269,6 +11362,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3448155331"] 
 -- First (oldest) message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3507181366"] = "First (oldest) message is shown, after loading a chat"
 
+-- The chat asks for feedback once a week
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3686366724"] = "The chat asks for feedback once a week"
+
 -- Preselect chat options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3728624759"] = "Preselect chat options?"
 
@@ -11277,6 +11373,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3730599555"] 
 
 -- Latest message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] = "Latest message is shown, after loading a chat"
+
+-- When enabled, you will be asked for feedback once a week.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3874748224"] = "When enabled, you will be asked for feedback once a week."
 
 -- Do you want to apply the default data source options when sending assistant results to chat?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Do you want to apply the default data source options when sending assistant results to chat?"

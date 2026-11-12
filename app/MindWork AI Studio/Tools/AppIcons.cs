@@ -431,6 +431,9 @@ public static class AppIcons
     /// <summary>Exports settings as a section for an enterprise configuration.</summary>
     public const string EXPORT_CONFIGURATION = LucideIcons.FILE_OUTPUT;
 
+    /// <summary>Marks the weekly feedback which the chat asks for.</summary>
+    public const string FEEDBACK = LucideIcons.MESSAGE_SQUARE_HEART;
+
     /// <summary>Marks a single file, such as a file path field.</summary>
     public const string FILE = LucideIcons.FILE;
 

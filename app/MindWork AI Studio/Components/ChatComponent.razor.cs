@@ -93,6 +93,9 @@ public partial class ChatComponent : MSGComponentBase
     [Inject]
     private AssistantLaunchService AssistantLaunchService { get; init; } = null!;
 
+    [Inject]
+    private FeedbackService FeedbackService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -2714,6 +2717,7 @@ public partial class ChatComponent : MSGComponentBase
                         // The job stored the answer only while chats are stored automatically, see AIJobService.CheckpointChatAsync:
                         this.hasUnsavedChanges = this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
                         this.previousInputForbidden = true;
+                        this.FeedbackService.AnswerFinished(snapshot.SubjectId);
                     }
 
                     this.StateHasChanged();

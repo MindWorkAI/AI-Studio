@@ -114,4 +114,14 @@ public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection =
     /// FileAttachment.ProvenanceId. A file which is gone keeps its text either way.
     /// </remarks>
     public bool ReadChangedAttachmentsAgain { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ReadChangedAttachmentsAgain, false);
+
+    /// <summary>
+    /// Should the chat ask for feedback after an answer?
+    /// </summary>
+    public bool FeedbackEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.FeedbackEnabled, false);
+
+    /// <summary>
+    /// The address of the feedback server, e.g., http://localhost:8080/feedback.
+    /// </summary>
+    public string FeedbackEndpoint { get; set; } = ManagedConfiguration.Register(configSelection, n => n.FeedbackEndpoint, string.Empty);
 }

@@ -1,5 +1,7 @@
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.Feedback;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Staan;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Tavily;
@@ -9,12 +11,13 @@ namespace AIStudio.Tests.Serialization;
 public static partial class JsonTestRoots
 {
     /// <summary>
-    /// What AI Studio sends to ERI servers and to search services.
+    /// What AI Studio sends to ERI servers, to search services, and to the feedback server.
     /// </summary>
     public static IEnumerable<TestCaseData> ServiceRequests()
     {
         TestHost.PrepareStaticState();
         yield return Case(new(typeof(RetrievalRequest), ERIClientBase.JSON_OPTIONS));
+        yield return Case(new(typeof(FeedbackPayload), FeedbackService.JSON_OPTIONS));
         yield return Case(new(typeof(StaanSearchRequest), WebSearchJson.OPTIONS));
         yield return Case(new(typeof(TavilySearchRequest), WebSearchJson.OPTIONS));
     }

@@ -248,6 +248,7 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
         builder.Services.AddSingleton<MailboxRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();
+        builder.Services.AddSingleton<FeedbackService>();
         builder.Services.AddScoped<AssistantLaunchService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         

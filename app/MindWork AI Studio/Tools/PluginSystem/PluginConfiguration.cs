@@ -454,6 +454,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: read changed attachments of a chat again?
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.ReadChangedAttachmentsAgain, this.Id, settingsTable, dryRun);
 
+        // Config: chat feedback?
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.FeedbackEnabled, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.FeedbackEndpoint, this.Id, settingsTable, dryRun);
+
         // Config: Slide Assistant template and defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
