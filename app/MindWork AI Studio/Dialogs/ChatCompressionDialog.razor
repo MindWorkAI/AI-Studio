@@ -1,0 +1,91 @@
+@inherits MSGComponentBase
+
+<MudDialog DefaultFocus="DefaultFocus.FirstChild">
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.body1">
+                @T("The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.")
+            </MudText>
+
+            <MudText Typo="Typo.body2">
+                @this.SummaryScope
+            </MudText>
+
+            @if (this.Plan.PendingQuestion is not null)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    @T("Your last message has no answer yet. It goes into the input field of the new chat, so you can send it there.")
+                </MudAlert>
+            }
+
+            @if (this.StoresChatFirst)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    @T("This chat has changes which are not saved yet. AI Studio saves it first, so that the whole conversation remains available.")
+                </MudAlert>
+            }
+
+            @if (this.HasDocumentsToSummarize)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    @T("The summary takes in the content of the documents attached in this chat. This takes longer than summarizing the messages alone.")
+                </MudAlert>
+            }
+
+            @if (this.HasImagesToSummarize)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    @T("The AI does not look at the images in this chat again. The summary keeps what the conversation said about them.")
+                </MudAlert>
+            }
+
+            <MudForm @ref="this.form">
+                <MudTextField T="string"
+                              @bind-Text="@this.chatName"
+                              Label="@T("Name of the new chat")"
+                              Variant="Variant.Outlined"
+                              Immediate="@true"
+                              Disabled="@this.isSummarizing"
+                              OnKeyDown="@this.HandleChatNameKeyDown"
+                              UserAttributes="@USER_INPUT_ATTRIBUTES"
+                              Validation="@this.ValidateChatName"/>
+
+                <MudTextField T="string"
+                              @bind-Text="@this.focus"
+                              Label="@T("What should the summary pay particular attention to? (optional)")"
+                              Placeholder="@T("For example: the decisions about the budget, with all figures.")"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Sizing="InputSizing.Auto"
+                              MaxLines="8"
+                              Immediate="@true"
+                              Disabled="@this.isSummarizing"
+                              UserAttributes="@USER_INPUT_ATTRIBUTES"
+                              Class="mt-3"/>
+            </MudForm>
+
+            @if (this.isSummarizing)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary"/>
+                <MudText Typo="Typo.body2">
+                    @this.ProgressMessage
+                </MudText>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(this.issue))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">
+                    @this.issue
+                </MudAlert>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@(async () => await this.CompressAsync())" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.COMPRESS_CHAT" Disabled="@this.isSummarizing">
+            @T("Compress & switch")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

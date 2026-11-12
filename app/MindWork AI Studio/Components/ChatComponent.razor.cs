@@ -1,6 +1,7 @@
 using System.Globalization;
 
 using AIStudio.Chat;
+using AIStudio.Chat.Compression;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -102,6 +103,17 @@ public partial class ChatComponent : MSGComponentBase
     private Profile currentProfile = Profile.NO_PROFILE;
     private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     private bool hasUnsavedChanges;
+
+    /// <summary>
+    /// Whether the open chat is being continued in a new chat right now, see CompressCurrentChat.
+    /// </summary>
+    /// <remarks>
+    /// From the moment the user confirmed the summary until the new chat is open, nothing may be
+    /// sent: a message sent meanwhile would go into the chat being left, and its answer would be
+    /// written there while the user already looks at the new chat.
+    /// </remarks>
+    private bool isCompressing;
+
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
     private byte scrollRenderCountdown;
@@ -128,6 +140,15 @@ public partial class ChatComponent : MSGComponentBase
     /// How much of the window must be used before the number starts saying so.
     /// </summary>
     private const double WINDOW_NEARLY_FULL = 0.8d;
+
+    /// <summary>
+    /// How much of the window the message about to be sent must fill before the chat asks first, see ConfirmContextWindowAsync.
+    /// </summary>
+    /// <remarks>
+    /// Not only once the window overflows: most models count their answer into the window, so the
+    /// last few percent leave little room for it, and the next message would no longer fit.
+    /// </remarks>
+    private const double WINDOW_FULL_ENOUGH_TO_ASK = 0.95d;
 
     /// <summary>
     /// How long the token count stays quiet after it ran, while nothing is being written.
@@ -807,6 +828,38 @@ public partial class ChatComponent : MSGComponentBase
     private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
 
     /// <summary>
+    /// Whether the open chat can be compressed into a new chat.
+    /// </summary>
+    /// <remarks>
+    /// Compressing copies the chat, so whatever stops a copy stops it as well, and it stores both
+    /// chats, which needs workspaces. Beyond that, the selected provider writes the summary, so it
+    /// has to be one the chat allows, with a model large enough for it, and the chat needs a
+    /// finished answer of the AI, which the new chat keeps word for word.
+    /// </remarks>
+    private bool CanThreadBeCompressed => this.CanThreadBeCopied
+                                          && this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
+                                          && !this.isCompressing
+                                          && this.IsProviderSelected
+                                          && this.ChatThread.IsLLMProviderAllowed(this.Provider)
+                                          && !this.IsWindowTooSmallForCompression
+                                          && ChatCompressionPlan.HasFinishedAnswer(this.ChatThread!);
+
+    /// <summary>
+    /// Whether the model of the selected provider is too small to compress the chat, see ChatCompressionService.MIN_CONTEXT_WINDOW.
+    /// </summary>
+    private bool IsWindowTooSmallForCompression => this.IsProviderSelected && !ChatCompressionService.CanSummarizeWith(this.Provider.GetModelProfile().Context);
+
+    /// <summary>
+    /// What the compress button says it does, or why it is switched off for the selected model.
+    /// </summary>
+    /// <remarks>
+    /// The minimum is a limit, so it is written out in full: the short form of the token count would round it.
+    /// </remarks>
+    private string CompressTooltip => this.IsWindowTooSmallForCompression
+        ? string.Format(T("Compressing a chat needs a model with a context window of at least {0} tokens."), ChatCompressionService.MIN_CONTEXT_WINDOW.ToString("N0", this.currentCulture))
+        : T("Compress this chat & switch to a new chat with its summary.");
+
+    /// <summary>
     /// Whether a chat template can be made from the open chat. While an answer is being written, the template would copy it unfinished.
     /// </summary>
     private bool CanThreadBecomeTemplate => this.CanThreadBeSaved && !this.IsCurrentChatStreaming;
@@ -1248,9 +1301,9 @@ public partial class ChatComponent : MSGComponentBase
         if (!this.IsProviderSelected)
             return true;
         
-        if(this.IsCurrentChatStreaming)
+        if(this.IsCurrentChatStreaming || this.isCompressing)
             return true;
-        
+
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return true;
         
@@ -1634,7 +1687,7 @@ public partial class ChatComponent : MSGComponentBase
         // the AI job service would turn a second answer down only after the chat got its message and
         // an empty answer, which then stays.
         //
-        if (this.IsCurrentChatStreaming)
+        if (this.IsCurrentChatStreaming || this.isCompressing)
             return;
 
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
@@ -1646,6 +1699,17 @@ public partial class ChatComponent : MSGComponentBase
             return;
         
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            return;
+
+        //
+        // Not when an answer is only generated again: no new message is sent then, and what the
+        // user is writing stays in the composer.
+        //
+        if (!reuseLastUserPrompt && !await this.ConfirmContextWindowAsync())
+            return;
+
+        // The notice may have waited for the user, while another message was sent or the chat was compressed:
+        if (this.IsCurrentChatStreaming || this.isCompressing)
             return;
 
         this.RefreshCurrentProfileAndChatTemplate();
@@ -2182,6 +2246,185 @@ public partial class ChatComponent : MSGComponentBase
         this.MarkCurrentChatAsLoadedParameter();
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+    }
+
+    /// <summary>
+    /// Compresses the open chat: the AI summarizes it, and the conversation continues in a new chat.
+    /// </summary>
+    /// <remarks>
+    /// The open chat stays as it is, so the whole conversation remains available. It is stored first
+    /// when it has unsaved changes or was never stored at all, e.g., a chat an assistant started while
+    /// chats are stored by hand: the conversation would be gone once the new chat opens otherwise.
+    /// The dialog says so beforehand, and when storing fails, nothing is compressed.<br/><br/>
+    ///
+    /// The new chat is a copy of this one whose messages give way to the summary and the last exchange,
+    /// see ChatCompression.TurnIntoContinuation. It thus keeps the workspace, the profile,
+    /// the chat template, the tools, the data sources, and the restrictions of this chat, and it
+    /// continues with the provider which wrote the summary. The summary passes the prompt injection
+    /// filter before it becomes a message of the new chat, since a model reads it there again.<br/><br/>
+    ///
+    /// The message the user is writing goes into the new chat, as with a copy. So does a last message
+    /// which never got an answer, when the user writes nothing, see ChatCompressionPlan. The
+    /// predefined message of a chat template is no message of the user and stays behind.<br/><br/>
+    ///
+    /// Once the user confirmed the summary, nothing can be sent until the new chat is open, see
+    /// isCompressing.
+    /// </remarks>
+    private async Task CompressCurrentChat()
+    {
+        if (this.ChatThread is not { } sourceChat || !this.CanThreadBeCompressed)
+            return;
+
+        // The new chat takes the message being written along, so the draft has to say what the user wrote:
+        if (this.ComposerState.HasUserDraft)
+            this.MirrorComposerIntoDraft(sourceChat);
+
+        var exampleConversationLength = this.SettingsManager.GetChatTemplateById(sourceChat.SelectedChatTemplate).ExampleConversation.Count;
+        var plan = ChatCompressionPlan.Of(sourceChat, exampleConversationLength, sourceChat.Draft.IsEmpty);
+        if (plan is null)
+        {
+            await this.MessageBus.SendWarning(new(AppIcons.COMPRESS_CHAT,T("There is nothing to summarize yet before your last message and the last answer of the AI.")));
+            return;
+        }
+
+        var provider = this.Provider;
+        var sourceName = ChatCompression.NameOf(sourceChat.Name);
+        var storesChatFirst = this.hasUnsavedChanges || !WorkspaceBehaviour.IsChatExisting(new(sourceChat.WorkspaceId, sourceChat.ChatId));
+        var dialogParameters = new DialogParameters<ChatCompressionDialog>
+        {
+            { x => x.SourceChat, sourceChat },
+            { x => x.Plan, plan },
+            { x => x.ProviderSettings, provider },
+            { x => x.SuggestedName, ChatCompression.NameOfContinuation(sourceChat.Name) },
+            { x => x.StoresChatFirst, storesChatFirst },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ChatCompressionDialog>(T("Compress Chat"), dialogParameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not ChatCompressionDialogResult result)
+            return;
+
+        // Nothing may continue a chat which is no longer the open one:
+        if (this.ChatThread?.ChatId != sourceChat.ChatId || this.IsCurrentChatStreaming || this.isCompressing)
+            return;
+
+        this.isCompressing = true;
+        this.StateHasChanged();
+        try
+        {
+            if (storesChatFirst || this.hasUnsavedChanges)
+            {
+                await this.SaveThread();
+                if (!WorkspaceBehaviour.IsChatExisting(new(sourceChat.WorkspaceId, sourceChat.ChatId)))
+                {
+                    await this.MessageBus.SendError(new(AppIcons.COMPRESS_CHAT,T("This chat could not be saved, so AI Studio did not compress it. Please try again.")));
+                    return;
+                }
+            }
+
+            await this.FlushDraftAsync();
+
+            // A model reads the summary again in the new chat, so what the AI wrote passes the filter first:
+            var payload = await this.AssistantLaunchService.CreateTextPayloadAsync(result.Summary, writtenByModel: true, sourceChat.CaptureRestrictions(), sourceName);
+            var summaryMessage = ChatCompression.SummaryMessage(sourceName, payload.Text);
+            Action<ChatThread> turnIntoContinuation = copy => ChatCompression.TurnIntoContinuation(copy, exampleConversationLength, summaryMessage, payload.Restrictions, provider.Id);
+
+            ChatThread continuation;
+            try
+            {
+                continuation = this.Workspaces is null
+                    ? await WorkspaceBehaviour.CopyChatAsync(sourceChat, result.Name, turnIntoContinuation)
+                    : await this.Workspaces.CopyChatAsync(sourceChat, result.Name, turnIntoContinuation);
+            }
+            catch (Exception e)
+            {
+                this.Logger.LogError(e, $"The compressed chat '{sourceChat.ChatId}' could not be continued in a new chat.");
+                await this.MessageBus.SendError(new(AppIcons.COMPRESS_CHAT,T("The new chat could not be created. This chat stays as it is.")));
+                return;
+            }
+
+            this.ChatThread = continuation;
+            this.hasUnsavedChanges = false;
+
+            // The new chat is on the disk already, and the message being written moved into it:
+            this.unstoredChat = null;
+            this.ComposerState.Clear();
+            this.ComposerState.RestoreFromDraft(continuation.Draft);
+
+            await this.SyncForegroundChatAsync();
+            this.MarkCurrentChatAsLoadedParameter();
+            await this.SyncWorkspaceHeaderWithChatThreadAsync();
+            await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+
+            // The new chat forgot which data sources an agent picked for the last request of the old one:
+            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(continuation.DataSourceOptions, continuation.AISelectedDataSources);
+            this.tokenTracker?.Nudge();
+        }
+        finally
+        {
+            this.isCompressing = false;
+            this.StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Asks the user what to do when the message about to be sent fills the context window of the
+    /// model, or no longer fits into it.
+    /// </summary>
+    /// <remarks>
+    /// Judged by the token count under the input field, the very number the user sees, so no request
+    /// is made for it. That count does not cover images, and it knows no window where nobody wrote
+    /// one down, e.g., for many self-hosted models; the notice then stays away, just as the number
+    /// keeps its colour. The notice comes from WINDOW_FULL_ENOUGH_TO_ASK on, before the window
+    /// overflows.<br/><br/>
+    ///
+    /// Compressing is offered only where it could succeed: the model has to be large enough for it,
+    /// and the chat needs something to summarize besides the last exchange, which the new chat keeps
+    /// word for word. The message being written goes along into the new chat unchanged, where the
+    /// user sends it, see CompressCurrentChat. Compressing therefore helps only when that message
+    /// leaves room for the summary; the last exchange is not counted, since that would take a count
+    /// of its own.
+    /// </remarks>
+    /// <returns>True when the message is to be sent.</returns>
+    private async Task<bool> ConfirmContextWindowAsync()
+    {
+        var fill = this.TokenBudgetFill;
+        if (fill < WINDOW_FULL_ENOUGH_TO_ASK)
+            return true;
+
+        var windowTokens = this.conversationTokens.Window.DefaultTokens;
+        var leavesRoomForTheSummary = this.conversationTokens.DraftTokens + ChatCompressionService.TokensForTheSummary(windowTokens) < windowTokens * WINDOW_FULL_ENOUGH_TO_ASK;
+        var canCompress = leavesRoomForTheSummary
+                          && this.CanThreadBeCompressed
+                          && ChatCompressionPlan.Of(this.ChatThread!, this.SettingsManager.GetChatTemplateById(this.ChatThread!.SelectedChatTemplate).ExampleConversation.Count, draftIsEmpty: false) is not null;
+
+        var isWindowExceeded = fill >= 1d;
+        var dialogParameters = new DialogParameters<ContextWindowFullDialog>
+        {
+            { x => x.ChatTokens, TokenAmount.Format(this.conversationTokens.Tokens, this.currentCulture) },
+            { x => x.WindowTokens, TokenAmount.Format(windowTokens, this.currentCulture) },
+            { x => x.IsWindowExceeded, isWindowExceeded },
+            { x => x.CanCompress, canCompress },
+        };
+
+        var title = isWindowExceeded ? T("This chat is too long for the model") : T("This chat nearly fills the context window of the model");
+        var dialogReference = await this.DialogService.ShowAsync<ContextWindowFullDialog>(title, dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not ContextWindowFullDecision decision)
+            return false;
+
+        if (decision is ContextWindowFullDecision.COMPRESS)
+        {
+            //
+            // The user meant to send what is in the composer, so it goes along into the new chat,
+            // even the untouched message of a chat template, which compressing leaves behind otherwise:
+            //
+            this.ComposerState.MarkUserDraft();
+            await this.CompressCurrentChat();
+            return false;
+        }
+
+        return true;
     }
 
     private async Task LoadedChatChanged(bool notifyParent = true)

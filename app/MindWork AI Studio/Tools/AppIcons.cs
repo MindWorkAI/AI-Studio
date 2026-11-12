@@ -269,6 +269,9 @@ public static class AppIcons
     /// <summary>Marks the properties of a component in the plugin audit.</summary>
     public const string COMPONENT_PROPERTIES = LucideIcons.SLIDERS_HORIZONTAL;
 
+    /// <summary>Compresses a chat into a new chat which starts with a summary of it.</summary>
+    public const string COMPRESS_CHAT = LucideIcons.FOLD_VERTICAL;
+
     /// <summary>Confirms a draft or takes over a suggestion.</summary>
     public const string CONFIRM = LucideIcons.CHECK;
 
